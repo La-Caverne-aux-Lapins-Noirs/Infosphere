@@ -1,0 +1,90 @@
+<a href="index.php?p=<?=$Position; ?>">
+    &larr;
+</a>
+<div style="width: 100%; height: 50px; text-align: center;">
+    <h3><?=$fetch["name"]; ?></h3>
+</div>
+<?php if ($fetch["icon"] != "") { ?>
+<div style="width: 100%; height: 300px; text-align: center; background-image: url(<?=$fetch["icon"]; ?>); background-size: contain; background-position: center center; background-repeat: no-repeat;">
+</div>
+<?php } ?>
+<br />
+
+<table class="content_table">
+    <tr>
+	<th>#</th>
+	<th><?=$Dictionnary["Avatar"]; ?></th>
+	<th><?=$Dictionnary["Login"]; ?></th>
+	<th><?=$Dictionnary["Status"]; ?></th>
+	<?php if (is_admin()) { ?>
+	<th class="edit_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+    <?php foreach ($fetch["user"] as $y) { ?>
+    <?php $URL = "index.php?p=ProfileMenu&amp;a={$y["codename"]}" ?>
+    <tr>
+	<td <?=clickable($URL); ?>><?=$y["id"]; ?></td>
+	<td <?=clickable($URL); ?>>
+	    <?php display_avatar($y, 100); ?>
+	</td>
+	<td <?=clickable($URL); ?>><?=$y["codename"]; ?></td>
+	<td <?=clickable($URL); ?>>
+	    <?php $Authority = ["Member", "Assistant", "Teacher", "Administrator"]; ?>
+	    <?=$Dictionnary[$Authority[$y["authority"]]]; ?>
+	</td>
+	<?php if (is_group_admin($fetch["id"])) { ?>
+	<td>
+	    <br />
+	    <form
+		method="post"
+		action="index.php?p=<?=$Position; ?>&amp;a=<?=$fetch["id"]; ?>"
+	    >
+		<input type="hidden" name="action" value="edit_member_authority" />
+		<input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+		<input type="hidden" name="user" value="<?=$y["id"]; ?>" />
+		<select name="authority" style="width: 45%; height: 50px;">
+		    <?php foreach ($Authority as $i => $auth) { ?>
+		    <option value="<?=$i; ?>"><?=$auth; ?></option>
+		    <?php } ?>
+		</select>
+		<input type="submit" value="&#10003;" style="color: green; width: 45%; height: 50px;" />
+	    </form>
+	    <br />
+	    <form
+		method="post"
+		action="index.php?p=<?=$Position; ?>&amp;a=<?=$fetch["id"]; ?>"
+	    >
+		<input type="hidden" name="action" value="remove_member" />
+		<input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+		<input type="hidden" name="user" value="<?=$y["id"]; ?>" />
+		<input type="submit" value="&#10007;" style="color: red; width: 91%; height: 50px;" />
+	    </form>
+	    <br />
+	</td>
+	<?php } ?>
+    </tr>
+    <?php } ?>
+</table>
+
+<form
+    method="POST"
+    action="<?=unrollurl(); ?>"
+    class="add_formular"
+    enctype="multipart/form-data"
+    >
+    <input type="hidden" name="action" value="add_group_member" />
+    <input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+    <h2><?=$Dictionnary["AddAMember"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="codename"
+	    placeholder="<?=$Dictionnary["User"]; ?>"
+	    value="<?=try_get($_POST, "codename"); ?>"
+	/><br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+
+
+

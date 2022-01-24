@@ -1,0 +1,39 @@
+<br />
+<form method="POST" action="index.php?p=<?=$Position; ?>"  class="add_formular" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="add" />
+    <h2><?=$Dictionnary["AddAMedal"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="medal"
+	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	value="<?=try_get($_POST, "medal"); ?>"
+	/><br />
+	<input
+	    type="text"
+	    name="tags"
+	    placeholder="<?=$Dictionnary["Tags"]; ?>"
+	    value="<?=try_get($_POST, "tags"); ?>"
+	/><br />
+	<select name="type">
+	    <option value="0"><?=$Dictionnary["PositiveMedal"]; ?></option>
+	    <option value="1"><?=$Dictionnary["NegativeMedal"]; ?></option>
+	    <option value="2"><?=$Dictionnary["CriticalNegativeMedal"]; ?></option>
+	</select><br />
+	<br />
+	<span><?=$Dictionnary["MedalIconSize"]; ?></span><br />
+	<input type="hidden" name="MAX_FILE_SIZE" value="<?=1024 * 200; ?>" />
+	<input
+	    type="file"
+		  name="icon"
+		  accept="image/png"
+		  placeholder="<?=$Dictionnary["Icone"]; ?>"
+		  value="<?=try_get($_POST, "icon"); ?>"
+	/><br />
+	<?php forge_language_formular(["name" => "text", "description" => "textarea"], $_POST); ?>
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+
+

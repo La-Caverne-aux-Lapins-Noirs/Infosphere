@@ -1,0 +1,49 @@
+<?php if ($user["visibility"] > PROFILE_ONLY || is_admin()) { ?>
+    <?php get_user_promotions($user); ?>
+    <?php if (count($data->medals) || is_admin()) { ?>
+	<h2><?=$Dictionnary["PersonnalMedals"]; ?></h2>
+	<?php $size = 75; ?>
+	<?php $medal_teacher = false; ?>
+	<?php foreach ($data->medals as $medal) { ?>
+	    <?php print_medal($medal); ?>
+	<?php } ?>
+	<?php if (is_admin()) { ?>
+	    <form method="post" action="index.php?<?=unrollget(); ?>">
+		<input type="hidden" name="action" value="add_medal" />
+		<input type="hidden" name="activity" value="-1" />
+		<input type="hidden" name="user" value="<?=$user["id"]; ?>" />
+		<input type="text" name="medal" value="" style="width: 200px;" placeholder="<?=$Dictionnary["Medals"]; ?>" />
+		<input type="submit" value="+" style="width: 50px;" />
+	    </form>
+	<?php } ?>
+    <?php } ?>
+    <h2><?=$Dictionnary["ModuleValidation"]; ?></h2>
+    <?php if (is_admin()) { ?>
+	<form
+	    method="post"
+		    action="index.php?p=ProfileMenu&amp;silent=1&amp;a=<?=$user["id"]; ?>"
+		    target="_blank"
+		    style="text-align: center; background-color: gray; border-radius: 10px;"
+	>
+	    <?php $ls = 0; ?>
+	    <?php foreach ($data->sublayer as $cycle) { ?>
+		<label for="reportcard[<?=$ls; ?>]"><?=$cycle->codename; ?></label>
+		<input type="hidden" name="cycle[<?=$ls; ?>]" value="<?=$cycle->codename; ?>" />
+		<input type="checkbox" name="reportcard[<?=$ls++; ?>]" />
+	    <?php } ?>
+	    <input type="submit" value="<?=$Dictionnary["GenerateReportCard"]; ?>" />
+	</form>
+	<br />
+	<form
+	    action="export.php"
+	    method="post"
+	    target="_blank"
+	    style="text-align: center; background-color: gray; border-radius: 10px;"
+	>
+	    <input type="hidden" name="data" value="<?=prepare_export(only_presence($user, $data)); ?>" />
+	    <input type="submit" value="<?=$Dictionnary["PrintStudentPresentMissing"]; ?>" />
+	</form>
+	<br />
+    <?php } ?>
+    <?php require ("print_cycles.phtml"); ?>
+<?php } ?>

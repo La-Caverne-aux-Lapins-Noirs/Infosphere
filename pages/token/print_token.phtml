@@ -1,0 +1,48 @@
+<?php
+
+$DatabaseFile = "./../../database.json";
+$ConfigurationFile = "./../../infosphere.dab";
+
+require_once ("./../../tools/index.php");
+require_once ("generate_token.php");
+require_once ("print_token.php");
+
+/// IL FAUT VERIFIER SI ON A LE DROIT DE FAIRE CA
+
+?>
+
+<style>
+ @page
+ {
+     size: 21cm 29.7cm;    /* A4 */
+     margin: 1cm 1cm 1cm 1cm;
+ }
+ *
+ {
+     margin: 0px 0px 0px 0px;
+     padding: 0px 0px 0px 0px;
+     border-collapse: collapse;
+     border: 0px;
+     clear: both;
+     line-height: 0.5cm;
+ }
+ td
+ {
+     margin-left: 1cm;
+     margin-right: 1cm;
+     text-align: center;
+     vertical-align: middle;
+     position: relative;
+ }
+ td > div
+ {
+     width: 90%;
+     height: 90%;
+     border: 1px solid lightgray;
+     font-size: small;
+ }
+</style>
+
+<?php
+print_token($_GET["session"]);
+exit;

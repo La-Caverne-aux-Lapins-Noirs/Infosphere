@@ -1,0 +1,37 @@
+<br />
+
+<form method="post" action="index.php?<?=unrollget(); ?>">
+    <input type="hidden" name="action" value="add_session" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <div style="width: 100%; height: 50px; overflow: auto;">
+	<div style="width: 210px; background-color: gray; display: inline-block; color: white;">
+	    <?=$Dictionnary["BeginDate"]; ?>
+	</div><br />
+	<?php
+	if ($Position == "ActivitiesMenu")
+	{
+	  $fields = ["week_begin_date", "day_begin_date", "hour_begin_date"];
+	  print_weekday_selector(NULL, $fields, NULL, false);
+	}
+	else
+	  print_datetime("begin_date", $_POST, false);
+	?>
+    </div>
+    <div style="width: 100%; height: 50px; overflow: auto;">
+	<div style="width: 210px; background-color: gray; display: inline-block; color: white;">
+	    <?=$Dictionnary["EndDate"]; ?>
+	</div><br />
+	<?php
+	if ($Position == "ActivitiesMenu")
+	{
+	  $fields = ["week_end_date", "day_end_date", "hour_end_date"];
+	  print_weekday_selector(NULL, $fields, NULL, false);
+	}
+	else
+	  print_datetime("end_date", $_POST, false);
+	?>
+    </div>
+    <input type="submit" value="+" style="color: green; width: 210px;" />
+    <br />
+    <br />
+</form>

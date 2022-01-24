@@ -1,0 +1,276 @@
+<br />
+
+<?php if ($Position != "ActivitiesMenu") { ?>
+<?php if ($content->id_template != -1) { ?>
+<div>
+    <div style="display: inline-block; background-color: gray; width: 110px;">
+	<a href="index.php?p=ActivitiesMenu&amp;activity=<?=$content->id_template; ?>">
+	    <?=$Dictionnary["Template"]; ?>
+	</a>
+	    :
+	<span style="background-color: <?=$content->template_link ? "green" : "red"; ?>;">
+	    &#128279;
+	</span>
+    </div>
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="display: inline-block;">
+	<input type="hidden" name="action" value="full_break"/>
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="submit" value="&nhArr;" title="<?=$Dictionnary["FullBreakTemplateLink"]; ?>" />
+    </form>
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="display: inline-block;">
+	<input type="hidden" name="action" value="restore_link" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="submit" value="&rlarr;" title="<?=$Dictionnary["RestoreTemplateLink"]; ?>" />
+    </form>
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="display: inline-block;">
+	<input type="hidden" name="action" value="full_reset" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="submit" value="&#10227;" title=<?=$Dictionnary["ResetTemplateLink"]; ?>" />
+    </form>
+</div>
+<br />
+<?php } ?>
+
+<?php } else { ?>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="display: inline-block;">
+    <input type="hidden" name="action" value="instantiate" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="suffix" placeholder="<?=$Dictionnary["Suffix"]; ?>" style="width: 100px;" />
+    <?php if ($content->parent_activity != -1) { // Si on est pas un module... ?>
+    <select name="parent">
+	<?php
+	$instances = db_select_all("
+          activity.id, activity.codename
+          FROM activity
+          WHERE id_template = {$content->parent_activity} AND deleted = 0
+	");
+	foreach ($instances as $inst)
+	{
+	?>
+	<option value="<?=$inst["id"]; ?>"><?=$inst["codename"]; ?></option>
+	<?php
+	}
+	?>
+    </select>
+    <?php } ?>
+    <input type="date" name="start_date" value="" style="width: 100px;" />
+    <input type="submit" value="<?=$Dictionnary["Instantiate"]; ?>" style="width: 100px;" />
+    <div style="width: 100%; height: 50px; overflow: auto;">
+	<div style="width: 210px; background-color: gray; display: inline-block; color: white;">
+	    <?=$Dictionnary["Instances"]; ?>
+	</div>
+	<?php
+	$subs = db_select_all("
+           id, codename, template_link
+           FROM activity
+           WHERE id_template = $content->id
+	     AND (done_date IS NULL OR done_date > NOW()) AND deleted = 0
+	");
+	$cnt = 1;
+	foreach ($subs as $sub)
+	{
+	?>
+	<a href="index.php?p=InstancesMenu&amp;activity=<?=$sub["id"]; ?>" style="display: inline-block;">
+	    <div style="width: 210px; background-color: <?=$cnt % 2 ? "white" : "gray"; ?>; font-size: xx-small;">
+		<?=$sub["codename"]; ?>
+		<?php if ($sub["template_link"] == 1) { ?>
+		&#128279;
+		<?php } ?>
+	    </div>
+	</a>
+	<?php
+	$cnt  += 1;
+	}
+	?>
+    </div>
+</form>
+
+<?php } ?>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <?php if ($content->enabled == false) { ?>
+    <input type="hidden" name="action" value="enable" />
+    <input type="submit" value="OFF &rarr; ON" style="color: green; width: 210px;" />
+    <?php } else { ?>
+    <input type="hidden" name="action" value="disable" />
+    <input type="submit" value="ON &rarr; OFF" style="color: red; width: 210px;" />
+    <?php } ?>
+    <br />
+</form>
+
+<?php if ($content->deleted == 0) { ?>
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="hidden" name="action" value="delete" />
+    <input type="submit" value="&#10007;" style="color: black; font-weight: bold; background-color: red; width: 210px;" />
+    <br />
+</form>
+<?php } else { ?>
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="hidden" name="action" value="undelete" />
+    <input type="submit" value="&#8630;" style="color: black; font-weight: bold; background-color: teal; width: 210px;" />
+    <br />
+</form>
+<?php } ?>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="display: inline-block;">
+    <input type="hidden" name="action" value="move_instance" />
+    <input type="hidden" name="parent" value="<?=$content->parent_activity; ?>" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="codename" placeholder="<?=$Dictionnary["BecomeChildOf"]; ?>" />
+    <input type="submit" value="&rarr;" />
+    <br />
+</form>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="bang_reference_activity" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="value" placeholder="<?=$Dictionnary["ReferenceActivity"]; ?>" />
+    <input type="submit" value="&#10003;" style="color: green; font-weight:  bold;" />
+    <br />
+</form>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="add_medal" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="medal" placeholder="<?=$Dictionnary["MedalName"]; ?>" />
+    <input type="submit" value="+" style="color: green; font-weight:  bold;" />
+    <br />
+</form>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="manage_teacher" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="teacher" placeholder="<?=$Dictionnary["Teacher"]; ?>" />
+    <input type="submit" value="+" style="color: blue;" />
+    <br />
+</form>
+<?php foreach ($content->teacher as $teacher) { ?>
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="manage_teacher" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="hidden" name="teacher" value="-<?=$teacher["id"]; ?>" />
+    <label for="teacher" style="display: inline-block; background-color: gray;">
+	<?php if (substr($teacher["codename"], 0, 1) == "#") { ?>
+	<a href="index.php?p=LaboratoriesMenu&amp;a=<?=$teacher["id"]; ?>">
+	<?php } else { ?>
+        <a href="index.php?p=ProfileMenu&amp;a=<?=$teacher["id"]; ?>">
+	<?php } ?>
+	    <?=$teacher["codename"]; ?>
+	</a>
+    </label>
+    <input type="submit" value="&#10007;" style="color: red;" />
+    <br />
+</form>
+<?php } ?>
+
+<?php if ($content->parent_activity == -1 && $Position == "ActivitiesMenu") { ?>
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="copy" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="codename" placeholder="<?=$Dictionnary["CopyWithCodeName"]; ?>" />
+    <input type="submit" value="C" style="color: teal;" />
+    <br />
+</form>
+<?php } ?>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="manage_class" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="class" placeholder="<?=$Dictionnary["Class"]; ?> (<?=$Dictionnary["Class, Activity, Asset"]; ?>)" />
+    <input type="submit" name="subaction" value="+" style="color: blue;" />
+    <br />
+</form>
+<?php foreach ($content->class as $class) { ?>
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="manage_class" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="hidden" name="number" value="<?=$class["position"]; ?>" />
+    <input type="hidden" name="class" value="<?=$class["id"]; ?>" />
+    <input type="hidden" name="support" value="<?=$class["id"]; ?>" />
+    <label for="teacher" style="display: inline-block; background-color: gray; width: 42%;">
+	<?php if ($class["type"] == 0) { // Module ?>
+	<a href="index.php?p=<?=$class["position"]; ?>&amp;a=<?=$class["id"]; ?>">
+	<?php } else if ($class["type"] == 1) { // Chapitre ?>
+        <a href="index.php?p=<?=$class["position"]; ?>&amp;a=<?=$class["ida"]; ?>&amp;b=<?=$class["idb"]; ?>">
+	<?php } else if ($class["type"] == 2) { // Autre activité ?>
+	<a href="index.php?p=<?=$class["position"]; ?>&amp;a=<?=$class["id"]; ?>">
+	<?php } else if ($class["type"] == 3) { // Autre activité non resolu ?>
+	<a href="#">
+	<?php } ?>
+	    <?=$class["codename"]; ?>
+	</a>
+    </label>
+    <input type="submit" name="subaction" value="<" style="color: blue;" />
+    <input type="submit" name="subaction" value=">" style="color: blue;" />
+    <input type="submit" name="subaction" value="X" style="color: red;" />
+    <br />
+</form>
+<?php } ?>
+
+<?php if ($content->is_template == false) { ?>
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+	<input type="hidden" name="action" value="manage_cycle" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="text" name="cycle" placeholder="<?=$Dictionnary["Cycle"]; ?>" />
+	<input type="submit" value="&#10003;" />
+    </form>
+    <?php foreach ($content->cycle as $cycle) { ?>
+	<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="color: white;">
+	    <input type="hidden" name="action" value="manage_cycle" />
+	    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	    <input type="hidden" name="cycle" value="-<?=$cycle["id"]; ?>" />
+	    <label for="cycle" style="display: inline-block; background-color: gray;">
+		<a href="index.php?p=CycleMenu&amp;a=<?=$cycle["id"]; ?>">
+		    <?=$cycle["codename"]; ?>
+		</a>
+	    </label>
+	    <input type="submit" value="&#10007;" style="color: red;" />
+	    <br />
+	</form>
+    <?php } ?>
+
+	<br />
+    <?php if ($content->parent_activity == -1) { // Lien vers le module ?>
+    <a href="index.php?p=ModulesMenu&amp;a=<?=$content->id; ?>"><?=$Dictionnary["JoinPage"]; ?></a><br />
+    <?php } else if (count($content->session) == 0) { // Lien vers l'instance, il n'y a pas de session ?>
+    <a href="index.php?p=ActivityMenu&amp;a=<?=$content->id; ?>"><?=$Dictionnary["JoinPage"]; ?></a><br />
+     <?php } ?>
+<?php } ?>
+
+<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+    <input type="hidden" name="action" value="rename" />
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="text" name="codename" placeholder="<?=$Dictionnary["ChangeCodeName"]; ?>" />
+    <input type="submit" value="!" style="color: pink;" />
+    <br />
+</form>
+
+<div style="width: 100%;">
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="width: 100px; display: inline-block;">
+	<input type="hidden" name="action" value="move_left" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="submit" value="&larr;" style="color: pink; width: 100px; display: inline-block;" />
+    </form>
+
+    <form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="width: 100px; display: inline-block;">
+	<input type="hidden" name="action" value="move_right" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="submit" value="&rarr;" style="color: pink; width: 100px; display: inline-block;" />
+	<br />
+    </form>
+</div>
+
+<form method="post" action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?><?="#".$content->id; ?>" target="_blank">
+    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+    <input type="hidden" name="action" value="export_activity" />
+    <select name="format" style="width: 30px;">
+	<option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+	<option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+    </select>
+    <input type="submit" value="<?=$Dictionnary["Export"]; ?>" style="font-weight: bold; width: 180px;" />
+    <br />
+</form>

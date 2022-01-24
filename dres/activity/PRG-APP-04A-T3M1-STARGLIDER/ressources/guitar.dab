@@ -1,0 +1,42 @@
+{Notes
+  [
+    Start = Music.Beat * 0
+    Duration = Music.Beat * 0.25
+    Frequency = 15
+  ],
+    [
+    Start = Music.Beat * 0.25
+    Duration = Music.Beat * 0.25
+    Frequency = 30
+  ],
+    [
+    Start = Music.Beat * 0.50
+    Duration = Music.Beat * 0.25
+    Frequency = 45
+  ],
+    [
+    Start = Music.Beat * 0.75
+    Duration = Music.Beat * 0.25
+    Frequency = 60
+  ],
+      [
+    Start = Music.Beat * 1.0
+    Duration = Music.Beat * 0.25
+    Frequency = 75
+  ],
+      [
+    Start = Music.Beat * 1.25
+    Duration = Music.Beat * 0.25
+    Frequency = 100
+  ],
+  [
+    Start = Music.Beat * 1.5
+    Duration = Music.Beat * 0.50
+    Frequency = 110
+  ],
+  [
+    Start = Music.Beat * 2
+    Duration = Music.Beat * 1
+    Frequency = 220
+  ]
+}

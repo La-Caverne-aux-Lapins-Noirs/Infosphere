@@ -1,0 +1,34 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && $User["authority"] >= CONTENT_AUTHOR
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Medals"]; ?></h2>
+
+<?=$Dictionnary["Page"]; ?>:
+<?php if ($page > 1) { ?>
+    <a href="<?=unrollurl(["n" => $page - 1]); ?>">&larr;</a>
+<?php } ?>
+&nbsp;<?=$page; ?>&nbsp;
+<a href="<?=unrollurl(["n" => $page + 1]); ?>">&rarr;</a>
+<form method="get" action="<?=unrollurl(); ?>">
+    <input type="hidden" name="p" value="<?=$Position; ?>" />
+    <input type="text" name="n" value="" placeholder="<?=$Dictionnary["Tags"]; ?>" />
+    <input type="submit" value="&#10003;" />
+</form>
+
+<?php
+if ($unique)
+    require_once ("list_activities.phtml");
+else
+    require_once ("list_medals.phtml");
+?>
+

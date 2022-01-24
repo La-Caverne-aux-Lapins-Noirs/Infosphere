@@ -1,0 +1,81 @@
+<?php
+if (is_admin())
+    require ("add_medal.phtml");
+?>
+
+<table class="content_table" id="medal<?=$content["id"]; ?>">
+    <!-- EN TETE ---------------------------------------------->
+    <tr>
+	<th class="id_column">#</th>
+	<th class="codename_column"><?=$Dictionnary["CodeName"]; ?></th>
+ 	<th class="tags_column"><?=$Dictionnary["Tags"]; ?></th>
+	<th class="name_column"><?=$Dictionnary["Name"]; ?></th>
+	<th class="description_column">
+	    <?=$Dictionnary["Description"]; ?>
+	    <?php // Ecrire les médailles impliquées ?>
+	</th>
+	<th class="tags_column"><?=$Dictionnary["Type"]; ?></th>
+	<th class="icon_column" style="width: 15%;"><?=$Dictionnary["Icon"]; ?></th>
+	<th style="width: 15%;"><?=$Dictionnary["ImpliedMedals"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="edit_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <!-- CORPS ------------------------------------------------>
+    <?php
+    $cnt = 0;
+    foreach ($fetch as $i => $content)
+    {
+    $URL = "index.php?p=".$Position."&amp;a=".$content["id"];
+    ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <!-- <td <?=clickable($URL); ?>><?=$content["id"]; ?></td> -->
+	    <td><a href=<?=$URL?>><?=$content["id"]; ?></a></td>
+	    <td><?=$content["codename"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["tags"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["description"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$Dictionnary[
+				       ["PositiveMedal", "NegativeMedal", "CriticalNegativeMedal"][$content["type"]]
+				       ]; ?></td>
+	    <td <?=clickable($URL); ?>>
+		<br /
+>		<?php if ($content["icon"] != "") { ?>
+		    <img src="<?=$content["icon"]; ?>" width="50" height="50" title="<?=$content["name"].": ".$content["description"]; ?>" />
+		<?php } else { ?>
+		    <img src="genicon.php?function=<?=$content["codename"]; ?>" height="25" width="150" />
+		<?php } ?>
+		<br />
+		<br />
+	    </td>
+	    <td>
+		<?php foreach ($content["implied"] as $imp) { ?>
+		    <?php $URL = "index.php?p=".$Position."&amp;a=".$imp["id"]; ?>
+		    <div style="text-align: center;">
+			<a href="<?=$URL; ?>">
+			    <?php if ($imp["icon"] != "") { ?>
+				<img src="<?=$imp["icon"]; ?>" width="50" height="50" />
+			    <?php } else { ?>
+				<img src="genicon.php?function=<?=$imp["codename"]; ?>" width="150" height="25" />
+			    <?php } ?>
+			</a>
+			<br /><?=$imp["codename"]; ?>
+			<form method="post" action="<?=unrollurl(); ?>">
+			    <input type="hidden" name="action" value="medal_medal_properties" />
+			    <input type="hidden" name="medal_medal" value="<?=$imp["id_medal_medal"]; ?>" />
+			    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+			    <input type="text" name="nbr" value="<?=$imp["nbr"]; ?>" style="width: 50px;" />
+			    <input type="submit" value="&#10003;" style="width: 50px;" />
+			</form>
+		    </div>
+		<?php } ?>
+	    </td>
+	    <?php require ("edit_medal.phtml"); ?>
+	</tr>
+    <?php } ?>
+</table>
+
+<br />
+<br />
+<br />

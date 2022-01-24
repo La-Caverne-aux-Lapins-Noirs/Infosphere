@@ -1,0 +1,24 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && $User["authority"] >= CONTENT_AUTHOR
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+
+?>
+
+<h2><?=$Dictionnary["TeacherGallery"]; ?></h2>
+
+
+<?php
+if ($unique)
+    require_once ("list_chapters.phtml");
+else
+    require_once ("list_categories.phtml");
+?>
+

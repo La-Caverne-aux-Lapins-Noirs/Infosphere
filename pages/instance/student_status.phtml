@@ -1,0 +1,51 @@
+<?php
+
+$DatabaseFile = "./../../database.json";
+$ConfigurationFile = "./../../infosphere.dab";
+
+require_once ("./../../tools/index.php");
+require_once ("student_status.php");
+
+/// IL FAUT VERIFIER SI ON A LE DROIT DE FAIRE CA
+// OU PLUTOT ==> PASSER LES INFORMATIONS PAR POST POUR NE PAS AVOIR A VERIFIER
+
+$_GET["export"] = (bool)@$_GET["export"];
+if ($_GET["export"] == false)
+{
+?>
+
+<style>
+ @page
+ {
+     size: 21cm 29.7cm;    /* A4 */
+     margin: 1cm 1cm 1cm 1cm;
+ }
+ *
+ {
+     margin: 0px 0px 0px 0px;
+     padding: 0px 0px 0px 0px;
+     border-collapse: collapse;
+     border: 0px;
+     clear: both;
+     line-height: 0.5cm;
+ }
+ td
+ {
+     margin-left: 1cm;
+     margin-right: 1cm;
+     text-align: center;
+     vertical-align: middle;
+     position: relative;
+ }
+ td > div
+ {
+     width: 90%;
+     height: 90%;
+     border: 1px solid lightgray;
+     font-size: small;
+ }
+</style>
+<?php
+}
+export_student_status((int)$_GET["instance"], isset($_GET["session"]) ? (int)$_GET["session"] : -1);
+exit;

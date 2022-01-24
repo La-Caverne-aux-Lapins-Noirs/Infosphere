@@ -1,0 +1,377 @@
+<?php
+$is_module = !($unique && ($action == "add" || $_POST["type"] != 18));
+?>
+
+<br />
+<form
+    method="POST"
+    action="index.php?<?=unrollget(); ?>"
+    class="add_formular"
+    enctype="multipart/form-data"
+    >
+    <input type="hidden" name="action" value="<?=$action; ?>_activity" />
+    <div>
+	<?php if ($Position == "ActivitiesMenu") { ?>
+	<input type="hidden" name="is_template" value="1" />
+	<?php } else { ?>
+	<input type="hidden" name="is_template" value="0" />
+	<?php } ?>
+	<h2>
+	    <?=$Dictionnary[$action == "add" ? "DefineAnActivity" : "EditTheActivity"]; ?><br />
+	</h2>
+	<?php if ($action == "add") { ?>
+	<input type="hidden" name="parent_activity" value="<?=try_get($_GET, "activity", -1); ?>" />
+	<?php } else { ?>
+	<input type="hidden" name="parent_activity" value="<?=try_get($_POST, "parent_activity", -1); ?>" />
+	<?php } ?>
+	<div>
+	    <input
+		type="<?=$action == 'add' ? 'text' : 'hidden'; ?>"
+		name="codename"
+		placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	        value="<?=try_get($_POST, "codename"); ?>"
+	    />
+	    <select name="type" <?=$action == 'add' ? "" : 'style="width: 306px"'; ?>>
+		<?php foreach ($ActivityType as $i => $v) { ?>
+		    <?php if (($unique == false || $_POST["type"] == 18) && $v["type"] == 0 || ($unique == true && $_POST["type"] != 18 && $v != 18)) { ?>
+			<option
+			    value="<?=$v["id"]; ?>"
+			    <?=try_get($_POST, "type") == $v["id"] ? "selected" : ""; ?>
+			>
+			    <?=$Dictionnary[$v["codename"]]; ?>
+			</option>
+		    <?php } ?>
+		<?php } ?>
+	    </select>
+	</div>
+	<?php if (!$is_module) { ?>
+	<div>
+	    <label for="team_size"><?=$Dictionnary["TeamSize"]; ?></label>
+	    <select name="team_size">
+		<option value="0"><?=$Dictionnary["NotConcerned"]; ?></option>
+		<?php for ($i = 1; $i <= 12; ++$i) { ?>
+		    <option
+			value="<?=$i; ?>"
+			<?=try_get($_POST, "team_size", 0) == $i ? "selected" : ""; ?>
+		    >
+			<?=$i; ?>
+		    </option>
+		<?php } ?>
+	    </select>
+	    <br />
+	</div>
+	<div>
+	    <label for="reference_activity"><?=$Dictionnary["ReferenceActivity"]; ?></label>
+	    <?php
+	    $ref = try_get($_POST, "reference_activity", "");
+	    if ($ref != "")
+	    {
+		if (($ref = db_select_one("codename FROM activity WHERE id = $ref")) != NULL)
+		    $ref = $ref["codename"];
+		else
+		    $ref = "";
+	    }
+	    ?>
+	    <input type="text" name="reference_activity" value="<?=$ref; ?>" />
+	    <br />
+	</div>
+	<div>
+	    <label for="repository_name"><?=$Dictionnary["RepositoryName"]; ?></label>
+	    <input type="text" name="repository_name" value="<?=try_get($_POST, "repository_name", ""); ?>" />
+	    <br />
+	</div>
+	<div>
+	    <label for="reference_repository"><?=$Dictionnary["ReferenceRepository"]; ?></label>
+	    <input type="text" name="reference_repository" value="<?=try_get($_POST, "reference_repository", ""); ?>" />
+	    <br />
+	</div>
+	<div>
+	    <label for="mark"><?=$Dictionnary["Money"]; ?></label>
+	    <input type="text" name="mark" value="<?=try_get($_POST, "mark", 0); ?>" />
+	    <br />
+	</div>
+	<div>
+	    <label for="estimated_work_duration"><?=$Dictionnary["EstimatedWorkDuration"]; ?></label>
+	    <input type="text" name="estimated_work_duration" value="<?=try_get($_POST, "estimated_work_duration", 0); ?>" />
+	    <br />
+	</div>
+	<?php } else { ?>
+	<div>
+	    <label for="credit"><?=$Dictionnary["Credit"]; ?></label>
+	    <select name="credit">
+		<?php for ($i = 0; $i <= 12; ++$i) { ?>
+		<option
+		    value="<?=$i; ?>"
+		    <?=try_get($_POST, "credit", 0) == $i ? "selected" : ""; ?>
+		    >
+		    <?=$i; ?>
+		</option>
+		<?php } ?>
+	    </select>
+	    <br />
+	</div>
+	<div>
+	    <label for="no_grade"><?=$Dictionnary["NoValidation"]; ?></label>
+	    <input type="checkbox" name="no_grade" <?=try_get($_POST, "no_grade", false) ? "checked" : ""; ?> />
+	</div>
+	<div>
+	    <label for="grade_module"><?=$Dictionnary["ValidationByGrade"]; ?></label>
+	    <input type="checkbox" name="grade_module" <?=try_get($_POST, "grade_module", false) ? "checked" : ""; ?> />
+	</div>
+	<div>
+	    <?=@$_POST["old_validation"] ? "<b style='color: red;'>Validation ancienne</b>" : ""; ?>
+	    <label for="validation_by_percent"><?=$Dictionnary["ValidationByPercent"]; ?></label>
+	    <input type="checkbox" name="validation_by_percent" <?=try_get($_POST, "validation_by_percent", false) ? "checked" : ""; ?> />
+	</div>
+	<div>
+	    <label for="grade_a"><?=$Dictionnary["GradeA"]; ?></label>
+	    <input type="text" name="grade_a" value="<?=try_get($_POST, "grade_a", ""); ?>" />
+	</div>
+	<div>
+	    <label for="grade_b"><?=$Dictionnary["GradeB"]; ?></label>
+	    <input type="text" name="grade_b" value="<?=try_get($_POST, "grade_b", ""); ?>" />
+	</div>
+	<div>
+	    <label for="grade_c"><?=$Dictionnary["GradeC"]; ?></label>
+	    <input type="text" name="grade_c" value="<?=try_get($_POST, "grade_c", ""); ?>" />
+	</div>
+	<div>
+	    <label for="grade_d"><?=$Dictionnary["GradeD"]; ?></label>
+	    <input type="text" name="grade_d" value="<?=try_get($_POST, "grade_d", ""); ?>" />
+	</div>
+	<div>
+	    <label for="grade_bonus"><?=$Dictionnary["GradeBonus"]; ?></label>
+	    <input type="text" name="grade_bonus" value="<?=try_get($_POST, "grade_bonus", ""); ?>" />
+	</div>
+	<?php } ?>
+	<br />
+	<?php if ($Position == "ActivitiesMenu") { ?>
+	<b><?=$Dictionnary["RelativeToTheCycle"]; ?></b><br />
+	<?php } ?>
+	<?=$Dictionnary["DefinePeriodOfActivity"]; ?>
+	<div>
+	    <label><?=$Dictionnary["EmergenceDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_emergence_date", "day_emergence_date", "hour_emergence_date"];
+	    print_weekday_selector(try_get($_POST, "emergence_date"), $fields);
+	    }
+	    else
+	    print_datetime("emergence_date", $_POST);
+	    ?>
+	</div>
+	<div>
+	    <label><?=$Dictionnary["DoneDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_done_date", "day_done_date", "hour_done_date"];
+	    print_weekday_selector(try_get($_POST, "done_date"), $fields);
+	    }
+	    else
+	    print_datetime("done_date", $_POST);
+	    ?>
+	</div>
+	<br />
+	<?=$Dictionnary["DefineRegistrationPeriod"]; ?>
+	<div>
+	    <label><?=$Dictionnary["RegistrationDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_registration_date", "day_registration_date", "hour_registration_date"];
+	    print_weekday_selector(try_get($_POST, "registration_date"), $fields);
+	    }
+	    else
+	    print_datetime("registration_date", $_POST);
+	    ?>
+	</div>
+	<div>
+	    <label><?=$Dictionnary["CloseDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_close_date", "day_close_date", "hour_close_date"];
+	    print_weekday_selector(try_get($_POST, "close_date"), $fields);
+	    }
+	    else
+	    print_datetime("close_date", $_POST);
+	    ?>
+	</div>
+	<br />
+	<?php if ($is_module == false) { ?>
+	<?=$Dictionnary["DefineHomeworkPeriod"]; ?>
+	<div>
+	    <label><?=$Dictionnary["SubjectAppeirDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_subject_date", "day_subject_date", "hour_subject_date"];
+	    print_weekday_selector(try_get($_POST, "subject_appeir_date"), $fields);
+	    }
+	    else
+	    print_datetime("subject_appeir_date", $_POST);
+	    ?>
+	</div>
+	<div>
+	    <label><?=$Dictionnary["PickupDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_pickup_date", "day_pickup_date", "hour_pickup_date"];
+	    print_weekday_selector(try_get($_POST, "pickup_date"), $fields);
+	    }
+	    else
+	    print_datetime("pickup_date", $_POST)
+	    ?>
+	</div>
+	<div>
+	    <label><?=$Dictionnary["SubjectDisappeirDate"]; ?></label>
+	    <?php
+	    if ($Position == "ActivitiesMenu")
+	    {
+	    $fields = ["week_subject_remove_date", "day_subject_remove_date", "hour_subject_remove_date"];
+	    print_weekday_selector(try_get($_POST, "subject_disappeir_date"), $fields);
+	    }
+	    else
+	    print_datetime("subject_disappeir_date", $_POST);
+	    ?>
+	</div>
+	<?php } ?>
+
+	<div>
+	    <?php
+	    $val = try_get($_POST, "allow_unregistration", "1");
+	    if (is_number($val))
+	        $val = !!$val;
+	    ?>
+	    <label><?=$Dictionnary["AllowUnregistration"]; ?></label>
+	    <input
+		type="checkbox"
+		name="allow_unregistration"
+	        <?=($val ? "checked" : ""); ?>
+	    />
+	</div>
+
+	<?php if ($is_module) { ?>
+	    <div>
+		<?php
+		$val = try_get($_POST, "hidden", 0);
+		if (is_number($val))
+	            $val = !!$val;
+		?>
+		<label><?=$Dictionnary["Hidden"]; ?></label>
+		<input
+		    type="checkbox"
+			  name="hidden"
+	            <?=($val ? "checked" : ""); ?>
+		/>
+	    </div>
+	<?php } ?>
+
+	<div>
+	    <?php
+	    $val = try_get($_POST, "subscription", "0");
+	    if (!is_number($val))
+	        $val = 0;
+	    ?>
+	    <label><?=$Dictionnary["Subscription"]; ?></label>
+	    <select name="subscription">
+		<option value="0" <?=$val == "0" ? "selected" : ""; ?>>
+		    <?=$Dictionnary["Manual"]; ?>
+		</option>
+		<option value="1" <?=$val == "1" ? "selected" : ""; ?>>
+		    <?=$Dictionnary["Mandatory"]; ?>
+		</option>
+		<option value="2" <?=$val == "2" ? "selected" : ""; ?>>
+		    <?=$Dictionnary["Automatic"]; ?>
+		</option>
+	    </select>
+	</div>
+
+	<?php if (!$is_module) { ?>
+	    <div>
+		<?php
+		$val = try_get($_POST, "slot_duration", "");
+		if ($val == "")
+		    $val = -1;
+		?>
+		<label><?=$Dictionnary["SlotDuration"]; ?></label>
+		<input type="text" name="slot_duration" value="<?=$val; ?>" />
+	    </div>
+
+	    <div>
+		<label for="subject_file"><?=$Dictionnary["SubjectFile"]; ?></label>
+		<input
+		    type="file"
+		    name="subject_file"
+		    placeholder="<?=$Dictionnary["Subject"]; ?>"
+	            value="<?=try_get($_POST, "subject_file"); ?>"
+		/>
+		<label for="subject_file_link"><?=$Dictionnary["SubjectLink"]; ?></label>
+		<input
+		    type="text"
+		    name="subject_file_link"
+		    placeholder="<?=$Dictionnary["Subject"]; ?>"
+	            value="<?=try_get($_POST, "subject_file"); ?>"
+		/>
+		<?=@strlen($_POST["subject_file"]) ? '<a target="_blank" href="'.$_POST["subject_file"].'">'.$Dictionnary["Download"].'</a>' : ""; ?>
+		<br />
+		<label for="ressource_files"><?=$Dictionnary["RessourceFiles"]; ?></label>
+		<input
+		    type="file"
+			  name="ressource_files"
+			  placeholder="<?=$Dictionnary["Subject"]; ?>"
+	            value="<?=try_get($_POST, "ressource_files"); ?>"
+	            multiple
+		/>
+		<?php
+		if (try_get($_POST, "codename"))
+		{
+		    $codename = $_POST["codename"];
+		    if (($dir = @scandir("./dres/activity/".$codename."/ressources/")) != false)
+		    {
+			foreach ($dir as $d)
+			{
+			    if ($d == "." || $d == ".." || $d == "index.htm")
+				continue ;
+		?>
+		    <br /><a href="./dres/activity/<?=$codename; ?>/ressources/<?=$d; ?>">
+			<?=$d; ?>
+		    </a>
+		<?php
+	        }
+		}
+		}
+		?>
+
+		<br />
+		<label for="configuration_file"><?=$Dictionnary["ConfigurationFile"]; ?></label>
+		<input
+		    type="file"
+			  name="configuration_file"
+			  placeholder="<?=$Dictionnary["Configuration"]; ?>"
+	            value="<?=try_get($_POST, "configuration_file"); ?>"
+		/>
+		<?=@strlen($_POST["configuration_file"]) ? '<a target="_blank" href="'.$_POST["configuration_file"].'">'.$Dictionnary["Download"].'</a>' : ""; ?>
+		<br />
+
+		<label for="wallpaper_file"><?=$Dictionnary["WallpaperFile"]; ?></label>
+		<input
+		    type="file"
+		    name="wallpaper_file"
+		    placeholder="<?=$Dictionnary["Wallpaper"]; ?>"
+	            value="<?=try_get($_POST, "wallpaper_file"); ?>"
+		/>
+
+	    </div>
+	<?php } ?>
+
+	<?php forge_language_formular(["name" => "text", "description" => "textarea"], $_POST); ?>
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+<br />
+<br />

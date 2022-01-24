@@ -1,0 +1,98 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && $User["authority"] >= CONTENT_AUTHOR
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/print_header.php");
+require_once (__DIR__."/print_activity.php");
+require_once (__DIR__."/../error_net.php");
+
+?>
+
+<?php if ($Position == "ActivitiesMenu") { ?>
+    <h2 style="display: inline-block;"><?=$Dictionnary["ActivityTypes"]; ?></h2>
+<?php } else { ?>
+    <h2 style="display: inline-block;"><?=$Dictionnary["CurrentModules"]; ?></h2>
+<?php } ?>
+
+<?php if (try_get($_GET, "activity", -1) != -1) { ?>
+    <h2 style="display: inline-block;">
+	<a href="index.php?p=<?=$Position; ?>&amp;activity=<?=$activity[0]->parent_activity; ?>">
+	    &larr;
+	</a>
+	<?=$activity[0]->codename; ?>
+    </h2>
+<?php } ?>
+
+<div style="display: inline-block;">
+    <a href="index.php?p=<?=$Position; ?>&amp;activity=<?=try_get($_GET, "activity", -1); ?>&amp;unroll=<?=!try_get($_GET, "unroll", 0); ?>">
+	<?=$Dictionnary["RollUnroll"]; ?>
+    </a>
+</div>
+
+<?php $roll = !try_get($_COOKIE, $Position, false); ?>
+<button style="display: inline-block;" onclick="toggle_rollc('<?=$Position; ?>', 'doneactivity', 1, this, '<?=$Dictionnary["ShowDone"]; ?>', '<?=$Dictionnary["HideDone"]; ?>');">
+    <?=$roll ? $Dictionnary["ShowDone"] : $Dictionnary["HideDone"]; ?>
+</button>
+
+
+<div style="width: 20%; float: right;">
+<?php
+// Formulaire d'édition de l'element courant
+if (try_get($_GET, "activity", -1) != -1)
+{
+    if (have_rights($_GET["activity"]))
+    {
+	$action = "edit";
+	if (!isset($_POST["action"]))
+	{
+	    foreach ($activity[0] as $k => $x)
+	    {
+		if (preg_match('/.*_date/', $k))
+		    $_POST[$k] = db_form_date($x);
+		else
+		    $_POST[$k] = $x;
+	    }
+	}
+	require ("formular.phtml");
+    }
+}
+
+// Formulaire d'ajout
+if ((try_get($_GET, "activity", -1) == -1 && is_admin())
+    || ($activity[0]->type == 18 && have_rights(try_get($_GET, "activity", -1))))
+{
+    $action = "add";
+    if (!isset($_POST["action"]))
+	$_POST = [];
+    require ("formular.phtml");
+    require_once ("import.phtml");
+    require_once ("export.phtml");
+}
+?>
+</div>
+
+<table class="content_table" style="width: 78%; float: left;">
+    <?php
+    print_header(0);
+    $cnt = 0;
+    if (is_object($activity))
+	$activity = $activity->sublayers;
+    foreach ($activity as $content)
+    {
+	if (have_rights($content->id))
+            print_activity($content, $cnt++, 0, $unroll_first, $always_unroll);
+    }
+    ?>
+</table>
+
+
+<br />
+<br />
+<br />
+

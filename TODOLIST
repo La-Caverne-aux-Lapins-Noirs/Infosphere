@@ -1,0 +1,53 @@
+
+EN COURS:
+ - Liaison prof - instance depuis les cycles
+ - Finir l'affichage des médailles sur le profil
+ - Remplir avec des instances plus précises les promotions (virer les cours qui ne les concerne pas)
+ - Formulaire pour permettre d'ajouter des médailles en mode "echec"
+ - "Albedo", le système qui parcoure les activités pour mettre en absent les absents, mettre en échec les médailles non acquises, etc...
+
+A FAIRE:
+
+ - Système de déclaration de présence sur l'intra.
+ - Limitation de la hiérarchie des activités: cursus, module, autre.
+ - Page module: inscription au module, etc.
+ - Page module avec les modules comme étant la racine
+
+ - Liaison prof - cycle (responsable de promotion)
+ - FINIR LA RESTRICTION DES DROITS (Création/suppression de médailles associés à leurs droits)
+
+ - La liaison projet-session (pour en tirer les équipes et les rendus)
+ - Voir mes activités du jour sur la page d'acceuil
+ - Voir mes projets en cours sur la page d'accueil
+
+ - Il faut pouvoir éditer son profil
+
+ - Permettre d'associer une valeur arbitraire aux équipes (pour determiner les sujets, par exemples)
+
+Basse priorité:
+
+ - Il faut qu'une médaille puisse "impliquer" d'autres: par exemple, medaille de réussite 3 implique réussite 2 qui implique réussite 1.
+ - Il faut pouvoir imposer, dans un module, que la médaille vienne du module lui meme (cela depend des modules apres...)
+
+ - Pouvoir limiter le nombre d'inscrit à une session, au dela de la salle utilisée.
+ - Lorsqu'un élève parcoure l'intranet, si l'IP est locale, alors signaler la présence.
+ - Mecanisme de log étudiants
+
+ - Faire passer tous les DL par un fichier php servant le contenu, de sorte a pouvoir:
+    - déchiffrer ce qui est chiffré
+    - compter les downloads
+    - masquer les vrais noms des fichiers - le nom du fichier sera passé en header
+
+ - Faire un système permettant aux élèves de dire qu'ils seront absent
+   sur une période. Ce système doit etre validé par un administratif qui dispose
+   d'un tableau de bord spécialisé.
+   Les activités ou était inscrit l'élève indiquent que l'élève sera absent.
+ - Sur les messages de l'infosphere, placer des tags style "Annonce d'absence",
+   "annonce d'annulation", "suivi", "commentaire pédagogique"
+ - Sur l'Intercom, il doit etre possible de faire un croisement entre deux "noeuds",
+   par exemple, une activité instantiée, et un élève. De sorte à ce qu'on puisse
+   faire des commentaires privés (visible par les deux cotés) des commentaires privés
+   pédagogique (visible seuklement les profs) ou de la conversation publique.
+ - Permettre via un filtre a l'affichage de retirer les messages privés.
+
+

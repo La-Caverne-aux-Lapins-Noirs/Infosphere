@@ -1,0 +1,61 @@
+<html>
+    <head>
+	<title><?=$user["codename"]; ?></title>
+	<meta charset="utf8" />
+	<style>
+
+	 @font-face
+	 {
+	     src: url("res/futura.ttf");
+	     font-family: futura;
+	 }
+
+	 body
+	 {
+	     font-family: futura;
+	     background-color: lightgray;
+	     text-align: center;
+	     -webkit-print-color-adjust: exact;
+	     color-adjust: exact;
+	 }
+
+	 @page
+	 {
+	     size: 21cm 29.7cm;    /* A4 */
+	     margin: 0mm 0mm 0mm 0mm;
+	     background-color: white;
+	 }
+
+	 .page
+	 {
+	     margin: auto;
+	     size: 21cm 29.7cm;
+	     height: 27.7cm; /* for margin */
+	     width: 19cm;
+	     padding-top: 1cm;
+	     padding-right: 1cm;
+	     padding-left: 1cm;
+	     padding-bottom: 1cm;
+	     position: relative;
+	     background-color: white;
+	     /*margin-bottom: 0.1cm;*/
+	     page-break-after: always;
+	     /* border: 1px solid black; */
+	 }
+	 table
+	 {
+	     background-color: lightgray;
+	     width: 19cm;
+	     border: 1px solid gray;
+	 }
+	 table tr td
+	 {
+	     background-color: white;
+	     text-align: center;
+	     font-size: x-small;
+	 }
+
+	</style>
+    </head>
+    <body>
+

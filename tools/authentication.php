@@ -1,0 +1,317 @@
+<?php
+
+// Anciens trucs...
+define("EXTERN", "1");
+define("STUDENT", "2");
+define("CONTENT_AUTHOR", "5");
+
+//
+define("BANISHED", "-1");
+define("OUTSIDE", "0"); // NON CONNECTE
+define("USER", "2"); // ACCES NORMAL
+define("DIRECTOR", "5"); // LOG AS + CREATION CYCLE + INSTANCE + LIAISON INSTANCE + SALLE
+define("ADMINISTRATOR", "6"); // TOUT
+
+function hash_method($str)
+{
+    // return (password_hash($str, PASSWORD_BCRYPT));
+    return (hash("whirlpool", $str, false));
+}
+
+function get_login_info($login, $password, $clear_password=true)
+{
+    global $Database;
+    global $albedo;
+
+    $login = $Database->real_escape_string($login);
+    $rows = db_select_rows("user", ["full_profile"]);
+    $rows = implode(", ", $rows);
+    $user_query = $Database->query("
+      SELECT $rows
+      FROM user
+      WHERE codename = '$login'
+    ");
+    if (($usr = $user_query->fetch_assoc()) == NULL)
+	return (["User" => NULL, "Error" => "UnknownLogin"]);
+    if ($usr["authority"] == BANISHED)
+	return (["User" => NULL, "Error" => "BannedAccount"]);
+
+    if ($clear_password)
+    {
+	$local_salt = base64_decode($usr["local_salt"]);
+	if (($cookiehash = hash_method($local_salt.$password)) == false)
+	    return (["Password" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+    }
+    else
+	$cookiehash = $password;
+
+    if (($usr["misc_configuration"] = json_decode($usr["misc_configuration"], true)) == NULL)
+	$usr["misc_configuration"] = [];
+
+    $usr["children"] = db_select_all("
+       user.codename as codename,
+       parent_child.id_child as id
+       FROM parent_child
+       LEFT JOIN user ON parent_child.id_child = user.id
+       WHERE parent_child.id_parent = ".$usr["id"]."
+    ");
+
+    $salt = base64_decode($usr["salt"]);
+    if (($hash = hash_method($salt.$cookiehash)) == false)
+	return (["Password" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+
+    if ($usr["password"] != $hash)
+	return (["User" => NULL, "Error" => "InvalidPassword"]);
+    unset($usr["password"]);
+    unset($usr["salt"]);
+    unset($usr["local_salt"]);
+    if (!UNIT_TEST && !isset($albedo))
+    {
+	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+    }
+    get_user_promotions($usr);
+    get_user_laboratories($usr);
+    $Database->query("UPDATE user SET last_visit = NOW() WHERE id = {$usr["id"]}");
+    return (["User" => $usr, "Error" => ""]);
+}
+
+function generate_password($len = 10)
+{
+    // Pas de O majuscule (pour ne pas confondre), pas de \, ni `, ni ", ni ', ni ~ ou ^
+    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&~#{([-|_@)]=}+$%*,?;.:/!";
+    $letter = false;
+    $number = false;
+    $symbol = false;
+
+    $rnd = "";
+    for ($i = 0; $i < $len; ++$i)
+    {
+	$r = rand(0, strlen($randpool) - 1);
+	$c = substr($randpool, $r, 1);
+	if (ctype_alpha($c))
+	    $letter = true;
+	else if (ctype_digit($c))
+	    $number = true;
+	else
+	    $symbol = true;
+	$randpool = str_replace($c, "", $randpool);
+	$rnd = $rnd.$c;
+    }
+    if ($letter == false)
+	$rnd = $rnd.substr("azertyuiopqsdfghjklmwxcvbnAZERYTUIPQSDFGHJKLMWXCVBN", rand(0, 25 * 2 - 1), 1);
+    if ($number == false)
+	$rnd = $rnd.substr("0123456789", rand(0, 9), 1);
+    if ($symbol == false)
+	$rnd = $rnd.substr("&#{([-|_@)]=}+$%*,?;.:/!", rand(0, 25), 1);
+    return ($rnd);
+}
+
+function subscribe($login, $mail, $password = NULL, $cookie = true)
+{
+    global $Database;
+
+    if ($password == NULL)
+	$password = generate_password();
+    if (strlen($login) < 2)
+	return (["User" => NULL, "Error" => "BadLogin"]);
+    if (strlen($password) < 8 || !preg_match("#[0-9]+#", $password) || !preg_match("#[a-zA-Z]+#", $password))
+	return (["User" => NULL, "Error" => "BadPassword"]);
+    if (filter_var($mail, FILTER_VALIDATE_EMAIL) == false)
+	return (["User" => NULL, "Error" => "BadMail"]);
+
+    add_log(TRACE, "User ".$login." is trying to subscribe", 0);
+    $login = $Database->real_escape_string($login);
+    $mail = $Database->real_escape_string($mail);
+    $user_query = $Database->query("
+      SELECT codename, mail
+      FROM user
+      WHERE codename = '$login' OR mail = '$mail'
+    ");
+    if (($usr = $user_query->fetch_assoc()) != NULL)
+    {
+	if ($usr["codename"] == $login && $usr["mail"] == $mail)
+	    return (["User" => NULL, "Error" => "LoginAndMailUsed"]);
+	if ($usr["codename"] == $login )
+	    return (["User" => NULL, "Error" => "LoginUsed"]);
+	return (["User" => NULL, "Error" => "MailUsed"]);
+    }
+
+    $local_salt = openssl_random_pseudo_bytes(256);
+    $salt = openssl_random_pseudo_bytes(256);
+
+    if (($cookiehash = hash_method($local_salt.$password)) == false)
+	return (["User" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+    if (($hash = hash_method($salt.$cookiehash)) == false)
+	return (["User" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+
+    $salt = base64_encode($salt);
+    $local_salt = base64_encode($local_salt);
+
+    if (($Database->query("
+      INSERT INTO user (codename, password, registration_date, salt, local_salt, mail)
+      VALUES ('$login', '$hash', NOW(), '$salt', '$local_salt', '$mail')
+    ")) == false)
+    {
+	add_log(TRACE, "Insertion failed: ".$Database->error, 0); // @codeCoverageIgnore
+        return (["User" => NULL, "Error" => "CannotRegister"]); // @codeCoverageIgnore
+    }
+    if (!UNIT_TEST && $cookie)
+    {
+	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+    }
+
+    $user_query = $Database->query("SELECT * FROM user WHERE codename = '$login'");
+    $usr = $user_query->fetch_assoc();
+    unset($usr["salt"]);
+    unset($usr["local_salt"]);
+    unset($usr["password"]);
+    send_subscribe_mail($usr["id"], $login, $mail, $password);
+    add_log(CRITICAL_USER_DATA, "User ".$usr["codename"]." added", $usr["id"]);
+    return (["User" => $usr, "Error" => ""]);
+}
+
+function try_subscribe($login, $mail, $password, $repassword)
+{
+    if ($password != $repassword)
+	return (["User" => NULL, "Error" => "PasswordDoesNotMatch"]);
+    return (subscribe($login, $mail, $password));
+}
+
+function regenerate_password($usr, $newpass)
+{
+    global $Database;
+
+    $hash_query = $Database->query("
+      SELECT salt, local_salt
+      FROM user
+      WHERE id = '".$Database->real_escape_string($usr["id"])."'
+      ");
+    if (($salts = $hash_query->fetch_assoc()) == NULL)
+	return (["Password" => NULL, "Error" => "UnknownId"]);
+    $salts["local_salt"] = base64_decode($salts["local_salt"]);
+    if (!($cookie_pass = hash_method($salts["local_salt"].$newpass)))
+	return (["Password" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+    if (!UNIT_TEST)
+	set_cookie("password", $cookie_pass, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+    $salts["salt"] = base64_decode($salts["salt"]);
+    if (!($final_pass = hash_method($salts["salt"].$cookie_pass)))
+	return (["Password" => NULL, "Error" => "CannotHash"]); // @codeCoverageIgnore
+    return (["Password" => $final_pass, "Error" => ""]);
+}
+
+// Cette fonction ne peut éditer aucun aspect critique lié a l'authentification ou au contact.
+function set_user_data($id, $vals, $misc_fields = [])
+{
+    global $Database;
+    global $User;
+
+    if (($id = resolve_codename("user", $id))->is_error())
+	return ($id);
+    if (($id = $id->value) == 1 && !UNIT_TEST && 0)
+	return (new ErrorResponse("CannotEditAdministrator")); // @codeCoverageIgnore
+    if (!isset($vals))
+	return (new ErrorResponse("MissingParameter"));
+
+    $misc = $User["misc_configuration"];
+    foreach ($misc_fields as $i => $v)
+    {
+	if ($v["type"] == "checkbox")
+	    $misc["profile"][$v["label"]] = (@$vals[$v["label"]] == "on");
+	else
+	    $misc["profile"][$v["label"]] = $vals[$v["label"]];
+	unset($vals[$v["label"]]);
+    }
+    $vals["misc_configuration"] = json_encode($misc, JSON_UNESCAPED_SLASHES);
+
+    /// Il faut resoudre id
+    $constfields = ["id", "password", "salt", "local_salt", "codename", "registration_date"];
+    $forge = unroll($vals, UPDATE, $constfields);
+    if ($Database->query("UPDATE user SET $forge WHERE id = $id") == false)
+	return (new ErrorResponse("CannotEdit")); // @codeCoverageIgnore
+
+    if ($id == $User["id"])
+    {
+	foreach ($vals as $i => $v)
+	{
+	    if (in_array($i, $constfields))
+		continue ; // @codeCoverageIgnore
+	    $User[$i] = $v;
+	}
+    }
+    return (new ValueResponse($User));
+}
+
+// Cette fonction peut tout faire
+function set_user_attributes($user, $new)
+{
+    global $Database;
+
+    if ($user == NULL)
+	return ["User" => NULL, "Error" => "InvalidParameter"];
+    $forgery = [];
+    $clean_user = [];
+    $password_regenerated = false;
+    foreach ($user as $k => $v)
+    {
+	if (in_array($k, ["id", "salt", "local_salt", "mail"]))
+	    continue ;
+	if (isset($new[$k]))
+	{
+	    $nk = $Database->real_escape_string($k);
+	    $nv = $Database->real_escape_string($new[$k]);
+	    $forgery[] = "$nk = '$nv'";
+	}
+    }
+    if (isset($new["mail"]))
+    {
+	if (filter_var($new["mail"], FILTER_VALIDATE_EMAIL) == false)
+	    return (["User" => NULL, "Error" => "BadMail"]);
+	$nk = $Database->real_escape_string("mail");
+	$nv = $Database->real_escape_string($new["mail"]);
+	$forgery[] = "$nk = '$nv'";
+    }
+    if (isset($new["password"]))
+    {
+	$msg = regenerate_password($user, $new["password"]);
+	if ($msg["Password"] == NULL)
+	    return (["User" => NULL, "Error" => $msg["Error"]]); // @codeCoverageIgnore
+	$nv = $msg["Password"];
+	$password_regenerated = true;
+	$forgery[] = "password = '$nv'";
+    }
+
+    if (count($forgery) == 0)
+	return (["User" => $user, "Error" => ""]);
+    $id = $Database->real_escape_string($user["id"]);
+    $forgery = implode(",", $forgery);
+    if ($Database->query("
+      UPDATE user
+      SET $forgery
+      WHERE id = '$id'
+    ") == false)
+      return (["User" => NULL, "Error" => "CannotUpdate"]); // @codeCoverageIgnore
+    $user_query = $Database->query("
+      SELECT *
+      FROM user
+      WHERE id = '$id'
+    ");
+    if (($new_user = $user_query->fetch_assoc()) == NULL)
+	return (["User" => NULL, "Error" => "UnknownId"]); // @codeCoverageIgnore
+    unset($new_user["password"]);
+    unset($new_user["salt"]);
+    unset($new_user["local_salt"]);
+    add_log(UNCRITICAL_USER_DATA, "User ".$user["id"]." changed data.", $user["id"]);
+    if (isset($new["mail"]) && $user["mail"] != $new["mail"])
+    {
+	add_log(CRITICAL_USER_DATA, "User ".$user["mail"]." switched to ".$new["mail"].".");
+	send_mail_change_mail($user, $new_user);
+    }
+    if ($password_regenerated)
+    {
+	add_log(CRITICAL_USER_DATA, "User ".$user["id"]." changed password.");
+	send_password_change_mail($new_user, $new["password"]);
+    }
+    return (["User" => $new_user, "Error" => ""]);
+}

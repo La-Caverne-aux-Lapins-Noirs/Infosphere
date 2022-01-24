@@ -1,0 +1,157 @@
+<div class="panel" style="height: 50px; text-align: center; padding: 10px 10px 10px 10px; width: calc(90% - 20px);">
+    <p>
+	<?php
+	$usrlist = [];
+	foreach ($users as $usr) {
+	$usrlist[] = $usr["codename"];
+	}
+	?>
+	<input
+	    type="text"
+	    class="aligned_box box250x25 lightbackground"
+	    style="height: 50px;"
+	    value="<?=implode(';', $usrlist); ?>"
+	    onclick="this.select(); document.execCommand('copy');"
+	/>
+    </p>
+</div>
+
+<div class="table_wrapper" style="width: 100%;">
+    <table class="content_table" style="width: 90%;">
+	<tr>
+	    <th style="width: 350px;">
+		<table style="width: 100%; height: 100%;">
+		    <tr>
+			<td style="width: 200px;">
+			    <a href="index.php?<?=unrollget(); ?>&amp;sort=<?=reverse_sort("codename", $sort); ?>">
+				<?=$Dictionnary["Login"]; ?>
+			    </a>
+			</td>
+			<td>&#128274;</td>
+			<td style="width: 60px;">
+			    <a href="index.php?<?=unrollget(); ?>&amp;sort=<?=reverse_sort("grade", $sort); ?>">
+				<?=$Dictionnary["Grade"]; ?>
+			    </a>
+			</td>
+			<td>
+			    <a href="index.php?<?=unrollget(); ?>&amp;sort=<?=reverse_sort("percent", $sort); ?>">
+				<?=$Dictionnary["Percent"]; ?>
+			    </a>
+			</td>
+		    </tr>
+		</table>
+	    </th>
+	    <?php foreach ($cmodule->medal as $med) { ?>
+		<td <?=$med["mandatory"] ? 'style="background-color: red;"' : ''; ?> style="width: 30px;">
+		    <a href="index.php?<?=unrollget(); ?>&amp;sort=<?=reverse_sort("medal_".$med["codename"], $sort); ?>">
+			<img src="<?=$med["icon"]; ?>" width="25" height="25" />
+		    </a>
+		</td>
+	    <?php } ?>
+	</tr>
+	<?php foreach ($users as $usr) { ?>
+	    <tr>
+		<th style="width: 350px;">
+		    <table style="width: 100%; height: 100%;">
+			<tr>
+			    <td style="position: relative; font-size: small; width: 200px;">
+				<?php display_nickname($usr); ?>
+			    </td>
+			    <td>
+				<input
+				    type="button" value="<?=$usr["closed"] ? "X" : "" ?>"
+					  onclick="edit_lock(<?=$cmodule->id; ?>, '<?=$usr["id"]; ?>', this);"
+					  style="width: 100%; height: 100%;"
+				/>
+			    </td>
+			    <td style="width: 60px;">
+				<?php if ($usr["visibility"] >= SUCCESSFUL_ACTIVITIES || $cmodule->is_teacher) { ?>
+				    <?php
+				    if ($usr["grade"] != -1)
+				    {
+					$gr = ["e", "d", "c", "b", "a"];
+					$gr = $Grade["grade_".$gr[$usr["grade"]]];
+				    ?>
+					<img src="<?=$gr["icon"]; ?>" alt="" width="25" height="25" />
+				    <?php } ?>
+				<?php } ?>
+			    </td>
+			    <td>
+				<?php if ($usr["visibility"] >= SUCCESSFUL_ACTIVITIES || $cmodule->is_teacher) { ?>
+				    <?=sprintf("%d", (int)(100 * $usr["percent"])); ?>%
+				<?php } ?>
+			    </td>
+			</tr>
+		    </table>
+		</th>
+		<?php foreach ($cmodule->medal as $med) { ?>
+		    <?php if ($usr["visibility"] >= SUCCESSFUL_ACTIVITIES || $cmodule->is_teacher) { ?>
+			<td
+			    <?php if ($cmodule->is_teacher) { ?>
+			    onclick="edit_medal(<?=$cmodule->id; ?>, '<?=$usr["codename"]; ?>', '<?=$med["codename"]; ?>');"
+			    <?php } ?>
+			>
+			    <img
+				id="<?=$usr["codename"]."_".$med["codename"]; ?>"
+				src="<?=$med["icon"]; ?>"
+				alt=""
+				width="25"
+				hnguyeneight="25"
+				style="visibility: <?=$med["result"] ? "visible" : "hidden"; ?>"
+			    />
+			</td>
+		    <?php } else { ?>
+			<td colspan="<?=count($cmodule->medal); ?>">
+			    <?=$Dictionnary["Hidden"]; ?>
+			</td>
+		    <?php } ?>
+		<?php } ?>
+	    </tr>
+	<?php } ?>
+    </table>
+
+    <?php return ; ?>
+
+    <table class="content_table">
+
+
+	<?php foreach ($users as $usr) { ?>
+	    <tr>
+		<td style="position: relative;">
+
+		</td>
+		<?php if ($usr["visibility"] >= SUCCESSFUL_ACTIVITIES || $cmodule->is_teacher) { ?>
+		    <td>
+			<?php
+			if ($usr["grade"] != -1)
+			{
+			    $gr = ["e", "d", "c", "b", "a"];
+			    $gr = $Grade["grade_".$gr[$usr["grade"]]];
+			?>
+			    <img src="<?=$gr["icon"]; ?>" alt="" width="25" height="25" />
+			<?php } ?>
+		    </td>
+		    <td>
+			<?=sprintf("%d", (int)(100 * $usr["percent"])); ?>%
+		    </td>
+		    <?php foreach ($usr["medal"] as $med) { ?>
+			<td onclick="edit_medal(<?=$cmodule->id; ?>, '<?=$usr["codename"]; ?>', '<?=$med["codename"]; ?>');">
+			    <img
+				id="<?=$usr["codename"]."_".$med["codename"]; ?>"
+				    src="<?=$med["icon"]; ?>"
+				    alt=""
+				    width="25"
+				    height="25"
+				    style="visibility: <?=$med["result"] ? "visible" : "hidden"; ?>"
+			    />
+			</t>
+		    <?php } ?>
+		<?php } else { ?>
+		    <td colspan="<?=2 + count($cmodule->medal); ?>">
+			<?=$Dictionnary["Hidden"]; ?>
+		    </td>
+		<?php } ?>
+	    </tr>
+	<?php } ?>
+    </table>
+</div>

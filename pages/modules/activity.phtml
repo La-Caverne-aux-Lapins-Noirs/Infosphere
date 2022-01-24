@@ -1,0 +1,31 @@
+<table class="panel" style="width: 90%;">
+    <tr>
+	<td style="height: 50px; vertical-align: middle; padding: 10px 10px 10px 10px; width: 15%; background-color: rgba(0, 0, 0, 0.2); border-radius: 10px;">
+	    <h4><?=$act->name; ?></h4>
+	    <p style="font-size: x-small;">
+		<?=$Dictionnary[$ActivityType[$act->type]["codename"]]; ?>
+	    </p>
+	</td>
+	<td style="vertical-align: middle; text-align: justify; padding: 10px 10px 10px 10px; background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; width: 35%;">
+	    <p><?=$act->description; ?></p>
+	</td>
+
+	<td style="text-align: right; padding-right: 5px;">
+	    <?php if (count($act->session)) { ?>
+		<?php foreach ($act->session as $session) { ?>
+		    <?php require ("session.phtml"); ?>
+		<?php } ?>
+	    <?php } else { ?>
+	    <a href="index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>&amp;b=-1">
+		<div class="aligned_box box250x50" style="background-color: #181818;">
+		    <?php $type = ""; ?>
+		    <?php if (($date = retrievedate($act, $type)) != NULL) { ?>
+		    <?=$type; ?><br />
+			<?=human_date($date); ?>
+		    <?php } ?>
+		    <br />
+		    <?=$Dictionnary["JoinPage"]; ?>
+		</div></a>
+	    <?php } ?>
+	</td>
+</table>

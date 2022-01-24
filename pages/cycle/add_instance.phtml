@@ -1,0 +1,53 @@
+<br />
+<form
+    method="POST"
+    action="index.php?p=<?=$Position; ?>&amp;a=<?=try_get($_GET, "a", -1); ?>&amp;activity=<?=try_get($_GET, "activity", -1); ?>"
+    class="add_formular"
+>
+    <input type="hidden" name="action" value="new_instance" />
+    <input type="hidden" name="cycle" value="<?=$cycle; ?>" />
+
+    <h2><?=$Dictionnary["InstantiateAnActivity"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="parent_codename"
+	    placeholder="<?=$Dictionnary["ParentInstanceName"]; ?>"
+	    value="<?=$act_code; ?>"
+	/><br />
+	<input
+	    type="text"
+	    name="codename"
+	    placeholder="<?=$Dictionnary["ActivityName"]; ?>"
+	    value="<?=try_get($_POST, "codename"); ?>"
+	/><br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+<br />
+<form
+    method="POST"
+    action="index.php?p=<?=$Position; ?>&amp;a=<?=try_get($_GET, "a", -1); ?>&amp;activity=<?=try_get($_GET, "activity", -1); ?>"
+    class="add_formular"
+>
+    <input type="hidden" name="action" value="share_instance" />
+
+    <h2><?=$Dictionnary["ShareAnActivity"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="cycle"
+	    placeholder="<?=$Dictionnary["Promotion"]; ?>"
+	    value="<?=$fetch["codename"]; ?>"
+	/><br />
+	<input
+	    type="text"
+	    name="codename"
+	    placeholder="<?=$Dictionnary["ActivityName"]; ?>"
+	    value="<?=try_get($_POST, "codename"); ?>"
+	/><br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>

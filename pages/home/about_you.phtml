@@ -1,0 +1,45 @@
+<h2><?=$Dictionnary["AboutYou"]; ?></h2>
+<?php if ($User != NULL) { ?>
+    <p style="text-align: center;">
+	<br />
+	<?=$Dictionnary["SecretIdentity"]; ?>
+	<span class="hidden_mouse">
+	    <?php
+	    if (@strlen($User["outside_secret"]) == 0)
+	    {
+		$secret = openssl_random_pseudo_bytes(8);
+ 		$secret = str_replace("=", "", base64_encode($secret));
+		$secret = str_replace("/", "", $secret);
+		$Database->query("
+            UPDATE user
+               SET outside_secret = '$secret'
+             WHERE id = ".$User["id"]
+		);
+	    }
+	    ?><br />
+	    <br />
+	    <?=crc32($User["outside_secret"]); ?>
+	</span>
+    </p>
+<?php } ?>
+
+<?php if ($User != NULL) { ?>
+<p style="text-align: center;">
+    <?php if (@strlen($User["birth_date"]) && datex("d/m/Y", time()) ==
+	datex("d/m/Y", date_to_timestamp($User["birth_date"]))) { ?>
+	<?=$Dictionnary["HappyBirthday"]; ?>!
+    <?php } ?>
+</p>
+<?php } ?>
+
+<p style="text-align: center;">
+    <br />
+    <?php $today_time = get_student_log(); ?>
+    Aujourd'hui, vous avez travaillé <?=(int)($today_time / 60.0 / 60.0); ?> heures, <?=(int)(($today_time / 60.0) % 60); ?> minutes et <?=(int)($today_time % 60); ?> secondes.
+</p>
+
+<p style="text-align: center;">
+    <br />
+    Les avatars et pseudonymes sont temporairement désactivés.
+</p>
+

@@ -1,0 +1,35 @@
+<?php if (is_admin()) { ?>
+    <td class="edit_panel">
+	<form method="post" action="index.php?p=<?=$Position; ?>">
+	    <select name="authority">
+		<?php foreach ($Status as $i => $s) { ?>
+		    <option value="<?=$i; ?>" <?=$i == $User["authority"] ? "selected" : ""; ?>>
+			<?=$Dictionnary[$s]; ?>
+		    </option>
+		<?php } ?>
+	    </select>
+	    <input type="hidden" name="action" value="set_status" />
+	    <input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10003;" style="color: green;" />
+	</form>
+
+	<form method="post" action="index.php?p=<?=$Position; ?>">
+	    <input type="text" name="parent_of" placeholder="<?=$Dictionnary["ParentOf"]; ?>" />
+	    <input type="hidden" name="action" value="add_children" />
+	    <input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10003;" style="color: green;" />
+	</form>
+	<form method="post" action="index.php?p=<?=$Position; ?>">
+	    <input type="hidden" name="action" value="new_password" />
+	    <input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#8635;" style="color: red;" />
+	</form>
+	<form method="post" action="index.php?p=<?=$Position; ?>">
+	    <input type="hidden" name="action" value="delete" />
+	    <input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10007;" style="color: red;" />
+	</form>
+
+    </td>
+<?php } ?>
+

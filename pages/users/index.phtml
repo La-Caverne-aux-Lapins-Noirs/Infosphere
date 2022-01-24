@@ -1,0 +1,94 @@
+<?php
+require_once ("fetch_users.php");
+
+if (file_exists(__DIR__."/handle_request.php")
+    && is_admin()
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+
+?>
+
+<h2><?=$Dictionnary["Members"]; ?></h2>
+<table class="content_table">
+    <tr>
+	<th class="id_column">#</th>
+	<th class="icon_column"><?=$Dictionnary["Avatar"]; ?></th>
+	<th class="codename_column"><?=$Dictionnary["Login"]; ?></th>
+	<th class="name_column"><?=$Dictionnary["Name"]; ?></th>
+	<th><?=$Dictionnary["Status"]; ?></th>
+	<th><?=$Dictionnary["Promotion"]; ?></th>
+	<th class="registration_date_column"><?=$Dictionnary["RegistrationDate"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="edit_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <?php
+    $Status = get_authorities();
+    if (($users = fetch_users()) === NULL)
+    {
+	$ErrorMsg = "CannotRetrieveContent";
+	$users = [];
+    }
+    $cnt = 0;
+    foreach ($users as $login => $content)
+    {
+	$URL = "index.php?p=ProfileMenu&amp;a={$content["id"]}";
+    ?>
+	<tr
+	    class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>"
+	>
+	    <td <?=clickable($URL); ?>>
+		<?=$content["id"]; ?>
+	    </td>
+	    <td <?=clickable($URL); ?>>
+		<?php display_avatar($content, 50); ?>
+	    </td>
+	    <td <?=clickable($URL); ?>>
+		<?php if ($content["nickname"] != "") { ?>
+		    <?=$content["nickname"]; ?><br />
+		    (<?=$login; ?>)
+		<?php } else { ?>
+		    <?=$login; ?>
+		<?php } ?>
+	    </td>
+	    <td>
+		<?=$content["first_name"]; ?> <?=$content["family_name"]; ?><br />
+		<?php if (count($content["children"])) { ?>
+		    <?=$Dictionnary["ParentOf"]; ?>:
+		    <?php for ($i = 0; isset($content["children"][$i]); ++$i) { ?>
+			<?=$content["children"][$i]["codename"]; ?><?php if (isset($content["children"][$i + 1])) { ?>, <?php } ?>
+		    <?php } ?>
+		<?php } ?>
+	    </td>
+	    <td><?=$Dictionnary[$Status[$content["authority"]]]; ?></td>
+	    <td>
+		<?php
+		if (isset($content["cycle"]))
+		{
+		    foreach ($content["cycle"] as $prom)
+		    {
+		    ?>
+		    <a href="index.php?p=SchoolYearMenu&amp;a=<?=$prom["id"]; ?>">
+			<?=$prom["codename"]; ?>
+		    </a>
+ 		    <?php
+		    }
+		}
+		?>
+	    </td>
+	    <td><?=date("d/m/Y", strtotime($content["registration_date"])); ?></td>
+	    <?php require ("edition.phtml"); ?>
+	</tr>
+    <?php } ?>
+</table>
+
+<?php
+if (is_admin())
+    require_once ("add.phtml");
+?>

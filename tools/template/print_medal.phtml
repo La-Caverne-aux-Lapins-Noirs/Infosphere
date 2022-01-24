@@ -1,0 +1,132 @@
+<?php
+if (@strlen($medal["success"]))
+    $t = $medal["success"] + $medal["failure"];
+$text = $medal["name"]." (".$medal["codename"]."):&#010;".$medal["description"]."&#010;";
+
+if (@$medal["mandatory"])
+    $text .= $Dictionnary["ThisMedalIsMandatory"]."&#010;";
+if (@$medal["local"])
+    $text .= $Dictionnary["ThisMedalIsLocal"]."&#010;";
+if (@$medal["grade_a"])
+    $text .= $Dictionnary["ThisMedalMayBeRequiredForGrade"]." A.&#010;";
+else if (@$medal["grade_b"])
+    $text .= $Dictionnary["ThisMedalMayBeRequiredForGrade"]." B.&#010;";
+else if (@$medal["grade_c"])
+    $text .= $Dictionnary["ThisMedalMayBeRequiredForGrade"]." C.&#010;";
+else if (@$medal["module_medal"])
+    $text .= $Dictionnary["ThisMedalMayBeRequiredForGrade"]." D.&#010;";
+
+if ($user != NULL && $user["visibility"] > SUCCESSFUL_ACTIVITIES && $size > 75)
+{
+    $text .= $Dictionnary["Attemps"].": $t&#010;".$Dictionnary["Success"].": ".$medal["success"];
+    if (count($medal["success_list"]))
+    {
+	$text .= "&#010;".$Dictionnary["SuccessfulActivities"].":";
+	foreach ($medal["success_list"] as $suc)
+	{
+	    $text .= "&#010; - ".$suc;
+	}
+    }
+}
+
+if ($medal["icon"] == "")
+{
+    if ($size > 75) // Si c'est une medaille de module
+    {
+	$ysize = 40;
+	$xsize = 140;
+    }
+    else
+    {
+	$ysize = $size;
+	$xsize = $size * 150.0 / 25.0;
+    }
+}
+else
+{
+    if ($size > 75)
+    {
+	$xsize = $size / 2;
+	$ysize = $size / 2;
+    }
+    else
+    {
+	$xsize = $size;
+	$ysize = $size;
+    }
+}
+?>
+
+<?php if ($medal_teacher) { ?>
+    <form method="post" action="index.php?<?=unrollget(); ?>" style="display: inline-block">
+	<input type="hidden" name="action" value="switch_medal" />
+	<input type="hidden" name="user" value="<?=$user["id"]; ?>" />
+	<input type="hidden" name="activity" value="<?=$medal_activity; ?>" />
+	<?php $onclick = 'onclick="this.closest(\'form\').submit(); return false;"'; ?>
+<?php } else { ?>
+    <?php $onclick = 'onclick="document.location.href=\'index.php?p=MedalsMenu&amp;a='.$medal["id"].'\'"'; ?>
+<?php } ?>
+
+<div class="profile_single_medal_box <?=$medal["icon"] == "" ? "band_box" : ""; ?>" style="width: <?=$xsize; ?>px; height: <?=$ysize; ?>px;">
+    <?php if ($medal["icon"] != "") { ?>
+	<img
+	    src="<?=$medal["icon"]; ?>"
+	    title="<?=$text; ?>"
+	    <?=isset($medal["success"]) && $medal["success"] == 0 ? 'style="opacity: 0.5;"' : ''; ?>
+	    <?=$onclick; ?>
+	/>
+    <?php } else { ?>
+	<img
+	    src="genicon.php?function=<?=$medal["codename"]; ?>"
+	    title="<?=$text; ?>"
+	    height="25"
+	    width="150"
+	    <?=isset($medal["success"]) && $medal["success"] == 0 ? 'style="opacity: 0.5;"' : ''; ?>
+	    <?=$onclick; ?>
+	/>
+    <?php } ?>
+    <?php $ysize = $ysize / 2; ?>
+    <?php $style = " style='width: {$ysize}px; height: {$ysize}px;' "; ?>
+    <?php if (@$medal["success"] > 0 && $size > 75) { ?>
+	<div class="medal_acquired" <?=$style; ?>>&nbsp;</div>
+    <?php } else if (@$medal["failure"] > 0 && $user["visibility"] > SUCCESSFUL_ACTIVITIES && $size > 75) { ?>
+	<div class="medal_failed" <?=$style; ?>>&nbsp;</div>
+    <?php } ?>
+
+    <?php if (isset($module)) { ?>
+
+	<?php if ($module->old_validation || $module->grade_module || $module->validation_by_percent) { ?>
+
+	    <?php if ($medal["mandatory"] == 1) { ?>
+		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+		<div class="medal_mandatory" <?=$style; ?>>&nbsp;</div>
+	    <?php } ?>
+
+	<?php } else { ?>
+
+	    <?php if ($medal["grade_a"] == 1) { ?>
+		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+		<div class="medal_grade_a" <?=$style; ?>>&nbsp;</div>
+	    <?php } else if ($medal["grade_b"] == 1) { ?>
+		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+		<div class="medal_grade_b" <?=$style; ?>>&nbsp;</div>
+	    <?php } else if ($medal["grade_c"] == 1) { ?>
+		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+		<div class="medal_grade_c" <?=$style; ?>>&nbsp;</div>
+	    <?php } else if ($medal["module_medal"] && $medal["bonus"] == 0) { ?>
+		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+		<div class="medal_grade_d" <?=$style; ?>>&nbsp;</div>
+	    <?php } ?>
+
+	<?php } ?>
+
+    <?php } ?>
+
+    <?php if ($medal["local"] == 1) { ?>
+	<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>
+	<div class="medal_local" <?=$style; ?>>&nbsp;</div>
+    <?php } ?>
+</div>
+<?php if ($medal_teacher) { ?>
+    </form>
+<?php } ?>

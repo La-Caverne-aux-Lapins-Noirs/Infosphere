@@ -1,0 +1,18 @@
+<form
+    method="POST"
+    action="index.php?<?=unrollget(); ?>"
+    class="add_formular"
+    enctype="multipart/form-data"
+    >
+    <input type="hidden" name="action" value="import_activities" />
+    <div style="min-height: 80px;">
+	<input type="file" name="configuration" style="width: 80%; height: 20px; line-height: 20px; font-size: 15px;" />
+	<div>
+	    <label for="dry" style="width: 70%; height: 20px; line-height: 20px; font-size: 15px;">
+		<?=$Dictionnary["RealImport"]; ?>
+	    </label>
+	    <input type="checkbox" name="notdry" />
+	</div>
+	<input type="submit" style="width: 80%; height: 30px; line-height: 20px; font-size: 15px;" />
+    </div>
+</form>

@@ -1,0 +1,42 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && is_admin()
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Cycle"]; ?></h2>
+
+<?php if ($unique) { ?>
+    <h3>
+	<?=$Dictionnary["Cycle"]; ?>&nbsp;:&nbsp;<?=$fetch["codename"]; ?><br />
+	<?=$Dictionnary["StartAt"]; ?> <?=$fetch["first_day"]; ?>
+    </h3>
+    <a href="index.php?p=<?=$Position; ?>">
+	&larr;
+    </a>
+    <?php if (is_admin()) { ?>
+	<form method="post" action="<?=unrollurl(); ?>" target="_blank">
+	    <input type="hidden" name="action" value="export_cycle" />
+	    <input type="hidden" name="data" value="<?=$fetch["id"]; ?>" />
+	    <input type="hidden" name="raw" value="1" />
+	    <input type="hidden" name="export" value="1" />
+	    <input type="submit" value="<?=$Dictionnary["ExportPromotion"]; ?>" />
+	</form>
+    <?php } ?>
+    <?php
+    require_once ("list_users.phtml");
+    ?>
+<?php
+} else {
+
+    require_once ("list_cycles.phtml");
+}
+?>
+

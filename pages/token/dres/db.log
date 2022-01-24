@@ -1,0 +1,36 @@
+-----------------
+15/10/20 17:46:25
+SELECT 
+  id 
+FROM 
+  token 
+ORDER BY 
+  id DESC 
+LIMIT 
+  1, 1 
+LIMIT 
+  1#> You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'LIMIT 1' at line 1
+#> /home/damdoshi/technocore/front/tools/database.php:159
+#> /home/damdoshi/technocore/front/pages/token/generate_token.php:21
+#> /home/damdoshi/technocore/front/pages/token/print_token.php:8
+#> /home/damdoshi/technocore/front/pages/token/print_token.phtml:45
+-----------------
+
+-----------------
+15/10/20 17:47:03
+SELECT 
+  id 
+FROM 
+  token 
+ORDER BY 
+  id DESC 
+LIMIT 
+  1, 1 
+LIMIT 
+  1#> You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'LIMIT 1' at line 1
+#> /home/damdoshi/technocore/front/tools/database.php:159
+#> /home/damdoshi/technocore/front/pages/token/generate_token.php:21
+#> /home/damdoshi/technocore/front/pages/token/print_token.php:8
+#> /home/damdoshi/technocore/front/pages/token/print_token.phtml:45
+-----------------
+

@@ -1,0 +1,29 @@
+<br />
+<form method="POST" action="index.php?p=<?=$Position; ?>"  class="add_formular"
+      enctype="multipart/form-data"
+>
+    <input type="hidden" name="action" value="add_user" />
+    <h2><?=$Dictionnary["AddAUser"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="login"
+	    placeholder="<?=$Dictionnary["Login"]; ?>"
+	    value="<?=try_get($_POST, "login"); ?>"
+	/><br />
+	<input
+	    type="text"
+	    name="mail"
+	    placeholder="<?=$Dictionnary["Mail"]; ?>"
+	    value="<?=try_get($_POST, "mail"); ?>"
+	/><br />
+	<input
+	    type="file"
+	    name="configuration"
+	    placeholder="<?=$Dictionnary["Configuration"]; ?>"
+	    value="<?=try_get($_POST, "configuration"); ?>"
+	/><br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>

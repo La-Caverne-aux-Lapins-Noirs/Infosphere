@@ -1,0 +1,44 @@
+<table class="content_table">
+    <!-- HEADER -------------------------------------------------------------->
+    <tr>
+	<th class="id_column">#</th>
+	<th class="codename_column"><?=$Dictionnary["CodeName"]; ?></th>
+	<th class="name_column"><?=$Dictionnary["Name"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["Occupation"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["CurrentActivity"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="edit_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <!-- BODY -------------------------------------------------------------->
+    <?php
+    foreach ($fetch as $content)
+    {
+       $URL = "index.php?p=".$Position."&amp;a={$content["id"]}";
+    ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["codename"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+	    <td <?=clickable($URL); ?>>
+		<?=$content["occupied"]; ?> / <?=count($content["desk"]); ?> <?=$Dictionnary["computerSeat"]; ?><br />
+		<?=$content["capacity"]; ?> <?=$Dictionnary["seats"]; ?>
+	    </td>
+	    <td>Actuellement indisponible</td>
+	    <?php
+	    if (is_admin())
+		require ("edition.phtml");
+	    ?>
+	</tr>
+    <?php } ?>
+</table>
+
+<?php
+if (is_admin())
+    require_once ("add.phtml");
+?>
+<br />
+<br />
+<br />
+

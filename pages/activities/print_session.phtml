@@ -1,0 +1,115 @@
+<div style="width: 300px; height: 300px; background-color: gray; border: 1px solid black; border-radius: 10px; display: inline-block; margin: 10px 10px 10px 10px; font-size: small; position: relative; color: black; overflow: auto;">
+
+    <div style="position: absolute; right: 2px; top: 2px; width: 30px; height: 20px; background-color: black">
+	<?php if ($session->deleted == false) { ?>
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="delete_session" />
+	    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	    <input type="hidden" name="session" value="<?=$session->id; ?>" />
+	    <input type="submit" style="width: 30px; color: red;" value="&#10007;" />
+	</form>
+	<?php } else { ?>
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="undelete_session" />
+	    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	    <input type="hidden" name="session" value="<?=$session->id; ?>" />
+	    <input type="submit" style="width: 30px; color: teal;" value="&#8630;" />
+	</form>
+	<?php } ?>
+    </div>
+
+    <h5><?=$Dictionnary["Session"]; ?></h5>
+    <br />
+    <b><?=$Dictionnary["BeginDate"]; ?></b>:
+    <?=weekday_or_date($session->begin_date, $offset, $Position == "ActivitiesMenu"); ?>
+    <br />
+
+    <b><?=$Dictionnary["EndDate"]; ?></b>:
+    <?=weekday_or_date($session->end_date, $offset, $Position == "ActivitiesMenu"); ?>
+    <br />
+    <br />
+    <hr />
+    <br />
+
+    <form method="post" action="index.php?<?=unrollget(); ?>">
+
+    </form>
+    <?php
+    if (!count($session->room))
+    echo $Dictionnary["NoRoom"]."<br />";
+    else
+    {
+    foreach ($session->room as $room)
+    {
+    ?>
+    <form method="post" action="index.php?<?=unrollget(); ?>">
+	<label for="room" style="display: inline-block; background-color: black;">
+	    <a href="index.php?p=RoomsMenu&amp;a=<?=$room["id"]; ?>" style="color: white;">
+		<div style="width: 150px;">
+		    <?=$room["codename"]; ?>
+		</div>
+	    </a>
+	</label>
+	<input type="hidden" name="action" value="add_room" />
+	<input type="hidden" name="room" value="-<?=$room["id"]; ?>" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="hidden" name="session" value="<?=$session->id; ?>" />
+	<input type="submit" style="width: 50px; color: red;" value="&#10007;" />
+    </form>
+    <?php
+    }
+    }
+    ?>
+    <form method="post" action="index.php?<?=unrollget(); ?>">
+	<input type="hidden" name="action" value="add_room" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="hidden" name="session" value="<?=$session->id; ?>" />
+	<input type="text" style="width: 150px;" name="room" placeholder="<?=$Dictionnary["Room"]; ?>">
+	<input type="submit" style="width: 50px; color: yellow;" value="+" />
+    </form>
+    <div style="width: 200px; display: inline-block;">
+	<?=$Dictionnary["RoomCapacity"]; ?>: <?=$session->maximum_subscription; ?>
+    </div>
+    <br />
+    <br />
+    <hr style="background-color: black;"/>
+    <br />
+    <form method="post" action="index.php?<?=unrollget(); ?>">
+	<input type="hidden" name="action" value="edit_session" />
+	<input type="hidden" name="activity" value="<?=$content->id; ?>" />
+	<input type="hidden" name="id" value="<?=$session->id; ?>" />
+	<?php
+	if ($Position == "ActivitiesMenu")
+	{
+	    $fields = ["week_begin_date", "day_begin_date", "hour_begin_date"];
+            print_weekday_selector(try_get($session, "begin_date"), $fields, NULL, false);
+	}
+	else
+	  print_datetime("begin_date", $session, false);
+	?>
+	<br />
+	<?php
+	if ($Position == "ActivitiesMenu")
+	{
+   	  $fields = ["week_end_date", "day_end_date", "hour_end_date"];
+	  print_weekday_selector(try_get($session, "end_date"), $fields, NULL, false);
+	}
+	else
+	  print_datetime("end_date", $session, false);
+	?>
+	<br />
+	<input type="number" name="maximum_subscription" min="-1" max="200"
+	       placeholder="<?=$Dictionnary["MaximumSubscription"]; ?>"
+	       style="width: 205px;"
+	       value="<?=$session->db_maximum_subscription; ?>"
+	/>
+	<br />
+	<input type="submit" value="&#10003;" style="width: 205px; color: teal;" />
+    </form>
+
+    <a href="index.php?p=ActivityMenu&amp;a=<?=$content->id; ?>&amp;b=<?=$session->id; ?>">
+	<div style="position: absolute; right: 2px; bottom: 2px; width: 30px; height: 20px; background-color: black; color: white; border-radius: 5px;">
+	    &rarr;
+	</div>
+    </a>
+</div>

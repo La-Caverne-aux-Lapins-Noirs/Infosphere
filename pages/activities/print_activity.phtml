@@ -1,0 +1,209 @@
+<?php
+
+$URL = "index.php?p=".$Position."&amp;a=".try_get($_GET, "a", -1)."&amp;activity=".$content->id;
+$classroom = $ActivityType[$content->type]["type"] == CLASSROOM;
+
+if ($content->is_template)
+    $hidden = !$content->enabled;
+else if ($content->done_date != NULL)
+    $hidden = date_to_timestamp($content->done_date) < time() && $content->id != try_get($_GET, "activity", -1);
+else
+    $hidden = false;
+?>
+
+<tr class="content_<?=$cnt % 2 ? "even" : "odd"; ?>  <?=$hidden ? "doneactivity" : ""; ?>"
+    style="visibility: <?=$hidden ? "collapse" : "visible"; ?>"
+    id="<?=$content->id; ?>"
+>
+    <td	<?=clickable($URL, "width: ".(50 - $left)."px;"); ?> rowspan="<?=$classroom ? 2 : ""; ?>">
+	<?=$content->id; ?>
+    </td>
+    <td class="codename_column">
+	<?php
+	echo $Dictionnary[$ActivityType[$content->type]["codename"]]."<br />";
+	if (isset($content->codename))
+	    echo $content->codename."<br />";
+	?>
+	<br />
+	<b><?=$content->name; ?></b>
+    </td>
+    <td <?=clickable($URL, ""); ?> class="description_column">
+	<?=$content->description; ?><br /><br />
+	<?php if ($content->type == 18) { ?>
+	    <?="<b>".$Dictionnary["AmountOfCredit"]."</b>: ".$content->credit; ?><br />
+	<?php } else if ($content->team_size > 0) { ?>
+	    <?="<b>".$Dictionnary["TeamSize"]."</b>: ".$content->team_size; ?><br />
+	<?php } ?>
+	<?php if ($content->mark != 0) { ?>
+	    <?="<b>".$Dictionnary["Money"]."</b>: ".$content->mark; ?><br />
+	<?php } ?>
+	<?php if ($content->slot_duration > 0) { ?>
+	    <?="<b>".$Dictionnary["SlotDuration"]."</b>: ".datex("H:i", date_to_timestamp($content->slot_duration * 60)); ?><br />
+	<?php } ?>
+	<?php if ($content->reference_activity != -1) { ?>
+	    <?="<b>".$Dictionnary["ReferenceActivity"]."</b>: ".$content->reference_codename; ?><br />
+	<?php } ?>
+	<?="<b>".$Dictionnary["Subscription"]."</b>: ".
+	   [
+	       $Dictionnary["Manual"],
+	       $Dictionnary["Mandatory"],
+	       $Dictionnary["Automatic"]
+	   ][$content->subscription];
+	?><br />
+	<?php if ($content->allow_unregistration == false) { ?>
+	    <b><?=$Dictionnary["UnregistrationForbidden"]; ?></b><br />
+	<?php } ?>
+	<?php if ($content->hidden) { ?>
+	    <b><?=$Dictionnary["ModuleHidden"]; ?></b><br />
+	<?php } ?>
+	<?php if (count($content->teacher)) { ?>
+	    <b><?=$Dictionnary["Teacher"]; ?>:</b><br />
+	<?php } ?>
+	<?php foreach ($content->teacher as $usr) { ?>
+	    <?php if (isset($usr["user"])) { ?>
+		<a href="index.php?p=ProfileMenu&amp;a=<?=$usr["id"]; ?>">
+		    <?=$usr["codename"]; ?>
+		</a><br />
+	    <?php } else { ?>
+		<a href="index.php?p=LaboratoriesMenu&amp;a=<?=$usr["id"]; ?>">
+		    <?=$usr["codename"]; ?>
+		</a><br />
+	    <?php } ?>
+	<?php } ?>
+	<?php if ($content->configuration != NULL) { ?>
+	    <br />
+	    <?=$Dictionnary["Configuration"]; ?>: <a href="<?=$content->configuration; ?>"><?=$Dictionnary["SeeConfiguration"]; ?></a>
+	<?php } ?>
+	<?php if ($content->subject != NULL) { ?>
+	    <br />
+	    <b><?=$Dictionnary["Subject"]; ?></b>: <a href="<?=$content->subject; ?>"><?=$Dictionnary["SeeSubject"]; ?></a>
+	    <br />
+	    <b><?=$Dictionnary["RepositoryName"]; ?></b>: <?=$content->repository_name; ?>
+	<?php } ?>
+	<?php if ($content->wallpaper != NULL) { ?>
+	    <a href="<?=$content->wallpaper; ?>"><?=$Dictionnary["Wallpaper"]; ?></a>
+	<?php } ?>
+    </td>
+    <td <?=clickable($URL, ""); ?> class="date_column">
+	<?php
+	if ($content->emergence_date)
+	    echo "<b>".$Dictionnary["EmergenceDate"]."</b>:<br />".weekday_or_date($content->emergence_date, $offset, $Position == "ActivitiesMenu")."<br />";
+	if ($content->done_date)
+	    echo "<b>".$Dictionnary["DoneDate"]."</b>:<br />".weekday_or_date($content->done_date, $offset, $Position == "ActivitiesMenu")."<br />";
+
+	if ($content->registration_date)
+	    echo "<b>".$Dictionnary["RegistrationDate"]."</b>:<br />".weekday_or_date($content->registration_date, $offset, $Position == "ActivitiesMenu")."<br />";
+	if ($content->close_date)
+	    echo "<b>".$Dictionnary["CloseDate"]."</b>:<br />".weekday_or_date($content->close_date, $offset, $Position == "ActivitiesMenu")."<br />";
+
+	if ($content->subject_appeir_date)
+	    echo "<b>".$Dictionnary["SubjectAppeirDate"]."</b>:<br />".weekday_or_date($content->subject_appeir_date, $offset, $Position == "ActivitiesMenu")."<br />";
+	if ($content->pickup_date)
+	    echo "<b>".$Dictionnary["PickupDate"]."</b>:<br />".weekday_or_date($content->pickup_date, $offset, $Position == "ActivitiesMenu")."<br />";
+	if ($content->subject_disappeir_date)
+	    echo "<b>".$Dictionnary["SubjectDisappeirDate"]."</b>:<br />".weekday_or_date($content->subject_disappeir_date, $offset, $Position == "ActivitiesMenu")."<br />";
+	?>
+    </td>
+    <td class="medal_column">
+	<div style="max-height: 300px; width: 100%; overflow-y: auto;">
+	    <?php $medx = []; ?>
+	    <?php foreach (sort_by_medal_grade($content->medal) as $medal) { ?>
+		<?php
+		$medx[] = $medal["codename"];
+		$color = "rgba(0, 0, 0, 0.2)";
+		if ($medal["grade_a"] || $medal["mandatory"])
+		    $color = "rgba(255, 0, 0, 0.2)";
+		else if ($medal["grade_b"])
+		    $color = "rgba(0, 0, 255, 0.2)";
+		else if ($medal["grade_c"])
+		    $color = "rgba(0, 255, 0, 0.2)";
+		else if ($medal["bonus"])
+		    $color = "rgba(255, 255, 0, 0.2)";
+		?>
+		<div style="display: inline-block; width: 100px; background-color: <?=$color; ?>; border-radius: 10px; position: relative; margin-bottom: 5px;">
+		    <a href="index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>"
+		    ><img
+			 <?php if ($medal["icon"] != "") { ?>
+			 src="<?=$medal["icon"]; ?>"
+			 width="30"
+			 height="30"
+			 <?php } else { ?>
+			 src="genicon.php?function=<?=$medal["codename"]; ?>"
+			 width="80"
+			 height="30"
+			 <?php } ?>
+			 title="<?=$medal["name"]; ?>: <?=$medal["description"]; ?>"
+		     /></a>
+
+		    <?php if (is_admin() || have_rights($content->id)) { ?>
+			<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>">
+			    <input type="hidden" name="action" value="medal_property" />
+			    <input type="hidden" name="medal" value="<?=$medal["id"]; ?>" />
+			    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+			    <input type="checkbox" name="local" <?=$medal["local"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+			    <label for="local"><?=$Dictionnary["Local"]; ?></label><br />
+			    <?php if ($content->type == 18 || $content->type == 22) { ?>
+				<input type="checkbox" name="mandatory" <?=$medal["mandatory"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+				<label for="mandatory"><?=$Dictionnary["Mandatory"]; ?></label><br />
+
+				<input type="checkbox" name="grade_a" <?=$medal["grade_a"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+				<label for="grade_a">A</label>
+				<input type="checkbox" name="grade_b" <?=$medal["grade_b"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+				<label for="grade_b">B</label>
+				<input type="checkbox" name="grade_c" <?=$medal["grade_c"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+				<label for="grade_c">C</label>
+				<br />
+				<input type="checkbox" name="bonus" <?=$medal["bonus"] ? "checked" : ""; ?> onchange="silent_submit(this.form);" />
+				<label for="bonus">Bonus</label>
+			    <?php } else { ?>
+				<input type="hidden" name="mandatory" value="0" />
+				<select name="mark">
+				    <?php for ($i = 0; $i < 10; ++$i) { ?>
+					<option value="<?=$i; ?>"><?=$i; ?></option>
+				    <?php } ?>
+				</select>
+			    <?php } ?>
+			</form>
+
+			<form method="post" action="index.php?<?=unrollget(); ?><?="#".$content->id; ?>" style="position: absolute; top: 0px; right: 0px;">
+			    <input type="hidden" name="action" value="remove_medal" />
+			    <input type="hidden" name="activity" value="<?=$content->id; ?>" />
+			    <input type="hidden" name="medal" value="<?=$medal["id"]; ?>" />
+			    <input type="submit" value="&#10007;" style="color: red;" style="display: inline-block;" />
+			</form>
+		    <?php } ?>
+		</div>
+	    <?php } ?>
+	</div>
+	<div style="max-height: 50px; width: 100%;">
+	    <input type="text" value="<?=implode(";", $medx); ?>" style="with: 100%; text-align: center; background-color: rgba(0, 0, 0, 0.0);" />
+	</div>
+    </td>
+
+    <td class="edit_panel edit_column">
+	<?php
+	if ($content->is_teacher)
+	    require ("inline_activity_formular.phtml");
+	?>
+    </td>
+</tr>
+<?php if ($classroom) { ?>
+<tr class="content_<?=$cnt % 2 ? "even" : "odd"; ?>  <?=$hidden ? "doneactivity" : ""; ?>"
+    style="visibility: <?=$hidden ? "collapse" : "visible"; ?>"
+>
+    <td colspan="4">
+	<?php
+	foreach ($content->session as $session)
+	{
+	    require ("print_session.phtml");
+	}
+	?>
+    </td>
+    <td>
+	<?php
+	if ($content->is_teacher)
+	    require ("inline_session_formular.phtml");
+	?>
+    </td>
+</tr>
+<?php } ?>

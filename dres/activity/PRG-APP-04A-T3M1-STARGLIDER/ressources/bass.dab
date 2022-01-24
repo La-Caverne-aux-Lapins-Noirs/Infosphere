@@ -1,0 +1,129 @@
+{Notes
+
+  [
+    Start = Music.Beat * 8
+    Duration = Music.Beat * 3.95
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 12
+    Duration = Music.Beat * 1.9
+    Frequency = 110
+  ],
+  [
+    Start = Music.Beat * 14
+    Duration = Music.Beat * 0.9
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 15
+    Duration = Music.Beat * 0.9
+    Frequency = 147
+  ],
+
+  '''''''''''''''''''''''''''''''
+
+  [
+    Start = Music.Beat * 16
+    Duration = Music.Beat * 0.9
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 17
+    Duration = Music.Beat * 0.45
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 17.5
+    Duration = Music.Beat * 0.45
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 18
+    Duration = Music.Beat * 0.9
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 19
+    Duration = Music.Beat * 0.9
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 20
+    Duration = Music.Beat * 0.9
+    Frequency = 110
+  ],
+  [
+    Start = Music.Beat * 21
+    Duration = Music.Beat * 0.9
+    Frequency = 55
+  ],
+  [
+    Start = Music.Beat * 22
+    Duration = Music.Beat * 0.9
+    Frequency = 110
+  ],
+  [
+    Start = Music.Beat * 23
+    Duration = Music.Beat * 0.9
+    Frequency = 55
+  ],
+
+  ''''''''''''''''''''''''''
+
+  [
+    Start = Music.Beat * 24
+    Duration = Music.Beat * 0.9
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 25
+    Duration = Music.Beat * 0.45
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 25.5
+    Duration = Music.Beat * 0.45
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 26
+    Duration = Music.Beat * 0.9
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 27
+    Duration = Music.Beat * 0.9
+    Frequency = 131
+  ],
+  [
+    Start = Music.Beat * 28
+    Duration = Music.Beat * 0.9
+    Frequency = 147
+  ],
+  [
+    Start = Music.Beat * 29
+    Duration = Music.Beat * 0.45
+    Frequency = 147
+  ],
+  [
+    Start = Music.Beat * 29.5
+    Duration = Music.Beat * 0.45
+    Frequency = 147 * 2
+  ],
+  [
+    Start = Music.Beat * 30
+    Duration = Music.Beat * 0.9
+    Frequency = 147
+  ],
+  [
+    Start = Music.Beat * 31
+    Duration = Music.Beat * 0.45
+    Frequency = 147
+  ],
+  [
+    Start = Music.Beat * 31.5
+    Duration = Music.Beat * 0.45
+    Frequency = 147 * 2
+  ]
+}

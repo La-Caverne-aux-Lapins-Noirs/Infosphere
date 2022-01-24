@@ -1,0 +1,71 @@
+<div style="width: 100%; min-height: 200px;">
+    <h3><?=$Dictionnary["ManagedActivities"]; ?>:</h3>
+
+    <table class="content_table">
+	<tr>
+	    <th>#</th>
+	    <th><?=$Dictionnary["Type"]; ?></th>
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><?=$Dictionnary["Date"]; ?></th>
+	    <th><?=$Dictionnary["Duration"]; ?></th>
+	</tr>
+	<?php foreach ($data->managed_activities as $module) { ?>
+	<tr>
+	    <td style="background-color: gray;"><?=$module->id; ?></td>
+	    <td style="background-color: gray;" colspan="4">
+		<a href="index.php?p=ModulesMenu&amp;a=<?=$module->id; ?>"><h3><?=$module->name; ?> (<?=$module->codename; ?>)</h3></a>
+	    </td>
+	</tr>
+	<tr>
+	    <?php
+	    $sessions = 0;
+	    $cumulated = 0;
+	    $previous = 0;
+	    $next = 0;
+	    foreach ($module->subactivities as $activity)
+	    {
+	      foreach ($activity->session as $session)
+              {
+	        $diff = $session->end_date - $session->begin_date;
+	        if ($session->end_date > time())
+	           $next += $diff;
+	        else
+ 	           $previous += $diff;
+	        $sessions += 1;
+	        $cumulated += $diff;
+	      }
+	    }
+	    ?>
+	    <td colspan="2">
+		<?=$Dictionnary["Sessions"].": ".$sessions; ?>
+	    </td>
+	    <td colspan="3">
+		<?=$Dictionnary["Duration"].": ".sprintf("%02d", ($cumulated / (60 * 60))).":".sprintf("%02d", $cumulated / 60 % 60); ?>
+		<?=$Dictionnary["Previously"].": ".sprintf("%02d", ($previous / (60 * 60))).":".sprintf("%02d", $previous / 60 % 60); ?>
+		<?=$Dictionnary["Next"].": ".sprintf("%02d", ($next / (60 * 60))).":".sprintf("%02d", $next / 60 % 60); ?>
+	    </td>
+	</tr>
+	<?php foreach ($module->subactivities as $activity) { ?>
+	<?php foreach ($activity->session as $session) { ?>
+	<tr>
+	    <td><?=$activity->id; ?></td>
+	    <td><?=$Dictionnary[$ActivityType[$activity->type]["codename"]]; ?></td>
+	    <td>
+		<?php if ($session->end_date > time()) { ?><b><?php } ?>
+		<a href="index.php?p=ActivityMenu&amp;a=<?=$activity->id; ?>&amp;b=<?=$session->id; ?>">
+		    <?=$activity->name; ?>
+		</a>
+		<?php if ($session->end_date > time()) { ?></b><?php } ?>
+	    </td>
+	    <td>
+		<?=datex("d/m/Y H:i", $session->begin_date)." - ".datex("H:i", $session->end_date); ?>
+	    </td>
+	    <td>
+		<?=datex("H:i", $session->end_date - $session->begin_date); ?>
+	    </td>
+	</tr>
+	<?php } ?>
+	<?php } ?>
+	<?php } ?>
+    </table>
+</div>

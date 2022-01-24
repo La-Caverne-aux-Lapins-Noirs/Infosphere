@@ -1,0 +1,201 @@
+
+----------------------------------------------------------------------------------------------------
+Profil:
+OK - Voir ses caracteristiques propres (Mail, adresse, etc.)
+OK - Voir ses médailles acquises
+OK - Voir ses médailles requises (Si on est lui ou si on est professeur)
+OK - Voir les activités auquel il a participé
+ - Voir sa page locale de l'infosphere:
+     - Les messages publics.
+     - Les notes propre à l'administration.
+ - Voir son niveau actuel de monnaie (en Mark).
+ - Voir les logs de connexion de l'utilisateur
+ - Voir son dépot git personnel
+ - Voir sa page perso
+ - Voir sa page sur la gallerie
+
+OK - Les administrateurs peuvent éditer le profil, et effectuer des opérations courantes a determiner.
+     (Certaines opérations seraient possible sur d'autres panneaux, cela n'empeche pas de pouvoir le
+     faire depuis cette page, par exemple:
+OK   - Ajouter ou retirer d'une promotion
+OK   - Ajouter ou retirer d'un groupe
+OK   - Ajouter ou retirer des médailles
+   )
+
+----------------------------------------------------------------------------------------------------
+Calendrier:
+OK  - Voir les activités correspondant à sa promotion ou ses responsabilités
+OK  - Voir les projets correspondant à sa promotion ou ses responsabiltiés
+  - Voir les activités en tant que salle.
+  - Exporter le calendrier au format GCALENDAR.
+OK  - Les activités affichées mènent à la page Instance/Session.
+
+----------------------------------------------------------------------------------------------------
+Modules:
+  - Voir l'ensemble des activités qui sont accessible du fait de mes promotions.
+    - La répartition est faite par cycle: Le cycle courant est situé en haut.
+      - Les cycles du futur sont masqués.
+      - Les cycles du passé sont masqués, mais peuvent être rendu visible.
+    - Dans le cycle, les matières sont déroulées (Les instances d'activité racine), si l'étudiant est inscrit.
+      - Si l'étudiant n'est pas inscrit, seul l'intitulé de la matière est inscrit, et il lui est proposé de s'inscrire.
+    - Dans les matières, les activités de celle ci sont déroulés (Les instances d'activités non racine), par ordre chronologique.
+      - Dans les matières, les projets sont affichés, activités comme les autres.
+      - Un lien depuis la matière mêne a l'e-learning, dans la partie associée à la matière.
+    - Les activités affichés mènent à la page Instance/Session.
+
+----------------------------------------------------------------------------------------------------
+Instance/Session:
+OK  - Cette page ne contient aucune information sur l'activité ne concerne en rien l'élève qui s'y rend.
+OK    - C'est à dire si l'instance/session est pour une promotion auquel il n'appartient pas.
+OK  - Elle affiche des informations sur le type de l'activité, son nom, son horaire et ses salles.
+OK  - Elle affiche les encadrants chargés de l'activité.
+OK  - La page instance/session affiche les médailles accessible grace a elle.
+OK  - Elle affiche éventuellement l'équipe auquel appartient l'utilisateur.
+OK  - Elle affiche les étudiants inscrits
+OK  - Elle lie les supports de cours associés qui se trouvent dans l'e-learning.
+OK  - Elle affiche le sujet de l'activité
+OK  - Elle affiche eventuellement la note/le commentaire si l'activité a été évaluée.
+OK  - Elle affiche la section de l'infosphere concernant la discussion sur l'activité présente.
+OK  - Elle affiche éventuellement les créneaux de rendez vous de l'activité, si celle ci en comporte.
+  - Elle affiche un moyen d'évaluer pour l'élève l'activité une fois celle ci passée, et eventuellement
+    l'évaluation qu'il a fait et un moyen de la modifier (limité dans le temps...)
+OK  - Elle affiche éventuellement les autres sessions de la session courante: si c'est une session
+      et non seulement une isntance, et si il y en a d'autres.
+OK  - Elle permet de s'inscrire à l'activité si on est de la bonne promo.
+OK  - Elle permet de rendre son travail a l'aide d'un lien vers le systeme de rendu pré-rempli.
+
+  - Elle permet de voir les services associés a l'instance (Redmine, etc.)
+
+  Aux admins:
+OK  - Elle permet d'inscrire/desinscrire les élèves a l'activité ou aux créneaux
+    de rendez vous.
+OK  - Elle permet de générer des créneaux de rendez vous.
+  - Elle permet de poster comme encadrant sur l'infosphere.
+OK  - Elle permet d'ajouter des encadrants ou d'en enlever.
+  - Elle permet de voir les avis condensés des élèves sur l'activité.
+  - Elle permet d'acceder a la page de correction avec les informations pré-remplies. (Barème, ramassage)
+
+----------------------------------------------------------------------------------------------------
+Salles (visiteurs):
+  - Voir les salles du campus sur lequel je suis. (Cette notion pourra être ajoutée plus tard)
+  - Voir la disponibilités des salles.
+  - L'infosphere dispose d'un salon de conversation par salle.
+    - L'administration peut y faire des annonces propres à la salle.
+    - Les élèves d'une activité multi salle peuvent cantonner leur discussion à leur salle.
+  - Si une activité est actuellement en cours dans la salle, un lien vers la page d'instance/session est posé.
+  - Les visiteurs peuvent voir les salles, mais pas le status de connexion des ordinateurs.
+
+----------------------------------------------------------------------------------------------------
+E-Learning:
+ - Voir les supports de cours associés aux activités qui sont accessible du fait de mes promotions.
+ - Celles du passé sont masquées mais peuvent être rendu visible.
+ - Les supports déjà consultés sont notés comme consulté.
+
+----------------------------------------------------------------------------------------------------
+Infosphere (Forum):
+ - Accès racine au réseau social de l'école.
+   - Deux catégories: les catégories "faites mains", et les catégories associés aux activités et autres éléments de l'infosphere.
+
+----------------------------------------------------------------------------------------------------
+Page rendu:
+OK - Le formulaire de ramassage. Il peut être prérempli par un lien vers cette page. (Principalement les pages d'instance/session)
+
+----------------------------------------------------------------------------------------------------
+Page recherche:
+OK - Permet de recherche un login, une activité, un support de cours, un post sur l'infosphere...
+
+----------------------------------------------------------------------------------------------------
+Page utilisateurs:
+ - Accessible seulement aux administrateurs.
+OK - Liste les utilisateurs.
+OK - Permet de générer des utilisateurs depuis une configuration ou manuellement (et de générer un mot de
+     passe)
+OK - Permet de regenerer un mot de passe utilisateur.
+OK - Permet de changer le status d'un utilisateur.
+OK - La generation ou regeneration d'un mot de passe provoque l'envoi du mail avec le nouveau mot
+     de passe a l'utilisateur. L'administrateur n'a pas accès au mot de passe.
+
+----------------------------------------------------------------------------------------------------
+Page groupe:
+OK - Liste les groupes
+OK - Liste les membres des groupes
+OK - Permet de créer des groupes
+OK - Permet de faire rejoindre ou disjoindre des membres du groupe.
+
+----------------------------------------------------------------------------------------------------
+Salles (administrateur):
+OK - Permet de lister des salles, d'en créer, d'en modifier.
+
+----------------------------------------------------------------------------------------------------
+Médailles:
+OK - Permet d'ajouter, supprimer, modifier des médailles (Admin)
+OK - Permet de lister les activités qui donnent accès à la médaille. (Visiteurs)
+
+----------------------------------------------------------------------------------------------------
+Activités:
+ Administrateur seulement
+OK - Permet de générer un modèle de déroulé scolaire: une matière contenant des projets et des activités
+   pouvant être instancié. Les activités ont toutes une date relative au début de la matière, de manière
+   à pouvoir être placé n'importe ou.
+
+OK - La page activité permet de générer une instance pour une certaine quantité de promotions et avec
+   une date de départ donnée. Si aucune date de départ n'est donné, le début du cycle est utilisé comme
+   date de début.
+
+OK - La liaison avec les médailles et l'e-learning est réalisé sur cette page.
+OK - Les modèles d'activités donnent naissent à des noeuds qui leur sont propre sur l'infosphere.
+ - Permet de caracteriser des exercices avec des valeurs specifiques qui seront utilisés pour
+   générer le dabsic associé. (Les médailles est un exemple flagrant)
+OK - Permet de fournir la documentation de l'exercice ou de l'activité.
+
+ - Les activités peuvent etre de type "exercice" afin de pouvoir être pioché par un générateur
+   d'examen ou une autre activité.
+
+----------------------------------------------------------------------------------------------------
+Promotions:
+ Administrateur seulement
+OK - Permet de créer de nouvelles promotions
+OK - Permet d'adjoindre de nouveaux élèves aux promotions ou d'en retirer
+ - Permet de faire évoluer une promotion entière vers une autre.
+OK - Permet de définir la semaine de démarrage du cycle.
+ - Les promotions vieilles ne doivent pas apparaitre par defaut. Un bouton peut servir à les faire
+ apparaitre. Cette disparition concerne aussi les formulaires!
+
+----------------------------------------------------------------------------------------------------
+Page de génération d'examen: (élèves)
+ - L'élève entre les médailles qu'il veut dans une liste affichée.
+ - Le générateur d'examen fabrique une activité qui figurera dans une matière racine speciale, associé
+   à un modele d'activité specifique. Cette activité sera unique et ne sera pas listée.
+ - Les exercices seront piochés dans les exercices auquel l'élève à accès et qui sont de type
+   "exercice". La préférence du générateur ira vers ceux n'ayant pas été fait.
+ - Une session sera planifiée dans "la salle d'exam" (determiné par l'administrateur) et un unique
+   poste sera reservé pour l'élève.
+
+----------------------------------------------------------------------------------------------------
+Page de gestion du robot de correction: (Administration)
+ - Permet l'installation de fichier DLL.
+ - Permet la catégorisation (composant, agglomerateur, etc.)
+ - Permet le telechargement.
+ - Permet de visualiser les modules installés.
+
+----------------------------------------------------------------------------------------------------
+Galerie des élèves:
+ - Deux catégories majeures: scolaire et non scolaire.
+ - Dans la première catégorie, l'élève peut choisir le projet qu'il souhaite montrer d'après les
+   activités de son cursus.
+ - Dans la seconde catégorie, l'élève doit choisit une catégorie parmis celle que l'administrateur
+   aura crée.
+ - Il est possible de lister par cycle ou globalement les galeries.
+ - Il est possible de demander a voir la galerie d'un élève en particulier.
+ - Il est possible de noter un élément de galerie. La note apparait une fois qu'il y en a au moins 10.
+ - Les travaux mis en ligne par les élèves doivent être vérifié par un modérateur.
+ - Les éléments de la galerie disposent chacun d'une entrée sur l'infosphere (ils sont représenté par
+   un topic et non par un sous forum)
+
+----------------------------------------------------------------------------------------------------
+L'échelle:
+ - Résultat des mesures des dépots personnels des élèves et des fonction qui s'y trouve.
+ - On peut demander a voir des scores d'activités précis.
+ - On peut y avoir le resultat d'un élève en particulier.
+ - On peut voir les resultats rangé par promotion ou globalement.
+ - Il y a un lien pour demander à l'échelle de faire un tour de circuit sur son dépot personnel.

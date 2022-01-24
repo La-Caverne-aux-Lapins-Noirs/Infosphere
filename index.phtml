@@ -1,0 +1,281 @@
+<?php if (!isset($include_shield) || $include_shield != hash("md5", "prevent weird stuff")) exit ; ?>
+<html>
+    <head>
+	<meta charset="utf8" />
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"-->
+	<title><?=strip_tags($Dictionnary[str_replace("Menu", "", $Position)]); ?> - <?=$Dictionnary["Infosphere"]; ?></title>
+	<!-- Infosphere & TechnoCore powered by Hanged Bunny Studio 2014-<?=date("Y", time()); ?> and Pentacle Technologie 2009-<?=date("Y", time()); ?> -->
+    </head>
+    <body>
+	<div id="head" class="menu"><?php // Menu ?>
+	    <a href="index.php" id="logo">
+		<img src="res/logo.png" alt="Logo" />
+	    </a>
+	    <script type="text/javascript">
+	     <?php require_once ("cookie.js"); ?>
+	     var clock_content = "";
+
+	     function SetContentClock(str)
+	     {
+		 clock_content = str;
+		 if (str != "")
+		     clock.innerHTML = clock_content;
+	     }
+	     function enable(obj, enable)
+	     {
+		 document.getElementById(obj).disabled = !enable;
+	     }
+	     function setcookie(id, value)
+	     {
+		 setCookie(id, value, 365 * 10);
+	     }
+	     function toggle_roll(id, size)
+	     {
+		 var div = document.getElementById(id);
+
+		 if (div.offsetHeight <= size + 5)
+		 {
+		     div.style.height = "unset";
+		     div.style.overflow = null;
+		 }
+		 else
+		 {
+		     div.style.height = size + "px";
+		     div.style.overflow = "hidden";
+		 }
+		 /* console.log(id); */
+		 setCookie(id, div.style.height, 365 * 10);
+	     }
+	     function toggle_rollc(cook, cla, size, obj, show, hide)
+	     {
+		 var div = document.getElementsByClassName(cla);
+		 var ck = getCookie(cook);
+
+		 if (ck == null)
+		     ck = 0;
+		 else
+		     ck = parseInt(ck);
+		 if (ck == 0)
+		     obj.innerHTML = hide;
+		 else
+		     obj.innerHTML = show;
+		 for (var i = 0; i < div.length; i++)
+		 {
+		     if (ck == 0)
+			 div.item(i).style.visibility = "visible";
+		     else
+			 div.item(i).style.visibility = "collapse";
+		 }
+		 setCookie(cook, ck > 0 ? "0" : "1", 365 * 10);
+	     }
+	     function reset_form(form)
+	     {
+		 form.style.backgroundColor = null;
+	     }
+	     function silent_submit(form)
+	     {
+		 var xhr = new XMLHttpRequest();
+		 var dest = form.getAttribute("action") + "&silent=1";
+		 var method = form.getAttribute("method");
+		 var fields = form.elements;
+		 var data = [];
+		 var serial = "";
+		 var name;
+		 var value;
+
+		 for (name in fields)
+		 {
+		     if (fields[name].type == "checkbox")
+		     {
+			 if (fields[name].checked == false)
+			     value = 0;
+			 else
+			     value = 1;
+			 data.push(encodeURIComponent(name) + "=" + encodeURIComponent(value));
+		     }
+		     else
+			 data.push(encodeURIComponent(name) + "=" + encodeURIComponent(fields[name].value));
+		 }
+		 serial = data.join('&').replace('/%20/g', '+');
+		 xhr.addEventListener("load", function(event) {
+		     form.style.backgroundColor = "green";
+		     console.log(xhr.statusText);
+		     setTimeout(reset_form, 500, form);
+		 });
+		 xhr.addEventListener("error", function(event) {
+		     form.style.backgroundColor = "red";
+		     console.log(xhr.statusText);
+		     setTimeout(reset_form, 500, form);
+		 });
+		 xhr.open(method, dest, false);
+		 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		 form.style.backgroundColor = "yellow";
+		 xhr.send(serial);
+	     }
+	     var last_active = 0;
+	     window.addEventListener('mousemove', e =>
+		 {
+		     var cnt = Date.now();
+
+		     if (cnt - last_active > 60000)
+		     {
+			 var xhr = new XMLHttpRequest();
+
+			 xhr.open("get", "index.php?silent=1", false);
+			 xhr.send();
+			 last_active = cnt;
+		     }
+		 }
+	     );
+	    </script>
+	    <?php foreach ($Pages as $Name => $Address) { ?>
+		<?php if ($Address["Menu"] === "Top" && ($Address["Authority"] == 0 || is_page_authorized($Address, $User))) { ?>
+		    <?php if (substr($Address["File"], 0, 4) == "http") { ?>
+			<a href="<?=$Address["File"]; ?>">
+		    <?php } else { ?>
+			<a
+			    href="index.php?p=<?=$Name; ?>"
+			    <?php if (isset($_GET["p"]) && $Name == $_GET["p"]) { ?>
+			    class="current_page"
+			    <?php } ?>
+			>
+		    <?php } ?>
+		<div
+		    <?php /*
+		    onMouseOver="SetContentClock('<?=addslashes($Dictionnary[str_replace("Menu", "", $Name)]); ?>');"
+		    onMouseOut="SetContentClock('');"
+		    */ ?>
+		>
+		    <?=$Dictionnary[str_replace("Menu", "", $Name)]; ?>
+		</div>
+	    </a>
+	    <?php } ?>
+	    <?php } ?>
+	    <div style="float: right;" id="clock">
+		<?=date("d/m/Y h:m:s", time()); ?>
+	    </div>
+	    <script type="text/javascript">
+	     var clock = document.getElementById("clock");
+
+	     function SetClockTime()
+	     {
+		 setTimeout(SetClockTime, 1000);
+		 if (clock_content != "")
+		     return ;
+		 date = new Date();
+		 var d = String(date.getDate()).padStart(2, '0');
+		 var m = String(date.getMonth() + 1).padStart(2, '0');
+		 var y = date.getFullYear();
+		 var h = String(date.getHours()).padStart(2, '0');
+		 var min = String(date.getMinutes()).padStart(2, '0');
+		 var sec = String(date.getSeconds()).padStart(2, '0');
+
+		 clock.innerHTML =
+		     d + "/" + m + "/" + y + " " + h + ":" + min + ":" + sec
+		 ;
+	     }
+	     SetClockTime();
+	    </script>
+	</div>
+
+	<div id="body">
+	    <?php require_once ("dispatch.php"); ?>
+	</div>
+
+	<?php if (isset($DebugLog) && $DebugLog != "") { ?>
+	<div id="debugbox">
+	    <?=str_replace("\n", "<br />", $DebugLog); ?>
+	</div>
+	<?php } ?>
+
+	<?php if ($ErrorMsg != "") { ?>
+	<div id="error_message" onclick="remove_error_div();">
+	    <p><?=$ErrorMsg; ?></p>
+	</div>
+	<script type="text/javascript">
+	 function remove_error_div() {
+	     document.getElementById("error_message").style.display = "none";
+	 }
+	 setTimeout(remove_error_div, 3000);
+	</script>
+	<?php } ?>
+
+	<?php if (is_object($LogMsg) || $LogMsg != "") { ?>
+	    <div id="log_message" onclick="remove_log_div();">
+		<?php if (is_object($LogMsg)) { ?>
+		    <p><?=strval($LogMsg); ?></p>
+		<?php } else { ?>
+		    <p><?=$Dictionnary[$LogMsg]; ?></p>
+		<?php } ?>
+	    </div>
+	<script type="text/javascript">
+	 function remove_log_div() {
+	     document.getElementById("log_message").style.display = "none";
+	 }
+	 setTimeout(remove_log_div, 3000);
+	</script>
+	<?php } ?>
+
+	<div id="foot">
+	    <!-- FORMULAIRE DE LANGAGE -->
+	    <form action="index.php?p=<?=$Position; ?>" method="POST">
+		<?php foreach ($LanguageList as $lng => $full) { ?>
+		<select name="language_select" onChange="submit(this);">
+		    <option
+			value="<?=$lng; ?>" <?=$Language == $lng ? "selected" : ""; ?>
+			>
+			<?=$full; ?>
+		    </option>
+		</select>
+		<?php } ?>
+	    </form>
+
+	    <!-- BOUTON DE PIED (BACK OFFICE) -->
+	    <div class="menu"><?php // Menu ?>
+		<?php foreach ($Pages as $Name => $Address) { ?>
+		    <?php if ($Address["Menu"] === "Bottom" && is_page_authorized($Address, $User)) { ?>
+			<a
+			    href="index.php?p=<?=$Name; ?>"
+			    <?php if (isset($_GET["p"]) && $Name == $_GET["p"]) { ?>
+			    class="current_page"
+			    <?php } ?>
+			>
+			    <div
+				onMouseOver="SetContentClock('<?=addslashes($Dictionnary[str_replace("Menu", "", $Name)]); ?>');"
+					     onMouseOut="SetContentClock('');"
+			    >
+				<?=$Dictionnary[str_replace("Menu", "", $Name)]; ?>
+			    </div>
+			</a>
+		    <?php } ?>
+		<?php } ?>
+	    </div>
+
+	    <div class="loginout"><!-- FORMULAIRE DE CONNEXION / DECONNEXION -->
+		<?php if ($User == NULL) { ?>
+		<form action="index.php?p=<?=$Position; ?>" method="POST">
+		    <input type="text" name="login" placeholder="<?=$Dictionnary["Login"]; ?>" />
+		    <input type="password" name="password" placeholder="<?=$Dictionnary["Password"]; ?>" />
+		    <input type="submit" value="&#10003;" />
+		    <?php if ($Configuration->Properties["subscription_possible"]) { ?>
+			<a href="index.php?p=Subscribe&amp;pp=<?=$Position; ?>">
+			    <input type="button" value="<?=$Dictionnary["Subscribe"]; ?>" />
+			</a>
+		    <?php } ?>
+		    <input type="hidden" name="logaction" value="login" />
+		</form>
+		<?php } else { ?>
+		    <form target="index.php?p=<?=$Position; ?>" method="POST">
+			<p class="menubartext">
+			    <span><?=$Dictionnary["LoggedAs"]; ?>&nbsp;<?=$User["codename"]; ?></span>
+			    <input type="submit" name"logout" value="&#10007;" style="float: right;" />
+			</p>
+			<input type="hidden" name="logaction" value="logout" />
+		    </form>
+		<?php } ?>
+	    </div>
+	</div>
+    </body>
+</html>
+<?php require_once ("profiling.php"); ?>

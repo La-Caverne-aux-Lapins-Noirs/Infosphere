@@ -1,0 +1,217 @@
+
+'VECTREX
+
+{Shapes
+  [
+    'V
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 0) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 0, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 10
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ]
+    }
+  ],
+  [
+    'E
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 1) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 0, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 10
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 10
+        Color = 255, 255, 255
+      ]
+    }
+  ],
+  [
+    'C
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 2) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 10, 10
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 0, 10
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 10, 10
+        Color = 128, 128, 128
+      ]
+    }
+  ],
+  [
+    'T
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 3) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 0, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 5, 10
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ]
+    }
+  ],
+  [
+    'R
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 4) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 0, 10
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 10, 5
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 3, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 10, 10
+        Color = 128, 128, 128
+      ]
+    }
+  ],
+  [
+    'E
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 5) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 0
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 0, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 5
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 0, 10
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 10
+        Color = 255, 255, 255
+      ]
+    }
+  ],
+  [
+    'X
+    Type = "Line"
+    Scale = 2, 2
+    Position = (-12 * 7 / 2 + 12 * 6) * _.Scale[0], -5 * _.Scale[1]
+    {Coordinates
+      [
+        Position = 0, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 5
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 0
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 5
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 0, 10
+        Color = 255, 255, 255
+      ],
+      [
+        Position = 5, 5
+        Color = 128, 128, 128
+      ],
+      [
+        Position = 10, 10
+        Color = 255, 255, 255
+      ]
+    }
+  ]
+}

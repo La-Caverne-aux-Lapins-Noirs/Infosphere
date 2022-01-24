@@ -1,0 +1,23 @@
+<a href="index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>&amp;b=<?=$session->id; ?>">
+    <div class="aligned_box box250x50" style="background-color: #181818;">
+	<span style="font-size: small;">
+	    <?=$Dictionnary["Session"]; ?>
+	    <?php if (count($session->slot)) { ?>
+	    <br />
+	    <?=$Dictionnary["AppointmentSlots"]; ?>
+	    <?php
+	    $reserved = 0;
+	    foreach ($session->slot as $slot)
+	    {
+	    if ($slot["id_team"] != -1)
+	    $reserved += 1;
+	    }
+	    ?>
+	    <?=$reserved; ?> / <?=count($session->slot); ?>
+	    <?php } ?>
+	</span>
+	<br />
+	<?=human_date($session->begin_date); ?> - <?=datex("H:i:s", $session->end_date); ?>
+	<br />
+	<?=$Dictionnary["JoinPage"]; ?>
+    </div></a>

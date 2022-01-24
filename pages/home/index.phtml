@@ -1,0 +1,62 @@
+<?php if ($silent) return ; ?>
+<?php require_once ("collect_dashboard_activities.php"); ?>
+<?php require_once ("collect_dashboard_projects.php"); ?>
+<div class="split_horizontal">
+    <div class="split_vertical">
+	<div class="double_horizontal">
+	    <div class="round_box" style="text-align: justify;">
+		<?php require ("welcome.phtml"); ?>
+	    </div>
+	    <div class="round_box" style="text-align: left;">
+		<?php if ($User != NULL) { ?>
+		    <?php require_once ("last_medals.php"); ?>
+		<?php } ?>
+	    </div>
+	</div>
+	<div class="double_horizontal">
+	    <div class="round_box">
+		<?php require ("about_you.phtml"); ?>
+	    </div>
+	    <div class="round_box" id="powerbox">
+		<?php if ($User != NULL) { ?>
+		    <?php require ("power.phtml"); ?>
+		<?php } ?>
+	    </div>
+	</div>
+    </div>
+    <div class="split_vertical">
+	<div class="double_horizontal">
+	    <div class="split_vertical">
+		<div class="round_box">
+		    <?php if ($User != NULL) { ?>
+			<?php require_once ("activities.phtml"); ?>
+		    <?php } ?>
+		</div>
+		<div class="round_box">
+		    <?php if ($User != NULL) { ?>
+			<?php require_once ("managed.phtml"); ?>
+		    <?php } ?>
+		</div>
+	    </div>
+	    <div class="round_box">
+		<?php if ($User != NULL) { ?>
+		    <?php require_once ("projects.phtml"); ?>
+		<?php } ?>
+	    </div>
+	</div>
+
+	<div class="round_box">
+	    <?php if ($User != NULL) { ?>
+		<?php require_once ("intercom.php"); ?>
+	    <?php } ?>
+	</div>
+    </div>
+<br />
+<br />
+<?php if ($User != NULL && count($alerts)) { ?>
+    <script>
+     document.getElementById("powerbox").style.backgroundColor = "red";
+    </script>
+<?php } ?>
+
+

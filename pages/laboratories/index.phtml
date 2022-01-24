@@ -1,0 +1,21 @@
+<?php
+if (file_exists(__DIR__."/handle_request.php")
+    && is_admin()
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Laboratories"]; ?></h2>
+
+<?php
+if ($unique)
+    require_once ("list_users.phtml");
+else
+    require_once ("list_groups.phtml");
+?>
+

@@ -1,0 +1,182 @@
+    {Notes
+      [
+        Start = Music.Beat * 0
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ], 
+      [
+        Start = Music.Beat * 1
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 2
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 3
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 4
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 5
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 5.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 6.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 7
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 8
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 9
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 10
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 11
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 12
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 13
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 13.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 14.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 15
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 16
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 17
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 18
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 19
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 20
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 21
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 21.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 22.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 23
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 24
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 25
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 26
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 27
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 28
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 29
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ],
+      [
+        Start = Music.Beat * 29.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 30.5
+	Duration = Music.Beat / 4
+	Frequency = 110
+      ],
+      [
+        Start = Music.Beat * 31
+	Duration = Music.Beat / 4
+	Frequency = 880
+      ]
+    }

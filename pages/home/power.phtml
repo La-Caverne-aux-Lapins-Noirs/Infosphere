@@ -1,0 +1,96 @@
+<?php $alerts = []; ?>
+
+<?php if (count($User["children"])) { ?>
+    <h2><?=$Dictionnary["ImpersonateAsParent"]; ?>:</h2>
+    <form action="index.php?<?=unrollget(); ?>" method="post">
+	<select name="children" style="width: 49%;">
+	    <?php foreach ($User["children"] as $children) { ?>
+		<option value="<?=$children["id"]; ?>"><?=$children["codename"]; ?></option>
+	    <?php } ?>
+	</select>
+	<input type="submit" value="<?=$Dictionnary["Impersonate"]; ?>" style="width: 49%;" />
+    </form>
+<?php } ?>
+
+<?php if ($OriginalUser["codename"] != $User["codename"] && $ParentConnexion) { ?>
+    <?php
+    echo $Dictionnary["FakeLoggedAs"]." ".$User["codename"]."<br />";
+    echo $Dictionnary["RealIdentity"]." ".$OriginalUser["codename"]."<br />";
+    ?>
+    <form action="index.php?<?=unrollget(); ?>" method="post">
+	<?=$Dictionnary["CancelImpersonate"].":"; ?>
+	<input type="hidden" name="children" value="<?=$OriginalUser["codename"]; ?>" />
+	<input type="submit" value="X" />
+    </form>
+<?php } ?>
+
+<?php if ($OriginalUser["authority"] >= ADMINISTRATOR) { ?>
+    <h2><?=$Dictionnary["AdministrationPower"]; ?></h2>
+    <?php
+    if ((disk_free_space("./") / disk_total_space("./")) <= 0.2)
+    {
+	$alerts[] = $Dictionnary["DiskFull"]." : ".intval(disk_free_space("./") / disk_total_space("./") * 100)."% ".$Dictionnary["remaining"].". (".(sprintf("%.1f", disk_free_space("./") / 1e9))."Go)";
+    }
+
+    $last = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Albedo stops.' ORDER BY log_date DESC");
+    if (date_to_timestamp($last["log_date"]) < now() - 60 * 3) // Il doit s'executer toutes les 2 minutes, et ca fait 3 minutes qu'il n'y a rien
+    {
+	$alerts[] = $Dictionnary["AlbedoDoesNotRun"];
+    }
+    ?>
+<?php } ?>
+
+<div>
+    <?php if ($OriginalUser["authority"] >= ADMINISTRATOR && $ParentConnexion == false) { ?>
+	<?php if ($OriginalUser["codename"] != $User["codename"]) { ?>
+	    <?php
+	    $alerts[] = $Dictionnary["FakeLoggedAs"]." ".$User["codename"];
+	    $alerts[] = $Dictionnary["RealIdentity"]." ".$OriginalUser["codename"];
+	    ?>
+	    <form action="index.php?<?=unrollget(); ?>" method="post">
+		<?=$Dictionnary["CancelImpersonate"].":"; ?>
+		<input type="hidden" name="log_as" value="<?=$OriginalUser["codename"]; ?>" />
+		<input type="submit" value="X" />
+	    </form>
+	<?php } ?>
+	<form action="index.php?<?=unrollget(); ?>" method="post">
+	    <?=$Dictionnary["Impersonate"].":<br />"; ?>
+	    <input type="text" name="log_as" placeholder="<?=$Dictionnary["Login"]; ?>" style="width: 49%;" />
+	    <input type="submit" value="<?=$Dictionnary["Impersonate"]; ?>" style="width: 49%;" />
+	</form>
+    <?php } ?>
+    <br />
+
+    <?php if ($User["authority"] >= ADMINISTRATOR) { ?>
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <?php if (isset($User["admin_mode"]) && $User["admin_mode"]) { ?>
+		<?php $alerts[] = $Dictionnary["AdminModeEnabled"]; ?>
+		<input
+		    type="submit"
+		    name="admin_mode"
+		    value="<?=$Dictionnary["DisableAdminMode"]; ?>"
+		    style="width: 99%; height: 50px;"
+		/>
+	    <?php } else { ?>
+		<input
+		    type="submit"
+		    name="admin_mode"
+		    value="<?=$Dictionnary["EnableAdminMode"]; ?>"
+		    style="width: 99%; height: 50px;"
+		/>
+	    <?php } ?>
+	</form>
+    <?php } ?>
+</div>
+
+<?php
+if (count($alerts))
+{
+    echo "<br />";
+    echo "<h3>".$Dictionnary["Warning"]."!</h3><br />";
+    foreach ($alerts as $a)
+    {
+	echo $a."<br />";
+    }
+}
+?>

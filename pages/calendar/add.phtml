@@ -1,0 +1,133 @@
+<br />
+<form method="POST" action="index.php?<?=unrollget(); ?>"  class="add_formular" id="instance_form">
+    <input type="hidden" name="action" value="add" />
+    <h2><?=$Dictionnary["AddASession"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="codename"
+	    placeholder="<?=$Dictionnary["InstanceCodename"]; ?>"
+	    value="<?=try_get($_POST, "codename"); ?>"
+	/>
+	<br /><br />
+
+	<?=$Dictionnary["Schedule"]; ?><br />
+	<input
+	    type="date"
+		  name="activity_date"
+		  value="<?=try_get($_POST, "activity_date"); ?>"
+	/>
+	<input
+	    type="time"
+		  name="begin_hour"
+		  min="09:00"
+		  max="23:00"
+		  step="<?=60*30; ?>"
+		  value="<?=try_get($_POST, "begin_hour"); ?>"
+	/>
+	<input
+	    type="time"
+		  name="end_hour"
+		  min="09:00"
+		  max="23:00"
+		  step="<?=60*30; ?>"
+		  value="<?=try_get($_POST, "end_hour"); ?>"
+	/>
+	<br />
+
+	<div id="room_list" style="height: 35px;">
+	    <!-- -->
+	</div>
+	<script type="text/javascript">
+	 var room_list = document.getElementById("room_list");
+	 var selected_room = {};
+
+	 function remove_room(elem)
+	 {
+	     selected_room[elem] = 0;
+	     var e = document.getElementById(elem);
+	     e.parentNode.removeChild(e);
+	 }
+	 function add_room(elem)
+	 {
+	     if (elem.value == "" || selected_room[elem.value] == 1)
+		 return ;
+	     selected_room[elem.value] = 1;
+	     room_list.innerHTML +=
+		 "<div onclick=\"remove_room('list_" + elem.value + "');\" " +
+		 "id=\"list_" + elem.value + "\">" +
+		 elem.value +
+		 "&nbsp;X</div>"
+	     ;
+	 }
+	</script>
+	<select onchange="add_room(this);">
+	    <option value="" disabled selected><?=$Dictionnary["SelectARoom"]; ?></option>
+	    <?php foreach (db_select_all("*, {$Language}_name as name FROM room ORDER BY name ASC") as $cn => $n) { ?>
+		<option value="<?=$n["id"]; ?>"><?=$n["name"]; ?></option>
+	    <?php } ?>
+	</select>
+	<br />
+	<input type="hidden" name="rooms" id="rooms" value="" />
+
+	<div id="school_year_list" style="height: 35px;">
+	    <!-- -->
+	</div>
+	<script type="text/javascript">
+	 var school_year_list = document.getElementById("school_year_list");
+	 var selected_year = {};
+
+	 function remove_year(elem)
+	 {
+	     selected_year[elem] = 0;
+	     var e = document.getElementById(elem);
+	     e.parentNode.removeChild(e);
+	 }
+	 function add_year(elem)
+	 {
+	     if (elem.value == "" || selected_year[elem.value] == 1)
+		 return ;
+	     selected_year[elem.value] = 1;
+	     school_year_list.innerHTML +=
+		 "<div onclick=\"remove_year('ylist_" + elem.value + "');\" " +
+		 "id=\"ylist_" + elem.value + "\">" +
+		 elem.options[elem.selectedIndex].innerHTML +
+		 "&nbsp;X</div>"
+	     ;
+	 }
+	</script>
+	<select onchange="add_year(this);">
+	    <option value="" disabled selected>
+		<?=$Dictionnary["SelectASchoolYear"]; ?>
+	    </option>
+	    <?php foreach (db_select_all("* FROM cycle WHERE done = 0 ORDER BY codename") as $cn => $n) { ?>
+		<option value="<?=$n["id"]; ?>"><?=$n["codename"]; ?></option>
+	    <?php } ?>
+	</select>
+	<br />
+	<input type="hidden" name="years" id="years" value="" />
+
+	<script type="text/javascript">
+	 function merge_submit()
+	 {
+	     var rl = document.getElementById("rooms");
+
+	     for (var index in selected_room)
+	     {
+		 if (selected_room[index] == 1)
+		     rl.value += index + ";";
+	     }
+	     var yl = document.getElementById("years");
+
+	     for (var index in selected_year)
+	     {
+		 if (selected_year[index] == 1)
+		     yl.value += index + ";";
+	     }
+	     document.getElementById("instance_form").submit();
+	 }
+	</script>
+	<br />
+	<input type="button" onclick="merge_submit();" value="&#10003;" />
+    </div>
+</form>

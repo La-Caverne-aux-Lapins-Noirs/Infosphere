@@ -1,0 +1,17 @@
+<form
+    method="post"
+    action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?>"
+    class="add_formular"
+    >
+    <br />
+    <div style="min-height: 60px;">
+	<input type="hidden" name="action" value="export_activity" />
+	<input type="text" name="activity" placeholder="<?=$Dictionnary["CodeName"]; ?>" style="width: 80%; height: 20px; line-height: 20px; font-size: 15px;" />
+	<select name="format" style="width: 80%; height: 20px; line-height: 20px; font-size: 15px;">
+	    <option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+	    <option value="detailed_sketch"><?=$Dictionnary["DetailedSketch"]; ?></option>
+	    <option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+	</select>
+	<input type="submit" value="<?=$Dictionnary["Export"]; ?>" style="width: 80%; height: 30px; line-height: 20px; font-size: 15px;" />
+    </div>
+</form>

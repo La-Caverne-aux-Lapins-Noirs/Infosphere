@@ -1,0 +1,60 @@
+<h5><?=$Dictionnary["Sessions"]; ?></h5>
+<table class="content_table" style="<?=$future; ?>">
+    <tr>
+	<th><?=$Dictionnary["Name"]; ?></th>
+	<th><?=$Dictionnary["CodeName"]; ?></th>
+	<th><?=$Dictionnary["Date"]; ?></th>
+	<th><?=$Dictionnary["Presence"]; ?></th>
+	<th><?=$Dictionnary["Audience"]; ?></th>
+	<th><?=$Dictionnary["Laboratory"]; ?></th>
+    </tr>
+    <?php $total_session = 0; ?>
+    <?php $total_hour = 0; ?>
+    <?php foreach ($sessions[$year][$month] as $act) { ?>
+    <tr>
+	<td style="text-align: center; font-size: x-small;">
+	    <a href="index.php?p=ModulesMenu&amp;a=<?=$act["id_pinstance"]; ?>">
+		<?=$act["pactivity_name"]; ?>
+	    </a><br />
+	    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id_instance"]; ?>&amp;b=<?=$act["id_session"]; ?>">
+		<?=$act["activity_name"]; ?>
+	    </a>
+	</td>
+	<td>
+	    <?=$act["pactivity_codename"]; ?><br />
+	    <?=$act["activity_codename"]; ?>
+	</td>
+	<td>
+	    <?=date("d/m/Y", date_to_timestamp($act["begin_date"])); ?>
+	</td>
+	<td style="text-align: center;">
+	    <?php if ($act["partial_duration"] == -1) { ?>
+	    <?=$act["duration"] / (60 * 60); ?>h
+	    <?php $total_hour = $total_hour + $act["duration"]; ?>
+	    <?php } else { ?>
+	    <?=$act["partial_duration"] / (60 * 60); ?>h <?=$Dictionnary["On"]; ?> <?=$act["duration"] / (60 * 60); ?>h
+	    <?php $total_hour = $total_hour + $act["partial_duration"]; ?>
+	    <?php } ?>
+	</td>
+	<td style="text-align: center; font-size: x-small;">
+	    <?php foreach ($act["cycle"] as $c) { ?>
+	    <a href="index.php?p=SchoolYearMenu&amp;a=<?=$c["id"]; ?>">
+		<?=$c["cycle"]; ?>
+	    </a>
+	    <br />
+	    <?php } ?>
+	</td>
+	<td style="text-align: center;">
+	    <?php if (strlen($act["laboratory_name"])) { ?>
+	    <?=$Dictionnary["Throught"]; ?> <?=$act["laboratory_name"]; ?>
+	    <?php } else { ?>
+	    <?php } ?>
+	</td>
+    </tr>
+    <?php $total_session += 1; ?>
+    <?php } ?>
+</table>
+<p>
+    <?=$Dictionnary["SessionTotal"]; ?>: <?=$total_session; ?><br />
+    <?=$Dictionnary["HourTotal"]; ?>: <?=$total_hour / (60 * 60); ?>h
+</p>

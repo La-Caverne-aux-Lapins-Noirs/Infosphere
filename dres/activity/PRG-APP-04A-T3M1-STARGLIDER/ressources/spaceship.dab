@@ -1,0 +1,273 @@
+
+[*
+**
+**
+**
+*]
+
+{Mesh
+  [ 'A1
+    Shape = "Triangle"
+    Color = 0, 128, 0
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = -50, -20, 13
+	Color = 0, 64, 0
+      ],
+      [
+	Position = -50, -20, -13
+      ]
+    }
+  ],
+  [ 'A2
+    Shape = "Triangle"
+    Color = 0, 128, 0
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = 50, -20, 13
+	Color = 0, 64, 0
+      ],
+      [
+	Position = 50, -20, -13
+      ]
+    }
+  ],
+  [ 'A3
+    Shape = "Triangle"
+    Color = 0, 128, 0
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = -50, 20, 13
+	Color = 0, 64, 0
+      ],
+      [
+	Position = -50, 20, -13
+      ]
+    }
+  ],
+  [ 'A4
+    Shape = "Triangle"
+    Color = 0, 128, 0
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = 50, 20, 13
+	Color = 0, 64, 0
+      ],
+      [
+	Position = 50, 20, -13
+      ]
+    }
+  ],
+
+  [ 'B1
+    Shape = "Triangle"
+    Color = 0, 64, 0
+    {Coord
+      [
+	Position = -50, -20, 0
+      ],
+      [
+	Position = -60, 0, 0
+      ],
+      [
+        Color = 255, 0, 0
+	Position = -50, 0, 60
+      ]
+    }
+  ],
+  [ 'B2
+    Shape = "Triangle"
+    Color = 0, 64, 0
+    {Coord
+      [
+	Position = -50, 20, 0
+      ],
+      [
+	Position = -60, 0, 0
+      ],
+      [
+        Color = 255, 0, 0
+	Position = -50, 0, 60
+      ]
+    }
+  ],
+  [ 'B3
+    Shape = "Triangle"
+    Color = 0, 64, 0
+    {Coord
+      [
+	Position = 50, -20, 0
+      ],
+      [
+	Position = 60, 0, 0
+      ],
+      [
+        Color = 255, 0, 0
+	Position = 50, 0, 60
+      ]
+    }
+  ],
+  [ 'B4
+    Shape = "Triangle"
+    Color = 0, 64, 0
+    {Coord
+      [
+	Position = 50, 20, 0
+      ],
+      [
+	Position = 60, 0, 0
+      ],
+      [
+        Color = 255, 0, 0
+	Position = 50, 0, 60
+      ]
+    }
+  ],
+
+  [ 'C1
+    Shape = "Triangle"
+    Color = 128, 0, 0
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = 0, 0, -30
+	Color = 255, 255, 0
+      ],
+      [
+	Position = 25, 0, 0
+      ]
+    }
+  ],
+  [ 'C2
+    Shape = "Triangle"
+    Color = 128, 0, 0
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = 0, 0, -30
+	Color = 255, 255, 0
+      ],
+      [
+	Position = -25, 0, 0
+      ]
+    }
+  ],
+  [ 'C3
+    Shape = "Triangle"
+    Color = 128, 0, 0
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = 0, 0, -30
+	Color = 255, 255, 0
+      ],
+      [
+	Position = -25, 0, 0
+      ]
+    }
+  ],
+  [ 'C4
+    Shape = "Triangle"
+    Color = 128, 0, 0
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = 0, 0, -30
+	Color = 255, 255, 0
+      ],
+      [
+	Position = 25, 0, 0
+      ]
+    }
+  ],
+
+  [ 'D1
+    Shape = "Triangle"
+    Color = 255, 255, 255
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = -10, 0, 0
+      ],
+      [
+	Position = 0, 0, 120
+      ]
+    }
+  ],
+  [ 'D2
+    Shape = "Triangle"
+    Color = 255, 255, 255
+    {Coord
+      [
+	Position = 0, 20, 0
+      ],
+      [
+	Position = 10, 0, 0
+      ],
+      [
+	Position = 0, 0, 120
+      ]
+    }
+  ],
+  [ 'D3
+    Shape = "Triangle"
+    Color = 255, 255, 255
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = -10, 0, 0
+      ],
+      [
+	Position = 0, 0, 120
+      ]
+    }
+  ],
+  [ 'D4
+    Shape = "Triangle"
+    Color = 255, 255, 255
+    {Coord
+      [
+	Position = 0, -20, 0
+      ],
+      [
+	Position = 10, 0, 0
+      ],
+      [
+	Position = 0, 0, 120
+      ]
+    }
+  ],
+
+  [ 'E1
+    Shape = "Sphere"
+    Color = 255, 255, 255
+    AltColor = 0, 0, 0
+    Position = 0, 0, 120
+    Diameter = 20
+    Smoothness = 15
+  ]
+}

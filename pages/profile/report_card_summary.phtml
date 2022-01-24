@@ -1,0 +1,76 @@
+<?php
+$acquired_credit = 0;
+$total_credit = 0;
+$present = 0;
+$late = 0;
+$latesum = 0;
+$missing = 0;
+$work = 0;
+$nowork = 0;
+$grade_avg = 0;
+
+foreach ($data->sublayer as $c)
+{
+    foreach ($c->sublayer as $mod)
+    {
+	$present += $mod->present->cumulated;
+	$late += $mod->late->cumulated;
+	$latesum += $mod->cumulated_late->cumulated;
+	$missing += $mod->missing->cumulated;
+	$work += $mod->work->cumulated;
+	$nowork += $mod->nowork->cumulated;
+	$acquired_credit += $mod->acquired_credit;
+	$total_credit += $mod->credit;
+	$grade_avg += $mod->grade * $mod->credit;
+    }
+}
+$grade_avg = $grade_avg / $total_credit;
+
+?>
+
+<style>
+ #summary tr th, #summary tr td
+ {
+     height: 30px;
+ }
+</style>
+
+<h1><?=$Dictionnary["Summary"]; ?></h1>
+
+<table style="width: 100%; background-color: gray;" id="summary">
+    <tr>
+	<th style="width: 50%;">
+	    <?=$Dictionnary["Data"]; ?>
+	</th>
+	<th>
+	    <?=$Dictionnary["Value"]; ?>
+	</th>
+    </tr><tr>
+	<td><?=$Dictionnary["Credit"]; ?></td>
+	<td> <?=$acquired_credit; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["TriedCredit"]; ?></td>
+	<td> <?=$total_credit; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["Grade"]; ?></td>
+	<td> <?=$Grade[round($grade_avg)]; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["Present"]; ?></td>
+	<td> <?=$present; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["Late"]; ?></td>
+	<td> <?=$late; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["CumulatedLate"]; ?></td>
+	<td><?=$latesum / 60 / 60; ?>h<?=$latesum / 60 % 60; ?>m</td>
+    </tr><tr>
+	<td><?=$Dictionnary["Missing"]; ?></td>
+	<td> <?=$missing; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["DeliveredWork"]; ?></td>
+	<td> <?=$work; ?></td>
+    </tr><tr>
+	<td><?=$Dictionnary["NoWork"]; ?></td>
+	<td> <?=$nowork; ?></td>
+    </tr>
+</table>

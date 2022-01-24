@@ -1,0 +1,109 @@
+<?php
+
+function sort_by_recent($a, $b)
+{
+    $aa = $a->cycle >= 20 ? -10 : 0;
+    $bb = $b->cycle >= 20 ? -10 : 0;
+    $ret = -(
+	(remove_hour($a->first_day) + $aa)
+	-
+	(remove_hour($b->first_day) + $bb)
+    );
+    return ($ret);
+}
+usort($data->sublayer, "sort_by_recent");
+
+foreach ($data->sublayer as $cycle)
+{
+    $idcycle = str_replace(".", "_", $user["codename"]."_cycle_".$cycle->codename);
+    if ($cycle->hidden && ($user["id"] != $User["id"] && !is_admin()))
+	continue ;
+    if (!isset($_COOKIE[$idcycle]))
+    {
+	if ($cycle->done == 0)
+	    $_COOKIE[$idcycle] = "unset";
+	else
+	    $_COOKIE[$idcycle] = "0px";
+    }
+?>
+    <hr />
+    <table style="font-size: small;">
+	<tr>
+	    <td style="text-align: center;">
+		<h3 style="background-color: rgba(0, 0, 0, 0.5); border-radius: 10px;">
+		    <a href="index.php?p=CycleMenu&amp;a=<?=$cycle->id; ?>">
+			<?=$cycle->codename; ?>
+		    </a>
+		    <?php if ($cycle->cycle < 20) { ?>
+		    (<?=sprintf("%s %d, %s %d",
+				$Dictionnary["Year"],
+				floor($cycle->cycle / 4) + 1,
+				$Dictionnary["Cycle"],
+				$cycle->cycle % 4 + 1
+		     );
+		     ?>)
+		    <?php } ?>
+		</h3>
+	    </td>
+	    <td>
+		<?php if ($user["visibility"] > SUCCESSFUL_ACTIVITIES) { ?>
+		    <?=$Dictionnary["Presence"]; ?>: <?=$cycle->present; ?><br />
+		    <?=$Dictionnary["Late"]; ?>: <?=$cycle->late; ?>
+		    (<?=$Dictionnary["CumulatedLate"]; ?> <?=$cycle->cumulated_late->cumulated / 60 / 60; ?>h<?=($cycle->cumulated_late->cumulated / 60) % 60; ?>m)<br />
+		    <?=$Dictionnary["Missing"]; ?>: <?=$cycle->missing; ?>
+		<?php } ?>
+	    </td>
+	    <td>
+		<?php if ($user["visibility"] > SUCCESSFUL_ACTIVITIES) { ?>
+		    <?php $Grade = ["E", "D", "C", "B", "A"]; ?>
+		    <?php if ($cycle->grade != -1) { ?>
+			<?=$Dictionnary["Credit"]; ?>:
+			<?=$cycle->acquired_credit + $cycle->bonus_credit; ?> / <?=$cycle->credit; ?>
+			<?=$cycle->bonus_credit > 0 ? $Dictionnary["Including"]." ".$cycle->bonus_credit." ".$Dictionnary["BonusCredit"] : ""; ?>
+			<?=$Dictionnary["Grade"]; ?> <?=$Grade[round($cycle->grade)]; ?><br />
+			<?php } ?>
+		    <?=$Dictionnary["DeliveredWork"]; ?>: <?=$cycle->work->cumulated; ?><br />
+		    <?=$Dictionnary["NoWork"]; ?>: <?=$cycle->nowork->cumulated; ?>
+		<?php } ?>
+	    </td>
+	    <td onclick="toggle_roll('<?=$idcycle; ?>', 0);"
+		style="background-color: black; text-align: center; font-size: 15px; color: white; border-radius: 25px; width: 40px;"
+	    >
+		< >
+	    </td>
+	</tr>
+	<?php if ($cycle->is_teacher) { ?>
+	    <tr>
+		<td colspan="4" style="position: relative; height: 110px;">
+		    <form method="post" action="<?=unrollurl(); ?>">
+			<input type="hidden" name="action" value="cycle_comment" />
+			<input type="hidden" name="id_cycle" value="<?=$cycle->id; ?>" />
+			<input type="hidden" name="id_user_cycle" value="<?=$cycle->id_user_cycle; ?>" />
+			<textarea name="cycle_comment" style="width: 75%; height: 100px; top: 5px; position: absolute; left: 15px;"><?=$cycle->commentaries; ?></textarea>
+			<input type="submit" value="&#10003;" style="width: 20%; height: 100px; top: 5px; position: absolute; right: 15px;" />
+		    </form>
+		</td>
+	    </tr>
+	<?php } else if (@strlen($cycle->commentaries)) { ?>
+	    <tr><td colspan="4" style="background-color: rgba(255, 255, 255, 0.5); border-radius: 10px; text-align: center;">
+		<br />
+		<?=$cycle->commentaries; ?>
+		<br /><br />
+	    </td></tr>
+	<?php } ?>
+	<tr>
+	    <td colspan="4">
+		<br />
+		<div
+		    class="indent"
+		    id="<?=$idcycle; ?>"
+		    style="height: <?=$_COOKIE[$idcycle]; ?>; overflow: auto;"
+		>
+		    <?php require ("print_module.phtml"); ?>
+		</div>
+		<br />
+	    </td>
+	</tr>
+    </table>
+    <br />
+<?php } ?>

@@ -1,0 +1,830 @@
+<html>
+    <head>
+	<title>Infosphere: Profilage des performences</title>
+	<meta charset="utf8" />
+	<style>
+	 table tr td
+	 {
+	     text-align: center;
+	     vertical-align: middle;
+	     border: 1px solid black;
+	 }
+	</style>
+    </head>
+    <body>
+	<h1>Profilage</h1>
+	<h2>Résumé</h2>
+	<ul>
+	    <li><b>Durée totale du chargement:</b> 1.1197459697723</li>
+	    <li><b>Nombre de requêtes SQL:</b> 10917</li>
+	    <li><b>Cumul des requêtes SQL:</b> 0.90657091140747</li>
+	    	    <li><b>Durée hors requêtes SQL:</b> 0.21317505836487</li>
+	</ul>
+
+	<h2>Temps par type de requete:</h2>
+		<table>
+	    <tr>
+		<th>Temps total</th>
+		<th>Nombre de requêtes</th>
+		<th>Chemin d'appel</th>
+	    </tr>
+	    <tr>
+				    <td>0.164145</td>
+		    <td>1156</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:242	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT  		activity_user_medal.result as result,                 activity_medal.mandatory as parent_mandatory,                 activity_medal.local as local,                 activity_medal.grade_a as grade_a,                 activity_medal.grade_b as grade_b,                 activity_medal.grade_c as grade_c,                 activity_medal.mandatory as mandatory 		FROM activity_user_medal                 LEFT JOIN user_medal ON activity_user_medal.id_user_medal = user_medal.id                 LEFT JOIN activity_medal ON activity_user_medal.id_activity = activity_medal.id_activity                 WHERE user_medal.id_user = 260                   AND user_medal.id_medal = 4                   AND activity_user_medal.id_activity = 4015 		   LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.063396</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/module_layer.php:105	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                 activity.fr_name as activity_name,                activity_user_medal.id_activity as id_activity,                activity_user_medal.result as result,                medal.id as id,                medal.codename as codename,                medal.fr_name as name,                medal.fr_description as description,                medal.icon as icon,                medal.type as type,                activity_medal.mandatory as mandatory,                activity_medal.local as local,                activity_medal.grade_a as grade_a,                activity_medal.grade_b as grade_b,                activity_medal.grade_c as grade_c                FROM user_medal                LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal                LEFT JOIN activity ON activity.id = activity_user_medal.id_activity                LEFT JOIN medal ON medal.id = user_medal.id_medal                LEFT JOIN activity_medal ON activity_medal.id_activity = activity.id                                         AND activity_medal.id_medal = medal.id                WHERE user_medal.id_user = 260                  AND (activity_user_medal.id_activity = 4037                   OR activity_user_medal.id_activity = 4095) 	       		    		</td>
+	    </tr>
+				    <td>0.052214</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/full_activity.php:219	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 4037 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.047140</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/module_layer.php:41	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             activity.id, activity.codename,            session.id as id_session,            team.commentaries as commentaries,            team.manual_credit as manual_credit,            team.manual_grade as manual_grade            FROM activity            LEFT JOIN team ON team.id_activity = activity.id            LEFT JOIN session ON session.id = team.id_session            WHERE activity.parent_activity = 4095              AND activity.deleted = 0            GROUP BY activity.id 			    		</td>
+	    </tr>
+				    <td>0.041884</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:122	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             activity.*,            activity.fr_name as name,            activity.fr_description as description,            activity.validation_by_percent as validation_by_percent,            activity.old_validation as old_validation,            parent.id_template as parent_id_template,            parent.codename as parent_codename,            parent.fr_name as parent_name,            template.codename as template_codename,            template.fr_name as template_name,            activity_type.codename as type_name            FROM activity            LEFT JOIN activity as parent ON activity.parent_activity = parent.id            LEFT JOIN activity as template ON activity.id_template = template.id            LEFT JOIN activity_type ON activity_type.id = activity.type            WHERE activity.id = 4037 AND activity.deleted = 0 	    LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.040357</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/full_activity.php:197	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 2515 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.033917</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/full_activity.php:221	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 4037        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.033780</td>
+		    <td>247</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:242	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT  		activity_user_medal.result as result,                 activity_medal.mandatory as parent_mandatory,                 activity_medal.local as local,                 activity_medal.grade_a as grade_a,                 activity_medal.grade_b as grade_b,                 activity_medal.grade_c as grade_c,                 activity_medal.mandatory as mandatory 		FROM activity_user_medal                 LEFT JOIN user_medal ON activity_user_medal.id_user_medal = user_medal.id                 LEFT JOIN activity_medal ON activity_user_medal.id_activity = activity_medal.id_activity                 WHERE user_medal.id_user = 260                   AND user_medal.id_medal = 531                   AND activity_user_medal.id_activity = 4014 		   LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.033772</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:292	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                 team.*                FROM team                 LEFT JOIN user_team ON team.id = user_team.id_team                 WHERE team.id_activity = 4037                 AND user_team.id_user = 260  	    		    		</td>
+	    </tr>
+				    <td>0.032416</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_teacher.php:13	/tools/full_activity.php:220	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.id as id_user,        user.codename as codename_user,        laboratory.id as id_laboratory,        laboratory.codename as codename_laboratory        FROM activity_teacher        LEFT JOIN user ON user.id = activity_teacher.id_user        LEFT JOIN laboratory ON laboratory.id = activity_teacher.id_laboratory        WHERE activity_teacher.id_activity = 4037     		    		</td>
+	    </tr>
+				    <td>0.024138</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/full_activity.php:199	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 2515        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.023926</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:409	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT * FROM session WHERE id_activity = 4037  AND id = 3345   AND deleted = 0		    		</td>
+	    </tr>
+				    <td>0.021108</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_cycle.php:13	/tools/full_activity.php:223	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT  	cycle.*,         activity_cycle.mandatory as mandatory         FROM activity_cycle         LEFT JOIN cycle ON activity_cycle.id_cycle = cycle.id         WHERE activity_cycle.id_activity = 4037     		    		</td>
+	    </tr>
+				    <td>0.020735</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:216	/tools/templated_fetch.php:10	/tools/full_activity.php:139	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          *         FROM activity         WHERE id = -1 LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.017439</td>
+		    <td>326</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/full_activity.php:96	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `activity` WHERE `id` = '4037'     		    		</td>
+	    </tr>
+				    <td>0.015593</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/full_activity.php:219	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 4037      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.015078</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/full_activity.php:221	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 4037      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.014266</td>
+		    <td>131</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_session.php:107	/tools/full_activity.php:414	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             team.*            FROM team             LEFT JOIN user_team ON team.id = user_team.id_team             WHERE team.id_session = 3345             AND user_team.id_user = 2  			    		</td>
+	    </tr>
+				    <td>0.013684</td>
+		    <td>133</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:308	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                    user.codename as codename,                   user.nickname as nickname,                   user.id as id,                   user.avatar as avatar,                   user.photo as photo,                   user.visibility as visibility,                   user_team.status as status,                   user_team.commentaries as commentaries                   FROM user_team                   LEFT JOIN user ON user_team.id_user = user.id                   WHERE user_team.id_team = 10579  AND user_team.id_user = 260  		  		    		</td>
+	    </tr>
+				    <td>0.012629</td>
+		    <td>131</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_session.php:152	/tools/full_activity.php:414	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             appointment_slot.*            FROM appointment_slot            LEFT JOIN team ON team.id = appointment_slot.id_team            WHERE appointment_slot.id_session = 3345            ORDER BY begin_date ASC 	   		    		</td>
+	    </tr>
+				    <td>0.012003</td>
+		    <td>131</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_session.php:70	/tools/full_activity.php:414	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             room.*,            room.fr_name as name            FROM session_room            LEFT JOIN room ON session_room.id_room = room.id            WHERE session_room.id_session = 3345 	   		    		</td>
+	    </tr>
+				    <td>0.011698</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/full_activity.php:197	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 2515      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.010833</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/full_activity.php:199	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 2515      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.010069</td>
+		    <td>133</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:313	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                    *                   FROM pickedup_work                   WHERE id_team = 10579                   ORDER BY pickedup_date DESC 		  		    		</td>
+	    </tr>
+				    <td>0.007613</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_cycle.php:13	/tools/full_activity.php:256	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT  	cycle.*,         activity_cycle.mandatory as mandatory         FROM activity_cycle         LEFT JOIN cycle ON activity_cycle.id_cycle = cycle.id         WHERE activity_cycle.id_activity = 4095     		    		</td>
+	    </tr>
+				    <td>0.007581</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/tools/full_activity.php:446	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 260 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.007247</td>
+		    <td>121</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/full_profile.php:499	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                            function.codename                           FROM function_medal                           LEFT JOIN function ON function_medal.id_function = function.id                           WHERE function_medal.id_medal = 579 			  		    		</td>
+	    </tr>
+				    <td>0.006922</td>
+		    <td>326</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_teacher.php:13	/tools/full_activity.php:257	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.id as id_user,        user.codename as codename_user,        laboratory.id as id_laboratory,        laboratory.codename as codename_laboratory        FROM activity_teacher        LEFT JOIN user ON user.id = activity_teacher.id_user        LEFT JOIN laboratory ON laboratory.id = activity_teacher.id_laboratory        WHERE activity_teacher.id_activity = 4095     		    		</td>
+	    </tr>
+				    <td>0.005656</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:219	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 2515 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.005638</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/fetch_activity_class.php:73	/tools/full_activity.php:221	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 2515        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.005409</td>
+		    <td>239</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:131	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                 fr_name as name                FROM activity                WHERE id = 2514 	        LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.005348</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/full_activity.php:219	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 4095 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.005320</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:292	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                 team.*                FROM team                 LEFT JOIN user_team ON team.id = user_team.id_team                 WHERE team.id_activity = 4095                 AND user_team.id_user = 260  	    		    		</td>
+	    </tr>
+				    <td>0.005045</td>
+		    <td>6</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/cycle_layer.php:30	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             activity.id,            team.id as id_team,            team.closed as closed,            team.commentaries as commentaries,            template.codename as template_codename            FROM activity_cycle            LEFT JOIN team ON team.id_activity = activity_cycle.id_activity            LEFT JOIN activity ON activity.id = activity_cycle.id_activity            LEFT JOIN activity as template ON activity.id_template = template.id            LEFT JOIN user_team ON user_team.id_team = team.id                  AND user_team.id_user = 260            WHERE activity_cycle.id_cycle = 56              AND activity.type = 18            AND activity.deleted = 0 GROUP BY activity.id 			    		</td>
+	    </tr>
+				    <td>0.004199</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:219	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 2515      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.004023</td>
+		    <td>262</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/fetch_activity_class.php:73	/tools/full_activity.php:221	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 2515      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.003951</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:122	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             activity.*,            activity.fr_name as name,            activity.fr_description as description,            activity.validation_by_percent as validation_by_percent,            activity.old_validation as old_validation,            parent.id_template as parent_id_template,            parent.codename as parent_codename,            parent.fr_name as parent_name,            template.codename as template_codename,            template.fr_name as template_name,            activity_type.codename as type_name            FROM activity            LEFT JOIN activity as parent ON activity.parent_activity = parent.id            LEFT JOIN activity as template ON activity.id_template = template.id            LEFT JOIN activity_type ON activity_type.id = activity.type            WHERE activity.id = 4095 AND activity.deleted = 0 	    LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.003735</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/full_activity.php:221	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 4095        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.003675</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_teacher.php:13	/tools/full_activity.php:220	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.id as id_user,        user.codename as codename_user,        laboratory.id as id_laboratory,        laboratory.codename as codename_laboratory        FROM activity_teacher        LEFT JOIN user ON user.id = activity_teacher.id_user        LEFT JOIN laboratory ON laboratory.id = activity_teacher.id_laboratory        WHERE activity_teacher.id_activity = 4095     		    		</td>
+	    </tr>
+				    <td>0.003528</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/full_activity.php:197	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 2514 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.003045</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/full_activity.php:210	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 4027 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.002942</td>
+		    <td>23</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:308	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                    user.codename as codename,                   user.nickname as nickname,                   user.id as id,                   user.avatar as avatar,                   user.photo as photo,                   user.visibility as visibility,                   user_team.status as status,                   user_team.commentaries as commentaries                   FROM user_team                   LEFT JOIN user ON user_team.id_user = user.id                   WHERE user_team.id_team = 12996  AND user_team.id_user = 260  		  		    		</td>
+	    </tr>
+				    <td>0.002614</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:216	/tools/student_log.php:64	/pages/profile/graph.php:77	/pages/profile/index.phtml:77	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         * FROM user_log        WHERE id_user = 260        AND log_date >= '2021-11-12T00:00:00'        AND log_date < '2021-11-13T00:00:00'         LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.002568</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_teacher.php:13	/tools/full_activity.php:211	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.id as id_user,        user.codename as codename_user,        laboratory.id as id_laboratory,        laboratory.codename as codename_laboratory        FROM activity_teacher        LEFT JOIN user ON user.id = activity_teacher.id_user        LEFT JOIN laboratory ON laboratory.id = activity_teacher.id_laboratory        WHERE activity_teacher.id_activity = 4027     		    		</td>
+	    </tr>
+				    <td>0.002447</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/full_activity.php:212	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 4027        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.002404</td>
+		    <td>1</td>
+		    <td>	/tools/student_log.php:44	/index.php:130</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			Requete non SELECT
+		    		</td>
+	    </tr>
+				    <td>0.002391</td>
+		    <td>72</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:210	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 2525 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.002244</td>
+		    <td>1</td>
+		    <td>	/tools/authentication.php:77	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			Requete non SELECT
+		    		</td>
+	    </tr>
+				    <td>0.002241</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:216	/tools/full_activity.php:207	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT codename, fr_name as name FROM activity WHERE id = 4027 LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.002201</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_cycle.php:13	/tools/full_activity.php:223	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT  	cycle.*,         activity_cycle.mandatory as mandatory         FROM activity_cycle         LEFT JOIN cycle ON activity_cycle.id_cycle = cycle.id         WHERE activity_cycle.id_activity = 4095     		    		</td>
+	    </tr>
+				    <td>0.001869</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/full_activity.php:199	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 2514        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.001854</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/tools/fetch_user.php:41	/pages/profile/handle_parameters.php:6	/pages/profile/index.phtml:24	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 260 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.001807</td>
+		    <td>72</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/fetch_activity_class.php:73	/tools/full_activity.php:212	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 2525        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.001693</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/full_activity.php:219	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 4095      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001684</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/full_activity.php:210	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 4027      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001659</td>
+		    <td>35</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/full_activity.php:96	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `activity` WHERE `id` = '4095'     		    		</td>
+	    </tr>
+				    <td>0.001596</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/full_profile.php:420	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                  activity.*, activity.fr_name as name, parent_activity.codename as parent_codename                 FROM activity_teacher                 LEFT JOIN activity ON activity_teacher.id_activity = activity.id                 LEFT JOIN activity as parent_activity ON activity.parent_activity = parent_activity.id                 LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id                 LEFT JOIN user_laboratory ON laboratory.id = user_laboratory.id_laboratory                 WHERE ( activity_teacher.id_user = 260 OR user_laboratory.id_user = 260 ) 	    		    		</td>
+	    </tr>
+				    <td>0.001578</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:216	/tools/templated_fetch.php:10	/tools/full_activity.php:139	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          *         FROM activity         WHERE id = -1 LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001575</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/full_activity.php:221	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 4095      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001383</td>
+		    <td>86</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/full_activity.php:212	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 4027      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001245</td>
+		    <td>23</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_activity.php:313	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                    *                   FROM pickedup_work                   WHERE id_team = 12996                   ORDER BY pickedup_date DESC 		  		    		</td>
+	    </tr>
+				    <td>0.001166</td>
+		    <td>72</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:210	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 2525      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.001157</td>
+		    <td>72</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/fetch_activity_class.php:73	/tools/full_activity.php:212	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 2525      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000907</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:216	/tools/fetch_user.php:36	/pages/profile/handle_parameters.php:6	/pages/profile/index.phtml:24	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                user.id as id,               user.codename as codename,               user.nickname as nickname,               user.first_name as first_name,               user.family_name as family_name,               user.mail as mail,               user.money as money,               user.registration_date as registration_date,               user.birth_date as birth_date,               user.address_name as address_name,               user.street_name as street_name,               user.postal_code as postal_code,               user.city as city,               user.country as country,               user.admin_note as admin_note,               authorities.label as authority,               user.avatar as avatar,               user.photo as photo,               user.visibility as visibility,               user.misc_configuration as misc_configuration                        FROM  user         LEFT JOIN authorities ON user.authority = authorities.id         WHERE user.id = 260 && user.authority != -1      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000897</td>
+		    <td>35</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/tools/full_activity.php:446	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 260 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.000870</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/full_activity.php:199	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 2514      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000852</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/full_activity.php:197	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 2514      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000689</td>
+		    <td>1</td>
+		    <td>	/tools/authentication.php:34	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			       SELECT id, codename, nickname, password, salt, local_salt, outside_secret, mail, localisation, registration_date, first_name, family_name, birth_date, authority, avatar, photo, money, phone, address_name, street_name, postal_code, city, country, visibility, connection_log, admin_note, misc_configuration, full_profile_date, last_visit       FROM user       WHERE codename = 'Damdoshi'     		    		</td>
+	    </tr>
+				    <td>0.000531</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_medal.php:20	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:219	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         medal.*,        medal.fr_name as name,        medal.fr_description as description,        activity_medal.mandatory as mandatory,        activity_medal.grade_a as grade_a,        activity_medal.grade_b as grade_b,        activity_medal.grade_c as grade_c,        activity_medal.local as local        FROM activity_medal        LEFT JOIN medal ON activity_medal.id_medal = medal.id        WHERE activity_medal.id_activity = 2514 AND deleted = 0        ORDER BY medal.codename ASC     		    		</td>
+	    </tr>
+				    <td>0.000494</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/intercom.php:53	/tools/intercom.php:300	/pages/profile/intercom.phtml:2	/tools/tabpanel.php:39	/pages/profile/index.phtml:96	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        message.*,       author.id as aid, author.salt as asalt,       author.nickname as nickname, author.codename as codename,       author.avatar as avatar, author.photo as photo,       target.id as tid, target.salt as tsalt,       message_alert.status as status,       message_alert.id as id_status       FROM message       LEFT OUTER JOIN user as author ON author.id = message.id_user       LEFT OUTER JOIN user as target ON target.id = message.id_misc       LEFT OUTER JOIN message_alert ON message_alert.id_message = message.id                   AND message_alert.id_user = 2       WHERE position = 'user'         AND id_misc = '260'          AND message.id_message = -1 GROUP BY message.id       ORDER BY visibility DESC, lastdate DESC     		    		</td>
+	    </tr>
+				    <td>0.000476</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/fetch_user.php:7	/pages/profile/handle_parameters.php:6	/pages/profile/index.phtml:24	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `user` WHERE `id` = '260'     		    		</td>
+	    </tr>
+				    <td>0.000460</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_activity_class.php:27	/tools/fetch_activity_class.php:73	/tools/full_activity.php:221	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         activity_support.id as id,        activity.id as activity_id,        activity.codename as activity_codename,        activity.is_template as is_template,        activity.fr_name as activity_name,        clss.fr_name as class_name,        clss.codename as class_codename,        clss.id as class_id,        class_asset.id as asset_id,        class_asset.fr_name as asset_name,        subactivity.id as subactivity_id,        subactivity.codename as subactivity_codename,        subactivity.fr_name as subactivity_name        FROM activity_support        LEFT JOIN class_asset ON class_asset.id = activity_support.id_class_asset        LEFT JOIN `class` as clss ON clss.id = class_asset.id_class        LEFT JOIN activity ON activity_support.id_activity = activity.id        LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id        WHERE activity_support.id_activity = 2514        ORDER BY activity_support.number ASC     		    		</td>
+	    </tr>
+				    <td>0.000361</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_medal.php:23	/tools/fetch_activity_medal.php:29	/tools/full_activity.php:219	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT            id_template, medal_template FROM activity WHERE id = 2514      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000339</td>
+		    <td>22</td>
+		    <td>	/tools/database.php:216	/tools/fetch_activity_class.php:67	/tools/fetch_activity_class.php:73	/tools/full_activity.php:221	/tools/full_profile/cycle_layer.php:40	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        id_template, class_template FROM activity WHERE id = 2514      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000334</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/database.php:302	/tools/authentication.php:29	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        `COLUMN_NAME`       FROM `INFORMATION_SCHEMA`.`COLUMNS`       WHERE `TABLE_SCHEMA`='infosphere' AND `TABLE_NAME`='user'     		    		</td>
+	    </tr>
+				    <td>0.000264</td>
+		    <td>3</td>
+		    <td>	/tools/database.php:216	/tools/full_profile/module_layer.php:179	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                         repository, pickedup_date FROM pickedup_work                        WHERE id_team = 10623                        ORDER BY pickedup_date DESC 		        LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000261</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:216	/tools/student_log.php:15	/index.php:130</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT        * FROM user_log       WHERE id_user = 2       AND log_date >= '2021-12-03T00:00:00'       AND log_date < '2021-12-04T00:00:00' 	 LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000254</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_children.php:12	/index.php:91</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.codename as codename,        parent_child.id_child as id        FROM parent_child        LEFT JOIN user ON parent_child.id_child = user.id        WHERE parent_child.id_parent = 2     		    		</td>
+	    </tr>
+				    <td>0.000246</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/index.php:83</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT * FROM `user` WHERE `id` = '2'     		    		</td>
+	    </tr>
+				    <td>0.000205</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/full_profile.php:469	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT             medal.*,            medal.fr_name as name,            medal.fr_description as description            FROM user_medal            LEFT JOIN activity_user_medal            ON user_medal.id = activity_user_medal.id_user_medal            LEFT JOIN medal            ON medal.id = user_medal.id_medal            WHERE user_medal.id_user = 260            AND activity_user_medal.id_activity = -1            AND activity_user_medal.result = 1 			    		</td>
+	    </tr>
+				    <td>0.000175</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:216	/tools/fetch_user.php:36	/tools/full_profile/full_profile.php:372	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                user.id as id,               user.codename as codename,               user.nickname as nickname,               user.first_name as first_name,               user.family_name as family_name,               user.mail as mail,               user.money as money,               user.registration_date as registration_date,               user.birth_date as birth_date,               user.address_name as address_name,               user.street_name as street_name,               user.postal_code as postal_code,               user.city as city,               user.country as country,               user.admin_note as admin_note,               authorities.label as authority,               user.avatar as avatar,               user.photo as photo,               user.visibility as visibility,               user.misc_configuration as misc_configuration                        FROM  user         LEFT JOIN authorities ON user.authority = authorities.id         WHERE user.id = 260 && user.authority != -1      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000158</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/fetch_user.php:7	/tools/full_profile/full_profile.php:372	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `user` WHERE `id` = '260'     		    		</td>
+	    </tr>
+				    <td>0.000155</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/tools/fetch_user.php:41	/tools/full_profile/full_profile.php:372	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 260 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.000145</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/intercom.php:10	/tools/intercom.php:300	/pages/profile/intercom.phtml:2	/tools/tabpanel.php:39	/pages/profile/index.phtml:96	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `user` WHERE `codename` = 'lenny.vigeon'     		    		</td>
+	    </tr>
+				    <td>0.000113</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/intercom.php:15	/tools/intercom.php:300	/pages/profile/intercom.phtml:2	/tools/tabpanel.php:39	/pages/profile/index.phtml:96	/dispatch.php:11</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT id_laboratory FROM user_laboratory WHERE id_user = 2		    		</td>
+	    </tr>
+				    <td>0.000105</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/fetch_laboratory.php:39	/tools/fetch_teacher.php:28	/tools/full_activity.php:220	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          user.id as id,         user.codename as codename,         user.nickname as nickname,         user.photo as photo,         user.avatar as avatar,         user_laboratory.authority as authority         FROM user_laboratory         LEFT JOIN user ON user_laboratory.id_user = user.id         WHERE id_laboratory = 11     		    		</td>
+	    </tr>
+				    <td>0.000092</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/full_profile/full_profile.php:405	/tools/full_profile/get_full_profile.php:7	/pages/profile/index.phtml:62	/dispatch.php:11	/index.phtml:184	/index.php:224</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT                 laboratory.codename,                laboratory.icon,                laboratory.fr_name,                laboratory.fr_description                FROM user_laboratory                LEFT JOIN laboratory ON laboratory.id = user_laboratory.id_laboratory                WHERE user_laboratory.id_user = 260                  AND deleted = 0 	    		    		</td>
+	    </tr>
+				    <td>0.000093</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/configuration.php:54	/tools/configuration.php:58	/tools/index.php:10	/index.php:39</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT * FROM configuration		    		</td>
+	    </tr>
+				    <td>0.000069</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/fetch_laboratory.php:20	/tools/fetch_teacher.php:28	/tools/full_activity.php:220	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `laboratory` WHERE `id` = '11'     		    		</td>
+	    </tr>
+				    <td>0.000062</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:216	/tools/fetch_laboratory.php:27	/tools/fetch_teacher.php:28	/tools/full_activity.php:220	/tools/full_profile/module_layer.php:52	/tools/full_profile/cycle_layer.php:63	/tools/full_profile/full_profile.php:391	/tools/full_profile/get_full_profile.php:7</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          id, codename, icon, fr_name as name, fr_description as description         FROM laboratory         WHERE id = 11 AND deleted = 0      LIMIT 1  		    		</td>
+	    </tr>
+				    <td>0.000061</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/index.php:90</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 2 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.000059</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/constants.php:30	/index.php:40</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT * FROM activity_type		    		</td>
+	    </tr>
+				    <td>0.000058</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/authentication.php:58	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         user.codename as codename,        parent_child.id_child as id        FROM parent_child        LEFT JOIN user ON parent_child.id_child = user.id        WHERE parent_child.id_parent = 2     		    		</td>
+	    </tr>
+				    <td>0.000058</td>
+		    <td>1</td>
+		    <td>	/tools/resolve_codename.php:69	/tools/intercom.php:18	/tools/intercom.php:300	/pages/profile/intercom.phtml:2	/tools/tabpanel.php:39	/pages/profile/index.phtml:96	/dispatch.php:11	/index.phtml:184</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			        SELECT id FROM `user` WHERE `id` = '260'     		    		</td>
+	    </tr>
+				    <td>0.000055</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_laboratories.php:15	/index.php:92</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         laboratory.*, laboratory.fr_name as name, user_laboratory.authority        FROM laboratory        LEFT JOIN user_laboratory ON laboratory.id = user_laboratory.id_laboratory        WHERE user_laboratory.id_user = 2        AND deleted = 0        		    		</td>
+	    </tr>
+				    <td>0.000056</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_promotions.php:22	/tools/authentication.php:75	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT          cycle.*,         user_cycle.commentaries as commentaries,         user_cycle.hidden as hidden,         user_cycle.bonus_credit as bonus_credit         FROM cycle         LEFT JOIN user_cycle         ON user_cycle.id_cycle = cycle.id         WHERE user_cycle.id_user = 2 	ORDER BY cycle.cycle DESC 			    		</td>
+	    </tr>
+				    <td>0.000051</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/constants.php:31	/index.php:40</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT * FROM medal WHERE codename LIKE 'grade_%' AND deleted = 0		    		</td>
+	    </tr>
+				    <td>0.000047</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/get_user_laboratories.php:15	/tools/authentication.php:76	/index.php:65</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT         laboratory.*, laboratory.fr_name as name, user_laboratory.authority        FROM laboratory        LEFT JOIN user_laboratory ON laboratory.id = user_laboratory.id_laboratory        WHERE user_laboratory.id_user = 2        AND deleted = 0        		    		</td>
+	    </tr>
+				    <td>0.000046</td>
+		    <td>1</td>
+		    <td>	/tools/database.php:185	/tools/database.php:198	/tools/constants.php:34	/index.php:40</td>
+	    </tr>
+	    <tr>
+		<td colspan="3">
+		    			SELECT * FROM configuration		    		</td>
+	    </tr>
+			</table>
+
+	<h2>Historique des requetes:</h2>
+	- Désactivé- 	    </body>
+</html>

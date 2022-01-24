@@ -1,0 +1,8 @@
+[Directories
+  Medals = "./dres/medals/"
+  Groups = "./dres/groups/"
+  Avatars = "./dres/avatars/"
+  ELearning = "./dres/elearning/"
+  StudentFiles = "./dres/student_files/"
+]
+

@@ -1,0 +1,83 @@
+
+<div class="control_buttons">
+
+    <!--div>
+	 <form action="index.php?<?=unrollget(); ?>" method="post">
+	    <div style="float: left; padding-left: 10px;">
+		<input type="hidden" name="action" value="filter" />
+		<?php
+		$cnt = 0;
+		$filters = [
+		  "filter_cycle" => "Cycle",
+		  "filter_room" => "Room",
+		  "filter_teacher" => "Teacher"
+		];
+		foreach ($filters as $filter => $label) {
+		?>
+		<input
+		    type="text"
+		    name="<?=$filter; ?>"
+		    value="<?=implode(";", try_get(@$User["misc_configuration"]["calendar"], $filter, [])); ?>"
+		    placeholder="<?=$Dictionnary[$label]; ?>"
+		/><?=$cnt++ % 2 ? "<br />" : ""; ?>
+		<?php } ?>
+		<input
+		    type="submit"
+		    value="&#10003;"
+		    style="width: 150px;"
+		/>
+	    </div>
+	</form>
+    </div-->
+
+    <div>
+	<form action="index.php?p=<?=$Position; ?>" method="post">
+	    <div style="float: right; padding-right: 10px;">
+		<input
+		    type="button"
+		    class="wide_button"
+		    style="height: 30px;"
+		    onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start - $one_week; ?>'"
+		    value="&#9668;"
+		/>
+		<br />
+		<input
+		    type="button"
+		    class="wide_button"
+		    style="height: 30px;"
+		    onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start + $one_week; ?>';"
+		    value="&#9658;"
+		/>
+	    </div>
+	    <div style="float: right; position: relative; width: 240px;">
+		<input
+		    type="week"
+		    name="start"
+		    style="position: absolute; top: 00px; left: 0px; height: 30px;"
+		    value="<?=datex("Y-\WW", $start); ?>"
+		/>
+		<input
+		    type="week"
+		    name="end"
+		    style="position: absolute; top: 30px; left: 0px; height: 30px;"
+		    value="<?=datex("Y-\WW", $end); ?>"
+		/>
+		<input
+		    type="submit"
+		    value="&#10003;"
+		    style="position: absolute; top: 00px; right: 0px; height: 60px; width: 60px;"
+		/>
+		<br />
+	    </div>
+	</form>
+	<?php if (is_admin()) { ?>
+	<form action="index.php?p=<?=$Position; ?>" method="post">
+	    <div style="float: right;">
+		<input type="hidden" name="start" value="<?=!$in_template ? $date0 : db_form_date(time()); ?>" />
+		<input type="hidden" name="end" value="<?=!$in_template ? db_form_date(date_to_timestamp($date0) + $one_week) : db_form_date(time() + $one_week); ?>" />
+		<input type="submit" value="<?=$in_template ? "Instance" : "Template"; ?>" style="width: 60px; height: 60px;" />
+	    </div>
+	</form>
+	<?php } ?>
+    </div>
+</div>

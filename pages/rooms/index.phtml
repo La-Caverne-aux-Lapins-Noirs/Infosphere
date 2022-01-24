@@ -1,0 +1,78 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && is_admin()
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Rooms"]; ?></h2>
+
+<i>Actuellement indisponible</i>
+
+<?php /*
+<script>
+ function visible_bubble(name, visible)
+ {
+     document.getElementById(name).style.visibility = visible ? "visible" : "hidden";
+ }
+</script>
+
+<?php foreach ($fetch as $room) { ?>
+    <h3><?=$room["name"]; ?></h3>
+    <?php if ($room["capacity"] != 0) { ?>
+	<p>
+	    <?=$Dictionnary["AvailableSeats"]; ?>:
+	    <?=$room["capacity"] - $room["occupied"]; ?> / <?=$room["capacity"]; ?>
+	</p>
+    <?php } ?>
+    <?php if (count($room["desk"]) != 0) { ?>
+	<p>
+	    <?=$Dictionnary["AvailableDesks"]; ?>:
+	    <?=$room["capacity"] - $room["occupied"]; ?> / <?=$room["capacity"]; ?>
+	</p>
+    <?php } ?>
+    <div style="position: relative;">
+	<div style="position: relative; display: inline-block;">
+	    <img
+		style="position: absolute; top: 0px; left: 0px;"
+		src="data:image/jpeg;base64,<?=base64_encode($room["map"]); ?>"
+	    />
+	    <?php foreach ($room["desk"] as $desk) { ?>
+		<div
+		    id="desk_<?=$room["name"]; ?>_<?=$desk["name"]; ?>"
+			style="position: absolute;
+			left: <?=$desk["x"]; ?>px;
+			top: <?=$desk["y"]; ?>px;
+			width: <?=$desk["w"]; ?>px;
+			height: <?=$desk["h"]; ?>px;
+			background-color: <?=$DeskStatusColors[$desk["status"]]; ?>;
+			"
+			onMouseEnter="visible_bubble('desk_<?=$room["name"]; ?>_<?=$desk["name"]; ?>_bubble', true);"
+			onMouseOut="visible_bubble('desk_<?=$room["name"]; ?>_<?=$desk["name"]; ?>_bubble', false);"
+		>
+		    <div
+			style="position: absolute; z-index: 1; visibility: hidden;
+			       top: -120px; left: <?=(-100 + $desk["w"] / 2); ?>px; height: 100px; width: 200px;
+			       background-color: rgba(128, 128, 128, 0.5);
+			       "
+			id="desk_<?=$room["name"]; ?>_<?=$desk["name"]; ?>_bubble"
+		    >
+			<?=$desk["name"]; ?><br />
+			<?=$Dictionnary[$DeskTypes[$desk["type"]]]; ?><br />
+			<?=$desk["mac"]; ?><br />
+			<?=$desk["ip"]; ?><br />
+			<?=$desk["login"]; ?>
+		    </div>
+		    <?=$desk["type"]; ?>
+		</div>
+	    <?php } ?>
+	</div>
+    </div>
+<?php } ?>
+*/ ?>
