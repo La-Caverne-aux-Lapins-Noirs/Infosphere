@@ -1,0 +1,68 @@
+<div
+    id="module_<?=$mod["id"]; ?>"
+    onclick="list_activities(<?=$mod["id"]; ?>);"
+    style="width: 99%; float: left;"
+    class="entry select_module"
+    >
+    <div class="activity_name_list_item">
+	<br />
+	<?=$mod["codename"]; ?><br /><i><?=$mod["name"]; ?></i>
+	<br />
+	<br />
+    </div>
+    <div class="activity_icon_list_item">
+	<?php if ($template == false) { ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsTemplateLinkActive"].'"'; ?>
+	    <?php if ($mod["template_link"]) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
+	    <?php } ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsMedalTemplateLinkActive"].'"'; ?>
+	    <?php if ($mod["medal_template"]) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	    <?php } ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsClassTemplateLinkActive"].'"'; ?>
+	    <?php if ($mod["support_template"]) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	    <?php } ?>
+	    <br />
+
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["MedalConfigured"].'"'; ?>
+	<?php if ($mod["nbr_medal"]) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["TeacherConfigured"].'"'; ?>
+	<?php if ($mod["nbr_teacher"]) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#9786;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#9786;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["ClassConfigured"].'"'; ?>
+	<?php if ($mod["nbr_class"]) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["CycleConfigured"].'"'; ?>
+	<?php if ($mod["nbr_cycle"]) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#10560;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#10560;&#xFE0E;</span>
+	<?php } ?>
+    </div>
+</div>

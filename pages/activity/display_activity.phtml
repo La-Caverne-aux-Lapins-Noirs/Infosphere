@@ -1,0 +1,605 @@
+<?php
+global $Configuration;
+global $BackgroundColor;
+global $Background;
+global $LanguageList;
+
+$BCookie = $template ? "template" : "module";
+$BackgroundColor = ' style="background-color: rgba(0, 0, 0, 0.1);" ';
+$Background = true;
+$js = "silent_submit(this)";
+?>
+<table id="down_edit_formular">
+    <tr>
+	<td colspan="2"><div>
+	    <?php edit_codename_form($page, $module); ?>
+	    <?php edit_type_form($page, $module); ?>
+	    <form
+		method="put"
+		onsubmit="return <?=$js; ?>;"
+		action="/api/<?=$page; ?>/<?=$module->id; ?>"
+		<?=$Background ? $BackgroundColor : ""; ?>
+	    >
+		<label for="subscription"><?=$Dictionnary["Subscription"]; ?></label>
+		<select name="subscription" onchange="<?=$js; ?>">
+		    <option value="0" <?=$module->subscription == 0 ? "selected" : ""; ?>>
+			<?=$Dictionnary["Manual"]; ?>
+		    </option>
+		    <option value="1" <?=$module->subscription == 1 ? "selected" : ""; ?>>
+			<?=$Dictionnary["Mandatory"]; ?>
+		    </option>
+		    <option value="2" <?=$module->subscription == 2 ? "selected" : ""; ?>>
+			<?=$Dictionnary["Automatic"]; ?>
+		    </option>
+		</select>
+	    </form>
+	    <?php check_form($page, $module, "allow_unregistration", "AllowUnregistration"); ?>
+	    <?php if ($module->parent_activity == -1) { ?>
+		<?php check_form($page, $module, "hidden", "Hidden"); ?>
+	    <?php } ?>
+
+	    <?php $dates = ["emergence", "done", "registration", "close"]; ?>
+	    <?php if ($module->parent_activity != -1) { ?>
+		<?php $dates = array_merge($dates, ["subject_appeir", "subject_disappeir", "pickup"]); ?>
+	    <?php } ?>
+	   
+	    <?php if ($template) { ?>
+
+		<?php check_form($page, $module, "enabled", "Enabled"); ?>
+		<br />
+
+		<?php $Background = false; ?>
+		<?php foreach ($dates as $dtype) { ?>
+		    <?php $fields = ["week_{$dtype}_date", "day_{$dtype}_date", "hour_{$dtype}_date", $dtype]; ?>
+		    <form
+			method="put"
+			onsubmit="return <?=$js; ?>;"
+			action="/api/<?=$page; ?>/<?=$module->id; ?>"
+			class="weekday_selector"
+			<?=$Background ? $BackgroundColor : ""; ?>
+		    >
+			<label for="<?=$dtype; ?>_date">
+			    <?=$Dictionnary[ucfirst($dtype)."Date"]; ?>
+			</label>
+			<?php $dtype_field = "{$dtype}_date"; ?>
+			<?php print_weekday_selector(
+			    $module->$dtype_field,
+			    $fields,
+			    NULL,
+			    true,
+			    $js
+			); ?>
+		    </form>
+		<?php } ?>
+
+	    <?php } else { ?>
+
+		<br />
+		<?php $Background = false; ?>
+		<?php foreach ($dates as $dtype) { ?>
+		    <form
+			method="put"
+			onsubmit="return <?=$js; ?>;"
+			action="/api/<?=$page; ?>/<?=$module->id; ?>"
+			class="weekday_selector"
+			<?=$Background ? $BackgroundColor : ""; ?>
+		    >
+			<label for="<?=$dtype; ?>_date">
+			    <?=$Dictionnary[ucfirst($dtype)."Date"]; ?>
+			</label>
+			<?php $dtype_field = "{$dtype}_date"; ?>
+			<?php print_datetime(
+			    $dtype,
+			    [$dtype => $module->$dtype_field],
+			    true,
+			    "full_date",
+			    "checkweekday"
+			); ?>
+		    </form>
+		<?php } ?>
+		
+	    <?php } ?>    
+	    <br />
+
+	    <?php $Background = !$Background; ?>
+	    <?php if ($module->parent_activity == -1) { ?>
+		
+		<?php foreach ([
+		    "credit_a" => "CreditA",
+		    "credit_b" => "CreditB",
+		    "credit_c" => "CreditC",
+		    "credit_d" => "CreditD"
+		] as $k => $v) { ?>
+		    <?php single_field_form($page, $module, $k, $v, -1); ?>
+		<?php } ?>
+		<br />
+
+		<?php $Background = !$Background; ?>
+		<?php $js = "silent_submit(this)"; ?>
+		<form method="put" onsubmit="return <?=$js; ?>;" action="/api/<?=$page; ?>/<?=$module->id; ?>">
+		    <label for="validation"><?=$Dictionnary["Validation"]; ?></label>
+		    <select
+			name="validation"
+			onchange="<?=$js; ?>"
+			style="position: relative; left: -5px"
+		    >
+			<?php
+			$rank = $module->grade_module == false
+			     && $module->grade_module == false
+			     && $module->no_grade == false
+			;
+			?>
+			<!-- Il faut un pourcentage de médailles obligatoire a chaque grade -->
+			<option value="3" <?=$module->validation == 3 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["ValidationByRank"]; ?>
+			</option>
+			<!-- Il faut une certaine moyenne pour avoir un grade donné -->
+			<option value="2" <?=$module->validation == 2 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["ValidationByGrade"]; ?>
+			</option>
+			<!-- Il faut un pourcentage donné de la réserve de médaille -->
+			<option value="1" <?=$module->validation == 1 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["ValidationByPercent"]; ?>
+			</option>
+			<!-- Il n'y a pas de validation -->
+			<option value="0" <?=$module->validation == 0 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["NoGrade"]; ?>
+			</option>
+		    </select>
+		</form>
+		
+		<?php foreach ([
+		    "grade_a" => "GradeA",
+		    "grade_b" => "GradeB",
+		    "grade_c" => "GradeC",
+		    "grade_d" => "GradeD",
+		    "grade_bonus" => "GradeBonus"
+		] as $k => $v) { ?>
+		    <?php single_field_form($page, $module, $k, $v); ?>
+		<?php } ?>
+
+	    <?php } else { ?>
+
+		<?php single_field_form($page, $module, "reference_activity", "ReferenceActivity", -1); ?>
+		<?php single_field_form($page, $module, "min_team_size", "MinTeamSize"); ?>
+		<?php single_field_form($page, $module, "max_team_size", "MaxTeamSize"); ?>
+		<?php single_field_form($page, $module, "repository_name", "RepositoryName"); ?>
+		<?php single_field_form($page, $module, "slot_duration", "SlotDuration", -1); ?>
+		<?php single_field_form($page, $module, "mark", "Mark"); ?>
+		<?php single_field_form($page, $module, "estimated_work_duration", "EstimatedWorkDuration"); ?>
+
+	    <?php } ?>
+
+	    <br />
+
+	</div></td>
+	<td colspan="2"><div class="box_of_centered_div" id="medal_box">
+	    <?php require_once ("display_medal.phtml"); ?>
+	</div></td>
+	<td colspan="2">
+	    <?php
+	    if ($module->parent_activity != -1)
+		$js = "silent_submitf(this, {after_success: list_activities(getCookie('".($template ? "template" : "activity")."-module'))});";
+	    else
+		$js = "silent_submitf(this, {after_success: function () { list_modules(); remove_down_formular(); } })";
+	    ?>
+	    <form
+		method="delete"
+		onsubmit="return <?=$js; ?>;"
+		action="/api/<?=$page; ?>/<?=$module->id; ?>"
+	    >
+		<input
+		    type="button"
+		    class="delete_wide"
+		    onclick="<?=$js; ?>;"
+		    value="&#10007;"
+		/>
+	    </form>
+	    <div>
+
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => "cycle",
+		    "linked_elems" => $module->cycle,
+		    "admin_func" => "is_director_for_activity"
+		]); ?>
+
+		<?php
+		$elems = [
+		    "placeholder" => "Teacher or laboratory",
+		    "table" => "teacher",
+		    "" => "teacher", // Pas user, afin d'éviter de confondre avec les inscrits
+		    "#" => "laboratory",
+		];
+		?>
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => $elems,
+		    "linked_elems" => $module->teacher,
+		    "admin_func" => "is_director_for_activity"
+		]); ?>
+
+		<?php
+		$elems = [
+		    "placeholder" => "Class, Activity, Asset",
+		    "table" => "support",
+		    "" => "class_asset",
+		    "#" => "class",
+		    "$" => "activity"
+		];
+		?>
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => $elems,
+		    "linked_elems" => $module->support,
+		    "admin_func" => "is_teacher_for_activity"
+		]); ?>
+
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => "scale",
+		    "linked_elems" => $module->scale,
+		    "admin_func" => "is_teacher_for_activity"
+		]); ?>
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => "mcq",
+		    "linked_elems" => $module->mcq,
+		    "admin_func" => "is_teacher_for_activity"
+		]); ?>
+		<?php list_of_links([
+		    "hook_name" => "activity",
+		    "hook_id" => $module->id,
+		    "linked_name" => "satisfaction",
+		    "linked_elems" => $module->satisfaction,
+		    "admin_func" => "is_teacher_or_director_for_activity"
+		]); ?>
+	    </div>
+	</td>
+    </tr>
+    <?php $LngList = array_merge(["NA" => $Dictionnary["AllLanguages"]], $LanguageList); ?>
+    <tr>
+	<td>
+	    <table class="table_split_halfv"><tr><td>
+		<div class="language_buttons">
+		    <?php foreach ($LngList as $k => $v) { ?>
+			<input
+			    type="button"
+			    value="<?=$v; ?>";
+			    class="languages_buttons"
+			    onclick="select_language('<?=$k; ?>', this);"
+			    style="
+				  height: <?=100 / count($LngList); ?>%;
+				  <?php if ($k == @$_COOKIE[$BCookie."-language"]) { ?>
+				  color: white;
+				  font-weight: bold;
+				  <?php } ?>
+				  "
+			/>
+		    <?php } ?>
+		</div>
+	    </td></tr><tr><td>
+		<div class="category_buttons">
+		    <?php foreach (($bts = ["basic", "syllabus", "training"]) as $cat) { ?>
+			<input
+			    type="button"
+			    value="<?=$Dictionnary[ucfirst($cat)]; ?>"
+			    onclick="select_category('<?=$cat; ?>', this);"
+			    class="categories_buttons"
+			    style="
+				  height: <?=100 / count($bts); ?>%;
+				  <?php if ($cat == @$_COOKIE[$BCookie."-category"]) { ?>
+				  color: white;
+				  font-weight: bold;
+				  <?php } ?>
+				  "
+			/>
+		    <?php } ?>
+		</div>
+	    </td></tr></table>
+	</div></td>
+	<td colspan="2"><div>
+	    <?php foreach ($LngList as $k => $v) { ?>
+		<?php // Pour l'intra ?>
+		<div class="activity_configuration_block basic_<?=$k; ?> basic">
+		    <?php if ($k != "NA") { ?>
+			<?php $js = "silent_submit(this)"; ?>
+			<?php $field = "name"; ?>
+			<form onsubmit="<?=$js; ?>" method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>">
+			    <?php if (is_teacher_for_activity($module->id) && $k != "NA") { ?>
+				<input type="button" onclick="<?=$js; ?>" value="&#10003;" />
+			    <?php } ?>
+			    <input
+				id="<?=$k; ?>_<?=$field; ?>_field"
+				type="text"
+				class="<?=$field; ?>_field"
+				name="<?=$k; ?>_<?=$field; ?>"
+				value="<?php $tmp = "{$k}_{$field}"; echo isset($module->$tmp) ? $module->$tmp : ""; ?>"
+				<?php if (!is_teacher_for_activity($module->id) || $k == "NA") { ?>
+				    style="background-color: lightgray;" readonly
+				<?php } ?>
+			    />
+			    <?php $field = "description"; ?>
+			    <textarea
+				id="<?=$k; ?>_<?=$field; ?>_field"
+				class="<?=$field; ?>_field"
+				name="<?=$k; ?>_<?=$field; ?>"
+				<?php if (!is_teacher_for_activity($module->id) || $k == "NA") { ?>
+				    style="background-color: lightgray;" readonly
+				<?php } ?>
+			    ><?php $tmp = "{$k}_{$field}"; echo isset($module->$tmp) ? $module->$tmp : ""; ?></textarea>
+			</form>
+		    <?php } ?>
+		</div>
+		<?php // Pour le syllabus ?>
+		<div class="activity_configuration_block syllabus_<?=$k; ?> syllabus">
+		    <?php if ($k != "NA") { ?>
+			<form onsubmit="<?=$js; ?>" method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>">
+			    <?php if (is_teacher_for_activity($module->id) && $k != "NA") { ?>
+				<input type="button" onclick="<?=$js; ?>" value="&#10003;" />
+			    <?php } ?>
+			    <?php foreach (["objective", "method", "reference"] as $field) { ?>
+				<?=$Dictionnary[ucfirst($field)]; ?>
+				<textarea
+				    id="<?=$k; ?>_<?=$field; ?>_field"
+					class="<?=$field; ?>_field"
+					name="<?=$k; ?>_<?=$field; ?>"
+					<?php if (!is_teacher_for_activity($module->id) || $k == "NA") { ?>
+					style="background-color: lightgray;" readonly
+					<?php } ?>
+				><?php $tmp = "{$k}_{$field}"; echo isset($module->$tmp) ? $module->$tmp : ""; ?></textarea>
+			    <?php } ?>
+			</form>
+		    <?php } else { ?>
+			<div style="position: relative;">
+			    <?php list_of_links([
+				"hook_name" => "activity",
+				"hook_id" => $module->id,
+				"linked_name" => "skill",
+				"linked_elems" => $module->skill,
+				"admin_func" => "is_teacher_for_activity"
+			    ]); ?>
+			</div>
+		    <?php } ?>
+		</div>
+		<?php // Pour les formations pros ?>
+		<div class="activity_configuration_block training_<?=$k; ?> training">
+		    <?php if ($k != "NA") { ?>
+			<form onsubmit="<?=$js; ?>" method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>">
+			    <?php if (is_teacher_for_activity($module->id)) { ?>
+				<input type="button" onclick="<?=$js; ?>" value="&#10003;" />
+			    <?php } ?>
+			    <?php foreach (["TODO"] as $field) { ?>
+				<?=$Dictionnary[ucfirst($field)]; ?>
+				<textarea
+				    id="<?=$k; ?>_<?=$field; ?>_field"
+					class="<?=$field; ?>_field"
+					name="<?=$k; ?>_<?=$field; ?>"
+					<?php if (!is_teacher_for_activity($module->id) || $k == "NA") { ?>
+					style="background-color: lightgray;" readonly
+					<?php } ?>
+				><?php $tmp = "{$k}_{$field}"; echo isset($module->$tmp) ? $module->$tmp : ""; ?></textarea>
+			    <?php } ?>
+			</form>
+		    <?php } ?>
+		</div>
+	    <?php } ?>
+	</td>
+	<td><div>
+	    <div class="ressource_buttons">
+		<?php foreach (($bts = ["actions", "subject_configuration", "files", "mood", "softwares"]) as $res) { ?>
+		    <input
+			type="button"
+			value="<?=$Dictionnary[ucfirst($res)]; ?>"
+			onclick="select_ressource('<?=$res; ?>', this);"
+			class="ressources_buttons"
+			style="
+			      height: <?=100 / count($bts); ?>%;
+			      <?php if ($res == @$_COOKIE[$BCookie."-ressource"]) { ?>
+			      color: white;
+			      font-weight: bold;
+			      <?php } ?>
+			      "
+		    />
+		<?php } ?>
+	    </div>
+	</div></td>
+	<td colspan="2"><div>
+	    <?php foreach ($LngList as $k => $v) { ?>
+		<?php // Actions ?>
+		<div class="activity_configuration_block actions_<?=$k; ?>">
+		    <?php require ("control_panel.phtml"); ?>
+		</div>
+		<?php // Sujet/Configuration ?>
+		<div class="activity_configuration_block subject_configuration_<?=$k; ?>">
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, 'subject_configuration_$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/subject"
+			>
+			    <label for="file"><?=$Dictionnary["SubjectOrConfiguration"]; ?></label>
+			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>
+		    <?php if (is_assistant_for_activity($module->id)) { ?>
+			<br />
+			<div id="subject_configuration_<?=$k; ?>">
+			    <a href="<?=@$module->subject[$k][0]; ?>">
+				<?=@$module->subject[$k][0] ? $Dictionnary["SeeSubject"] : ""; ?>
+			    </a>
+			    <a href="<?=@$module->configuration[$k][0]; ?>">
+				<?=@$module->configuration[$k][0] ? $Dictionnary["SeeConfiguration"] : ""; ?>
+			    </a>
+			</div>
+		    <?php } ?>
+		</div>
+		<?php // Fichiers disponibles pour les élèves ?>
+		<div class="activity_configuration_block files_<?=$k; ?>">
+		    <?php $fbid = "file_browser"; ?>
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, '$fbid$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/ressource"
+			>
+			    <label for="file"><?=$Dictionnary["File"]; ?></label>
+			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input id="path<?=$k; ?>2" type="hidden" name="path" value="" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="document.getElementById('path<?=$k; ?>2').value = document.getElementById('path<?=$k; ?>').value; <?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>
+		    <?php if ($module->ressource && is_assistant_for_activity($module->id)) { ?>
+			<div id="subject_ressources_<?=$k; ?>">
+			    <?php
+			    $language = $k;
+			    $target = @$module->ressource[$k][0];
+			    $path = preg_replace("/^\.\/dres\/activity\//", "", @$module->ressource[$k][0]);
+			    $path = preg_replace("/^[a-zA-Z0-9\-_]+\//", "", $path);
+			    if ($language != "NA")
+				$path = preg_replace("/^$k\//", "", $path);
+			    $path = preg_replace("/^ressource/", "", $path);
+			    $type = "ressource";
+			    require ("./tools/template/path_browser.phtml");
+			    ?>
+			</div>
+		    <?php } ?>
+		</div>
+		<?php // Fichiers d'ambiances ?>
+		<div class="activity_configuration_block mood_<?=$k; ?>">
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, 'wallpaper_configuration_$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/wallpaper"
+			>
+			    <label for="file"><?=$Dictionnary["Wallpaper"]; ?></label>
+			    <input type="hidden" name="language" value="<?="NA"; ?>" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>		    
+		    <?php if (is_assistant_for_activity($module->id)) { ?>
+			<div id="wallpaper_configuration_<?=$k; ?>">
+			    <?php if (isset($module->wallpaper["NA"][0])) { ?>
+			    <div
+				class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper["NA"][0]; ?>');"
+				ondblclick="window.open('<?=$module->wallpaper["NA"][0]; ?>', '_blank');"
+			    >
+			    </div>
+			    <?php } ?>
+			</div>
+		    <?php } ?>
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, 'intro_configuration_$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/intro"
+			>
+			    <label for="file"><?=$Dictionnary["AnimatedWallpaper"]; ?></label>
+			    <input type="hidden" name="language" value="<?="NA"; ?>" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>
+		    <?php if (is_assistant_for_activity($module->id)) { ?>
+			<div id="intro_configuration_<?=$k; ?>">
+			    <?php if (isset($module->intro["NA"][0])) { ?>
+			    <video
+				controls
+				class="wallpaper_sample" src="<?=$module->intro["NA"][0]; ?>"
+				ondblclick="window.open('<?=$module->intro["NA"][0]; ?>', '_blank');"
+			    >
+			    </video>
+			    <?php } ?>
+			</div>
+		    <?php } ?>
+		    <?php $fbid = "mood_browser"; ?>
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, '$fbid$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/mood"
+			>
+			    <label for="file"><?=$Dictionnary["MusicOrPlaylist"]; ?></label>
+			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>
+		    <?php if (is_assistant_for_activity($module->id)) { ?>
+			<div id="music_configuration_<?=$k; ?>">
+			    <?php
+			    $file_browser_height =
+				"calc(100% - 3 * 35px ".
+				(isset($module->wallpaper["NA"][0]) ? "- 50px " : "").
+				(isset($module->intro["NA"][0]) ? "- 50px " : "").
+				")";
+			    $language = $k;
+			    $target = @$module->music["NA"][0];
+			    $path = preg_replace("/^\.\/dres\/activity\//", "", @$module->music["NA"][0]);
+			    $path = preg_replace("/^[a-zA-Z0-9\-_]+\//", "", $path);
+			    $path = preg_replace("/^mood/", "", $path);
+			    $type = "mood";
+			    require ("./tools/template/path_browser.phtml");
+			    ?>
+			</div>
+		    <?php } ?>
+		</div>
+		<?php // Moulinettes et binaire de référence ?>
+		<div class="activity_configuration_block softwares_<?=$k; ?> softwares">
+		    <?php ob_start(); ?>
+		    <select name="type" style="width: 100%;">
+			<option value="0"><?=$Dictionnary["EvaluatorRepository"]; ?></option>
+			<option value="1"><?=$Dictionnary["ReferenceRepository"]; ?></option>
+			<option value="2"><?=$Dictionnary["ToolsRepository"]; ?></option>
+		    </select>
+		    <?php $html = ob_get_clean(); ?>
+		    <?php list_of_links([
+			"hook_name" => "activity",
+			"hook_id" => $module->id,
+			"linked_name" => "software",
+			"linked_elems" => $module->repositories,
+			"additional_html" => $html,
+			"admin_func" => "is_teacher_for_activity",
+			"display_link" => false,
+			"extra_form_id" => $k
+		    ]); ?>
+		</div>
+	    <?php } ?>
+	</div></td>
+    </tr>
+</table>

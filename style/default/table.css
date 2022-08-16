@@ -1,0 +1,17 @@
+
+.content_table
+{
+    font-size: small;
+}
+
+.content_table, .content_table tr, .content_table td
+{
+    border: 1px solid black;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.description_column
+{
+    font-size: small;
+}

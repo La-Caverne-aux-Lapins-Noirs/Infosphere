@@ -1,0 +1,88 @@
+<?php if ($page != "template") { ?>
+
+    <?php if ($module->type == MODULE) { ?>
+	<a class="button_link" href="index.php?=ModulesMenu&amp;a=<?=$module->id; ?>">
+	    <?=$Dictionnary["SeeTheModule"]; ?>
+	</a>
+    <?php } ?>
+    <?php if ($module->type_type == 1) { ?>
+	<a class="button_link" href="index.php?=ActivityMenu&amp;a=<?=$module->id; ?>">
+	    <?=$Dictionnary["SeeTheActivity"]; ?>
+	</a>
+    <?php } ?>
+    
+<?php } else { ?>
+
+    <div>
+	<?php $js = "silent_submit(this, 'list_of_instances<?=$module->id; ?>');"; ?>
+	<h4 style="text-align: center;"><?=$Dictionnary["Instantiate"]; ?></h4>
+	<form
+	    method="post"
+	    action="/api/<?=$page; ?>/<?=$module->id; ?>/instantiate"
+	    onsubmit="return <?=$js; ?>"
+	>
+	    <input type="text" name="prefix" value="" style="width: 49%;" placeholder="<?=$Dictionnary["Prefix"]; ?>" />
+	    <input type="text" name="suffix" value="" style="width: 49%;" placeholder="<?=$Dictionnary["Suffix"]; ?>" />
+	    <input type="date" name="start_date" value="" style="width: 49%;" />
+	    <select name="parent" style="width: 49%;">
+		<option value=""><?=$Dictionnary["ParentInstanceName"]; ?></option>
+	    </select>
+	    <br />
+	    <input type="hidden" name="action" value="instantiate" />
+	    <input type="button" value="<?=$Dictionnary["Instantiate"]; ?>" style="width: 100%;" />
+	</form>
+	<br />
+	<h4 style="text-align: center;"><?=$Dictionnary["LivingInstances"]; ?></h4>
+	<?php
+	$instances = db_select_all("
+                id, codename
+                FROM activity
+                WHERE id_template = {$module->id}
+                AND deleted IS NULL
+                AND template_link = 1
+                AND done_date > NOW()
+	");
+	?>
+	<div class="sublist_of_link" id="list_of_instances<?=$module->id; ?>">
+	    <?php if (count($instances)) { ?>
+		<?php foreach ($instances as $instance) { ?>
+		    <div><a href="<?=inside_link("instances", $instance["id"]); ?>">
+			<?=$instance["codename"]; ?>
+		    </a></div>
+		<?php } ?>
+	    <?php } else { ?>
+		<div>/</div>
+	    <?php } ?>
+	</div>
+    </div>
+
+    <?php if ($module->parent_activity == -1) { ?>
+	<br />
+	<form
+	    method="post"
+	    action="/api/<?=$page; ?>/<?=$module->id; ?>"
+	    onsubmit="return <?=$js; ?>"
+	>
+	    <input type="text" name="codename" value="" />
+	    <input type="hidden" name="action" value="duplicate" />
+	    <input
+		type="button"
+		value="<?=$Dictionnary["CopyWithCodeName"]; ?>"
+		style="width: 50%; color: lightgray; border-radius: 3px;"
+	    />
+	</form>
+    <?php } ?>
+
+<?php } ?>
+
+<?php if ($module->parent_activity != -1) { ?>
+
+    <br />
+    <?php single_field_with_ok_form($page, ["id" => $module->id, "codename" => ""], "new_father", "NewParentModule", NULL, NULL, "", "", "silent_submit(this); location.reload();"); ?>
+<?php } else { ?>
+
+    <br />
+    <a class="button_link" href="A FAIRE"><?=$Dictionnary["ExportSyllabus"]; ?></a>
+    <a class="button_link" href="A FAIRE"><?=$Dictionnary["ExportModel"]; ?></a>
+
+<?php } ?>

@@ -1,0 +1,88 @@
+.userdiv
+{
+    height: 300px;
+    overflow: hidden;
+    border: 1px solid black;
+    min-width: 350px;
+    position: relative;
+    text-align: left;
+}
+
+.userdiv h3
+{
+    height: 55px;
+    padding-left: 10px;
+    font-size: medium;
+    width: 100%;
+    z-index: 1;
+}
+
+.userdiv .left, .userdiv .right
+{
+    position: absolute;
+    top: 0px;
+    width: 50%;
+    height: 100%;
+    text-align: center;
+}
+
+.userdiv input, .userdiv form
+{
+    height: 25px;
+    font-size: x-small;
+}
+
+.userdiv .sublist_of_link div
+{
+    height: 21px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    width: 95% !important;
+    display: inline-block;
+    line-height: 21px;
+}
+
+.userdiv .sublist_of_link > div
+{
+    position: relative;
+}
+
+.userdiv .sublist_of_link input[type="button"]
+{
+    position: absolute;
+    right: 0px;
+    top: 1px;
+}
+
+.userdiv input[type=text]
+{
+    width: 85%;
+}
+
+.userdiv input[type=button]
+{
+    width: 12%;
+    position: relative;
+    top: 1px;
+}
+
+.userdiv .list_of_link h5, .userdiv .list_of_link form
+{
+    width: 100%;
+}
+
+.userdiv .sublist_of_link input
+{
+    top: 0px;
+    height: 19px;
+}
+
+.formular_slot
+{
+    vertical-align: top;
+}
+
+.formular_slot input
+{
+    width: 100%;
+}

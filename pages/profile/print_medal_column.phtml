@@ -1,0 +1,114 @@
+<?php
+$band = 0;
+$med = 0;
+
+$tmp_medal_list = sort_by_medal_grade($medal_list);
+$sorted_medal_list = [];
+foreach ($tmp_medal_list as $tmp)
+{
+    if (!($tmp["bonus"] && $tmp["success"] == 0 && $tmp["failure"] == 0))
+	$sorted_medal_list[] = $tmp;
+}
+
+$no_medal = true;
+foreach ($sorted_medal_list as $medal)
+{
+    if (_display_medal($module_medal, $medal, $module))
+	$no_medal = false;
+}
+
+if ($cycle->done == false || $module_medal == false || $no_medal == true)
+    $grade_medal = NULL;
+else
+{
+    $gr = ["e", "d", "c", "b", "a", "a"];
+    if (($grade_medal = db_select_one("
+       *,
+       medal.{$Language}_name as name,
+       medal.{$Language}_description as description
+       FROM medal WHERE codename = 'grade_".$gr[$module->grade]."' AND deleted = 0
+       ")) != NULL)
+    {
+	$grade_medal["success"] = 1;
+	$grade_medal["success_list"] = [];
+	$grade_medal["failure"] = 0;
+	$grade_medal["failure_list"] = [];
+	$grade_medal["mandatory"] = false;
+	$grade_medal["module_medal"] = true;
+	$grade_medal["local"] = false;
+	$med += 1;
+    }
+}
+
+foreach ($sorted_medal_list as $medal)
+{
+    if ($medal["icon"] == "")
+	$band += 1;
+    if ($medal["icon"] != "")
+	$med += 1;
+    if ($band != 0 && $med != 0)
+	break ;
+}
+
+if ($band == 0 || $med == 0)
+{
+?>
+    <div style="width: 100%;">
+	<?php
+	if (($medal = $grade_medal))
+	    print_medal($medal, $module, $user, $size);
+	foreach ($sorted_medal_list as $medal)
+	{
+	    if (_display_medal($module_medal, $medal, $module))
+	    {
+		print_medal($medal, $module, $user, $size);
+	    }
+	}
+	?>
+    </div>
+<?php
+}
+else
+{
+?>
+    <div style="float: left; width: 49.5%; overflow-x: auto;">
+	<?php
+	if (($medal = $grade_medal))
+	    print_medal($medal, $module, $user, $size);
+	foreach ($sorted_medal_list as $medal)
+	{
+	    if (_display_medal($module_medal, $medal, $module, $size))
+	    {
+		if ($medal["icon"] != "")
+		    print_medal($medal, $module, $user, $size);
+	    }
+	}
+	?>
+    </div>
+    <div style="float: left; width: 49.5%; overflow-x: auto;">
+	<?php
+	foreach ($sorted_medal_list as $medal)
+	{
+	    if (_display_medal($module_medal, $medal, $module))
+	    {
+		if ($medal["icon"] == "")
+		    print_medal($medal, $module, $user, $size);
+	    }
+	}
+	?>
+    </div>
+<?php
+}
+?>
+
+<?php if ($medal_teacher) { ?>
+    <div style="width: 90%; padding-left: 10%; border-radius: 5px; float: left; text-align: right;">
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="add_medal" />
+	    <input type="hidden" name="activity" value="<?=$medal_activity; ?>" />
+	    <input type="hidden" name="user" value="<?=$user["id"]; ?>" />
+	    <input type="text" name="medal" value="" style="width: 200px;" placeholder="<?=$Dictionnary["Medals"]; ?>" />
+	    <input type="submit" value="+" style="width: 50px;" />
+	</form>
+    </div>
+<?php } ?>

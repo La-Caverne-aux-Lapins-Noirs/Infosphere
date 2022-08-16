@@ -1,0 +1,96 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && $User["authority"] >= ADMINISTRATOR
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Functions"]; ?></h2>
+
+<form method="post" action"=index.php?<?=unrollget(); ?>" class="add_formular">
+    <div style="min-height: 50px;">
+	<h2><?=$Dictionnary["AddAFunction"]; ?></h2>
+	<input type="hidden" name="action" value="edit_function" />
+	<input type="text" name="codename" value="<?=try_get($_POST, "codename"); ?>" />
+	<input type="submit" value="<?=$Dictionnary["Add"]; ?>" />
+    </div>
+    <br />
+</form>
+
+<table class="content_table">
+    <tr>
+	<th><?=$Dictionnary["FunctionName"]; ?></th>
+	<th><?=$Dictionnary["ConditionMedals"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th><img src="./res/cog.png" width="50" height="50" /></th>
+	<?php } ?>
+    </tr>
+    <?php $cnt = 0; ?>
+    <?php foreach (db_select_all("
+            function.*, COUNT(function_medal.id) as cnt
+            FROM function
+            LEFT JOIN function_medal ON function.id = function_medal.id_function
+            WHERE deleted IS NULL
+            GROUP BY function.id
+            ORDER BY cnt ASC
+    ") as $func) { ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <td><?=$func["codename"]; ?></th>
+	    </td>
+	    <td>
+		<?php
+		foreach(db_select_all("
+		    medal.*, medal.{$Language}_name as name
+                    FROM function_medal
+                    LEFT JOIN medal ON function_medal.id_medal = medal.id
+                    WHERE function_medal.id_function = {$func["id"]}
+		    ") as $medal) {
+		?>
+		    <div style="display: inline-block; text-align: center; background-color: rgba(255, 255, 255, 0.5);">
+			<a href="index.php?p=MedalMenu&amp;a=<?=$medal["id"]; ?>">
+			    <?php if ($medal["icon"] != "") { ?>
+				<img
+				    src="<?=$medal["icon"]; ?>"
+				    alt="<?=$medal["codename"]; ?>"
+				    width="50" height="50"
+				/>
+			    <?php } else { ?>
+				<img
+				    src="genicon.php?function=<?=$medal["codename"]; ?>"
+				    alt="<?=$medal["codename"]; ?>"
+				    width="100" height="25"
+				/>
+			    <?php } ?>
+			</a>
+			<br />
+			<?php if (is_admin()) { ?>
+			    <form method="post" action="index.php?<?=unrollget(); ?>">
+				<input type="hidden" name="action" value="edit_function_medal" />
+				<input type="hidden" name="function" value="<?=$func["id"]; ?>" />
+				<input type="hidden" name="medals" value="-<?=$medal["id"]; ?>" />
+				<input type="submit" value="X" style="color: red; width: 100%;" />
+			    </form>
+			    <?=$medal["codename"]; ?>
+			<?php } else { ?>
+			    <?=$medal["name"]; ?>
+			<?php } ?>
+		    </div>
+		<?php } ?>
+	    </td>
+	    <?php if (is_admin()) { ?>
+		<td>
+		    <form method="post" action"=index.php?<?=unrollget(); ?>">
+			<input type="hidden" name="action" value="edit_function_medal" />
+			<input type="hidden" name="function" value="<?=$func["id"]; ?>" />
+			<input type="text" name="medals" value="<?=try_get($_POST, "medals"); ?>" />
+			<input type="submit" value="<?=$Dictionnary["Add"]; ?>" />
+		    </form>
+
+		</td>
+	    <?php } ?>
+	</tr>
+    <?php } ?>
+</table>

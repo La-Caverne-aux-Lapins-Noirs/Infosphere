@@ -1,0 +1,132 @@
+<?php
+$alternance = 0;
+foreach ($module->sublayer as $act)
+{
+    if ($user["visibility"] <= SUCCESSFUL_ACTIVITIES)
+	$act["present"] = 0;
+    if ($alternance++ % 2)
+	$the_style = "background-color: rgba(0, 0, 0, 0.2)";
+    else
+	$the_style = "background-color: rgba(255, 255, 255, 0.2)";
+
+    if ($module->grade_module)
+	$note = 4;
+    else
+	$note = 3;
+?>
+    <table class="content_table" style="<?=$the_style; ?>;">
+	<tr>
+	    <td><h5>
+		<a href="index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>&amp;b=<?=$act->id_session; ?>">
+		    <?=$act->name; ?>
+		</a><br />
+		<?php if ($act->begin_date != NULL) { ?>
+		    <?=human_date($act->begin_date); ?>
+		<?php } ?>
+	    </h5></td>
+	    <?php
+	    if ($act->present->cumulated > 0)
+	    {
+		$style = "background-color: green; color: white;";
+		$word = $Dictionnary["Present"];
+	    }
+	    else if ($act->late->cumulated > 0)
+	    {
+		$style = "background-color: orange; color: black;";
+		$word = $Dictionnary["Late"]." ";
+		if ($act->cumulated_late->cumulated)
+		    $word .= ($act->cumulated_late->cumulated / 60 / 60)."h".
+			     (($act->cumulated_late->cumulated / 60) % 60);
+	    }
+	    else if ($act->missing->cumulated > 0)
+	    {
+		$style = "background-color: red; color: black;";
+		$word = $Dictionnary["Missing"];
+	    }
+	    else if ($act->registered == false)
+	    {
+		$style = "";
+		$word = $Dictionnary["NotSubscribed"];
+	    }
+	    else
+	    {
+		$style = "";
+		$word = "";
+	    }
+	    ?>
+	    <td style="<?=$style; ?> font-weight: bold;">
+		<?=$word; ?>
+	    </td>
+
+	    <?php
+	    if ($act->work->cumulated > 0)
+	    {
+		$style = "background-color: green; color: white;";
+		if (is_admin() || $user["id"] == $User["id"])
+		    $word = $Dictionnary["Download"];
+		else
+		    $word = $Dictionnary["WorkDelivered"];
+	    }
+	    else if ($act->nowork->cumulated > 0)
+	    {
+		$style = "background-color: red; color: black;";
+		$word = $Dictionnary["NoWork"];
+	    }
+	    else
+	    {
+		$style = "";
+		$word = "";
+	    }
+	    ?>
+	    <?php if ($note == 4) { ?>
+		<td style="<?=$style; ?> font-weight: bold;">
+		    <?php
+		    foreach ($act->medal as $med)
+		    {
+			if (is_note($med["codename"]))
+			{
+			    echo ((int)substr($med["codename"], 4))." / 20";
+			    continue ;
+			}
+		    }
+		    ?>
+		</td>
+	    <?php } ?>
+	    <td style="<?=$style; ?> font-weight: bold;">
+		<?php
+		if ((is_admin() || $user["id"] == $User["id"]) && $act->work->cumulated)
+		{
+		?>
+		    <a href="<?=$act->archive; ?>">
+			<?=$word; ?> (<?=human_date($act->pickedup_date); ?>)
+		    </a>
+		<?php } else { ?>
+		    <?=$word; ?>
+		<?php } ?>
+	    </td>
+	</tr>
+	<?php if (count($act->medal) && $module->grade_module == false) { ?>
+	    <tr>
+		<td colspan="<?=$note; ?>">
+		    <?php
+		    $size = 35;
+		    $medal_list = $act->medal;
+		    $module_medal = false;
+		    $medal_activity = $act->codename;
+		    $medal_teacher = $act->is_teacher;
+		    require ("print_medal_column.phtml");
+		    ?>
+		</td>
+	    </tr>
+	<?php } ?>
+	<?php if (strlen($act->commentaries)) { ?>
+	    <tr>
+		<td colspan="<?=$note; ?>">
+		    <?=$act->commentaries; ?>
+		</td>
+	    </tr>
+	<?php } ?>
+    </table>
+<?php
+}
+?>

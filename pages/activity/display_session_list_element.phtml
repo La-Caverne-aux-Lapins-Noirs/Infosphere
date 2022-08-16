@@ -1,0 +1,44 @@
+<div
+    id="session_<?=$session->id; ?>"
+    onclick="display_session(<?=$session->id; ?>);"
+    style="width: 99%; float: left;"
+    class="entry select_session"
+>
+    <div class="activity_name_list_item">
+	<br />
+	<?php if (!$activity->is_template) { ?>
+	    <?php if ($session->begin_date != NULL && $session->end_date != NULL) { ?>
+		<?=datex("d/m/Y", $session->begin_date); ?>
+		<br />
+		<?=datex("h:i", $session->begin_date); ?>
+		-
+		<?=datex("h:i", $session->end_date); ?>
+	    <?php } else { ?>
+		<?=$Dictionnary["NewSession"]; ?>
+	    <?php } ?>
+	<?php } else { ?>
+	    <?=weekday_date($session->begin_date, NULL, false); ?>
+	    -
+	    <?=weekday_date($session->end_date, NULL, false); ?>
+	<?php } ?>
+	<br />
+	<br />
+    </div>
+    <div class="activity_icon_list_item">
+	
+	<?php $txt = 'title="'.$Dictionnary["DatesConfigured"].'"'; ?>
+	<?php if ($session->begin_date !== NULL && $session->end_date !== NULL) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#128337;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#128337;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["RoomConfigured"].'"'; ?>
+	<?php if (count($session->room)) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#127979;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#127979;&#xFE0E;</span>
+	<?php } ?>
+
+    </div>
+</div>

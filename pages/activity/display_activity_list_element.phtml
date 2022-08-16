@@ -1,0 +1,90 @@
+<div
+    id="activity_<?=$act->id; ?>"
+    onclick="list_sessions(<?=$act->id; ?>);"
+    style="width: 99%; float: left;"
+    class="entry select_activity"
+>
+    <div class="activity_name_list_item">
+	<br />
+	<?php
+	if (strncmp($act->codename, $module->codename, strlen($module->codename)) == 0)
+	{
+	    // $prefix = substr($act->codename, 0, strlen($module->codename));
+	    $prefix = "";
+	    $act->codename = substr($act->codename, strlen($module->codename));
+	    if (substr($act->codename, 0, 1) == "-")
+		$act->codename = substr($act->codename, 1);
+	}
+	else
+	    $prefix = "";
+	echo "<b>".$prefix."</b>".$act->codename."<br /><i>".$act->name."</i>";
+	?>
+	<br />
+	<br />
+    </div>
+
+    <div class="activity_icon_list_item">
+	<?php if (!$act->is_template) { ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsTemplateLinkActive"].'"'; ?>
+	    <?php if ($act->template_link) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
+	    <?php } ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsMedalTemplateLinkActive"].'"'; ?>
+	    <?php if ($act->medal_template) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	    <?php } ?>
+
+	    <?php $txt = 'title="'.$Dictionnary["IsClassTemplateLinkActive"].'"'; ?>
+	    <?php if ($act->support_template) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red; <?=$txt; ?>">&#128203;&#xFE0E;</span>
+	    <?php } ?>
+
+	    <?php if ($act->type_type == 2) { ?>
+		<?php $txt = 'title="'.$Dictionnary["AreSessionConfigured"].'"'; ?>
+		<?php if (count($act->session)) { ?>
+		    <span style="color: green;" <?=$txt; ?>>&#127979;&#xFE0E;</span>
+		<?php } else { ?>
+		    <span style="color: red; <?=$txt; ?>">&#127979;&#xFE0E;</span>
+		<?php } ?>
+	    <?php } ?>	    
+	    <br />
+
+	<?php } ?>
+	
+	<?php $txt = 'title="'.$Dictionnary["MedalConfigured"].'"'; ?>
+	<?php if (count($act->medal)) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#127894;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["TeacherConfigured"].'"'; ?>
+	<?php if (count($act->teacher) + count($module->teacher)) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#9786;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#9786;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["ClassConfigured"].'"'; ?>
+	<?php if (count($act->support)) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["CycleConfigured"].'"'; ?>
+	<?php if (count($act->cycle) + count($module->cycle)) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#10560;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#10560;&#xFE0E;</span>
+	<?php } ?>
+    </div>
+</div>

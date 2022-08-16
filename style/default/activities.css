@@ -1,0 +1,260 @@
+/*
+**
+*/
+
+#activity_tab .entry:hover
+{
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+b
+{
+    text-shadow:
+	0px 0px 0px black,
+	0px 0px 0px black,
+	0px 0px 0px black,
+	0px 0px 0px black
+    ;
+}
+
+#activity_tab > tr > td > h5
+{
+    text-align: center;
+}
+
+#activity_tab > tr > td
+{
+    border-left: 2px solid black;
+}
+
+#activity_tab td > div
+{
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    scrollbar-width: 5px;
+}
+
+#down_formular > td
+{
+    text-align: center;
+}
+
+.entry
+{
+    border-bottom: 1px solid gray;
+}
+
+#edit_formular
+{
+    background-color: transparent !important;
+}
+
+.edit_formular td h5
+{
+    text-align: center;
+}
+
+.edit_formular td > div
+{
+    background-color: gray !important;
+}
+
+.form_entry > div > label,
+.form_entry > div > input,
+.form_entry > div > select
+{
+    border-radius: 2px;
+}
+
+.date_entry > div > label,
+.date_entry > div > select
+{
+    border-radius: 2px;
+}
+
+.date_entry > div > input[type="datetime-local"]
+{
+    border-radius: 2px;
+}
+
+.date_entry > div > input[type="checkbox"]
+{
+    border-radius: 2px;
+    background-color: black;
+}
+
+.form_entry > div > label, .date_entry > div > label
+{
+    text-align: center;
+    background-color: lightgray;
+}
+
+.download_button, .link_button
+{
+    text-align: center;
+    background-color: white;
+    border-radius: 2px;
+}
+
+.delete_button
+{
+    background-color: rgb(32, 32, 32);
+    color: red;
+    text-align: center;
+    border-radius: 2px;
+}
+
+.download_button:hover
+{
+    background-color: pink;
+    text-align: center;
+    border-radius: 2px;
+}
+
+#down_edit_formular .medal_configuration select,
+#down_edit_formular .medal_configuration label,
+#down_edit_formular .medal_configuration input
+{
+    background-color: transparent;
+    border: 0;
+    text-align: center;
+}
+
+#down_edit_formular .medal_configuration label
+{
+    position: relative;
+    top: 0px;
+    left: -5px;
+}
+
+#down_edit_formular .medal_configuration input
+{
+    background-color: white;
+    width: 30px;
+    height: 20px;
+}
+
+#down_edit_formular .medal_configuration img
+{
+    border-radius: 5px;
+}
+
+#down_edit_formular .medal_configuration form
+{
+    background-color: transparent !important;
+}
+
+#down_edit_formular .delete_round
+{
+    background-color: rgb(32, 32, 32) !important;
+    color: red;
+    text-align: center;
+    border-radius: 30px;
+}
+
+#down_edit_formular .delete_wide
+{
+    background-color: rgb(32, 32, 32) !important;
+    color: red;
+    text-align: center;
+    border-radius: 50px;
+}
+
+
+#down_edit_formular .sublist_of_link div, #down_edit_formular .sublist_of_link div a
+{
+    background-color: gray;
+    border-radius: 10px;
+    text-align: center;
+    color: lightgray;
+    text-decoration: none;
+    font-size: small;
+}
+
+#down_edit_formular .sublist_of_link div a:hover
+{
+    color: white;
+}
+
+#down_edit_formular .sublist_of_link div input[type="button"]
+{
+    border-radius: 10px;
+}
+
+.syllabus > form > input[type="button"], .activity_configuration_block > form > input[type="button"]
+{
+    color: green;
+    border-radius: 15px;
+}
+
+.file_browser
+{
+    background-color: white;
+    border: 1px solid gray;
+}
+
+.file_browser > .icon
+{
+    border-bottom: 1px solid gray;
+    background-image: url("res/file.png");
+}
+
+.file_browser > .directory
+{
+    background-image: url("res/directory.png");
+    background-position: left center;
+}
+
+.file_browser .filename
+{
+    font-weight: bold;
+    color: white;
+    text-shadow:
+	-1px -1px 0px black,
+	-1px +1px 0px black,
+	+1px -1px 0px black,
+	+1px +1px 0px black,
+	-1px -0px 0px black,
+	+1px +0px 0px black,
+	+0px -1px 0px black,
+	+0px +1px 0px black
+    ;
+}
+
+.file_browser > .icon input
+{
+    color: red;
+}
+
+.button_link
+{
+    color: lightgray;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    width: calc(100% - 2px);
+    height: 30px;
+    line-height: 30px;
+    font-size: large;
+    border-radius: 5px;
+    border: 2px outset gray;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.activity_name_list_item
+{
+}
+
+.activity_icon_list_item
+{
+    text-shadow:
+	-1px -1px 0px black,
+	-1px +1px 0px black,
+	+1px -1px 0px black,
+	+1px +1px 0px black,
+	-1px -0px 0px black,
+	+1px +0px 0px black,
+	+0px -1px 0px black,
+	+0px +1px 0px black
+    ;
+}

@@ -1,0 +1,87 @@
+<h2><?=$Dictionnary["AddAUser"]; ?></h2><br />
+<form onsubmit="return false;" method="POST" action="/api/user">
+    <input
+	type="text"
+	name="login"
+	placeholder="<?=$Dictionnary["Login"]; ?>"
+    /><br />
+    <input
+	type="text"
+	name="mail"
+	placeholder="<?=$Dictionnary["Mail"]; ?>"
+    /><br />
+
+    <input
+	type="text"
+	name="first_name"
+	placeholder="<?=$Dictionnary["FirstName"]; ?>"
+    /><br />
+    <input
+	type="text"
+	name="family_name"
+	placeholder="<?=$Dictionnary["FamilyName"]; ?>"
+    /><br />
+    <input
+	type="date"
+	name="birth_date"
+	placeholder="<?=$Dictionnary["BirthDate"]; ?>"
+    /><br />
+    <input
+	type="phone"
+	name="phone"
+	placeholder="<?=$Dictionnary["Phone"]; ?>"
+    /><br />
+
+    <input
+	type="button"
+	onclick="silent_submitf(this.parentNode, {tofill: 'userlist', toclear: 'userlist', wrapper: 'users', clear_form: true});"
+	value="<?=$Dictionnary["AddAUser"]; ?>"
+    />
+</form>
+<br />
+<h2><?=$Dictionnary["AddUsersByCSV"]; ?></h2><br />
+<form onsubmit="return false;" method="POST" action="/api/user" enctype="multipart/form-data">
+    <script src="script/ext/csv.js"></script>
+    <script>
+     function load_and_split(form)
+     {
+	 var file = document.getElementById("configuration").files[0];
+
+	 if (file == null)
+	 {
+	     set_error_div("<?=$Dictionnary["CannotLoadFile"]; ?>", false);
+	     return ;
+	 }
+	 var reader = new FileReader();
+	 var data = "";
+
+	 reader.onload = function(e)
+	 {
+	     var obj = load_csv(e.target.result, "users", false);
+
+	     if (obj == null)
+	     {
+		 set_error_div("<?=$Dictionnary["CannotReadFile"]; ?>", false);
+		 return ;
+	     }
+	     silent_submit(
+		 form,
+		 "userlist",
+		 null,
+		 "userlist",
+		 null,
+		 obj
+	     );
+	 }
+	 reader.readAsText(file);
+     }
+    </script>
+    <input
+	type="file"
+	id="configuration"
+	name="configuration"
+	placeholder="<?=$Dictionnary["Configuration"]; ?>"
+    value="<?=try_get($_POST, "configuration"); ?>"
+    /><br />
+    <input type="button" onclick="load_and_split(this.parentNode);" value="<?=$Dictionnary["AddUsers"]; ?>" />
+</form>

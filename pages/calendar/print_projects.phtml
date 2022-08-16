@@ -1,0 +1,13 @@
+<a href="index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>" class="<?=$act->registered != NULL ? "registered_act" : "unregistered_act"; ?>">
+    <div
+	class="calendar_activity vertical"
+	style="top: <?=$act->top; ?>%; left: <?=$act->left; ?>%; height: <?=$act->height; ?>%; width: <?=$act->width; ?>%; background-color: <?=color_from_name($act->name, ["white"]); ?>; overflow-y: hidden; white-space: nowrap; font-size: 20px;"
+	class="project_calendar">
+	<?php for ($i = 0; $i < 50; ++$i) { ?>
+	    <b>
+		<?=ucfirst($act->name); ?>
+		<?php for ($j = 0; $j < 10; ++$j) { echo "&nbsp;"; } ?>
+	    </b>
+	<?php } ?>
+    </div>
+</a>

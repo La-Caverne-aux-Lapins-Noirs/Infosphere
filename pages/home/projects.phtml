@@ -1,0 +1,25 @@
+<?php $projects = collect_dashboard_projects(time()); ?>
+<h2><?=$Dictionnary["CurrentProjects"]; ?>:</h2>
+<?php if (count($projects)) { ?>
+    <table style="text-align: center;">
+	<tr>
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><?=$Dictionnary["EndDate"]; ?></th>
+	</tr>
+	<?php foreach ($projects as $act) { ?>
+	    <tr>
+		<td>
+		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>">
+			<?=$act["name"]; ?>
+		    </a>
+		</td>
+		<td>
+		    <?=datex("d/m", date_to_timestamp($act["pickup_date"])); ?>
+		    <?php if ($act["soon"]) { ?>
+			<?=$Dictionnary["EndThisWeek"]; ?>
+		    <?php } ?>
+		</td>
+	    </tr>
+	<?php } ?>
+    </table>
+<?php } ?>

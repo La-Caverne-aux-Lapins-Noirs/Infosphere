@@ -1,0 +1,167 @@
+<?php
+require_once ("is_room_full.php");
+require_once ("count_slots.php");
+
+// On récupère les infos
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+if ($activity == NULL)
+{
+    require_once (__DIR__."/../error_net.php");
+    return ;
+}
+
+// On traite les demandes a l'aide des infos
+if (file_exists(__DIR__."/handle_request.php")
+    && isset($_POST["action"]))
+require_once (__DIR__."/handle_request.php");
+
+require_once (__DIR__."/../error_net.php");
+
+?>
+<h2><?=$Dictionnary["Activity"]; ?></h2>
+
+<?php intercom_handle_request("activity", $activity->id); ?>
+
+<?php
+// Deux panneaux, a gauche et a droite
+
+$left_panel = [
+    $Dictionnary["About"] => __DIR__."/about.php",
+];
+if (count($activity->team) > 0)
+    $left_panel[$Dictionnary["RegisteredStudents"]] = __DIR__."/users.php";
+if (count($activity->class) > 0)
+    $left_panel[$Dictionnary["AssociatedCourseMaterial"]] = __DIR__."/material.php";
+if (count($activity->medal) > 0)
+    $left_panel[$Dictionnary["Medals"]] = __DIR__."/medals.php";
+if (count($activity->session) > 1)
+    $left_panel[$Dictionnary["OtherSessions"]] = __DIR__."/other_sessions.php";
+if (isset($activity->user_team["id"]) && $activity->min_team_size > 1)
+    $left_panel[$Dictionnary["Team"]] = __DIR__."/team.php";
+
+ob_start();
+$cnt = 0;
+$work = [];
+if (@count(@$activity->user_team["work"]))
+    $work = [$activity->user_team];
+else if (is_admin())
+    $work = $activity->team;
+foreach ($work as $wk)
+{
+    if (!is_admin())
+	$tlog = " - ".str_replace(".", "_", $User["codename"]);
+    else
+	$tlog = " - ".$wk["team_name"]." (".$wk["leader"]["codename"].")";
+    foreach ($wk["work"] as $wkx)
+    {
+	$repo = $wkx["repository"];
+	$ret = pathinfo($wkx["repository"], PATHINFO_EXTENSION);
+	if ($ret == "")
+	    $repo .= "*"; // Retro compat...
+	$cnt += display_ressources($repo, datex("d/m/Y H:i:s", $wkx["pickedup_date"]).$tlog);
+    }
+}
+$work = ob_get_contents();
+ob_get_clean();
+if ($activity->evaluation == NULL && $cnt > 0)
+    $left_panel[$Dictionnary["WorkDelivered"]] = __DIR__."/work.php";
+
+$right_panel = [
+    $Dictionnary["Subject"] => __DIR__."/subject.php",
+];
+
+ob_start();
+$cnt = 0;
+$cnt += display_ressources("./dres/activity/".$activity->template_codename."/ressources/*");
+$cnt += display_ressources("./dres/activity/".$activity->codename."/ressources/*");
+$list = ob_get_contents();
+ob_get_clean();
+if ($cnt > 0)
+    $right_panel[$Dictionnary["Ressources"]] = __DIR__."/ressources.php";
+
+$right_panel[$Dictionnary["Intercom"]] = __DIR__."/discussion.php";
+
+if ($activity->unique_session && count($activity->unique_session->slot))
+    $right_panel[$Dictionnary["AppointmentSlots"]] = __DIR__."/slots.php";
+if ($activity->evaluation != NULL)
+    $right_panel[$Dictionnary["Evaluation"]] = __DIR__."/evaluation.php";
+
+$right_panel[$Dictionnary["OpinionOnActivity"]] = __DIR__."/opinion.php";
+if ($activity->is_teacher)
+{
+    $right_panel[$Dictionnary["Administration"]] = __DIR__."/administration.php";
+    $right_panel[$Dictionnary["Logs"]] = __DIR__."/logs.php";
+}
+
+?>
+
+<style>
+ .toplist
+ {
+     font-size: small;
+ }
+ .content
+ {
+ }
+ <?php
+ if ($activity->wallpaper)
+ {
+ ?>
+ .background
+ {
+     background-size: cover;
+     color: white;
+     font-weight: bold;
+     text-shadow: -1px -0px 0px white;
+ }
+ .background h1, .background h2, .background h3, .background h4, .background p
+ {
+     background-clip: content-box;
+     background-color: rgba(0, 0, 0, 0.75);
+ }
+ .background a
+ {
+     color: white;
+ }
+ .leftbackground
+ {
+     background-image: url("<?=$activity->wallpaper; ?>");
+ }
+ .rightbackground
+ {
+     background-image: url("<?=$activity->wallpaper; ?>");
+ }
+ <?php
+ }
+ ?>
+</style>
+
+<div class="double_horizontal" style="height: 90%;">
+    <div style="height: 100%;"
+	 style="<?=$activity->wallpaper ? "background-image: url('".$activity->wallpaper."');" : ""; ?>; background-size: cover;"
+    >
+	<?php
+	tabpanel(
+	    $left_panel,
+	    $Position.$activity->id."left",
+	    $Dictionnary["About"],
+	    "toplist",
+	    "round_box leftbackground background"
+	);
+	?>
+    </div>
+    <div style="height: 100%;">
+	<?php
+	tabpanel(
+	    $right_panel,
+	    $Position.$activity->id."right",
+	    $Dictionnary["Subject"],
+	    "toplist",
+	    "round_box"
+	);
+	?>
+    </div>
+</div>
+

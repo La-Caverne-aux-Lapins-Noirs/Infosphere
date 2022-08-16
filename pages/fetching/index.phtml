@@ -1,0 +1,56 @@
+<?php
+if (file_exists(__DIR__."/handle_request.php")
+    && isset($_POST["action"]) && $User != NULL && $User["authority"] >= STUDENT)
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+
+define("RECORDED", "0");
+define("ARCHIVED", "1");
+define("EVALUATED", "2");
+
+$ConclusionMessage = "";
+?>
+
+<form
+    id="fullpage_form"
+    action="index.php?p=<?=$Position; ?>"
+    method="post"
+    enctype="multipart/form-data"
+>
+    <input type="hidden" name="action" value="fetch" />
+    <h2><?=$Dictionnary["Fetching"]; ?></h2>
+    <p>
+	<input
+	    type="text"
+	    name="code"
+	    placeholder="<?=$Dictionnary["ActivityCode"]; ?>"
+	    value="<?=try_get($_POST, "code"); ?>"
+	/>
+	<br />
+
+	<?php if ($upform && ($format == "" || $format == NULL)) { ?>
+	    <input type="hidden" name="MAX_FILE_SIZE" value="<?=1024 * 1020 * 500; ?>" />
+	    <span id="formular_delivery">
+		<label for="archive"><?=$Dictionnary["SendAsArchive"]; ?></label>
+		<br />
+		<input
+		    type="file"
+		    name="archive"
+		    placeholder="<?=$Dictionnary["File"]; ?>"
+		/>
+	    </span>
+	    <br />
+	    <input type="submit" value="<?=$Dictionnary["Upload"]; ?>" />
+	<?php } else { ?>
+	    <input type="submit" value="<?=$Dictionnary["SelectActivity"]; ?>" />
+	<?php } ?>
+    </p>
+</form>
+
+<script type="text/javascript">
+ edit_form(document.getElementById("fetch_format"));
+</script>

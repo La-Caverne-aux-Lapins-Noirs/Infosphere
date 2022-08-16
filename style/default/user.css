@@ -1,0 +1,22 @@
+
+.userdiv .sublist_of_link div
+{
+    background-color: gray;
+    border-radius: 10px;
+}
+
+.userdiv .sublist_of_link div a
+{
+    color: lightgray;
+    text-decoration: none;
+}
+
+.userdiv .sublist_of_link div a:hover
+{
+    color: white;
+}
+
+.userdiv .sublist_of_link div input[type="button"]
+{
+    border-radius: 10px;
+}

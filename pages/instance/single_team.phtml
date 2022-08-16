@@ -1,0 +1,234 @@
+<?php
+if ($activity->min_team_size > 1)
+    $div_class = "teamdiv";
+else
+    $div_class = "noteamdiv";
+
+?>
+<div class="registereddiv <?=$div_class; ?>">
+
+    <div style="position: absolute; top: 0px; right: 10px; width: 50%; text-align: right;">
+	<?php if ($activity->is_teacher
+		  && $activity->unique_session != NULL
+		  && $activity->reference_activity == -1) {?>
+	    <div style="float: right;">
+		<form
+		    method="post"
+			    action="index.php?<?=unrollget(); ?>"
+			    style="display: inline-block;"
+		>
+		    <input type="hidden" name="action" value="adm_declare_present" />
+		    <input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+		    <input type="submit" value="O" style="color: green; width: 25px; height: 25px;" />
+		</form>
+		<form
+		    method="post"
+			    action="index.php?<?=unrollget(); ?>"
+			    style="display: inline-block;"
+		>
+		    <input type="hidden" name="action" value="adm_declare_late" />
+		    <input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+		    <input type="submit" value="&#9202;" style="color: orange; width: 25px; height: 25px;" />
+		</form>
+		<form
+		    method="post"
+			    action="index.php?<?=unrollget(); ?>"
+			    style="display: inline-block;"
+		>
+		    <input type="hidden" name="action" value="adm_declare_missing" />
+		    <input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+		    <input type="submit" value="X" style="color: red; width: 25px; height: 25px;" />
+		</form>
+	    </div>
+	<?php } ?>
+
+	<?php if ($activity->unique_session != NULL) { ?>
+	    <?php if ($cteam["present"] == 1) { ?>
+		<span style="color: green;"><?=$Dictionnary["Present"]; ?></span>
+	    <?php } else if ($cteam["present"] == -1) { ?>
+		<span style="color: orange;"><?=$Dictionnary["Late"]; ?></span>
+	    <?php } else if ($cteam["present"] == -2) { ?>
+		<span style="color: red;"><?=$Dictionnary["Missing"]; ?></span>
+	    <?php } ?>
+	<?php } ?>
+
+	<?php if ($cteam["canjoin"] == false) { ?>
+	    <span>&#128274;</span>
+	<?php } ?>
+	&nbsp;&nbsp;
+    </div>
+
+    <?php if (count($cteam["work"])) { ?>
+	<form action="<?=$cteam["work"][array_key_first($cteam["work"])]["repository"]; ?>"
+	      method="get"
+	      target="_blank">
+	    <input
+		type="submit"
+		style="position: absolute; bottom: 10px; right: 10px; width: 100px;"
+		value="<?=$Dictionnary["DeliveredWork"]; ?>"
+	    />
+	</a>
+	</form>
+    <?php } ?>
+
+    <?php if ($activity->min_team_size > 1) { ?>
+	<h4><?=$cteam["team_name"]; ?></h4>
+	<?php if ($activity->is_teacher) { ?>
+	    <div style="position: absolute; top: 0px; left: 0px;">
+		<form method="POST" action="index.php?<?=unrollget(); ?>">
+		    <input type="hidden" name="action" value="force_subscribe_team" />
+		    <input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+		    <input
+			type="text"
+			name="logins"
+			style="width: 175px;"
+			placeholder="<?=$Dictionnary["UserToSubscribe"]; ?>"
+		    />
+		    <input type="submit"
+			   style="width: 25px;"
+			   value="&#10003;"
+			   style="color: green;"
+		    />
+		</form>
+	    </div>
+	<?php } else if ($activity->registered == false) { ?>
+	    <?php if (count($cteam["user"]) < $activity->min_team_size && $cteam["canjoin"]) { ?>
+		<div style="position: absolute; top: 0px; right: 0px;">
+		    <form method="post" action="index.php?<?=unrollget(); ?>">
+			<input type="hidden" name="action" value="join_team" />
+			<input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+			<input type="submit"
+			       style="width: 200px; color: green;"
+			       value="<?=$Dictionnary["Join"]; ?>"
+			/>
+		    </form>
+		</div>
+	    <?php } ?>
+	<?php } else { ?>
+	    <?php // Rien a faire ?>
+	<?php } ?>
+    <?php } ?>
+
+    <?php foreach ($cteam["user"] as $usr) { ?>
+	<div class="teamate" style="display: inline-block; min-height: 170px; background-color: rgba(255, 255, 255, 0.5); border-radius: 5px;">
+	    <table style="width: 100%;">
+		<tr><td style="width: 105px;">
+		    <?php display_avatar($usr, 100); ?>
+		    <br />
+		    <?php if ($activity->is_teacher) { ?>
+			<form method="POST" action="index.php?<?=unrollget(); ?>">
+			    <input type="hidden" name="action" value="force_unsubscribe" />
+			    <input type="hidden" name="logins" value="<?=$usr["id"]; ?>" />
+			    <input
+				type="submit"
+				style="width: 100px; color: red;"
+				value="&#10007;"
+			    />
+			</form>
+			<form method="POST" action="index.php?<?=unrollget(); ?>">
+			    <input type="hidden" name="action" value="add_medal" />
+			    <input type="hidden" name="id" value="<?=$usr["id"]; ?>" />
+			    <input
+				type="text"
+				name="medal"
+				style="width: 100px;"
+				placeholder="<?=$Dictionnary["AddMedals"]; ?>"
+			    /><br />
+			    <input
+				type="submit"
+				style="width: 100px; color! green;"
+				value="+"
+			    />
+			</form>
+		    <?php } ?>
+		</td><td style="text-align: center; vertical-align: top;">
+		    <a href="index.php?p=ProfileMenu&amp;a=<?=$usr["id"]; ?>">
+			<div style="<?=$usr["status"] == 2 ? "font-weight: bold;" : ""; ?>; text-align: left;">
+			    <?php display_nickname($usr); ?>
+
+			    <?php if ($activity->min_team_size > 1) { ?>
+				<?php if ($usr["status"] == 2) { ?>
+				    <br />
+				    <i style="font-size: x-small;"><?=$Dictionnary["Administrator"]; ?></i>
+				    <br />
+				<?php } else if ($usr["status"] == 0) { ?>
+				    <br />
+				    <i style="font-size: x-small;"><?=$Dictionnary["SubscriptionNotValidatedYet"]; ?></i>
+				    <br />
+				<?php } else { ?>
+				    <br /><br /><br />
+				<?php } ?>
+			    <?php } ?>
+			</div>
+		    </a>
+		    <div style="width: 100%; padding-top: 10px;">
+			<?php $medals = []; ?>
+			<?php if ($usr["visibility"] == COMPLETE_PROFILE || $activity->is_teacher || $usr["id"] == $User["id"]) { ?>
+			    <?php if ($activity->reference_activity == -1) { ?>
+				<?php get_activity_medal_for_user($usr, $activity->id); ?>
+			    <?php } else {?>
+				<?php get_activity_medal_for_user($usr, $activity->reference_activity); ?>
+			    <?php } ?>
+			<?php } else { ?>
+			    <?php $usr["medal"] = []; ?>
+			<?php } ?>
+			<?php for ($i = 0; $i < 2; ++$i) { ?>
+			    <?php foreach ($usr["medal"] as $im) { ?>
+				<?php if (($im["icon"] == "" && $i == 0) || ($im["icon"] != "" && $i == 1)) { ?>
+				    <?php continue ; ?>
+				<?php } ?>
+
+				<?php if ($activity->is_teacher) { ?>
+				    <form method="POST" action="index.php?<?=unrollget(); ?>" style="display: inline-block;">
+					<input type="hidden" name="action" value="remove_medal" />
+					<input type="hidden" name="id" value="<?=$im["id_activity_user_medal"]; ?>" />
+					<?php if ($im["icon"] != "") { ?>
+					    <div style="display: inline-block; width: 30px; height: 30px; position: relative;" onclick="this.closest('form').submit();return false;">
+						<img width="30" height="30" src="<?=$im["icon"]; ?>" title="<?=$im["name"].":\n".$im["description"]; ?>" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
+					<?php } else { ?>
+					    <div style="display: inline-block; width: 150px; height: 30px; position: relative;" onclick="this.closest('form').submit();return false;">
+						<img src="genicon.php?function=<?=$im["codename"]; ?>" height="25" width="150" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
+					<?php } ?>
+					    <img width="15" height="15" src="./res/cross.png" style="position: absolute; right: 0px; bottom: 0px;" />
+					</div>
+				    </form>
+				<?php } else { ?>
+				    <img width="30" height="30" src="<?=$im["icon"]; ?>" title="<?=$im["name"].":\n".$im["description"]; ?>" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
+				<?php } ?>
+				<?php $medals[] = $im["codename"]; ?>
+			    <?php } ?>
+			    <br />
+			<?php } ?>
+			<?php if (count($medals) && $activity->is_assistant) { ?>
+			    <br />
+			    <input type="text" value="<?=implode($medals, ";"); ?>" />
+			<?php } ?>
+			<?php if ($activity->is_assistant) { ?>
+			    <form method="post" action="index.php?<?=unrollget(); ?>">
+				<input type="hidden" name="action" value="user_team_comment" />
+				<input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+				<input type="hidden" name="user" value="<?=$usr["id"]; ?>" />
+				<textarea name="commentaries"><?=$usr["commentaries"]; ?></textarea>
+				<input type="submit" value="&#10003;" />
+			    </form>
+			    <form method="post" action="<?=unrollurl(); ?>">
+				<input type="hidden" name="action" value="raise_alert" />
+				<input type="hidden" name="user" value="<?=$usr["id"]; ?>" />
+				<input type="text" name="message" value="" placeholder="<?=$Dictionnary["Message"]; ?>" style="background-color: rgb(128, 0, 0); color: white;" />
+				<input type="submit" value="<?=$Dictionnary["ALERT"]; ?>" style="background-color: red;" />
+			    </form>
+			<?php } else if (@strlen($usr["commentaries"])) { ?>
+			    <?php if ($usr["visibility"] == COMPLETE_PROFILE || $activity->is_assistant || $usr["id"] == $User["id"]) { ?>
+				<p style="max-height: 100px; overflow:auto;">
+				    <?=str_replace("\n", "<br />", $usr["commentaries"]); ?>
+				</p>
+			    <?php } ?>
+			<?php } ?>
+		    </div>
+		</td></tr>
+	    </table>
+	</div>
+    <?php } ?>
+</div>
+<br />
+<br />

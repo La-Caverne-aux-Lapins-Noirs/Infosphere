@@ -1,0 +1,38 @@
+
+@font-face
+{
+    src: url("/res/futura.ttf");
+    font-family: futura;
+}
+
+*
+{
+    font-family: futura;
+}
+
+.content_table
+{
+}	
+
+.content_even
+{
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.content_odd
+{
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+#loading_screen1, #loading_screen2
+{
+    background-color: black;
+}
+
+#loading_logo
+{
+    background-image: url("/res/logo.png");
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
+}

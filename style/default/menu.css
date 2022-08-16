@@ -1,0 +1,11 @@
+
+@font-face
+{
+    src: url("/res/futura.ttf");
+    font-family: futura;
+}
+
+*
+{
+    font-family: futura;
+}

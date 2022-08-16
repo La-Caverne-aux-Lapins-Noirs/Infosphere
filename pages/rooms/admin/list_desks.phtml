@@ -1,0 +1,52 @@
+<h3><?=$fetch["name"]; ?></h3>
+<a href="index.php?p=<?=$Position; ?>">
+    &larr;
+</a>
+<table class="content_table">
+    <!-- HEADER -------------------------------------------------------------->
+    <tr>
+	<th class="id_column">#</th>
+	<th class="codename_column"><?=$Dictionnary["CodeName"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["Type"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["Ip"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["Mac"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["Position"]; ?></th>
+	<th style="width: 200px;"><?=$Dictionnary["CurrentStatus"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="edit_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <!-- BODY -------------------------------------------------------------->
+    <?php
+    foreach ($fetch["desk"] as $content)
+    {
+    $URL = "#";
+    ?>
+    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>" style="background-color: <?=$DeskStatusColors[$content["status"]]; ?>">
+	<td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$content["codename"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$Dictionnary[$DeskTypes[$content["type"]]]; ?></td>
+	<td <?=clickable($URL); ?>><?=$content["ip"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$content["mac"]; ?></td>
+	<td <?=clickable($URL); ?>>
+	    X: <?=$content["x"]; ?> Y: <?=$content["y"]; ?>
+	    W: <?=$content["w"]; ?> H: <?=$content["h"]; ?>
+	</td>
+	<td <?=clickable($URL); ?>>
+	    <?=$Dictionnary[$DeskStatus[$content["status"]]]; ?>
+	    <?php if ($content["status"] >= 1 && $content["status"] <= 3) { ?>
+	    <?=$Dictionnary["by"]; ?>
+	    <a href="index.php?p=ProfileMenu&amp;a=<?=$content["id_user"]; ?>">
+		<?=$content["user"]; ?>
+	    </a>
+	    <?php } ?>
+	</td>
+	<?php
+	if (is_admin())
+	//require ("edition.phtml");
+	echo "<td></td>";
+	?>
+    </tr>
+    <?php } ?>
+</table>

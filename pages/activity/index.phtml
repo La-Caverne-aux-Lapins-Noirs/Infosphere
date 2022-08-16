@@ -1,0 +1,111 @@
+<?php
+if ($_GET["p"] == "ActivitiesMenu" || $_GET["p"] == "TestMenu") // Template
+    $template = 1;
+else
+    $template = 0;
+?>
+
+<?php if ($Position == "InstancesMenu") { ?>
+    <h2 class="alignable_blocks"><?=$Dictionnary["Instances"]; ?></h2>
+    <?php $page = "module"; ?>
+<?php } else { ?>
+    <h2 class="alignable_blocks"><?=$Dictionnary["ActivityTemplates"]; ?></h2>
+    <?php $page = "template"; ?>
+<?php } ?>
+
+<table id="activity_tab"><tr id="selectlist"><td>
+    <!-- MODULES -->
+    <h5><?=$Dictionnary["Module"]; ?></h5>
+    <div id="module_list">
+    </div>
+    
+</td><td>
+    <!-- ACTIVITES -->
+    <h5><?=$Dictionnary["Activity"]; ?></h5>
+    <div id="activity_list">
+    </div>
+    
+</td><td>
+    <!-- SESSIONS -->
+    <h5><?=$Dictionnary["Session"]; ?></h5>
+    <div id="session_list">
+    </div>
+    
+</td><td rowspan="2" style="width: 60%; height: 100%;">
+    <!-- FORMULAIRE D'EDITION -->
+    <h5 id="edit_formular_title"></h5>
+    <div id="edit_formular">
+    </div>
+</td></tr><tr id="down_formular"><td>
+    <!-- FORMULAIRE D'AJOUT DE MODULE -->
+    <?php $js = "return silent_submit(this, 'module_list')"; ?>
+    <form onsubmit="<?=$js; ?>" method="post" action="/api/<?=$page; ?>">
+	<input
+	    type="text"
+	    name="codename"
+	    value=""
+	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	    style="width: 45%;"
+	/>
+	<input
+	    type="button"
+	    onclick="<?=$js; ?>"
+	    value="+"
+	    style="width: 45%;"
+	/>
+    </form>
+</td><td>
+    <!-- FORMULAIRE D'AJOUT D'ACTIVITE -->
+    <?php $js = "return silent_submit(this, 'activity_list')"; ?>
+    <form onsubmit="<?=$js; ?>" method="post" action="/api/activity" style="display: none;" id="activity_add_form">
+	<input
+	    type="hidden"
+	    id="selected_module"
+	    name="module"
+	/>
+	<input
+	    type="text"
+	    name="codename"
+	    value=""
+	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	    style="width: 45%;"
+	/>
+	<input
+	    type="button"
+	    onclick="<?=$js; ?>"
+	    value="+"
+	    style="width: 45%;"
+	/>
+    </form>
+</td><td>
+    <!-- FORMULAIRE D'AJOUT DE SESSION -->
+    <?php $js = "return silent_submit(this, 'session_list')"; ?>
+    <form onsubmit="<?=$js; ?>" method="post" action="/api/session" style="display: none;" id="session_add_form">
+	<input
+	    type="hidden"
+	    id="selected_activity"
+	    name="activity"
+	/>
+	<input
+	    type="button"
+	    onclick="<?=$js; ?>"
+	    value="+"
+	    style="width: 90%;"
+	/>
+    </form>
+</td></tr></table>
+<!-- For script purpose -->
+<input
+    type="hidden"
+    id="selected_session"
+    name="selected_session"
+/>
+
+<script>
+ <?php require_once (__DIR__."/script.js"); ?>
+ list_modules();
+ list_activities(<?=try_get($_GET, "a", try_get($_COOKIE, "$page-module")); ?>);
+ list_sessions(<?=try_get($_GET, "b", try_get($_COOKIE, "$page-activity")); ?>);
+ display_session(<?=try_get($_GET, "c", try_get($_COOKIE, "$page-session")); ?>);
+ select_formular();
+</script>

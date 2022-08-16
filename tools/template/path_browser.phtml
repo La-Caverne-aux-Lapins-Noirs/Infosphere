@@ -1,0 +1,40 @@
+<?php
+/*
+** $page : template ou module
+** $path : le chemin du dossier ouvert depuis le dossier racine des ressources
+** $target : le chemin du dosser ouvert depuis le dossier racine du site web
+** $language : la langue qu'on utilise actuellement. NA si c'est pour toutes les langues
+** $id : l'identifiant associé à l'objet contenant tous ces fichiers
+** $type : la nature des fichiers parcourus
+** $fbid : la base du nom de l'id du navigateur
+ */
+if (!@strlen($fbid))
+    $fbid = "file_browser";
+$js = "silent_submit(this, '$fbid$language');";
+?>
+<form
+    style="width: 100%;"
+	   method="put"
+	   onsubmit="return <?=$js; ?>"	
+	   action="/api/<?=$page; ?>/<?=$id; ?>/<?=$type; ?>"
+>
+    <input type="hidden" name="language" value="<?=$language; ?>" />
+    <input
+	id="path<?=$fbid.$language; ?>"
+	class="path_browser"
+	type="text"
+	name="path"
+	value="<?=$path; ?>"
+	onchange="return <?=$js; ?>"
+    />
+</form>
+<div
+    class="file_browser"
+    id="<?=$fbid.$language; ?>"
+    <?php if (isset($file_browser_height)) { ?>
+	style="height: <?=$file_browser_height; ?>"
+        <?php unset($file_browser_height); ?>
+    <?php } ?>
+>
+<?php require ("file_browser.phtml"); ?>
+</div>

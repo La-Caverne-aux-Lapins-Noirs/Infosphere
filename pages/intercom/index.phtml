@@ -1,0 +1,27 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Discussion"]; ?></h2>
+<?php
+if (!is_admin())
+{
+    echo "L'intercom apparaitra dans quelques jours.";
+    return ;
+}
+?>
+<?php
+if (!$unique)
+    require_once ("list_categories.php");
+else
+    require_once ("list_topics.php");
+?>
+

@@ -1,0 +1,42 @@
+<?php
+require_once ("handle_request.php");
+require_once ("fetch_awaiting_session.php");
+
+echo "<h1>".$Dictionnary["Token"]."</h1>";
+
+/*
+** Token:
+** 0: Non entré
+** 1: Entré en temps et en heure
+** -1: Entré en retard
+*/
+
+?>
+<form
+    id="fullpage_form"
+    action="index.php?p=<?=$Position; ?>"
+    method="post"
+>
+    <input type="hidden" name="action" value="fill_token" />
+    <h2><?=$Dictionnary["AddToken"]; ?></h2>
+    <p>
+	<input
+	    type="text"
+	    name="code"
+	    placeholder="<?=$Dictionnary["ActivityCode"]; ?>"
+	    value="<?=try_get($_POST, "code"); ?>"
+	/>
+	<br />
+	<input type="submit" value="<?=$Dictionnary["Confirm"]; ?>" />
+    </p>
+</form>
+
+<?php
+echo "<h2>".$Dictionnary["SessionAwaitingTokens"]."</h2>";
+foreach (fetch_awaiting_session()->value as $s)
+{
+    echo '<a href="index.php?p=ActivityMenu&amp;a=".$s["id_instance"]."&amp;b=".$s["id_session"]">';
+    echo $s["name"].": ".human_date($s["begin_date"])." - ".human_date($s["end_date"]);
+    echo '</a><br />';
+}
+?>

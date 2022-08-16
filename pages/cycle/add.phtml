@@ -1,0 +1,63 @@
+<br />
+<form method="POST" action="index.php?p=<?=$Position; ?>"  class="add_formular">
+    <input type="hidden" name="action" value="add_cycle" />
+    <h2><?=$Dictionnary["AddAPromotion"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="name"
+	    placeholder="<?=$Dictionnary["PromotionName"]; ?>"
+	    value="<?=try_get($_POST, "name"); ?>"
+	/>
+	<br />
+	<br />
+	<?=$Dictionnary["CycleNumber"]; ?><br />
+	<select name="year">
+	    <?php for ($i = 0; $i < 4 * 5 + 1; ++$i) { ?>
+		<option value="<?=$i; ?>" <?=try_get($_POST, "year") == $i ? "selected" : ""; ?>>
+		    <?php if ($i < 4 * 5) { ?>
+			<?=$Dictionnary["Cycle"]; ?>
+			<?=$i; ?>
+			(<?=$Dictionnary["Year"]; ?> <?=floor($i / 4) + 1; ?>)
+		    <?php } else { ?>
+			<?=$Dictionnary["Cycle"]; ?>
+			<?=$i; ?>
+			(<?=$Dictionnary["OutOfYear"]; ?>)
+		    <?php } ?>
+		</option>
+	    <?php } ?>
+	</select>
+	<br />
+	<br />
+	<?=$Dictionnary["FirstWeekDate"]; ?><br />
+	<input
+	    type="date"
+		  name="first_week"
+		  value="<?=try_get($_POST, "first_week"); ?>"
+	/>
+	<br />
+	<br />
+	<?=$Dictionnary["LastDayDate"]; ?><br />
+	<input
+	    type="date"
+	    name="last_day"
+	    value="<?=try_get($_POST, "first_week"); ?>"
+	/>
+	<br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+<br />
+<!--form enctype="multipart/form-data" action="#" method="post" class="add_formular" id="addformfile">
+    <h2><?=$Dictionnary["AddAPromotionFile"]; ?></h2><br>
+    <div>
+	<input type="hidden" name="action" value="import">
+	<input required type="file" name="userfile" accept=".json, .dab, .sic, .dabsic">
+	<br>
+	<input type="submit">
+    </div>
+</form-->
+
+
+

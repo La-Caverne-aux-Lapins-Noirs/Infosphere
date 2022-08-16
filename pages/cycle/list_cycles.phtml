@@ -1,0 +1,104 @@
+<?php
+if (is_admin())
+{
+    require_once ("add.phtml");
+    echo "<br />";
+}
+?>
+
+<table class="content_table">
+    <tr>
+	<th class="tiny_column">#</th>
+	<th class="medium_column"><?=$Dictionnary["CodeName"]; ?></th>
+	<th class="small_column"><?=$Dictionnary["FirstWeekDate"]; ?></th>
+	<th class="small_column"><?=$Dictionnary["LastDayDate"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["CycleNumber"]; ?></th>
+	<th class="small_column"><?=$Dictionnary["HowManyStudents"]; ?></th>
+	<th class="small_column"><?=$Dictionnary["HowManyInstances"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["Teacher"]; ?></th>
+	<?php if (is_admin()) { ?>
+	<th class="wide_column">
+	</th>
+	<?php } ?>
+    </tr>
+    <?php
+    $cnt = 0;
+    $ALL = [];
+    foreach ($fetch as $y)
+    {
+    if ($y["done"] == 0)
+    $ALL[] = $y["codename"];
+    $URL = "index.php?p=".$Position."&amp;a=".$y["id"];
+    ?>
+    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>" style="<?=$y["done"] ? "background-color: rgba(0, 0, 0, 0.5); color: white;" : ""; ?>">
+	<td <?=clickable($URL); ?>><?=$y["id"]; ?></td>
+	<td><?=$y["codename"]; ?></td>
+	<td <?=clickable($URL); ?>><?=datex("d/m/Y", $y["first_day"]); ?></td>
+	<td <?=clickable($URL); ?>><?=datex("d/m/Y", $y["last_day"]); ?></td>
+	<td <?=clickable($URL); ?>><?=$y["cycle"]; ?> (<?=$Dictionnary["Year"]; ?> <?=floor($y["cycle"] / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$y["cycle"] % 4 + 1; ?>)</td>
+	<td <?=clickable($URL); ?>><?=count($y["user"]); ?></td>
+	<td <?=clickable($URL); ?>><?=count($y["activity"]); ?></td>
+	<td>
+	    <?php
+	    foreach ($y["teacher"] as $teacher)
+	    {
+		if ($teacher["id_user"] > 0)
+		{
+		    ?>
+			<a href="index.php?p=ProfileMenu&amp;a=<?=$teacher["id_user"]; ?>">
+			    <?=$teacher["codename_user"]; ?>
+			</a>
+		    <?php
+		}
+		else if ($teacher["id_laboratory"] > 0)
+		{
+		    ?>
+			<a href="index.php?p=LaboratoriesMenu&amp;a=<?=$teacher["id_laboratory"]; ?>">
+			    #<?=$teacher["codename_laboratory"]; ?>
+			</a>
+	            <?php
+		}
+	    }
+	    ?>
+	</td>
+	<?php if (is_admin()) { ?>
+	<td>
+	    <form method="post" action="index.php?<?=unrollget(); ?>" style="display: inline-block;">
+		<input type="hidden" name="action" value="cycle_done">
+		<input type="hidden" name="cycle" value="<?=$y["id"]; ?>" />
+		<input type="checkbox" name="done" onchange="silent_submit(this.form);" <?=$y["done"] ? "checked" : ""; ?> />
+		<label for="done"><?=$Dictionnary["CycleDone"]; ?></label>
+	    </form>
+	    <form method="post" action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?>" style="display: inline-block;">
+		<input type="hidden" name="action" value="export_activity" />
+		<input type="hidden" name="cycle" value="<?=$y["id"]; ?>" />
+		<select name="format" style="width: 100px; height: 20px; line-height: 20px; font-size: 15px;">
+		    <option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+		    <option value="detailed_sketch"><?=$Dictionnary["DetailedSketch"]; ?></option>
+		    <option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+		</select>
+		<input type="submit" value="<?=$Dictionnary["Export"]; ?>" style="width: 80px; height: 30px; line-height: 20px; font-size: 15px;" />
+	    </form>
+	    <form method="post" action="<?=unrollurl(); ?>" style="display: inline-block; width: 33%;">
+		<input type="hidden" name="action" value="cycle_teacher" />
+		<input type="hidden" name="id_cycle" value="<?=$y["id"]; ?>" />
+		<input type="text" name="user" value="" placeholder="<?=$Dictionnary["Teacher"]; ?>" />
+		<input type="submit" value="+" />
+	    </form>
+	    <form method="post" action="index.php?<?=unrollget(); ?>" style="display: inline-block; width: 33%;">
+		<input type="hidden" name="action" value="delete_cycle">
+		<input type="hidden" name="cycle" value="<?=$y["id"]; ?>" />
+		<input type="submit" value="X" style="color: red; width: 100%;" />
+	    </form>
+	</td>
+	<?php } ?>
+    </tr>
+	</a>
+	<?php } ?>
+
+	<tr>
+	    <td colspan="<?=6 + is_admin(); ?>">
+		<input type="text" value="<?=implode(";", $ALL); ?>" />
+	    </td>
+	</tr>
+</table>

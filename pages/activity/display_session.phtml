@@ -1,0 +1,145 @@
+<?php
+global $Configuration;
+global $BackgroundColor;
+global $Background;
+global $LanguageList;
+global $one_week;
+global $one_day;
+global $one_hour;
+global $date0;
+
+$BackgroundColor = ' style="background-color: rgba(0, 0, 0, 0.1);" ';
+$Background = true;
+$js = "silent_submit(this)";
+?>
+<table id="down_edit_formular">
+    <tr><td><div>
+	<br />
+	<?php
+	single_field_form($page, $session, "maximum_subscription", "MaximumSubscription");
+	if ($template)
+	{
+	    $week = (int)($session->begin_date / $one_week) + 1;
+	    $day = (int)($session->begin_date / $one_day) % 7 + 1;
+	    $begin_hour = (int)($session->begin_date / $one_hour) % 24;
+	    $begin_min = (int)($session->begin_date / 60) % 60;
+	    $begin_min = ((int)($begin_min / 10)) * 10;
+	    $end_hour = (int)($session->end_date / $one_hour) % 24;
+	    $end_min = (int)($session->end_date / 60) % 60;
+	    $end_min = ((int)($end_min / 10)) * 10;
+	?>
+	    <br />
+	    <form
+		method="put"
+		action="/api/<?=$page; ?>/<?=$session->id; ?>"
+		onsubmit="return <?=$js; ?>"
+		<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
+	    >
+		<label for="week"><?=$Dictionnary["Week"]; ?></label>
+		<select
+		    id="<?=$week = uniqid(); ?>"
+		    name="week"
+		    onchange="delay_before_submit(1000, this, '<?=$week; ?>');"
+		>
+		    <?php for ($i = 1; $i < 52; ++$i) { ?>
+			<option value="<?=$i; ?>" <?=$i == $week ? "selected" : ""; ?>><?=$i; ?></option>
+		    <?php } ?>
+		</select>
+		<label for="day"><?=$Dictionnary["Day"]; ?></label>
+		<select
+		    id="<?=$day = uniqid(); ?>"
+		    name="day"
+		    onchange="delay_before_submit(1000, this, '<?=$day; ?>');"
+		>
+		    <?php for ($i = 1; $i < 7; ++$i) { ?>
+			<option value="<?=$i; ?>" <?=$i == $day ? "selected" : ""; ?>><?=$i; ?></option>
+		    <?php } ?>
+		</select>
+		<label for="begin"><?=$Dictionnary["Begin"]; ?></label>
+		<input
+		    type="time"
+		    name="begin"
+		    value="<?=sprintf("%02d", $begin_hour).":".sprintf("%02d", $begin_min); ?>"
+		/>
+		<label for="end"><?=$Dictionnary["End"]; ?></label>
+		<input
+		    type="time"
+		    name="end"
+		    value="<?=sprintf("%02d", $end_hour).":".sprintf("%02d", $end_min); ?>"
+		/>
+		<input type="button" value="&#10003;" onclick="<?=$js; ?>" />
+	    </form>
+	<?php } else { ?>
+	    <br />
+	    <form
+		method="put"
+		action="/api/<?=$page; ?>/<?=$session->id; ?>"
+			onsubmit="return <?=$js; ?>"
+		style="position: relative;"
+	    >
+		<label for="day"><?=$Dictionnary["Day"]; ?></label>
+		<input
+		    type="date"
+		    name="day"
+		    value="<?=datex("Y-m-d", $session->begin_date); ?>"
+		/>
+		<label for="begin"><?=$Dictionnary["Begin"]; ?></label>
+		<input
+		    type="time"
+		    name="begin"
+		    value="<?=datex("h:i", $session->begin_date); ?>"
+		/>
+		<label for="end"><?=$Dictionnary["End"]; ?></label>
+		<input
+		    type="time"
+		    name="end"
+		    value="<?=datex("h:i", $session->end_date); ?>"
+		/>
+		<input
+		    type="button"
+		    onclick="<?=$js; ?>"
+		    value="&#10003;"
+		    style="
+			  position: absolute;
+			  width: 20px;
+			  height: 70px;
+			  top: 0px;
+			  right: 5px;
+			  "
+		/>
+	    </form>
+	<?php } ?>
+	<br />
+	<br />
+	
+	<?php ob_start(); ?>
+	<?=$Dictionnary["RoomCapacity"]; ?>: <?=$session->room_space != -1 ? $session->room_space : "/"; ?>
+	<?php list_of_links([
+	    "hook_name" => "session",
+	    "hook_id" => $session->id,
+	    "linked_name" => "room",
+	    "linked_elems" => $session->room,
+	    "admin_func" => "is_teacher_or_director_for_session",
+	    "additional_html" => ob_get_clean()
+	]); ?>
+    </div></td><td><div>
+	<?php $js = "silent_submitf(this, {after_success: list_sessions(getCookie('".($template ? "template" : "module")."-activity'))})"; ?>
+	<form
+	    method="delete"
+	    onsubmit="return <?=$js; ?>;"
+	    action="/api/session/<?=$session->id; ?>"
+	>
+	    <input
+		type="button"
+		class="delete_wide"
+		onclick="<?=$js; ?>;"
+		value="&#10007;"
+	    />
+	</form>
+	<br />
+	<a class="button_link" href="index.php?=ActivityMenu&amp;a=<?=$module->id; ?>&amp;b<?=$session->id; ?>">
+	    <?=$Dictionnary["SeeTheActivity"]; ?>
+	</a>
+	<br />
+    </div></td></tr>
+</table>

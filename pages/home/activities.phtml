@@ -1,0 +1,42 @@
+<?php
+$activities = collect_dashboard_activities(
+    time(),
+    first_second_of_day(time()) + 60 * 60 * 24 * 2,
+    false
+);
+?>
+<h2><?=$Dictionnary["NextActivities"]; ?>:</h2>
+<?php if (count($activities["participate"])) { ?>
+    <table style="text-align: center;">
+	<tr>
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><?=$Dictionnary["Date"]; ?></th>
+	    <th><?=$Dictionnary["Hour"]; ?></th>
+	</tr>
+	<?php foreach ($activities["participate"] as $act) { ?>
+	    <tr>
+		<td>
+		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>&amp;b=<?=$act["id_session"]; ?>">
+			<?=$act["name"]; ?>
+		    </a>
+		</td>
+		<td>
+		    <?php if ($act["soon"] == 0) { ?>
+			<?=$Dictionnary["Today"]; ?>
+		    <?php } else if ($act["soon"] == 1) { ?>
+			<?=$Dictionnary["Tomorrow"]; ?>
+			<?=datex("d/m", date_to_timestamp($act["begin_date"])); ?>
+		    <?php } else { ?>
+			<?=datex("d/m", date_to_timestamp($act["begin_date"])); ?>
+		    <?php } ?>
+		</td>
+		<td>
+		    <?=datex("H:i", date_to_timestamp($act["begin_date"])); ?>
+		    -
+		    <?=datex("H:i", date_to_timestamp($act["end_date"])); ?>
+		</td>
+	    </tr>
+	<?php } ?>
+    </table>
+<?php } ?>
+

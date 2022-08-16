@@ -1,0 +1,47 @@
+<style>
+ .content_table th
+ {
+     height: 20px;
+ }
+</style>
+<tr>
+    <th style="width: 40px;"><?=$Dictionnary["Date"]; ?></th>
+    <th style="width: 20px;"></th>
+    <th
+	id="work_column"
+	class="calendar_column"
+	style="width: <?=$CurrentWorkWidth; ?>px;"
+    >
+	<?=$Dictionnary["CurrentWork"]; ?>
+    </th>
+    <th style="width: 50px;">H</th>
+    <th class="calendar_column" id="Monday">
+	<?=$Dictionnary["Monday"]; ?>
+    </th>
+    <th class="calendar_column" id="Tuesday">
+	<?=$Dictionnary["Tuesday"]; ?>
+    </th>
+    <th class="calendar_column" id="Wednesday">
+	<?=$Dictionnary["Wednesday"]; ?>
+    </th>
+    <th class="calendar_column" id="Thurdsday">
+	<?=$Dictionnary["Thursday"]; ?>
+    </th>
+    <th class="calendar_column" id="Friday">
+	<?=$Dictionnary["Friday"]; ?>
+    </th>
+    <th class="calendar_column" id="Saturday">
+	<?=$Dictionnary["Saturday"]; ?>
+    </th>
+    <th class="calendar_column" id="Sunday">
+	<?=$Dictionnary["Sunday"]; ?>
+    </th>
+</tr>
+
+<script>
+ var CalendarColumns = document.getElementsByClassName("calendar_column");
+ for (var i = 0; i < CalendarColumns.length; ++i)
+ {
+     CalendarColumns.item(i).style.minWidth = CalendarColumns.item(i).offsetWidth;
+ }
+</script>

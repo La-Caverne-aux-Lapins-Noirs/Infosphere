@@ -1,0 +1,186 @@
+<?php if (!isset($include_shield) || $include_shield != hash("md5", "prevent weird stuff")) exit ; ?>
+<html>
+    <head>
+	<meta charset="utf8" />
+	<?php foreach (glob("./style/structure/*.css") as $css) { ?>
+	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+	<?php } ?>
+	<?php if (isset($Configuration->Properties["style"])) { ?>
+	    <?php foreach (glob("./style/{$Configuration->Properties["style"]}/*.css") as $css) { ?>
+		<link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+	    <?php } ?>
+	<?php } ?>
+	<title>
+	    <?=strip_tags($Dictionnary[str_replace("Menu", "", $Position)]); ?> - <?=$Dictionnary["Infosphere"]; ?>
+	</title>
+        <!--
+        ---- Authors:
+        ---- Jason Brillante "Damdoshi"
+        ----
+        ---- Involved companies:
+        ---- Hanged Bunny Studio SAS 2014-2021.
+        ---- Pentacle Technologie 2009-<?=date("Y", time()); ?>.
+        ---- EFRITS SAS 2022-<?=date("Y", time()); ?>.
+        ----
+        ---- Infosphere & TechnoCore
+        --->
+	<script type="text/javascript">
+	 <?php foreach (glob("./script/ext/*.js") as $js) { ?>
+	     <?php require_once ($js); ?>
+	 <?php } ?>
+	 <?php foreach (glob("./script/*.js") as $js) { ?>
+	     <?php require_once ($js); ?>
+	 <?php } ?>
+	 var start = Date.now();
+	</script>
+    </head>
+
+    <body onload="remove_loading_screen();">
+	<div id="loading_logo"></div>
+	<div id="loading_screen1"></div>
+	<div id="loading_screen2"></div>
+
+	<!----------------------
+	---- MENU SUPERIEUR ----
+	----------------------->
+
+	<div id="head" class="menu">
+	    <a href="index.php" id="logo">
+		<img src="res/logo.png" alt="Logo" />
+	    </a>
+	    <?php add_menu_entries($TopMenu); ?>	    
+	    <div style="float: right;" id="clock">
+		<?=date("d/m/Y h:m:s", time()); ?>
+	    </div>
+	    <script type="text/javascript">
+	     var clock = document.getElementById("clock");
+
+	     function SetClockTime()
+	     {
+		 setTimeout(SetClockTime, 1000);
+		 if (clock_content != "")
+		     return ;
+		 date = new Date();
+		 var d = String(date.getDate()).padStart(2, '0');
+		 var m = String(date.getMonth() + 1).padStart(2, '0');
+		 var y = date.getFullYear();
+		 var h = String(date.getHours()).padStart(2, '0');
+		 var min = String(date.getMinutes()).padStart(2, '0');
+		 var sec = String(date.getSeconds()).padStart(2, '0');
+
+		 clock.innerHTML =
+		     d + "/" + m + "/" + y + " " + h + ":" + min + ":" + sec
+		 ;
+	     }
+	     SetClockTime();
+	    </script>
+	</div>
+
+	<div id="body">
+	    <?php require_once ("dispatch.php"); ?>
+	</div>
+
+	
+	<div id="debugbox" style="display: <?=isset($DebugLog) && $DebugLog != "" ? "block" : "none" ?>;" onclick="this.style.display = 'none';">
+	    <?=str_replace("\n", "<br />", @$DebugLog); ?>
+	</div>
+
+	<div id="chatbox">
+	</div>
+	
+	<?php
+	// MESSAGE GENERAL DE LOG OU D'ERREUR
+	$Message = "";
+	$Error = $ErrorMsg != "";
+	if ($ErrorMsg != "")
+	    $Message = $ErrorMsg;
+	else if (is_object($LogMsg))
+	    $Message = strval($LogMsg);
+	else if ($LogMsg != "")
+	    $Message = $Dictionnary[$LogMsg];
+	?>
+	<div
+	    id="error_message"
+	    onclick="remove_error_div();"
+	    style="
+		display: <?=$Message != "" ? 'block' : 'none'; ?>;
+		background-color: <?=$Error ? "red" : "green"; ?>;
+		"
+	>
+	    <p><?=$Message; ?></p>
+	</div>
+	<script type="text/javascript">
+	 var errtmout = null;
+	 function remove_error_div() {
+	     document.getElementById("error_message").style.display = "none";
+	 }
+	 function set_error_div(msg, good = false) {
+	     if (errtmout != null)
+		 clearTimeout(errtmout);
+	     errtmout = null;
+	     var errmsg = document.getElementById("error_message");
+
+	     errmsg.innerHTML = "<p>" + msg + "</p>";
+	     errmsg.style.display = "block";
+	     errmsg.style.backgroundColor = good ? "green" : "red";
+	     errtmout = setTimeout(remove_error_div, 20000);
+	 }
+	 function set_debug_div(code) {
+	     document.getElementById("debugbox").innerHTML = code;
+	     document.getElementById("debugbox").style.display = "block";
+	 }
+	 <?php if ($Message != "") { ?>
+	 errtmout = setTimeout(remove_error_div, 5000);
+	 <?php } ?>
+	</script>
+
+	<!----------------------
+	---- MENU INFERIEUR ----
+        ----------------------->
+	
+	<div id="foot">
+	    <!-- FORMULAIRE DE LANGAGE -->
+	    <form action="index.php?p=<?=$Position; ?>" method="POST">
+		<?php foreach ($LanguageList as $lng => $full) { ?>
+		<select name="language_select" onChange="submit(this);">
+		    <option value="<?=$lng; ?>" <?=$Language == $lng ? "selected" : ""; ?>>
+			<?=$full; ?>
+		    </option>
+		</select>
+		<?php } ?>
+	    </form>
+
+	    <!-- BOUTON DE PIED (BACK OFFICE) -->
+	    <div class="menu">
+		<?php add_menu_entries($BottomMenu); ?>
+	    </div>
+
+	    <!-- FORMULAIRE DE CONNEXION / DECONNEXION -->
+	    <div class="loginout">
+		<?php if ($User == NULL) { ?>
+		    <form action="index.php?p=<?=$Position; ?>" method="POST">
+			<input type="text" name="login" placeholder="<?=$Dictionnary["Login"]; ?>" />
+			<input type="password" name="password" placeholder="<?=$Dictionnary["Password"]; ?>" />
+			<input type="submit" value="&#10003;" />
+			<?php if ($Configuration->Properties["subscription_possible"]) { ?>
+			    <a href="index.php?p=Subscribe&amp;pp=<?=$Position; ?>">
+				<input type="button" value="<?=$Dictionnary["Subscribe"]; ?>" />
+			    </a>
+			<?php } ?>
+			<input type="hidden" name="logaction" value="login" />
+		    </form>
+		<?php } else { ?>
+		    <form target="index.php?p=<?=$Position; ?>" method="POST">
+			<p class="menubartext">
+			    <span><?=$Dictionnary["LoggedAs"]; ?>&nbsp;<?=$User["codename"]; ?></span>
+			    <input type="submit" name"logout" value="&#10007;" style="float: right;" />
+			</p>
+			<input type="hidden" name="logaction" value="logout" />
+		    </form>
+		<?php } ?>
+	    </div>
+	</div>
+    </body>
+</html>
+
+<?php require_once ("profiling.php"); ?>

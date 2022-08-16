@@ -1,0 +1,40 @@
+<h2><?=$Dictionnary["AboutYou"]; ?>, <?php display_nickname($User, false); ?></h2>
+<br />
+<table><tr><td>
+    <?php display_avatar($User); ?>
+</td><td>
+    <img src="tools/student_status.php" id="student_status" />
+</td></tr></table>
+
+<p>
+    <br />
+    &nbsp;&nbsp;&nbsp;&nbsp;<?=$Dictionnary["SecretIdentity"]; ?>
+    <span class="hidden_mouse">
+	<?php
+	if (@strlen($User["outside_secret"]) == 0)
+	{
+	    $secret = openssl_random_pseudo_bytes(8);
+ 	    $secret = str_replace("=", "", base64_encode($secret));
+	    $secret = str_replace("/", "", $secret);
+	    $Database->query("
+	        UPDATE user
+	        SET outside_secret = '$secret'
+	        WHERE id = ".$User["id"]
+	    );
+	}
+	?>
+	<?=crc32($User["outside_secret"]); ?>
+    </span>
+</p>
+
+<?php if (@strlen($User["birth_date"]) && datex("d/m/Y", time()) == datex("d/m/Y", date_to_timestamp($User["birth_date"]))) { ?>
+<p style="text-align: center;">
+    <?=$Dictionnary["HappyBirthday"]; ?>!
+</p>
+<?php } ?>
+
+<p style="text-align: center;">
+    <br />
+    <?php $today_time = get_student_log(); ?>
+    Aujourd'hui, vous avez travaillé <?=(int)($today_time / 60.0 / 60.0); ?> heures, <?=(int)(($today_time / 60.0) % 60); ?> minutes et <?=(int)($today_time % 60); ?> secondes.
+</p>

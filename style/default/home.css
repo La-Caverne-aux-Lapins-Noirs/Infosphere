@@ -1,0 +1,21 @@
+
+#home_table tr td > div, #activity_table tr td > div
+{
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+#welcome
+{
+    text-align: justify;
+}
+
+#about_you
+{
+    text-align: justify;
+}
+
+#about_you > table tr td
+{
+    text-align: center;
+}

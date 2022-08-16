@@ -1,0 +1,371 @@
+/*
+**
+*/
+
+
+h1
+{
+    width: 49%;
+    float: left;
+    font-size: large;
+    height: 25px;
+}
+#body
+{
+    padding: 0;
+    width: 100%;
+}
+#activity_tab
+{
+    width: 100%;
+    height: calc(100% - 50px);
+}
+#activity_tab > tr > td
+{
+    width: calc(40% / 3);
+}
+#activity_tab td > h5
+{
+    height: 20px;
+    text-align: center;
+}
+#selectlist td
+{
+    height: calc(100% - 40px);
+}
+#activity_tab td > div
+{
+    width: 99%;
+    margin-left: 0.5%;
+    height: calc(100% - 20px);
+    overflow: auto;
+}
+#activity_tab td > div::-webkit-scrollbar
+{
+    display: none;
+}
+#down_formular > td
+{
+    height: 40px;
+}
+.entry
+{
+    font-size: small;
+}
+
+#edit_formular
+{
+    height: 100% !important;
+}
+
+#edit_formular label,
+#edit_formular select,
+#edit_formular input
+{
+    display: inline-block;
+    font-size: small;
+    width: 47%;
+}
+
+#edit_formular label
+{
+    margin-left: 1.0%;
+}
+
+#edit_formular input[type="button"]
+{
+    width: 4%;
+}
+
+#edit_formular .check_formular label
+{
+    width: 90%;
+}
+
+#edit_formular .check_formular input
+{
+    width: 5%;
+}
+
+#edit_formular .list_of_link h5,
+#edit_formular .list_of_link form
+{
+    width: 49%;
+}
+
+#down_edit_formular .medal_configuration
+{
+    position: relative;
+    padding-top: 10px;
+    width: 90px;
+    height: 80px;
+    text-align: center;
+    border-radius: 90px;
+}
+
+#down_edit_formular .medal_configuration select
+{
+    width: 80px;
+    text-align: center;
+}
+
+#down_edit_formular .medal_configuration label
+{
+    width: calc(100% - 50px);
+    line-height: 25px;
+    font-size: 15px;
+    position: relative;
+    top: -5px;
+}
+
+#down_edit_formular .medal_configuration input[type="checkbox"]
+{
+    position: relative;
+    top: 0px;
+    left: 5px;
+    height: 20px;
+    width: 20px;
+}
+
+#down_edit_formular
+{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#down_edit_formular td
+{
+    height: 50%;
+    vertical-align: top;	
+}
+
+#down_edit_formular > tr > td > div
+{
+    position: relative;
+    overflow: auto;
+    height: 100%;
+    width: calc(100% - 20px);
+    left: 10px;
+    top: 0px;
+}
+
+#down_edit_formular .date_composer
+{
+    width: 12%;
+}
+
+#down_edit_formular .full_date
+{
+    width: calc(2 * 12% + 19%);
+}
+
+#down_edit_formular .hour
+{
+    width: 19% !important;
+}
+
+#down_edit_formular .checkweekday
+{
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 5px;
+}
+
+#down_edit_formular .language_buttons input
+{
+    width: 100%;
+    height: 25px;
+}
+
+#down_edit_formular .category_buttons input
+{
+    width: 100%;
+    height: 33%;
+}
+
+#down_edit_formular .ressource_buttons input
+{
+    width: 100%;
+}
+
+#down_edit_formular .name_field
+{
+    margin-top: 10px;
+    margin-left: 10px;
+    width: calc(100% - 50px);
+}
+
+#down_edit_formular .description_field
+{
+    height: calc(100% - 100px);
+}
+
+#down_edit_formular textarea
+{
+    resize: none;
+    width: calc(100% - 20px);
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+#down_edit_formular .syllabus textarea
+{
+    height: calc((100% - 70px) / 3 - 40px);
+}
+
+#down_edit_formular .delete_round
+{
+    position: absolute;
+    height: 30px !important;
+    width: 30px !important;
+    top: 0px;
+    right: 0px;
+}
+
+#down_edit_formular .delete_wide
+{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 30px !important;
+    width: 30px !important;
+}
+
+#down_edit_formular > tr > td
+{
+    position: relative !important;
+}
+
+#down_edit_formular .sublist_of_link div
+{
+    position: relative;
+    height: 21px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    width: 100% !important;
+    display: inline-block;
+    line-height: 21px;
+}
+
+#down_edit_formular .sublist_of_link input[type="button"]
+{
+    position: absolute;
+    right: 0px;
+    top: -1px;
+}
+
+.syllabus, .training
+{
+    padding-top: 10px;
+}
+
+.syllabus, .activity_configuration_block
+{
+    position: relative;
+}
+
+.syllabus > form > input[type="button"], .basic > form > input[type="button"]
+{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.path_browser
+{
+    width: calc(100% - 10px) !important;
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.file_browser
+{
+    width: calc(100% - 10px);
+    margin-left: 5px;
+    margin-top: 5px;
+    height: calc(100% - 3em - 10px);
+    vertical-align: top;
+    overflow: auto;
+}
+
+.file_browser > .icon
+{
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    height: 30px;
+    background-position: center center;
+    background-size: contain;
+}
+
+.file_browser > .icon input
+{
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    height: 30px !important;
+    width: 30px !important;
+}
+
+.file_browser .filename
+{
+    display: block;
+    width: calc(100% - 30px);
+    height: 30px;
+    text-align: center;
+    position: absolute;
+    top: 2px;
+    line-height: 28px;
+}
+
+.file_browser video
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100px;
+    height: 30px;
+    z-index: 1;
+}
+
+.file_browser audio
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100px;
+    height: 30px;
+    z-index: 1;
+}
+
+.wallpaper_sample
+{
+    width: 100%;
+    height: 50px;
+    background-size: contain;
+    background-position: center center;
+}
+
+.activity_name_list_item
+{
+    float: left;
+    width: 55%;
+    white-space: nowrap;
+    overflow-x: hidden;
+    margin-left: 5%;
+}
+
+.activity_icon_list_item
+{
+    float: right;
+    width: 30%;
+    text-align: right;
+    font-size: larger;
+    font-weight: bold;
+    margin-right: 5%;
+    margin-top: 10px;
+}

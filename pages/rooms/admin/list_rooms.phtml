@@ -1,0 +1,61 @@
+<table class="content_table">
+    <!-- HEADER -------------------------------------------------------------->
+    <tr>
+	<th class="tiny_column">#</th>
+	<th class="small_column"><?=$Dictionnary["CodeName"]; ?></th>
+	<th class="wide_column"><?=$Dictionnary["Name"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["Occupation"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["CurrentActivity"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["School"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="wide_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <!-- BODY -------------------------------------------------------------->
+    <?php
+    foreach ($fetch as $content)
+    {
+       $URL = "index.php?p=".$Position."&amp;a={$content["id"]}";
+    ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["codename"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+	    <td <?=clickable($URL); ?>>
+		<?=$content["occupied"]; ?> / <?=count($content["desk"]); ?> <?=$Dictionnary["computerSeat"]; ?><br />
+		<?=$content["capacity"]; ?> <?=$Dictionnary["seats"]; ?>
+	    </td>
+	    <td>Actuellement indisponible</td>
+	    <td>
+		<?php
+		$schools = db_select_all("
+                   school.id,
+		   school.codename
+		   FROM school_room
+		   LEFT JOIN school ON school_room.id_school = school.id
+		   WHERE school_room.id_room = ".$content["id"]." AND deleted IS NULL
+		   ");
+		?>
+		<?php foreach ($schools as $s) { ?>
+		    <a href="index.php?p=SchoolMenu&amp;a=<?=$s["id"]; ?>">
+			<?=$s["codename"]; ?>
+		    </a>
+		<?php } ?>
+	    </td>
+	    <?php
+	    if (is_admin())
+		require ("edition.phtml");
+	    ?>
+	</tr>
+    <?php } ?>
+</table>
+
+<?php
+if (is_admin())
+    require_once ("add.phtml");
+?>
+<br />
+<br />
+<br />
+

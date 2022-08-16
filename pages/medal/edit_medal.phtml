@@ -1,0 +1,56 @@
+<?php if (is_admin()) { ?>
+    <td class="edit_panel">
+	<br />
+	<form method="post" action="index.php?<?=unrollget(); ?>#medal<?=$content["id"]; ?>">
+	    <input type="hidden" name="action" value="update" />
+	    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+	    <input type="text" name="tags" placeholder="<?=$Dictionnary["Tags"]; ?>" value="" style="width: 49%;" />
+	    <input type="submit" value="&#10003;" style="color: green; width: 49%;" />
+	</form>
+	<br />
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="update" />
+	    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+	    <select name="type" style="width: 49%;">
+		<option value="0" <?=$content["type"] == 0 ? "selected" : ""; ?>><?=$Dictionnary["PositiveMedal"]; ?></option>
+		<option value="1" <?=$content["type"] == 1 ? "selected" : ""; ?>><?=$Dictionnary["NegativeMedal"]; ?></option>
+		<option value="2" <?=$content["type"] == 2 ? "selected" : ""; ?>><?=$Dictionnary["CriticalNegativeMedal"]; ?></option>
+	    </select>
+	    <input type="submit" value="&#10003;" style="color: green; width: 49%;" />
+	</form>
+	<br />
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="medal_medal" />
+	    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+	    <input type="text" name="medals" placeholder="<?=$Dictionnary["Medals"]; ?>" value="" style="width: 49%;" />
+	    <input type="submit" value="+" style="color: teal; width: 49%; font-weight: bold;" />
+	</form>
+	<br />
+	<form method="post" action="index.php?<?=unrollget(); ?>" enctype="multipart/form-data">
+	    <input type="hidden" name="action" value="edit_icon" />
+	    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+	    <input type="hidden" name="MAX_FILE_SIZE" value="<?=1024 * 200; ?>" />
+	    <input
+		type="file"
+		name="icon"
+		accept="image/png"
+		placeholder="<?=$Dictionnary["Icon"]; ?>"
+		value="<?=try_get($_POST, "icon"); ?>"
+		style="width: 49%;"
+	    />
+	    <input
+		type="submit"
+		value="&#10003;"
+		style="width: 49%"
+	    />
+	</form>
+	<br />
+	<form method="post" action="index.php?<?=unrollget(); ?>">
+	    <input type="hidden" name="action" value="delete_medal" />
+	    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10007;" style="color: red; width: 100%;" />
+	</form>
+	<br />
+	<br />
+    </td>
+<?php } ?>

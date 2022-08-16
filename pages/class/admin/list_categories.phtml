@@ -1,0 +1,33 @@
+<?php
+if (is_admin())
+{
+    require_once("add.phtml");
+    echo "<br />";
+}
+?>
+<table class="content_table">
+    <tr>
+	<th class="tiny_column">#</th>
+	<th class="medium_column"><?=$Dictionnary["CodeName"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["Name"]; ?></th>
+	<th class="wide_column"><?=$Dictionnary["Description"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["NumberAssets"]; ?></th>
+    </tr>
+    <?php
+    $cnt = 0;
+    foreach ($fetch as $y)
+    {
+    $URL = "index.php?p=".$Position."&amp;a=".$y["id"];
+    ?>
+    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	<td <?=clickable($URL); ?>><?=$y["id"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$y["codename"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$y["name"]; ?></td>
+	<td <?=clickable($URL); ?>><?=$y["description"]; ?></td>
+	<td <?=clickable($URL); ?>><?=count($y["asset"]); ?></td>
+    </tr>
+    <?php
+    }
+    ?>
+</table>
+

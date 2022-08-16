@@ -1,0 +1,10 @@
+<?php if ($User != NULL && $User["authority"] >= CONTENT_AUTHOR) { ?>
+    <td class="edit_panel">
+	<form method="post" action="index.php?p=<?=$Position; ?>">
+	    <input type="hidden" name="action" value="delete" />
+	    <input type="hidden" name="parent" value="<?=try_get($_GET, "a", ""); ?>" />
+	    <input type="hidden" name="codename" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10007;" style="color: red;" />
+	</form>
+    </td>
+<?php } ?>

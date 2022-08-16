@@ -1,0 +1,17 @@
+<form action="index.php?<?=unrollget(); ?>">
+    <label for="id_cycle"><?=$Dictionnary["AddStudentsToProm"]; ?></label>
+    <select name="id_cycle">
+	<?php
+	foreach (fetch_cycle() as $l)
+	{
+	if ($prom["codename"] != $l['codename'])
+	{
+	?>
+	<option value="<?=$l['id']?>"><?=$l['codename']?></option>
+	<?php
+	}
+	}
+	?>
+    </select>
+    <input type="submit" value="<?=$Dictionnary["Add"]; ?>">
+</form>

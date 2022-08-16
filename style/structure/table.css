@@ -1,0 +1,37 @@
+
+.content_table
+{
+    width: 100%;
+}
+
+.content_table th
+{
+    height: 55px;
+}
+
+.wide_coloumn
+{
+    width: 300px;
+    min-width: 250px;
+}
+
+.medium_column
+{
+    width: 180px;
+    max-width: 220px;
+    min-width: 180px;
+}
+
+.small_column
+{
+    width: 100px;
+    max-width: 200px;
+    min-width: 100px;
+}
+
+.tiny_column
+{
+    width: 30px;
+    max-width: 50px;
+    min-width: 30px;
+}

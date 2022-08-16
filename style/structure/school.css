@@ -1,0 +1,15 @@
+
+.school_table
+{
+    height: 90% !important;
+}
+
+.school_table tr > td
+{
+    height: 20% !important;
+}
+
+.school_table tr > td > div
+{
+    overflow: auto;
+}

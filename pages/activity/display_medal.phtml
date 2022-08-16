@@ -1,0 +1,108 @@
+<?php
+global $Configuration;
+global $BackgroundColor;
+global $Background;
+global $LanguageList;
+
+if (is_teacher_for_activity($module->id))
+{
+    $js = "silent_submit(this, 'medal_box')";
+    single_field_with_ok_form($page, ["id" => $module->id], "codename", "Medal", "medal", NULL, "", "post", $js);
+}
+$MedalColor = [
+    "rgba(255, 255, 0, 0.2)",
+    "rgba(0, 0, 0, 0.2)",
+    "rgba(0, 255, 0, 0.2)",
+    "rgba(0, 0, 255, 0.2)",
+    "rgba(255, 0, 0, 0.2)"
+];
+?>
+<br />
+<?php foreach (sort_by_medal_grade($module->medal) as $medal) { ?>
+    <?php
+    $medx[] = $medal["codename"];
+    $color = $MedalColor[$medal["role"]];
+    ?>
+    <div class="medal_configuration" style="background-color: <?=$color; ?>">
+	<a href="<?=inside_link("medal", $medal["id"]); ?>">
+	    <?php if (file_exists($Configuration->MedalsDir($medal["codename"])."/icon.png")) { ?>
+		<img
+		    src="<?=$Configuration->MedalsDir($medal["codename"])."icon.png"; ?>"
+		    width="30"
+		    height="30"
+		    title="<?=$medal["name"]." : ".$medal["description"]; ?>"
+		/>
+	    <?php } else { ?>
+		<img
+		    src="genicon.php?function=<?=$medal["codename"]; ?>"
+		    width="80"
+		    height="20"
+		    title="<?=$medal["name"]." : ".$medal["description"]; ?>"
+		/>
+	    <?php } ?>
+	</a>
+	<?php if (is_teacher_for_activity($module->id)) { ?>
+
+	    <form
+		method="delete"
+		onsubmit="return <?=$js; ?>;"
+		action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+	    >
+		<input
+		    type="button"
+		    class="delete_round"
+		    onclick="<?=$js; ?>;"
+		    value="&#10007;"
+		/>
+	    </form>
+
+	    <?php if ($module->parent_activity == -1) {?>
+		<form
+		    method="put"
+		    onsubmit="return <?=$js; ?>;"
+		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+		>
+		    <select
+			name="role"
+			onchange="<?=$js; ?>;"
+		    >
+			<option value="1" <?=$medal["role"] == 1 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["GradeD"]; ?>
+			</option>
+			<option value="2" <?=$medal["role"] == 2 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["GradeC"]; ?>
+			</option>
+			<option value="3" <?=$medal["role"] == 3 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["GradeB"]; ?>
+			</option>
+			<option value="4" <?=$medal["role"] == 4 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["GradeA"]; ?>
+			</option>
+			<option value="0" <?=$medal["role"] == 0 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["Bonus"]; ?>
+			</option>
+		    </select>
+		</form>
+	    <?php } else { ?>
+		<?php single_field_form($page, $module, "mark", "Mark"); ?>
+	    <?php } ?>
+	    <form
+		class="check_formular"
+		method="put"
+		onsubmit="return <?=$js; ?>;"
+		action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+		<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
+	    >
+		<label for="local"><?=$Dictionnary["Local"]; ?></label>
+		<input
+		    type="checkbox"
+		    name="local"
+		    <?=$medal["local"] ? "checked" : ""; ?>
+		    onchange="<?=$js; ?>;"
+		/>
+	    </form>
+	<?php } else { ?>
+
+	<?php } ?>
+    </div>
+<?php } ?>

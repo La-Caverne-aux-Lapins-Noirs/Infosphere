@@ -1,0 +1,59 @@
+<?php
+/*
+** $page : template ou module
+** $path : le chemin du dossier ouvert depuis le dossier racine des ressources
+** $target : le chemin du dosser ouvert depuis le dossier racine du site web
+** $language : la langue qu'on utilise actuellement. NA si c'est pour toutes les langues
+** $id: l'identifiant associé a l'element contenant tous ces fichiers
+** $type : la nature des fichiers parcourus
+** $fbid : la base du nom de l'id du navigateur
+*/
+?>
+<?php if ($target !== NULL) { ?>
+    <?php
+    $directories = [];
+    $files = [];
+    ?>
+    <?php foreach (scandir($target) as $content) { ?>
+	<?php
+	if ($content == "." || $content == "index.php")
+	    continue ;
+	if ($content == ".." && $path == "/")
+	    continue ;
+	if (is_dir($target.$content))
+	    $directories[] = $target.$content;
+	else
+	    $files[] = $target.$content;
+	?>
+    <?php } ?>
+    <?php foreach (array_merge($directories, $files) as $content) { ?>
+	<div
+	    class="icon <?=is_dir($content) ? "directory" : pathinfo($content, PATHINFO_EXTENSION); ?>"
+		   <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["jpg", "jpeg", "png", "gif", "bmp", "webp"])) { ?>
+		style="background-image: url('<?=$content; ?>?<?=now(); ?>'); background-size: contain;"
+		   <?php } ?>
+	    <?php if (is_dir($content)) { ?>
+		ondblclick="
+		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=$path.($path != "/" ? "/" : "").pathinfo($content, PATHINFO_BASENAME); ?>';
+		   silent_submit(document.getElementById('path<?=$fbid.$language; ?>'), '<?=$fbid.$language; ?>');
+		   "
+	    <?php } else { ?>
+	    ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
+	    <?php } ?>
+	>
+	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["wav", "mp3", "ogg"])) { ?>
+		<audio src="<?=$content; ?>?<?=now(); ?>" controls></audio>
+	    <?php } ?>
+	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["avi", "mp4", "ogv", "webm", "mkv"])) { ?>
+		<video src="<?=$content; ?>?<?=now(); ?>" controls></video>
+	    <?php } ?>
+
+	    <form action="/api/<?=$page; ?>/<?=$id; ?>/<?=$type; ?>/<?=str_replace("/", "@", $content); ?>" method="delete">
+		<input type="button" onclick="silent_submit(this, '<?=$fbid.$language; ?>');" value="&#10007;" />
+	    </form>
+	    <div class="filename"><?=pathinfo($content, PATHINFO_BASENAME); ?><?=is_dir($content) ? "/" : ""; ?></div>
+	</div>
+    <?php } ?>
+<?php } ?>
+
+

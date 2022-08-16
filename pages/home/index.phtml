@@ -1,0 +1,34 @@
+<?php if ($silent) return ; ?>
+<?php require_once ("collect_dashboard_activities.php"); ?>
+<?php require_once ("collect_dashboard_projects.php"); ?>
+<?php if ($User == NULL) { ?>
+    <?php require ("welcome.phtml"); ?>
+<?php } else { ?>
+    <table id="home_table">
+	<tr><td>
+	    <div id="welcome"><?php require ("welcome.phtml"); ?></div>
+	</td><td>
+	    <div><?php require_once ("last_medals.php"); ?></div>
+	</td><td>
+	    <table id="activity_table"><tr><td>
+		<div><?php require_once ("activities.phtml"); ?></div>
+	    </td></tr><tr><td>
+		<div><?php require_once ("managed.phtml"); ?></div>
+	    </td></tr></table>
+	</td><td>
+	    <div><?php require_once ("projects.phtml"); ?></div>    
+	</td></tr><tr><td>
+	    <div id="about_you"><?php require ("about_you.phtml"); ?></div>
+	</td><td>
+	    <div id="powerbox"><?php require ("power.phtml"); ?></div>
+	</td><td colspan="2">
+	    <div><?php require_once ("intercom.php"); ?></div>
+	</td></tr>
+    </table>
+    <?php if (count($alerts)) { ?>
+	<script>
+	 document.getElementById("powerbox").style.backgroundColor = "red";
+	</script>
+    <?php } ?>
+<?php } ?>
+

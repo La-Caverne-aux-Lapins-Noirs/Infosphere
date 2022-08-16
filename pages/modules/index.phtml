@@ -1,0 +1,58 @@
+<?php
+
+if (file_exists(__DIR__."/handle_request.php")
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+require_once (__DIR__."/../get_medals.php");
+require_once (__DIR__."/../is_registered.php");
+
+// Pour module_list et le menu
+$profile = get_full_profile($User);
+
+// On a pas trouvé le module parmi ceux auquel je participe, mais il y a quand meme un parametre
+// donc je charge le module, mais pas depuis le profil
+if ($current_module != -1)
+    $my_module = false;
+else
+    $my_module = true;
+
+require_once ("menu.phtml");
+?>
+
+<div class="module_body" style="overflow: auto;">
+
+    <?php
+    if ($current_module != -1)
+    {
+	$cmodule = new FullActivity;
+	$cmodule->build($current_module, false, !$display_students, -1, NULL, NULL, true);
+	$cmodule->sublayer = $cmodule->subactivities;
+
+	// On est sur une page de matière
+	if ($cmodule->is_teacher)
+	{
+	    echo '<script type="text/javascript">';
+	    require_once ("edit_lock.js");
+	    require_once ("edit_medal.js");
+	    echo '</script>';
+	}
+	require_once ("module_header.phtml");
+	if ($display_students)
+	    require ("student_list.php");
+	else
+	    require ("activity.php");
+
+    }
+    else
+    {
+	// On est sur la page listant les matières
+	require_once ("module_list.phtml");
+    }
+    ?>
+
+</div>

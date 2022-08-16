@@ -1,0 +1,123 @@
+<html>
+    <head>
+	<title>Infosphere's installation</title>
+	<style>
+	 @font-face
+	 {
+	     src: url("/res/futura.ttf");
+	     font-family: futura;
+	 }
+	 *
+	 {
+	     font-family: futura;
+	 }
+	 body
+	 {
+	     background: linear-gradient(to right, black, white, white, white, lightgray);
+	 }
+	 #logo
+	 {
+	     position: absolute;
+	     left: 0px;
+	     top: 0px;
+	     height: 100%;
+	     width: 28%;
+	     background-repeat: no-repeat;
+	     background-image: url("res/logo.png");
+	     background-position: top center;
+	     background-size: contain;
+	 }
+	 #tuto
+	 {
+	     position: absolute;
+	     height: 40%;
+	     width: 90%;
+	     left: calc((100% - 90%) / 2);
+	     bottom: 100px;
+	     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.2));
+	     color: white;
+	 }
+	 #tuto p
+	 {
+	     margin: 20px 20px 20px 20px;
+	     text-align: justify;
+	 }
+	 #bottom
+	 {
+	     position: absolute;
+	     bottom: 0px;
+	     width: 100%;
+	     text-align: center;
+	     color: white;
+	     font-weight: bold;
+	 }
+	 form
+	 {
+	     position: absolute;
+	     right: 5%;
+	     top: 0px;
+	     width: 66%;
+	     height: 100%;
+	     text-align: center;
+	 }
+	 input
+	 {
+	     width: 100%;
+	     height: 70px;
+	     font-size: 45px;
+	 }
+	 .sexy
+	 {
+	     width: 100%;
+	     height: 140px;
+	     font-size: 66px;
+	 }
+	</style>
+    </head>
+    <body>
+	<div id="logo">
+	    <div id="tuto">
+		<p>
+		    To successfully install <b>Infosphere</b>:<br /><br />
+		    - The user executing that script <b>must</b> have write access to its folder.<br />
+		    <br />
+		    - The user executing that script <b>must</b> be able to add events to its
+		    crontab.<br />
+		    <br />
+		    - The database must already be created and an user with alteration rights
+		    must have been set. The database and the user can have the same name.<br />
+		    <br />
+		    - Infosphere require the full TechnoCore suite and other free softwares
+		    to fully work: <b>mergeconf</b>, <b>genicon</b>, <b>docbuilder</b>,
+		    <b>evaluator</b> and to be associated with an <b>LDAP</b> registry,
+		    an <b>NFS</b>, a <b>mail server</b>, a <b>peertube</b> and any software forge
+		    that handle subversion and git over http protocol.<br />
+		    <br />
+		    - Some softwares from the TechnoCore suite could be exploited by Infosphere
+		    to keep track of students using a school it infrastructure.
+		</p>
+	    </div>
+	    <p id="bottom">
+		Hanged Bunny Studio 2014-<?=date("Y", time()); ?><br />
+		Pentacle Technologie 2008-<?=date("Y", time()); ?><br />
+		EFRITS SAS 2022-<?=date("Y", time()); ?><br />
+	    </p>
+	</div>
+	<form method="post" action="install.php">
+	    <h1>Infosphere's installation</h1>
+            <p><?=$ErrorMsg != "" ? $Dictionnary[$ErrorMsg] : ""; ?></p>
+	    <h2>Database credentials</h2>
+	    <input type="text" name="host" placeholder="Host" value="<?=try_get($_POST, "host"); ?>" /><br />
+	    <input type="text" name="login" placeholder="Login" value="<?=try_get($_POST, "login"); ?>" /><br />
+	    <input type="password" name="password" placeholder="Password" value="<?=try_get($_POST, "password"); ?>" /><br />
+	    <input type="text" name="database" placeholder="Database name" value="<?=try_get($_POST, "database"); ?>" /><br />
+	    <h2>Future Infosphere administrator's account</h2>
+	    <input type="text" name="admin_login" placeholder="Administrator's login" value="<?=try_get($_POST, "admin_login"); ?>" /><br />
+	    <input type="text" name="admin_mail" placeholder="Administrator's mail" value="<?=try_get($_POST, "admin_mail"); ?>" /><br />
+	    <input type="password" name="admin_password" placeholder="Administrator's password" value="<?=try_get($_POST, "admin_password"); ?>" /><br />
+	    <input type="password" name="admin_repassword" placeholder="Administrator's password again" value="<?=try_get($_POST, "admin_repassword"); ?>" /><br />
+	    <br />
+	    <input type="submit" class="sexy" value="Install TechnoCore's Infosphere" />
+	</form>
+    </body>
+</html>

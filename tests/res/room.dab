@@ -1,0 +1,17 @@
+= {
+  [
+    Type = "LinuxSeat"
+    Name = "Obs"
+    Mac = "a:b:c:d"
+    Ip = "192.168.0.100"
+    Position = 1, 2, 3, 4
+  ],
+  [
+    Type = "LinuxSeat"
+    Name = "Promenade"
+    Mac = "e:f:g:h"
+    Ip = "192.168.0.200"
+    Position = 5, 6, 7, 8
+  ]
+}
+

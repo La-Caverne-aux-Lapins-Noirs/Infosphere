@@ -1,0 +1,58 @@
+<?php
+
+$search = [];
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL && $User["authority"] >= STUDENT
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<div style="width: 100%; height: 40%;">
+    <form id="fullpage_form" action="index.php?<?=unrollget(); ?>" method="post">
+	<input type="hidden" name="action" value="search" />
+	<h2><?=$Dictionnary["Search"]; ?></h2>
+	<p>
+	    <input
+		id="searchbar"
+		type="text"
+		name="codename"
+		placeholder="<?=$Dictionnary["CodeName"]; ?>"
+		value="<?=try_get($_POST, "codename"); ?>"
+	    />
+	    <br />
+
+	    <input type="submit" value="<?=$Dictionnary["Search"]; ?>" />
+	</p>
+    </form>
+</div>
+<script>
+ document.getElementById("searchbar").focus();
+</script>
+
+<?php foreach ($search as $category) { ?>
+    <hr /><br />
+    <div style="width: 99%; text-align: center;">
+	<h3 style="width: 100%; font-size: xx-large;"><?=$Dictionnary[$category["name"]]; ?></h3>
+	<div>
+	    <?php foreach ($category["result"] as $result) { ?>
+		<a href="<?=$result["address"]; ?>">
+		    <div style="width: 300px; height: 300px; display: inline-block; border: 2px solid; border-radius: 20px; background-image: url('<?=$result["icon"]; ?>'); background-size: cover;">
+			<h4>
+			    <?php if (isset($result["name"])) { ?>
+				<?=$result["name"]; ?>
+			    <?php } else { ?>
+				<?=$result["codename"]; ?>
+			    <?php } ?>
+			</h4>
+		    </div>
+		</a>
+	    <?php } ?>
+	</div>
+    </div>
+<?php } ?>

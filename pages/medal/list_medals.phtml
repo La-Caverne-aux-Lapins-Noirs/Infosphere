@@ -1,0 +1,76 @@
+<?php
+if (is_admin())
+{
+    require ("add_medal.phtml");
+    echo "<br />";
+}
+?>
+
+<table class="content_table">
+    <!-- EN TETE ---------------------------------------------->
+    <tr>
+	<th class="tiny_column">#</th>
+	<th class="small_column"><?=$Dictionnary["CodeName"]; ?></th>
+ 	<th class="small_column"><?=$Dictionnary["Tags"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["Name"]; ?></th>
+	<th class="wide_column">
+	    <?=$Dictionnary["Description"]; ?>
+	    <?php // Ecrire les médailles impliquées ?>
+	</th>
+	<th class="small_column"><?=$Dictionnary["Type"]; ?></th>
+	<th class="medium_column"><?=$Dictionnary["Icon"]; ?></th>
+	<th style="small_column"><?=$Dictionnary["ImpliedMedals"]; ?></th>
+	<?php if (is_admin()) { ?>
+	    <th class="wide_column"><img src="./res/cog.png" /></th>
+	<?php } ?>
+    </tr>
+
+    <!-- CORPS ------------------------------------------------>
+    <?php
+    $cnt = 0;
+    $cnames = [];
+    foreach ($fetch as $i => $content)
+    {
+	$URL = "index.php?p=".$Position."&amp;a=".$content["id"];
+	$cnames[] = $content["codename"];
+    ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>" id="medal<?=$content["id"]; ?>">
+	    <!-- <td <?=clickable($URL); ?>><?=$content["id"]; ?></td> -->
+	    <td><a href=<?=$URL?>><?=$content["id"]; ?></a></td>
+	    <td><?=$content["codename"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["tags"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$content["description"]; ?></td>
+	    <td <?=clickable($URL); ?>><?=$Dictionnary[
+				       ["PositiveMedal", "NegativeMedal", "CriticalNegativeMedal"][$content["type"]]
+				       ]; ?></td>
+	    <td <?=clickable($URL); ?>>
+		<br />
+		<?php print_medal_icon($content["codename"], 50); ?>
+		<br />
+		<br />
+	    </td>
+	    <td>
+		<?php foreach ($content["implied"] as $imp) { ?>
+		    <div style="text-align: center;">
+			<?php print_medal_icon($imp["codename"], 50); ?>
+			<br /><?=$imp["codename"]; ?>
+			<form method="post" action="<?=unrollurl(); ?>">
+			    <input type="hidden" name="action" value="medal_medal_properties" />
+			    <input type="hidden" name="medal_medal" value="<?=$imp["id_medal_medal"]; ?>" />
+			    <input type="hidden" name="medal" value="<?=$content["id"]; ?>" />
+			    <input type="submit" value="&#10003;" style="width: 50px;" />
+			</form>
+		    </div>
+		<?php } ?>
+	    </td>
+	    <?php require ("edit_medal.phtml"); ?>
+	</tr>
+    <?php } ?>
+</table>
+
+<input type="text" value="<?=implode(";", $cnames); ?>" />
+
+<br />
+<br />
+<br />

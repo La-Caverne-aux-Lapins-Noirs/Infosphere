@@ -1,0 +1,148 @@
+<?php
+
+require_once (__DIR__."/get_first_week_date.php");
+
+require_once (__DIR__."/collect_projects.php");
+require_once (__DIR__."/collect_short_projects.php");
+require_once (__DIR__."/collect_activities.php");
+
+if (file_exists(__DIR__."/handle_request.php") && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+require_once (__DIR__."/print_projects.php");
+require_once (__DIR__."/print_day_activities.php");
+require_once (__DIR__."/print_short_projects.php");
+require_once (__DIR__."/print_header.php");
+require_once (__DIR__."/print_control_buttons.php");
+
+$in_template = $start < $one_day * 7 * 20;
+$projects = collect_projects($start, $end, $wlist);
+?>
+
+<div class="calendar_menu">
+    <h2><?=$Dictionnary["Calendar"]; ?>: <?=datex("d/m/Y", $start)." - ".datex("d/m/Y", $end); ?></h2>
+    <?php print_control_buttons($start, $end, $wlist); ?>
+</div>
+
+<script>
+ function enlarge_work(wat, id)
+ {
+     return ;
+     var obj = document.getElementById(id);
+
+     if (obj.style.minWidth == "")
+	 obj.style.minWidth = obj.offsetWidth + "px";
+
+     val = parseInt(obj.style.minWidth);
+     if (wat)
+	 obj.style.width = val * 1.5 + "px";
+     else
+	 obj.style.width = val + "px";
+ }
+</script>
+
+<table class="content_table calendar">
+    <?php
+    print_header();
+
+    // Contient dans 'projects' la colonne des projets en cours
+    // Contient dans 'column' si un projet occupe la colonne
+    // 'max_column' contient le nombre de colonne...
+    // sachant que la frise fait
+    $project_columns = [];
+    $nbr_week = round(($end - $start) / $one_week);
+
+    // On avance de semaine en semaine.
+    for ($period = $start; $period < $end; $period += $one_week)
+    {
+    ?>
+	<tr>
+	    <td rowspan="2">
+		<p><?=floor(($period - $first_week_date) / $one_week) + 1; ?></p>
+	    </td>
+
+	    <?php if ($period == $start) { // Merge a complete column ?>
+		<td rowspan="<?=$nbr_week * 19; ?>" style="width: 20px;" class="calendar_project_container">
+		    <?php for ($c = 0; $c < $nbr_week * 7; ++$c) { ?>
+			<div style="position: absolute; width: 20px; height: <?=(100 / ($nbr_week * 7)); ?>%; top: <?=($c + 0.5) * (100 / ($nbr_week * 7)); ?>%;">
+			    <?=$c % 7 + 1; ?>
+			</div>
+		    <?php } ?>
+		</td>
+		<td
+		    rowspan="<?=$nbr_week * 19; ?>"
+		    class="calendar_project_container"
+		    onmouseover="enlarge_work(true, 'work_column')"
+		    onmouseleave="enlarge_work(false, 'work_column')"
+		>
+		    <?php print_projects($projects); ?>
+		</td>
+	    <?php } ?>
+	    <td rowspan="2"></td>
+	    <?php for ($i = 0; $i < 7; ++$i) { ?>
+		<td class="day_column <?=same_day($period + $one_day * $i, time()) ? "today" : ""; ?>">
+		    <?=$Dictionnary[$Days[$i]]; ?>
+		    <?=date('d', $period + $one_day * $i); ?>
+		    <?=$Dictionnary[date('F', $period + $one_day * $i)]; ?>
+		</td>
+	    <?php } ?>
+	</tr>
+
+	<tr>
+	    <?php $short_projects = collect_short_projects($period, $wlist);  ?>
+	    <td colspan="7" style="height: <?=20 * (count($short_projects) == 0 ? 1 : count($short_projects)); ?>px;">
+		<div class="short_projects_container" style="height: <?=20 * count($short_projects); ?>px;">
+		    <?php print_short_projects($short_projects); ?>
+		</div>
+	    </td>
+	</tr>
+
+	<tr>
+	    <td style="height: 90%;" rowspan="17">
+		<p class="vertical" style="padding-left: 12px;">
+		    <?=date("d/m/Y", $period); ?>
+		    <?=date("d/m/Y", $period + $one_week - $one_day); ?>
+		</p>
+	    </td>
+
+	    <td class="hour_label">07-08</td>
+
+	    <?php for ($i = 0; $i < 7; ++$i) { // 7 jours dans la semaine ?>
+		<td
+		    rowspan="17"
+		    class="calendar_day_container"
+		    onmouseover="enlarge_work(true, '<?=$Days[$i]; ?>')"
+		    onmouseleave="enlarge_work(false, '<?=$Days[$i]; ?>')"
+		>
+		    <?php if (is_day_off($period + $one_day * $i)) { ?>
+			<div>
+			    <?=$Dictionnary["DayOff"]; ?>
+			</div>
+		    <?php } ?>
+		    <?php
+		    $out = collect_activities(
+			$period + $one_day * $i,
+			$period + $one_day * ($i + 1) - 1,
+			$wlist,
+			7 * 60 * 60,
+			24 * 60 * 60,
+			15 * 60
+		    );
+
+		    print_day_activities($out);
+		    ?>
+		</td>
+	    <?php
+	    } ?>
+	</tr>
+
+	<?php for ($i = 8; $i < 24; ++$i) { // Affichage des heures ?>
+	    <tr><td class="hour_label"><?php printf("%02d", $i); ?>-<?php printf("%02d", $i + 1); ?></td></tr>
+	<?php } ?>
+
+    <?php } ?>
+</table>

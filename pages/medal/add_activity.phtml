@@ -1,0 +1,18 @@
+<br />
+<form method="POST" action="index.php?p=<?=$Position; ?>&amp;a=<?=try_get($_GET, "a", -1); ?>" class="add_formular" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="link" />
+    <input type="hidden" name="medal" value="<?=$fetch["id"]; ?>" />
+    <h2><?=$Dictionnary["LinkAnActivity"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="activity"
+	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	    value="<?=try_get($_POST, "activity"); ?>"
+	/><br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+
+

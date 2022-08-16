@@ -1,0 +1,104 @@
+<?php
+foreach ($cycle->sublayer as $module)
+{
+    if ($module->hidden)
+	continue ;
+
+    $idmod = str_replace(".", "_", $user["codename"]."_module_".$module->codename);
+    if (!isset($_COOKIE[$idmod]))
+	$_COOKIE[$idmod] = "0px";
+?>
+    <table style="font-size: small; background-color: rgba(0, 0, 0, 0.2); border-radius: 10px;">
+	<tr>
+	    <td style="text-align: center;">
+		<h4>
+		    <a href="index.php?p=ModulesMenu&amp;a=<?=$module->id; ?>">
+			<?=$module->name; ?><br />
+			<?php if (substr($module->template_codename, 0, 4) == "del_") { ?>
+			    <?=explode("_", $module->template_codename)[2]; ?>
+			<?php } else { ?>
+			    <?=$module->template_codename; ?>
+			<?php } ?>
+		    </a>
+		</h4>
+	    </td>
+	    <td>
+		<?php if ($user["visibility"] > SUCCESSFUL_ACTIVITIES) { ?>
+		    <?=$Dictionnary["Presence"]; ?>: <?=$module->present; ?><br />
+		    <?=$Dictionnary["Late"]; ?>: <?=$module->late; ?>
+		    (<?=$Dictionnary["CumulatedLate"]; ?> <?=$cycle->cumulated_late->cumulated / 60 / 60; ?>h<?=($cycle->cumulated_late->cumulated / 60) % 60; ?>m)<br />
+		    <?=$Dictionnary["Missing"]; ?>: <?=$module->missing; ?>
+		<?php } ?>
+	    </td>
+	    <td>
+		<?php if ($user["visibility"] > SUCCESSFUL_ACTIVITIES) { ?>
+		    <?=$Dictionnary["Credit"]; ?>: <?=$module->acquired_credit; ?> / <?=$module->credit; ?><br />
+		    <?=$Dictionnary["DeliveredWork"]; ?>: <?=$module->work->cumulated; ?><br />
+		    <?=$Dictionnary["NoWork"]; ?>: <?=$module->nowork->cumulated; ?>
+		<?php } ?>
+	    </td>
+	    <td onclick="toggle_roll('<?=$idmod; ?>', 0);"
+		style="background-color: black; text-align: center; font-size: 15px; color: white; border-radius: 25px; width: 40px;"
+	    >
+		< >
+	    </td>
+	</tr>
+	<tr>
+	    <td colspan="4">
+		<?php if ($module->is_teacher) { ?>
+		    <form method="post" action="<?=unrollurl(); ?>">
+			<input type="hidden" name="action" value="module_comment" />
+			<input type="hidden" name="id_module" value="<?=$module->id; ?>" />
+			<input type="hidden" name="id_team" value="<?=$module->id_team; ?>" />
+			<textarea name="module_comment" style="width: 75%; height: 100px;"><?=$module->commentaries; ?></textarea>
+			<input type="submit" value="&#10003;" style="width: 20%; height: 100px; float: right;" />
+			<br /><br />
+		    </form>
+		<?php } else if (@strlen($module->commentaries)) { ?>
+		    <div style="width: 90%; margin-left: 5%; text-align: center; background-color: rgba(255, 255, 255, 0.3); border-radius: 10px;">
+			<br />
+			<?=$module->commentaries ?>
+			<br /><br />
+		    </div>
+		<?php } ?>
+	    </td>
+	</tr>
+	<?php if (!$module->no_grade && count($module->medal)) { ?>
+	    <tr>
+		<td colspan="4">
+		    <?php
+		    $size = 100;
+		    $medal_list = $module->medal;
+		    $module_medal = true;
+		    $medal_activity = $module->codename;
+		    $medal_teacher = $module->is_teacher;
+		    require ("print_medal_column.phtml");
+		    ?>
+		</td>
+	    </tr>
+	    <tr>
+		<td colspan="4">
+		    <br />
+		    <div style="width: 90%; margin-left: 5%;">
+			<?php require ("progress.php"); ?>
+		    </div>
+		    <br />
+		</td>
+	    </tr>
+	<?php } ?>
+	<tr>
+	    <td colspan="4">
+		<div
+		    class="indent"
+		    id="<?=$idmod; ?>"
+		    style="height: <?=$_COOKIE[$idmod]; ?>; overflow: auto;"
+		>
+		    <?php require ("print_activity.phtml"); ?>
+		</div>
+	    </td>
+	</tr>
+    </table>
+    <br />
+<?php
+}
+?>

@@ -1,0 +1,20 @@
+<form
+    method="POST"
+    action="index.php?<?=unrollget(); ?>"
+    class="add_formular"
+>
+    <input type="hidden" name="action" value="add_activity" />
+    <input type="hidden" name="cycle" value="<?=$cycle; ?>" />
+
+    <h2><?=$Dictionnary["AddActivity"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="activity"
+	    placeholder="<?=$Dictionnary["Activity"]; ?>"
+	    value="<?=try_get($_POST, "activity"); ?>"
+	/><br />
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>

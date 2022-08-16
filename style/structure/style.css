@@ -1,0 +1,1233 @@
+/*
+**
+**
+**
+*/
+
+.calendar_basic_info
+{
+    width: 100%;
+    float: left;
+}
+
+.doneactivity
+{
+    font-style: italic;
+    color: gray;
+}
+
+#debugbox
+{
+    background-color: rgba(0, 0, 0, 0.66);
+    color: white;
+    font-size: x-large;
+    position: fixed;
+    top: 10%;
+    right: 2%;
+    height: 80%;
+    width: 50%;
+    overflow: auto;
+    z-index: 5;
+}
+
+.db_bug_div
+{
+    padding: 10px 10px 10px 10px;
+    z-index: 50;
+    float: left;
+    width: calc(100% - 25px - 20px);
+    margin: 10px 10px 10px 10px;
+    background-color: red;
+    color: white;
+    font-weight: bold;
+    border: 2px solid black;
+    overflow: auto;
+    height: 300px;
+}
+
+#error_message
+{
+    position: absolute;
+    display: table-cell;
+    background-color: red;
+    width: 33%;
+    height: 50px;
+    font-size: 15px;
+    line-height: 33px;
+    top: 0px;
+    right: 0px;
+    z-index: 1;
+}
+
+#error_message p, #log_message p
+{
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+#head
+{
+}
+
+.menu
+{
+    background-image: url("/res/menu.png");
+    overflow: display;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 50px;
+    color: lightgray;
+}
+
+#foot .menu
+{
+    left: 170px;
+    width: 85%;
+}
+
+.menu img
+{
+    float: left;
+    height: 50px;
+    width: 50px;
+}
+
+.loginout
+{
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 20%;
+    text-align: right;
+}
+
+.menu div
+{
+    float: left;
+    margin-left: 10px;
+    /* width: calc((100% - 100px) / 6 - 10px); */
+    height: 50px;
+    text-align: center;
+    line-height: 50px;
+}
+
+.menubartext span
+{
+    color: lightgray;
+    font-size: medium;
+}
+
+.menu a div
+{
+    color: lightgray;
+    font-size: small;
+    padding-left: 10px;
+    padding-right: 10px;
+    transition:
+	background-color 0.2s linear,
+	color 0.2s linear
+    ;
+}
+
+.menu .current_page > div
+{
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.menu a div:hover
+{
+    color: white;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu a div:active
+{
+    font-weight: bold;
+}
+
+.menu div img
+{
+    width: 50px;
+    height: 50px;
+    opacity: 0.8;
+}
+
+.menu div img:hover
+{
+    opacity: 1.0;
+}
+
+#logo
+{
+    opacity: 0.8;
+}
+
+#logo:hover
+{
+    opacity: 1;
+}
+
+#clock
+{
+    background-color: rgba(0, 0, 0, 0);
+    padding-right: 30px;
+}
+
+#foot
+{
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    height: 50px;
+    left: 0px;
+    background-image: url("/res/menu.png");
+    color: lightgray;
+}
+
+#foot > form
+{
+    width: 300px;
+    height: 100%;
+}
+
+#foot select, #foot > div input
+{
+    float: left;
+    margin-top: 5px;
+    width: 160px;
+    height: 40px;
+    font-size: 33px;
+    line-height: 33px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+#foot > div
+{
+    float: right;
+}
+
+#foot p
+{
+    font-size: 33px;
+    line-height: 33px;
+}
+
+#foot p span
+{
+    position: relative;
+    top: 8px;
+}
+
+#foot input[type=submit]
+{
+    width: 40px;
+    height: 40px;
+}
+
+#body
+{
+    position: absolute;
+    overflow-y: scroll;
+    top: 50px;
+    left: 0px;
+    width: calc(100% - 20px);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: calc(100% - 50px - 50px - 10px - 10px);
+    background-color: lightgray;
+}
+
+.body_height
+{
+    height: calc(100% - 50px - 50px - 10px - 10px) !important;
+}
+
+#fullpage_form p
+{
+    position: absolute;
+    top: 20%;
+    width: 100%;
+    text-align: center;
+}
+
+#fullpage_form h2
+{
+    position: absolute;
+    top: 10%;
+    width: 100% !important
+}
+
+#fullpage_form input, #fullpage_form h2, #fullpage_form select, #fullpage_form label
+{
+    margin-bottom: 25px;
+    width: 50%;
+    height: 50px;
+    font-size: 40px;
+    line-height: 50px;
+    text-align: center;
+}
+
+.edit_column input[type="submit"]
+{
+    width: 30px;
+}
+
+.edit_column input[type="text"]
+{
+    width: 180px;
+}
+
+.edit_column label
+{
+    width: 180px;
+}
+
+.date_column
+{
+    width: 170px;
+    font-size: xx-small;
+}
+
+.medal_column
+{
+    width: 400px;
+}
+
+.icon_column
+{
+    width: 70px;
+}
+
+.icon_column > img
+{
+    width: 50px;
+    height: 50px;
+}
+
+.edit_panel > form
+{
+    display: inline;
+    width: 250px;
+}
+
+.edit_panel input, .edit_panel select
+{
+    width: 40%;
+}
+
+.disabled_activity
+{
+    color: gray;
+    font-style: italic;
+}
+
+.edit_column img
+{
+    width: 50px;
+    height: 50px;
+}
+
+.add_formular > div
+{
+    text-align: center;
+    border-radius: 20px;
+    background-color: gray;
+    width: 100%;
+    min-height: 200px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    font-size: x-small;
+}
+
+.add_formular > h2
+{
+    text-align: center;
+    width: 100%;
+}
+
+.add_formular > div input:not(.radio), .add_formular > div select, .add_formular > div label:not(.radio)
+{
+    display: inline-block;
+    width: 150px;
+    height: 15px;
+    vertical-align: top;
+    line-height: 15px;
+    border: 1px solid gray;
+}
+
+input[type="submit"], input[type="button"]
+{
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px outset rgb(32, 32, 32);
+    border-radius: 5px;
+    color: lightgray;
+}
+
+.add_formular > div input[type="checkbox"]
+{
+    width: 35px;
+}
+
+.add_formular .date_composer
+{
+    width: 40px !important;
+    font-size: x-small;
+}
+
+.add_formular .date_composer[type="time"]
+{
+    width: 70px !important;
+    font-size: x-small;
+}
+
+.add_formular > div label
+{
+    background-color: lightgray;
+}
+
+#addformfile > div
+{
+    min-height: 50px;
+}
+
+.language_entry
+{
+    display: inline-block;
+    width: 220px;
+    height: 150px;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.language_entry span
+{
+    width: 200px;
+    height: 20px;
+    line-height: 35px;
+    font-size: 22px;
+}
+
+.language_entry input, .language_entry textarea
+{
+    width: 200px !important;
+    height: 30px;
+    line-height: 50px;
+}
+
+.language_entry textarea
+{
+    height: 80px;
+}
+
+.normal_text
+{
+    font-size: 16px;
+    line-height: 16px !important;
+}
+
+.day_column
+{
+    width: calc(100% / 7);
+    height: 20px;
+}
+
+.vertical
+{
+    text-orientation: upright;
+    writing-mode: vertical-rl;
+    text-align: center;
+}
+
+.hour_label
+{
+    height: 35px;
+}
+
+.today
+{
+    background-color: red;
+}
+
+#room_list > div, #school_year_list > div
+{
+    height: 20px;
+    margin-top: 5px;
+    margin-left: 2.5px;
+    margin-right: 2.5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    display: inline-block;
+    font-size: 15px;
+    min-width: 50px;
+    text-align: center;
+    line-height: 20px;
+    border-radius: 5px;
+    border: 1px solid black;
+    background-color: gray;
+}
+
+.calendar_activity
+{
+    position: absolute;
+    border: 1px solid black;
+    font-size: small;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    text-shadow:
+	0px 0px 1px white,
+	0px 0px 1px white,
+	0px 0px 1px white,
+	-1px -1px 2px black,
+	-1px -1px 2px black,
+	-1px -1px 2px black,
+	1px -1px 2px black,
+	1px -1px 2px black,
+	1px -1px 2px black,
+	-1px 1px 2px black,
+	-1px 1px 2px black,
+	-1px 1px 2px black,
+	1px 1px 2px black,
+	1px 1px 2px black,
+	1px 1px 2px black
+    ;
+}
+
+a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
+{
+    color: white;
+}
+
+.calendar_edit_box
+{
+    position: absolute;
+    text-align: center;
+    z-index: 10;
+}
+
+.calendar_project_container
+{
+    position: relative;
+}
+
+.calendar_day_container
+{
+    position: relative;
+}
+
+.instance_panel_container > div
+{
+    float: left;
+    width: 32%;
+    margin-left: 1%;
+    height: 80%;
+}
+
+.split_vertical > div
+{
+    width: 100%;
+    height: 50%;
+}
+
+.split_horizontal > div
+{
+    width: 50%;
+    height: 100%;
+    float: left;
+}
+
+.double_vertical > div
+{
+    width: calc(100% - 20px);
+    height: calc(50% - 20px);
+}
+
+.double_horizontal > div
+{
+    height: calc(100% - 20px);
+    width: calc(50% - 20px);
+    float: left;
+}
+
+.several_horizontal > div
+{
+    height: 100%;
+    float: left;
+}
+
+.final_box
+{
+    /* border: 0px solid rgba(255, 255, 255, 0.5); */
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.full_box_with_title
+{
+    background-color: lightgray;
+    overflow: hidden;
+}
+
+.subject_box
+{
+    background-color: lightgray;
+}
+
+.full_box_with_title > h4
+{
+    height: 25px;
+}
+
+.full_box_with_title > div
+{
+    overflow-y: scroll;
+    height: calc(100% - 30px);
+}
+
+.activity_single_medal_box
+{
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.3);
+    width: 30%;
+    min-width: 200px;
+    height: 125px;
+    margin-right: 2%;
+    display: inline-block;
+    margin-bottom: 10px;
+    vertical-align: top;
+}
+
+.activity_single_medal_box > div
+{
+    position: relative;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.activity_single_medal_box > div > img
+{
+    width: 75px;
+    height: 75px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.activity_single_medal_box > p
+{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: small;
+}
+
+.module
+{
+    height: 50px;
+    background-color: white;
+    border: 1px solid black;
+    box-shadow: 5px 5px 5px black;
+    margin-bottom: 10px;
+    padding: 10px 10px 10px 10px;
+}
+
+.rollable
+{
+    display: block;
+}
+
+.registered_student_module
+{
+    background-color: blue;
+}
+
+.past_module
+{
+    color: gray;
+}
+
+.future_module
+{
+    background-color: lightblue;
+}
+
+.control_buttons
+{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    padding-top: 10px;
+    height: 30px;
+    text-align: right;
+}
+
+.control_buttons .wide_button
+{
+    width: 70px;
+}
+
+.planning_filters
+{
+    position: absolute;
+    top: 25px;
+    left: 0px;
+    width: 60%;
+    height: 30px;
+    text-align: left;
+}
+.planning_filters div
+{
+    text-align: center;
+    width: calc(100% / 6);
+    float: left;
+}
+.planning_filters > form label
+{
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+}
+.planning_filters > form input
+{
+    width: 200px;
+}
+
+.medal_acquired
+{
+    color: green;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+    background-image: url("/res/check.png");
+    background-size: 100% 100%;
+}
+
+.medal_failed
+{
+    color: red;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+    background-image: url("/res/cross.png");
+    background-size: 100% 100%;
+}
+
+.medal_mandatory, .medal_local, .medal_grade_a, .medal_grade_b, .medal_grade_c, .medal_grade_d
+{
+    color: blue;
+    position: absolute;
+    right: -5px;
+    top: 0px;
+    z-index: 1;
+    width: 25px;
+    height: 25px;
+    background-image: url("/res/mandatory.png");
+    background-size: 100% 100%;
+}
+
+.band_box > .medal_mandatory,
+.band_box > .medal_local,
+.band_box > .medal_grade_a,
+.band_box > .medal_grade_b,
+.band_box > .medal_grade_c,
+.band_box > .medal_grade_d
+{
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.medal_local
+{
+    left: 0px !important;
+    background-image: url("/res/local.png") !important;
+}
+
+.medal_grade_a
+{
+    background-image: url("/res/grade_a.png") !important;
+}
+
+.medal_grade_b
+{
+    background-image: url("/res/grade_b.png") !important;
+}
+
+.medal_grade_c
+{
+    background-image: url("/res/grade_c.png") !important;
+}
+
+.medal_grade_d
+{
+    background-image: url("/res/grade_d.png") !important;
+}
+
+
+.result
+{
+    width: 100%;
+    height: 60px;
+    background-color: gray;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.result h3 {
+    padding-top: 17px;
+}
+
+.bar {
+    width: 30%;
+    height: 15px;
+    border: 1px solid;
+    margin-left: 5px;
+    display: inline-block;
+    font-size: 80%;
+}
+
+.fill_bar {
+    height: 100%;
+    text-align: center;
+    display: inline-block;
+}
+
+.storage-text {
+    display: inline-block;
+}
+
+.radioselect
+{
+    text-align: center;
+    background-color: gray;
+    width: 75%;
+    margin-left: 12.5%;
+    min-height: 50px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+.radioselect > h2
+{
+    text-align: center;
+    width: 100%;
+}
+
+.profile_edit label, .profile_edit input
+{
+    display: inline-block;
+    width: 200px;
+}
+
+.profile_edit input[type="submit"]
+{
+    width: 400px;
+}
+
+.add
+{
+    display: none;
+}
+
+.rate
+{
+    display: none;
+}
+
+.import_rate
+{
+    display: none;
+}
+
+.profile_medal_box, .profile_band_box
+{
+    width: 100px;
+    height: 100px;
+    position: relative;
+    background-size: 100% 100%;
+}
+
+.profile_band_box
+{
+    width: 400px !important;
+}
+
+.profile_single_medal_box
+{
+    position: relative;
+    display: inline-block;
+}
+
+.profile_single_medal_box > img
+{
+    width: 90%;
+    height: 90%;
+    padding-right: 10%;
+    padding-left: 10%;
+    white-space: pre-line;
+}
+
+.profile_medal_optional
+{
+}
+
+.instance_date > label
+{
+    width: 30%;
+    font-size: small;
+    display: inline-block;
+}
+
+.registered_act
+{
+    opacity: 1.0;
+}
+
+.unregistered_act
+{
+    opacity: 0.33;
+}
+
+.unregistered_act:hover
+{
+    opacity: 1.0;
+}
+
+.short_projects_container
+{
+    position: relative;
+    width: 100%;
+}
+
+.short_projects
+{
+    border: solid 1px black;
+    position: absolute;
+    height: 20px;
+    text-align: center;
+}
+
+.indent
+{
+    width: 98%;
+    margin-left: 2%;
+}
+
+.hidden_mouse
+{
+    background-color: black;
+    color: black;
+}
+
+.hidden_mouse:hover
+{
+    background-color: black;
+    color: white;
+}
+
+.module_menu
+{
+    background-color: #181818;
+    color: white;
+    position: absolute;
+    height: 100%;
+    width: 19%;
+    top: 0px;
+    left: 0px;
+    font-size: small;
+    line-height: 150%;
+}
+
+.tinyscroll::-webkit-scrollbar
+{
+    width: 5px;
+    height: 5px;
+}
+
+.tinyscroll::-webkit-scrollbar-thumb
+{
+    background: #FFFFFF;
+    border-radius: 15px;
+}
+
+.tinyscroll::-webkit-scrollbar-thumb:hover
+{
+    background: linear-gradient(13deg, #c7ceff 14%,#000000 64%);
+}
+
+.tinyscroll::-webkit-scrollbar-track
+{
+    background: #181818;
+    border-radius: 15px;
+}
+
+.module_menu a
+{
+    color: white;
+    text-decoration: none;
+    padding-left: 3%;
+}
+
+.module_menu a:hover
+{
+    text-decoration: underline overline;
+}
+
+.module_body
+{
+    position: absolute;
+    top: 0px;
+    left: 20%;
+    width: 80%;
+    height: 100%;
+}
+
+.module_body .module_activity
+{
+    width: 90%;
+    padding-left: 10px;
+    margin-left: 2.5%;
+    background-color: gray;
+    height: 40px;
+    margin-bottom: 10px;
+}
+
+.module_body .module_block
+{
+    width: 45%;
+    height: 220px;
+    margin: 20px 20px 20px 20px;
+    padding: 10px 10px 10px 10px;
+    background-color: gray;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.calendar_menu
+{
+    position: absolute;
+    width: calc(100% - 20px);
+    padding: 10px 10px 10px 10px;
+    top: 0px;
+    left: 0px;
+}
+
+.calendar
+{
+    position: absolute;
+    top: 80px;
+    left: 0px;
+    height: calc(100% - 120px);
+    width: 100%;
+}
+
+.tabpanel
+{
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}
+
+.tablist
+{
+    width: 100%;
+    height: 30px;
+    position: absolute;
+    padding-bottom: 10px;
+    top: 0px;
+    left: 0px;
+}
+
+.tablist div
+{
+    height: 30px;
+    line-height: 30px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: inline-block;
+    float: left;
+    text-align: center;
+}
+
+.tablist div:hover
+{
+    background-color: white;
+}
+
+.tablist div:active
+{
+    background-color: black;
+    color: white;
+    font-weight: bold;
+}
+
+.tabcontent
+{
+    position: absolute;
+    top: 40px;
+    left: 0px;
+    width: 100%;
+    height: 94%;
+}
+
+.tabcontent > div
+{
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.3);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: calc(100% - 30px - 10px);
+}
+
+.bigbuttons input
+{
+    width: 100%;
+    height: 30px;
+}
+
+.bigbuttons input[type="button"]
+{
+    background-color: gray;
+}
+
+.button_paragraph
+{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    text-align: center;
+    font-size: large;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+}
+.button_paragraph:hover
+{
+    background-color: white;
+}
+.button_paragraph:active
+{
+    background-color: black;
+    color: white;
+    font-weight: bold;
+}
+
+.registereddiv
+{
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    position: relative;
+    padding-bottom: 50px;
+}
+
+.teamdiv
+{
+    width: 100%;
+}
+
+.teamdiv .teamate
+{
+    width: 49%;
+}
+
+.noteamdiv
+{
+    width: 49%;
+    display: inline-block;
+}
+
+.panel
+{
+    border-radius: 10px;
+    background-color: gray;
+    margin-bottom: 10px;
+}
+
+.aligned_box
+{
+    display: inline-block;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    padding: 10px 10px 10px 10px;
+}
+
+.box250x50
+{
+    font-size: x-small;
+    width: 250px;
+    height: 50px;
+}
+
+.box250x25
+{
+    width: 250px;
+    height: 25px;
+}
+
+.bigtext
+{
+    font-size: large;
+    line-height: 100%;
+}
+
+.lightbackground
+{
+    background-color: rgba(255, 255, 255, 0.4);
+    color: black;
+}
+
+.dynbutton > div:hover
+{
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.table_wrapper
+{
+    /* direction: */
+    overflow-x: scroll;
+    overflow-y: visible;
+    /* margin-left: 350px; */
+}
+
+.table_wrapper > table > tr > td
+{
+    padding: 5px 20px;
+    width: 25px;
+}
+
+.table_wrapper > table > tr > th
+{
+    padding: 5px 20px;
+    width: 200px;
+}
+
+.table_wrapper > table > tr > th:first-child
+{
+    position: absolute;
+    left: 5px;
+}
+
+.prettybox
+{
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.25);
+    border: 1px solid white;
+    padding: 10px 10px 10px 10px;
+}

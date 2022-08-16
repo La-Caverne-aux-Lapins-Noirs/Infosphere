@@ -1,0 +1,17 @@
+<br />
+<form method="POST" action="index.php?p=<?=$Position; ?>"  class="add_formular">
+    <input type="hidden" name="action" value="add" />
+    <h2><?=$Dictionnary["AddAClass"]; ?></h2><br />
+    <div>
+	<input
+	    type="text"
+	    name="codename"
+	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	    value="<?=try_get($_POST, "codename"); ?>"
+	/><br />
+	<br />
+	<?php forge_language_formular(["name" => "text", "description" => "textarea"], $_POST); ?>
+	<br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
