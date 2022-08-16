@@ -35,9 +35,10 @@ function add_log($type, $msg, $id_author = -1)
 	$msg .= " - Logged as ".$User["codename"];
     $url = str_replace("&amp;", "&", unrollget());
     $urlhash = crc32($url);
+    $ip = crc32(get_client_ip());
     return (!!$Database->query("
-      INSERT INTO log (id_user, log_date, type, message, ip, url, urlhash)
-      VALUES ('$id', NOW(), '$type', '$msg', '".get_client_ip()."', '$url', $urlhash)
-      "));
+	INSERT INTO log (id_user, log_date, type, message, ip, url, urlhash)
+	VALUES ('$id', NOW(), '$type', '$msg', $ip, '$url', $urlhash)
+    "));
 }
 

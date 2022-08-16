@@ -79,7 +79,7 @@ $next_week_activity = db_select_all("
    ORDER BY begin_date
 ");
 
-function is_teacher($activity, $module, $filter)
+function is_teacherx($activity, $module, $filter)
 {
     return (db_select_one("
       id_user, id_laboratory
@@ -120,7 +120,7 @@ foreach ($users as $usr)
     $content = "";
     foreach ($starting_projects as $sp)
     {
-	if (!is_teacher($sp["id"], $sp["parent_activity"], $filter))
+	if (!is_teacherx($sp["id"], $sp["parent_activity"], $filter))
 	    continue ;
 	$id = $sp["id"];
 	if (@strlen($name = $sp["name"]) == 0)
@@ -135,7 +135,7 @@ foreach ($users as $usr)
     $content = "";
     foreach ($ending_projects as $sp)
     {
-	if (!is_teacher($sp["id"], $sp["parent_activity"], $filter))
+	if (!is_teacherx($sp["id"], $sp["parent_activity"], $filter))
 	    continue ;
 	$id = $sp["id"];
 	if (@strlen($name = $sp["name"]) == 0)
@@ -149,7 +149,7 @@ foreach ($users as $usr)
     $content = "";
     foreach ($next_week_activity as $sp)
     {
-	if (!is_teacher($sp["id_activity"], $sp["parent_activity"], $filter))
+	if (!is_teacherx($sp["id_activity"], $sp["parent_activity"], $filter))
 	    continue ;
 	$ida = $sp["id_activity"];
 	$idb = $sp["id"];

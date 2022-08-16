@@ -14,12 +14,11 @@ require ("tools/index.php");
 $msg = get_login_info($argv[1], $argv[2], true);
 unset($argv);
 
-$OriginalUser = $User = $msg["User"];
-if ($msg["Error"] != "" || $User["id"] != 1)
+if ($msg->is_error() || $msg->value["id"] != 1)
     exit ;
+$OriginalUser = $User = $msg->value;
 
 add_log(TRACE, "Albedo starts.", 1);
-
 // Ici, on est admin, si les paramètres étaient bons
 // C'est ici que commence le travail d'Albedo.
 // Chaque fichier albedo doit commencer par vérifier les credentials
@@ -30,5 +29,4 @@ foreach ($files as $f)
 {
     require ($f);
 }
-
 add_log(TRACE, "Albedo stops.", 1);

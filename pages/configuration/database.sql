@@ -14,9 +14,9 @@ CREATE TABLE `log` (
   `log_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `type` int(11) NOT NULL,
   `url` text DEFAULT NULL,
-  `urlhash` bigint(11) DEFAULT NULL,
+  `urlhash` int(11) DEFAULT NULL,
   `message` varchar(255) DEFAULT NULL,
-  `ip` int(255) DEFAULT NULL
+  `ip` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 ALTER TABLE `log`
