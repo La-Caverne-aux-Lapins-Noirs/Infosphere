@@ -1,0 +1,28 @@
+<td>
+    <form
+	method="post"
+		action="index.php?p=<?=$Position; ?>&amp;a=<?=$fetch["id"]; ?>"
+    >
+	<br />
+	<input type="hidden" name="action" value="edit_member_authority" />
+	<input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+	<input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	<select name="authority" style="width: 45%; height: 50px;">
+	    <?php foreach ($Authority as $i => $auth) { ?>
+		<option value="<?=$i; ?>"><?=$auth; ?></option>
+	    <?php } ?>
+	</select>
+	<input type="submit" value="&#10003;" style="color: green; width: 45%; height: 50px;" />
+    </form>
+    <br />
+    <form
+	method="post"
+	action="index.php?p=<?=$Position; ?>&amp;a=<?=$fetch["id"]; ?>"
+    >
+	<input type="hidden" name="action" value="remove_member" />
+	<input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+	<input type="hidden" name="user" value="<?=$content["id"]; ?>" />
+	<input type="submit" value="&#10007;" style="color: red; width: 91%; height: 50px;" />
+    </form>
+    <br />
+</td>

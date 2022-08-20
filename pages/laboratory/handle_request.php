@@ -2,7 +2,7 @@
 
 $LogMsg = "";
 
-if ($_POST["action"] == "add_group")
+if ($_POST["action"] == "add_laboratory")
 {
     if (!is_admin())
     {
@@ -13,7 +13,7 @@ if ($_POST["action"] == "add_group")
 	"laboratory", $_POST["codename"],
 	[], // No additional fields
 	$_FILES["icon"]["tmp_name"], $Configuration->GroupsDir,
-	["name", "description"], $_POST
+	["name" => false, "description" => false], $_POST
     );
     $LogMsg = "GroupAdded";
 }
@@ -40,7 +40,7 @@ else if ($_POST["action"] == "remove_member")
 else if ($_POST["action"] == "add_group_member")
 {
     $lab = (int)$_POST["laboratory"];
-    if (($request = resolve_codename("user", $_POST["codename"]))->is_error())
+    if (($request = resolve_codename("user", $_POST["user"]))->is_error())
 	return ;
     $user = $request->value;
     if (!is_group_admin($lab))
@@ -48,10 +48,8 @@ else if ($_POST["action"] == "add_group_member")
 	$request = new ErrorResponse("PermissionDenied");
 	return ;
     }
-    $Database->query("
-	INSERT INTO user_laboratory (id_user, id_laboratory)
-        VALUES ($user, $lab)
-    ");
+    if (($request = handle_links($user, $lab, "user", "laboratory"))->is_error())
+	return ;
     $LogMsg = "MemberAdded";
 }
 else if ($_POST["action"] == "edit_member_authority")
@@ -70,4 +68,19 @@ else if ($_POST["action"] == "edit_member_authority")
        WHERE id_user = $user AND id_laboratory = $lab
     ");
     $LogMsg = "ProfileUpdated";
+}
+else if ($_POST["action"] == "add_school")
+{
+    $lab = (int)$_POST["laboratory"];
+    if (($request = resolve_codename("school", $_POST["school"]))->is_error())
+	return ;
+    $school = $request->value;
+    if (!is_admin())
+    {
+	$request = new ErrorResponse("PermissionDenied");
+	return ;
+    }
+    if (($request = handle_links($school, $lab, "school", "laboratory"))->is_error())
+	return ;
+    $LogMsg = "SchoolAdded";
 }

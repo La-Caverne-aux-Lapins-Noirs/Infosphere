@@ -210,9 +210,21 @@ function db_select_all($query, $key_field = "", $display = false)
     {
 	if ($key_field != "")
 	{
-	    if ($r[$key_field] == "")
-		continue ;
-	    $data[$r[$key_field]] = $r;
+	    if (!is_array($key_field))
+	    {
+		if (@$r[$key_field] == NULL)
+		    continue ;
+		$data[$r[$key_field]] = $r;
+	    }
+	    else
+	    {
+		foreach ($key_field as $kf)
+		{
+		    if (@$r[$kf] == NULL)
+			continue ;
+		    $data[$r[$kf]] = $r;
+		}
+	    }
 	}
 	else
 	    $data[] = $r;

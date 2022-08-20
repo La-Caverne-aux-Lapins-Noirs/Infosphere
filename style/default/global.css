@@ -1,4 +1,5 @@
 
+
 @font-face
 {
     src: url("/res/futura.ttf");
@@ -35,4 +36,105 @@
     background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;
+}
+
+.backarrow
+{
+    font-size: 50px;
+    text-decoration: none;
+}
+
+.no_border, .no_border tr, .no_border tr td
+{
+    border-style: none !important;
+}
+
+.sublist_of_link div, .sublist_of_link div a
+{
+    background-color: gray;
+    border-radius: 10px;
+    text-align: center;
+    color: lightgray;
+    text-decoration: none;
+    font-size: small;
+}
+
+.sublist_of_link div a:hover
+{
+    color: white;
+}
+
+.sublist_of_link div input[type="button"]
+{
+    border-radius: 10px;
+}
+
+.click_list
+{
+    overflow: auto;
+}
+
+.click_list>div:hover
+{
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.click_list>div
+{
+    position: relative;
+    margin-left: 10px;
+    width: calc(100% - 20px);
+    height: 50px;
+    x-overflow: auto;
+    border: 1px solid gray;
+}
+
+.click_list>div>div
+{
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    width: 40px;
+    height: 40px;
+    font-size: 40px;
+    z-index: 1;
+    color: white;
+    text-shadow:
+	-1px -1px 0px black,
+	-1px +1px 0px black,
+	+1px -1px 0px black,
+	+1px +1px 0px black,
+	-1px -0px 0px black,
+	+1px +0px 0px black,
+	+0px -1px 0px black,
+	+0px +1px 0px black
+    ;
+}
+
+.click_list>div>a>img
+{
+    position: absolute;
+    left: 5px;
+    top: 0px;
+}
+
+.click_list>div>p
+{
+    position: absolute;
+    left: 60px;
+    top: 0px;
+    font-size: 20px;
+    top: calc((100% - 20px) / 2);
+    height: 20px;
+}
+
+.big_top_table
+{
+    width: 100%;
+    height: calc(100% - 50px - 50px - 10px - 10px);
+}
+
+.big_top_table td
+{
+    vertical-align: top;
 }

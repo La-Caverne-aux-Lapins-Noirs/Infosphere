@@ -154,5 +154,6 @@ require_once ("get_medals.php");
 require_once ("get_icon.php");
 require_once ("print_icon.php");
 require_once ("print_medal_icon.php");
+require_once ("add_cycle.php");
 // @codeCoverageIgnoreEnd
 

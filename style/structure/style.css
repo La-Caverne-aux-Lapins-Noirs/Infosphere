@@ -398,35 +398,6 @@ input[type="submit"], input[type="button"]
     min-height: 50px;
 }
 
-.language_entry
-{
-    display: inline-block;
-    width: 220px;
-    height: 150px;
-    text-align: center;
-    overflow-x: auto;
-}
-
-.language_entry span
-{
-    width: 200px;
-    height: 20px;
-    line-height: 35px;
-    font-size: 22px;
-}
-
-.language_entry input, .language_entry textarea
-{
-    width: 200px !important;
-    height: 30px;
-    line-height: 50px;
-}
-
-.language_entry textarea
-{
-    height: 80px;
-}
-
 .normal_text
 {
     font-size: 16px;

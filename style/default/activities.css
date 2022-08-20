@@ -160,27 +160,6 @@ b
     border-radius: 50px;
 }
 
-
-#down_edit_formular .sublist_of_link div, #down_edit_formular .sublist_of_link div a
-{
-    background-color: gray;
-    border-radius: 10px;
-    text-align: center;
-    color: lightgray;
-    text-decoration: none;
-    font-size: small;
-}
-
-#down_edit_formular .sublist_of_link div a:hover
-{
-    color: white;
-}
-
-#down_edit_formular .sublist_of_link div input[type="button"]
-{
-    border-radius: 10px;
-}
-
 .syllabus > form > input[type="button"], .activity_configuration_block > form > input[type="button"]
 {
     color: green;

@@ -6,7 +6,6 @@ CREATE TABLE `cycle` (
   `deleted` datetime DEFAULT NULL,
 
   `first_day` datetime DEFAULT NULL,
-  `last_day` datetime DEFAULT NULL,
   `cycle` int(11) NOT NULL,
   `done` int(11) DEFAULT NULL,
 

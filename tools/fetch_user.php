@@ -6,9 +6,11 @@ function fetch_user($id, $add_fields = [])
 
     if (($id = resolve_codename("user", $id))->is_error())
 	return ($id);
+    $id = $id->value;
+    die();
     if (strlen($add_fields = implode(",", $add_fields)))
 	$add_fields = ", ".$add_fields;
-    if (!is_array($id = $id->value))
+    if (!is_array($id))
 	$id = [$id]; 
     $u = db_select_one("
               user.id as id,

@@ -42,6 +42,7 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 		debug = "";
 
 	    // On neutralise les caractères HTML
+	    trace = trace.replaceAll(/<br \/>/g, "\n");
 	    trace = trace.replaceAll(/[ ]+/g, " ").replaceAll(/</g, "&lt;").replaceAll(/>/g, "&rt;");
 
 	    // On forge le message final

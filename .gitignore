@@ -1,5 +1,6 @@
 *~
 #*
+.htaccess
 database.json
 profiling.htm
-
+version.php

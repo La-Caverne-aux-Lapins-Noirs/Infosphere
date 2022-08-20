@@ -1,0 +1,69 @@
+<h2><?=$Dictionnary["AddAPromotion"]; ?></h2><br />
+<form onsubmit="return false;" method="POST" action="/api/<?=$page; ?>">
+    <input
+	type="text"
+	name="name"
+	placeholder="<?=$Dictionnary["PromotionName"]; ?>"
+    /><br />
+    <br />
+    
+    <?=$Dictionnary["CycleNumber"]; ?><br />
+    <select name="year">
+	<?php for ($i = 0; $i < 4 * 5 + 1; ++$i) { ?>
+	    <option value="<?=$i; ?>">
+		<?php if ($i < 4 * 5) { ?>
+		    <?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+		    (<?=$Dictionnary["Year"]; ?> <?=floor($i / 4 + 1); ?>)
+		<?php } else { ?>
+		    <?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+		    (<?=$Dictionnary["OutOfYear"]; ?>)
+		<?php } ?>
+	    </option>
+	<?php } ?>
+    </select><br />
+    <br />
+
+    <?php if ($page == "cycle") { ?>
+	<?=$Dictionnary["FirstWeekDate"]; ?><br />
+	<input
+	    type="date"
+	    name="first_week"
+	    placeholder="<?=$Dictionnary["FirstWeekDate"]; ?>"
+	/><br />
+	<br />
+    <?php } ?>
+
+    <input
+	type="button"
+	onclick="silent_submitf(this.parentNode, {tofill: 'cyclelist', toclear: 'cyclelist', wrapper: 'cycles', clear_form: true});"
+	value="<?=$Dictionnary["AddAPromotion"]; ?>"
+    />
+</form>
+
+<?php if ($page == "cycle") { ?>
+    <br />
+    <br />
+    <h2><?=$Dictionnary["InstantiateAPromotion"]; ?></h2><br />
+    <form onsubmit="return false;" method="POST" action="/api/<?=$page; ?>">
+	<input
+	    type="text"
+	    name="name"
+	    placeholder="<?=$Dictionnary["PromotionName"]; ?>"
+	/><br />
+	<br />
+
+	<?=$Dictionnary["FirstWeekDate"]; ?><br />
+	<input
+	    type="date"
+	    name="first_week"
+	    placeholder="<?=$Dictionnary["FirstWeekDate"]; ?>"
+	/><br />
+	<br />
+
+	<input
+	    type="button"
+	    onclick="silent_submitf(this.parentNode, {tofill: 'cyclelist', toclear: 'cyclelist', wrapper: 'users', clear_form: true});"
+	    value="<?=$Dictionnary["Instantiate"]; ?>"
+	/>
+    </form>
+<?php } ?>

@@ -1,0 +1,16 @@
+<table class="content_table">
+    <?php require ("head_cycle.phtml"); ?>
+    <?php if (count($cycles = fetch_cycle($page, $id, true, false, true)) == 0) { ?>
+	<tr><td colspan="<?=$columns; ?>"><?=$Dictionnary["NoCycle"]; ?></td></tr>
+    <?php } else { ?>
+	<?php $cnt = 0; ?>
+	<?php foreach ($cycles as $content) { ?>
+	    <tr
+		class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>"
+		style="<?=$content["done"] ? "background-color: lightgray; color: white;" : ""; ?>"
+	    >
+		<?php require ("list_cycle_line.phtml"); ?>
+	    </tr>
+	<?php }?>
+    <?php } ?>
+</table>

@@ -1,0 +1,16 @@
+<?php $URL = "index.php?p=ProfileMenu&amp;a={$content["codename"]}" ?>
+
+<td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+<td <?=clickable($URL); ?>>
+    <?php display_avatar($content, 100); ?>
+</td>
+<td <?=clickable($URL); ?>><?=$content["codename"]; ?></td>
+<td <?=clickable($URL); ?>>
+    <?php $Authority = ["Member", "Assistant", "Teacher", "Administrator"]; ?>
+    <?=$Dictionnary[$Authority[$content["authority"]]]; ?>
+</td>
+
+<?php if (is_group_admin($fetch["id"])) { ?>
+    <?php require ("edit_user.phtml"); ?>
+<?php } ?>
+

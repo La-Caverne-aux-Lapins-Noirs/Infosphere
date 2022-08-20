@@ -1,0 +1,28 @@
+<h2><?=$Dictionnary["AddAMember"]; ?></h2><br />
+<form method="post" action="<?=unrollurl(); ?>" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="add_group_member" />
+    <input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+    <div>
+	<input
+	    type="text"
+	    name="user"
+	    placeholder="<?=$Dictionnary["User"]; ?>"
+	    value="<?=try_get($_POST, "user"); ?>"
+	/><br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>
+<h2><?=$Dictionnary["AddASchool"]; ?></h2><br />
+<form method="post" action="<?=unrollurl(); ?>" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="add_school" />
+    <input type="hidden" name="laboratory" value="<?=$fetch["id"]; ?>" />
+    <div>
+	<input
+	    type="text"
+	    name="school"
+	    placeholder="<?=$Dictionnary["User"]; ?>"
+	    value="<?=try_get($_POST, "school"); ?>"
+	/><br />
+	<input type="submit" value="&#10003;" />
+    </div>
+</form>

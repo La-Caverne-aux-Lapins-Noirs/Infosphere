@@ -20,7 +20,7 @@ CREATE TABLE `user_laboratory` (
   `id` int(11) NOT NULL,
   `id_user` int(11) NOT NULL,
   `id_laboratory` int(11) NOT NULL,
-  `authority` int(11) DEFAULT NULL
+  `authority` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 ALTER TABLE `user_laboratory`

@@ -1,0 +1,25 @@
+<?php $URL = unrollurl(["a" => $content["id"]]); ?>
+
+<td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+<td><?=$content["codename"]; ?></td>
+<?php if ($content["is_template"] == 0) { ?>
+    <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["first_day"]); ?></td>
+    <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["last_day"]); ?></td>
+<?php } ?>
+<td <?=clickable($URL); ?>><?=$content["cycle"]; ?> (<?=$Dictionnary["Year"]; ?> <?=floor($content["cycle"] / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$content["cycle"] % 4 + 1; ?>)</td>
+<?php if ($page == "cycle") { ?>
+    <td <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
+<?php } ?>
+<td <?=clickable($URL); ?>><?=count($content["activity"]); ?></td>
+<?php if (!is_admin()) { ?>
+    <td>
+	<?php foreach ($content["teacher"] as $teacher) { ?>
+	    <?php $dest = $teacher["codename"][0] != "#" ? "Profile" : "Laboratories"; ?>
+	    <a href="index.php?p=<?=$dest; ?>Menu&amp;a=<?=$teacher["id"]; ?>">
+		<?=$teacher["codename"]; ?>
+	    </a>
+	<?php } ?>
+    </td>
+<?php } else { ?>
+    <?php require ("edit_cycle.phtml"); ?>
+<?php } ?>

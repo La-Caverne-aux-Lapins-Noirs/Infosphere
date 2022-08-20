@@ -10,6 +10,8 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
 	return (new ErrorResponse("MissingTableName"));
     if (!is_symbol($table))
 	return (new ErrorResponse("InvalidTableName", $table));
+    if ($codename === NULL)
+	return (new ValueResponse(NULL));
     if (is_array($codename))
 	$codename = implode(";", $codename);
 
@@ -22,39 +24,13 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
     else
 	return (resolve_multiple_codenames($table, $codename, $codename_column, $fetch_all));
 
-    $hashprefix = false;
-    $subprefix = false;
-    $dollarprefix = false;
+    $codename = trim($codename);
+    $desc = get_prefix($codename);
+    $codename = $desc["label"];
     $NotFoundError = "BadCodeName";
-    do
-    {
-	$found = false;
-	if (substr($codename, 0, 1) == "#")
-	{
-	    $found = true;
-	    $hashprefix = true;
-	    $codename = substr($codename, 1);
-	}
-	if (substr($codename, 0, 1) == "$")
-	{
-	    $found = true;
-	    $dollarprefix = true;
-	    $codename = substr($codename, 1);
-	}
-	if (substr($codename, 0, 1) == "-")
-	{
-	    $found = true;
-	    if ($codename == -1) // C'est un problème, car on doit pouvoir supprimer l'id 1.
-		return (new ValueResponse(-1));
-	    $subprefix = true;
-	    $codename = substr($codename, 1);
-	}
-    }
-    while ($found);
+    
     if (is_number($codename))
     {
-	if ($codename == -1)
-	    return (new ValueResponse(-1));
 	$codename_column = "id";
 	$NotFoundError = "NotAnId";
     }
@@ -73,13 +49,7 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
     if ($fetch_all == "*")
 	return (new ValueResponse($q));
 
-    $out = $q["id"];
-    if ($subprefix)
-	$out = "-".$out;
-    if ($hashprefix)
-	$out = "#".$out;
-    if ($dollarprefix)
-	$out = "$".$out;
+    $out = ($desc["negative"] ? "-" : "").$desc["prefix"].$q["id"];
     return (new ValueResponse($out));
 }
 

@@ -1,6 +1,10 @@
 <?php
 
-function split_symbols($x, $c = ";", $negation = true)
+/*
+** Il serait interessant d'utiliser get_prefix.
+*/
+
+function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addprefix = "")
 {
     if (!isset($x))
 	return (new ErrorResponse("MissingCodeName"));
@@ -16,47 +20,16 @@ function split_symbols($x, $c = ";", $negation = true)
 		$out[] = intval($x[$i]);
 	    else
 	    {
-		$neg = false;
-		$lab = false;
-		$alt = false;
-		do
-		{
-		    $found = false;
-		    if ($negation)
-		    {
-			if (substr($x[$i], 0, 1) == "-")
-			{
-			    $neg = true;
-			    $found = true;
-			    $x[$i] = substr($x[$i], 1);
-			}
-		    }
-		    if (substr($x[$i], 0, 1) == "#") // Supporte les groupes
-		    {
-			$found = true;
-			$x[$i] = substr($x[$i], 1);
-			$lab = true;
-		    }
-		    if (substr($x[$i], 0, 1) == "$") // Supporte l'alterateur $
-		    {
-			$found = true;
-			$x[$i] = substr($x[$i], 1);
-			$alt = true;
-		    }
-		}
-		while ($found);
-		if (!is_symbol($x[$i]))
+		$res = get_prefix($x[$i]);
+		if (!is_integer($res["label"]) && !is_symbol($res["label"]))
 		    return (new ErrorResponse("InvalidParameter", $x[$i]));
-		if ($x[$i] == "")
+		if ($res["label"] == "")
 		    continue ;
-		$new = "";
-		if ($neg)
-		    $new .= "-";
-		if ($lab)
-		    $new .= "#";
-		if ($alt)
-		    $new .= "$";
-		$out[] = $new.$x[$i];
+		$out[] = $getmod ? $res["mod"] : (
+		    ($res["negative"] ? "-" : "").
+		    $res["prefix"].$addprefix.
+		    $res["label"]
+		);
 	    }
 	}
     }

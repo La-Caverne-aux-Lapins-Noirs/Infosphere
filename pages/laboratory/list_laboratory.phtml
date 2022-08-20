@@ -1,0 +1,32 @@
+<?php $URL = "index.php?p=".$Position."&amp;a={$content["id"]}"; ?>
+<td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+<td <?=clickable($URL); ?>>
+    <img
+	src="<?=$content["icon"] != "" ? $content["icon"] : "res/no_avatar.png"; ?>"
+	alt="<?=$Dictionnary["Avatar"]; ?>"
+	width="50"
+	height="50"
+    />
+</td>
+<td <?=clickable($URL); ?>><?=$content["codename"]; ?></td>
+<td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+<td>
+    <?php
+    if (isset($content["school"]))
+    {
+	foreach ($content["school"] as $sc)
+	{
+    ?>
+	<a href="index.php?p=SchoolMenu&amp;a=<?=$sc["id"]; ?>">
+	    <?=$sc["codename"]; ?>
+	</a>
+    <?php
+    }
+    }
+    ?>
+</td>
+<td <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
+
+<?php if (is_admin()) { ?>
+    <?php require ("edit_laboratory.phtml"); ?>
+<?php } ?>

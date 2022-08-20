@@ -1,29 +1,9 @@
-<?php
-if (file_exists(__DIR__."/handle_parameters.php"))
-    require_once (__DIR__."/handle_parameters.php");
-require_once (__DIR__."/../error_net.php");
-?>
-
 <div>
-    <script>
-     function use_search(action, obj)
-     {
-	 var target = document.getElementById("userlist");
-	 var searchbar = document.getElementById("searchbar");
-
-	 if (searchbar.value != "")
-	     obj.action = action + "/" + searchbar.value;
-	 else
-	     obj.action = action;
-	 silent_submit(obj, target, null, null, null);
-	 return (false);
-     }
-    </script>
     <h2 class="alignable_blocks"><?=$Dictionnary["Members"]; ?></h2>
     <form
-	class="alignable_blocks"
+	class="alignable_blocks searchbar"
 	method="get"
-	onsubmit="return use_search('/api/user', this);"
+	onsubmit="return use_search('/api/user', this, 'userlist');"
     >
 	<input
 	    type="text"

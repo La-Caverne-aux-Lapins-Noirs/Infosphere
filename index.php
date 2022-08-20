@@ -79,6 +79,7 @@ else
 $Unlisted = [
     "ActivityMenu" => "./pages/instance/",
     "Subscribe" => "./pages/subscribe/",
+    "TeacherMenu" => "./pages/profile/", // Redirection vers profil pour des raisons de simplicité
 ];
 
 $TopMenu = [
@@ -102,7 +103,7 @@ $TopMenu["SearchMenu"] = "./pages/search/";
 
 $BottomMenu = [
     "UsersMenu" => "./pages/user/",
-    "LaboratoriesMenu" => "./pages/laboratories/",
+    "LaboratoryMenu" => "./pages/laboratory/",
     "AdminRoomsMenu" => "./pages/rooms/admin/",
     "MedalsMenu" => "./pages/medals/",
     "FunctionMenu" => "./pages/functions/",

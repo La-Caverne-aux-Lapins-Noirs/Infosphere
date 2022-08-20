@@ -24,7 +24,8 @@ function DisplayModule($id, $data, $method, $output, $module)
     {
 	if (is_teacher_for_activity($id) == false)
 	    forbidden();
-	($module = new FullActivity)->build($id);
+	if (($module = new FullActivity)->build($id) == false)
+	    return (new ValueResponse(["content" => $Dictionnary["Empty"]]));
 	if ($output == "json")
 	    return (new ValueResponse(["content" => json_encode($module, JSON_UNESCAPED_SLASHES)]));
 	ob_start();
@@ -114,7 +115,8 @@ function DisplayActivity($id, $data, $method, $output, $module)
 
     if ($id == -1)
 	bad_request();
-    ($activity = new FullActivity)->build($id);
+    if (($activity = new FullActivity)->build($id) == false)
+	return (new ValueResponse(["content" => $Dictionnary["Empty"]]));
     $template = $activity->is_template;
     $page = $module;
     if ($output == "json")

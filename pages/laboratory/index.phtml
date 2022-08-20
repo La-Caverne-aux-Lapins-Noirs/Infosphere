@@ -1,0 +1,79 @@
+<?php
+if (file_exists(__DIR__."/handle_request.php")
+    && is_admin()
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+require_once (__DIR__."/../error_net.php");
+?>
+
+<h2><?=$Dictionnary["Laboratories"]; ?></h2>
+<?php if ($unique) { ?>
+    <h3><?=$fetch["name"]; ?></h3>
+    <a href="index.php?p=<?=$Position; ?>" class="backarrow">
+	&larr;
+    </a>
+<?php } ?>
+
+<?php if (is_admin()) { ?>
+    <table class="edit_console"><tr><td><div class="fullscreen scrollable">
+<?php } ?>
+
+<table class="content_table">
+    <?php if ($unique) { ?>
+
+	<?php if ($fetch["icon"] != "") { ?>
+	    <div class="big_flag" style="background-image: url(<?=$fetch["icon"]; ?>);">
+	    </div>
+	<?php } ?>
+	<tr>
+	    <th>#</th>
+	    <th><?=$Dictionnary["Avatar"]; ?></th>
+	    <th><?=$Dictionnary["Login"]; ?></th>
+	    <th><?=$Dictionnary["Status"]; ?></th>
+	    <?php if (is_admin()) { ?>
+		<th class="edit_column"><img src="./res/cog.png" /></th>
+	    <?php } ?>
+	</tr>
+	<?php $cnt = 0; ?>
+	<?php foreach ($fetch["user"] as $content) { ?>
+	    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+		<?php require ("list_users.phtml"); ?>
+	    </tr>
+	<?php } ?>
+
+    <?php } else { ?>
+	<tr>
+	    <th class="id_column">#</th>
+	    <th class="icon_column"><?=$Dictionnary["Icon"]; ?></th>
+	    <th class="codename_column"><?=$Dictionnary["CodeName"]; ?></th>
+	    <th class="name_column"><?=$Dictionnary["Name"]; ?></th>
+	    <th class="wide_column"><?=$Dictionnary["School"]; ?></th>
+	    <th><?=$Dictionnary["HowManyStudents"]; ?></th>
+	    <?php if (is_admin()) { ?>
+		<th class="edit_column"><img src="./res/cog.png" /></th>
+	    <?php } ?>
+	</tr>
+	<?php $cnt = 0; ?>
+	<?php foreach ($fetch as $content) { ?>
+	    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+		<?php require ("list_laboratory.phtml"); ?>
+	    </tr>
+	<?php } ?>
+    <?php } ?>
+</table>
+
+<?php if (is_admin()) { ?>
+    </div></td><td class="formular_slot">
+	<?php if ($unique) { ?>
+	    <?php require ("add_users.phtml"); ?>
+	<?php } else { ?>
+	    <?php require ("add_laboratory.phtml"); ?>
+	<?php } ?>
+    </td></tr></table>
+<?php } ?>
+
+

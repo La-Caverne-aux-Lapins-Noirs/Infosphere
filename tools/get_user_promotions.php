@@ -4,6 +4,7 @@ function get_user_promotions(array &$usr, $by_name = false)
 {
     global $Database;
     global $Language;
+    global $one_week;
 
     if (!isset($usr["id"]) || !is_number($usr["id"]))
 	return ([]);
@@ -15,7 +16,6 @@ function get_user_promotions(array &$usr, $by_name = false)
         cycle.{$Language}_name as name,
         cycle.is_template as is_template,
 	cycle.first_day as first_day,
-	cycle.last_day as last_day,
 	cycle.cycle as cycle,
 	cycle.done as done,
         user_cycle.commentaries as commentaries,
@@ -31,6 +31,7 @@ function get_user_promotions(array &$usr, $by_name = false)
     $usr["greatest_cycle"] = -1;
     foreach ($usr["cycle"] as $i => $v)
     {
+	$usr["cycle"][$i]["last_day"] = date_to_timestamp($usr["cycle"][$i]["first_day"]) + 15 * $one_week;
 	$usr["cycle"][$i]["year"] = floor($v["cycle"] / 4); // Fait ici car SQLite n'a pas FLOOR.
 	if ($usr["greatest_cycle"] < $v["cycle"])
 	    $usr["greatest_cycle"] = $v["cycle"];

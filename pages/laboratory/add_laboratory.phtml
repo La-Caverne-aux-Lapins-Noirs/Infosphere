@@ -1,0 +1,23 @@
+<h2><?=$Dictionnary["AddAGroup"]; ?></h2><br />
+<form method="POST" action="index.php?p=<?=$Position; ?>" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="add_laboratory" />
+    <input
+	type="text"
+	name="codename"
+	placeholder="<?=$Dictionnary["GroupName"]; ?>"
+	value="<?=try_get($_POST, "codename"); ?>"
+    /><br />
+    <input
+	type="file"
+	name="icon"
+	accept="image/png"
+	placeholder="<?=$Dictionnary["Icone"]; ?>"
+	value="<?=try_get($_POST, "icon"); ?>"
+    /><br />
+    
+    <?php forge_language_formular(["name" => "text", "description" => "textarea"], $_POST); ?>
+    <br />
+    <br />
+    <input type="submit" value="&#10003;" />
+</form>
+

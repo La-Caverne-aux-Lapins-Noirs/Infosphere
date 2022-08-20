@@ -1,13 +1,14 @@
 <?php
 
-function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities = true)
+function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = false, $activities = true)
 {
     global $Language;
+    global $one_week;
 
     if (($years = fetch_data(
-	"cycle", $id, [], "codename", $by_name, true, true, [], [
+	"cycle", $id, [], "codename", $by_name, true, true, ["is_template" => $type == "cursus"], [
 	    // En SQL, l'index 0 est l'index 1... WTF.
-	    "cycle.done ASC, SUBSTRING(cycle.codename, 1, 8) ASC, cycle.cycle ASC"
+	    "cycle.done ASC, SUBSTRING(cycle.codename, 1, 4) ASC, cycle.cycle ASC"
 	    // "SUBSTRING(cycle.codename, 1, 8) ASC, cycle.cycle ASC"
     ])
     )->is_error())
@@ -15,7 +16,9 @@ function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities 
     $years = $years->value;
     foreach ($years as $i => &$v)
     {
-	$v["teacher"] = db_select_all("
+	$v["last_day"] = date_to_timestamp($years[$i]["first_day"]) + 15 * $one_week;
+	$v["last_day"] = db_form_date($v["last_day"]);
+	$teacher = db_select_all("
             user.id as id_user,
             user.codename as codename_user,
             laboratory.id as id_laboratory,
@@ -24,9 +27,26 @@ function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities 
             LEFT JOIN user ON cycle_teacher.id_user = user.id
             LEFT JOIN laboratory ON cycle_teacher.id_laboratory = laboratory.id
             WHERE cycle_teacher.id_cycle = ".$v["id"]."
-	    ", $by_name ? "codename" : "");
+	    ", $by_name ? ["codename_user", "codename_laboratory"] : "");
+	$v["teacher"] = [];
+	foreach ($teacher as $t)
+	{
+	    $nod = [];
+	    if (isset($t["codename_laboratory"]))
+	    {
+		$nod["id"] = $t["id_laboratory"];
+		$nod["laboratory"] = $nod["codename"] = "#".$t["codename_laboratory"];
+	    }
+	    else
+	    {
+		$nod["id"] = $t["id_user"];
+		$nod["teacher"] = $nod["codename"] = $t["codename_user"];
+	    }
+	    $v["teacher"][] = $nod;
+	}
 	$v["user"] = db_select_all("
             user.id as id,
+            user.id as id_user,
             user.codename as codename,
             user_cycle.hidden as hidden
             FROM user_cycle
@@ -43,8 +63,11 @@ function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities 
 	if ($activities)
 	{
 	    $v["activity"] = db_select_all("
-              activity.id as id, activity_cycle.id as id_activity_cycle,
-              activity.codename as codename, activity.emergence_date as emergence_date,
+              activity.id as id,
+              activity.id as id_activity,
+              activity_cycle.id as id_activity_cycle,
+              activity.codename as codename,
+              activity.emergence_date as emergence_date,
               activity.subscription as subscription,
               template.{$Language}_name as name
               FROM activity_cycle
@@ -55,6 +78,7 @@ function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities 
                 AND activity.parent_activity = -1
                 AND activity.is_template = 0
 	      ");
+	    /*
 	    foreach ($v["activity"] as &$act)
 	    {
 		$act["user"] = db_select_all("
@@ -64,9 +88,10 @@ function fetch_cycle($id = -1, $by_name = false, $fulluser = false, $activities 
                   WHERE team.id_activity = {$act["id"]}
 	      ");
 	    }
+	    */
 	}
     }
-    if ($id != -1)
+    if ($id != -1 && 0)
 	return ($years[array_key_first($years)]);
     return ($years);
 }

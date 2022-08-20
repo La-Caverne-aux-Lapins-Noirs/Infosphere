@@ -1,0 +1,21 @@
+<?php $columns = ($page == "cycle") ? 7 : 4; ?>
+<tr>
+    <th class="tiny_column">#</th>
+    <th class="wide_column"><?=$Dictionnary["CodeName"]; ?></th>
+    <?php if ($page == "cycle") { ?>
+	<th class="small_column"><?=$Dictionnary["FirstWeekDate"]; ?></th>
+	<th class="small_column"><?=$Dictionnary["LastDayDate"]; ?></th>
+    <?php } ?>
+    <th class="medium_column"><?=$Dictionnary["CycleNumber"]; ?></th>
+    <?php if ($page == "cycle") { ?>
+	<th class="small_column"><?=$Dictionnary["HowManyStudents"]; ?></th>
+    <?php } ?>
+    <th class="small_column"><?=$Dictionnary["HowManyInstances"]; ?></th>
+    <?php if (!is_admin()) { ?>
+	<th class="medium_column"><?=$Dictionnary["Director(s)"]; ?></th>
+    <?php } else { ?>
+	<th class="edit_column">
+	    <img src="./res/cog.png" />
+	</th>
+    <?php } ?>
+</tr>

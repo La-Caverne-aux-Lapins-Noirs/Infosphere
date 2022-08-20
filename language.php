@@ -4,7 +4,8 @@ if (isset($Dictionnary))
     return ; // @codeCoverageIgnore
 
 $LanguageList= [
-    "fr" => "Français"
+    "fr" => "Français",
+    "en" => "English"
 ];
 if (!isset($Language))
     $Language = "fr";

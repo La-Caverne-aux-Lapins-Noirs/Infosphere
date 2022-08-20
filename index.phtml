@@ -141,13 +141,13 @@
 	<div id="foot">
 	    <!-- FORMULAIRE DE LANGAGE -->
 	    <form action="index.php?p=<?=$Position; ?>" method="POST">
-		<?php foreach ($LanguageList as $lng => $full) { ?>
 		<select name="language_select" onChange="submit(this);">
-		    <option value="<?=$lng; ?>" <?=$Language == $lng ? "selected" : ""; ?>>
-			<?=$full; ?>
-		    </option>
+		    <?php foreach ($LanguageList as $lng => $full) { ?>
+			<option value="<?=$lng; ?>" <?=$Language == $lng ? "selected" : ""; ?>>
+			    <?=$full; ?>
+			</option>
+		    <?php } ?>
 		</select>
-		<?php } ?>
 	    </form>
 
 	    <!-- BOUTON DE PIED (BACK OFFICE) -->

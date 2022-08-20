@@ -8,7 +8,7 @@ function fetch_laboratory($id = -1, $by_name = false)
     if ($id == -1)
     {
 	$out = [];
-	foreach (db_select_all("id FROM laboratory WHERE deleted = 0") as $lab)
+	foreach (db_select_all("id FROM laboratory WHERE deleted IS NULL") as $lab)
 	{
 	    if ($by_name)
 		$out[$lab["codename"]] = fetch_laboratory($lab["id"], $by_name);

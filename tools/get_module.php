@@ -34,7 +34,7 @@ function get_modules($template, $id = -1)
 	LEFT OUTER JOIN activity_cycle ON activity.id = activity_cycle.id_activity
 	WHERE activity.is_template = $template $id
 	AND activity.deleted IS NULL
-	AND activity.enabled = 1
+	AND activity.disabled IS NULL
 	AND activity.parent_activity = -1
         $filter
 	GROUP BY activity.id

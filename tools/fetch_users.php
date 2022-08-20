@@ -19,6 +19,8 @@ function fetch_users($attr = [], $id = -1)
 	if (($id = resolve_codename("user", $id))->is_error())
 	    return ([]);
 	$id = $id->value;
+	if ($id == [])
+	    return ([]);
 	if (!is_array($id))
 	    $id = [$id];
     }

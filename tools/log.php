@@ -34,8 +34,8 @@ function add_log($type, $msg, $id_author = -1)
     if ($User["codename"] != $OriginalUser["codename"])
 	$msg .= " - Logged as ".$User["codename"];
     $url = str_replace("&amp;", "&", unrollget());
-    $urlhash = crc32($url);
-    $ip = crc32(get_client_ip());
+    $urlhash = crc32($url) & 0x7FFFFFFF;
+    $ip = crc32(get_client_ip()) & 0x7FFFFFFF;
     return (!!$Database->query("
 	INSERT INTO log (id_user, log_date, type, message, ip, url, urlhash)
 	VALUES ('$id', NOW(), '$type', '$msg', $ip, '$url', $urlhash)
