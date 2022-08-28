@@ -7,7 +7,7 @@ function DisplaySession($id, $data, $method, $output, $module)
     if ($id == -1)
 	bad_request();
     $id = (int)$id;
-    if (!count($session = db_select_one("id_activity FROM session WHERE id = $id")))
+    if (!($session = db_select_one("id_activity FROM session WHERE id = $id")))
 	not_found();
     $page = $module;
     ($module = new FullActivity)->build($session["id_activity"]);
@@ -42,17 +42,14 @@ function EditSession($id, $data, $method, $output, $module)
     $data["team"] = $session->id_team;
     $data["laboratory"] = $session->id_laboratory;
     $data["user"] = $session->id_user;
-    $data["begin_date"] = $session->begin_date;
-    $data["end_date"] = $session->end_date;
     
     if (isset($data["maximum_subscription"]))
 	$data["maximum_subscription"] = (int)$data["maximum_subscription"];
-    if (isset($data["day"]) && isset($data["begin"]) && isset($data["end"]))
-    {
-	$data["begin_date"] = date_to_timestamp($data["day"]) + time_to_timestamp($data["begin"]);
-	$data["end_date"] = date_to_timestamp($data["day"]) + time_to_timestamp($data["end"]);
-    }
-   
+    else
+	$data["maximum_subscription"] = $session->maximum_subscription;
+
+    $data = convert_date($data);
+
     if (($ret = edit_session($data))->is_error())
 	return ($ret);
     return (new ValueResponse([

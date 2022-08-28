@@ -22,10 +22,12 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
      {
 	foreach ($dates as $d)
 	{
-	    if ($act->$d != NULL)
+	    if (@$act->$d != NULL)
 	    {
 		$keys[] = $d;
-		$vals[] = "'".db_form_date($act->$d + $sdate)."'";
+		$vals[] = "'".db_form_date(
+		    date_to_timestamp($act->$d) + date_to_timestamp($sdate)
+		)."'";
 	    }
 	}
     }
@@ -46,7 +48,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	foreach (
 	    ["id", "is_template", "id_template", "template_link",
 	     "medal_template", "support_template", "type", "parent_activity",
-	     "codename", "enabled"
+	     "codename", "disabled"
 	    ] as $r)
 	{
 	    unset($rows[array_search($r, $rows)]);
@@ -55,7 +57,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	{
 	    if (array_search($x, $dates) !== false)
 	    {
-		if ($act->$x === NULL)
+		if (@$act->$x === NULL)
 		    $tmp = "NULL";
 		else
 		    $tmp = "'".db_form_date($act->$x)."'";
@@ -82,9 +84,9 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	}
     }
 
-    if ($act->emergence_date === NULL)
+    if (@$act->emergence_date === NULL)
 	$act->emergence_date = $sdate;
-    if ($act->registration_date === NULL)
+    if (@$act->registration_date === NULL)
 	$act->registration_date = $act->emergence_date;
 
     if (count($keys))
@@ -118,12 +120,12 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
          type,
          parent_activity,
          codename,
-         enabled $keys
+         disabled $keys
 	)
       VALUES
-        ($template, $act->type, $parent, '$codename', 1 $vals)
+        ($template, $act->type, $parent, '$codename', NULL $vals)
     ") == NULL)
-        return (-1);
+        return (new ErrorResponse("CannotAdd"));
     $actid = $Database->insert_id;
     foreach ($act->session as $sess)
     {
@@ -131,7 +133,8 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	    continue ;
 	$begin_date = db_form_date($sess->begin_date + $sdate);
 	$end_date = db_form_date($sess->end_date + $sdate);
-	$maximum_subscription = $sess->maximum_subscription;
+	if (($maximum_subscription = $sess->maximum_subscription) == NULL)
+	    $maximum_subscription = "NULL";
 	$Database->query("
            INSERT INTO session
              (id_activity, begin_date, end_date, maximum_subscription)
@@ -141,7 +144,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	if ($act->slot_duration != -1)
 	    @generate_slots($Database->last_id, datex("H:i", $act->slot_duration), 1);
     }
-    return ($actid);
+    return (new ValueResponse($actid));
 }
 
 function instantiate_template($activity, $sdate, $prefix = "", $suffix = "", $parent = -1)
@@ -149,20 +152,23 @@ function instantiate_template($activity, $sdate, $prefix = "", $suffix = "", $pa
     global $Database;
 
     if ($activity->is_template == false)
-	return (false);
+	return (new ErrorResponse("InvalidParameter"));
     $sdate = first_second_of_day($sdate);
 
     if ($suffix == "")
 	$suffix = "_".datex("d_m_Y", date_to_timestamp($sdate))."_".$activity->id;
 
+    $generated = [];
     $codename = $prefix.$activity->codename.$suffix;
-    if (($id = insert_activity($activity, $parent, $codename, $sdate)) == -1)
-	return (false);
+    if (($id = insert_activity($activity, $parent, $codename, $sdate))->is_error())
+	return ($id);
+    $generated[] = $id = $id->value;
     foreach ($activity->subactivities as $sub)
     {
 	$codename = $sub->codename."_".$suffix;
-	if (($new_id = insert_activity($sub, $id, $codename, $sdate)) == -1)
-	    return (false);
+	if (($new_id = insert_activity($sub, $id, $codename, $sdate))->is_error())
+	    return ($new_id);
+	$generated[] = $new_id = $new_id->value;
 
 	$ref_switch[$sub->id]["newid"] = $new_id;
 	$ref_switch[$sub->id]["ref"] = $sub->reference_activity;
@@ -183,6 +189,11 @@ function instantiate_template($activity, $sdate, $prefix = "", $suffix = "", $pa
 	    ");
 	}
     }
-    return (true);
+    // On ne retourne que le premier car actuellement
+    // je n'ai pas le temps de faire un vrai ménage et la partie API
+    // comporte une partie nettoyage en cas d'echec.
+    // Idéalement, il faudrait qu'en cas d'echec, tout soit nettoyé avant de quitter
+    // la fonction.
+    return (new ValueResponse($generated[0]));
 }
 

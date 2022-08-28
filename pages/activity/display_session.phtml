@@ -26,7 +26,6 @@ $js = "silent_submit(this)";
 	    $begin_min = ((int)($begin_min / 10)) * 10;
 	    $end_hour = (int)($session->end_date / $one_hour) % 24;
 	    $end_min = (int)($session->end_date / 60) % 60;
-	    $end_min = ((int)($end_min / 10)) * 10;
 	?>
 	    <br />
 	    <form
@@ -35,36 +34,34 @@ $js = "silent_submit(this)";
 		onsubmit="return <?=$js; ?>"
 		<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
 	    >
-		<label for="week"><?=$Dictionnary["Week"]; ?></label>
+		<label for="week_session_date"><?=$Dictionnary["Week"]; ?></label>
 		<select
-		    id="<?=$week = uniqid(); ?>"
-		    name="week"
-		    onchange="delay_before_submit(1000, this, '<?=$week; ?>');"
+		    id="<?=uniqid(); ?>"
+		    name="week_session_date"
 		>
 		    <?php for ($i = 1; $i < 52; ++$i) { ?>
 			<option value="<?=$i; ?>" <?=$i == $week ? "selected" : ""; ?>><?=$i; ?></option>
 		    <?php } ?>
 		</select>
-		<label for="day"><?=$Dictionnary["Day"]; ?></label>
+		<label for="day_session_date"><?=$Dictionnary["Day"]; ?></label>
 		<select
-		    id="<?=$day = uniqid(); ?>"
-		    name="day"
-		    onchange="delay_before_submit(1000, this, '<?=$day; ?>');"
+		    id="<?=uniqid(); ?>"
+		    name="day_session_date"
 		>
-		    <?php for ($i = 1; $i < 7; ++$i) { ?>
+		    <?php for ($i = 1; $i <= 7; ++$i) { ?>
 			<option value="<?=$i; ?>" <?=$i == $day ? "selected" : ""; ?>><?=$i; ?></option>
 		    <?php } ?>
 		</select>
-		<label for="begin"><?=$Dictionnary["Begin"]; ?></label>
+		<label for="hour_begin_date"><?=$Dictionnary["Begin"]; ?></label>
 		<input
 		    type="time"
-		    name="begin"
+		    name="hour_begin_date"
 		    value="<?=sprintf("%02d", $begin_hour).":".sprintf("%02d", $begin_min); ?>"
 		/>
-		<label for="end"><?=$Dictionnary["End"]; ?></label>
+		<label for="hour_end_date"><?=$Dictionnary["End"]; ?></label>
 		<input
 		    type="time"
-		    name="end"
+		    name="hour_end_date"
 		    value="<?=sprintf("%02d", $end_hour).":".sprintf("%02d", $end_min); ?>"
 		/>
 		<input type="button" value="&#10003;" onclick="<?=$js; ?>" />
@@ -137,9 +134,11 @@ $js = "silent_submit(this)";
 	    />
 	</form>
 	<br />
-	<a class="button_link" href="index.php?=ActivityMenu&amp;a=<?=$module->id; ?>&amp;b<?=$session->id; ?>">
-	    <?=$Dictionnary["SeeTheActivity"]; ?>
-	</a>
-	<br />
+	<?php if ($template == false) { ?>
+	    <a class="button_link" href="index.php?=ActivityMenu&amp;a=<?=$module->id; ?>&amp;b<?=$session->id; ?>">
+		<?=$Dictionnary["SeeTheActivity"]; ?>
+	    </a>
+	    <br />
+	<?php } ?>
     </div></td></tr>
 </table>

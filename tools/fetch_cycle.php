@@ -16,6 +16,29 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
     $years = $years->value;
     foreach ($years as $i => &$v)
     {
+	if ($v["is_template"])
+	{
+	    $v["instance"] = [];
+	    $tmp = db_select_all("
+               id, codename, first_day FROM cycle WHERE id_template = {$v["id"]}
+	       ");
+	    foreach ($tmp as $inst)
+	    {
+		$inst["last_day"] = date_to_timestamp($inst["first_day"]) + 15 * $one_week;
+		if ($inst["last_day"] > now() + 60 * 60 * 24 * 10)
+		{
+		    $inst["last_day"] = db_form_date($inst["last_day"]);
+		    $v["instance"][] = $inst;
+		}
+	    }
+	}
+	else
+	{
+	    if (($d = db_select_one("codename FROM cycle WHERE id = {$v["id_template"]}")))
+		$v["codename_template"] = $d["codename"];
+	    else
+		$v["codename_template"] = NULL;
+	}
 	$v["last_day"] = date_to_timestamp($years[$i]["first_day"]) + 15 * $one_week;
 	$v["last_day"] = db_form_date($v["last_day"]);
 	$teacher = db_select_all("
@@ -28,6 +51,16 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
             LEFT JOIN laboratory ON cycle_teacher.id_laboratory = laboratory.id
             WHERE cycle_teacher.id_cycle = ".$v["id"]."
 	    ", $by_name ? ["codename_user", "codename_laboratory"] : "");
+	$v["school"] = db_select_all("
+	    school.id as id_school,
+            school.id as id,
+            school.codename as codename,
+            school.{$Language}_name as name
+            FROM school_cycle
+            LEFT JOIN school ON school_cycle.id_school = school.id
+            WHERE school_cycle.id_cycle = $id
+            AND deleted IS NULL
+	", $by_name ? "codename" : "");
 	$v["teacher"] = [];
 	foreach ($teacher as $t)
 	{
@@ -65,6 +98,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
 	    $v["activity"] = db_select_all("
               activity.id as id,
               activity.id as id_activity,
+              activity.is_template as is_template,
               activity_cycle.id as id_activity_cycle,
               activity.codename as codename,
               activity.emergence_date as emergence_date,
@@ -74,21 +108,9 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               LEFT JOIN activity ON activity_cycle.id_activity = activity.id
               LEFT JOIN activity as template ON activity.id_template = template.id
               WHERE activity_cycle.id_cycle = ".$v["id"]."
-                AND activity.deleted = 0
-                AND activity.parent_activity = -1
-                AND activity.is_template = 0
+                AND activity.deleted IS NULL
+                AND activity.disabled IS NULL
 	      ");
-	    /*
-	    foreach ($v["activity"] as &$act)
-	    {
-		$act["user"] = db_select_all("
-                  user.codename as codename FROM team
-                  LEFT JOIN user_team ON team.id = user_team.id_team
-                  LEFT JOIN user ON user_team.id_user = user.id
-                  WHERE team.id_activity = {$act["id"]}
-	      ");
-	    }
-	    */
 	}
     }
     if ($id != -1 && 0)

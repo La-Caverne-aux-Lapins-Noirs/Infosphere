@@ -6,44 +6,36 @@ function check_session_field(&$fields)
 
     $fields = convert_date($fields);
 
-    if (isset($fields["activity"]))
+    if (@$fields["activity"])
     {
 	if (($id = resolve_codename("activity", $fields["activity"]))->is_error())
 	    return ($id);
 	$tfields["id_activity"] = $id->value;
     }
-    else
-	$tfields["id_activity"] = -1;
 
-    if (isset($fields["laboratory"]))
+    if (@$fields["laboratory"])
     {
 	if (($id = resolve_codename("laboratory", $fields["laboratory"]))->is_error())
 	    return ($id);
 	$tfields["id_laboratory"] = $id->value;
     }
-    else
-	$tfields["id_laboratory"] = -1;
 
-    if (isset($fields["team"]))
+    if (@$fields["team"])
     {
 	if (($id = resolve_codename("team", $fields["team"]))->is_error())
 	    return ($id);
 	$tfields["id_team"] = $id->value;
     }
-    else
-	$tfields["id_team"] = -1;
 
-    if (isset($fields["user"]))
+    if (@$fields["user"])
     {
 	if (($id = resolve_codename("user", $fields["user"]))->is_error())
 	    return ($id);
 	$tfields["id_user"] = $id->value;
     }
-    else
-	$tfields["id_user"] = -1;
 
-    default_int_val($tfields, $fields, "maximum_subscription", -1);
-
+    default_val($tfields, $fields, "maximum_subscription");
+    
     if (strlen(@$fields["begin_date"]) && strlen(@$fields["end_date"]))
     {
 	if (date_to_timestamp($fields["begin_date"]) > date_to_timestamp($fields["end_date"]))
@@ -52,11 +44,6 @@ function check_session_field(&$fields)
 	    return (new ErrorResponse("InvalidDate"));
 	foreach (["begin_date", "end_date"] as $label)
 	    $tfields[$label] = db_form_date($fields[$label]);
-    }
-    else
-    {
-	$tfields["begin_date"] = "NULL";
-	$tfields["end_date"] = "NULL";
     }
     return (new ValueResponse($tfields));
 }

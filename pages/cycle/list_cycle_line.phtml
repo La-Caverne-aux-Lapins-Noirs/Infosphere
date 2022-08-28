@@ -13,10 +13,26 @@
 <td <?=clickable($URL); ?>><?=count($content["activity"]); ?></td>
 <?php if (!is_admin()) { ?>
     <td>
+	<h5><?=$Dictionnary["Teacher"]; ?></h5>
 	<?php foreach ($content["teacher"] as $teacher) { ?>
 	    <?php $dest = $teacher["codename"][0] != "#" ? "Profile" : "Laboratories"; ?>
 	    <a href="index.php?p=<?=$dest; ?>Menu&amp;a=<?=$teacher["id"]; ?>">
 		<?=$teacher["codename"]; ?>
+	    </a>
+	<?php } ?>
+	<?php if ($page == "cursus") { ?>
+	    <?php if (count($content["instance"])) { ?>
+		<h5><?=$Dictionnary["CycleInstances"]; ?></h5>
+		<?php foreach ($content["instance"] as $instance) { ?>
+		    <a href="index.php?p=CycleMenu&amp;a=<?=$instance["id"]; ?>">
+			<?=$instance["codename"]; ?>
+		    </a>
+		<?php } ?>
+	    <?php } ?>
+	<?php } else if ($content["id_template"] != -1) { ?>
+	    <h5><?=$Dictionnary["Template"]; ?></h5>
+	    <a href="index.php?p=CycleTemplateMenu&amp;a=<?=$content["id_template"]; ?>">
+		<?=$content["codename_template"]; ?>
 	    </a>
 	<?php } ?>
     </td>

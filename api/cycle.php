@@ -34,7 +34,11 @@ $Tab = [
 	],
 	"activity" => [
 	    "is_director_for_cycle",
-	    "AddMatter",
+	    "SetMatter",
+	],
+	"school" => [
+	    "is_director_for_cycle",
+	    "SetSchool",
 	],
     ],
     "DELETE" => [
@@ -48,7 +52,7 @@ $Tab = [
 	],	
 	"activity" => [
 	    "is_director_for_cycle",
-	    "RemoveMatter",
+	    "SetMatter",
 	],
 	"teacher" => [
 	    "is_director_for_cycle",
@@ -57,6 +61,10 @@ $Tab = [
 	"laboratory" => [
 	    "is_director_for_cycle",
 	    "SetCycleTeacher",
-	]
+	],
+	"school" => [
+	    "is_director_for_cycle",
+	    "SetSchool",
+	],
     ],
 ];

@@ -3,10 +3,10 @@
 class FullSession
 {
     public $id;
-    public $id_activity = -1;
-    public $id_team = -1;
-    public $id_laboratory = -1;
-    public $id_user = -1;
+    public $id_activity = NULL;
+    public $id_team = NULL;
+    public $id_laboratory = NULL;
+    public $id_user = NULL;
     public $is_template = false;
     public $id_template = -1;
     public $template_link = true;
@@ -18,8 +18,8 @@ class FullSession
     public $end_minute = NULL;
     public $slot = [];
     public $room = [];
-    public $db_maximum_subscription = -1;
-    public $maximum_subscription = -1;
+    public $db_maximum_subscription = NULL;
+    public $maximum_subscription = NULL;
     public $room_space = -1;
     public $room_full = false;
     public $current_occupation = -1;
@@ -45,7 +45,7 @@ class FullSession
     {
 	$id = (int)$id;
 	$session = db_select_one("* FROM session WHERE id = $id");
-	if ($session["id_activity"] != -1)
+	if ($session["id_activity"])
 	{
 	    $this->id_activity = $session["id_activity"];
 	    ($activity = new FullActivity)->build($session["id_activity"]);
@@ -93,7 +93,7 @@ class FullSession
 	}
 	if ($this->room_space != -1)
 	{
-	    if ($this->maximum_subscription == -1 || $this->maximum_subscription > $this->room_space)
+	    if ($this->maximum_subscription == NULL || $this->maximum_subscription > $this->room_space)
 		$this->maximum_subscription = $this->room_space;
 	}
 

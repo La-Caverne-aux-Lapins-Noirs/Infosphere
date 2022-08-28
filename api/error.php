@@ -1,8 +1,20 @@
 <?php
 
-function bad_request()
+function bad_request($msg = "")
 {
+    global $Database;
+    global $Dictionnary;
+
     http_response_code(400);
+    if ($msg != "")
+    {
+	header("Content-Type: application/json");
+	echo json_encode([
+	    "result" => "ko",
+	    "msg" => strval(isset($Dictionnary[$msg]) ? $Dictionnary[$msg] : $msg),
+	    "content" => ""
+	], JSON_UNESCAPED_SLASHES);
+    }
     debug_packet();
     die();
 }

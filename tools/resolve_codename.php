@@ -45,7 +45,7 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
        SELECT $fetch_all FROM `$table` WHERE `$codename_column` = '$codename'
     ");
     if (($q = $q->fetch_assoc()) == false)
-	return (new ErrorResponse($NotFoundError, $codename));
+	return (new ErrorResponse($NotFoundError, $codename, $table));
     if ($fetch_all == "*")
 	return (new ValueResponse($q));
 

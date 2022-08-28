@@ -140,10 +140,110 @@ function SetUser($id, $data, $method, $output, $module)
     return (new ValueResponse([
 	"msg" => "Edited",
 	"content" => list_of_linksb([
-	    "hook_name" => "cycle",
+	    "hook_name" => $module,
 	    "hook_id" => $cycle["id"],
 	    "linked_name" => "user",
 	    "linked_elems" => $cycle["user"],
 	    "admin_func" => "is_director_for_cycle"
     ])]));
 }
+
+function SetMatter($id, $data, $method, $output, $module)
+{
+    if ($id == -1 || !isset($data["activity"]))
+	bad_request();
+    if (($act = resolve_codename("activity", $data["activity"], "codename", true))->is_error())
+	return ($act);
+    $act = $act->value;
+    // Templates dans templates, instances dans instances.
+    if ($act["is_template"] != ($module == "cursus"))
+	bad_request();
+    if (($ret = handle_links($data["activity"], $id, "activity", "cycle"))->is_error())
+	return ($ret);
+    $cycle = fetch_cycle($module, $id, true, false, true);
+    $cycle = $cycle[array_key_first($cycle)];
+    return (new ValueResponse([
+	"msg" => "Edited",
+	"content" => list_of_linksb([
+	    "hook_name" => $module,
+	    "hook_id" => $cycle["id"],
+	    "linked_name" => "activity",
+	    "linked_elems" => $cycle["activity"],
+	    "admin_func" => "is_director_for_cycle"
+    ])]));    
+}
+
+function SetSchool($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+}
+
+function InstantiateCycle($id, $data, $method, $output, $module)
+{
+    global $Database;
+    
+    if ($id == -1)
+	bad_request();
+    // On récupère la semaine d'instantiation
+    // Celle ci ne peut pas etre plus dans le passé qu'un trimestre.
+    $first_week = date_to_timestamp(@$data["first_week"]);
+    if ($first_week < now() - 60 * 60 * 24 * 7 * 15)
+	bad_request();
+    $first_week = db_form_date($first_week);
+    // Instancier le cycle, puis toutes les matieres contenues
+    $cycle = fetch_cycle($module, $id, true, false, true);
+    $cycle = $cycle[array_key_first($cycle)];
+    if (@strlen($data["instance_name"]) == 0)
+	$name = $cycle["codename"]."_".datex("d_m_Y", $first_week);
+    else
+	$name = $data["instance_name"];
+    if (($ret = add_cycle($name, $cycle["cycle"], $first_week, $cycle["id"]))->is_error())
+	return ($ret);
+    $ret = $ret->value;
+    // L'id du cycle créé
+    $id = $ret["id"];
+
+    // Sera un ErrorResponse au besoin.
+    $error_msg = NULL;
+
+    // Le cycle est maintenant crée. Il faut donc instantier le contenu du template.
+    $matter = [];
+    foreach ($cycle["activity"] as $acti)
+    {
+	($act = new FullActivity)->build($acti["id"]);
+	if (($error_msg = instantiate_template($act, $first_week))->is_error())
+	    goto Clear;
+	$matter[] = $activity = $error_msg->value;
+	if (($error_msg = handle_links($activity, $id, "activity", "cycle"))->is_error())
+	    goto Clear;
+    }
+    // A ce stade, les matières, les activités, les sessions, les rendez vous existent.
+    // Les dates sont résolues et les liens avec le cycle sont établis.
+    // Comme les fonctions établissant les autorités sur ces éléments exploitent le modèle
+    // pour dispatcher cette autorité, on a presque terminé: il faut transmettre les écoles
+    // pour transmettre l'autorité de la direction de cette école
+    foreach ($cycle["school"] as $school)
+	if (($error_msg = handle_links($school["id"], $id, "school", "cycle"))->is_error())
+	    goto Clear;
+    return (new ValueResponse([
+	"msg" => $Dictionnary["Done"]
+    ]));
+    
+Clear:
+    foreach ($matter as $matter_id)
+    {
+	foreach (db_select_all("id FROM activity WHERE id_parent  = $matter_id") as $act)
+	{
+	    foreach (db_select_all("id FROM session WHERE id_activity = ".$act["id"]) as $ses)
+		$Database->query("DELETE FROM appointment_slot WHERE id_session = ".$ses["id"]);
+	    $Database->query("DELETE FROM session WHERE id_activity = ".$act["id"]);
+	}
+	$Database->query("DELETE FROM activity WHERE id_parent = $matter_id");
+    }
+    $Database->query("DELETE FROM activity_cycle WHERE id_cycle = $id");
+    $Database->query("DELETE FROM school_cycle WHERE id_cycle = $id");
+    $Database->query("DELETE FROM cycle WHERE id = $id");
+    return ($error_msg);
+}
+

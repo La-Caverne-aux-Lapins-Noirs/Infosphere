@@ -160,6 +160,11 @@ function check_date($s)
 	$x = explode("-", $s);
 	if (count($x) != 3)
 	    return (false);
+	if (($TheT = strpos($x[2], "T")))
+	{
+	    $x[2] = substr($x[2], 0, $TheT);
+	    $s = substr($s, 0, strpos($s, "T"));
+	}
 	if (checkdate($x[1], $x[2], $x[0]) == false)
 	    return (false);
 	$format = "Y-m-d";
@@ -311,7 +316,7 @@ function weekday_to_timestamp($week, $day, $hour)
 	$day -= 1;
     else
 	$day = 0;
-    $hour = hour_to_timestamp($hour);
+    $hour = time_to_timestamp($hour);
     return (date_to_timestamp($date0)
 	+ $week * $one_week
 	+ $day * $one_day
@@ -408,7 +413,7 @@ function convert_date($post)
 
     if (!isset($post["subject_appeir_date"]))
 	$post["subject_appeir_date"] = @weekday_to_timestamp(
-	    $post["week_subject_date"], $post["day_subject_date"], $post["hour_subject_date"]
+	    $post["week_subject_appeir_date"], $post["day_subject_appeir_date"], $post["hour_subject_appeir_date"]
 	);
     if (!isset($post["pickup_date"]))
 	$post["pickup_date"] = @weekday_to_timestamp(
@@ -416,15 +421,15 @@ function convert_date($post)
 	);
     if (!isset($post["subject_disappeir_date"]))
 	$post["subject_disappeir_date"] = @weekday_to_timestamp(
-	    $post["week_subject_remove_date"], $post["day_subject_remove_date"], $post["hour_subject_remove_date"]
+	    $post["week_subject_disappeir_date"], $post["day_subject_disappeir_date"], $post["hour_subject_disappeir_date"]
 	);
-    if (!isset($post["begin_date"]))
+    if (!@strlen($post["begin_date"]))
 	$post["begin_date"] = @weekday_to_timestamp(
-	    $post["week_begin_date"], $post["day_begin_date"], $post["hour_begin_date"]
+	    $post["week_session_date"], $post["day_session_date"], $post["hour_begin_date"]
 	);
-    if (!isset($post["end_date"]))
+    if (!@strlen($post["end_date"]))
 	$post["end_date"] = @weekday_to_timestamp(
-	    $post["week_begin_date"], $post["day_begin_date"], $post["hour_end_date"]
+	    $post["week_session_date"], $post["day_session_date"], $post["hour_end_date"]
 	);
     return ($post);
 }
@@ -458,3 +463,24 @@ function handle_french($body)
     $body = str_replace("ç", "&ccedil;", $body);
     return ($body);
 }
+
+function array_to_object($arr)
+{
+    if (is_object($arr))
+	return ($arr);
+    $obj = new StdClass;
+    foreach ($arr as $k => &$v)
+	$obj->$k = &$v;
+    return ($obj);
+}
+
+function object_to_array($obj)
+{
+    if (is_array($obj))
+	return ($obj);
+    $arr = [];
+    foreach ($obj as $k => &$v)
+	$arr[$k] = &$v;
+    return ($arr);
+}
+

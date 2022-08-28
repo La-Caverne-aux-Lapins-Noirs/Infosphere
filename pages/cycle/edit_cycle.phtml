@@ -12,6 +12,30 @@
 	    "linked_elems" => $content["teacher"],
 	    "admin_func" => "is_director_for_cycle"
 	]); ?>
+	<?php if ($page == "cycle") { ?>
+	    <?php list_of_links([
+		"hook_name" => "cycle",
+		"hook_id" => $content["id"],
+		"linked_name" => "school",
+		"linked_elems" => $content["school"],
+		"admin_func" => "is_director_for_cycle"
+	    ]); ?>
+	<?php } ?>
+	<?php if ($page == "cursus") { ?>
+	    <?php if (count($content["instance"])) { ?>
+		<h5><?=$Dictionnary["CycleInstances"]; ?></h5>
+		<?php foreach ($content["instance"] as $instance) { ?>
+		    <a href="index.php?p=CycleMenu&amp;a=<?=$instance["id"]; ?>">
+			<?=$instance["codename"]; ?>
+		    </a>
+		<?php } ?>
+	    <?php } ?>
+	<?php } else if ($content["id_template"] != -1) { ?>
+	    <h5><?=$Dictionnary["Template"]; ?></h5>
+	    <a href="index.php?p=CycleTemplateMenu&amp;a=<?=$content["id_template"]; ?>">
+		<?=$content["codename_template"]; ?>
+	    </a>
+	<?php } ?>
     </td><td>
 
 	<?php $js = "silent_submit(this);" ?>

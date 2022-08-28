@@ -160,6 +160,20 @@ function SetActivityLink($id, $data, $method, $output, $module)
     
     if ($id == -1)
 	bad_request();
+    if (isset($data["cycle"]))
+    {
+	// On vérifie que c'est bien un template avec lequel on va s'accrocher
+	if (!is_director_for_cycle($data["cycle"]))
+	    forbidden();
+	if (($cyc = resolve_codename("cycle", $data["cycle"], "codename", true))->is_error())
+	    return ($cyc);
+	$cyc = $cyc->value;
+	if (($act = resolve_codename("activity", $id, "codename", true))->is_error())
+	    return ($act);
+	$act = $act->value;
+	if ($cyc["is_template"] != $act["is_template"])
+	    bad_request("CannotMixInstancesAndTemplates");
+    }
     $links = [
 	"cycle" => [
 	    "table" => "cycle",

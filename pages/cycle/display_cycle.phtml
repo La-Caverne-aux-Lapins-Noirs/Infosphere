@@ -3,17 +3,24 @@
     <td class="click_list">
 	<?php
 	$users = db_select_all("
-	  id, codename
+	  user.id, user.codename
           FROM user
+          LEFT JOIN user_school ON user.id = user_school.id_user
+          LEFT JOIN school_cycle ON school_cycle.id_school = user_school.id_school
           WHERE deleted IS NULL
+          AND school_cycle.id_cycle = {$cycle["id"]}
           ORDER BY codename ASC
-        ");
-	foreach ($users as $usr) { ?>
-	    <div onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$cycle["id"]; ?>_name');">
-		<div <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-		<?=display_avatar($usr, 50); ?>
-		<p><?=$usr["codename"]; ?></p>
-	    </div>
+          ");
+	if (count($users)) { ?>
+	    <?php foreach ($users as $usr) { ?>
+		<div onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$cycle["id"]; ?>_name');">
+		    <div <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
+		    <?=display_avatar($usr, 50); ?>
+		    <p><?=$usr["codename"]; ?></p>
+		</div>
+	    <?php } ?>
+	<?php } else { ?>
+	    <?=$Dictionnary["Empty"]; ?>
 	<?php } ?>
     </td>
 
@@ -34,28 +41,33 @@
     $not_too_old = "";
     if ($page == "cycle")
 	$not_too_old = "
-          AND done_date > '".$cycle["first_day"]."'
+          AND (done_date IS NULL OR done_date > '".$cycle["first_day"]."')
 	  ";
     $acts = db_select_all("
        id, codename, {$Language}_name as name
        FROM activity
        WHERE is_template = ".($page == "cursus" ? 1 : 0)."
+       AND parent_activity = -1
        AND deleted IS NULL $not_too_old
        ");
-    foreach ($acts as $act) { ?>
-	<div onclick="add_to_listfield('<?=$usr["codename"]; ?>', 'activity<?=$cycle["id"]; ?>_name');">
-	    <div <?=clickable("index.php?p=$link&amp;a={$act["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-	    <p><?=$act["codename"]; ?> <?=$act["name"]; ?></p>
-	</div>
+    if (count($acts)) { ?>
+	<?php foreach ($acts as $act) { ?>
+	    <div onclick="add_to_listfield(this, '<?=$act["codename"]; ?>', 'activity<?=$cycle["id"]; ?>_name');">
+		<div <?=clickable("index.php?p=$link&amp;a={$act["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
+		<p><?=$act["codename"]; ?> <?=$act["name"]; ?></p>
+	    </div>
+	<?php } ?>
+    <?php } else { ?>
+	<?=$Dictionnary["Empty"]; ?>
     <?php } ?>
 </td>
 
 <td>
     <?php list_of_links([
-	"hook_name" => "cycle",
+	"hook_name" => $page,
 	"hook_id" => $cycle["id"],
 	"linked_name" => "activity",
-	"linked_elems" => $cycle["user"],
+	"linked_elems" => $cycle["activity"],
 	"admin_func" => "is_director_for_cycle",
     ]); ?>
 </td>

@@ -1,0 +1,4 @@
+- On peut actuellement lier activité et cycle de deux manière: en passant
+par /api/template (et /api/module ou je sais plus quoi) et en passant par /api/cycle
+La manière par /api/cycle est plus simple donc meilleure. Il faut donc aiguiller
+le formulaire de la page activité vers l'api cycle.
