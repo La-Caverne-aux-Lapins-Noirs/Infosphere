@@ -3,23 +3,25 @@
 function forge_language_fields($field, $attr = false, $merge = false, $table = "")
 {
     global $LanguageList;
+    global $Language;
 
     if (!is_array($field))
 	$field = [$field];
 
     $out = [];
-    foreach ($LanguageList as $k => $v)
+    foreach ($field as $f)
     {
-	foreach ($field as $f)
+	foreach ($LanguageList as $k => $v)
 	{
 	    $str = "";
 	    if ($table != "")
 		$str = $table.".";
 	    $str .= $k."_".$f;
 	    if ($attr)
-		$str .= " as $f ";
+		$str .= " as {$k}_$f ";
 	    $out[] = $str;
 	}
+	$out[] = $Language."_".$f." as ".$f;
     }
     if ($merge)
 	return (implode(",", $out));

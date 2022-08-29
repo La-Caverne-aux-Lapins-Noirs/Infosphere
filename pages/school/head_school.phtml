@@ -1,0 +1,16 @@
+<tr>
+    <th class="tiny_column">#</th>
+    <th style="width: 150px;"><?=$Dictionnary["Icon"]; ?></th>
+    <th class="wide_column"><?=$Dictionnary["CodeName"]; ?></th>
+    <th class="wide_column"><?=$Dictionnary["Name"]; ?></th>
+    <?php if (!is_admin()) { ?>
+	<th class="small_column">
+	    <?=$Dictionnary["Director"]; ?>
+	</th>
+    <?php } else { ?>
+	<th class="edit_column">
+	    <img src="./res/cog.png" />
+	</th>
+    <?php } ?>
+</tr>
+

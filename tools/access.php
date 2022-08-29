@@ -145,7 +145,7 @@ function is_director_for_activity($id)
     return ($activity->is_director);
 }
 
-function is_director($id)
+function is_director_for_school($id)
 {
     global $User;
 
@@ -154,6 +154,23 @@ function is_director($id)
     $id = $id == -1 ? "" : " AND id_school = $id ";
     $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 1 $id");
     return ($match != NULL);
+}
+
+function is_director($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    return (db_select_one("
+        cycle_teacher.id
+        FROM cycle_teacher
+        WHERE cycle_teacher.id_user = {$User["id"]}
+	LEFT JOIN user_laboratory
+          ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
+	WHERE cycle_teacher.id_user = {$User["id"]}
+	OR user_laboratory.id_user = {$User["id"]}
+	"));
 }
 
 function is_me_or_admin($id)

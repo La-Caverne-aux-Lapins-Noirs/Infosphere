@@ -16,6 +16,7 @@ function DisplayCycles($id, $data, $method, $output, $module)
 function AddCycle($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $User;
 
     if ($id != -1 || !isset($data["cycles"]))
 	bad_request();
@@ -32,11 +33,13 @@ function AddCycle($id, $data, $method, $output, $module)
 	    if ($module != "cycle")
 		bad_request();
 	}
-	if (($ret = add_cycle($cycle["name"], $cycle["year"], $fweek))->is_error())
+	if (($ret = add_cycle($cycle["name"], $cycle["year"], $cycle, $fweek))->is_error())
 	    return ($ret);
 	if (!is_admin())
 	{
 	    // M'ajouter comme directeur.
+	    if (($ret = handle_links($User["id"], $cycle["id"], "user", "cycle"))->is_error())
+		return ($ret);
 	}
 	$subs[] = $cycle["name"];
 	$cnt += 1;
@@ -155,8 +158,14 @@ function SetMatter($id, $data, $method, $output, $module)
     if (($act = resolve_codename("activity", $data["activity"], "codename", true))->is_error())
 	return ($act);
     $act = $act->value;
+
     // Templates dans templates, instances dans instances.
-    if ($act["is_template"] != ($module == "cursus"))
+    if (isset($act[0]))
+    {
+	if ($act[0]["is_template"] != ($module == "cursus"))
+	    bad_request();
+    }
+    else if ($act["is_template"] != ($module == "cursus"))
 	bad_request();
     if (($ret = handle_links($data["activity"], $id, "activity", "cycle"))->is_error())
 	return ($ret);

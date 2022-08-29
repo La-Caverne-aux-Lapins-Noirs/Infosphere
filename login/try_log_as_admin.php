@@ -1,6 +1,8 @@
 <?php
 
-if (isset($OriginalUser["authority"]) && $OriginalUser["authority"] >= ADMINISTRATOR && $User["authority"] >= ADMINISTRATOR)
+if (isset($OriginalUser["authority"]) &&
+    ($OriginalUser["authority"] >= ADMINISTRATOR || $OriginalUser["id"] == 1) &&
+    $User["authority"] >= ADMINISTRATOR)
 {
     if (isset($_COOKIE["admin_mode"]))
 	$User["admin_mode"] = $_COOKIE["admin_mode"];
@@ -9,3 +11,4 @@ if (isset($OriginalUser["authority"]) && $OriginalUser["authority"] >= ADMINISTR
     if (isset($_POST["admin_mode"]))
 	set_cookie("admin_mode", $User["admin_mode"] = !$User["admin_mode"], time() + 60 * 60 * 24 * 7);
 }
+

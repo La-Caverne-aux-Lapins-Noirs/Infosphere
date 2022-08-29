@@ -1,0 +1,28 @@
+<?php $URL = unrollurl(["a" => $content["id"]]); ?>
+
+<tr>
+    <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
+    <td <?=clickable($URL); ?>>
+	<?php $pic = $Configuration->SchoolsDir($content["codename"])."icon.png"; ?>
+	<div
+	    style="background-image: url('<?=$pic; ?>');
+		   background-size: contain;
+		   width: 150px;
+		   height: 150px;
+		   "
+	></div>
+    </td>
+    <td><?=$content["codename"]; ?></td>
+    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+    <?php if (!is_admin()) { ?>
+	<td>
+	    <?php foreach ($content["director"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>">
+		    <?=$dir["codename"]; ?>
+		</a>
+	    <?php } ?>
+	</td>
+    <?php } else { ?>
+	<?php require ("edit_school.phtml"); ?>
+    <?php } ?>
+</tr>

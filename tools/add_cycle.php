@@ -1,9 +1,7 @@
 <?php
 
-function add_cycle($codename, $year, $first_week = NULL, $id_template = NULL)
+function add_cycle($codename, $year, $lng, $first_week = NULL, $id_template = NULL)
 {
-    global $Database;
-
     if (!isset($year))
 	return (new ErrorResponse("InvalidCycleNumber"));
     // 5 ans de scolarité + Les modules anciens élèves
@@ -19,6 +17,6 @@ function add_cycle($codename, $year, $first_week = NULL, $id_template = NULL)
 	"is_template" => $first_week === NULL || $id_template === NULL ? 1 : 0,
 	"id_template" => $id_template
     ];
-    return (@try_insert("cycle", $codename, $fields));
+    return (@try_insert("cycle", $codename, $fields, "", "", ["name"], $lng));
 }
 

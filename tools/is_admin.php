@@ -18,7 +18,7 @@ function is_admin($usr = NULL)
 	else
 	    $usr["admin_mode"] = false;
     }
-    if ($usr["authority"] != ADMINISTRATOR)
+    if ($usr["authority"] != ADMINISTRATOR && $usr["id"] != 1)
 	return (false);
     if (!isset($usr["admin_mode"]))
 	return (false);

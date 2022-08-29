@@ -6,7 +6,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
     global $one_week;
 
     if (($years = fetch_data(
-	"cycle", $id, [], "codename", $by_name, true, true, ["is_template" => $type == "cursus"], [
+	"cycle", $id, ["name"], "codename", $by_name, true, true, ["is_template" => $type == "cursus"], [
 	    // En SQL, l'index 0 est l'index 1... WTF.
 	    "cycle.done ASC, SUBSTRING(cycle.codename, 1, 4) ASC, cycle.cycle ASC"
 	    // "SUBSTRING(cycle.codename, 1, 8) ASC, cycle.cycle ASC"
@@ -58,7 +58,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
             school.{$Language}_name as name
             FROM school_cycle
             LEFT JOIN school ON school_cycle.id_school = school.id
-            WHERE school_cycle.id_cycle = $id
+            WHERE school_cycle.id_cycle = ".$v["id"]."
             AND deleted IS NULL
 	", $by_name ? "codename" : "");
 	$v["teacher"] = [];

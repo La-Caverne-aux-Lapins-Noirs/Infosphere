@@ -10,6 +10,7 @@ if ($BaseDir == "")
     function debug_response() {}
 }
 
+require_once ("new_directory.php");
 require_once ("get_dir.php");
 require_once ("ext/parsedown.php");
 require_once ("access.php");
@@ -98,6 +99,7 @@ require_once ("fetch_activity_cycle.php"); // A retirer
 require_once ("fetch_activity_skill.php"); // A retirer
 require_once ("fetch_link.php");
 require_once ("fetch_session.php");
+require_once ("fetch_school.php");
 require_once ("fetch_cycle_activity.php");
 require_once ("fetch_teacher.php");
 require_once ("fetch_activity_medal.php");
@@ -142,7 +144,6 @@ require_once ("is_cycle_hidden.php");
 require_once ("get_client_ip.php");
 require_once ("is_day_off.php");
 require_once ("pick_up_work.php");
-require_once ("new_directory.php");
 require_once ("student_log.php");
 require_once ("set_cookie.php");
 require_once ("sort_by_medal_grade.php");
@@ -155,5 +156,6 @@ require_once ("get_icon.php");
 require_once ("print_icon.php");
 require_once ("print_medal_icon.php");
 require_once ("add_cycle.php");
+require_once ("add_school.php");
 // @codeCoverageIgnoreEnd
 

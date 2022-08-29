@@ -1,0 +1,72 @@
+<td class="click_list">
+    <?php
+    // On sélectionne seulement ceux qui ne sont pas la
+    $users = db_select_all("
+	  user.id, user.codename
+          FROM user
+          LEFT JOIN user_school
+            ON user.id = user_school.id_user
+            AND user_school.authority = 0
+            AND user_school.id_school = {$school["id"]}
+          WHERE deleted IS NULL
+          AND user_school.id IS NULL
+          ORDER BY codename ASC
+          ");
+    if (count($users)) { ?>
+	<?php foreach ($users as $usr) { ?>
+	    <div class="userclicklist" onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$school["id"]; ?>_name');">
+		<div <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
+		<?=display_avatar($usr, 50); ?>
+		<p><?=$usr["codename"]; ?></p>
+	    </div>
+	<?php } ?>
+    <?php } else { ?>
+	<?=$Dictionnary["Empty"]; ?>
+    <?php } ?>
+</td>
+
+<td>
+    <?php list_of_links([
+	"hook_name" => "school",
+	"hook_id" => $school["id"],
+	"linked_name" => "user",
+	"linked_elems" => $school["user"],
+	"admin_func" => "is_director_for_school",
+    ]); ?>
+</td>
+
+<td class="click_list">
+    <?php
+    $cycs = db_select_all("
+       cycle.id, codename, {$Language}_name as name
+       FROM cycle
+       LEFT JOIN school_cycle
+         ON cycle.id = school_cycle.id_cycle
+         AND school_cycle.id_school = {$school["id"]}
+       WHERE is_template = 0
+	AND deleted IS NULL
+	AND first_day > '".db_form_date(now() - 60 * 60 * 24 * 7 * 16)."'
+        AND school_cycle.id IS NULL
+        AND done IS NULL
+       ");
+    if (count($cycs)) { ?>
+	<?php foreach ($cycs as $cyc) { ?>
+	    <div onclick="add_to_listfield(this, '<?=$cyc["codename"]; ?>', 'cycle<?=$school["id"]; ?>_name');">
+		<div <?=clickable("index.php?p=CycleMenu&amp;a={$cyc["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
+		<p><?=$cyc["codename"]; ?> <?=$cyc["name"]; ?></p>
+	    </div>
+	<?php } ?>
+    <?php } else { ?>
+	<?=$Dictionnary["Empty"]; ?>
+    <?php } ?>
+</td>
+
+<td>
+    <?php list_of_links([
+	"hook_name" => "school",
+	"hook_id" => $school["id"],
+	"linked_name" => "cycle",
+	"linked_elems" => $school["cycle"],
+	"admin_func" => "is_director_for_school",
+    ]); ?>
+</td>

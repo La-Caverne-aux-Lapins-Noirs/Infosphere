@@ -1,7 +1,10 @@
 <?php $URL = unrollurl(["a" => $content["id"]]); ?>
 
 <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
-<td><?=$content["codename"]; ?></td>
+<td>
+    <b><?=$content["codename"]; ?></b><br />
+    <?=@$content["name"]; ?>
+</td>
 <?php if ($content["is_template"] == 0) { ?>
     <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["first_day"]); ?></td>
     <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["last_day"]); ?></td>

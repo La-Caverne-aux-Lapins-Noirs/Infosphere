@@ -63,7 +63,6 @@ function try_insert(
     }
 
     $icon_file = "";
-    $icon_insert = "";
     if ($icon == "" && $icon_dir != "")
     {
 	$icon_file = ""; // $icon_dir."/".$codename."/icon.png";
@@ -73,9 +72,19 @@ function try_insert(
     {
 	$icon_file = $icon_dir."/".$codename."/icon.png";
 	new_directory($icon_file);
-	if (($msg = upload_png($icon, $icon_file, [100, 100], MINIMUM_PICTURE_SIZE))->is_error())
-	    return ($msg); // @codeCoverageIgnore
-	$icon_insert = ", '$icon_file'";
+	if (file_exists($icon))
+	{
+	    // Si le fichier existe: c'est certainement un upload via POST.
+	    if (($msg = upload_png($icon, $icon_file, [100, 100], MINIMUM_PICTURE_SIZE))->is_error())
+		return ($msg); // @codeCoverageIgnore
+	}
+	else
+	{
+	    // Si le fichier n'existe pas: c'est un upload via AJAX, avec le fichier b64.
+	    $icon = base64_decode($icon[0]["content"]);
+	    if (file_put_contents($icon_file, $icon) === false)
+		return (new ErrorResponse("CannotWritePngFile"));
+	}
     }
     $forge = "
       INSERT INTO `$table` ($codename_column $trusted_label {$ret["Labels"]})

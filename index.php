@@ -104,19 +104,22 @@ $TopMenu["SearchMenu"] = "./pages/search/";
 $BottomMenu = [
     "UsersMenu" => "./pages/user/",
     "LaboratoryMenu" => "./pages/laboratory/",
-    "AdminRoomsMenu" => "./pages/rooms/admin/",
     "MedalsMenu" => "./pages/medals/",
     "FunctionMenu" => "./pages/functions/",
-    "ActivityTemplatesMenu" => "./pages/activity/",
-    "InstancesMenu" => "./pages/activity/",
+
     "CycleTemplateMenu" => "./pages/cycle/",
-    "CycleMenu" => "./pages/cycle/",
+    "ActivityTemplatesMenu" => "./pages/activity/",
     "AdminClassMenu" => "./pages/class/admin/",
+    "ScaleMenu" => "./pages/scale/",
+    
+    "SchoolMenu" => "./pages/school/",
+    "InstancesMenu" => "./pages/activity/",
+    "CycleMenu" => "./pages/cycle/",
     // "RobotMenu" => "./pages/robot/",
     // "ExercisesMenu" => "./pages/exercises/",
-    "ScaleMenu" => "./pages/scale/",
+    
+    "AdminRoomsMenu" => "./pages/rooms/admin/",
     "ConfigMenu" => "./pages/configuration/",
-    "SchoolMenu" => "./pages/school/",
     "TestMenu" => "./pages/test/",
 ];
 

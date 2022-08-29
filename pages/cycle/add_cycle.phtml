@@ -6,6 +6,8 @@
 	placeholder="<?=$Dictionnary["PromotionName"]; ?>"
     /><br />
     <br />
+
+    <?php forge_language_formular(["name" => "text"], $_POST); ?>
     
     <?=$Dictionnary["CycleNumber"]; ?><br />
     <select name="year">

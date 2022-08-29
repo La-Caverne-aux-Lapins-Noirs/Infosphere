@@ -1,0 +1,13 @@
+<table class="content_table">
+    <?php require ("head_school.phtml"); ?>
+    <?php if (count($school = fetch_school()) == 0) { ?>
+	<tr><td colspan="4"><?=$Dictionnary["NoSchool"]; ?></td></tr>
+    <?php } else { ?>
+	<?php $cnt = 0; ?>
+	<?php foreach ($school as $content) { ?>
+	    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+		<?php require ("list_school_line.phtml"); ?>
+	    </tr>
+	<?php }?>
+    <?php } ?>
+</table>

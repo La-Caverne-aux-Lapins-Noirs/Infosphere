@@ -1,14 +1,19 @@
-
 <?php if ($page == "cycle") { ?>
     <td class="click_list">
 	<?php
 	$users = db_select_all("
 	  user.id, user.codename
           FROM user
-          LEFT JOIN user_school ON user.id = user_school.id_user
-          LEFT JOIN school_cycle ON school_cycle.id_school = user_school.id_school
+          LEFT JOIN user_school
+            ON user.id = user_school.id_user
+          LEFT JOIN school_cycle
+            ON school_cycle.id_school = user_school.id_school
+            AND school_cycle.id_cycle = {$cycle["id"]}
+          LEFT JOIN user_cycle
+            ON user_cycle.id_user = user.id
           WHERE deleted IS NULL
-          AND school_cycle.id_cycle = {$cycle["id"]}
+          AND user_cycle.id IS NULL
+          AND user_school.authority = 0
           ORDER BY codename ASC
           ");
 	if (count($users)) { ?>
@@ -44,10 +49,14 @@
           AND (done_date IS NULL OR done_date > '".$cycle["first_day"]."')
 	  ";
     $acts = db_select_all("
-       id, codename, {$Language}_name as name
+       activity.id, codename, {$Language}_name as name
        FROM activity
+       LEFT JOIN activity_cycle
+         ON activity.id = activity_cycle.id_activity
+         AND activity_cycle.id_cycle = ".$cycle["id"]."
        WHERE is_template = ".($page == "cursus" ? 1 : 0)."
        AND parent_activity = -1
+       AND activity_cycle.id IS NULL
        AND deleted IS NULL $not_too_old
        ");
     if (count($acts)) { ?>

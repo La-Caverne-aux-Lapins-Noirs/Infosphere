@@ -1,0 +1,26 @@
+<h2><?=$Dictionnary["AddASchool"]; ?></h2><br />
+<form onsubmit="return false;" method="POST" action="/api/school" style="text-align: center;">
+
+    <input
+	type="text"
+	name="codename"
+	placeholder="<?=$Dictionnary["CodeName"]; ?>"
+    /><br />
+    <br />
+
+    <label for="icon"><?=$Dictionnary["SchoolLogo"]; ?></label>
+    <input
+	type="file"
+	name="icon"
+	placeholder="<?=$Dictionnary["SchoolLogo"]; ?>"
+    /><br />
+    <br />
+
+    <?php forge_language_formular(["name" => "text"], $_POST); ?>
+
+    <input
+	type="button"
+	onclick="silent_submitf(this.parentNode, {tofill: 'schoollist', toclear: 'schoollist', wrapper: 'schools', clear_form: true});"
+	value="<?=$Dictionnary["AddASchool"]; ?>"
+    />
+</form>

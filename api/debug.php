@@ -28,8 +28,8 @@ function debug_response($data, $label = "")
 
     if ($label != "")
 	$label = "$label:\n\n";
-    $debug_log[] = htmlentities(PrintR($label, true).PrintR($data, true));
-    //$debug_log[] = PrintR($label, true).PrintR($data, true);
+    //$debug_log[] = htmlentities(PrintR($label, true).PrintR($data, true));
+    $debug_log[] = PrintR($label, true).PrintR($data, true);
 }
 
 function gtfo($msg = "")
