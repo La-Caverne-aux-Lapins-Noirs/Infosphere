@@ -39,11 +39,13 @@ $unique = $id != -1;
 <?php } else { ?>
 
     <?php if (is_admin()) { ?>
-	<table class="edit_console"><tr><td><div class="fullscreen scrollable" id="cyclelist">
+	<table class="edit_console"><tr><td>
     <?php }?>
-    <?php require ("list_cycle.phtml"); ?>
+    <div class="fullscreen scrollable" id="cyclelist">
+	<?php require ("list_cycle.phtml"); ?>
+    </div>
     <?php if (is_admin()) { ?>
-    </div></td><td class="formular_slot">
+    </td><td class="formular_slot">
         <?php require ("add_cycle.phtml"); ?>
     </td></tr></table>
 <?php } ?>

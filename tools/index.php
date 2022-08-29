@@ -95,6 +95,7 @@ require_once ("full_activity.php");
 require_once ("fulliframe.php");
 require_once ("fetch_rooms.php");
 require_once ("fetch_cycle.php");
+require_once ("fetch_medal.php");
 require_once ("fetch_activity_cycle.php"); // A retirer
 require_once ("fetch_activity_skill.php"); // A retirer
 require_once ("fetch_link.php");
@@ -157,5 +158,6 @@ require_once ("print_icon.php");
 require_once ("print_medal_icon.php");
 require_once ("add_cycle.php");
 require_once ("add_school.php");
+require_once ("all_configuration_files.php");
 // @codeCoverageIgnoreEnd
 

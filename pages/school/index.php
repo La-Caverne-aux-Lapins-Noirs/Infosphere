@@ -33,11 +33,13 @@ $unique = $id != -1;
 <?php } else { ?>
 
     <?php if (is_admin()) { ?>
-	<table class="edit_console"><tr><td><div class="fullscreen scrollable" id="schoollist">
+	<table class="edit_console"><tr><td>
     <?php }?>
-    <?php require ("list_school.phtml"); ?>
+    <div class="fullscreen scrollable" id="schoollist">
+	<?php require ("list_school.phtml"); ?>
+    </div>
     <?php if (is_admin()) { ?>
-	</div></td><td class="formular_slot">
+	</td><td class="formular_slot">
             <?php require ("add_school.phtml"); ?>
 	</td></tr></table>
     <?php } ?>

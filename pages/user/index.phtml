@@ -14,13 +14,15 @@
 </div>
 
 <?php if (is_admin()) { ?>
-  <table class="edit_console"><tr><td><div class="fullscreen scrollable" id="userlist">
+  <table class="edit_console"><tr><td>
 <?php }?>
 
-<?php foreach (fetch_users() as $user) require ("display_user.phtml"); ?>
+<div class="fullscreen scrollable" id="userlist">
+    <?php foreach (fetch_users() as $user) require ("display_user.phtml"); ?>
+</div>
 
 <?php if (is_admin()) { ?>
-    </div></td><td class="formular_slot">
+    </td><td class="formular_slot">
         <?php require ("add_user.phtml"); ?>
     </td></tr></table>
 <?php } ?>

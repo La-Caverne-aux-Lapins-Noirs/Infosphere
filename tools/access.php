@@ -19,7 +19,7 @@ function is_me($id)
     return ($User != NULL && $User["id"] == $id);
 }
 
-function is_teacher($id)
+function is_teacher($id = NULL)
 {
     global $User;
 

@@ -7,7 +7,12 @@
 ** $id : l'identifiant associé à l'objet contenant tous ces fichiers
 ** $type : la nature des fichiers parcourus
 ** $fbid : la base du nom de l'id du navigateur
- */
+*/
+if ($type !== NULL && $id !== NULL)
+    $api = "/api/$page/$id/$type";
+else
+    $api = "/api/$page";
+
 if (!@strlen($fbid))
     $fbid = "file_browser";
 $js = "silent_submit(this, '$fbid$language');";
@@ -16,7 +21,7 @@ $js = "silent_submit(this, '$fbid$language');";
     style="width: 100%;"
 	   method="put"
 	   onsubmit="return <?=$js; ?>"	
-	   action="/api/<?=$page; ?>/<?=$id; ?>/<?=$type; ?>"
+           action="<?=$api; ?>"
 >
     <input type="hidden" name="language" value="<?=$language; ?>" />
     <input

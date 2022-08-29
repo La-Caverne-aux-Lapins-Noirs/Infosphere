@@ -25,10 +25,10 @@
 	<input type="hidden" name="MAX_FILE_SIZE" value="<?=1024 * 200; ?>" />
 	<input
 	    type="file"
-		  name="icon"
-		  accept="image/png"
-		  placeholder="<?=$Dictionnary["Icon"]; ?>"
-		  value="<?=try_get($_POST, "icon"); ?>"
+	    name="icon"
+	    accept="image/png"
+	    placeholder="<?=$Dictionnary["Icon"]; ?>"
+	    value="<?=try_get($_POST, "icon"); ?>"
 	/><br />
 	<?php forge_language_formular(["name" => "text", "description" => "textarea"], $_POST); ?>
 	<br />

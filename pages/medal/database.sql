@@ -4,14 +4,13 @@ CREATE TABLE `medal` (
   `codename` varchar(255) NOT NULL,
   `deleted` datetime DEFAULT NULL,
 
-  `icon` varchar(255) DEFAULT NULL,
   `type` int(11) DEFAULT NULL,
   `tags` varchar(32) DEFAULT NULL,
 
   `fr_name` varchar(255) DEFAULT NULL,
   `fr_description` text DEFAULT NULL,
   `en_name` varchar(255) DEFAULT NULL,
-  `eb_description` text DEFAULT NULL
+  `en_description` text DEFAULT NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

@@ -138,6 +138,12 @@ table
     width: 100%;
 }
 
+.afullscreen
+{
+    height: calc(100% - 50px);
+    width: 100%;
+}
+
 .scrollable
 {
     overflow: auto;

@@ -104,8 +104,8 @@ $TopMenu["SearchMenu"] = "./pages/search/";
 $BottomMenu = [
     "UsersMenu" => "./pages/user/",
     "LaboratoryMenu" => "./pages/laboratory/",
-    "MedalsMenu" => "./pages/medals/",
-    "FunctionMenu" => "./pages/functions/",
+    "MedalsMenu" => "./pages/medal/",
+    "FunctionMenu" => "./pages/function/",
 
     "CycleTemplateMenu" => "./pages/cycle/",
     "ActivityTemplatesMenu" => "./pages/activity/",
