@@ -1,20 +1,26 @@
 <h1><?=$Dictionnary["Welcome"]; ?></h1>
 <br />
-<p>
-    <?php if (!@strlen($Configuration->Properties["welcome_note"])) { ?>
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	Le logiciel face à vous est un intranet scolaire qui vous servira dans la réalisation de vos travaux.
-	Celui-ci est encore en développement, et est mis à jour régulièrement.
-	Des nouvelles fonctionnalitées vont s'ajouter au fur et à mesure du temps et il est possible que vous rencontriez des problèmes.<br />
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	Nous nous efforcerons d'être le plus efficace possible et de transformer de système pour qu'il soit aussi parfait que possible,
-	et d'être à l'écoute de vos critiques, remarques et suggestions afin qu'il corresponde aux attentes légitimes de tous.<br />
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	N'hésitez pas à nous remonter en urgence tous les problèmes que vous rencontrerez à l'adresse suivante:
-    <?php } ?>
-    <a href="mailto:<?=$Configuration->Properties["mail_login"]; ?>">
-	<?=$Configuration->Properties["mail_login"]; ?>
-    </a>
+<br />
+<p style="text-align: center; width: 60%; margin-left: 20%;">
+    <?=$Dictionnary["TodayQuote"]; ?><br />
+    <?=famous_quote((int)(now() / 60 / 60 / 24)); ?>.
+</p>
+<br />
+<p style="width: 90%; margin-left: 5%;">
+    <span style="font-size: small;">
+	<?php if (!@strlen($Configuration->Properties["welcome_note"])) { ?>
+	    &nbsp;&nbsp;&nbsp;&nbsp;
+	    Le logiciel face à vous est un intranet scolaire qui vous servira dans la réalisation de vos travaux.
+	    Celui-ci est mis à jour régulièrement. Des nouvelles fonctionnalitées vont s'ajouter au fur et à mesure du temps et il est possible que vous rencontriez des problèmes.<br />
+	    &nbsp;&nbsp;&nbsp;&nbsp;
+	    Nous nous efforcerons d'être le plus efficace possible et de transformer de système pour qu'il soit aussi parfait que possible, et d'être à l'écoute de vos critiques, remarques et suggestions afin qu'il corresponde aux attentes légitimes de tous.<br />
+	    &nbsp;&nbsp;&nbsp;&nbsp;
+	    N'hésitez pas à nous remonter en urgence tous les problèmes que vous rencontrerez à l'adresse suivante:
+	<?php } ?>
+	<a href="mailto:<?=$Configuration->Properties["mail_login"]; ?>">
+	    <?=$Configuration->Properties["mail_login"]; ?>
+	</a>
+    </span>		
     <br />
     <br />
 </p>

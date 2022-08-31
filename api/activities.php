@@ -646,11 +646,26 @@ function AddRessource($id, $data, $method, $output, $module)
 
 function RemoveRessource($id, $data, $method, $output, $module)
 {
-    if (remove_activity_file($id, $data) == false)
+    if ($id == -1 || !isset($data["file"]))
+	bad_request();
+    if (!isset($data["language"]))
+	$data["language"] = "";
+
+    // On vérifie que le dossier est bien celui de l'activité demandé...
+    ($module = new FullActivity)->build($id);
+    $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"]);
+    $file = $data["file"];
+    if ($file[0] == "-")
+	$file = substr($file, 1);
+    $file = str_replace("@", "/", $file);
+    if (strncmp($normal_dir, $file, strlen($normal_dir)) != 0)
+	bad_request();
+
+    // Tout est bon, on envoi à la poubelle
+    if (remove_ressource_file("activity_ressource", $id, $file) == false)
 	bad_request();
     return (GetRessourceDir($id, $data, "GET", $output, $module, "RessourceDeleted"));
 }
-
     
 function GetMoodDir($id, $data, $method, $output, $module, $msg = "")
 {
@@ -744,7 +759,23 @@ function AddMood($id, $data, $method, $output, $module)
 
 function RemoveMood($id, $data, $method, $output, $module)
 {
-    if (remove_activity_file($id, $data) == false)
+    if ($id == -1 || !isset($data["file"]))
+	bad_request();
+    if (!isset($data["language"]))
+	$data["language"] = "";
+
+    // On vérifie que le dossier est bien celui de l'activité demandé...
+    ($module = new FullActivity)->build($id);
+    $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"]);
+    $file = $data["file"];
+    if ($file[0] == "-")
+	$file = substr($file, 1);
+    $file = str_replace("@", "/", $file);
+    if (strncmp($normal_dir, $file, strlen($normal_dir)) != 0)
+	bad_request();
+
+    // Tout est bon, on envoi à la poubelle
+    if (remove_ressource_file("activity_mood", $id, $file) == false)
 	bad_request();
     return (GetMoodDir($id, $data, "GET", $output, $module, "MoodDeleted"));
 }

@@ -8,6 +8,7 @@
 ** $type : la nature des fichiers parcourus
 ** $fbid : la base du nom de l'id du navigateur
 */
+$entries = [];
 ?>
 <?php if ($target !== NULL) { ?>
     <?php
@@ -18,7 +19,7 @@
 	<?php
 	if ($content == "." || $content == "index.php")
 	    continue ;
-	if ($content == ".." && $path == "/")
+	if ($content == ".." && ($path == "/" || $path == ""))
 	    continue ;
 	if (is_dir($target.$content))
 	    $directories[] = $target.$content;
@@ -26,21 +27,26 @@
 	    $files[] = $target.$content;
 	?>
     <?php } ?>
-    <?php foreach (array_merge($directories, $files) as $content) { ?>
+    <?php foreach (($entries = array_merge($directories, $files)) as $content) { ?>
 	<div
 	    class="icon <?=is_dir($content) ? "directory" : pathinfo($content, PATHINFO_EXTENSION); ?>"
-		   <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["jpg", "jpeg", "png", "gif", "bmp", "webp"])) { ?>
+	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["jpg", "jpeg", "png", "gif", "bmp", "webp"])) { ?>
 		style="background-image: url('<?=$content; ?>?<?=now(); ?>'); background-size: contain;"
-		   <?php } ?>
+	    <?php } ?>
 	    <?php if (is_dir($content)) { ?>
-		ondblclick="
-		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=$path.($path != "/" ? "/" : "").pathinfo($content, PATHINFO_BASENAME); ?>';
+	        ondblclick="
+		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=$written = ($path.($path != "/" ? "/" : "").pathinfo($content, PATHINFO_BASENAME)); ?>';
 		   silent_submit(document.getElementById('path<?=$fbid.$language; ?>'), '<?=$fbid.$language; ?>');
+		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=($writen = resolve_path($written)) == "" ? "/" : $written; ?>';
 		   "
 	    <?php } else { ?>
-	    ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
+	        ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
 	    <?php } ?>
 	>
+	    <?php if (in_array(($ext = pathinfo($content, PATHINFO_EXTENSION)), ["ttf", "woff2"])) { ?>
+		<div style="position: absolute; top: 0px; left: 0px; z-index: 1; font-family: fnt<?=md5(resolve_path($content)); ?>;">AaBbCc</div>
+	    <?php } ?>
+	    
 	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["wav", "mp3", "ogg"])) { ?>
 		<audio src="<?=$content; ?>?<?=now(); ?>" controls></audio>
 	    <?php } ?>
@@ -48,12 +54,29 @@
 		<video src="<?=$content; ?>?<?=now(); ?>" controls></video>
 	    <?php } ?>
 
-	    <form action="<?=$api; ?>/<?=str_replace("/", "@", $content); ?>" method="delete">
-		<input type="button" onclick="silent_submit(this, '<?=$fbid.$language; ?>');" value="&#10007;" />
-	    </form>
-	    <div class="filename"><?=pathinfo($content, PATHINFO_BASENAME); ?><?=is_dir($content) ? "/" : ""; ?></div>
+	    <?php if (pathinfo($content, PATHINFO_BASENAME) != "..") { ?>
+		<form action="<?=$api; ?>/<?=str_replace("/", "@", $content); ?>" method="delete" style="z-index: 3;">
+		    <?php $this_field = "path".$fbid.$language.pathinfo($content, PATHINFO_BASENAME); ?>
+		    <input type="hidden" name="path" id="<?=$this_field; ?>" value="" />
+		    <input type="button" onclick="
+                        document.getElementById('<?=$this_field; ?>').value = document.getElementById('path<?=$fbid.$language; ?>').value;
+			silent_submit(this, '<?=$fbid.$language; ?>');" value="&#10007;
+				 " />
+		</form>
+	    <?php } ?>
+	    <div class="filename" style="z-index: 2;"><?=pathinfo($content, PATHINFO_BASENAME); ?><?=is_dir($content) ? "/" : ""; ?></div>
 	</div>
     <?php } ?>
 <?php } ?>
 
+<?php foreach ($entries as $k => $in) { ?>
+    <?php if ($in[0] == ".") unset($entries[$k]); ?>
+<?php } ?>
+<?php if (count($entries) == 0) { ?>
+    <p style="text-align: center;">
+	<br />
+	<?=$Dictionnary["Empty"]; ?>
+	<br />
+    </p>
+<?php } else print_r($entries); ?>
 

@@ -29,7 +29,7 @@ $js = "silent_submit(this, '$fbid$language');";
 	class="path_browser"
 	type="text"
 	name="path"
-	value="<?=$path; ?>"
+	value="<?=$path == "" ? "/" : $path; ?>"
 	onchange="return <?=$js; ?>"
     />
 </form>
@@ -41,5 +41,5 @@ $js = "silent_submit(this, '$fbid$language');";
         <?php unset($file_browser_height); ?>
     <?php } ?>
 >
-<?php require ("file_browser.phtml"); ?>
+    <?php require ("file_browser.phtml"); ?>
 </div>

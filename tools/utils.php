@@ -8,6 +8,16 @@ function random_name()
     return (md5(microtime()));
 }
 
+function is_between($val, $min, $max)
+{
+    $val = (int)$val;
+    if ($val < $min)
+	return (false);
+    if ($val > $max)
+	return (false);
+    return (true);
+}
+
 function try_get($array, $key, $default = "", $id = NULL)
 {
     if (!isset($array))

@@ -473,6 +473,7 @@ $js = "silent_submit(this)";
 			    $language = $k;
 			    $target = @$module->ressource[$k][0];
 			    $path = preg_replace("/^\.\/dres\/activity\//", "", @$module->ressource[$k][0]);
+			    $path = preg_replace("/^dres\/activity\//", "", @$module->ressource[$k][0]);
 			    $path = preg_replace("/^[a-zA-Z0-9\-_]+\//", "", $path);
 			    if ($language != "NA")
 				$path = preg_replace("/^$k\//", "", $path);

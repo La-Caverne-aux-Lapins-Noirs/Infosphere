@@ -10,6 +10,7 @@
 	</select>
 	<input type="submit" value="<?=$Dictionnary["Impersonate"]; ?>" style="width: 49%;" />
     </form>
+    <br />
 <?php } ?>
 
 <?php if ($OriginalUser["codename"] != $User["codename"] && $ParentConnexion) { ?>
@@ -22,6 +23,7 @@
 	<input type="hidden" name="children" value="<?=$OriginalUser["codename"]; ?>" />
 	<input type="submit" value="X" />
     </form>
+    <br />
 <?php } ?>
 
 <?php if ($OriginalUser["authority"] >= ADMINISTRATOR) { ?>

@@ -5,6 +5,11 @@
 	<?php foreach (glob("./style/structure/*.css") as $css) { ?>
 	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
 	<?php } ?>
+
+	<?php if ($Position == "MedalsMenu") { ?>
+	    <link rel="stylesheet" type="text/css" href="./style/medals_font.php" />
+	<?php } ?>
+	
 	<?php if (isset($Configuration->Properties["style"])) { ?>
 	    <?php foreach (glob("./style/{$Configuration->Properties["style"]}/*.css") as $css) { ?>
 		<link rel="stylesheet" type="text/css" href="<?=$css; ?>" />

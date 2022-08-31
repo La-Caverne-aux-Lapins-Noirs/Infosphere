@@ -62,18 +62,24 @@
 		    <br />
 
 		    <?=$Dictionnary["ConfigurationBasedMedal"]; ?>
+		    <input type="text" name="specificator" placeholder="<?=$Dictionnary["Specificator"]; ?>" />
+		    <select name="shape">
+			<option value="1"><?=$Dictionnary["BandShape"]; ?></option>
+			<option value="0"><?=$Dictionnary["RoundShape"]; ?></option>
+		    </select><br />
 		    <select name="configuration">
+			<option value=""><?=$Dictionnary["NoConfiguration"]; ?></option>
 			<?php foreach (sort(all_configuration_files($Configuration->MedalsDir("_ressources"))) as $list) { ?>
 			    <option value="<?=$list; ?>"><?=$list; ?></option>
 			<?php } ?>
-		    </select>
-		    <input
-			type="file"
-			name="picture"
-			accept="image/png"
-			placeholder="<?=$Dictionnary["Icon"]; ?>"
-			value="<?=try_get($_POST, "icon"); ?>"
-		    /><br />
+		    </select><br />
+		    <?=$Dictionnary["ConfigurationBasedMedalIcon"]; ?>
+		    <select name="picture">
+			<option value=""><?=$Dictionnary["NoIcon"]; ?></option>
+			<?php foreach (sort(all_files($Configuration->MedalsDir("_ressources"), ["png"])) as $list) { ?>
+			    <option value="<?=$list; ?>"><?=$list; ?></option>
+			<?php } ?>
+		    </select><br />
 		    <br />
 
 		    <?php forge_language_formular([
@@ -98,14 +104,15 @@
 		<form
 		    method="post"
 		    onsubmit="return <?=$js; ?>;"
-		    action="/api/medal"
+		    action="/api/medal/-1/ressource"
 		>
 		    <label for="file"><?=$Dictionnary["PictureOrConfiguration"]; ?></label><br />
+		    <input id="path2" type="hidden" name="path" value="" />
 		    <input
 			type="file"
 			name="file"
 			multiple="true"
-			onchange="<?=$js; ?>"
+			onchange="document.getElementById('path2').value = document.getElementById('path<?=$fbid; ?>').value; <?=$js; ?>"
 		    />
 		</form>
 	    <?php } ?>
@@ -116,8 +123,8 @@
 		$file_browser_height = "calc(100% - 35px)";
 		$target = $Configuration->MedalsDir("_ressources");
 		$path = "/";
-		$type = NULL;
-		$id = NULL;
+		$type = "ressource";
+		$id = "-1";
 		require ("./tools/template/path_browser.phtml");
 		?>
 	    </div>
