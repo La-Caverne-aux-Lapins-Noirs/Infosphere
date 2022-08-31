@@ -1,0 +1,19 @@
+
+[BandMedal
+  RessourceFile = "medalfont.ttf"
+  BoxSize = 400, 100
+  GlyphSize = 50, 50
+  Color = 255, 255, 255
+  OutlineColor = 0, 0, 0
+  OutlineSize = 3
+  HorizontalAlign = "Middle"
+  VerticalAlign = "Middle"
+]
+
+[Medal
+  BorderColor = 0, 0, 0
+  BorderWidth = 0.15
+  InsideColor = 128, 128, 128
+  MiddleColor = 255, 255, 255
+]
+
