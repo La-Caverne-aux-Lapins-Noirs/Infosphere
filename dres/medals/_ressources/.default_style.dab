@@ -1,6 +1,6 @@
 
 [BandMedal
-  RessourceFile = "medalfont.ttf"
+  RessourceFile = @".default_font.ttf"
   BoxSize = 400, 100
   GlyphSize = 50, 50
   Color = 255, 255, 255

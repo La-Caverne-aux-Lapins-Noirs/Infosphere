@@ -21,6 +21,8 @@ $entries = [];
 	    continue ;
 	if ($content == ".." && ($path == "/" || $path == ""))
 	    continue ;
+	if ($content != ".." && $content[0] == ".")
+	    continue ;
 	if (is_dir($target.$content))
 	    $directories[] = $target.$content;
 	else
@@ -78,5 +80,5 @@ $entries = [];
 	<?=$Dictionnary["Empty"]; ?>
 	<br />
     </p>
-<?php } else print_r($entries); ?>
+<?php } ?>
 

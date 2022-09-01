@@ -18,7 +18,7 @@ function fetch_medal($id = -1)
     ");
     foreach ($out as &$v)
     {
-	$v["icon"] = $Configuration->MedalsDir($v["codename"]);
+	$v["icon"] = $Configuration->MedalsDir($v["codename"])."icon.png";
     }
     return ($id == "" ? $out : $out[0]);
 }

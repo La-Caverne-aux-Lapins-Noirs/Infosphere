@@ -34,44 +34,65 @@ function AddMedal($id, $data, $method, $output, $module)
     new_directory($target);
     
     // Est ce qu'on prend directement l'image envoyé?
-    if (isset($data["icon"]["content"]))
+    if (isset($data["icon"][0]["content"]))
     {
-	$command = "";
-	$content = $data["icon"]["content"];
+	// On enregistre l'image
+	if (pathinfo($data["icon"][0]["name"], PATHINFO_EXTENSION) != "png")
+	    bad_request("InvalidFile");
+	$content = $data["icon"][0]["content"];
 	$content = base64_decode($content);
+	$picture = $Configuration->MedalsDir("_ressources").".$codename.png";
+	if (file_put_contents($picture, $content) === false)
+	    return (new ErrorResponse("CannotWritePngFile"));
+
+	// On génère une medaille invisible dont l'icone sera l'image envoyée.
+	// On pourra ainsi toujours faire appel à des spécificateurs.
+	$conf = $Configuration->MedalsDir("_ressources").".invisible_style.dab";
+
+	$command = "genicon pins $codename -p $picture -c $conf";
     }
     // Est ce qu'on va générer l'icone?
     else
     {
-	$command = "genicon $shape $codename";
-	if (($picture = isset($data["picture"]) ? $data["picture"] : ""))
-	    $picture = $Configuration->MedalsDir("_ressources").resolve_path($picture);
-	if (file_exists($picture))
+	// Y a t il une configuration determinée?
+	if (isset($data["configuration"]))
+	    $conf = resolve_path($data["configuration"]);
+	else
+	    $conf = ".default_style.dab";	
+	$conf = $Configuration->MedalsDir("_ressources").$conf;
+	if (!file_exists($conf))
+	    bad_request();
+	
+	$command = "genicon $shape $codename -c $conf";
+
+	// Y a t il une icone issue de la réserve de ressources?
+	if (isset($data["picture"]))
+	{
+	    $picture = $Configuration->MedalsDir("_ressources").resolve_path($data["picture"]);
+	    if (!file_exists($picture))
+		bad_request();
 	    $command .= " -p $picture";
+	}
+
+	// Y a t il des spécificateurs envoyés?
 	if ($specificator != "")
 	    $command .= " -s $specificator";
-	if (($conf = isset($data["configuration"]) ? $data["configuration"] : ""))
-	    $conf = $Configuration->MedalsDir("_ressources").resolve_path($conf);
-	if (file_exists($conf))
-	    $command .= " -c $conf";
-	else
-	    $command .= " -c ".resolve_path(__DIR__."/../default.dab");
-	$content = base64_encode(shell_exec($command));
     }
 
+    if (($content = shell_exec($command." | base64 ")) === false)
+	bad_request();
     debug_response($command);
-    return (new Response);
 
     End:
     $ins = @try_insert("medal", $codename, [
 	"tags" => $tags,
 	"type" => $type,
 	"command" => $command
-    ], $content, $target, ["name", "description"], $data);
+    ], $content, $target, ["name" => false, "description" => false], $data);
     if ($ins->is_error())
 	return ($ins);
     $ret = DisplayMedals($id, $data, $method, $output, $module);
-    $ret["msg"] = "MedalAdded";
+    $ret->value["msg"] = "MedalAdded";
     return ($ret);
 }
 
@@ -115,7 +136,10 @@ function AddRessource($id, $data, $method, $output, $module)
 	    bad_request();
 	$content = base64_decode($files["content"]);
 	new_directory($target);
-	file_put_contents($target.str_replace(" ", "_", $files["name"]), $content);
+	$files["name"] = str_replace(" ", "_", $files["name"]);
+	if ($files["name"][0] == ".")
+	    $files["name"] = substr($files["name"], 1);
+	file_put_contents($target.$files["name"], $content);
 	system("chmod 640 ".$target.$files["name"]);
     }
     return (GetRessourceDir($id, $data, "GET", $output, $module, "RessourceAdded"));
