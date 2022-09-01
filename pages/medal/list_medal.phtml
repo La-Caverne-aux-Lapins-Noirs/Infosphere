@@ -4,11 +4,19 @@
 	<tr><td style="width: 100px;">
 	    <div
 		class="medal_box_picture"
-		style="background-image: url('<?=$medal["icon"]; ?>');"
+		style="
+		       background-image: url('<?=$medal["icon"]; ?>');
+		       <?php if ($medal["band"] != NULL) { ?>
+		       border-radius: 50px;
+		       <?php } ?>
+		       "
 	    ></div>
 	</td><td style="padding-left: 10px;">
-	    <h5><?=$medal["codename"]; ?></h5><br />
-	    XXX
+	    <h4><?=$medal["name"]; ?><?=is_teacher() ? " (".$medal["codename"].")" : ""; ?></h4>
+	    <h5><?=$Dictionnary["Tags"]; ?>: <?=$medal["tags"]; ?></h5>
+	    <p style="font-size: small;">
+		<?=$medal["description"]; ?>
+	    </p>
 	</td></tr>
     </table>
 <?php } ?>

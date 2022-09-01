@@ -1,0 +1,11 @@
+
+[Local
+  {Overlay
+    [
+      RessourceFile = @"./local.png"
+      UnderText = false
+      ColorMask = 255, 255, 255, 128
+    ]
+  }
+]
+

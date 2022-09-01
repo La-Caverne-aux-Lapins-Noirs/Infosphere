@@ -20,7 +20,7 @@ function AddMedal($id, $data, $method, $output, $module)
 	bad_request();
     $codename = $data["codename"];
     $shape = isset($data["shape"]) ? (int)@$data["shape"] : 1;
-    $shape = ["pins", "band", "sband"][$shape];
+    $shape = ["pins", "sband"][$shape];
     if (($tags = split_symbols($data["tags"], ",", false, false, ""))->is_error())
 	$tags = "";
     else
@@ -53,7 +53,7 @@ function AddMedal($id, $data, $method, $output, $module)
     else
     {
 	// Y a t il une configuration determinée?
-	if (isset($data["configuration"]))
+	if (isset($data["configuration"]) && @strlen($data["configuration"]))
 	    $conf = resolve_path($data["configuration"]);
 	else
 	    $conf = ".default_style.dab";	
@@ -74,11 +74,17 @@ function AddMedal($id, $data, $method, $output, $module)
 	// Y a t il des spécificateurs envoyés?
 	if ($specificator != "")
 	    $command .= " -s $specificator";
+
+	if ($shape == "sband")
+	{
+	    $cmd = str_replace("sband", "band", $command);
+	    shell_exec("DISPLAY=:1 $cmd > $target/band.png");
+	}
     }
 
     if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
 	bad_request();
-    
+
 End:
     $ins = @try_insert("medal", $codename, [
 	"tags" => $tags,

@@ -1,0 +1,13 @@
+
+[Triangle
+  Corner = 3
+  Rotation = 90
+  Shift = 0, -60
+  Scale = 1.1, 1.3
+
+  [Icon
+    Scale = 0.6, 0.6
+    Shift = 0, -60
+  ]
+]
+

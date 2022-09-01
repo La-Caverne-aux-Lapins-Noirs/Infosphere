@@ -1,0 +1,11 @@
+
+[Failed
+  {Overlay
+    [
+      RessourceFile = @"./failed.png"
+      UnderText = false
+      ColorMask = 255, 255, 255, 128
+    ]
+  }
+]
+

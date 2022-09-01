@@ -69,14 +69,14 @@
 		    </select><br />
 		    <select name="configuration">
 			<option value=""><?=$Dictionnary["NoConfiguration"]; ?></option>
-			<?php foreach (sort(all_configuration_files($Configuration->MedalsDir(".ressources"))) as $list) { ?>
+			<?php foreach (all_configuration_files($Configuration->MedalsDir(".ressources")) as $list) { ?>
 			    <option value="<?=$list; ?>"><?=$list; ?></option>
 			<?php } ?>
 		    </select><br />
 		    <?=$Dictionnary["ConfigurationBasedMedalIcon"]; ?>
 		    <select name="picture">
 			<option value=""><?=$Dictionnary["NoIcon"]; ?></option>
-			<?php foreach (sort(all_files($Configuration->MedalsDir(".ressources"), ["png"])) as $list) { ?>
+			<?php foreach (all_files($Configuration->MedalsDir(".ressources"), ["png"]) as $list) { ?>
 			    <option value="<?=$list; ?>"><?=$list; ?></option>
 			<?php } ?>
 		    </select><br />

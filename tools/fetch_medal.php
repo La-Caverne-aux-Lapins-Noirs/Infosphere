@@ -19,6 +19,9 @@ function fetch_medal($id = -1)
     foreach ($out as &$v)
     {
 	$v["icon"] = $Configuration->MedalsDir($v["codename"])."icon.png";
+	$v["band"] = $Configuration->MedalsDir($v["codename"])."band.png";
+	if (!file_exists($v["band"]))
+	    $v["band"] = NULL;
     }
     return ($id == "" ? $out : $out[0]);
 }
