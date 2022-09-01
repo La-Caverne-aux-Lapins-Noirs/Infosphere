@@ -60,7 +60,7 @@ class CConfiguration
 	    if (!is_dir($v))
 		new_directory($v);
 	}
-	new_directory($this->MedalsDir("_ressources"));
+	new_directory($this->MedalsDir(".ressources"));
 	$tmp = db_select_all("* FROM configuration");
 	foreach ($tmp as $v)
 	    $this->Properties[$v["codename"]] = $v["value"];

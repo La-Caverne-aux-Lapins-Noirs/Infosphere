@@ -5,7 +5,7 @@ $Language = "fr";
 require_once ("language.php");
 require_once ("tools/index.php");
 
-foreach (all_font_files($Configuration->MedalsDir("_ressources")) as $font)
+foreach (all_font_files($Configuration->MedalsDir(".ressources")) as $font)
 {
     $file = resolve_path($font);
     $font = "fnt".md5($file);

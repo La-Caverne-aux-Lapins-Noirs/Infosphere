@@ -69,14 +69,14 @@
 		    </select><br />
 		    <select name="configuration">
 			<option value=""><?=$Dictionnary["NoConfiguration"]; ?></option>
-			<?php foreach (sort(all_configuration_files($Configuration->MedalsDir("_ressources"))) as $list) { ?>
+			<?php foreach (sort(all_configuration_files($Configuration->MedalsDir(".ressources"))) as $list) { ?>
 			    <option value="<?=$list; ?>"><?=$list; ?></option>
 			<?php } ?>
 		    </select><br />
 		    <?=$Dictionnary["ConfigurationBasedMedalIcon"]; ?>
 		    <select name="picture">
 			<option value=""><?=$Dictionnary["NoIcon"]; ?></option>
-			<?php foreach (sort(all_files($Configuration->MedalsDir("_ressources"), ["png"])) as $list) { ?>
+			<?php foreach (sort(all_files($Configuration->MedalsDir(".ressources"), ["png"])) as $list) { ?>
 			    <option value="<?=$list; ?>"><?=$list; ?></option>
 			<?php } ?>
 		    </select><br />
@@ -121,7 +121,7 @@
 		$page = "medal";
 		$language = "";
 		$file_browser_height = "calc(100% - 35px)";
-		$target = $Configuration->MedalsDir("_ressources");
+		$target = $Configuration->MedalsDir(".ressources");
 		$path = "/";
 		$type = "ressource";
 		$id = "-1";

@@ -70,7 +70,7 @@ function try_insert(
     }
     else if ($icon != "" && $icon_dir != "")
     {
-	$icon_file = $icon_dir."/".$codename."/icon.png";
+	$icon_file = $icon_dir."icon.png";
 	new_directory($icon_file);
 	if (file_exists($icon))
 	{
@@ -81,7 +81,10 @@ function try_insert(
 	else
 	{
 	    // Si le fichier n'existe pas: c'est un upload via AJAX, avec le fichier b64.
-	    $icon = base64_decode($icon[0]["content"]);
+	    if (isset($icon[0]["content"]))
+		$icon = base64_decode($icon[0]["content"]);
+	    else
+		$icon = base64_decode($icon);
 	    if (file_put_contents($icon_file, $icon) === false)
 		return (new ErrorResponse("CannotWritePngFile"));
 	}

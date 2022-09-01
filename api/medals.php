@@ -4,9 +4,9 @@ function DisplayMedals($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
 
-    $medal = fetch_medal();
+    $medals = fetch_medal();
     if ($output == "json")
-	return (new ValueResponse(["content" => json_encode($medal, JSON_UNESCAPED_SLASHES)]));
+	return (new ValueResponse(["content" => json_encode($medals, JSON_UNESCAPED_SLASHES)]));
     ob_start();
     require ("./pages/medal/list_medal.phtml");
     return (new ValueResponse(["content" => ob_get_clean()]));
@@ -30,8 +30,7 @@ function AddMedal($id, $data, $method, $output, $module)
     else
 	$specificator = implode(",", $specificator->value);
     $type = is_between($data["type"], 0, 2) ? $data["type"] : 0;
-    $target = $Configuration->MedalsDir($codename)."/icon.png";
-    new_directory($target);
+    $target = $Configuration->MedalsDir($codename);
     
     // Est ce qu'on prend directement l'image envoyé?
     if (isset($data["icon"][0]["content"]))
@@ -41,14 +40,13 @@ function AddMedal($id, $data, $method, $output, $module)
 	    bad_request("InvalidFile");
 	$content = $data["icon"][0]["content"];
 	$content = base64_decode($content);
-	$picture = $Configuration->MedalsDir("_ressources").".$codename.png";
+	$picture = $Configuration->MedalsDir(".ressources").".$codename.png";
 	if (file_put_contents($picture, $content) === false)
 	    return (new ErrorResponse("CannotWritePngFile"));
 
 	// On génère une medaille invisible dont l'icone sera l'image envoyée.
 	// On pourra ainsi toujours faire appel à des spécificateurs.
-	$conf = $Configuration->MedalsDir("_ressources").".invisible_style.dab";
-
+	$conf = $Configuration->MedalsDir(".ressources").".invisible_style.dab";
 	$command = "genicon pins $codename -p $picture -c $conf";
     }
     // Est ce qu'on va générer l'icone?
@@ -59,16 +57,15 @@ function AddMedal($id, $data, $method, $output, $module)
 	    $conf = resolve_path($data["configuration"]);
 	else
 	    $conf = ".default_style.dab";	
-	$conf = $Configuration->MedalsDir("_ressources").$conf;
+	$conf = $Configuration->MedalsDir(".ressources").$conf;
 	if (!file_exists($conf))
 	    bad_request();
-	
 	$command = "genicon $shape $codename -c $conf";
 
 	// Y a t il une icone issue de la réserve de ressources?
 	if (isset($data["picture"]))
 	{
-	    $picture = $Configuration->MedalsDir("_ressources").resolve_path($data["picture"]);
+	    $picture = $Configuration->MedalsDir(".ressources").resolve_path($data["picture"]);
 	    if (!file_exists($picture))
 		bad_request();
 	    $command .= " -p $picture";
@@ -79,11 +76,10 @@ function AddMedal($id, $data, $method, $output, $module)
 	    $command .= " -s $specificator";
     }
 
-    if (($content = shell_exec($command." | base64 ")) === false)
+    if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
 	bad_request();
-    debug_response($command);
-
-    End:
+    
+End:
     $ins = @try_insert("medal", $codename, [
 	"tags" => $tags,
 	"type" => $type,
@@ -106,7 +102,7 @@ function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
     if (!isset($data["path"]))
 	$data["path"] = "";
 
-    $root = $Configuration->MedalsDir("_ressources");
+    $root = $Configuration->MedalsDir(".ressources");
     $html = get_dir($root, $data["path"], "medal", -1, "ressource", "medalres_browser", is_teacher(), "");
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
@@ -124,7 +120,7 @@ function AddRessource($id, $data, $method, $output, $module)
     if (!isset($data["path"]))
 	$data["path"] = "";
     $path = resolve_path($data["path"]);
-    $root = $Configuration->MedalsDir("_ressources");
+    $root = $Configuration->MedalsDir(".ressources");
     $target = resolve_path($root.$path."/");
     foreach ($data["file"] as $files)
     {
@@ -157,7 +153,7 @@ function RemoveRessource($id, $data, $method, $output, $module)
     if ($id != -1 || !isset($data["ressource"]))
 	bad_request();
     // On vérifie que le dossier est bien celui de l'activité demandé...
-    $normal_dir = $Configuration->MedalsDir("_ressources");
+    $normal_dir = $Configuration->MedalsDir(".ressources");
     $file = $data["ressource"];
     if ($file[0] == "-")
 	$file = substr($file, 1);
