@@ -2,12 +2,13 @@
 
 function fetch_rooms($id = -1, $by_name = false)
 {
+    global $Configuration;
     global $Language;
 
     if ($id == -1)
     {
 	$out = [];
-	foreach (db_select_all("id FROM room WHERE deleted = 0") as $lab)
+	foreach (db_select_all("id FROM room WHERE deleted IS NULL") as $lab)
 	{
 	    if ($by_name)
 		$out[$lab["codename"]] = fetch_rooms($lab["id"], $by_name);
@@ -20,12 +21,25 @@ function fetch_rooms($id = -1, $by_name = false)
     if (($err = resolve_codename("room", $id))->is_error())
 	return ([]);
     $id = $err->value;
-
+    
     $lab = db_select_one("
-	id, codename, {$Language}_name as name, capacity, map
+	id, codename, {$Language}_name as name, capacity
 	FROM room
-	WHERE id = $id AND deleted = 0
+	WHERE id = $id AND deleted IS NULL
     ");
+
+    $lab["school"] = db_select_all("
+      school.*, school.id as id_school, school.{$Language}_name as name
+      FROM school_room
+      LEFT JOIN school
+        ON school.id = school_room.id_school
+      WHERE school_room.id_room = $id
+    ");
+    
+    if (file_exists($tmp = $Configuration->RoomsDir($lab["codename"])."/icon.png"))
+	$lab["map"] = $tmp;
+    else
+	$lab["map"] = NULL;
 
     $lab["desk"] = db_select_all("
         room_desk.*,
@@ -41,6 +55,8 @@ function fetch_rooms($id = -1, $by_name = false)
 	if ($d["id_user"] != NULL)
 	    $lab["occupied"] += 1;
     }
+    $lab["computer_capacity"] = count($lab["desk"]);
+    $lab["computer_available"] = $lab["computer_capacity"] - $lab["occupied"];
     return ($lab);
 }
 

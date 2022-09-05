@@ -184,8 +184,23 @@ function SetMatter($id, $data, $method, $output, $module)
 
 function SetSchool($id, $data, $method, $output, $module)
 {
-    if ($id == -1)
+    global $Dictionnary;
+    
+    if ($id == -1 || !isset($data["school"]))
 	bad_request();
+    if (($ret = handle_links($data["school"], $id, "school", "cycle"))->is_error())
+	return ($ret);
+    $cycle = fetch_cycle($module, $id);
+    $cycle = $cycle[array_key_first($cycle)];
+    return (new ValueResponse([
+	"msg" => $Dictionnary["Edited"],
+	"content" => list_of_linksb([
+	    "hook_name" => "cycle",
+	    "hook_id" => $id,
+	    "linked_name" => "school",
+	    "linked_elems" => $cycle["school"],
+	    "admin_func" => "is_director_for_cycle",
+    ])]));
 }
 
 function InstantiateCycle($id, $data, $method, $output, $module)

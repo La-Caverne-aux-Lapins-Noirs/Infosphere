@@ -1,0 +1,46 @@
+<h2><?=$Dictionnary["AddARoom"]; ?></h2><br />
+<form
+    method="POST"
+    action="/api/room"
+    enctype="multipart/form-data"
+    onsubmit="return false;"
+>
+    <input
+	type="text"
+	name="codename"
+	placeholder="<?=$Dictionnary["CodeName"]; ?>"
+	value="<?=try_get($_POST, "codename"); ?>"
+    /><br />
+    <input
+	type="text"
+	placeholder="<?=$Dictionnary["RoomCapacity"]; ?>"
+	name="capacity"
+	value=""
+    /><br />
+    <br />
+    <h5><?=$Dictionnary["RoomMap"]; ?></h5>
+    <input
+	type="file"
+	name="icon"
+	accept="image/png"
+	placeholder="<?=$Dictionnary["Icone"]; ?>"
+	value="<?=try_get($_POST, "icon"); ?>"
+    /><br />
+    <br />
+    <h5><?=$Dictionnary["RoomDeskConfiguration"]; ?></h5>
+    <input
+	type="file"
+	name="configuration"
+    /><br />
+    
+    <?php forge_language_formular(["name" => "text"], $_POST); ?>
+    <br />
+    <br />
+
+    <input
+	type="button"
+	onclick="silent_submitf(this.parentNode, {tofill: 'roomlist', toclear: 'roomlist', wrapper: 'rooms', clear_form: true});"
+	value="&#10003;"
+    />
+</form>
+

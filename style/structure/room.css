@@ -1,0 +1,82 @@
+
+.roomdiv
+{
+    margin-top: 10px;
+    width: calc(100% - 10px);
+    height: 500px;
+    border: 1px solid black;
+    position: relative;
+    overflow-x: auto;
+}
+
+.roomdiv .map
+{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: calc(100% - 300px);
+    min-width: 1250px;
+    height: 100%;
+    background-size: 1250px 500px;
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+
+.roomdiv .info
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 300px;
+    height: 100%;
+ }
+
+.desk
+{
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border: 3px solid black;
+    border-radius: 15px;
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.roomdiv .info h5
+{
+    height: 20px;
+}
+
+.roomdiv .info form
+{
+}
+
+.roomdiv .info .scrollable
+{
+    height: 100px;
+    background-color: red;
+}
+
+.roomdiv .info .deskinfo
+{
+    position: absolute;
+    left: 10px;
+    width: calc(100% - 20px);
+}
+
+.roomdiv .sublist_of_link div
+{
+    display: inline-block;
+}
+
+.mapinfo
+{
+    width: 100%;
+}
+
+.mapinfo td
+{
+    width: 50%;
+    text-align: center;
+}

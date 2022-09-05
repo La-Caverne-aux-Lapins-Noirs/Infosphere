@@ -114,13 +114,33 @@
 	<h3>&nbsp;<?php // $Dictionnary["AdministrateStudents"]; ?></h3>
 
 	<p style="text-align: center;">
-	    <a href="index.php?p=InstancesMenu&amp;activity=<?=$activity->id; ?>">
+	    <?php
+	    $link = [
+		"p" => "InstancesMenu",
+		"a" => $activity->parent_activity ?: -1,
+		"b" => $activity->id ?: -1,
+		"c" => $activity->unique_session ? $activity->unique_session->id : -1
+	    ];
+	    ?>
+	    <a href="<?=unrollurl($link); ?>">
 		<?=$Dictionnary["SeeInstanceConfiguration"]; ?>
 	    </a><br />
 	</p>
 
 	<p style="text-align: center;">
-	    <a href="index.php?p=ActivitiesMenu&amp;activity=<?=$activity->id_template; ?>">
+	    <?php
+	    $link = [
+		"p" => "ActivityTemplatesMenu",
+		"a" => db_select_one("
+		    matter.id FROM activity
+		    LEFT JOIN activity as matter
+		    ON matter.id = activity.parent_activity
+		    WHERE activity.id = $activity->id_template
+		")["id"],
+		"b" => $activity->id_template ?: -1
+	    ];
+	    ?>
+	    <a href="<?=unrollurl($link); ?>">
 		<?=$Dictionnary["SeeTemplateConfiguration"]; ?>
 	    </a><br />
 	</p>

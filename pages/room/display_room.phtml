@@ -1,0 +1,101 @@
+<div class="roomdiv">
+    <div class="map" style="background-image: url('<?=$room["map"]; ?>');">
+	<?php foreach ($room["desk"] as $desk) { ?>
+	    <?php
+	    $Status = [
+		$Dictionnary["Free"],
+		$Dictionnary["Used"],
+		$Dictionnary["Locked"],
+		$Dictionnary["Unavailable"],
+	    ];
+	    $Color = [
+		"rgba(0, 255, 0, 0.3)",
+		"rgba(255, 0, 0, 0.3)",
+		"rgba(0, 0, 255, 0.3)",
+		"rgba(0, 0, 0, 0.3)",
+	    ];
+	    $Types = [
+		"./res/linux.png",
+		"./res/windows.png",
+		"./res/mac.png",
+		"./res/rpi.png",
+	    ];
+	    $Description = [
+		[$Dictionnary["DeskName"], $desk["codename"]],
+		[$Dictionnary["Type"], $desk["type"]],
+		[$Dictionnary["IpAddress"], $desk["ip"]],
+		[$Dictionnary["MacAddress"], $desk["mac"]],
+		[$Dictionnary["Status"], $desk["status"]]
+	    ];
+	    ob_start(); ?>
+	    <table class="mapinfo">
+		<?php foreach ($Description as $desc) { ?>
+		    <tr><td><b><?=$desc[0]; ?>:</b></td><td><?=$desc[1]; ?></td></tr>
+		<?php } ?>
+		<?php if ($desk["id_user"]) { ?>
+		    <?=$Dictionnary["OccupiedBy"].": ".resolve_codename("user", $desk["id_user"])->value."\n"; ?>
+		<?php } ?>
+		<tr><td colspan="2"><?=$desk["misc"]; ?></td></tr>
+	    </table>
+	    <?php $deskdesc = ob_get_clean(); ?>
+	    <div
+		class="desk"
+		style="right: <?=1250 - $desk["x"]; ?>px; top: <?=$desk["y"]; ?>px; background: url('<?=$Types[(int)$desk["type"]]; ?>'), <?=$Color[(int)$desk["status"]]; ?>;"
+		onmouseover="document.getElementById('deskinfo').innerHTML = '<?=htmlentities(str_replace("\n", "<br />", $deskdesc)); ?>';"
+	    >
+	    </div>
+	<?php } ?>
+    </div>
+    <div class="info">
+	<br />
+	<h5><?=$room["name"]; ?><?=is_admin() ? " (".$room["codename"].")" : ""; ?></h5>
+	<?php $js = "silent_submit(this);"; ?>
+	<form
+	    method="put"
+	    action="/api/room/<?=$room["id"]; ?>"
+	    onsubmit="return <?=$js; ?>;"
+	    style="height: <?=$roomh = ($isdir = is_director_for_room($room["id"])) ? 180 : 100; ?>px;"
+	>
+	    <label for="capacity"><?=$Dictionnary["ComputerCapacity"]; ?></label>
+	    : <?=$room["computer_capacity"]; ?><br />
+	    <label for="capacity"><?=$Dictionnary["AvailableComputer"]; ?></label>
+	    : <?=$room["computer_available"]; ?><br />
+	    <label for="capacity"><?=$Dictionnary["SeatCapacity"]; ?></label>
+	    <?php if ($isdir) { ?>
+	    <input
+		type="text"
+		onchange="<?=$js; ?>"
+		name="capacity"
+		style="width: 50px;"
+		value="<?=$room["capacity"] ? $room["capacity"] : "0"; ?>"
+	    /><br />
+	    <br />
+	    <label for="map"><b><?=$Dictionnary["EditMap"]; ?></b></label><br />
+	    <input
+		type="file"
+		onchange="<?=$js; ?>"
+		name="map"
+	    /><br />
+	    <label for="configuration"><b><?=$Dictionnary["EditConfiguration"]; ?></b></label><br />
+	    <input
+		type="file"
+		onchange="<?=$js; ?>"
+		name="configuration"
+	    /><br />
+	    <br />
+	    <?php } else { ?>
+		: <?=$room["capacity"]; ?><br />
+	    <?php } ?>
+	</form>
+	<div id="column scrollable" style="position: relative;">
+	    <?php list_of_links([
+		"hook_name" => "room",
+		"hook_id" => $room["id"],
+		"linked_name" => "school",
+		"linked_elems" => $room["school"],
+		"admin_func" => "only_admin"
+	    ]); ?>		    
+	</div>
+	<p class="deskinfo" id="deskinfo" style="bottom: 0px; height: calc(100% - 200px);"></p>
+    </div>
+</div>

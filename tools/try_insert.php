@@ -63,12 +63,7 @@ function try_insert(
     }
 
     $icon_file = "";
-    if ($icon == "" && $icon_dir != "")
-    {
-	$icon_file = ""; // $icon_dir."/".$codename."/icon.png";
-	//shell_exec("genicon '$codename' 400 400 > $icon_file");
-    }
-    else if ($icon != "" && $icon_dir != "")
+    if ($icon != "" && $icon_dir != "")
     {
 	$icon_file = $icon_dir."icon.png";
 	new_directory($icon_file);

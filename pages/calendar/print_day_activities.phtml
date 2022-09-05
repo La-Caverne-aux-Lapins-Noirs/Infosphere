@@ -1,39 +1,5 @@
 <a href="index.php?p=ActivityMenu&amp;a=<?=$Session->id_activity; ?>&amp;b=<?=$Session->id; ?>" class="<?=($Session->registered || $Session->slot_reserved) ? "registered_act" : "unregistered_act"; ?>">
 
-    <?php if (isset($User["authority"]) && $User["authority"] >= CONTENT_AUTHOR && 0) { ?>
-	<!-- FORMULAIRE DE MODIFICATION -->
-	<div class="calendar_edit_box" id="<?=$Session->parent->codename; ?>" style="top: <?="calc(".$Session->top."% - 50px)"; ?>;">
-	    <form
-		action="index.php?<?=unrollget(); ?>"
-		method="POST"
-	    >
-		<input type="hidden" name="action" value="delete" />
-		<input
-		    type="hidden"
-		    name="id_instance"
-		    value="<?=$Session->id_activity; ?>"
-		/>
-		<input
-		    type="hidden"
-		    name="id_session"
-		    value="<?=$Session->id; ?>"
-		/>
-		<input type="submit" value="&#10007;" style="color: red;" />
-
-		<textarea
-		    id="instance_codename"
-		    style="width: 1px; height: 1px; z-index: 1; position: absolute; top: -5px; left: -5px; display: hidden;"
-		><?=$Session->parent->codename; ?></textarea>
-		<input
-		    type="button"
-		    style="width: 100%;"
-		    value="#"
-		    onClick="document.getElementById('instance_codename').select(); document.execCommand('copy');"
-		/>
-	    </form>
-	</div>
-    <?php } ?>
-
     <?php
     // Il faudra remplacer ca par des propriété de type d'activité...
     if ($Session->parent->type == 5 || $Session->parent->type == 6)
@@ -49,10 +15,6 @@
     <div
 	class="calendar_activity tinyscroll"
 	       style="width: <?=$Session->width; ?>%; left: <?=$Session->left; ?>%; top: <?=$Session->top; ?>%; height: <?=$Session->height; ?>%; background-color: <?=color_from_name($Session->parent->parent_codename, ["white"]); ?>; <?=$background; ?>"
-	<?php if (isset($User["authority"]) && $User["authority"] >= CONTENT_AUTHOR && 0) { ?>
-	onMouseEnter="document.getElementById('<?=$Session->codename; ?>').style.visibility = 'visible';"
-	onMouseLeave="document.getElementById('<?=$Session->codename; ?>').style.visibility = 'hidden';"
-	<?php } ?>
     >
 	<p class="calendar_basic_info">
 	    <?php if (@strlen($Session->parent->name) != 0) { ?>
@@ -90,7 +52,7 @@
     $no_slots = count($Session->slot) == 0 && ($Session->parent->type == 7 || ($Session->parent->type >= 10 && $Session->parent->type <= 13));
     ?>
 
-    <?php if (isset($User["authority"]) && $User["authority"] >= CONTENT_AUTHOR && ($no_room || $no_teacher || $no_slots) && $Session->end_date > time()) { ?>
+    <?php if (is_admin() && ($no_room || $no_teacher || $no_slots) && $Session->end_date > time()) { ?>
 	<!-- ICONES D'INFORMATIONS -->
 	<div class="calendar_edit_box" id="<?=$Session->parent->codename; ?>" style="top: <?="calc(".$Session->top."% + ".$Session->height."% + 1px)"; ?>; left: <?=$Session->left; ?>%; width: <?=$Session->width; ?>%;">
 	    <?php if ($no_room) { ?>

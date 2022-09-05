@@ -156,7 +156,29 @@ function is_director_for_school($id)
     return ($match != NULL);
 }
 
-function is_director($id)
+function is_director_for_room($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    get_user_school($User);
+    foreach ($User["school"] as $school)
+    {
+	if ($school["authority"] == 0)
+	    continue ;
+	$ret = db_select_one("
+	    id FROM school_room
+	    WHERE id_school = {$school["id_school"]}
+	    AND id_room = $id
+	    ");
+	if ($ret)
+	    return (true);
+    }
+    return (false);
+}
+
+function is_director($id = -1)
 {
     global $User;
 
@@ -165,7 +187,6 @@ function is_director($id)
     return (db_select_one("
         cycle_teacher.id
         FROM cycle_teacher
-        WHERE cycle_teacher.id_user = {$User["id"]}
 	LEFT JOIN user_laboratory
           ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
 	WHERE cycle_teacher.id_user = {$User["id"]}

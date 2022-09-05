@@ -1,0 +1,29 @@
+<div>
+    <h2 class="alignable_blocks"><?=$Dictionnary["Rooms"]; ?></h2>
+    <form
+	class="alignable_blocks searchbar"
+	method="get"
+	onsubmit="return use_search('/api/room', this, 'roomlist');"
+    >
+	<input
+	    type="text"
+	    id="searchbar"
+	    placeholder="<?=$Dictionnary["Search"]; ?>"
+	/>
+    </form>
+</div>
+
+<?php if (is_director()) { ?>
+    <table class="edit_console"><tr><td>
+<?php }?>
+
+<div class="fullscreen scrollable" id="roomlist">
+    <?php foreach (fetch_rooms() as $room) require ("display_room.phtml"); ?>
+</div>
+
+<?php if (is_director()) { ?>
+    </td><td class="formular_slot">
+        <?php require ("add_room.phtml"); ?>
+    </td></tr></table>
+<?php } ?>
+  

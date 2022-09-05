@@ -157,6 +157,7 @@ require_once ("get_icon.php");
 require_once ("print_icon.php");
 require_once ("print_medal_icon.php");
 require_once ("add_cycle.php");
+require_once ("add_room.php");
 require_once ("add_school.php");
 require_once ("all_files.php");
 require_once ("famous_quote.php");

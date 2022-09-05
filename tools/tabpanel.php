@@ -50,11 +50,12 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
      function dis<?=$id; ?>(lst, label)
      {
 	 var i;
+
 	 for (i = 0; i < tablist_<?=md5($v); ?>.length; ++i)
 	 {
 	     document.getElementById(tablist_<?=md5($v); ?>[i]).style.visibility = "hidden";
 	 }
-	 set_cookie('<?=addslashes($position); ?>', label);
+	 setCookie('<?=addslashes($position); ?>', label);
 	 document.getElementById(lst).style.visibility = "visible";
      }
     </script>

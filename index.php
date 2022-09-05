@@ -88,7 +88,6 @@ $TopMenu = [
     "CalendarMenu" => "./pages/calendar/",
     "ModulesMenu" => "./pages/modules/",
     "ClassMenu" => "./pages/class/",
-    "RoomsMenu" => "./pages/rooms/",
     "FetchingMenu" => "./pages/fetching/",
     "TokenMenu" => "./pages/token/",
     "IntercomMenu" => "./pages/intercom/"
@@ -118,7 +117,7 @@ $BottomMenu = [
     // "RobotMenu" => "./pages/robot/",
     // "ExercisesMenu" => "./pages/exercises/",
     
-    "AdminRoomsMenu" => "./pages/rooms/admin/",
+    "RoomsMenu" => "./pages/room/",
     "ConfigMenu" => "./pages/configuration/",
     "TestMenu" => "./pages/test/",
 ];

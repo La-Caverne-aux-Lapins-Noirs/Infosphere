@@ -16,8 +16,8 @@ if (isset($User["authority"]) && $User["authority"] >= ADMINISTRATOR)
 	else
 	{
 	    $User = $usr->value;
-	    if (($User["misc_configuration"] = json_decode($User["misc_configuration"], true)) == NULL)
-		$user["misc_configuration"] = [];
+	    // if (($User["misc_configuration"] = json_decode($User["misc_configuration"], true)) == NULL)
+	    // $user["misc_configuration"] = [];
 	    get_user_promotions($User);
 	    get_user_children($User);
 	    get_user_laboratories($User);

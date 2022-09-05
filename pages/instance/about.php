@@ -65,36 +65,50 @@
 	    <?php } ?>
 	<?php } ?>
 
-	<p>
+	<style>
+	 .left_align_right td:first-of-type
+	 {
+	     text-align: right;
+	     padding-right: 5px;
+	 }
+	</style>
+	<table class="left_align_right">
 	    <?php if ($activity->emergence_date != NULL) { ?>
-		<b><?=$Dictionnary["EmergenceDate"]; ?></b>:
-		<?=litteral_date($activity->emergence_date); ?><br />
+		<tr><td><b><?=$Dictionnary["EmergenceDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->emergence_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->registration_date != NULL) { ?>
-		<b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:
-		<?=litteral_date($activity->registration_date); ?><br />
+		<tr><td><b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->registration_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->close_date != NULL) { ?>
-		<b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:
-		<?=litteral_date($activity->close_date); ?><br />
+		<tr><td><b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->close_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->subject_appeir_date != NULL) { ?>
-		<b><?=$Dictionnary["SubjectAppeirDate"]; ?></b>:
-		<?=litteral_date($activity->subject_appeir_date); ?><br />
+		<tr><td><b><?=$Dictionnary["SubjectAppeirDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->subject_appeir_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->pickup_date != NULL) { ?>
-		<b><?=$Dictionnary["PickupDate"]; ?></b>:
-		<?=litteral_date($activity->pickup_date); ?><br />
+		<tr><td><b><?=$Dictionnary["PickupDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->pickup_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->subject_disappeir_date != NULL) { ?>
-		<b><?=$Dictionnary["SubjectDisappeirDate"]; ?></b>:
-		<?=litteral_date($activity->subject_disappeir_date); ?><br />
+		<tr><td><b><?=$Dictionnary["SubjectDisappeirDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->subject_disappeir_date); ?></td>
+		</tr>
 	    <?php } ?>
 	    <?php if ($activity->done_date != NULL) { ?>
-		<b><?=$Dictionnary["DoneDate"]; ?></b>:
-		<?=litteral_date($activity->done_date); ?><br />
+		<tr><td><b><?=$Dictionnary["DoneDate"]; ?></b>:</td>
+		    <td><?=litteral_date($activity->done_date); ?></td>
+		</tr>
 	    <?php } ?>
-	</p>
+	</table>
 
     </div>
     <div style="width: 50%; float: left;">

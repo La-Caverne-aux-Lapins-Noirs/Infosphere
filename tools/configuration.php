@@ -8,6 +8,7 @@ class CConfiguration
     public $_UsersDir;
     public $_ActivitiesDir;
     public $_SchoolsDir;
+    public $_RoomsDir;
     public $Properties = [];
 
     function UsersDir($usr = NULL)
@@ -27,6 +28,12 @@ class CConfiguration
 	if ($school == NULL)
 	    return ($this->_SchoolsDir);
 	return ($this->_SchoolsDir.$school."/");
+    }
+    function RoomsDir($room = NULL)
+    {
+	if ($room == NULL)
+	    return ($this->_RoomsDir);
+	return ($this->_RoomsDir.$room."/");
     }
     function ActivitiesDir($act = NULL, $lng = NULL)
     {
@@ -49,6 +56,7 @@ class CConfiguration
 	$this->ELearningDir = "$DIR/elearning/";
 	$this->_UsersDir = "$DIR/users/";
 	$this->_SchoolsDir = "$DIR/school/";
+	$this->_RoomsDir = "$DIR/room/";
 	$this->_ActivitiesDir = "$DIR/activity/";
 
 	foreach ($this as $k => $v)

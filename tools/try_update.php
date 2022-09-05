@@ -35,10 +35,24 @@ function try_update(
     $icon_file = "";
     if ($icon != "" && $icon_dir != "")
     {
-	$icon_file = $icon_dir.$codename.".png";
-	if (($msg = upload_png($icon, $icon_file, [100, 100], MINIMUM_PICTURE_SIZE))->is_error())
-	    return ($msg); // @codeCoverageIgnore
-	$updated_fields[] = "`icon` = '$icon_file'";
+	$icon_file = $icon_dir."icon.png";
+	new_directory($icon_file);
+	if (file_exists($icon))
+	{
+	    // Si le fichier existe: c'est certainement un upload via POST.
+	    if (($msg = upload_png($icon, $icon_file, [100, 100], MINIMUM_PICTURE_SIZE))->is_error())
+		return ($msg); // @codeCoverageIgnore
+	}
+	else
+	{
+	    // Si le fichier n'existe pas: c'est un upload via AJAX, avec le fichier b64.
+	    if (isset($icon[0]["content"]))
+		$icon = base64_decode($icon[0]["content"]);
+	    else
+		$icon = base64_decode($icon);
+	    if (file_put_contents($icon_file, $icon) === false)
+		return (new ErrorResponse("CannotWritePngFile"));
+	}
     }
 
     foreach ($trusted_fields as $i => $v)

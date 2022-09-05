@@ -32,7 +32,7 @@ $left_panel = [
 ];
 if (count($activity->team) > 0)
     $left_panel[$Dictionnary["RegisteredStudents"]] = __DIR__."/users.php";
-if (count($activity->class) > 0)
+if (count($activity->support) > 0)
     $left_panel[$Dictionnary["AssociatedCourseMaterial"]] = __DIR__."/material.php";
 if (count($activity->medal) > 0)
     $left_panel[$Dictionnary["Medals"]] = __DIR__."/medals.php";
@@ -105,10 +105,7 @@ if ($activity->is_teacher)
  .content
  {
  }
- <?php
- if ($activity->wallpaper)
- {
- ?>
+ <?php if ($activity->current_wallpaper) { ?>
  .background
  {
      background-size: cover;
@@ -127,20 +124,18 @@ if ($activity->is_teacher)
  }
  .leftbackground
  {
-     background-image: url("<?=$activity->wallpaper; ?>");
+     background-image: url("<?=$activity->current_wallpaper; ?>");
  }
  .rightbackground
  {
-     background-image: url("<?=$activity->wallpaper; ?>");
+     background-image: url("<?=$activity->current_wallpaper; ?>");
  }
- <?php
- }
- ?>
+ <?php } ?>
 </style>
 
 <div class="double_horizontal" style="height: 90%;">
     <div style="height: 100%;"
-	 style="<?=$activity->wallpaper ? "background-image: url('".$activity->wallpaper."');" : ""; ?>; background-size: cover;"
+	 style="<?=$activity->current_wallpaper ? "background-image: url('".$activity->current_wallpaper."');" : ""; ?>; background-size: cover;"
     >
 	<?php
 	tabpanel(

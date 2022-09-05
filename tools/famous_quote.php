@@ -14,7 +14,7 @@ $FamousQuote["fr"] = [
     "Quand on est dans l'imitation, on ne peut être qu'en retard",
     "Du pain en temps de paix est meilleur que du gâteau en temps de guerre",
     "Assis sur les genoux d'une mère pauvre aimante, tout enfant est riche",
-    "Le pessimisme face au futur ne doit pas être un argument supplémentaire pour l'inaction dans le présent.",
+    "Le pessimisme face au futur ne doit pas être un argument supplémentaire pour l'inaction dans le présent",
     "Le peuple regorge de talents bloqués derrière le mur d'argent",
     "Là où il y a une volonté, il y a un chemin",
     "De tous les événements inattendus, le plus inattendu c'est la vieillesse",

@@ -1,5 +1,19 @@
 <?php
 
+function select_right_elem(&$vis, $field)
+{
+    global $Language;
+
+    $cfield = "current_$field";
+    if (isset($vis->$field[$Language][0]))
+	$vis->$cfield = $vis->$field[$Language][0];
+    else if (isset($vis->$field["NA"][0]))
+	$vis->$cfield = $vis->$field["NA"][0];
+    else
+	$vis->$cfield = NULL;
+    return ($vis->$cfield);
+}
+
 class FullActivity extends Response
 {
     public $id_template = -1;
@@ -64,9 +78,12 @@ class FullActivity extends Response
     public $estimated_work_duration = 0;
     public $configuration = NULL;
     public $subject = NULL;
+    public $current_subject = NULL;
     public $ressource = NULL;
+    public $current_ressource = NULL;
     public $music = NULL;
-    public $wallpaper = NULL;
+    public $wallpaper = NULL; // Collection de papiers peints, tous langages
+    public $current_wallpaper;
     public $intro = NULL;
     public $syllabus;
 
@@ -248,6 +265,11 @@ class FullActivity extends Response
 	to_timestamp($this->subject_disappeir_date);
 	to_timestamp($this->pickup_date);
 
+	select_right_elem($this, "wallpaper");
+	select_right_elem($this, "ressource");
+	select_right_elem($this, "intro");
+	select_right_elem($this, "subject");
+	
 	$this->medal = [];
 	$this->support = [];
 	$this->teacher = [];
