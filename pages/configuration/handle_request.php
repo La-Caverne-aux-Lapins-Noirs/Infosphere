@@ -7,8 +7,7 @@ if ($_POST["action"] == "execute_query")
     {
 	ob_start();
 	require ($Operations[$ope]);
-	$result = ob_get_contents();
-	ob_end_clean();
+	$result = ob_get_clean();
     }
 }
 

@@ -1,0 +1,71 @@
+<?php ($matter = new FullActivity)->build($module); ?>
+
+<?php $nbline = 0; ?>
+<table class="module_tab">
+    <tr><td colspan="3" style="text-align: center;">
+	<h2><?=$matter->name ?: $matter->codename; ?></h2>
+    </td></tr>
+    <tr><td>
+    <?php if ($matter->emergence_date != NULL) { ?>
+	<b><?=$Dictionnary["EmergenceDate"]; ?></b>:
+	<?=litteral_date($matter->emergence_date); ?>
+	<?php $nbline += 1; ?>
+	<br />
+    <?php } ?>
+    <?php if ($matter->registration_date != NULL) { ?>
+	<b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:
+	<?=litteral_date($matter->registration_date); ?>
+	<?php $nbline += 1; ?>
+	<br />
+    <?php } ?>
+    <?php if ($matter->close_date != NULL) { ?>
+	<b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:
+	<?=litteral_date($matter->close_date); ?>
+	<?php $nbline += 1; ?>
+	<br />
+    <?php } ?>
+    <?php if ($matter->done_date != NULL) { ?>
+	<b><?=$Dictionnary["DoneDate"]; ?></b>:
+	<?=litteral_date($matter->done_date); ?>
+	<?php $nbline += 1; ?>
+	<br />
+    <?php } ?>
+    
+    <?php if ($matter->maximum_subscription != -1) { ?>
+	<?php $nbline += 1; ?>
+	<?=$Dictionnary["MaximumSubscription"].": ".$matter->maximum_subscription; ?>
+    <?php } ?>
+</td><td>
+    <?=$matter->description; ?>
+</td><td>
+    
+    <?php if (!period($matter->registration_date, $matter->close_date)) { ?>
+	<b><?=$Dictionnary["SubscriptionPeriodIsClose"]; ?></b>
+    <?php } else { ?>
+    
+	<form method="put" action="/api/module/<?=$module; ?>">
+	    <?php if ($matter->allow_unregistration == false) { ?>
+		<b style="color: red;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>!</b>
+	    <?php } ?>
+	</form>
+
+    <?php } ?>
+
+</td></tr><tr><td colspan="3" style="overflow-x: scroll; text-align: center;">
+
+    <?php foreach ($matter->medal as $medal) { ?>
+	<div
+	    class="medal_box_picture"
+	    style="
+		   display: inline-block; margin-left: 5px; margin-right: 5px;
+		   background-image: url('<?=$medal["icon"]; ?>');
+		   <?php if ($medal["band"] != NULL) { ?>
+		   border-radius: 50px;
+		   <?php } ?>
+		   "
+	></div>
+    <?php } ?>
+    
+</td></tr></table>
+	
+

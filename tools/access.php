@@ -111,11 +111,13 @@ function is_director_for_cycle($id)
     if (is_admin())
 	return (true);
     if (($ida = db_select_one("
-        id_user
+        cycle_teacher.id_user, user_laboratory.id_user
         FROM cycle_teacher
         LEFT JOIN laboratory ON cycle_teacher.id_laboratory
         LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
-        WHERE cycle_teacher.id_user = $id OR user_laboratory.id_user = $id
+        WHERE (cycle_teacher.id_user = {$User["id"]}
+        OR user_laboratory.id_user = {$User["id"]})
+        AND cycle_teacher.id_cycle = $id
     ")) == NULL)
 	return (false);
     return (true);

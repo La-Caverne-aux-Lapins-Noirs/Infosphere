@@ -1,0 +1,33 @@
+
+.submenu
+{
+    height: 95%;
+    width: 100%;
+}
+
+.submenutd
+{
+    vertical-align: top;
+}
+
+.submenutr > td:first-of-type
+{
+    width: 400px;
+}
+
+.submenu tr > td:last-of-type
+{
+    width: calc(100% - 400px);
+}
+
+.module_tab
+{
+    width: calc(100% - 20px);
+    margin-left: 10px;
+    height: 150px;
+}
+
+.module_tab td
+{
+    vertical-align: top;
+}

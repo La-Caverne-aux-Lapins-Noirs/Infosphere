@@ -1,3 +1,6 @@
+<?php
+$mail = db_select_one("mail FROM user WHERE id = 1")["mail"];
+?>
 <h1><?=$Dictionnary["Welcome"]; ?></h1>
 <br />
 <br />
@@ -17,8 +20,8 @@
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    N'hésitez pas à nous remonter en urgence tous les problèmes que vous rencontrerez à l'adresse suivante:
 	<?php } ?>
-	<a href="mailto:<?=$Configuration->Properties["mail_login"]; ?>">
-	    <?=$Configuration->Properties["mail_login"]; ?>
+	<a href="mailto:<?=$mail; ?>">
+	    <?=$mail; ?>
 	</a>
     </span>		
     <br />
@@ -28,5 +31,5 @@
     Nous vous souhaitons la meilleure scolarité possible.
     <br />
     <br />
-    <b><?=$Configuration->Properties["admin_login"]; ?></b>
+    <b><?=$mail; ?></b>
 </p>

@@ -1,0 +1,29 @@
+
+.submenutr > td:first-of-type
+{
+    padding: 10px;
+    background-color: #181818;
+    border-radius: 10px;
+}
+
+.submenutr > td:first-of-type, .submenutd a
+{
+    color: lightgray;
+    text-decoration: none;
+}
+
+.submenutd a:hover
+{
+    text-decoration: underline;
+}
+
+.module_tab
+{
+    border-radius: 15px;
+    background-color: gray;
+}
+
+.module_tab td
+{
+    padding: 10px;
+}

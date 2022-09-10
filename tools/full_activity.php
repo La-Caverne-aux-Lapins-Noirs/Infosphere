@@ -87,12 +87,21 @@ class FullActivity extends Response
     public $intro = NULL;
     public $syllabus;
 
+    // Il faudra changer ca lors d'une prochaine maj.
     public $fr_name;
     public $fr_description;
     public $fr_objective;
     public $fr_method;
     public $fr_reference;
 
+    public $en_name;
+    public $en_description;
+    public $en_objective;
+    public $en_method;
+    public $en_reference;
+    // Parceque c'est vraiment de la merde comme fonctionnement
+
+    
     public $emergence_date = NULL;
     public $done_date = NULL;
     public $registration_date = NULL;

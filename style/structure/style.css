@@ -600,34 +600,9 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     font-size: small;
 }
 
-.module
-{
-    height: 50px;
-    background-color: white;
-    border: 1px solid black;
-    box-shadow: 5px 5px 5px black;
-    margin-bottom: 10px;
-    padding: 10px 10px 10px 10px;
-}
-
 .rollable
 {
     display: block;
-}
-
-.registered_student_module
-{
-    background-color: blue;
-}
-
-.past_module
-{
-    color: gray;
-}
-
-.future_module
-{
-    background-color: lightblue;
 }
 
 .control_buttons
@@ -910,19 +885,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     color: white;
 }
 
-.module_menu
-{
-    background-color: #181818;
-    color: white;
-    position: absolute;
-    height: 100%;
-    width: 19%;
-    top: 0px;
-    left: 0px;
-    font-size: small;
-    line-height: 150%;
-}
-
 .tinyscroll::-webkit-scrollbar
 {
     width: 5px;
@@ -944,48 +906,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 {
     background: #181818;
     border-radius: 15px;
-}
-
-.module_menu a
-{
-    color: white;
-    text-decoration: none;
-    padding-left: 3%;
-}
-
-.module_menu a:hover
-{
-    text-decoration: underline overline;
-}
-
-.module_body
-{
-    position: absolute;
-    top: 0px;
-    left: 20%;
-    width: 80%;
-    height: 100%;
-}
-
-.module_body .module_activity
-{
-    width: 90%;
-    padding-left: 10px;
-    margin-left: 2.5%;
-    background-color: gray;
-    height: 40px;
-    margin-bottom: 10px;
-}
-
-.module_body .module_block
-{
-    width: 45%;
-    height: 220px;
-    margin: 20px 20px 20px 20px;
-    padding: 10px 10px 10px 10px;
-    background-color: gray;
-    display: inline-block;
-    vertical-align: bottom;
 }
 
 .calendar_menu

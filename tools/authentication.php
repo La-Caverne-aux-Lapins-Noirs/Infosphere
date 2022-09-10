@@ -62,7 +62,7 @@ function get_login_info($login, $password, $clear_password=true)
     return (new ValueResponse($usr));
 }
 
-function generate_password($len = 10)
+function generate_password($len = 12)
 {
     // Pas de O majuscule (pour ne pas confondre), pas de \, ni `, ni ", ni ', ni ~ ou ^
     $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&~#{([-|_@)]=}+$%*,?;.:/!";
@@ -206,6 +206,7 @@ function set_user_data($id, $vals, $misc_fields = [])
     if (!isset($vals))
 	return (new ErrorResponse("MissingParameter"));
 
+    /*
     $misc = $User["misc_configuration"];
     foreach ($misc_fields as $i => $v)
     {
@@ -216,6 +217,7 @@ function set_user_data($id, $vals, $misc_fields = [])
 	unset($vals[$v["label"]]);
     }
     $vals["misc_configuration"] = json_encode($misc, JSON_UNESCAPED_SLASHES);
+    */
 
     /// Il faut resoudre id
     $constfields = ["id", "password", "salt", "local_salt", "codename", "registration_date"];

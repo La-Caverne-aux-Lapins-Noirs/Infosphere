@@ -3,6 +3,7 @@
 function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
 {
     global $Language;
+    global $Configuration;
 
     $strong = in_array($type, [
 	5, // Examen
@@ -44,6 +45,10 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
 	    ));
 	}
     }
+
+    foreach ($all as &$v)
+	$v["icon"] = $Configuration->MedalsDir($v["codename"])."/icon.png";
+    
     return ($all);
 }
 

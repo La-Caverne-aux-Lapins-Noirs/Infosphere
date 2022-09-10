@@ -1,98 +1,71 @@
 <?php
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-require ("ext/phpmailer/src/Exception.php");
-require ("ext/phpmailer/src/PHPMailer.php");
-require ("ext/phpmailer/src/SMTP.php");
-
-function send_mail($target, $title, $body)
+function send_mail($target, $title, $content, $domain = NULL)
 {
     global $Configuration;
 
-    if (!strlen(@$Configuration->Properties["mail_login"]) ||
-	!strlen(@$Configuration->Properties["mail_password"]))
-    {
-	// Pas de mail configuré, on envoi rien. On log pour prevenir quand meme l'administrateur.
-	add_log(TRACE, "Send mail called without mailed configured. No mail were sent.");
-	return (new Response);
-    }
-    
     if (!is_array($target))
 	$target = [$target];
-    try
+    $Key = @$Configuration->Properties["mailgun_key"];
+    $Sender = @$Configuration->Properties["mailgun_sender"];
+    if ($domain == NULL)
+	$Domain = @$Configuration->Properties["domain"];
+    else
+	$Domain = $domain;
+    if (!$Key || !$Sender || !$Domain)
     {
-	$body = str_replace("\n", "<br />", $body);
-	$body = handle_french($body);
-	$mail = new PHPMailer(true);
-	//$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-	$mail->isSMTP();
-	$mail->Host = 'smtp.office365.com';
-	$mail->SMTPAuth = true;
-	$mail->Username = $Configuration->Properties["mail_login"];
-	$pass = $Configuration->Properties["mail_password"];
-	$pass = openssl_decrypt($pass, "des", "this_is_the_key", 0, "azertyui");
-	$mail->Password = $pass;
-
-	// Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-	$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-	// TCP port to connect to, use 465 for `PHPMailer::ENCRYPTION_SMTPS` above
-	$mail->Port = 587;
-
-	$mail->setFrom($mail->Username, 'Albedo');
-	foreach ($target as $tar)
-	{
-	    if (isset($tar["mail"]) && isset($tar["name"]))
-		$mail->addAddress($tar["mail"], $tar["name"]);
-	    else
-		$mail->addAddress($tar);
-	}
-	$mail->isHTML(true);
-	$mail->Subject = handle_french($title);
-	$mail->Body = $body;
-	$mail->AltBody = strip_tags($body);
-	$mail->send();
+	add_log(TRACE, "A mail sending was requested without the Infosphere to be able to process it. Set a mailgun key, a sending mail adress and the currently used domain.");
+	return (new ErrorResponse("CannotSendMail"));
     }
-    catch (Exception $e)
-    {
-	return (new ErrorResponse("CannotSendMail", $e->getMessage()));
-    }
+    $Cmd = [
+	"curl -s --user 'api:$Key'",
+	"https://api.eu.mailgun.net/v3/$Domain/messages",
+	"-F from='Infosphere $Domain <mailgun@$Domain>'"
+    ];
+    foreach ($target as $tar)
+	$Cmd[] = "-F to=$tar";
+    $Cmd = array_merge($Cmd, [
+	"-F subject=".escapeshellarg($title),
+	"-F text=".escapeshellarg($content),
+    ]);
+    $Cmd[] = "2>&1";
+    $Cmd = implode(" ", $Cmd);
+    echo htmlentities($Cmd);
+    if (($Output = shell_exec($Cmd))[0] != "{")
+	return (new ErrorResponse("CannotSendMail", $Output));
     return (new Response);
 }
 
-function send_mail_change_mail($user, $new_user)
+function send_mail_change_mail($user, $new_user, $domain = NULL)
 {
     global $Dictionnary;
+    global $Configuration;
 
-    if (($request = send_mail($user["mail"],
-			      $Dictionnary["MailChangedTitle"],
-			      sprintf($Dictionnary["MailChangedContent"],
-				      $_SERVER["SERVER_NAME"],
-				      $new_user["mail"],
-				      get_client_ip())
-    ))->is_error())
+    if ($domain == NULL)
+	$Domain = @$Configuration->Properties["domain"];
+    else
+	$Domain = $domain;
+    $Content = sprintf($Dictionnary["MailChangedContent"],
+		       $Domain,
+		       $new_user["mail"],
+		       get_client_ip()
+    );
+    if (($request = send_mail($user["mail"], $Dictionnary["MailChangedTitle"], $Content))->is_error())
     {
 	add_log(TRACE, "Cannot send mail change mail to old ".$user["mail"], $user["id"]);
 	return ($request);
     }
     
-    if (($request = send_mail($new_user["mail"],
-			      $Dictionnary["MailChangedTitle"],
-			      sprintf($Dictionnary["MailChangedContent"],
-				      $_SERVER["SERVER_NAME"],
-				      $new_user["mail"],
-				      get_client_ip()))
-    )->is_error())
+    if (($request = send_mail($new_user["mail"], $Dictionnary["MailChangedTitle"], $Content))->is_error())
 	add_log(TRACE, "Cannot send mail change mail to new ".$new_user["mail"], $user["id"]);
-
+    
     return ($request);
 }
 
-function send_password_change_mail($user, $new_password)
+function send_password_change_mail($user, $new_password, $domain = NULL)
 {
     global $Dictionnary;
+    global $Configuration;
 
     // BACKDOOR TEMPORAIRE EN ATTENDANT D'AVOIR UN SERVEUR MAIL
     /*
@@ -109,20 +82,24 @@ function send_password_change_mail($user, $new_password)
      */
     // FIN DE LA BACKDOOR
 
-    if (($request = send_mail($user["mail"],
-			      $Dictionnary["PasswordChangedTitle"],
-			      sprintf($Dictionnary["PasswordChangedContent"],
-				      $_SERVER["SERVER_NAME"],
-				      $new_password,
-				      get_client_ip()))
-    )->is_error())
+    if ($domain == NULL)
+	$Domain = @$Configuration->Properties["domain"];
+    else
+	$Domain = $domain;
+    $Content = sprintf($Dictionnary["PasswordChangedContent"],
+		       $Domain,
+		       $new_password,
+		       get_client_ip()
+    );
+    if (($request = send_mail($user["mail"], $Dictionnary["PasswordChangedTitle"], $Content))->is_error())
         add_log(TRACE, "Cannot send password change mail to ".$user["mail"], $user["id"]);
     return ($request);
 }
 
-function send_subscribe_mail($id, $login, $mail, $password)
+function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
 {
     global $Dictionnary;
+    global $Configuration;
 
     /*
     // BACKDOOR TEMPORAIRE EN ATTENDANT D'AVOIR UN SERVEUR MAIL
@@ -137,13 +114,16 @@ function send_subscribe_mail($id, $login, $mail, $password)
     file_put_contents("./users.json", $file);
      */
 
-    if (($request = send_mail($mail,
-			      $Dictionnary["SubscribeTitle"],
-			      sprintf($Dictionnary["SubscribeContent"],
-				      $_SERVER["SERVER_NAME"],
-				      $login,
-				      $password))
-    )->is_error())
+    if ($domain == NULL)
+	$Domain = @$Configuration->Properties["domain"];
+    else
+	$Domain = $domain;
+    $Content = sprintf($Dictionnary["SubscribeContent"],
+		       $Domain,
+		       $login,
+		       $password
+    );
+    if (($request = send_mail($mail, $Dictionnary["SubscribeTitle"], $Content))->is_error())
 	add_log(TRACE, "Cannot send password change mail to ".$mail, $id);
     return ($request);
 }

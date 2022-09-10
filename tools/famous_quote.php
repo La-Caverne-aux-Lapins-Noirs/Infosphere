@@ -30,6 +30,19 @@ $FamousQuote["fr"] = [
     "Le temps de vivre, c'est aussi le temps d'aimer",
     "La science consiste à faire ce qu'on fait en sachant et en disant que c'est tout ce qu'on peut faire, en énonçant les limites de la validité de ce qu'on fait",
     "Proverbe vegan: On ne fait pas d'omelette",
+    "Le courage n'est pas l'absence de peur, mais la capacité de la vaincre",
+    "Choisissez un travail que vous aimez et vous n'aurez pas à travailler un seul jour de votre vie",
+    "Le domaine de la liberté commence là où s'arrête le travail déterminé par la nécéssité",
+    "Offrir l'amitié à qui veut l'amour, c'est donner du pain à qui meurt de soif",
+    "Celui qui sème l'injustice moissonne le malheur",
+    "Tout n'est pas politique, mais la politique s'intéresse à tout",
+    "Tous les ennemis de la liberté parlent contre le despotisme d'opinion, parce qu'ils préfèrent le despotisme de la force",
+    "Après la faculté de penser, celle de communiquer ses pensées à ses semblables est l'attribut le plus frappant qui distingue l'homme de la brute",
+    "Rien n'est juste que ce qui est honnête; rien n'est utile que ce qui est juste",
+    "IL est plus facile de nous ôter la vie que de triompher de nos principes",
+    "La clémence qui compose avec la tyrannie est barbare",
+    "Après le pain, l'éducation est le premier besoin du peuple",
+    "Pour enchaîner les peuples, on commence par les endormir",
 ];
 
 $FamousQuote["en"] = [

@@ -76,6 +76,24 @@ table
     min-width: 200px;
 }
 
+.edit_console_left
+{
+    height: 95%;
+}
+
+.edit_console_left > tr > td:last-of-type
+{
+    width: 85%;
+    text-align: center;
+}
+
+.edit_console_left > tr > td:first-of-type
+{
+    padding-left: 20px;
+    padding-right: 20px;
+    min-width: 200px;
+}
+
 ._50hpx
 {
     height: 50px;

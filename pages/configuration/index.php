@@ -17,6 +17,8 @@ if ($result != "")
 {
     echo "<h2>".$Dictionnary["Results"]."</h2>";
     echo '<div style="width: 100%; height: 600px; overflow: auto; border: 3px black solid; background-color: #ff69b4;">';
+    $result = str_replace("\n", "<br/>", $result);
+    $result = str_replace(" ", "&nbsp;", $result);
     echo $result;
     echo '</div>';
 }
