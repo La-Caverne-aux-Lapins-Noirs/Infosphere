@@ -1,0 +1,8 @@
+
+[Efficient 'En RAM
+  {Overlay
+    RessourceFile = @"./efficient.png"
+    UnderText = false
+    ColorMask = 255, 255, 255, 12
+  }
+]

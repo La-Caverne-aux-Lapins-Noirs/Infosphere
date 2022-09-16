@@ -26,4 +26,27 @@
 .module_tab td
 {
     padding: 10px;
+    border-radius: 5px;
+}
+
+.medalscroll
+{
+    height: 100px;
+}
+
+.medalscroll > div
+{
+    width: 100%;
+    height: 105px;
+    text-align: left;
+    overflow-x: auto;
+    background-color: lightgray;
+    border-radius: 5px;
+}
+
+.gradetab td
+{
+    text-align: center;
+    padding: 0;
+    vertical-align: middle;
 }

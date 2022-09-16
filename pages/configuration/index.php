@@ -2,6 +2,12 @@
 require_once ("fetch_log.php");
 require_once ("usual_operation.php");
 
+if (!is_admin())
+{
+    http_response_code(404);
+    die();
+}
+
 $result = "";
 if (file_exists(__DIR__."/handle_request.php")
     && is_admin()

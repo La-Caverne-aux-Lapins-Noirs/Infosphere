@@ -47,7 +47,12 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
     }
 
     foreach ($all as &$v)
+    {
 	$v["icon"] = $Configuration->MedalsDir($v["codename"])."/icon.png";
+	$v["band"] = $Configuration->MedalsDir($v["codename"])."band.png";
+	if (!file_exists($v["band"]))
+	    $v["band"] = NULL;
+    }
     
     return ($all);
 }

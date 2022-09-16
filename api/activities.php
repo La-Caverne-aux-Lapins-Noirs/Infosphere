@@ -57,6 +57,74 @@ function AddModule($id, $data, $method, $output, $module)
     return (DisplayModule($id, [], "GET", $output, $module));
 }
 
+function SetActivityRegistration($id, $data, $method, $output, $module)
+{
+    global $User;
+    
+    if ($id == -1)
+	bad_request();
+    ($activity = new FullActivity)->build($id);
+    $auth = false;
+    if (isset($data["id_user"]))
+    {
+	if (($auth = is_teacher_for_activity($id)) == false)
+	    forbidden();
+	$id_user = $data["id_user"];
+    }
+    else
+    {
+	if (($auth = is_teacher_for_activity($id)) != false)
+	    forbidden();
+	$id_user = $User["id"];
+    }
+    if (isset($data["id_team"]))
+	$target_team = $data["id_team"];
+    else
+	$target_team = -1;
+    $team = db_select_one("
+	team.id
+	FROM team
+	LEFT JOIN user_team
+	ON team.id = user_team.id_team
+	WHERE team.id_activity = $id AND user_team.id_user = $id_user
+    ");
+
+    // Si on est prof, on inscrit directement. Sinon on doit verifier les règles
+    if ($auth)
+    {
+	if ($team == NULL)
+	{
+	    $ret = subscribe_to_instance($activity, $id_user, $target_team, true);
+	    $msg = "Subscribed";
+	}
+	else
+	{
+	    $ret = unsubscribe_from_instance($activity, $id_user, true);
+	    $msg = "Unsubscribed";
+	}
+    }
+    else
+    {
+	// On est pas prof, on doit verifier les règles
+	if ($team == NULL)
+	{
+	    $ret = subscribe_to_instance($activity);
+	    $msg = "YouHaveSubscribed";
+	}
+	else
+	{
+	    $ret = unsubscribe_from_instance($activity);
+	    $msg = "YouHaveUnsubscribed";
+	}
+    }
+
+    if ($ret->is_error())
+	return ($ret);
+    return (new ValueResponse([
+	"msg" => $msg
+    ]));
+}
+
 // Instantie autant les activités que les modules.
 function Instantiate($id, $data, $method, $output, $module)
 {

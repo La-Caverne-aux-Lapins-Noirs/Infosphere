@@ -5,12 +5,16 @@
 </td><td class="submenutd">
     <?php if (isset($_GET["a"])) { ?>
 	<?php if (isset($valid_activities[$module = (int)$_GET["a"]])) { ?>
-	    <?php require_once ("module.phtml"); ?>
+	    <?php if (is_teacher_for_activity($module) && (int)@$_GET["b"]) { ?>
+		<?php require_once ("admin.phtml"); ?>
+	    <?php } else { ?>
+		<?php require_once ("module.phtml"); ?>
+	    <?php } ?>
 	<?php } else { ?>
 	    <?=$Dictionnary["NotFound"]; ?>
 	<?php } ?>
     <?php } else { ?>
-	
+	<?php require ("module_resume.php"); ?>
     <?php } ?>
 </td></tr></table>
 

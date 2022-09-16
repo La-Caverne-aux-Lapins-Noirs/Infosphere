@@ -30,7 +30,6 @@ function send_mail($target, $title, $content, $domain = NULL)
     ]);
     $Cmd[] = "2>&1";
     $Cmd = implode(" ", $Cmd);
-    echo htmlentities($Cmd);
     if (($Output = shell_exec($Cmd))[0] != "{")
 	return (new ErrorResponse("CannotSendMail", $Output));
     return (new Response);

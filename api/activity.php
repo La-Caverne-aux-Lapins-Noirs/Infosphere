@@ -92,6 +92,10 @@ $Tab = [
 	    "is_assistant_for_activity",
 	    "GetMoodDir"
 	],
+	"registration" => [
+	    "everybody",
+	    "SetActivityRegistration",
+	],
     ],
     "DELETE" => [
 	"" => [

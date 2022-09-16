@@ -1,0 +1,8 @@
+
+[Short
+  {Overlay
+    RessourceFile = @"./short.png"
+    UnderText = false
+    ColorMask = 255, 255, 255, 12
+  }
+]

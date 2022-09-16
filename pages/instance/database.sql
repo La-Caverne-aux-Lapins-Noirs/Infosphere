@@ -58,3 +58,35 @@ CREATE TABLE `pickedup_work` (
 ALTER TABLE `pickedup_work`
   ADD PRIMARY KEY (`id`),
   ADD KEY `id_team` (`id_team`);
+
+CREATE TABLE `ticket` (
+  `id` int(11) NOT NULL,
+  `id_team` int(11) NOT NULL,
+  `id_sprint` int(11) DEFAULT NULL,
+  `id_user` int(11) DEFAULT NULL,
+  `estimated_time` int(11) DEFAULT NULL,
+  `real_time` int(11) DEFAULT NULL,
+  `title` text NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` int(11) DEFAULT NULL,
+  `creation_date` datetime,
+  `done_date` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+ALTER TABLE `ticket`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_team` (`id_team`),
+  ADD KEY `id_sprint` (`id_sprint`),
+  ADD KEY `id_user` (`id_user`);
+
+CREATE TABLE `sprint` (
+  `id` int(11) NOT NULL,
+  `id_team` int(11) NOT NULL,
+  `title` text NOT NULL,
+  `start_date` datetime,
+  `done_date` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+ALTER TABLE `sprint`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_team` (`id_team`);

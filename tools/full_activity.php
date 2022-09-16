@@ -67,12 +67,12 @@ class FullActivity extends Response
     const GRADE_VALIDATION = 2;
     const PERCENT_VALIDATION = 1;
     const NO_VALODATION = 0;
-    public $validation = FulLActivity::RANK_VALIDATION;
+    public $validation = FullActivity::RANK_VALIDATION;
 
     const MANUAL_SUBSCRIPTION = 0;
     const MANDATORY_SUBSCRIPTION = 1;
     const AUTOMATIC_SUBSCRIPTION = 2;
-    public $subscription = FulLActivity::MANUAL_SUBSCRIPTION;
+    public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
 
     public $slot_duration = -1;
     public $estimated_work_duration = 0;
@@ -100,7 +100,6 @@ class FullActivity extends Response
     public $en_method;
     public $en_reference;
     // Parceque c'est vraiment de la merde comme fonctionnement
-
     
     public $emergence_date = NULL;
     public $done_date = NULL;
@@ -125,7 +124,7 @@ class FullActivity extends Response
     public $registered = false;
     public $user_team = NULL;
     public $leader = false;
-    public $session_registered = -1;
+    public $session_registered = NULL;
     public $registered_elsewhere = false;
     public $is_teacher = false;
     public $is_assistant = false;
@@ -390,10 +389,9 @@ class FullActivity extends Response
                  WHERE id_activity = {$this->id}
 	    ");
 	}
-	foreach ($acyc as $ac)
-	{
-	    $this->teacher = array_merge($this->teacher, fetch_teacher($ac, true, "cycle"));
-	}
+	if (@$Configuration->Properties["direction_is_teacher"])
+	    foreach ($acyc as $ac)
+		$this->teacher = array_merge($this->teacher, fetch_teacher($ac, true, "cycle"));
 
 	$auth = retrieve_authority($this->teacher);
 	$this->is_teacher = $this->is_teacher || $auth >= TEACHER;
@@ -539,13 +537,14 @@ class FullActivity extends Response
 		$ses = new FullSession;
 		$ses->build($a, $this, NULL, $only_user);
 		if ($ses->registered)
-		    $this->session_registered = $ses->id;
+		    $this->session_registered = $ses;
 		$this->session[] = $ses;
 	    }
 	    if (count($this->session))
 	    {
 		$this->unique_session = &$this->session[0];
-		if ($this->unique_session->id != $this->session_registered && $this->session_registered != -1)
+		if ($this->session_registered != NULL
+		    && $this->unique_session->id != $this->session_registered->id)
 		    $this->registered_elsewhere = true;
 	    }
 	}

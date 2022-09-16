@@ -1,0 +1,8 @@
+
+[Defensive
+  {Overlay
+    RessourceFile = @"./defensive.png"
+    UnderText = false
+    ColorMask = 255, 255, 255, 12
+  }
+]

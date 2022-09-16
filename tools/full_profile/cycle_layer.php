@@ -14,9 +14,15 @@ class CycleLayer extends Layer
     {
 	global $Language;
 	global $Database;
+	global $Configuration;
 
 	/// On récupère les profs du cycle
-	$teachers = fetch_teacher($cycle_id, true, "cycle");
+	if (@$Configuration->Properties["direction_is_teacher"])
+	    $teachers = fetch_teacher($cycle_id, true, "cycle");
+	else
+	    $teachers = [];
+	// Aucune raison de récupérer les profs du cycle -> la direction
+	// n'a rien a voir avec les cours eux meme.
 	$auth = retrieve_authority($teachers);
 	$this->is_teacher = $auth >= TEACHER;
 	$this->is_assistant = $auth >= ASSISTANT;

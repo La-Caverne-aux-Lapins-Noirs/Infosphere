@@ -1,0 +1,8 @@
+
+[Recursive
+  {Overlay
+    RessourceFile = @"./recursive.png"
+    UnderText = false
+    ColorMask = 255, 255, 255, 12
+  }
+]

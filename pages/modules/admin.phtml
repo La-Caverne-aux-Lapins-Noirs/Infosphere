@@ -1,0 +1,102 @@
+<?php
+// Ajouter et retirer des inscrits
+// Mettre des médailles et les enlever
+
+($matter = new FullActivity)->build($module);
+?>
+<script>
+ function sync_all_scrolls(scr)
+ {
+     var scrolls = document.getElementsByClassName("hscrolls");
+
+     for (var i = 0; i < scrolls.length; ++i)
+	 scrolls.item(i).scrollLeft = scr.scrollLeft;
+ }
+</script>
+<table class="content_table" style="margin-left: 20px; width: calc(100% - 30px);">
+    <tr>
+	<td colspan="5" style="text-align: left; padding-left: 20px;">
+	    <br />
+	    <a href="<?=unrollurl(["b" => NULL]); ?>" style="color: black;">
+		<?=$Dictionnary["BackToModule"]; ?>
+	    </a><br />
+	    <br />
+	    <form method="put" action="/api/module/<?=$matter->id; ?>/registration">
+		<label for="id_user"><?=$Dictionnary["AddOrRemoveUsers"]; ?></label><br />
+		<input type="text" name="id_user" value="" placeholder="<?=$Dictionnary["Users"]; ?>" />
+		<input type="button" onclick="" value="&#10003;"  />
+	    </form><br />
+	    <br />
+	</td>
+    </tr>
+    <tr>
+	<th style="width: 15%;"><?=$Dictionnary["User"]; ?></th>
+	<th style="width: 65%;">
+	    <div class="hscrolls" onscroll="sync_all_scrolls(this);">
+		<table><tr>
+		    <?php foreach ($matter->medal as $medal) { ?>
+			<td>
+			    <div
+				class="medal_box_picture"
+				style="
+				       display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
+				       background-image: url('<?=$medal["icon"]; ?>');
+				       <?php if ($medal["band"] != NULL) { ?>
+				       border-radius: 25px;
+				       border: 2px black solid;
+				       <?php } ?>
+				       width: 46px !important; height: 46px !important;
+				       "
+			    ></div> 
+			</td>
+		    <?php } ?>
+		</tr></table>
+	    </div>
+	</th>
+	<th><?=$Dictionnary["Grade"]; ?></th>
+	<th><?=$Dictionnary["Credits"]; ?></th>
+	<th style="width: 10%;">
+	    <img src="res/cog.png" width="50" height="50" />
+	</th>
+    </tr>
+
+    <?php $cnt = 0; ?>
+    <?php foreach ($matter->team as $team) { ?>
+	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <td>
+		<?php $id = array_key_first($team["user"]); ?>
+		<a href="index.php?p=ProfileMenu&amp;a=<?=$id; ?>">
+		    <?=$team["user"][$id]; ?>
+		</a>
+	    </td>
+	    <td>
+		<div class="hscrolls" onscroll="sync_all_scrolls(this);">
+		    <table><tr>
+			<?php foreach ($matter->medal as $medal) { ?>
+			    <td>
+				<?php // Check ou pas ?>
+			    </td>
+			<?php } ?>
+		    </tr></table>
+		</div>
+	    </td>
+	    <td>
+		<?php // Le grade acquis ?>
+	    </td>
+	    <td>
+		<?php // Les flammes acquises ?>
+	    </td>
+	    <td>
+		<form method="put" action="/api/module/<?=$matter->id; ?>/registration">
+		    <input type="hidden" name="id_user" value="<?=$id; ?>" />
+		    <input type="text" value="" placeholder="<?=$Dictionnary["Grade"]; ?>" />
+		    <input type="button" onclick="" value="&#10007;" />
+		</form>
+		<form method="put" action="/api/module/<?=$matter->id; ?>/registration">
+		    <input type="hidden" name="id_user" value="<?=$id; ?>" />
+		    <input type="button" onclick="" value="&#10003;" />
+		</form>
+	    </td>
+	</tr>
+    <?php } ?>
+</table>

@@ -25,12 +25,15 @@ function is_teacher($id = NULL)
 
     if (is_admin())
 	return (true);
-    return (db_select_one("
-	activity_teacher.id FROM activity_teacher
-	LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
+    $ret = db_select_one("
+	activity_teacher.id
+        FROM activity_teacher
+	LEFT JOIN user_laboratory
+        ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
 	WHERE activity_teacher.id_user = {$User["id"]}
 	OR user_laboratory.id_user = {$User["id"]}
-	"));
+	");
+    return ($ret);
 }
 
 function is_assistant_for_activity($id)
