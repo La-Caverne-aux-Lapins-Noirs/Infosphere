@@ -33,12 +33,23 @@ h1
 {
     height: calc(100% - 40px);
 }
+#module_list, #activity_list, #session_list
+{
+    height: calc(100% - 20px);
+    overflow-y: auto !important;
+}
 #activity_tab td > div
 {
     width: 99%;
     margin-left: 0.5%;
     height: calc(100% - 20px);
     overflow: auto;
+}
+@-moz-document url-prefix() {
+    #module_list, #activity_list, #session_list
+    {
+	height: 700px !important;
+    }
 }
 #activity_tab td > div::-webkit-scrollbar
 {

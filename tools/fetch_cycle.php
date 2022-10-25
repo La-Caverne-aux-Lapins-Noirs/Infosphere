@@ -34,7 +34,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
 	}
 	else
 	{
-	    if (($d = db_select_one("codename FROM cycle WHERE id = {$v["id_template"]}")))
+	    if (@$v["id_template"] && ($d = db_select_one("codename FROM cycle WHERE id = {$v["id_template"]}")))
 		$v["codename_template"] = $d["codename"];
 	    else
 		$v["codename_template"] = NULL;

@@ -64,7 +64,7 @@ function collect_projects($start, $end, $wlist)
 	$s->build($sess["id"], false, false);
 	if ($s->is_assistant == false && filter_out_activity($s, $wlist))
 	    continue ;
-	if ($ActivityType[$s->type]["type"] != PROJECT || $ActivityType[$s->type]["id"] == 15)
+	if ($s->type_type != 1 || $ActivityType[$s->type]["id"] == 15)
 	    continue ;
 	$projects[] = $s;
     }

@@ -51,61 +51,34 @@
 	<?=$Dictionnary["MaximumSubscription"].": ".$matter->maximum_subscription; ?>
     <?php } ?>
 </td><td style="padding: 0;">
-
-    <table class="gradetab">
-	<tr><th>
-	    
-	</th><th>
-	    <?=$Dictionnary["GradeD"]; ?>
-	</th><th>
-	    <?=$Dictionnary["GradeC"]; ?>
-	</th><th>
-	    <?=$Dictionnary["GradeB"]; ?>
-	</th><th>
-	    <?=$Dictionnary["GradeA"]; ?>
-	</th></tr>
-	<tr><td>
-	    <?=$Dictionnary["RequiredMedalAcquistionPercentage"]; ?>
-	</td><td>
-	    <?=$matter->grade_d; ?>%
-	</td><td>
-	    <?=$matter->grade_c; ?>%
-	</td><td>
-	    <?=$matter->grade_b; ?>%
-	</td><td>
-	    <?=$matter->grade_a; ?>%
-	</td></tr>
-	<tr><td>
-	    <?=$Dictionnary["AcquiredCredit"]; ?>
-	</td><td>
-	    <?=$matter->credit_d; ?>
-	</td><td>
-	    <?=$matter->credit_c; ?>
-	</td><td>
-	    <?=$matter->credit_b; ?>
-	</td><td>
-	    <?=$matter->credit_a; ?>
-	</td></tr>
-	<tr><td colspan="5">
-	    <b><?=$Dictionnary["GradeBonus"]; ?></b>: <?=$matter->grade_bonus; ?>%
-	</td></tr>
-    </table>
-    
+    <?php require_once ("grade_array.phtml"); ?>
 </td><td style="padding-top: 0px; text-align: center;">
 
     <?php if ($matter->subscription != FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
-    
+
 	<?php if (!period($matter->registration_date, $matter->close_date)) { ?>
 	    <b><?=$Dictionnary["SubscriptionPeriodIsClose"]; ?></b>
 	<?php } else { ?>
+	    <?php $js = "silent_submit(this); setTimeout(function() { location.reload(); }, 500);"; ?>
 	    <form method="put" action="/api/module/<?=$module; ?>/registration">
-		<?php if ($matter->allow_unregistration == false) { ?>
-		    <b style="color: white;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>!</b>
-		<?php } else if ($matter->registered) { ?>
-		    <input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Unsubscribe"]; ?>" />		
-		<?php } ?>
-		<?php if ($matter->registered == false) { ?>
-		    <input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Subscribe"]; ?>" />
+		<?php if ($matter->registered) { ?>
+		    
+		    <?php if ($matter->allow_unregistration == false) { ?>
+			<input type="button" value="<?=$Dictionnary["Subscribed"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
+		    <?php } else { ?>
+			<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Unsubscribe"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
+		    <?php } ?>
+		    
+		<?php } else if ($matter->registered == false) { ?>
+		    <input
+			type="button"
+			onclick="<?=$js; ?>"
+			value="<?=$Dictionnary["Subscribe"]; ?>"
+			style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;"
+		    /><br /><br />
+		    <?php if ($matter->allow_unregistration == false) { ?>
+			<b style="color: white;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>.</b><br />
+		    <?php } ?>
 		<?php } ?>
 	    </form>
 	<?php } ?>
@@ -116,6 +89,11 @@
     <?=$matter->description; ?>
 </td></tr><tr><td colspan="3" class="medalscroll">
     <div>
+	<?php if (!count($matter->medal)) { ?>
+	    <span style="position: relative; top: 10px; left: 10px; font-style: italic; color: gray;">
+		<?=$Dictionnary["NoAssociatedMedalToMatter"]; ?>
+	    </span>
+	<?php } ?>
 	<?php foreach ($matter->medal as $medal) { ?>
 	    <div
 		class="medal_box_picture"

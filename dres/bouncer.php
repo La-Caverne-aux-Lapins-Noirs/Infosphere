@@ -53,8 +53,8 @@ if ($type == "activity")
     // C'est pas la configuration?
     if ($target[2] == "configuration.dab")
 	not_found(); // Trop d'informations pour les étudiants...
-    // On est inscrit?
-    if ($activity->registered == false)
+    // On est inscrit? On est accepté?
+    if ($activity->registered == false || $activity->leader == 0)
 	forbidden();
     // Le sujet est dispo?
     if ($activity->subject_appeir_date == NULL || $activity->subject_appeir_date < now())

@@ -55,7 +55,7 @@
 	    </a>
 	    <?php add_menu_entries($TopMenu); ?>	    
 	    <div style="float: right;" id="clock">
-		<?=date("d/m/Y h:m:s", time()); ?>
+		<?=human_date(now()); ?>
 	    </div>
 	    <script type="text/javascript">
 	     var clock = document.getElementById("clock");

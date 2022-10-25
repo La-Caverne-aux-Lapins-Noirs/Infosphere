@@ -12,9 +12,10 @@
 	/>
     </form>
 </div>
+<br />
 
 <?php if (is_teacher()) { ?>
-    <table class="afullscreen"><tr><td class="formular_slot">
+    <table class="afullscreen"><tr><td class="formular_slot" style="width: 65%;">
 <?php } ?>
 <div class="fullscreen scrollable" id="medallist">
     <?php $medals = fetch_medal(); ?>

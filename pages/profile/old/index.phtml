@@ -1,0 +1,106 @@
+<?php
+require_once ("get_managed_activities.php");
+require_once ("sort_by_month.php");
+
+$refresh = false;
+
+$conf_fields = [
+    "EnableManagedActivityReport" => [
+	"label" => "managed_activity_report",
+	"type" => "checkbox",
+    ],
+];
+
+if (file_exists(__DIR__."/handle_request.php")
+    && $User != NULL
+    && isset($_POST["action"]))
+    require_once (__DIR__."/handle_request.php");
+
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+if (isset($_POST["action"]) && $_POST["action"] == "add_message")
+{
+    $request = intercom_handle_request("user", $user["id"]);
+    $LogMsg = "MessageSent";
+}
+
+if (is_admin()
+    && ($lst = try_get($_POST, "reportcard", [])) != []
+    && ($cyc = try_get($_POST, "cycle", [])) != []
+    && isset($silent) && $silent && $ErrorMsg == "")
+{
+    require_once (__DIR__."/report_card_request.php");
+    return ;
+}
+
+require_once (__DIR__."/../error_net.php");
+
+if (!isset($user) || $user == NULL)
+    return ;
+
+function _display_medal($mod_medal, $medal, $mod)
+{
+    if ($mod_medal == false)
+	return (true);
+    if ($mod->validation_by_percent)
+	return ($medal["module_medal"]);
+    if ($medal["type"] == 0) // Médaille positive seulement
+    {
+	// On affiche si c'est une médaille de module ou si c'est une médaille acquise
+	if ($medal["module_medal"])
+	    return (true);
+	return ($medal["success"] > 0);
+    }
+    return (false);
+}
+
+if ($User["id"] == $user["id"] || is_admin())
+{
+    $user["visibility"] = COMPLETE_PROFILE;
+}
+
+if ($user["visibility"] == HIDDEN && $User["authority"] < ASSISTANT)
+{
+    $ErrorMsg = "ThisProfileIsHidden";
+    return ;
+}
+
+$data = get_full_profile($user, ["only_user"], $refresh);
+$user["credit"] = $data->acquired_credit;
+
+?>
+<div class="double_horizontal">
+    <div>
+	<div style="width: 100%; height: 250px; overflow: auto; position: relative;" class="final_box">
+	    <?php if (($user["codename"] == $User["codename"] || is_admin()) && $edit_profile) { ?>
+		<?php require ("formular.php"); ?>
+	    <?php } else { ?>
+		<?php require ("profile.php"); ?>
+	    <?php } ?>
+	</div>
+	<br />
+	<?php if ($user["visibility"] > PROFILE_ONLY || is_admin()) { ?>
+	    <?php require ("graph.php"); ?>
+	<?php } ?>
+    </div>
+
+    <div class="final_box" style="height: 99%;">
+	<?php
+	$panel = [
+	    $Dictionnary["Profile"] => __DIR__."/cursus.phtml",
+	    $Dictionnary["ManagedActivities"] => __DIR__."/managed_activities.phtml",
+	    $Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
+	];
+	foreach ($user["cycle"] as $c)
+	{
+	    if (substr($c["codename"], 0, 3) == "PRG")
+	    {
+		$panel[$Dictionnary["AuthorizedFunctions"]] = __DIR__."/functions.phtml";
+		break ;
+	    }
+	}
+	tabpanel($panel, $Position.$user["id"], $Dictionnary["Profile"]);
+	?>
+    </div>
+</div>

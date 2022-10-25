@@ -6,9 +6,11 @@
 		    <?=$activity->parent_name; ?>
 		</a><br />
 	    <?php } ?>
-	    <?=$Dictionnary[$activity->type_name]; ?>
+	    <?php if ($activity->type != 19) { // Misc ?>
+		<?=$Dictionnary[$activity->type_name]; ?>
+	    <?php } ?>
 	</h3>
-	<h1><?=$activity->name; ?></h1>
+	<h1 style="width: 100%; font-size: xx-large; text-decoration: underline;"><?=$activity->name; ?></h1><br /><br />
 	<p><?=$activity->codename; ?></p>
 
 	<?php if ($activity->reference_activity != -1) { ?>

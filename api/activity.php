@@ -93,7 +93,7 @@ $Tab = [
 	    "GetMoodDir"
 	],
 	"registration" => [
-	    "everybody",
+	    "everybody", // Autorisation trop complexe pour etre ici.
 	    "SetActivityRegistration",
 	],
     ],

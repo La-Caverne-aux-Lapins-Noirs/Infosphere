@@ -9,12 +9,13 @@
                 ON user.id = user_school.id_user
               LEFT JOIN school_cycle
                 ON school_cycle.id_school = user_school.id_school
-                AND school_cycle.id_cycle = {$cycle["id"]}
               LEFT JOIN user_cycle
                 ON user_cycle.id_user = user.id
+                AND user_cycle.id_cycle = {$cycle["id"]}
               WHERE deleted IS NULL
-              AND user_cycle.id IS NULL
+              AND school_cycle.id_cycle = {$cycle["id"]}
               AND user_school.authority = 0
+              AND user_cycle.id IS NULL
               ORDER BY codename ASC
 		");
 	    if (count($users)) { ?>

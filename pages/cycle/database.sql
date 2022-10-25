@@ -3,6 +3,7 @@ CREATE TABLE `cycle` (
   `id` int(11) NOT NULL,
   `codename` varchar(64) NOT NULL,
   `is_template` int(11) DEFAULT NULL,
+  `id_template` int(11) DEFAULT NULL,
   `deleted` datetime DEFAULT NULL,
 
   `first_day` datetime DEFAULT NULL,

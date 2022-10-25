@@ -78,7 +78,6 @@ function handle_links(
 	    $neg = false;
 	    if (is_int($l) && $l < 0)
 	    {
-		debug_response("aaa");
 		$neg = true;
 		$l *= -1;
 	    }

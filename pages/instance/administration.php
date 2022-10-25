@@ -129,20 +129,26 @@
 
 	<p style="text-align: center;">
 	    <?php
-	    $link = [
-		"p" => "ActivityTemplatesMenu",
-		"a" => db_select_one("
+	    $template = db_select_one("
 		    matter.id FROM activity
 		    LEFT JOIN activity as matter
 		    ON matter.id = activity.parent_activity
 		    WHERE activity.id = $activity->id_template
-		")["id"],
-		"b" => $activity->id_template ?: -1
-	    ];
+	    ");
+	    if ($template)
+	    {
+		$link = [
+		    "p" => "ActivityTemplatesMenu",
+		    "a" => $template["id"],
+		    "b" => $activity->id_template ?: -1
+		];
 	    ?>
-	    <a href="<?=unrollurl($link); ?>">
-		<?=$Dictionnary["SeeTemplateConfiguration"]; ?>
-	    </a><br />
+		<a href="<?=unrollurl($link); ?>">
+		    <?=$Dictionnary["SeeTemplateConfiguration"]; ?>
+		</a><br />
+	    <?php
+	    }
+	    ?>
 	</p>
 
 	<?php if ($activity->unique_session) { ?>

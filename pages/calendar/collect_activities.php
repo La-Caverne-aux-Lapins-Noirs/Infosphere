@@ -44,7 +44,7 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize)
 	    continue ;
 	if ($s->registered)
 	{
-	    if ($s->session_registered != -1 && $s->session_registered != $sess["id"])
+	    if ($s->session_registered->id != -1 && $s->session_registered->id != $sess["id"])
 		continue ;
 	    if ($s->unique_session->slot_reserved)
 	    {

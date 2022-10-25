@@ -13,11 +13,11 @@ else
     <?php
     $not_too_soon = $activity->subject_appeir_date == NULL || $activity->subject_appeir_date < now();
     $not_too_late = $activity->subject_disappeir_date == NULL || $activity->subject_disappeir_date > now();
-    $display_subject = $activity->current_subject != "" && ($activity->is_teacher || $activity->registered && $not_too_soon && $not_too_late);
+    $display_subject = $activity->current_subject != "" && ($activity->is_teacher || ($activity->registered && $activity->leader > 0) && $not_too_soon && $not_too_late);
     ?>
 
     <h4><?=$Dictionnary["ActivitySubject"]; ?></h4>
-    <?php $pdf = pathinfo($activity->current_subject, PATHINFO_EXTENSION) == "pdf"; ?>
+    <?php $pdf = strlen($activity->current_subject) > 256 || pathinfo($activity->current_subject, PATHINFO_EXTENSION) == "pdf"; ?>
 
     <?php if ($display_subject) { ?>
 	<div style="float: right; height: 25px;">
@@ -29,7 +29,7 @@ else
 	</div>
 	<iframe
 	    src="<?=$activity->current_subject; ?><?=$pdf ? '#toolbar=0&navpanes=0&scrollbar=0' : ''; ?>"
-	    style="width: 99%; height: 90%;"
+		 style="width: 99%; height: 90%;"
 	>
 	</iframe>
     <?php } else { ?>

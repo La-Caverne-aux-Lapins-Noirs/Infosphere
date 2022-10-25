@@ -66,7 +66,8 @@ function try_insert(
     if ($icon != "" && $icon_dir != "")
     {
 	$icon_file = $icon_dir."icon.png";
-	new_directory($icon_file);
+	if (($ndir = new_directory($icon_file))->is_error())
+	    return ($ret);
 	if (file_exists($icon))
 	{
 	    // Si le fichier existe: c'est certainement un upload via POST.

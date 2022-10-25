@@ -77,6 +77,7 @@ class FullActivity extends Response
     public $slot_duration = -1;
     public $estimated_work_duration = 0;
     public $configuration = NULL;
+    public $current_configuration = NULL;
     public $subject = NULL;
     public $current_subject = NULL;
     public $ressource = NULL;
@@ -123,6 +124,7 @@ class FullActivity extends Response
     public $can_subscribe = false;
     public $registered = false;
     public $user_team = NULL;
+    public $code = NULL;
     public $leader = false;
     public $session_registered = NULL;
     public $registered_elsewhere = false;
@@ -202,7 +204,7 @@ class FullActivity extends Response
 	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "credit_a", "credit_b", "credit_c", "credit_d", "mark",
 	    "subscription", "slot_duration", "estimated_work_duration", "configuration", "subject", "emergence_date", "done_date", "registration_date",
 	    "close_date", "subject_appeir_date", "subject_disappeir_date", "pickup_date", "id_template",
-	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "enabled", "deleted", "parent_name",
+	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "deleted", "parent_name",
 	    "maximum_subscription", "validation", "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "repository_name"
 	];
 	foreach ($LanguageList as $k => $v)
@@ -218,6 +220,7 @@ class FullActivity extends Response
 	// Juste au cas ou...
 	$this->id = $activity_id;
 	$this->name = $data[$Language."_name"];
+	$this->enabled = $data["disabled"] === NULL;
 	$this->description = $data[$Language."_description"];
 	$this->credit = [
 	    0 => 0,
@@ -277,6 +280,15 @@ class FullActivity extends Response
 	select_right_elem($this, "ressource");
 	select_right_elem($this, "intro");
 	select_right_elem($this, "subject");
+	select_right_elem($this, "configuration");
+
+	if ($this->current_configuration !== NULL && file_exists($this->current_configuration))
+	{
+	    if (($out = generate_subject($this->current_configuration, $this)) != NULL)
+		$this->current_subject = $out;
+	    else
+		$this->current_configuration = NULL;
+	}
 	
 	$this->medal = [];
 	$this->support = [];
@@ -425,7 +437,8 @@ class FullActivity extends Response
                   user.id as id,
                   user.visibility as visibility,
                   user_team.status as status,
-                  user_team.commentaries as commentaries
+                  user_team.commentaries as commentaries,
+                  user_team.code as code
                   FROM user_team
                   LEFT JOIN user ON user_team.id_user = user.id
                   WHERE user_team.id_team = {$team["id"]} $limit

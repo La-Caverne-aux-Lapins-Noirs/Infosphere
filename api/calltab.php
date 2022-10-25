@@ -19,3 +19,4 @@ if (isset($Tab[$METHOD][$DATA["action"]]))
     $request = $Tab[$METHOD][$DATA["action"]][1]($ID, $DATA, $METHOD, $OUTPUT, $MODULE);
 }
 
+

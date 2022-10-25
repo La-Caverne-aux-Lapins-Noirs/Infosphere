@@ -48,7 +48,7 @@ if (!isset($User["misc_configuration"]["calendar"]["filter_cycle"])
     $tmp = [];
     foreach ($User["cycle"] as $cycle)
     {
-	$wlist["cycle"][] = $cycle["id"];
+	$wlist["cycle"][] = $cycle["id_cycle"];
 	$tmp[] = $cycle["codename"];
     }
     $User["misc_configuration"]["calendar"]["filter_cycle"] = implode(";", $tmp);

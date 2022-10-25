@@ -15,6 +15,7 @@ CREATE TABLE `user` (
   `visibility` int(11) NOT NULL DEFAULT 3,
   `authority` int(11) NOT NULL DEFAULT 0,
   `money` int(11) NOT NULL DEFAULT 0,
+  `bookbail` datetime DEFAULT NULL,
 
   -- Informations personnelles
   `nickname` varchar(255) DEFAULT NULL,

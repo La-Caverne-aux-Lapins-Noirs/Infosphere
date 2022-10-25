@@ -3,6 +3,7 @@
 {
     width: 400px;
     height: 100px;
+    display: inline-block;
 }
 
 .medal_box td

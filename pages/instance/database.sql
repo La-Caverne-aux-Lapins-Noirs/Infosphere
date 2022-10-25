@@ -35,6 +35,7 @@ CREATE TABLE `user_team` (
   `id_team` int(11) NOT NULL,
   `id_user` int(11) NOT NULL,
   `status` int(11) DEFAULT NULL,
+  `code` varchar(128) NOT NULL,
   `commentaries` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

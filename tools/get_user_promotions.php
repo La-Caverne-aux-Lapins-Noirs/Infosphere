@@ -12,12 +12,8 @@ function get_user_promotions(array &$usr, $by_name = false)
 	return ($usr["cycle"]);
     $forge = "
         cycle.id as id_cycle,
-        cycle.codename as codename,
         cycle.{$Language}_name as name,
-        cycle.is_template as is_template,
-	cycle.first_day as first_day,
-	cycle.cycle as cycle,
-	cycle.done as done,
+        cycle.*,
         user_cycle.commentaries as commentaries,
         user_cycle.hidden as hidden,
         user_cycle.id as id

@@ -1,8 +1,10 @@
 
 [Perf
   {Overlay
-    RessourceFile = @"./perf.png"
-    UnderText = false
-    ColorMask = 255, 255, 255, 12
+    [
+      RessourceFile = @"./perf.png"
+      UnderText = false
+      ColorMask = 255, 255, 255, 12
+    ]
   }
 ]

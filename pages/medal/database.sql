@@ -6,6 +6,7 @@ CREATE TABLE `medal` (
 
   `type` int(11) DEFAULT NULL,
   `tags` varchar(32) DEFAULT NULL,
+  `command` varchar(255) DEFAULT NULL,
 
   `fr_name` varchar(255) DEFAULT NULL,
   `fr_description` text DEFAULT NULL,

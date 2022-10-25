@@ -293,3 +293,21 @@ table
     font-size: 20px;
     height: 35px;
 }
+
+.full_size_table
+{
+    width: 100%;
+    height: 100%;
+}
+
+.uservalues
+{
+    margin-left: 10px;
+    margin-right: 10px;
+    width: calc(100% - 20px);
+}
+
+.uservalues tr td:last-of-type
+{
+    text-align: center;
+}

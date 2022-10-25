@@ -1,5 +1,10 @@
 <?php
 /////////////////////////////////////
+// Vitrine                       ///
+///////////////////////////////////
+// require_once ("showcase/index.htm"); die();
+
+/////////////////////////////////////
 // Si on est pas encore installé ///
 ///////////////////////////////////
 
@@ -90,14 +95,16 @@ $TopMenu = [
     "ClassMenu" => "./pages/class/",
     "FetchingMenu" => "./pages/fetching/",
     "TokenMenu" => "./pages/token/",
-    "IntercomMenu" => "./pages/intercom/"
-    // "StudGalleryMenu" => "./pages/gallery/",
+    "IntercomMenu" => "./pages/intercom/",
+    "BookMenu" => "./pages/book/",
+    "StudGalleryMenu" => "./pages/gallery/",
 ];
 if (isset($Configuration->Properties["video_service"]))
     $TopMenu["VideoSphereMenu"] = $Configuration->Properties["video_service"];
 if (isset($Configuration->Properties["forge_service"]))
     $TopMenu["ForgeMenu"] = $Configuration->Properties["forge_service"];
-$TopMenu["LibLapinMenu"] = "http://liblapin.org";
+if (isset($Configuration->Properties["liblapin"]))
+    $TopMenu["LibLapinMenu"] = "http://liblapin.org";
 $TopMenu["SearchMenu"] = "./pages/search/";
 
 $BottomMenu = [

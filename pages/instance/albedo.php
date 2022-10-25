@@ -1,5 +1,7 @@
 <?php
 
+return ; // Sabotage temporaire, en attendant la re ecriture
+
 // S'interesse aux activités terminées dans les 2 dernières heures
 // Place les absents et les médailles échouées.
 $begin = db_form_date(now() - 60 * 60 * 2);

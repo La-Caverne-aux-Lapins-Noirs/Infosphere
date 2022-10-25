@@ -1,39 +1,46 @@
 <?php
 $cycles = db_select_all("
-    cycle.*, {$Language}_name as name FROM cycle
+    cycle.*, cycle.id as id_cycle, {$Language}_name as name FROM cycle
     LEFT JOIN user_cycle ON cycle.id = user_cycle.id_cycle
     WHERE user_cycle.id_user = {$User["id"]}
     AND cycle.is_template = 0
     ORDER BY cycle.cycle DESC
     ");
+
+// On rassemble les cycles communs. (Par exemple, l'EF4+l'EF4 Spécialité)
+$cycles = merge_cycles($cycles);
+
 if (count($cycles)) { ?>
     <h2><?=$Dictionnary["Matter"]; ?></h2>
     <br />
     <?php foreach ($cycles as $cycle) { ?>
-	<h3>
-	    <?=$Dictionnary["Cycle"]; ?> <?=$cycle["name"] ?: $cycle["codename"]; ?>
-	    (<?=$Dictionnary["Year"]; ?> <?=ceil(($cycle["cycle"] + 1) / 4); ?>,
-	    <?=$Dictionnary["Trimester"]; ?> <?=(int)$cycle["cycle"] % 4 + 1; ?>)
+	<h3 style="border-top: 1px solid gray; padding-top: 5px;">
+	    <?=$Dictionnary["Cycle"]; ?> <?=$cycle["name"] ?: $cycle["codename"]; ?><br />
+	    <span style="font-size: small;">
+		(<?=$Dictionnary["Year"]; ?> <?=ceil(($cycle["cycle"] + 1) / 4); ?>,
+		<?=$Dictionnary["Trimester"]; ?> <?=(int)$cycle["cycle"] % 4 + 1; ?>)
+	    </span>
+	    <br /><br />
 	</h3>
 	<ul>
 	    <?php
-	    require_once ("fetch_matters.php");
-	    $matters = fetch_matters($User["id"], $cycle["id"]);
-	    if (count($matters) == 0)
+	    if (count($cycle["matters"]) == 0)
 		echo $Dictionnary["Empty"];
-	    foreach ($matters as $mat) { ?>
+	    foreach ($cycle["matters"] as $mat) { ?>
 		<?php ($matter = new FullActivity)->build($mat["id"], false, false); ?>
 		<?php if ($matter->hidden) continue ; ?>
 		<li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
-		    <h4>
+		    <h4 style="position: relative;">
 			<?=$matter->registered ? "<b>" : ""; ?>
 			<?=$matter->fr_name ?:
 			   $matter->template_codename ?:
 			   $matter->codename
 			; ?>
 			<?=$matter->registered ? "</b>" : ""; ?>
-			(<?=$matter->credit_d."-".$matter->credit_a; ?>
-			<?=$Dictionnary["Credit(s)"]; ?>)
+			<span class="flammes">
+			    (<?=$matter->credit_d."-".$matter->credit_a; ?>
+			    <?=$Dictionnary["Credit(s)"]; ?>)
+			</span>
 			<?php
 			$valid_activities[$matter->id] = $matter->registered ? 1 : 0;
 			?>
@@ -41,6 +48,7 @@ if (count($cycles)) { ?>
 		</a></li>
 	    <?php } ?>
 	</ul>
+	<br />
     <?php } ?>
 <?php } ?>
 

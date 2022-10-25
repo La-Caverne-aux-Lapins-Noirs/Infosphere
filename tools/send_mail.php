@@ -24,9 +24,16 @@ function send_mail($target, $title, $content, $domain = NULL)
     ];
     foreach ($target as $tar)
 	$Cmd[] = "-F to=$tar";
+
+    $title = html_entity_decode($title);
+    $title = str_replace("\"", "\\\"", $title);
+    $title = str_replace(";", "", $title);
+    $content = html_entity_decode($content);
+    $content = str_replace("\"", "\\\"", $content);
+    $content = str_replace(";", "", $content);
     $Cmd = array_merge($Cmd, [
-	"-F subject=".escapeshellarg($title),
-	"-F text=".escapeshellarg($content),
+	"-F subject=\"$title\"",
+	"-F text=\"$content\"",
     ]);
     $Cmd[] = "2>&1";
     $Cmd = implode(" ", $Cmd);
@@ -66,8 +73,8 @@ function send_password_change_mail($user, $new_password, $domain = NULL)
     global $Dictionnary;
     global $Configuration;
 
-    // BACKDOOR TEMPORAIRE EN ATTENDANT D'AVOIR UN SERVEUR MAIL
     /*
+    // BACKDOOR TEMPORAIRE EN ATTENDANT D'AVOIR UN SERVEUR MAIL
     $file = file_get_contents("./users.json");
     $file = json_decode($file, true);
     $file[] = [
@@ -77,9 +84,9 @@ function send_password_change_mail($user, $new_password, $domain = NULL)
     ];
     $file = json_encode($file, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     file_put_contents("./users.json", $file);
-    return (true);
-     */
+    //return (true);
     // FIN DE LA BACKDOOR
+    */
 
     if ($domain == NULL)
 	$Domain = @$Configuration->Properties["domain"];
@@ -122,6 +129,7 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
 		       $login,
 		       $password
     );
+
     if (($request = send_mail($mail, $Dictionnary["SubscribeTitle"], $Content))->is_error())
 	add_log(TRACE, "Cannot send password change mail to ".$mail, $id);
     return ($request);

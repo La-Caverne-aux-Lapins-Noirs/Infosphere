@@ -60,7 +60,7 @@ function AddModule($id, $data, $method, $output, $module)
 function SetActivityRegistration($id, $data, $method, $output, $module)
 {
     global $User;
-    
+
     if ($id == -1)
 	bad_request();
     ($activity = new FullActivity)->build($id);
@@ -81,6 +81,11 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	$target_team = $data["id_team"];
     else
 	$target_team = -1;
+
+    if (($id_user = resolve_codename("user", $id_user))->is_error())
+	return ($id_user);
+    $id_user = $id_user->value;
+
     $team = db_select_one("
 	team.id
 	FROM team
@@ -154,7 +159,7 @@ function Instantiate($id, $data, $method, $output, $module)
     $instances = db_select_all("
        id, codename
        FROM activity
-       WHERE id_template = {$module->id}
+       WHERE id_template = {$activity->id}
        AND deleted IS NULL
        AND template_link = 1
        AND done_date > NOW()
@@ -214,6 +219,9 @@ function AddActivity($id, $data, $method, $output, $module)
     if ($id != -1)
 	bad_request();
     ($module = new FullActivity)->build(@$data["module"]);
+    if ($data["codename"][0] != "-")
+	$data["codename"] = "-".$data["codename"];
+    $data["codename"] = $module->codename.$data["codename"];
     if (($request = add_activity(
 	["codename" => $data["codename"], "parent_activity" => $module->id], [], $module->is_template))->is_error()
     )

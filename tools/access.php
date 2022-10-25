@@ -1,11 +1,11 @@
 <?php
 
-function everybody($id)
+function everybody($id = -1)
 {
     return (true);
 }
 
-function logged_in($id)
+function logged_in($id = -1)
 {
     global $User;
 
@@ -23,6 +23,8 @@ function is_teacher($id = NULL)
 {
     global $User;
 
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
     $ret = db_select_one("
@@ -106,11 +108,28 @@ function is_teacher_for_activity($id)
     return ($activity->is_teacher);
 }
 
+function is_student($id = -1) // cycle id?
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    if (!$User)
+	return (false);
+    if ($id == -1)
+	return (!!db_select_one("id FROM user_cycle WHERE id_user = {$User["id"]}"));
+    return (!!db_select_one("
+      id FROM user_cycle WHERE id_user = {$User["id"]} AND id_cycle = $id
+      "));
+}
+
 function is_director_for_cycle($id)
 {
     global $Database;
     global $User;
-    
+
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
     if (($ida = db_select_one("
@@ -187,6 +206,8 @@ function is_director($id = -1)
 {
     global $User;
 
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
     return (db_select_one("

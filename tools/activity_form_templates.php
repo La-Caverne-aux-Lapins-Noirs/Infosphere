@@ -162,6 +162,9 @@ function edit_type_form($page, $obj)
     >
 	<label for="type"><?=$Dictionnary["Type"]; ?></label>
 	<select name="type" onchange="<?=$js; ?>">
+	    <?php if ($v["type"] === NULL) { ?>
+		<option value=""></option>
+	    <?php } ?>
 	    <?php foreach ($ActivityType as $i => $v) { ?>
 		<?php if ($obj->parent_activity == -1) { ?>
 		    <?php if ($v["type"] == 0) { ?>

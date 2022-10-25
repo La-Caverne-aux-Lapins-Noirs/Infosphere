@@ -1,0 +1,36 @@
+<style>
+ .gradetab
+ {
+     border-radius: 10px;
+ }
+ .gradetab th, .gradetab td
+ {
+     border: 5px solid gray;
+     background-color: lightgray;
+     padding: 2px 2px 2px 2px;
+ }
+</style>
+<table class="gradetab">
+    <tr><th style="width: 30%; background-color: gray;"></th>
+	<th><?=$Dictionnary["GradeD"]; ?></th>
+	<th><?=$Dictionnary["GradeC"]; ?></th>
+	<th><?=$Dictionnary["GradeB"]; ?></th>
+	<th style="border-top-right-radius: 20px;"><?=$Dictionnary["GradeA"]; ?></th>
+    </tr><tr>
+	<td style="font-size: small;"><?=$Dictionnary["RequiredMedalAcquistionPercentage"]; ?></td>
+	<td><?=$matter->grade_d; ?>%</td>
+	<td><?=$matter->grade_c; ?>%</td>
+	<td><?=$matter->grade_b; ?>%</td>
+	<td><?=$matter->grade_a; ?>%</td>
+    </tr><tr>
+	<td style="font-size: small;"><?=$Dictionnary["AcquiredCredit"]; ?></td>
+	<td><?=$matter->credit_d; ?></td>
+	<td><?=$matter->credit_c; ?></td>
+	<td><?=$matter->credit_b; ?></td>
+	<td><?=$matter->credit_a; ?></td>
+    </tr><tr>
+	<td colspan="5" style="border-bottom-right-radius: 20px; border-bottom-left-radius: 20px;">
+	    <b><?=$Dictionnary["GradeBonus"]; ?></b>: <?=$matter->grade_bonus; ?>%
+	</td>
+    </tr>
+</table>

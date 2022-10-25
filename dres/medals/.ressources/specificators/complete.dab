@@ -1,9 +1,11 @@
 
 [Complete
   {Overlay
-    RessourceFile = @"./complete.png"
-    UnderText = false
-    ColorMask = 255, 255, 255, 12
+    [
+      RessourceFile = @"./complete.png"
+      UnderText = false
+      ColorMask = 255, 255, 255, 12
+    ]
   }
 ]
 

@@ -6,7 +6,7 @@ $FamousQuote["fr"] = [
     "'Un de ces jours' signifie aucune de ces jours",
     "Celui qui n'a pas bâti de maison croit que les murs sortent de terre",
     "Les bijoux sont la dernière chose qu'on achète et la première qu'on vend",
-    "Ceux qui souffrent de la même maladie compatissent entre eux, ceux qui ont les mêmes soucis s'entraindent",
+    "Ceux qui souffrent de la même maladie compatissent entre eux, ceux qui ont les mêmes soucis s'entraident",
     "Qui est seul n'est pas toujours pauvre, mais qui est pauvre est trop souvent seul",
     "La richesse donne de la beauté aux laids, des pieds aux boiteux, des yeux aux aveugles, de l'intérêt aux larmes",
     "Nous ne connaissons la valeur de l'eau que lorsque le puit est à sec",

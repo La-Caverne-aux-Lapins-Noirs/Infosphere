@@ -1,12 +1,12 @@
 <?php if ($page != "template") { ?>
 
     <?php if ($module->type == MODULE) { ?>
-	<a class="button_link" href="index.php?=ModulesMenu&amp;a=<?=$module->id; ?>">
+	<a class="button_link" href="index.php?p=ModulesMenu&amp;a=<?=$module->id; ?>">
 	    <?=$Dictionnary["SeeTheModule"]; ?>
 	</a>
     <?php } ?>
     <?php if ($module->type_type == 1) { ?>
-	<a class="button_link" href="index.php?=ActivityMenu&amp;a=<?=$module->id; ?>">
+	<a class="button_link" href="index.php?p=ActivityMenu&amp;a=<?=$module->id; ?>">
 	    <?=$Dictionnary["SeeTheActivity"]; ?>
 	</a>
     <?php } ?>
@@ -14,7 +14,7 @@
 <?php } else { ?>
 
     <div>
-	<?php $js = "silent_submit(this, 'list_of_instances<?=$module->id; ?>');"; ?>
+	<?php $js = "silent_submit(this, 'list_of_instances{$module->id}');"; ?>
 	<h4 style="text-align: center;"><?=$Dictionnary["Instantiate"]; ?></h4>
 	<form
 	    method="post"
@@ -29,7 +29,7 @@
 	    </select>
 	    <br />
 	    <input type="hidden" name="action" value="instantiate" />
-	    <input type="button" value="<?=$Dictionnary["Instantiate"]; ?>" style="width: 100%;" />
+	    <input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Instantiate"]; ?>" style="width: 100%;" />
 	</form>
 	<br />
 	<h4 style="text-align: center;"><?=$Dictionnary["LivingInstances"]; ?></h4>

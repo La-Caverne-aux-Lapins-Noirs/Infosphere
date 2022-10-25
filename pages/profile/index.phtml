@@ -1,106 +1,67 @@
 <?php
-require_once ("get_managed_activities.php");
-require_once ("sort_by_month.php");
-
-$refresh = false;
-
-$conf_fields = [
-    "EnableManagedActivityReport" => [
-	"label" => "managed_activity_report",
-	"type" => "checkbox",
-    ],
-];
-
-if (file_exists(__DIR__."/handle_request.php")
-    && $User != NULL
-    && isset($_POST["action"]))
-    require_once (__DIR__."/handle_request.php");
-
-if (file_exists(__DIR__."/handle_parameters.php"))
-    require_once (__DIR__."/handle_parameters.php");
-
-if (isset($_POST["action"]) && $_POST["action"] == "add_message")
-{
-    $request = intercom_handle_request("user", $user["id"]);
-    $LogMsg = "MessageSent";
-}
-
-if (is_admin()
-    && ($lst = try_get($_POST, "reportcard", [])) != []
-    && ($cyc = try_get($_POST, "cycle", [])) != []
-    && isset($silent) && $silent && $ErrorMsg == "")
-{
-    require_once (__DIR__."/report_card_request.php");
-    return ;
-}
-
-require_once (__DIR__."/../error_net.php");
-
-if (!isset($user) || $user == NULL)
-    return ;
-
-function _display_medal($mod_medal, $medal, $mod)
-{
-    if ($mod_medal == false)
-	return (true);
-    if ($mod->validation_by_percent)
-	return ($medal["module_medal"]);
-    if ($medal["type"] == 0) // Médaille positive seulement
-    {
-	// On affiche si c'est une médaille de module ou si c'est une médaille acquise
-	if ($medal["module_medal"])
-	    return (true);
-	return ($medal["success"] > 0);
-    }
-    return (false);
-}
-
-if ($User["id"] == $user["id"] || is_admin())
-{
-    $user["visibility"] = COMPLETE_PROFILE;
-}
-
-if ($user["visibility"] == HIDDEN && $User["authority"] < ASSISTANT)
-{
-    $ErrorMsg = "ThisProfileIsHidden";
-    return ;
-}
-
-$data = get_full_profile($user, ["only_user"], $refresh);
-$user["credit"] = $data->acquired_credit;
-
+$user = $User;
 ?>
-<div class="double_horizontal">
-    <div>
-	<div style="width: 100%; height: 250px; overflow: auto; position: relative;" class="final_box">
-	    <?php if (($user["codename"] == $User["codename"] || is_admin()) && $edit_profile) { ?>
-		<?php require ("formular.php"); ?>
-	    <?php } else { ?>
-		<?php require ("profile.php"); ?>
-	    <?php } ?>
-	</div>
-	<br />
-	<?php if ($user["visibility"] > PROFILE_ONLY || is_admin()) { ?>
-	    <?php require ("graph.php"); ?>
-	<?php } ?>
-    </div>
 
-    <div class="final_box" style="height: 99%;">
+<style>
+ table, td
+ {
+     border: 1px black solid;
+ }
+</style>
+
+<table class="full_size_table">
+    <tr><td>
+	<table class="full_size_table"><tr><td style="width: 300px; vertical-align: top;">
+	    <p style="text-align: center;">
+		<b style="font-size: xx-large;"><?php display_nickname($user, false); ?></b><br />
+		<?php display_avatar($user); ?>
+	    </p>
+	    <table class="uservalues">
+		<tr><td><b><?=$Dictionnary["CodeName"]; ?></b>:</td><td><?=$user["codename"]; ?></td></tr>
+		<tr><td><b><?=$Dictionnary["FirstName"]; ?></b>:</td><td><?=$user["first_name"]; ?></td></tr>
+		<tr><td><b><?=$Dictionnary["FamilyName"]; ?></b>:</td><td><?=$user["family_name"]; ?></td></tr>
+		<tr><td><b><?=$Dictionnary["BirthDate"]; ?></b>:</td><td><?=$user["birth_date"] ? human_date($user["birth_date"], true) : ""; ?></td></tr>
+		<tr><td><b><?=$Dictionnary["Phone"]; ?></b>:</td><td><?=$user["phone"]; ?></td></tr>
+		<tr><td><b><?=$Dictionnary["Address"]; ?></b>:</td><td>
+		    <input
+			readonly
+			disabled="disabled"
+			style="width: 100%;"
+			type="text"
+			value="<?=$user["address_name"]; ?> <?=$user["street_name"]; ?> <?=$user["postal_code"]; ?> <?=$user["city"]; ?> <?=$user["country"]; ?>"
+		    />
+		</td></tr>
+		<tr><td><b><?=$Dictionnary["MemberSince"]; ?></b>:</td><td><?=human_date($user["registration_date"], true); ?></td></tr>
+	    </table>
+	</td><td>
+	    <table class="full_size_table">
+		<?php if (is_admin() || $user["id"] == $User["id"]) { ?>
+		    <tr><td>
+			Fichiers associés au compte (Mettre un browser ici)
+		    </td></tr>
+		<?php } ?>
+		<tr><td>
+		    Médailles personnelles
+		</td></tr>
+	    </table>
+	</td></tr></table>
+    </td><td>
+	Score
+    </td></tr><tr>
+	<td
+	    style="height: 50%; background-image: url('/pages/profile/stats.php?w=960&amp;h=400&amp;e=<?=now(); ?>&amp;s<?=now() - 7 * 24 * 60 * 60; ?>'); background-size: 100% 100%;"
+	>
+	    <img src="" />
+	</td>
+	<td>
 	<?php
 	$panel = [
-	    $Dictionnary["Profile"] => __DIR__."/cursus.phtml",
+	    $Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
 	    $Dictionnary["ManagedActivities"] => __DIR__."/managed_activities.phtml",
 	    $Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
 	];
-	foreach ($user["cycle"] as $c)
-	{
-	    if (substr($c["codename"], 0, 3) == "PRG")
-	    {
-		$panel[$Dictionnary["AuthorizedFunctions"]] = __DIR__."/functions.phtml";
-		break ;
-	    }
-	}
 	tabpanel($panel, $Position.$user["id"], $Dictionnary["Profile"]);
-	?>
-    </div>
-</div>
+	?>	
+    </td></tr>
+</table>
+

@@ -92,7 +92,8 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    $target_team = $Database->insert_id;
 	    $team_id = $Database->insert_id;
 	    add_log(TRACE, "New team $target_team");
-	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status) VALUES ($target_team, $id, 2)"))
+	    $code = hash("md5", $target_team.$id);
+	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status, code) VALUES ($target_team, $id, 2, '$code')"))
 		return (new ErrorResponse("CannotAddUserToTeam"));
 	    add_log(TRACE, "User $id join team $target_team");
 
@@ -133,7 +134,8 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    // Si l'équipe est pleine et qu'on est pas en train de forcer l'inscription.
 	    if ($total["cnt"] >= $activity->min_team_size && $activity->is_teacher == false)
 		return (new ErrorResponse("TeamIsFull"));
-	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status) VALUES ($target_team, $id, ".($accept ? 1 : 0).")"))
+	    $code = hash("md5", $target_team.$id);
+	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status, code) VALUES ($target_team, $id, ".($accept ? 1 : 0).", '$code')"))
 		return (new ErrorResponse("CannotAddUserToTeam"));
 	    add_log(TRACE, "User $id join team $target_team");
 	    $team_id = $target_team;

@@ -45,6 +45,14 @@ function fetch_laboratory($id = -1, $by_name = false)
 	if (file_exists($pic))
 	    $usr["photo"] = $pic;
     }
+
+    $lab["school"] = db_select_all("
+	school.*, school.{$Language}_name as name
+	FROM school
+	LEFT JOIN school_laboratory
+	ON school.id = school_laboratory.id_school
+	WHERE school_laboratory.id_laboratory = $id
+    ");
     return ($lab);
 }
 

@@ -5,40 +5,51 @@
 get_user_promotions($User);
 if (!count($User["cycle"]))
     return ;
-$cycle = $User["cycle"][array_key_first($User["cycle"])];
-require_once ("fetch_matters.php");
-$matters = fetch_matters($User["id"], $cycle["id"]);
-$max_credit = 0;
-$min_credit = 0;
-$min_mandatory_credit = 0;
-$max_mandatory_credit = 0;
-$mandatory = 0;
-$total = 0;
-foreach ($matters as $act)
+$FUK = true;
+$User["cycle"] = merge_cycles($User["cycle"]);
+
+foreach ($User["cycle"] as $cycle)
 {
-    $max_credit += $act->credit_a;
-    $min_credit += $act->credit_d;
-    if ($act->subscription != FullActivity::MANUAL_SUBSCRIPTION)
+    // $matters = fetch_matters($User["id"], $cycle["id_cycle"]);
+    $matters = $cycle["matters"];
+    $max_credit = 0;
+    $min_credit = 0;
+    $min_mandatory_credit = 0;
+    $max_mandatory_credit = 0;
+    $mandatory = 0;
+    $total = 0;
+    $nmatters = [];
+    foreach ($matters as $act)
     {
-	$max_mandatory_credit += $act->credit_a;
-	$min_mandatory_credit += $act->credit_d;
-	$mandatory += 1;
+	($nact = new FullActivity)->build($act["id"], false, false);
+	$max_credit += $nact->credit_a;
+	$min_credit += $nact->credit_d;
+	if ($nact->subscription != FullActivity::MANUAL_SUBSCRIPTION)
+	{
+	    $max_mandatory_credit += $nact->credit_a;
+	    $min_mandatory_credit += $nact->credit_d;
+	    $mandatory += 1;
+	}
+	$total += 1;
+	$nmatters[] = $nact;
     }
-    $total += 1;
-}
+    $matters = $nmatters;
 ?>
 
 <table>
-    <tr><td colspan="3">
-	<h1><?=$Dictionnary["Cycle"]; ?> <?=$cycle["name"] ?: $cycle["codename"]; ?></h1>
-    </td></tr><tr><td>
+    <tr><td colspan="3" style="text-align: center;">
+	<br />
+	<h1 style="width: 100%;"><?=$Dictionnary["Cycle"]; ?> <?=$cycle["name"] ?: $cycle["codename"]; ?></h1>
+	<br /><br />
+    </td></tr>
+    <tr><td>
 	<a href="<?=unrollurl(["p" => "CycleMenu", "a" => $cycle["id"]]); ?>">
 	    <?=$Dictionnary["SeeSubscribedList"]; ?>
 	</a><br />
     </td><td>
 	<?=$Dictionnary["AvailableCredits"]; ?> : <?=$min_credit; ?> - <?=$max_credit; ?><br />
 	<?=$Dictionnary["MandatoryCredits"]; ?> : <?=$min_mandatory_credit; ?> - <?=$max_mandatory_credit; ?><br />
-	<?=$Dictionnary["OptionCredits"]; ?> : <?=$min_credit - $min_mandatory_credit; ?> - <?=$ax_credit - $max_mandatory_credit; ?>
+	<?=$Dictionnary["OptionCredits"]; ?> : <?=$min_credit - $min_mandatory_credit; ?> - <?=$max_credit - $max_mandatory_credit; ?>
     </td><td>
 	<?=$Dictionnary["Matters"]; ?> : <?=$total; ?><br />
 	<?=$Dictionnary["MandatoryMatters"]; ?> : <?=$mandatory; ?><br />
@@ -49,3 +60,7 @@ foreach ($matters as $act)
 <?php foreach ($matters as $act) { ?>
     <?php require ("module_tab.php"); ?>
 <?php } ?>
+
+<?php
+}
+?>

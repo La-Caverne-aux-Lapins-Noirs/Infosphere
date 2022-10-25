@@ -38,7 +38,7 @@ $local_teams = 0;
 	require ("single_team.phtml");
     foreach ($activity->team as $cteam)
     {
-	if ($cteam["id"] == $activity->user_team["id"])
+	if ($activity->user_team != NULL && $cteam["id"] == $activity->user_team["id"])
 	    continue ;
 	if ($activity->reference_activity == -1)
 	{

@@ -6,28 +6,28 @@ function check_session_field(&$fields)
 
     $fields = convert_date($fields);
 
-    if (@$fields["activity"])
+    if (@$fields["activity"] > 0)
     {
 	if (($id = resolve_codename("activity", $fields["activity"]))->is_error())
 	    return ($id);
 	$tfields["id_activity"] = $id->value;
     }
 
-    if (@$fields["laboratory"])
+    if (@$fields["laboratory"] > 0)
     {
 	if (($id = resolve_codename("laboratory", $fields["laboratory"]))->is_error())
 	    return ($id);
 	$tfields["id_laboratory"] = $id->value;
     }
 
-    if (@$fields["team"])
+    if (@$fields["team"] > 0)
     {
 	if (($id = resolve_codename("team", $fields["team"]))->is_error())
 	    return ($id);
 	$tfields["id_team"] = $id->value;
     }
 
-    if (@$fields["user"])
+    if (@$fields["user"] > 0)
     {
 	if (($id = resolve_codename("user", $fields["user"]))->is_error())
 	    return ($id);
@@ -35,7 +35,7 @@ function check_session_field(&$fields)
     }
 
     default_val($tfields, $fields, "maximum_subscription");
-    
+
     if (strlen(@$fields["begin_date"]) && strlen(@$fields["end_date"]))
     {
 	if (date_to_timestamp($fields["begin_date"]) > date_to_timestamp($fields["end_date"]))
@@ -71,6 +71,18 @@ function add_session($fields, $dry = false)
     if (($tfields = check_session_field($fields))->is_error())
 	return ($tfields);
     $tfields = $tfields->value;
+
+    foreach (["id_activity", "id_laboratory", "id_team", "id_user"] as $ids)
+	if (!isset($tfields[$ids]))
+	    $tfields[$ids] = -1;
+
+    foreach (["maximum_subscription", "begin_date", "end_date"] as $ids)
+    {
+	if (!isset($tfields[$ids]))
+	    $tfields[$ids] = "NULL";
+	else
+	    $tfields[$ids] = "'".$tfields[$ids]."'";
+    }
 
     if ($dry)
 	return (new Response);

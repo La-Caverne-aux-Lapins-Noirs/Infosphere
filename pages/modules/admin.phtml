@@ -13,25 +13,33 @@
 	 scrolls.item(i).scrollLeft = scr.scrollLeft;
  }
 </script>
+<style>
+ .content_table tr td a
+ {
+     color: black !important;
+ }
+</style>
 <table class="content_table" style="margin-left: 20px; width: calc(100% - 30px);">
     <tr>
-	<td colspan="5" style="text-align: left; padding-left: 20px;">
+	<td colspan="6" style="text-align: left; padding-left: 20px;">
 	    <br />
 	    <a href="<?=unrollurl(["b" => NULL]); ?>" style="color: black;">
 		<?=$Dictionnary["BackToModule"]; ?>
 	    </a><br />
 	    <br />
-	    <form method="put" action="/api/module/<?=$matter->id; ?>/registration">
+	    <?php $js = "return silent_submit(this); location.reload();"; ?>
+	    <form method="put" action="/api/module/<?=$matter->id; ?>/registration" onsubmit="<?=$js; ?>">
 		<label for="id_user"><?=$Dictionnary["AddOrRemoveUsers"]; ?></label><br />
 		<input type="text" name="id_user" value="" placeholder="<?=$Dictionnary["Users"]; ?>" />
-		<input type="button" onclick="" value="&#10003;"  />
+		<input type="button" onclick="<?=$js; ?>" value="&#10003;"  />
 	    </form><br />
 	    <br />
 	</td>
     </tr>
     <tr>
+	<th style="width: 50px;"><?=$Dictionnary["Avatar"]; ?></th>
 	<th style="width: 15%;"><?=$Dictionnary["User"]; ?></th>
-	<th style="width: 65%;">
+	<th style="width: calc(65% - 50px);">
 	    <div class="hscrolls" onscroll="sync_all_scrolls(this);">
 		<table><tr>
 		    <?php foreach ($matter->medal as $medal) { ?>
@@ -63,11 +71,12 @@
     <?php $cnt = 0; ?>
     <?php foreach ($matter->team as $team) { ?>
 	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
+	    <?php $id = array_key_first($team["user"]); ?>
 	    <td>
-		<?php $id = array_key_first($team["user"]); ?>
-		<a href="index.php?p=ProfileMenu&amp;a=<?=$id; ?>">
-		    <?=$team["user"][$id]; ?>
-		</a>
+		<?php display_avatar($team["user"][$id], 50); ?>
+	    </td>
+	    <td>
+		<?php display_nickname($team["user"][$id]); ?>
 	    </td>
 	    <td>
 		<div class="hscrolls" onscroll="sync_all_scrolls(this);">

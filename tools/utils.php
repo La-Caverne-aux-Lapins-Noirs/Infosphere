@@ -111,7 +111,7 @@ function now()
 {
     global $NoLocalisation;
 
-    $dt = new DateTime("now");
+    $dt = new DateTime("now"); // Avec localisation
     return ($dt->getTimestamp() + $dt->getOffset());
 }
 
@@ -257,8 +257,10 @@ function european_date($d, $only_day = false, $only_hour = false, $no_seconds = 
     return (datex("d/m/Y H:i$secs", $d)); // @codeCoverageIgnore
 }
 
-function human_date($d, $only_day = false, $only_hour = false, $no_seconds = false)
+function human_date($d = NULL, $only_day = false, $only_hour = false, $no_seconds = false)
 {
+    if ($d === NULL)
+	return (human_date(now(), $only_day, $only_hour, $no_seconds));
     if (!is_number($d))
 	$d = date_to_timestamp($d);
     // @codeCoverageIgnoreStart
@@ -434,13 +436,23 @@ function convert_date($post)
 	    $post["week_subject_disappeir_date"], $post["day_subject_disappeir_date"], $post["hour_subject_disappeir_date"]
 	);
     if (!@strlen($post["begin_date"]))
-	$post["begin_date"] = @weekday_to_timestamp(
-	    $post["week_session_date"], $post["day_session_date"], $post["hour_begin_date"]
-	);
+    {
+	if (isset($post["week_session_date"]))
+	    $post["begin_date"] = @weekday_to_timestamp(
+		$post["week_session_date"], $post["day_session_date"], $post["hour_begin_date"]
+	    );
+	else if (isset($post["begin"]))
+	    $post["begin_date"] = db_form_date(hour_to_timestamp($post["begin"]) + date_to_timestamp($post["day"]));
+    }
     if (!@strlen($post["end_date"]))
-	$post["end_date"] = @weekday_to_timestamp(
-	    $post["week_session_date"], $post["day_session_date"], $post["hour_end_date"]
-	);
+    {
+	if (isset($post["week_session_date"]))
+	    $post["end_date"] = @weekday_to_timestamp(
+		$post["week_session_date"], $post["day_session_date"], $post["hour_end_date"]
+	    );
+	else if (isset($post["end"]))
+	    $post["end_date"] = db_form_date(hour_to_timestamp($post["end"]) + date_to_timestamp($post["day"]));
+    }
     return ($post);
 }
 

@@ -1,8 +1,10 @@
 
 [Short
   {Overlay
-    RessourceFile = @"./short.png"
-    UnderText = false
-    ColorMask = 255, 255, 255, 12
+    [
+      RessourceFile = @"./short.png"
+      UnderText = false
+      ColorMask = 255, 255, 255, 12
+    ]
   }
 ]

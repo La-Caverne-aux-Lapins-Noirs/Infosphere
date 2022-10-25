@@ -32,7 +32,7 @@ function collect_short_projects($week, $wlist)
 	$s->build($sess["id"], false, false);
 	if ($s->is_assistant == false && filter_out_activity($s, $wlist))
 	    continue ;
-	if ($ActivityType[$s->type]["type"] != PROJECT)
+	if ($s->type_type != 1)
 	    continue ;
 	$projects[] = $s;
     }
