@@ -1,0 +1,17 @@
+<?php
+$start = $_GET["s"];
+$end = $_GET["e"];
+$_GET["lm"] = "m";
+
+$_GET["d"] = [];
+$_GET["d"]["presence"] = [];
+$_GET["d"]["mispresence"] = [];
+
+$_GET["d"] = json_encode($_GET["d"], JSON_UNESCAPED_SLASHES);
+$_GET["d"] = base64_encode($_GET["d"]);
+$params = [];
+foreach ($_GET as $gk => $gv)
+    $params[] = "$gk=$gv";
+$params = implode("&amp;", $params);
+?>
+<div class="statsin" style="background-image: url(/tools/profile_stats.php?<?=$params; ?>);"></div>

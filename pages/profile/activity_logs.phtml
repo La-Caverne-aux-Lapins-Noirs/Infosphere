@@ -1,0 +1,72 @@
+<?php
+$start = $_GET["s"];
+$end = $_GET["e"];
+$_GET["lm"] = "b";
+
+$start = db_form_date($start, true);
+$end = db_form_date($end, true);
+
+$intra_logs = [];
+$query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 0 AND id_user = {$User["id"]}
+  AND log_date >= '$start' AND log_date <= '$end'
+", "log_date");
+foreach ($query as $kk => $vv)
+    $intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["intra_logs"] = $intra_logs;
+
+$work_logs = [];
+$query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 1 AND id_user = {$User["id"]}
+  AND log_date >= '$start' AND log_date <= '$end'
+", "log_date");
+foreach ($query as $kk => $vv)
+    $work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["work_logs"] = $work_logs;
+
+$lock_logs = [];
+$query = db_select_all("
+  log_date, duration FROM user_log WHERE type = -1 AND id_user = {$User["id"]}
+  AND log_date >= '$start' AND log_date <= '$end'
+", "log_date");
+foreach ($query as $kk => $vv)
+    $lock_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["lock_logs"] = $lock_logs;
+
+// MOYENNES
+
+$avg_intra_logs = [];
+$query = db_select_all("
+  log_date, AVG(duration) as duration FROM user_log WHERE type = 0
+  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
+", "log_date");
+foreach ($query as $kk => $vv)
+    $avg_intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["avg_intra_logs"] = $avg_intra_logs;
+
+$avg_work_logs = [];
+$query = db_select_all("
+  log_date, AVG(duration) as duration FROM user_log WHERE type = 1
+  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
+", "log_date");
+foreach ($query as $kk => $vv)
+    $avg_work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["avg_work_logs"] = $avg_work_logs;
+
+$avg_lock_logs = [];
+$query = db_select_all("
+  log_date, AVG(duration) FROM user_log WHERE type = -1
+  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
+", "log_date");
+foreach ($query as $kk => $vv)
+    $avg_lock_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["avg_lock_logs"] = $avg_lock_logs;
+
+$_GET["d"] = json_encode($_GET["d"], JSON_UNESCAPED_SLASHES);
+$_GET["d"] = base64_encode($_GET["d"]);
+$params = [];
+foreach ($_GET as $gk => $gv)
+    $params[] = "$gk=$gv";
+$params = implode("&amp;", $params);
+?>
+<div class="statsin" style="background-image: url(/tools/profile_stats.php?<?=$params; ?>);"></div>

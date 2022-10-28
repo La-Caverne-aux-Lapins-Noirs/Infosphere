@@ -1,5 +1,11 @@
 <?php
 $user = $User;
+/*
+** Il faut faire un systeme de calcul d'"implication", basé sur les logs,
+** la partition et les rendus, qui soit lissé dans le temps pour former une tendance
+** Il faut faire un systeme de calcul de réussite, basé sur les médailles nouvellement
+** acquises, le grade moyen et le nombre de flammes, pareil, lissé dans le temps
+*/
 ?>
 
 <style>
@@ -48,10 +54,22 @@ $user = $User;
     </td><td>
 	Score
     </td></tr><tr>
-	<td
-	    style="height: 50%; background-image: url('/pages/profile/stats.php?w=960&amp;h=400&amp;e=<?=now(); ?>&amp;s<?=now() - 7 * 24 * 60 * 60; ?>'); background-size: 100% 100%;"
-	>
-	    <img src="" />
+	<?php
+	$_GET["w"] = 960;
+	$_GET["h"] = 400;
+	$_GET["e"] = now();
+	$_GET["s"] = now() - 14 * 24 * 60 * 60;
+	?>
+	<td class="stats" style="height: 50%;">
+	    <?php
+	    $panel = [
+		$Dictionnary["ActivityLogs"] => __DIR__."/activity_logs.phtml",
+		$Dictionnary["Presence"] => __DIR__."/presence.phtml",
+		$Dictionnary["MedalGain"] => __DIR__."/medals.phtml",
+		$Dictionnary["DeliveryDone"] => __DIR__."/delivery.phtml",
+	    ];
+	    tabpanel($panel, $Position.$user["id"]."graphes", $Dictionnary["ActivityLogs"]);
+	    ?>
 	</td>
 	<td>
 	<?php
@@ -60,7 +78,7 @@ $user = $User;
 	    $Dictionnary["ManagedActivities"] => __DIR__."/managed_activities.phtml",
 	    $Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
 	];
-	tabpanel($panel, $Position.$user["id"], $Dictionnary["Profile"]);
+	tabpanel($panel, $Position.$user["id"], $Dictionnary["Intercom"]);
 	?>	
     </td></tr>
 </table>

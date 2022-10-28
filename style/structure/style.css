@@ -973,7 +973,7 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     top: 40px;
     left: 0px;
     width: 100%;
-    height: 94%;
+    height: calc(100% - 50px);
 }
 
 .tabcontent > div
@@ -984,7 +984,7 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     top: 0px;
     left: 0px;
     width: 100%;
-    height: calc(100% - 30px - 10px);
+    height: calc(100%);
 }
 
 .bigbuttons input
@@ -1121,4 +1121,14 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     background-color: rgba(255, 255, 255, 0.25);
     border: 1px solid white;
     padding: 10px 10px 10px 10px;
+}
+
+.statsin
+{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100%;
 }
