@@ -1,1 +1,87 @@
-Activités gérées
+<style>
+ .manact td
+ {
+     vertical-align: top;
+     font-size: x-small;
+     text-align: center;
+ }
+</style>
+<table class="full_size_table manact">
+    <tr><td rowspan="2" style="height: 100%; width: 50%;">
+	<div class="full_size_table" style="overflow: auto;">
+	    <table>
+		<tr>
+		    <th><?=$Dictionnary["Matter"]; ?></th>
+		    <th><?=$Dictionnary["Activity"]; ?></th>
+		    <th><?=$Dictionnary["Laboratory"]; ?></th>
+		    <th><?=$Dictionnary["Date"]; ?></th>
+		</tr>
+		<!-- Liste des activités encadrées -->
+		<?php $all = array_merge($user->managed_activities["sessions"], $user->managed_activities["activities"]); ?>
+		<?php foreach ($all as $ma) { ?>
+		    <?php if ($ma["parent_activity"] == NULL) continue ; ?>
+		    <?php if ($ma["is_template"] != 0) continue ; ?>
+		    <tr><td>
+			<a href="index.php?p=ModulesMenu&amp;a=<?=$ma["parent_activity"]; ?>">
+			    <?=@strlen($ma["matter_name"]) ? $ma["matter_name"] : $ma["matter_codename"]; ?>
+			</a>
+		    </td><td>
+			<a href="index.php?p=ActivityMenu&amp;a=<?=$ma["id_activity"]; ?>&amp;b=<?=isset($ma["id_session"]) ? $ma["id_session"] : -1; ?>">
+			    <?=@strlen($ma["name"]) ? $ma["name"] : $Dictionnary[$ActivityType[$ma["type"]]["codename"]]; ?>
+			</a>
+		    </td><td>
+			<?php if (isset($ma["laboratory_codename"])) { ?>
+			    <a href="index.php?p=LaboratoryMenu&amp;a=<?=$ma["id_laboratory"]; ?>">
+				<?=strlen($ma["laboratory_name"]) ? $ma["laboratory_name"] : $ma["laboratory_codename"]; ?>
+			    </a>
+			<?php } else { ?>
+			    /
+			<?php } ?>
+		    </td><td>
+			<?php if ($ma["begin_date"]) { ?>
+			    <?=datex("d/m/Y", $ma["begin_date"]); ?><br />
+			    <?=datex("H:i", $ma["begin_date"]); ?>-<?=datex("H:i", $ma["end_date"]); ?>
+			<?php } else { ?>
+			    <?php if ($ma["pickup_date"]) { ?>
+				<?=$Dictionnary["PickupDate"]; ?>: <?=$ma["pickup_date"]; ?><br />
+			    <?php } ?>
+			    <?php if ($ma["close_date"]) { ?>
+				<?=$Dictionnary["CloseDate"]; ?>: <?=$ma["close_date"]; ?><br />
+			    <?php } ?>
+			<?php } ?>
+		    </td></tr>
+		<?php } ?>
+	    </table>
+	</div>
+    </td><td style="height: 50%;">
+	<div class="full_size_table" style="overflow: auto;">
+	    <!-- Liste des matières encadrées -->
+	    <?php foreach ($user->managed_activities["activities"] as $ma) { ?>
+		<?php if ($ma["parent_activity"] != NULL) continue ; ?>
+		<?php if ($ma["is_template"] != 0) continue ; ?>
+		<a href="index.php?p=ModulesMenu&amp;a=<?=$ma["id"]; ?>">
+		    <?php if (strlen($ma["name"])) { ?>
+			<?=$ma["name"]; ?>
+		    <?php } ?>
+		    <?=isset($ma["id_template"]) && $ma["id_template"] != NULL ? $ma["template_codename"] : $ma["codename"]; ?>
+		    <br />
+		</a>
+	    <?php } ?>
+	</div>
+    </td></tr><tr><td>
+	<div class="full_size_table" style="overflow: auto;">
+	    <!-- Liste des templates -->
+	    <?php foreach ($user->managed_activities["activities"] as $ma) { ?>
+		<?php if ($ma["parent_activity"] != NULL) continue ; ?>
+		<?php if ($ma["is_template"] != 1) continue ; ?>
+		<a href="index.php?p=ActivityTemplatesMenu&amp;a=<?=$ma["id"]; ?>">
+		    <?php if (strlen($ma["name"])) { ?>
+			<?=$ma["name"]; ?>
+		    <?php } ?>
+		    <?=$ma["codename"]; ?>
+		    <br />
+		</a>
+	    <?php } ?>
+	</div>
+    </td></tr>
+</table>

@@ -26,7 +26,7 @@
     <br />
 <?php } ?>
 
-<?php if ($OriginalUser["authority"] >= ADMINISTRATOR) { ?>
+<?php if ($OriginalUser["authority"] >= ADMINISTRATOR) { //// LES ALERTES //////////////////////////////// ?>
     <h2><?=$Dictionnary["AdministrationPower"]; ?></h2>
     <?php
     if ((disk_free_space("./") / disk_total_space("./")) <= 0.2)
@@ -35,9 +35,14 @@
     }
 
     $last = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Albedo stops.' ORDER BY log_date DESC");
+    $lastcheck = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Infosphere hand runs.' ORDER BY log_date DESC");
     if (!$last || date_to_timestamp($last["log_date"]) < now() - 60 * 3) // Il doit s'executer toutes les 2 minutes, et ca fait 3 minutes qu'il n'y a rien
     {
 	$alerts[] = $Dictionnary["AlbedoDoesNotRun"];
+    }
+    if (!$lastcheck || date_to_timestamp($lastcheck["log_date"]) < now() - 60 - 60 * 3) // Aucune connexion réussie depuis plus de 3 mins.
+    {
+	$alerts[] = $Dictionnary["InfosphereHandDoesNotRun"];
     }
     ?>
 <?php } ?>
@@ -66,7 +71,7 @@
     <?php if ($User["authority"] >= ADMINISTRATOR) { ?>
 	<form method="post" action="index.php?<?=unrollget(); ?>">
 	    <?php if (isset($User["admin_mode"]) && $User["admin_mode"]) { ?>
-		<?php $alerts[] = $Dictionnary["AdminModeEnabled"]; ?>
+		<?php $alerts[] = "<br />".$Dictionnary["AdminModeEnabled"]; ?>
 		<input
 		    type="submit"
 		    name="admin_mode"

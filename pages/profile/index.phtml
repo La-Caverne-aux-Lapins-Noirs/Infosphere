@@ -1,5 +1,14 @@
 <?php
-$user = $User;
+if (!isset($_GET["a"]))
+    $_GET["a"] = $User["id"];
+if (($user = fetch_user($_GET["a"]))->is_error())
+    $user = $User;
+else
+    $user = $user->value;
+$user = get_full_profile($user, []);
+$edit_profile = try_get($_GET, "edit_profile", "0");
+$allow_edit = is_admin() || $user == $User;
+
 /*
 ** Il faut faire un systeme de calcul d'"implication", basé sur les logs,
 ** la partition et les rendus, qui soit lissé dans le temps pour former une tendance
@@ -7,79 +16,98 @@ $user = $User;
 ** acquises, le grade moyen et le nombre de flammes, pareil, lissé dans le temps
 */
 ?>
-
-<style>
- table, td
- {
-     border: 1px black solid;
- }
-</style>
-
 <table class="full_size_table">
     <tr><td>
 	<table class="full_size_table"><tr><td style="width: 300px; vertical-align: top;">
 	    <p style="text-align: center;">
-		<b style="font-size: xx-large;"><?php display_nickname($user, false); ?></b><br />
+		<b style="font-size: large;"><?php display_nickname($user, false); ?></b><br />
 		<?php display_avatar($user); ?>
 	    </p>
-	    <table class="uservalues">
-		<tr><td><b><?=$Dictionnary["CodeName"]; ?></b>:</td><td><?=$user["codename"]; ?></td></tr>
-		<tr><td><b><?=$Dictionnary["FirstName"]; ?></b>:</td><td><?=$user["first_name"]; ?></td></tr>
-		<tr><td><b><?=$Dictionnary["FamilyName"]; ?></b>:</td><td><?=$user["family_name"]; ?></td></tr>
-		<tr><td><b><?=$Dictionnary["BirthDate"]; ?></b>:</td><td><?=$user["birth_date"] ? human_date($user["birth_date"], true) : ""; ?></td></tr>
-		<tr><td><b><?=$Dictionnary["Phone"]; ?></b>:</td><td><?=$user["phone"]; ?></td></tr>
-		<tr><td><b><?=$Dictionnary["Address"]; ?></b>:</td><td>
-		    <input
-			readonly
-			disabled="disabled"
-			style="width: 100%;"
-			type="text"
-			value="<?=$user["address_name"]; ?> <?=$user["street_name"]; ?> <?=$user["postal_code"]; ?> <?=$user["city"]; ?> <?=$user["country"]; ?>"
-		    />
-		</td></tr>
-		<tr><td><b><?=$Dictionnary["MemberSince"]; ?></b>:</td><td><?=human_date($user["registration_date"], true); ?></td></tr>
-	    </table>
-	</td><td>
-	    <table class="full_size_table">
-		<?php if (is_admin() || $user["id"] == $User["id"]) { ?>
+	    <form method="post" action="">
+		<table class="uservalues">
+		    <?php
+		    $fields = [
+			"CodeName" => "codename",
+			"Mail" => "mail",
+			"Nickname" => "nickname",
+			"FirstName" => "first_name",
+			"FamilyName" => "family_name",
+			"BirthDate" => "birth_date",
+			"Phone" => "phone",
+			"AddressName" => "address_name",
+			"Address" => "street_name",
+			"PostalCode" => "postal_code",
+			"City" => "city",
+			"Country" => "country",
+		    ];
+		    foreach ($fields as $k => $v) { ?>
+			<tr><td>
+			    <b><?=$Dictionnary[$k]; ?></b>:
+			</td><td>
+			    <?php if (strstr($v, "date")) $user->$v = human_date($user->$v, true); ?>
+			    <input
+				<?=is_admin() && $v != "codename" ? "" : 'readonly disabled="disabled"'; ?>
+				type="text"
+				name="<?=$v; ?>"
+				style="width: 100%; text-align: center;"
+				value="<?=@strlen($user->$v) ? $user->$v : ""; ?>"
+			    />
+			</td></tr>
+		    <?php } ?>
 		    <tr><td>
-			Fichiers associés au compte (Mettre un browser ici)
+			<b><?=$Dictionnary["MemberSince"]; ?></b>:
+		    </td><td>
+			<?=human_date($user->registration_date, true); ?>
+			<?php if ($allow_edit) { ?>
+		    </td></tr><tr><td colspan="2">
+			<input type="submit" value="&#10003;" style="width: 100%;" />
+			<?php } ?>
 		    </td></tr>
-		<?php } ?>
-		<tr><td>
-		    Médailles personnelles
-		</td></tr>
-	    </table>
+		</table>
+	    </form>
+	</td><td style="overflow: auto;">
+	    <?php
+	    $type = NULL;
+	    $language = "NA";
+	    $page = "user";
+	    $id = $user->id;
+	    $path = "";
+	    $target = $Configuration->UsersDir($user->codename);
+	    if (!(is_admin() || $id == $User["id"]))
+		$target .= "/public/";
+	    require ("./tools/template/path_browser.phtml");
+	    ?>
 	</td></tr></table>
-    </td><td>
-	Score
+    </td><td rowspan="2">
+	<?php
+	$panel = ["#" => __DIR__."/personnal.phtml"];
+	foreach ($user->merged_sublayers as $fdmy => $msl)
+	    $panel[$fdmy] = __DIR__."/cycle.phtml";
+	if ($user->assistant || $user->teacher || $user->director)
+	    $panel[$Dictionnary["ManagedActivities"]] = __DIR__."/managed_activities.phtml";
+	tabpanel($panel, $Position.$user->id."cursus", "#");
+	?>
     </td></tr><tr>
 	<?php
 	$_GET["w"] = 960;
 	$_GET["h"] = 400;
-	$_GET["e"] = now();
+	$_GET["e"] = now() + 60 * 60 * 12;
 	$_GET["s"] = now() - 14 * 24 * 60 * 60;
 	?>
-	<td class="stats" style="height: 50%;">
+	<td class="stats" style="height: 50%">
 	    <?php
 	    $panel = [
 		$Dictionnary["ActivityLogs"] => __DIR__."/activity_logs.phtml",
 		$Dictionnary["Presence"] => __DIR__."/presence.phtml",
-		$Dictionnary["MedalGain"] => __DIR__."/medals.phtml",
+		$Dictionnary["Medals"] => __DIR__."/medals.phtml",
 		$Dictionnary["DeliveryDone"] => __DIR__."/delivery.phtml",
+		$Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
+		$Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
+		$Dictionnary["Laboratory"] => __DIR__."/laboratories.phtml",
 	    ];
-	    tabpanel($panel, $Position.$user["id"]."graphes", $Dictionnary["ActivityLogs"]);
+	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext");
 	    ?>
 	</td>
-	<td>
-	<?php
-	$panel = [
-	    $Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
-	    $Dictionnary["ManagedActivities"] => __DIR__."/managed_activities.phtml",
-	    $Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
-	];
-	tabpanel($panel, $Position.$user["id"], $Dictionnary["Intercom"]);
-	?>	
-    </td></tr>
+    </tr>
 </table>
 

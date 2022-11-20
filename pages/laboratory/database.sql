@@ -3,9 +3,6 @@ CREATE TABLE `laboratory` (
   `id` int(11) NOT NULL,
   `codename` varchar(255) NOT NULL,
   `deleted` datetime DEFAULT NULL,
-
-  `icon` varchar(255) DEFAULT NULL,
-
   `fr_name` varchar(255) DEFAULT NULL,
   `fr_description` text DEFAULT NULL,
   `en_name` varchar(255) DEFAULT NULL,

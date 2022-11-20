@@ -6,16 +6,22 @@ class CycleLayer extends Layer
     public $cycle = -1;
     public $done = false;
     public $first_day = NULL;
-    public $bonus_credit = 0;
+    public $last_day = NULL;
     public $id_user_cycle = -1;
-
+    
     // $sublayer sera des module layer
     public function buildsub($user_id, $cycle_id, $blist = [])
     {
 	global $Language;
 	global $Database;
 	global $Configuration;
+	global $one_week;
 
+	if ($this->first_day)
+	{
+	    $this->last_day = date_to_timestamp($this->first_day) + 15 * $one_week;
+	    $this->last_day = db_form_date($this->last_day);
+	}
 	/// On récupère les profs du cycle
 	if (@$Configuration->Properties["direction_is_teacher"])
 	    $teachers = fetch_teacher($cycle_id, true, "cycle");
@@ -30,19 +36,21 @@ class CycleLayer extends Layer
 	////// ON RECUPERE LES MODULES OU L'ON EST INSCRIT
 	$modules = db_select_all("
            activity.id,
+           user_team.id_user as id_user,
            team.id as id_team,
            team.closed as closed,
            team.commentaries as commentaries,
            template.codename as template_codename
            FROM activity_cycle
            LEFT JOIN team ON team.id_activity = activity_cycle.id_activity
+           LEFT JOIN user_team ON user_team.id_team = team.id
            LEFT JOIN activity ON activity.id = activity_cycle.id_activity
            LEFT JOIN activity as template ON activity.id_template = template.id
-           LEFT JOIN user_team ON user_team.id_team = team.id
-                 AND user_team.id_user = $user_id
            WHERE activity_cycle.id_cycle = $cycle_id
-             AND activity.type = 18
-           AND activity.deleted = 0 GROUP BY activity.id
+	     AND user_team.id_user = $user_id
+             AND activity.parent_activity IS NULL
+             AND activity.is_template = 0
+           AND activity.deleted IS NULL GROUP BY activity.id
 	");
 	foreach ($modules as $mod)
 	{
@@ -54,7 +62,7 @@ class CycleLayer extends Layer
 		return (false);
 	    $fields = [
 		"id", "codename", "name", "description", "credit_a", "credit_b", "credit_c", "credit_d", "hidden", "template_codename",
-		"is_teacher", "closed", "commentaries", "validation_by_percent", "old_validation",
+		"is_teacher", "closed", "commentaries", "validation_by_percent", "old_validation", "subscription",
 		"grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "grade_module", "allow_unregistration", "no_grade",
 		"emergence_date", "done_date", "registration_date", "close_date"
 	    ];

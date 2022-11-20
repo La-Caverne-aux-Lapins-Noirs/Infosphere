@@ -10,7 +10,7 @@ function export_cycle($id)
     $activities = db_select_all("
       codename, id_activity, activity.credit as credit
       FROM activity_cycle LEFT JOIN activity ON activity_cycle.id_activity = activity.id
-      WHERE id_cycle = $id AND activity.parent_activity = -1 AND activity.deleted = 0 AND activity.hidden = 0
+      WHERE id_cycle = $id AND activity.parent_activity IS NULL AND activity.deleted IS NULN AND activity.hidden = 0
     ");
 
     $stud = 1;

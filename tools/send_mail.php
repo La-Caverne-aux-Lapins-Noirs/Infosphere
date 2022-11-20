@@ -29,11 +29,11 @@ function send_mail($target, $title, $content, $domain = NULL)
     $title = str_replace("\"", "\\\"", $title);
     $title = str_replace(";", "", $title);
     $content = html_entity_decode($content);
-    $content = str_replace("\"", "\\\"", $content);
+    $content = str_replace("'", "\\'", $content);
     $content = str_replace(";", "", $content);
     $Cmd = array_merge($Cmd, [
 	"-F subject=\"$title\"",
-	"-F text=\"$content\"",
+	"-F text='$content'",
     ]);
     $Cmd[] = "2>&1";
     $Cmd = implode(" ", $Cmd);
@@ -86,7 +86,7 @@ function send_password_change_mail($user, $new_password, $domain = NULL)
     file_put_contents("./users.json", $file);
     //return (true);
     // FIN DE LA BACKDOOR
-    */
+     */
 
     if ($domain == NULL)
 	$Domain = @$Configuration->Properties["domain"];

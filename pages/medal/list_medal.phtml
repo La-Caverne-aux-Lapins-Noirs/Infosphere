@@ -11,13 +11,71 @@
 		       <?php } ?>
 		       "
 	    ></div>
-	</td><td style="padding-left: 10px;">
-	    <h4><?=$medal["name"]; ?><?=is_teacher() ? " (".$medal["codename"].")" : ""; ?></h4>
-	    <h5><?=$Dictionnary["Tags"]; ?>: <?=$medal["tags"]; ?></h5>
-	    <p style="font-size: small;">
-		<?=$medal["description"]; ?>
-	    </p>
-	</td></tr>
+	</td><td style="padding-left: 10px; width: 270px;">
+	    <div style="width: 100%; height: 100px; overflow: auto;">
+		<h4><?=$medal["name"]; ?><?=is_teacher() ? " (".$medal["codename"].")" : ""; ?></h4>
+		<h5><?=$Dictionnary["Tags"]; ?>: <?=$medal["tags"]; ?></h5>
+		<p style="font-size: small;">
+		    <?=$medal["description"]; ?>
+		</p>
+	    </div>
+	</td>
+	<?php if (is_teacher()) { ?>
+	    <script>
+	     <?php
+	     $mcli = explode(" ", $medal["command"]);
+	     array_shift($mcli); // ./genicon
+	     $medal["shape"] = $mcli[0] == "pins" ? "0" : "1";
+	     array_shift($mcli); // [sband, band, pins]
+	     array_shift($mcli); // medal_name
+	     for ($imcli = 0; $imcli < count($mcli); ++$imcli)
+	     {
+		 if ($mcli[$imcli] == "-p")
+		 {
+		     $imcli += 1;
+		     $medal["picture"] = $mcli[$imcli];
+		     $medal["picture"] = str_replace("dres/medals/.ressources/", "", $medal["picture"]);
+		 }
+		 else if ($mcli[$imcli] == "-s")
+		 {
+		     $imcli += 1;
+		     $medal["specificator"] = $mcli[$imcli];
+		 }
+		 else if ($mcli[$imcli] == "-c")
+		 {
+		     $imcli += 1;
+		     if (!strstr($mcli[$imcli], ".default_style.dab"))
+			 $medal["configuration"] = $mcli[$imcli];
+		 }
+	     }
+	     foreach ([
+		 "command",
+		 "name",
+		 "description",
+		 "deleted",
+		 "band",
+		 "icon"
+	     ] as $cc)
+	         unset($medal[$cc]);
+	     ?>
+	     var <?=$medal["codename"]; ?> = {
+		 <?php foreach ($medal as $kmed => $med) { ?>
+		     <?=$kmed; ?>: "<?=$med; ?>",
+		 <?php } ?>
+		 edit: true
+	     };
+	    </script>
+	    <?php $js = "silent_submit(this, 'medallist');"; ?>
+	    <td style="width: 20px;">
+		<form method="delete" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="confirm() && <?=$js; ?>;">
+		    <input type="button" value="&#10007;" onclick="confirm() && <?=$js; ?>;" style="color: red;" />
+		</form>
+		<form method="put" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="load_form(document.getElementById('medal_formular'), <?=$medal["codename"]; ?>);">
+		    <input type="button" value="E" onclick="load_form(document.getElementById('medal_formular'), <?=$medal["codename"]; ?>);" style="color: #00FFFF;" />
+		</form>
+	    </td>
+	<?php } ?>
+	</tr>
     </table>
 <?php } ?>
 

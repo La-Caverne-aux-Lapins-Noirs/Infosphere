@@ -16,6 +16,8 @@ function get_activity_medal_for_user(&$student, $idact)
 	WHERE activity_user_medal.id_activity = $idact
           AND user_medal.id_user = {$student["id"]}
 	  ");
+    foreach ($student["medal"] as &$med)
+	$med["icon"] = "/genicon.php?function=".$med["codename"];
     return ($student);
 }
 

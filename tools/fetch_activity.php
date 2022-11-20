@@ -10,7 +10,7 @@ function fetch_activity($id = -1, $rec = false)
     if ($id != -1)
 	$id = " AND activity.id = $id ";
     else
-	$id = " AND activity.parent_activity = -1 ";
+	$id = " AND activity.parent_activity IS NULL ";
     $all = db_select_all("
        id, parent_activity, codename
        FROM activity

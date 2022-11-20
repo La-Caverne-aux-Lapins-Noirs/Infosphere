@@ -1,0 +1,45 @@
+<?php
+$matters = db_select_all("
+  activity.id
+  FROM activity
+  LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
+  LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
+  LEFT JOIN user_laboratory ON laboratory.id = user_laboratory.id_laboratory
+    AND user_laboratory.authority > 0
+
+  LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity.id
+  LEFT JOIN cycle_teacher ON cycle_teacher.id_cycle = activity_cycle.id_cycle
+  LEFT JOIN laboratory as lab ON cycle_teacher.id_laboratory = lab.id
+  LEFT JOIN user_laboratory as userlab ON lab.id = userlab.id_laboratory
+    AND userlab.authority > 0
+
+  LEFT JOIN school_cycle ON school_cycle.id_cycle = activity_cycle.id_cycle
+  LEFT JOIN user_school ON school_cycle.id_school = user_school.id_school
+    AND user_school.authority = 1
+
+  WHERE (activity_teacher.id_user = {$User["id"]}
+    OR user_laboratory.id_user = {$User["id"]}
+    OR cycle_teacher.id_user = {$User["id"]}
+    OR userlab.id_user = {$User["id"]}
+    OR (user_school.id_user = {$User["id"]} AND user_school.authority = 1)
+    OR ".(is_admin() ? "1" : "0")."
+  )
+  AND activity.parent_activity IS NULL
+  AND activity.is_template = 0
+  GROUP BY activity.id
+  ORDER BY activity.codename
+  ");
+if (count($matters)) { ?>
+    <h2><?=$Dictionnary["ManagedActivities"]; ?></h2>
+    <ul>
+	<?php foreach ($matters as $mat) { ?>
+	    <?php ($matter = new FullActivity)->build($mat["id"], false, false); ?>
+	    <li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
+		<h4>
+		    <?=$matter->codename; ?>: <?=$matter->fr_name; ?>
+		</h4>
+		<?php $valid_activities[$matter->id] = 2; ?>
+	    </a></li>
+	<?php } ?>
+    </ul>
+<?php } ?>

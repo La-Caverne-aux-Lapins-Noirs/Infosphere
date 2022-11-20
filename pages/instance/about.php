@@ -186,7 +186,7 @@
 		    </form>
 		<?php } ?>
 
-	    <?php } else if ($activity->is_teacher) { ?>
+	    <?php } else /* if ($activity->is_teacher) */ { ?>
 		<input type="button" value="<?=$Dictionnary["YouAreNotConcerned"]; ?>" />
 	    <?php } ?>
 	</div>

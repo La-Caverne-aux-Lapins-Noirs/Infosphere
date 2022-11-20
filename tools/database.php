@@ -325,18 +325,44 @@ function add_db_err_print($x)
     $Database->print_on_error[] = $x;
 }
 
-function secure_text($msg, $cipher = "")
+function longhash($seed)
+{
+    $len = "";
+    for ($i = 0; $i < 10; ++$i)
+    {
+	$seed = hash("whirlpool", $len.$seed);
+	$len .= $seed;
+    }
+    return ($len);
+}
+
+function secure_data($data, $pass)
+{
+    $lhash = longhash($pass);
+    $msg = openssl_encrypt(
+	$data, "blowfish", $pass, 0, "azertyui"
+    );
+    return ($msg);
+}
+
+function unsecure_data($data, $pass)
+{
+    $lhash = longhash($pass);
+    $msg = openssl_decrypt(
+	$data, "blowfish", $pass, 0, "azertyui"
+    );
+    return ($msg);
+}
+
+function secure_text($msg, $pass = "")
 {
     global $Database;
 
     $msg = strip_tags($msg);
     $msg = str_replace("\n", "<br />", trim($msg));
-    if ($cipher != "")
+    if ($pass != "")
 	$msg = openssl_encrypt(
-	    $msg,
-	    openssl_get_cipher_methods()[0],
-	    $cipher,
-	    0, "azertyui01234567"
+	    $msg, "blowfish", $pass, 0, "azertyui01234567"
 	);
     $msg = $Database->real_escape_string($msg);
     return ($msg);

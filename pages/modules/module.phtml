@@ -1,17 +1,29 @@
-<?php ($matter = new FullActivity)->build($module); ?>
+<?php
+$module = NULL;
+foreach ($user->merged_sublayers as $cyc)
+{
+    foreach ($cyc->matters as $mod)
+    {
+	if ($mod->id == $id_module)
+	    $module = $mod;
+    }
+}
+if ($module == NULL)
+    ($module = new FullActivity)->build($id_module);
+?>
 
 <?php $nbline = 0; ?>
 <table class="module_tab">
     <tr><td colspan="3" style="position: relative;">
-	<h2><?=$matter->name ?: $matter->codename; ?></h2>
-	<?php if (is_teacher_for_activity($matter->id)) { ?>
+	<h2><?=$module->name ?: $module->codename; ?></h2>
+	<?php if (is_teacher_for_activity($module->id)) { ?>
 	    <a href="<?=unrollurl(["b" => 1]); ?>" style="position: absolute; width: 20%; left: calc((100% - 20%) / 2); top: 10px; text-align: center; z-index: 1;">
 		<?=$Dictionnary["ManageModule"]; ?>
 	    </a>
 	    <?php
 	    $link = [
 		"p" => "InstancesMenu",
-		"a" => $matter->id
+		"a" => $module->id
 	    ];
 	    ?>
 	    <a href="<?=unrollurl($link); ?>" style="position: absolute; right: 40px; top: 10px; z-index: 1;">
@@ -21,62 +33,62 @@
 	<hr style="border-color: lightgray;" />
     </td></tr>
     <tr><td style="padding-top: 0px;">
-    <?php if ($matter->emergence_date != NULL) { ?>
+    <?php if ($module->emergence_date != NULL) { ?>
 	<b><?=$Dictionnary["EmergenceDate"]; ?></b>:
-	<?=litteral_date($matter->emergence_date); ?>
+	<?=litteral_date($module->emergence_date); ?>
 	<?php $nbline += 1; ?>
 	<br />
     <?php } ?>
-    <?php if ($matter->registration_date != NULL) { ?>
+    <?php if ($module->registration_date != NULL) { ?>
 	<b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:
-	<?=litteral_date($matter->registration_date); ?>
+	<?=litteral_date($module->registration_date); ?>
 	<?php $nbline += 1; ?>
 	<br />
     <?php } ?>
-    <?php if ($matter->close_date != NULL) { ?>
+    <?php if ($module->close_date != NULL) { ?>
 	<b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:
-	<?=litteral_date($matter->close_date); ?>
+	<?=litteral_date($module->close_date); ?>
 	<?php $nbline += 1; ?>
 	<br />
     <?php } ?>
-    <?php if ($matter->done_date != NULL) { ?>
+    <?php if ($module->done_date != NULL) { ?>
 	<b><?=$Dictionnary["DoneDate"]; ?></b>:
-	<?=litteral_date($matter->done_date); ?>
+	<?=litteral_date($module->done_date); ?>
 	<?php $nbline += 1; ?>
 	<br />
     <?php } ?>
     
-    <?php if ($matter->maximum_subscription != -1) { ?>
+    <?php if ($module->maximum_subscription != -1) { ?>
 	<?php $nbline += 1; ?>
-	<?=$Dictionnary["MaximumSubscription"].": ".$matter->maximum_subscription; ?>
+	<?=$Dictionnary["MaximumSubscription"].": ".$module->maximum_subscription; ?>
     <?php } ?>
 </td><td style="padding: 0;">
     <?php require_once ("grade_array.phtml"); ?>
 </td><td style="padding-top: 0px; text-align: center;">
 
-    <?php if ($matter->subscription != FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
+    <?php if ($module->subscription != FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
 
-	<?php if (!period($matter->registration_date, $matter->close_date)) { ?>
+	<?php if (!period($module->registration_date, $module->close_date)) { ?>
 	    <b><?=$Dictionnary["SubscriptionPeriodIsClose"]; ?></b>
 	<?php } else { ?>
 	    <?php $js = "silent_submit(this); setTimeout(function() { location.reload(); }, 500);"; ?>
-	    <form method="put" action="/api/module/<?=$module; ?>/registration">
-		<?php if ($matter->registered) { ?>
+	    <form method="put" action="/api/module/<?=$module->id; ?>/registration">
+		<?php if ($module->registered) { ?>
 		    
-		    <?php if ($matter->allow_unregistration == false) { ?>
+		    <?php if ($module->allow_unregistration == false) { ?>
 			<input type="button" value="<?=$Dictionnary["Subscribed"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
 		    <?php } else { ?>
 			<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Unsubscribe"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
 		    <?php } ?>
 		    
-		<?php } else if ($matter->registered == false) { ?>
+		<?php } else if ($module->registered == false) { ?>
 		    <input
 			type="button"
 			onclick="<?=$js; ?>"
 			value="<?=$Dictionnary["Subscribe"]; ?>"
 			style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;"
 		    /><br /><br />
-		    <?php if ($matter->allow_unregistration == false) { ?>
+		    <?php if ($module->allow_unregistration == false) { ?>
 			<b style="color: white;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>.</b><br />
 		    <?php } ?>
 		<?php } ?>
@@ -86,18 +98,19 @@
     <?php } ?>
 
 </td></tr><tr><td colspan="3">
-    <?=$matter->description; ?>
+    <?=$module->description; ?>
 </td></tr><tr><td colspan="3" class="medalscroll">
-    <div>
-	<?php if (!count($matter->medal)) { ?>
+    <div style="text-align: center;">
+	<?php if (!count($module->medal)) { ?>
 	    <span style="position: relative; top: 10px; left: 10px; font-style: italic; color: gray;">
 		<?=$Dictionnary["NoAssociatedMedalToMatter"]; ?>
 	    </span>
 	<?php } ?>
-	<?php foreach ($matter->medal as $medal) { ?>
+	<?php foreach ($module->medal as $medal) { ?>
 	    <div
 		class="medal_box_picture"
 		style="
+		       position: relative;
 		       display: inline-block; margin-left: 5px; margin-right: 5px;
 		       background-image: url('<?=$medal["icon"]; ?>');
 		       <?php if ($medal["band"] != NULL) { ?>
@@ -106,11 +119,36 @@
 		       width: 92px !important; height: 92px !important;
 		       <?php } ?>
 		       "
-	    ></div>
+	    >
+		<?php if (!isset($medal["module_medal"]) || $medal["module_medal"]) { ?>
+		    <img
+			src="res/grade_<?=["d", "c", "b", "a"][$medal["role"] - 1]; ?>.png"
+			style="position: absolute; top: 0px; right: -10px; width: 40px; height: 40px;"
+		    />
+		<?php } ?>
+		<?php if (@$medal["local"]) { ?>
+		    <img
+			src="res/local.png"
+			style="position: absolute; bottom: 0px; right: -10px; width: 40px; height: 40px;"
+		    />
+		<?php } ?>
+	    </div>
 	<?php } ?>
     </div>
+    <?php if (isset($module->validation_by_percent)) { ?>
+</td></tr><tr><td colspan="3">
+    <?php require (__DIR__."/../profile/progress.php"); ?>
+    <?php } ?>
 </td></tr></table>
-	
-<?php foreach ($matter->subactivities as $act) { ?>
+
+<?php
+if (!isset($module->sublayer))
+    $module = $module->subactivities;
+else
+    $module = $module->sublayer;
+?>
+<?php foreach ($module as $act) { ?>
+    <?php ($actx = new FullActivity)->build($act->id); ?>
+    <?php $act = $actx; // Parcequ'actuellement, j'ai la flemme d'enrichir Fullprofile correctement... ?>
     <?php require ("module_tab.php"); ?>
 <?php } ?>

@@ -22,10 +22,12 @@ function merge_cycles($cycles)
 {
     global $User;
     global $FUK;
-    
+
     $fcycles = [];
     foreach ($cycles as $cycle)
     {
+	$cycle = (array)$cycle;
+	return ;
 	$fd = $cycle["first_day"];
 	if (!isset($fcycles[$fd]))
 	{

@@ -519,14 +519,14 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 
 .double_vertical > div
 {
-    width: calc(100% - 20px);
-    height: calc(50% - 20px);
+    width: calc(100%);
+    height: calc(50% - 1px);
 }
 
 .double_horizontal > div
 {
-    height: calc(100% - 20px);
-    width: calc(50% - 20px);
+    height: calc(100%);
+    width: calc(50% - 1px);
     float: left;
 }
 
@@ -931,7 +931,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     position: relative;
     height: 100%;
     width: 100%;
-    overflow: auto;
 }
 
 .tablist
@@ -969,22 +968,24 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 
 .tabcontent
 {
+    overflow: auto;	
     position: absolute;
     top: 40px;
     left: 0px;
     width: 100%;
     height: calc(100% - 50px);
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .tabcontent > div
 {
     border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.3);
     position: absolute;
     top: 0px;
     left: 0px;
     width: 100%;
     height: calc(100%);
+    vertical-align: top;
 }
 
 .bigbuttons input
@@ -1132,3 +1133,9 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     width: 100%;
     height: 100%;
 }
+
+.uservalues b, .uservalues input, .uservalues td
+{
+    font-size: x-small;
+}
+

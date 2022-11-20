@@ -143,6 +143,9 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	");
 	if ($act->slot_duration != -1)
 	    @generate_slots($Database->last_id, datex("H:i", $act->slot_duration), 1);
+	$last_session = $Database->insert_id;
+	foreach ($sess->room as $room)
+	    handle_links("session", "room", $last_session, $room);
     }
     return (new ValueResponse($actid));
 }

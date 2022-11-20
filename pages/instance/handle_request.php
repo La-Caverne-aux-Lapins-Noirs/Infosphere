@@ -73,7 +73,9 @@ if ($User != NULL && isset($_POST["action"]))
 	{
 	    if (!is_number($_POST["simultaneous"]))
 		$_POST["simultaneous"] = 1;
-	    $request = @generate_slots($session, $_POST["duration"], $_POST["simultaneous"]);
+	    $dur = (int)$_POST["duration"];
+	    $dur = sprintf("%02d:%02d", $dur / 60, $dur % 60);
+	    $request = @generate_slots($session, $dur, $_POST["simultaneous"]);
 	    $LogMsg = "SlotsGenerated";
 	}
     }
@@ -394,9 +396,13 @@ if ($User != NULL && isset($_POST["action"]))
 	{
 	    if (period(date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute,
 		       date_to_timestamp($activity->unique_session->begin_date) + $five_minute * 3))
-		$request = @update_table("team", $activity->user_team["id"], ["present" => 1]);
+	    $request = @update_table(
+		"team", $activity->user_team["id"], ["present" => 1, "declaration_date" => now()]
+	    );
 	    else
-		$request = @update_table("team", $activity->user_team["id"], ["present" => -1]);
+		$request = @update_table(
+		    "team", $activity->user_team["id"], ["present" => -1, "declaration_date" => now()]
+		);
 	    $LogMsg = "PresenceDeclared";
 	}
     }

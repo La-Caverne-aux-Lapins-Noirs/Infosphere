@@ -1,0 +1,50 @@
+<?php foreach ($user->school as $school) { ?>
+    <?php $icon = $Configuration->SchoolsDir($school["codename"])."icon.png"; ?>
+    <div
+	onclick="document.location='index.php?p=SchoolMenu&amp;a=<?=$school["id"]; ?>"
+	style="
+		 position: relative;
+		 margin: 20px 20px 20px 20px;
+		 border-radius: 20px;
+		 display: inline-block;
+		 width: 200px;
+		 height: 200px;
+		 background-size: contain;
+		 background-color: rgba(255, 255, 255, 0.5);
+		 background-image: url('<?=file_exists($icon) ? $icon : "res/no_avatar_lab.png"; ?>'); ;
+		 "
+    >
+	<?php if (!file_exists($icon)) { ?>
+	    <p style="
+		      position: absolute;
+		      vertical-align: middle;
+		      bottom: 40%;
+		      width: calc(100% - 80px);
+		      text-align: center;
+		      padding-left: 40px;
+		      padding-right: 40px;
+		      "
+	    >
+		<?=$school["name"]; ?>
+	    </p>
+	<?php } ?>
+    </div>
+<?php } ?>
+<?php
+foreach ($user->medals as $medal) { ?>
+    <img
+	src="/genicon.php?function=<?=$medal["codename"]; ?>&amp;shape=sband"
+	alt="<?=$medal["name"]; ?>"
+	width="200"
+	height="200"
+	style="
+	     display: inline-block;
+	     padding: 0;
+	     margin: 20px 20px 20px 20px;
+	     border-radius: 20px;
+	     "
+	onclick="document.location = 'index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>'";
+    />
+<?php } ?>
+
+

@@ -3,7 +3,7 @@
 class CConfiguration
 {
     public $_MedalsDir;
-    public $GroupsDir;
+    public $_GroupsDir;
     public $ELearningDir;
     public $_UsersDir;
     public $_ActivitiesDir;
@@ -11,11 +11,25 @@ class CConfiguration
     public $_RoomsDir;
     public $Properties = [];
 
+    function GroupsDir($grp = NULL)
+    {
+	if ($grp == NULL)
+	    return ($this->_GroupsDir);
+	return ($this->_GroupsDir.$grp."/");
+    }
+    
     function UsersDir($usr = NULL)
     {
 	if ($usr == NULL)
 	    return ($this->_UsersDir);
-	return ($this->_UsersDir.$usr."/");
+	$dir = $this->_UsersDir.$usr."/";
+	if (!is_dir($dir))
+	{
+	    new_directory($dir."public/index.php");
+	    new_directory($dir."personnal/index.php");
+	    new_directory($dir."admin/index.php");
+	}
+	return ($dir);
     }
     function MedalsDir($medal = NULL)
     {
@@ -52,7 +66,7 @@ class CConfiguration
     {
 	$DIR = "dres";
 	$this->_MedalsDir = "$DIR/medals/";
-	$this->GroupsDir = "$DIR/groups/";
+	$this->_GroupsDir = "$DIR/groups/";
 	$this->ELearningDir = "$DIR/elearning/";
 	$this->_UsersDir = "$DIR/users/";
 	$this->_SchoolsDir = "$DIR/school/";

@@ -582,13 +582,26 @@ class FullActivity extends Response
 	}
 
 	get_user_promotions($user);
-	foreach ($user["cycle"] as $cycle)
+	if ($this->parent_activity == -1)
 	{
-	    if (isset($this->cycle[$cycle["codename"]]))
+	    foreach ($user["cycle"] as $cycle)
 	    {
-		$this->can_subscribe = true;
-		break ;
+		if (isset($this->cycle[$cycle["codename"]]))
+		{
+		    $this->can_subscribe = true;
+		    break ;
+		}
 	    }
+	}
+	else
+	{
+	    $topsub = db_select_one("
+              * FROM team LEFT JOIN user_team ON team.id = user_team.id_team
+              WHERE user_team.id_user = {$user["id"]}
+              AND team.id_activity = $this->parent_activity
+	      ");
+	    if ($topsub)
+		$this->can_subscribe = true;
 	}
 
 	// Si on ne veut pas les sous activités...

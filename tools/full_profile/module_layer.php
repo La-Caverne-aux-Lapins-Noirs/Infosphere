@@ -7,6 +7,8 @@ class ModuleLayer extends Layer
     public $current_percent = 0;
     public $grade = -1;
     public $hidden = false;
+    public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
+    public $maximum_subscription = -1;
     public $manual_grade = NULL;
     public $manual_credit = NULL;
     public $grade_a = 85;
@@ -19,11 +21,12 @@ class ModuleLayer extends Layer
     public $validation_by_percent = false;
     public $old_validation = false;
     public $configuration = [];
-    public $allow_unregistration;
+    public $allow_unregistration = true;
     public $emergence_date;
     public $done_date;
     public $registration_date;
     public $close_date;
+    public $type_type = 0; // Const
 
     // Les scores de la validation principale
     public $valid_grade_a = 0;
@@ -32,24 +35,38 @@ class ModuleLayer extends Layer
     public $valid_grade_d = 0;
     public $valid_grade_e = 0;
 
+    public $credit_a = 0;
+    public $credit_b = 0;
+    public $credit_c = 0;
+    public $credit_d = 0;
+    public $credit = [];
+    
     public $id_team = -1; // Le lien module-utilisateur.
 
     // $sublayer sera des activity layer
     public function buildsub($user_id, $module_id, $blist = [])
     {
 	global $Language;
+	global $Configuration;
 
+	$this->credit[0] = 0;
+	$this->credit[1] = &$this->credit_d;
+	$this->credit[2] = &$this->credit_c;
+	$this->credit[3] = &$this->credit_b;
+	$this->credit[4] = &$this->credit_a;
 	$activities = db_select_all("
            activity.id, activity.codename,
            session.id as id_session,
            team.commentaries as commentaries,
            team.manual_credit as manual_credit,
-           team.manual_grade as manual_grade
+           team.manual_grade as manual_grade,
+           activity_type.type as type_type
            FROM activity
+           LEFT JOIN activity_type ON activity.type = activity_type.id
            LEFT JOIN team ON team.id_activity = activity.id
            LEFT JOIN session ON session.id = team.id_session
            WHERE activity.parent_activity = $module_id
-             AND activity.deleted = 0
+             AND activity.deleted IS NULL
            GROUP BY activity.id
 	");
 	foreach ($activities as $act)
@@ -60,7 +77,7 @@ class ModuleLayer extends Layer
 	    $activity = new FullActivity;
 	    $only_user = array_search("only_user", $blist) !== false;
 	    $activity->build($activity_id, false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user);
-	    transfert(["id", "codename", "name", "description", "registered", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
+	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
 	    $sub->acquired_credit = 0;
 	    $sub->commentaries = $act["commentaries"];
@@ -97,14 +114,9 @@ class ModuleLayer extends Layer
                medal.codename as codename,
                medal.{$Language}_name as name,
                medal.{$Language}_description as description,
-               medal.icon as icon,
                medal.type as type,
-               activity_medal.mandatory as mandatory,
                activity_medal.local as local,
-               activity_medal.grade_a as grade_a,
-               activity_medal.grade_b as grade_b,
-               activity_medal.grade_c as grade_c,
-               activity_medal.bonus as bonus,
+               activity_medal.mark as mark,
                activity_medal.role as role
                FROM user_medal
                LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
@@ -114,10 +126,17 @@ class ModuleLayer extends Layer
                                         AND activity_medal.id_medal = medal.id
                WHERE user_medal.id_user = $user_id
                  AND (activity_user_medal.id_activity = $activity_id
-                  OR activity_user_medal.id_activity = $module_id)
+                  OR activity_user_medal.id_activity = $module_id
+		)
 	       ");
 	    foreach ($acquired as $med)
 	    {
+		$med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
+		if (!file_exists($med["icon"]))
+		    $med["icon"] = NULL;
+		$med["band"] = $Configuration->MedalsDir($med["codename"])."band.png";
+		if (!file_exists($med["band"]))
+		    $med["band"] = NULL;
 		if ($med["id_activity"] == $module_id)
 		    $target = &$this;
 		else

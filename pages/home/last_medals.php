@@ -1,4 +1,7 @@
-<h2><?=$Dictionnary["LastAcquiredMedals"]; ?>:</h2>
+<h2 style="text-align: left;">
+    <?=$Dictionnary["LastAcquiredMedals"]; ?>:
+</h2>
+<br />
 <?php
 $medals = db_select_all("
     medal.*,
@@ -11,29 +14,14 @@ $medals = db_select_all("
 
 foreach ($medals as $med)
 {
+    $med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
     if (strlen($med["icon"]) == 0)
 	continue ;
 ?>
     <a href="index.php?p=MedalsMenu&amp;a=<?=$med["id"]; ?>" style="text-decoration: none;">
 	<img
 	    src="<?=$med["icon"]; ?>"
-	    style="width: 75px; height: 75px;"
-	    alt="<?=$med["name"]; ?>"
-	/>
-    </a>
-<?php
-}
-
-echo "<br />";
-foreach ($medals as $med)
-{
-    if (strlen($med["icon"]) != 0)
-	continue ;
-?>
-    <a href="index.php?p=MedalsMenu&amp;a=<?=$med["id"]; ?>" style="text-decoration: none;">
-	<img
-	    src="genicon.php?function=<?=$med["codename"]; ?>"
-	    style="width: 200px; height: 50px;"
+	    style="width: 75px; height: 75px; border-radius: 50px; border: 5px solid black;"
 	    alt="<?=$med["name"]; ?>"
 	/>
     </a>

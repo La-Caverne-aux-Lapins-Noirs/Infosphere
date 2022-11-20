@@ -1,6 +1,8 @@
 <?php
 
 return ; // Sabotage temporaire, en attendant la re ecriture
+if (!isset($albedo) || $albedo != 1)
+    return ;
 
 // S'interesse aux activités terminées dans les 2 dernières heures
 // Place les absents et les médailles échouées.

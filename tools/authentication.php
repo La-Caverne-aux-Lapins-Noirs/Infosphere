@@ -64,8 +64,10 @@ function get_login_info($login, $password, $clear_password=true)
 
 function generate_password($len = 12)
 {
-    // Pas de O majuscule (pour ne pas confondre), pas de \, ni `, ni ", ni ', ni ~ ou ^
-    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&~#{([-|_@)]=}+$%*,?;.:/!";
+    // Pas de O majuscule (pour ne pas confondre avec zéro)
+    // Pas de \, ni `, ni ", ni ', ni ~ ou ^.
+    // Pas de $ ou * pour limiter les risques avec les passages dans le shell.
+    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&~#{([-|_@)]=}+%,?;.:/!";
     $letter = false;
     $number = false;
     $symbol = false;

@@ -48,6 +48,11 @@ table
     font-size: x-small;
 }
 
+.smallertext
+{
+    font-size: small;
+}
+
 .edit_console
 {
     height: 95%;

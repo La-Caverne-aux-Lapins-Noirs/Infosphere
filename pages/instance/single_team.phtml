@@ -1,5 +1,5 @@
 <?php
-if ($activity->min_team_size > 1)
+if ($activity->max_team_size > 1)
     $div_class = "teamdiv";
 else
     $div_class = "noteamdiv";
@@ -71,7 +71,7 @@ else
 	</form>
     <?php } ?>
 
-    <?php if ($activity->min_team_size > 1) { ?>
+    <?php if ($activity->max_team_size > 1) { ?>
 	<h4><?=$cteam["team_name"]; ?></h4>
 	<?php if ($activity->is_teacher) { ?>
 	    <div style="position: absolute; top: 0px; left: 0px;">
@@ -92,7 +92,7 @@ else
 		</form>
 	    </div>
 	<?php } else if ($activity->registered == false) { ?>
-	    <?php if (count($cteam["user"]) < $activity->min_team_size && $cteam["canjoin"]) { ?>
+	    <?php if (count($cteam["user"]) < $activity->max_team_size && $cteam["canjoin"]) { ?>
 		<div style="position: absolute; top: 0px; right: 0px;">
 		    <form method="post" action="index.php?<?=unrollget(); ?>">
 			<input type="hidden" name="action" value="join_team" />
@@ -146,7 +146,7 @@ else
 			<div style="<?=$usr["status"] == 2 ? "font-weight: bold;" : ""; ?>; text-align: left;">
 			    <?php display_nickname($usr); ?>
 
-			    <?php if ($activity->min_team_size > 1) { ?>
+			    <?php if ($activity->max_team_size > 1) { ?>
 				<?php if ($usr["status"] == 2) { ?>
 				    <br />
 				    <i style="font-size: x-small;"><?=$Dictionnary["Administrator"]; ?></i>
@@ -182,13 +182,8 @@ else
 				    <form method="POST" action="index.php?<?=unrollget(); ?>" style="display: inline-block;">
 					<input type="hidden" name="action" value="remove_medal" />
 					<input type="hidden" name="id" value="<?=$im["id_activity_user_medal"]; ?>" />
-					<?php if ($im["icon"] != "") { ?>
-					    <div style="display: inline-block; width: 30px; height: 30px; position: relative;" onclick="this.closest('form').submit();return false;">
-						<img width="30" height="30" src="<?=$im["icon"]; ?>" title="<?=$im["name"].":\n".$im["description"]; ?>" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
-					<?php } else { ?>
-					    <div style="display: inline-block; width: 150px; height: 30px; position: relative;" onclick="this.closest('form').submit();return false;">
-						<img src="genicon.php?function=<?=$im["codename"]; ?>" height="25" width="150" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
-					<?php } ?>
+					<div style="display: inline-block; width: 50px; height: 50px; position: relative;" onclick="this.closest('form').submit();return false;">
+					    <img width="50" height="50" src="<?=$im["icon"]; ?>" title="<?=$im["name"].":\n".$im["description"]; ?>" style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>" />
 					    <img width="15" height="15" src="./res/cross.png" style="position: absolute; right: 0px; bottom: 0px;" />
 					</div>
 				    </form>

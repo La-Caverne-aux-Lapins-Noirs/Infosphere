@@ -486,6 +486,7 @@ function handle_french($body)
     return ($body);
 }
 
+/*
 function array_to_object($arr)
 {
     if (is_object($arr))
@@ -505,4 +506,4 @@ function object_to_array($obj)
 	$arr[$k] = &$v;
     return ($arr);
 }
-
+*/

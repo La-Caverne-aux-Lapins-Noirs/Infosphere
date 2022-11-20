@@ -16,7 +16,7 @@ function fetch_matters($id_user, $id_cycle)
       LEFT JOIN user_team ON user_team.id_team = team.id
         AND user_team.id_user = $id_user
       WHERE activity_cycle.id_cycle = $id_cycle
-      AND activity.parent_activity = -1
+      AND activity.parent_activity IS NULL
       GROUP BY activity.id
       ORDER BY
         CASE WHEN user_team.id IS NULL

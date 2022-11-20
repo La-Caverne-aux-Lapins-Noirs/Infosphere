@@ -285,9 +285,9 @@
 		    <?=$Dictionnary["SlotDuration"]; ?>
 		</label>
 		<input
-		    type="time"
-			  name="duration"
-			  style="width: 96%; text-align: center;"
+		    type="text"
+		    name="duration"
+		    style="width: 96%; text-align: center;"
 		/>
 		<label for="simultaneous">
 		    <?=$Dictionnary["SimultaneousSlot"]; ?>

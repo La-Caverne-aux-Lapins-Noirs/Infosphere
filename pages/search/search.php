@@ -4,10 +4,11 @@ function search($codename)
 {
     global $Database;
     global $Language;
+    global $Configuration;
 
     $category = [
 	"user" => [
-	    "fields" => ", photo as icon",
+	    "fields" => "",
 	    "join" => "",
 	    "position" => "ProfileMenu",
 	    "where" => "AND authority != -1"
@@ -33,8 +34,14 @@ function search($codename)
 	{
 	    foreach ($res as $r)
 	    {
-		if (isset($r["deleted"]) && $r["deleted"] == 1)
+		if (isset($r["deleted"]) && $r["deleted"] != NULL)
 		    continue ;
+		if ($name == "user")
+		{
+		    $r["icon"] = $Configuration->UsersDir($r["codename"])."/icon.png";
+		    if (!file_exists($r["icon"]))
+			$r["icon"] = "res/no_avatar.png";
+		}
 		$new = $r;
 		$new["address"] = "index.php?p=".$fields["position"]."&amp;a=".$r["id"];
 		$out[$name]["name"] = ucfirst($name);

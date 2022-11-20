@@ -34,5 +34,6 @@ function edit_codename($table, $old, $new)
 	}
     }
     $Database->query("UPDATE `$table` SET codename = '$new' WHERE id = $old");
+    return (new Response);
 }
 

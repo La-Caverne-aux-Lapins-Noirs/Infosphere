@@ -1,14 +1,15 @@
 <?php
 require_once ("fetch_matters.php");
-require_once ("merge_cycles.php");
+$user = get_full_profile($User, []);
 ?>
 <?php $valid_activities = []; // [id] = 0, 1, 2; // not sub, sub, teacher ?>
 <table class="submenu"><tr class="submenutr"><td class="submenutd">
-    <?php require_once ("menu.phtml"); ?>
+    <?php require_once ("matter_menu.phtml"); ?>
+    <?php require_once ("managed_menu.phtml"); ?>
 </td><td class="submenutd">
     <?php if (isset($_GET["a"])) { ?>
-	<?php if (isset($valid_activities[$module = (int)$_GET["a"]])) { ?>
-	    <?php if (is_teacher_for_activity($module) && (int)@$_GET["b"]) { ?>
+	<?php if (isset($valid_activities[$id_module = (int)$_GET["a"]])) { ?>
+	    <?php if (is_teacher_for_activity($id_module) && (int)@$_GET["b"]) { ?>
 		<?php require_once ("admin.phtml"); ?>
 	    <?php } else { ?>
 		<?php require_once ("module.phtml"); ?>
@@ -17,7 +18,7 @@ require_once ("merge_cycles.php");
 	    <?=$Dictionnary["NotFound"]; ?>
 	<?php } ?>
     <?php } else { ?>
-	<?php require ("module_resume.php"); ?>
+	<?php require ("resume.php"); ?>
     <?php } ?>
 </td></tr></table>
 

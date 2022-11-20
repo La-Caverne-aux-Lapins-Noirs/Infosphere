@@ -19,12 +19,19 @@ function is_me($id)
     return ($User != NULL && $User["id"] == $id);
 }
 
-function is_teacher($id = NULL)
+function is_assistant($usr = NULL)
+{
+    return (is_teacher(NULL, $usr, 1));
+}
+
+function is_teacher($id = NULL, $usr = NULL, $lvl = 2)
 {
     global $User;
 
-    if (!$User)
+    if (!$User && $usr == NULL)
 	return (false);
+    if ($usr == NULL)
+	$usr = $User;
     if (is_admin())
 	return (true);
     $ret = db_select_one("
@@ -32,8 +39,9 @@ function is_teacher($id = NULL)
         FROM activity_teacher
 	LEFT JOIN user_laboratory
         ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
-	WHERE activity_teacher.id_user = {$User["id"]}
-	OR user_laboratory.id_user = {$User["id"]}
+        AND user_laboratory.authority >= $lvl
+	WHERE activity_teacher.id_user = {$usr["id"]}
+	OR user_laboratory.id_user = {$usr["id"]}
 	");
     return ($ret);
 }

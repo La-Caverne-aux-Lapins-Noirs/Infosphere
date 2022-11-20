@@ -14,7 +14,7 @@ function fetch_activity_template($id = -1, $rec = false, $deleted = 0)
     }
     else
     {
-	$wh = " AND activity.parent_activity = -1 ";
+	$wh = " AND activity.parent_activity IS NULL ";
 	$or = " codename ASC";
     }
     $deleted = (int)$deleted;

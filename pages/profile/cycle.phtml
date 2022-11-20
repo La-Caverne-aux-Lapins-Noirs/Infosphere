@@ -1,0 +1,181 @@
+<?php
+if (!isset($cycle_stack))
+    $cycle_stack = $user->merged_sublayers;
+$curcycle = $cycle_stack[array_key_first($cycle_stack)]->matters;
+?>
+<style>
+ .profile_matter td, .profile_matter th
+ {
+     text-align: center;
+     font-size: small;
+ }
+ .profile_activity td, .profile_activity th, .profile_activity a
+ {
+     text-decoration: none;
+     color: black;
+     text-align: center;
+     font-size: x-small;
+ }
+ .profile_activity th
+ {
+     font-size: small;
+ }
+
+</style>
+<table class="profile_matter" style="width: 100%;"><tr><th style="width: 20%;">
+    <?=$Dictionnary["Module"]; ?>
+</th><th style="width: 10%;">
+    <?=$Dictionnary["AvailableCredits"]; ?>
+</th><th style="width: 10%;">
+    <?=$Dictionnary["AcquiredCredit"]; ?>
+</th><th style="width: 70px;">
+    <?=$Dictionnary["Grade"]; ?>
+</th><th>
+    <?=$Dictionnary["Medals"]; ?>
+</th></tr>
+
+<?php
+$lighter = "255, 255, 255, 0.33";
+$darker = "0, 0, 0, 0.33";
+$neutral = "255, 255, 255, 0.0";
+?>
+<?php $alpha = 1; ?>
+<?php foreach ($curcycle as $module) { ?>
+    <?php if ($module->hidden) continue ; ?>
+    <?php $alpha += 1; ?>
+    <tr style="background-color: rgba(<?=$alpha % 2 ? $lighter : $neutral; ?>); border-top: 1px solid black;"><td>
+	<a href="index.php?p=ModulesMenu&amp;a=<?=$module->id; ?>">
+	    <h5><?=strlen(@$module->name) ? $module->name : $module->codename; ?></h5>
+	</a>
+    </td><td style="font-size: x-small;">
+	<?=sprintf("%02d", $module->credit_d); ?>
+	<?=sprintf("%02d", $module->credit_c); ?>
+	<?=sprintf("%02d", $module->credit_b); ?>
+	<?=sprintf("%02d", $module->credit_a); ?>
+    </td><td style="font-size: x-small;">
+	<?=$module->acquired_credit; ?>
+    </td><td style="font-size: x-small;">
+	<div
+	    <?php $grade = ["empty", "grade_e", "grade_d", "grade_c", "grade_b", "grade_a"]; ?>
+	    class="medal_box_picture"
+	    style="
+		   margin-left: 10px; margin-right: 10px;
+		   background-position: center center;
+		   background-image: url('dres/medals/<?=$grade[$module->grade + 1]; ?>/icon.png;');
+		   width: 50px !important;
+		   height: 50px !important;
+		   border-radius: 50px;
+		   border: 2px black solid;
+		   "
+	></div>
+    </td><td style="height: 56px;">
+	<div class="full_size_table" style="overflow-y: auto; height: 56px; scrollbar-width: 5px;">
+	    <?php foreach ($module->medal as $medal) { ?>
+		<?php if ($medal["type"] != 0) continue ; ?>
+		<div
+		    class="medal_box_picture"
+		    style="
+			   position: relative;
+			   display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
+			   background-image: url('<?=$medal["icon"]; ?>');
+			   width: 50px !important;
+			   height: 50px !important;
+			   <?php if ($medal["band"] != NULL) { ?>
+			   border-radius: 50px;
+			   border: 2px black solid;
+			   <?php } ?>
+			   <?php if ($medal["success"] == 0) { ?>
+			   <?php if ($medal["failure"] > 0) { ?>
+			   
+			   <?php } else { ?>
+			   opacity: 0.5;
+			   <?php } ?>
+			   <?php } ?>
+			   "
+		>
+		    <?php if ($medal["module_medal"]) { ?>
+			<img
+			    src="res/grade_<?=["d", "c", "b", "a"][$medal["role"] - 1]; ?>.png"
+			    style="position: absolute; top: 0px; right: -10px; width: 20px; height: 20px;"
+			/>
+		    <?php } ?>
+		    <?php if ($medal["local"]) { ?>
+			<img
+			    src="res/local.png"
+			    style="position: absolute; bottom: 0px; right: -10px; width: 20px; height: 20px;"
+			/>
+		    <?php } ?>
+		</div>
+	    <?php } ?>
+	</div>
+    </td></tr>
+    <tr style="background-color: rgba(<?=$darker; ?>);"><td colspan="5">
+	<?php require ("progress.php"); ?>
+    </td></tr>
+    <?php if (count($module->sublayer)) { ?>
+	<tr style="background-color: rgba(<?=$darker; ?>);"><td colspan="5">
+	    <table style="width: 100%;" class="profile_activity">
+		<tr><th>
+		    <?=$Dictionnary["Activity"]; ?>
+		</th><th>
+		    <?=$Dictionnary["Type"]; ?>
+		</th><th>
+		    <?=$Dictionnary["DoneDate"]; ?>
+		</th><th>
+		    <?=$Dictionnary["Medals"]; ?>
+		</th><th>
+		    <?=$Dictionnary["Commentaries"]; ?>
+		</th><th>
+		    <?=$Dictionnary["Status"]; ?>
+		</th><th>
+		    <?=$Dictionnary["DeliveredWork"]; ?>
+		</th></tr>
+		<?php $beta = 0; ?>
+		<?php foreach ($module->sublayer as $activity) { ?>
+		    <?php $beta += 1; ?>
+		    <tr style="background-color: rgba(<?=$beta % 2 ? $lighter : $neutral; ?>);"><td>
+			<a href="index.php?p=ActivityMenu&amp;a=<?=$activity->id; ?>&amp;<?=$activity->id_session; ?>">
+			    <?=$activity->name ?: $activity->codename; ?>
+			</a>
+		    </td><td>
+			<?=$Dictionnary[$ActivityType[$activity->type]["codename"]]; ?>
+		    </td><td>
+			<?php ($sess = new FullActivity)->build($activity->id, false, true, $activity->id_session); ?>
+			<?php if ($activity->id_session != -1 && $sess->type_type == 2) { ?>
+			    <?php if (isset($sess->unique_session->end_date)) { ?>
+				<?=human_date($sess->unique_session->end_date); ?>
+			    <?php } ?>
+			<?php } else { ?>
+			    <?=human_date($activity->pickup_date); ?>
+			<?php } ?>
+		    </td><td>
+			<?php foreach ($activity->medal as $med) { ?>
+			    <?=$med["codename"]; ?>
+			<?php } ?>
+		    </td><td>
+
+		    </td><td>
+			<?php if ($activity->registered == false) { ?>
+			    <?=$Dictionnary["NotSubscribed"]; ?>
+			<?php } else if ($activity->present->cumulated) { ?>
+			    <?=$Dictionnary["Present"]; ?>
+			<?php } else if ($activity->late->cumulated) { ?>
+			    <?=$Dictionnary["Late"]; ?>
+			<?php } else if ($activity->missing->cumulated) { ?>
+			    <?=$Dictionnary["Missing"]; ?>
+			<?php } else { ?>
+			    <?=$Dictionnary["SingleSubscribed"]; ?>
+			<?php } ?>
+		    </td><td>
+			/
+		    </td></tr>
+		<?php } ?>
+	    </table>
+	    <br />
+	</td></tr>
+    <?php } ?>
+<?php } ?>
+</table>
+
+<?php
+array_shift($cycle_stack);

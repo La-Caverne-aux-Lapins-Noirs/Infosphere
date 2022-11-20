@@ -68,7 +68,12 @@
 		    ?>
 		    <a href="<?=unrollurl($link); ?>">
 			<?=$Dictionnary["SeeMatter"]; ?>
-		    </a>
+		    </a><br /><br />
+		    <?php if ($act->registered == false) { ?>
+			<?=$Dictionnary["NotSubscribed"]; ?>
+		    <?php } else { ?>
+			<?=$Dictionnary["SingleSubscribed"]; ?>
+		    <?php } ?>
 		<?php } ?>
 		<br />
 	    </div>

@@ -16,7 +16,8 @@ function get_user_promotions(array &$usr, $by_name = false)
         cycle.*,
         user_cycle.commentaries as commentaries,
         user_cycle.hidden as hidden,
-        user_cycle.id as id
+        user_cycle.id as id,
+        user_cycle.id as id_user_cycle
         FROM cycle
         LEFT JOIN user_cycle
         ON user_cycle.id_cycle = cycle.id

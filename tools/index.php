@@ -10,6 +10,7 @@ if ($BaseDir == "")
     function debug_response() {}
 }
 
+require_once ("merge_cycles.php");
 require_once ("new_directory.php");
 require_once ("get_dir.php");
 require_once ("ext/parsedown.php");
@@ -163,5 +164,7 @@ require_once ("all_files.php");
 require_once ("famous_quote.php");
 require_once ("remove_ressource_file.php");
 require_once ("generate_subject.php");
+require_once ("list_of_managed_activities.php");
+require_once ("hand_request.php");
 // @codeCoverageIgnoreEnd
 

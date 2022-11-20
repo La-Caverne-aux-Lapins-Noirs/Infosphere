@@ -41,9 +41,16 @@ class Layer extends ArrayObject
     }
     public function __get($n)
     {
-	if (!isset($this[$n]))
-	    backtrack();
-	return ($this[$n]);
+	if (!isset($this->$n))
+	{
+	    if (!isset($this[$n]))
+	    {
+		backtrack();
+		return (NULL);
+	    }
+	    return ($this[$n]);
+	}
+	return ($this->$n);
     }
 
     function retrieve_one(&$l, $r)

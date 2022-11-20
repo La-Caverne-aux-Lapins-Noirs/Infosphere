@@ -3,8 +3,7 @@
 $search = [];
 
 if (file_exists(__DIR__."/handle_request.php")
-    && $User != NULL && $User["authority"] >= STUDENT
-    && isset($_POST["action"]))
+    && $User != NULL && isset($_POST["action"]))
     require_once (__DIR__."/handle_request.php");
 
 if (file_exists(__DIR__."/handle_parameters.php"))

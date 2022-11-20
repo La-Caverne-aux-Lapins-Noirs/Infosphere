@@ -2,16 +2,11 @@
 // Cette page affiche les matières du cycle en cours le plus avancé.
 // Les blocs sont illustrés par les wallpaper des modules
 
-get_user_promotions($User);
-if (!count($User["cycle"]))
-    return ;
-$FUK = true;
-$User["cycle"] = merge_cycles($User["cycle"]);
-
-foreach ($User["cycle"] as $cycle)
+$already_done = [];
+foreach ($user->sublayer as $cycle)
 {
-    // $matters = fetch_matters($User["id"], $cycle["id_cycle"]);
-    $matters = $cycle["matters"];
+    if (now() > date_to_timestamp($cycle->last_day))
+	continue ;
     $max_credit = 0;
     $min_credit = 0;
     $min_mandatory_credit = 0;
@@ -19,9 +14,43 @@ foreach ($User["cycle"] as $cycle)
     $mandatory = 0;
     $total = 0;
     $nmatters = [];
-    foreach ($matters as $act)
+    $matters = db_select_all("
+       activity.{$Language}_name as name, activity.*
+       FROM activity_cycle
+       LEFT JOIN activity ON activity_cycle.id_activity = activity.id
+       WHERE activity_cycle.id_cycle = {$cycle->id}
+       AND activity.parent_activity IS NULL
+    ");
+    foreach ($matters as $nact)
     {
-	($nact = new FullActivity)->build($act["id"], false, false);
+	$nact = (object)$nact;
+	if (!isset($already_done[$nact->id]))
+	    $already_done[$nact->id] = 1;
+	else
+	    continue ;
+
+	$outact = NULL;
+	foreach ($user->merged_sublayers as $mcyc)
+	{
+	    foreach ($mcyc->matters as $mmatt)
+	    {
+		if ($mmatt->id == $nact->id)
+		{
+		    $outact = $mmatt;
+		}
+	    }
+	}
+	if ($outact == NULL)
+	{
+	    $id = $nact->id;
+	    ($nact = new FullActivity)->build($id, false, false);
+	    $nact->registered = false;
+	}
+	else
+	{
+	    $nact = $outact;
+	    $nact->registered = true;
+	}
 	$max_credit += $nact->credit_a;
 	$min_credit += $nact->credit_d;
 	if ($nact->subscription != FullActivity::MANUAL_SUBSCRIPTION)
@@ -39,7 +68,7 @@ foreach ($User["cycle"] as $cycle)
 <table>
     <tr><td colspan="3" style="text-align: center;">
 	<br />
-	<h1 style="width: 100%;"><?=$Dictionnary["Cycle"]; ?> <?=$cycle["name"] ?: $cycle["codename"]; ?></h1>
+	<h1 style="width: 100%;"><?=$Dictionnary["Cycle"]; ?> <?=strlen($cycle->name) ? $cycle->name : $cycle->codename; ?></h1>
 	<br /><br />
     </td></tr>
     <tr><td>

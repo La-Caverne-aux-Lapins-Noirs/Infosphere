@@ -10,7 +10,7 @@ $local_teams = 0;
     <table style="height: 30px; font-size: x-small; text-align: center;">
 	<tr>
 	    <td><?=$Dictionnary["CrossSessionRegistered"].": ".$total_students; ?></td>
-	    <?php if ($activity->min_team_size >= 2) { ?>
+	    <?php if ($activity->max_team_size >= 2) { ?>
 		<td><?=$Dictionnary["CrossSessionTeams"].": ".$total_teams; ?></td>
 	    <?php } ?>
 	    <?php
@@ -18,7 +18,7 @@ $local_teams = 0;
 	    $local_teams = count($activity->unique_session->team);
 	    ?>
 	    <td><?=$Dictionnary["RegisteredUsers"].": ".$local_students; ?></td>
-	    <?php if ($activity->min_team_size >= 2) { ?>
+	    <?php if ($activity->max_team_size >= 2) { ?>
 		<td><?=$Dictionnary["RegisteredTeams"].": ".$local_teams; ?></td>
 	    <?php } ?>
 	</tr>

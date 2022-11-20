@@ -84,7 +84,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
 	else
 	{
 	    $name = $a["activity_codename"];
-	    $s["position"] = "ActivityTemplatesMenu";
+	    $s["position"] = "ActivityMenu";
 	    $s["id_activity"] = $a["id_activity"];
 
 	    $s["name"] = $a["activity_name"];

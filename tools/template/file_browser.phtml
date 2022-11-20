@@ -13,7 +13,7 @@ $entries = [];
 <?php if ($target !== NULL) { ?>
     <?php
     $directories = [];
-    $files = [];
+    $subfiles = [];
     ?>
     <?php foreach (scandir($target) as $content) { ?>
 	<?php
@@ -26,10 +26,10 @@ $entries = [];
 	if (is_dir($target.$content))
 	    $directories[] = $target.$content;
 	else
-	    $files[] = $target.$content;
+	    $subfiles[] = $target.$content;
 	?>
     <?php } ?>
-    <?php foreach (($entries = array_merge($directories, $files)) as $content) { ?>
+    <?php foreach (($entries = array_merge($directories, $subfiles)) as $content) { ?>
 	<div
 	    class="icon <?=is_dir($content) ? "directory" : pathinfo($content, PATHINFO_EXTENSION); ?>"
 	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["jpg", "jpeg", "png", "gif", "bmp", "webp"])) { ?>

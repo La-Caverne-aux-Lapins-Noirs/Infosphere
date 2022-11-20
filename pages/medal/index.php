@@ -13,6 +13,36 @@
     </form>
 </div>
 <br />
+<?php if (is_teacher()) { ?>
+    <script>
+     function clear_formular(form)
+     {
+	 form.reset();
+	 return ;
+     }
+     function load_form(form, data)
+     {
+	 var fields = form.elements;
+	 
+	 for (name in fields)
+	 {
+	     if (typeof fields[name].name === "undefined")
+		 continue ;
+	     if (typeof data[name] === "undefined")
+		 continue ;
+	     console.log(fields[name].type);
+	     if (fields[name].type == "checkbox")
+		 fields[name].checked = data[name];
+	     else if (fields[name].type == "text")
+		 fields[name].value = data[name];
+	     else if (fields[name].type == "textarea")
+		 fields[name].value = data[name];
+	     else if (fields[name].type == "select-one")
+		 fields[name].value = data[name];
+	 }
+     }
+    </script>
+<?php } ?>
 
 <?php if (is_teacher()) { ?>
     <table class="afullscreen"><tr><td class="formular_slot" style="width: 65%;">
@@ -31,7 +61,15 @@
 		    method="post"
 		    onsubmit="return <?=$js; ?>;";
 		    action="/api/medal"
+		    id="medal_formular"
+		    style="position: relative;"
 		>
+		    <label for="edit" style="position: absolute; top: 0px; right: 50px; text-align: right;">
+			<?=$Dictionnary["Edit"]; ?>
+		    </label>
+		    <input type="checkbox" name="edit" style="position: absolute; top: 0px; right: 25px; width: 20px; height: 20px;" />
+		    <input type="button" value="&#x1F9F9;&#xFE0E;" onclick="clear_formular(document.getElementById('medal_formular'));" style="position: absolute; top: 0px; right: 0px; width: 20px; height: 20px; color: white;" />
+		    
 		    <label for="codename"><?=$Dictionnary["CodeName"]; ?><br />
 		    <input
 			type="text"
@@ -65,8 +103,12 @@
 		    <?=$Dictionnary["ConfigurationBasedMedal"]; ?>
 		    <input type="text" name="specificator" placeholder="<?=$Dictionnary["Specificator"]; ?>" />
 		    <select name="shape">
-			<option value="1"><?=$Dictionnary["BandShape"]; ?></option>
-			<option value="0"><?=$Dictionnary["RoundShape"]; ?></option>
+			<option value="1">
+			    <?=$Dictionnary["BandShape"]; ?>
+			</option>
+			<option value="0">
+			    <?=$Dictionnary["RoundShape"]; ?>
+			</option>
 		    </select><br />
 		    <select name="configuration">
 			<option value=""><?=$Dictionnary["NoConfiguration"]; ?></option>
@@ -117,7 +159,7 @@
 		    />
 		</form>
 	    <?php } ?>
-	    <div id="medalres" style="height: calc(100% - 100px);">
+	    <div id="medalres" style="height: calc(100% - 170px);">
 		<?php
 		$page = "medal";
 		$language = "";
@@ -128,6 +170,13 @@
 		$id = "-1";
 		require ("./tools/template/path_browser.phtml");
 		?>
+	    </div>
+	    <div style="height: 70px; width: calc(100% - 10px); margin-left: 5px;">
+		<form method="put" onsubmit="return <?=$js; ?>;" action="/api/medal">
+		    <input type="text" name="old_codename" value="" placeholder="<?=$Dictionnary["PreviousCodeName"]; ?>" />
+		    <input type="text" name="new_codename" value="" placeholder="<?=$Dictionnary["NewCodeName"]; ?>" />
+		    <input type="button" onclick="return <?=$js; ?>;" value="&#10003;" />
+		</form>
 	    </div>
 	</td></tr></table>
     </td></tr></table>

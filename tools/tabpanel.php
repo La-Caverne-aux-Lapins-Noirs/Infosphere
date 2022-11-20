@@ -42,7 +42,7 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	</div>
     </div>
     <script>
-     var tablist_<?=md5($val); ?> = [
+     var tablist_<?=md5($position); ?> = [
 	 <?php foreach ($files as $k => $val) { ?>
 	 "tab_<?=md5($val); ?>",
 	 <?php } ?>
@@ -51,9 +51,9 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
      {
 	 var i;
 
-	 for (i = 0; i < tablist_<?=md5($val); ?>.length; ++i)
+	 for (i = 0; i < tablist_<?=md5($position); ?>.length; ++i)
 	 {
-	     document.getElementById(tablist_<?=md5($val); ?>[i]).style.visibility = "hidden";
+	     document.getElementById(tablist_<?=md5($position); ?>[i]).style.visibility = "hidden";
 	 }
 	 setCookie('<?=addslashes($position); ?>', label);
 	 document.getElementById(lst).style.visibility = "visible";

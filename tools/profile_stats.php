@@ -39,77 +39,8 @@ if ($len % 2 ? 0 : 1)
     $startday -= 1;
 }
 
-if (!isset($_GET["d"]))
-    $data = [
-	"avg_intra_logs" => [
-	    $endday - 6 => 2,
-	    $endday - 5 => 3,
-	    $endday - 4 => 2,
-	    $endday - 3 => 3,
-	    $endday - 2 => 2,
-	    $endday - 1 => 3,
-	    $endday - 0 => 2,
-	],
-	"intra_logs" => [
-	    $endday - 1 => 3,
-	    $endday => 5
-	],
-	"avg_work_logs" => [
-	    $endday - 6 => 1,
-	    $endday - 5 => 1,
-	    $endday - 4 => 2,
-	    $endday - 3 => 2,
-	    $endday - 2 => 3,
-	    $endday - 1 => 3,
-	    $endday - 0 => 4,
-	    $endday + 1 => 15,
-	],
-	"work_logs" => [
-	    $endday - 1 => 5,
-	    $endday => 8
-	],
-	"avg_lock_logs" => [
-	    $endday - 4 => 1,
-	    $endday - 3 => 1,
-	],
-	"lock_logs" => [
-	    $endday - 4 => 1,
-	    $endday - 3 => 2,
-	    $endday - 2 => 3,
-	],
-	"presence" => [
-	    $endday - 3 => 1,
-	    $endday - 2 => 2,
-	    $endday - 1 => 3,
-	    $endday - 0 => 1,
-	],
-	"mispresence" => [
-	    $endday - 3 => 2,
-	    $endday - 2 => 1,
-	    $endday - 1 => 0,
-	    $endday - 0 => 2,
-	],
-	"delivery" => [
-	    $endday - 5 => 1,
-	    $endday - 4 => 2,
-	],
-	"misdelivery" => [
-	    $endday - 6 => 2,
-	    $endday - 5 => 1,
-	    $endday - 4 => 0,
-	],
-	"medals" => [
-	    $endday - 6 => 12,
-	    $endday - 5 => 6,
-	    $endday - 4 => 2,
-	],
-	"mismedals" => [
-	    $endday - 6 => 4,
-	    $endday - 5 => 5,
-	    $endday - 4 => 7,
-	],
-    ];
-else
+$data = [];
+if (isset($_GET["d"]))
     $data = json_decode(base64_decode($_GET["d"]), true);
 
 // On fait la somme des champs qui s'ajoutent
@@ -184,6 +115,7 @@ $lightgreen = imagecolorallocatealpha($img, 128, 255, 128, 0);
 $red = imagecolorallocatealpha($img, 255, 0, 0, 0);
 $reda = imagecolorallocatealpha($img, 255, 0, 0, 90);
 $darkblue = imagecolorallocatealpha($img, 0, 128, 255, 0);
+$darkbluea = imagecolorallocatealpha($img, 0, 128, 255, 60);
 $yellow = imagecolorallocatealpha($img, 255, 255, 0, 0);
 $teal = imagecolorallocatealpha($img, 0, 255, 255, 0);
 $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
@@ -242,7 +174,8 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
     $coords = draw_area($data, "intra_logs", $startday, $index, $bladder, $darkgreena, $darkgreen);
     $coords = draw_area($data, "work_logs", $startday, $index, $bladder, $greena, $green, [$coords[8], $coords[9]]);
 
-    draw_line($data, "presence", $startday, $index, $bladder, $darkblue);
+    $coords = draw_area($data, "presence", $startday, $index, $bladder, $darkbluea, $darkblue);
+    draw_area($data, "late", $startday, $index, $bladder, $darkbluea, $darkblue, [$coords[8], $coords[9]]);
     if ($landmark == "b")
 	draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
     else
@@ -313,6 +246,7 @@ $col = [
     "work_logs" => $green,
     "lock_logs" => $lightgreen,
     "presence" => $darkblue,
+    "late" => $darkbluea,
     "delivery" => $yellow,
     "medals" => $teal,
 ];

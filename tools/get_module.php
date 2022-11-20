@@ -35,7 +35,7 @@ function get_modules($template, $id = -1)
 	WHERE activity.is_template = $template $id
 	AND activity.deleted IS NULL
 	AND activity.disabled IS NULL
-	AND activity.parent_activity = -1
+	AND activity.parent_activity IS NULL
         $filter
 	GROUP BY activity.id
 	ORDER BY activity.codename ASC

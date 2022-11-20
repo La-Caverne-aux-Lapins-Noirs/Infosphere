@@ -41,7 +41,7 @@ $tables = db_get_tables();
                   FROM {$cat["position"]}
                   WHERE deleted = 0
                     AND is_template = 1
-                    AND parent_activity = -1
+                    AND parent_activity IS NULL
                   ORDER BY name
 		  ");
 		foreach ($parts as &$c)

@@ -108,7 +108,9 @@ CREATE TABLE `activity_teacher` (
   `id` int(11) NOT NULL,
   `id_activity` int(11) NOT NULL,
   `id_user` int(11) DEFAULT NULL,
-  `id_laboratory` int(11) DEFAULT NULL
+  `id_laboratory` int(11) DEFAULT NULL,
+  `teacher_pay` int(11) DEFAULT NULL,
+  `assistant_pay` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 ALTER TABLE `activity_teacher`

@@ -13,7 +13,7 @@ function fetch_cycle_activity($cycle, $cond = [])
        id_activity as id
        FROM activity_cycle
        LEFT JOIN activity ON activity_cycle.id_activity = activity.id
-       WHERE activity_cycle.id_cycle = $cycle AND activity.deleted = 0 AND activity.parent_activity = -1
+       WHERE activity_cycle.id_cycle = $cycle AND activity.deleted = 0 AND activity.parent_activity IS NULL
     ");
     foreach ($all as $i => &$v)
     {

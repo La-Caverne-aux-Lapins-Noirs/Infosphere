@@ -161,6 +161,11 @@ $js = "silent_submit(this)";
 
 	    <?php } else { ?>
 
+		<?php
+		if (isset($module->reference_activity) && $module->reference_activity != NULL && $module->reference_activity != -1)
+		    $module->reference_activity = db_select_one("codename FROM activity WHERE id = {$module->reference_activity}")["codename"];
+		?>
+		
 		<?php single_field_form($page, $module, "reference_activity", "ReferenceActivity", -1); ?>
 		<?php single_field_form($page, $module, "min_team_size", "MinTeamSize"); ?>
 		<?php single_field_form($page, $module, "max_team_size", "MaxTeamSize"); ?>
