@@ -134,10 +134,6 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "SetActivityLink"
 	],
-	"medal" => [
-	    "is_teacher_for_activity",
-	    "EditMedal"
-	],
 	"scale" => [
 	    "is_teacher_for_activity",
 	    "SetActivityLink"

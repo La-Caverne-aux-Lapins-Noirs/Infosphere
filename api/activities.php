@@ -461,6 +461,12 @@ function EditActivity($id, $data, $method, $output, $module)
     if (isset($data["subscription"]))
 	if ($data["subscription"] < 0 || $data["subscription"] > 2)
 	    return (new ErrorValue("InvalidValue", $data["subscription"]));
+    if (isset($data["reference_activity"]) && $data["reference_activity"] != NULL)
+    {
+	if (($ret = resolve_codename("activity", $data["reference_activity"]))->is_error())
+	    return ($ret);
+	$data["reference_activity"] = $ret->value;
+    }
 
     // General treatment
     $fields = array_merge([
@@ -489,7 +495,7 @@ function EditActivity($id, $data, $method, $output, $module)
 function AddMedal($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
-    
+
     if ($id == -1)
 	bad_request();
     $page = $module;
@@ -498,7 +504,10 @@ function AddMedal($id, $data, $method, $output, $module)
     else if (isset($data["codename"]))
 	$medal = $data["codename"];
     else
+    {
+	debug_response("prout");
 	bad_request();
+    }
     if (($err = handle_linksf([
 	"left_value" => $id,
 	"right_value" => $medal,

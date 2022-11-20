@@ -20,6 +20,10 @@ $Tab = [
 	]
     ],
     "PUT" => [
+	"" => [
+	    "is_teacher",
+	    "MoveMedal",
+	],
 	"ressource" => [
 	    "is_assistant_for_activity",
 	    "GetRessourceDir"

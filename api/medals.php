@@ -74,28 +74,51 @@ function AddMedal($id, $data, $method, $output, $module)
 	// Y a t il des spécificateurs envoyés?
 	if ($specificator != "")
 	    $command .= " -s $specificator";
+    }
 
+End:
+    if (isset($data["edit"]) && $data["edit"])
+	$ins = @try_update("medal", $codename, [
+	    "tags" => $tags,
+	    "type" => $type,
+	    "command" => $command
+	], $content, $target, ["name" => false, "description" => false], $data);
+    else
+	$ins = @try_insert("medal", $codename, [
+	    "tags" => $tags,
+	    "type" => $type,
+	    "command" => $command
+	], $content, $target, ["name" => false, "description" => false], $data);
+    if ($ins->is_error())
+	return ($ins);
+    
+    if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
+	bad_request();
+    if (isset($data["icon"][0]["content"]))
+    {
 	if ($shape == "sband")
 	{
 	    $cmd = str_replace("sband", "band", $command);
-	    shell_exec("DISPLAY=:1 $cmd > $target/band.png");
+	    if (($content = shell_exec("DISPLAY=:1 $cmd > $target/band.png")) === false)
+		bad_request();
 	}
     }
 
-    if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
-	bad_request();
-
-End:
-    $ins = @try_insert("medal", $codename, [
-	"tags" => $tags,
-	"type" => $type,
-	"command" => $command
-    ], $content, $target, ["name" => false, "description" => false], $data);
-    if ($ins->is_error())
-	return ($ins);
     $ret = DisplayMedals($id, $data, $method, $output, $module);
     $ret->value["msg"] = "MedalAdded";
     return ($ret);
+}
+
+function MoveMedal($id, $data, $method, $output, $module)
+{
+    global $Configuration;
+
+    if (($ret = edit_codename("medal", $data["old_codename"], $data["new_codename"]))->is_error())
+	return ($ret);
+    system("mv ".$Configuration->MedalsDir($data["old_codename"])." ".$Configuration->MedalsDir($data["new_codename"]));
+    return (new ValueResponse([
+	"msg" => "MedalMoved",
+    ]));
 }
 
 function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
@@ -149,7 +172,9 @@ function AddRessource($id, $data, $method, $output, $module)
 
 function DeleteMedal($id, $data, $method, $output, $module)
 {
-    
+    if (($ret = mark_as_deleted("medal", $id))->is_error())
+	return ($ret);
+    return (DisplayMedals($id, $data, $method, $output, $module));
 }
 
 function RemoveRessource($id, $data, $method, $output, $module)
