@@ -52,7 +52,11 @@ function AddModule($id, $data, $method, $output, $module)
     if ($id != -1)
 	bad_request();
     $template = ($module == "template");
-    if (($request = add_activity(["codename" => $data["codename"]], [], $template))->is_error())
+    if (($request = add_activity([
+	"codename" => $data["codename"],
+	"type" => 18,
+	"parent_activity" => NULL
+    ], [], $template))->is_error())
 	return ($request);
     return (DisplayModule($id, [], "GET", $output, $module));
 }
