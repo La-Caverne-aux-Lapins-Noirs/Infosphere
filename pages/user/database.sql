@@ -27,7 +27,13 @@ CREATE TABLE `user` (
   `street_name` text DEFAULT NULL,
   `postal_code` text DEFAULT NULL,
   `city` text DEFAULT NULL,
-  `country` text DEFAULT NULL
+  `country` text DEFAULT NULL,
+
+  `bookbail` datetime DEFAULT NULL,
+  `ìne` varchar(11) DEFAULT NULL,
+  `current_class` int(11) DEFAULT NULL,
+  `target_class` int(11) DEFAULT NULL,
+  `target_entry` int(11) DEFAULT NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

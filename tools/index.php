@@ -166,5 +166,6 @@ require_once ("remove_ressource_file.php");
 require_once ("generate_subject.php");
 require_once ("list_of_managed_activities.php");
 require_once ("hand_request.php");
+require_once ("convert_to_codename.php");
 // @codeCoverageIgnoreEnd
 

@@ -67,7 +67,7 @@ function generate_password($len = 12)
     // Pas de O majuscule (pour ne pas confondre avec zéro)
     // Pas de \, ni `, ni ", ni ', ni ~ ou ^.
     // Pas de $ ou * pour limiter les risques avec les passages dans le shell.
-    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&~#{([-|_@)]=}+%,?;.:/!";
+    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&#{([-|_@)]=}+%,?;.:/!";
     $letter = false;
     $number = false;
     $symbol = false;
@@ -109,7 +109,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
 	return (new ErrorResponse("BadMail", $mail));
 
     if (!INSTALLATION)
-	add_log(TRACE, "User ".$login." is trying to subscribe", 0);
+	add_log(TRACE, "User $login is trying to subscribe", 0);
     $login = $Database->real_escape_string($login);
     $mail = $Database->real_escape_string($mail);
     $user_query = $Database->query("
@@ -143,7 +143,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
     ")) == false)
     {
 	if (!INSTALLATION)
-	    add_log(TRACE, "Insertion failed: ".$Database->error, 0); // @codeCoverageIgnore
+	    add_log(TRACE, "Insertion failed.", 0); // @codeCoverageIgnore
 	return (new ErrorResponse("CannotRegister")); // @codeCoverageIgnore
     }
     if (!UNIT_TEST && $cookie)
@@ -196,14 +196,27 @@ function regenerate_password($usr, $newpass)
 }
 
 // Cette fonction ne peut éditer aucun aspect critique lié a l'authentification ou au contact.
-function set_user_data($id, $vals, $misc_fields = [])
+function set_user_data($id, $vals, $misc_fields = [], $adduser = false)
 {
     global $Database;
     global $User;
 
+    if (isset($vals["id"]))
+	$id = $vals["id"];
     if (($id = resolve_codename("user", $id))->is_error())
-	return ($id);
-    if (($id = $id->value) == 1 && !UNIT_TEST && 0)
+    {
+	if ($id->label != "CodeNameAlreadyUsed" || $adduser == false)
+	    return ($id);
+	if (($ret = try_subscribe($vals["codename"], $vals["mail"], NULL, NULL))->is_error())
+	{
+	    if ($ret->label != "LoginAndMailUsed"
+		&& $ret->label != "MailUsed"
+		&& $ret->label != "LoginUsed")
+	    return ($ret);
+	}
+	$id = resolve_codename("user", $vals["codename"]);
+    }
+    if (($id = $id->value) == 1) // && !UNIT_TEST && 0)
 	return (new ErrorResponse("CannotEditAdministrator")); // @codeCoverageIgnore
     if (!isset($vals))
 	return (new ErrorResponse("MissingParameter"));
@@ -224,10 +237,11 @@ function set_user_data($id, $vals, $misc_fields = [])
     /// Il faut resoudre id
     $constfields = ["id", "password", "salt", "local_salt", "codename", "registration_date"];
     $forge = unroll($vals, UPDATE, $constfields);
-    if ($Database->query("UPDATE user SET $forge WHERE id = $id") == false)
+    $req = "UPDATE user SET $forge WHERE id = $id";
+    if ($Database->query($req) == false)
 	return (new ErrorResponse("CannotEdit")); // @codeCoverageIgnore
 
-    if ($id == $User["id"])
+    if ($User && $id == $User["id"])
     {
 	foreach ($vals as $i => $v)
 	{

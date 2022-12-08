@@ -14,7 +14,7 @@ function send_mail($target, $title, $content, $domain = NULL)
 	$Domain = $domain;
     if (!$Key || !$Sender || !$Domain)
     {
-	add_log(TRACE, "A mail sending was requested without the Infosphere to be able to process it. Set a mailgun key, a sending mail adress and the currently used domain.");
+	add_log(TRACE, "A mail sending was requested without the Infosphere to be able to process it. Set a mailgun key, a sending mail adress and the currently used domain.", 1);
 	return (new ErrorResponse("CannotSendMail"));
     }
     $Cmd = [
@@ -29,16 +29,16 @@ function send_mail($target, $title, $content, $domain = NULL)
     $title = str_replace("\"", "\\\"", $title);
     $title = str_replace(";", "", $title);
     $content = html_entity_decode($content);
-    $content = str_replace("'", "\\'", $content);
+    $content = str_replace("\"", "\\\"", $content);
     $content = str_replace(";", "", $content);
     $Cmd = array_merge($Cmd, [
 	"-F subject=\"$title\"",
-	"-F text='$content'",
+	"-F text=\"$content\"",
     ]);
     $Cmd[] = "2>&1";
     $Cmd = implode(" ", $Cmd);
     if (($Output = shell_exec($Cmd))[0] != "{")
-	return (new ErrorResponse("CannotSendMail", $Output));
+	return (new ErrorResponse("CannotSendMail", $Output, 1));
     return (new Response);
 }
 
@@ -131,7 +131,7 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
     );
 
     if (($request = send_mail($mail, $Dictionnary["SubscribeTitle"], $Content))->is_error())
-	add_log(TRACE, "Cannot send password change mail to ".$mail, $id);
+	add_log(TRACE, "Cannot send subscription mail to ".$mail, $id);
     return ($request);
 }
 

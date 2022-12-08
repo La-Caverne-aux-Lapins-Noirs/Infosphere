@@ -32,7 +32,6 @@
 
 #loading_logo
 {
-    background-image: url("/res/logo.png");
     background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;

@@ -39,7 +39,10 @@ $type = $target[0];
 require_once ("login/index.php");
 
 if ($User == NULL)
-    authentication_required();
+{
+    if (pathinfo($type, PATHINFO_EXTENSION) != "png" || count($target) != 1)
+	authentication_required();
+}
 
 if ($type == "activity")
 {

@@ -476,13 +476,26 @@ function get_week($d)
     return (1 + (int)($d / $one_week));
 }
 
-function handle_french($body)
+function handle_french($body, $encode = true)
 {
-    $body = str_replace("é", "&eacute;", $body);
-    $body = str_replace("è", "&egrave;", $body);
-    $body = str_replace("à", "&agrave;", $body);
-    $body = str_replace("ù", "&ugrave;", $body);
-    $body = str_replace("ç", "&ccedil;", $body);
+    if ($encode)
+    {
+	$body = str_replace("é", "&eacute;", $body);
+	$body = str_replace("è", "&egrave;", $body);
+	$body = str_replace("à", "&agrave;", $body);
+	$body = str_replace("ù", "&ugrave;", $body);
+	$body = str_replace("ç", "&ccedil;", $body);
+	return ($body);
+    }
+    $body = str_replace("é", "e", $body);
+    $body = str_replace("è", "e", $body);
+    $body = str_replace("ê", "e", $body);
+    $body = str_replace("ë", "e", $body);
+    $body = str_replace("à", "a", $body);
+    $body = str_replace("ù", "u;", $body);
+    $body = str_replace("ç", "c", $body);
+    $body = str_replace("ï", "i", $body);
+    $body = str_replace("î", "i", $body);
     return ($body);
 }
 

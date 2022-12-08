@@ -41,7 +41,13 @@
     </head>
 
     <body onload="remove_loading_screen();">
-	<div id="loading_logo"></div>
+	<div id="loading_logo"
+	     <?php if (!file_exists("dres/logo.png")) { ?>
+	     style="background-image: url('/res/logo.png');"
+	     <?php } else { ?>
+	     style="background-image: url('dres/logo.png');"
+	     <?php } ?>
+	></div>
 	<div id="loading_screen1"></div>
 	<div id="loading_screen2"></div>
 
@@ -51,7 +57,11 @@
 
 	<div id="head" class="menu">
 	    <a href="index.php" id="logo">
-		<img src="res/logo.png" alt="Logo" />
+		<?php if (!file_exists("dres/logo.png")) { ?>
+		    <img src="res/logo.png" alt="Logo" />
+		<?php } else { ?>
+		    <img src="dres/logo.png" alt="Logo" />
+		<?php } ?>
 	    </a>
 	    <?php add_menu_entries($TopMenu); ?>	    
 	    <div style="float: right;" id="clock">

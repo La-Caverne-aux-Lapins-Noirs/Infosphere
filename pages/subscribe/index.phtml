@@ -5,47 +5,104 @@ function pf($str)
 	return ('value="'.$_POST[$str].'"');
     return ('value=""');
 }
+$prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 ?>
-<form id="fullpage_form" method="POST" action="index.php?p=<?=$PreviousPosition; ?>">
-    <?php if (isset($_GET["prospect"]) && $_GET["prospect"]) { ?>
+<style>
+ label
+ {
+     text-align: left !important;
+     margin-left: 10px;
+ }
+ <?php if ($prospect) { ?>
+ #fullpage_form h2
+ {
+     top: 1%;
+ }
+ #fullpage_form p
+ {
+     top: 6%;
+ }
+ <?php } ?>
+</style>
+<script>
+ function check_repeat(rep, ori)
+ {
+     if (rep.value != ori.value)
+	 rep.style.backgroundColor = "red";
+     else
+	 rep.style.backgroundColor = null;
+ }
+</script>
+<form
+    id="fullpage_form"
+    method="POST"
+    action="index.php?p=<?=$PreviousPosition; ?>"
+>
+    <?php if ($prospect) { ?>
 	<h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
 	<p>
 	    <input type="hidden" name="logaction" value="conv_subscribe" />
-	    <?=$Dictionnary["ThatWillCreateAnAccount"]; ?><br />
 	    <br />
-	    <textarea
-		style="resize: none;
-		       height: 100px;
-		       font-size: 1em;
-		       line-height: 1em;
-		       text-align: justify;
-		       "
-	    ><?php require ("cgu.txt"); ?></textarea>
-
 	    <input
 		type="text"
 		name="first_name"
-		placeholder="<?=$Dictionnary["FirstName"]; ?>"
+		placeholder="<?=$Dictionnary["FirstName"]; ?>*"
 		<?=pf("first_name"); ?>
+		required
 	    />
 	    <br />
 	    <input
 		type="text"
 		name="family_name"
-		placeholder="<?=$Dictionnary["FamilyName"]; ?>"
+		placeholder="<?=$Dictionnary["FamilyName"]; ?>*"
 		<?=pf("family_name"); ?>
+		required
 	    />
 	    <br />
+	    
+	    <input
+		type="mail"
+		name="mail"
+		id="mail"
+		placeholder="<?=$Dictionnary["Mail"]; ?>*"
+		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
+		required
+	    />
+	    <br />
+
+	    <input
+		type="mail"
+		name="repeat_mail"
+		onchange="check_repeat(this, document.getElementById('mail'));"
+		placeholder="<?=$Dictionnary["RepeatMail"]; ?>*"
+		      value="<?=isset($_POST["repeat_mail"]) ? $_POST["repeat_mail"] : ""; ?>"
+		required
+	    />
+	    <br />
+
 	    <input
 		type="text"
+		pattern="0[0-9]{9}"
+		name="phone"
+		placeholder="<?=$Dictionnary["Phone"]; ?>*"
+		value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
+		required
+	    />
+	    <br />
+
+	    <input
+		type="text"
+		pattern="[0-9]{5}"
 		name="postal_code"
 		placeholder="<?=$Dictionnary["PostalCode"]; ?>"
 		<?=pf("postal_code"); ?>
+		required
 	    />
 	    <br />
-	    <?=$Dictionnary["CurrentClass"]; ?><br />
+	    
 	    <select name="current_class">
 		<?php if ($Language == "fr") { ?>
+		    <option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
 		    <option value="-4">Primaire</option>
 		    <option value="-3">Coll&egrave;ge</option>
 		    <option value="-2">Seconde</option>
@@ -63,8 +120,8 @@ function pf($str)
 		<?php } ?>
 	    </select>
 	    <br />
-	    <?=$Dictionnary["TargetedClass"]; ?><br />
 	    <select name="target_class">
+		<option value=""><?=$Dictionnary["TargetedClass"]; ?></option>
 		<option value="1"><?=$Dictionnary["Year"]; ?> 1</option>
 		<option value="2"><?=$Dictionnary["Year"]; ?> 2</option>
 		<option value="3"><?=$Dictionnary["Year"]; ?> 3</option>
@@ -74,56 +131,101 @@ function pf($str)
 		<option value="7"><?=$Dictionnary["LongTraining"]; ?></option>
 	    </select>
 	    <br />
-	    <?=$Dictionnary["TargetedEntry"]; ?><br />
 	    <select name="target_entry">
+		<option value=""><?=$Dictionnary["TargetedEntry"]; ?></option>
 		<option value="0"><?=$Dictionnary["EndOfSeptember"]; ?></option>
 		<option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
 		<option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
 	    </select>
 
-	    <input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
+	    <textarea readonly
+		style="resize: none;
+		       height: 100px;
+		       font-size: small;
+		       line-height: 1em;
+		       text-align: justify;
+		       "
+	    ><?php require ("privacy.txt"); ?></textarea>
+	    <br />
+	    <input
+		name="accept_privacy"
+		type="checkbox"
+		<?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
+	    />
+	    <label for="accept_privacy"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
+	    <br />
+
+	    <textarea readonly
+		style="resize: none;
+		       height: 100px;
+		       font-size: small;
+		       line-height: 1em;
+		       text-align: justify;
+		       "
+	    ><?php require ("rules.txt"); ?></textarea>
+	    <br />
+	    <input
+		name="accept_rules"
+		type="checkbox"
+		<?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
+	    />
+	    <label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
+	    <br />
+
+	    <input type="submit" value="<?=$Dictionnary["Send"]; ?>" />
 	</p>
     <?php } else { ?>
 	<h2><?=$Dictionnary["Subscribe"]; ?></h2>
 	<p>
 	    <input type="hidden" name="logaction" value="subscribe" />
-	    <textarea
+	    <input
+		type="text"
+		name="first_name"
+		placeholder="<?=$Dictionnary["FirstName"]; ?>"
+		<?=pf("first_name"); ?>
+	    />
+	    <br />
+	    <input
+		type="text"
+		name="family_name"
+		placeholder="<?=$Dictionnary["FamilyName"]; ?>"
+		<?=pf("family_name"); ?>
+	    />
+	    <br />
+	    <input
+		type="mail"
+		name="mail"
+		id="mail"
+		placeholder="<?=$Dictionnary["Mail"]; ?>"
+		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
+	    />
+	    <br />
+	    <input
+		type="mail"
+		name="repeat_mail"
+		onchange="check_repeat(this, document.getElementById('mail'));"
+		placeholder="<?=$Dictionnary["RepeatMail"]; ?>"
+		value="<?=isset($_POST["repeat_mail"]) ? $_POST["repeat_mail"] : ""; ?>"
+	    />
+	    <br />
+
+	    <textarea readonly
 		style="resize: none;
 		       height: 100px;
 		       font-size: 1em;
 		       line-height: 1em;
 		       text-align: justify;
 		       "
-	    ><?php require ("cgu.txt"); ?></textarea>
+	    ><?php require ("rules.txt"); ?></textarea>
 	    <br />
 	    <input
-		type="text"
-		name="login"
-		placeholder="<?=$Dictionnary["Login"]; ?>"
-		value="<?=isset($_POST["login"]) ? $_POST["login"] : ""; ?>"
+		name="accept_rules"
+		type="checkbox"
+		<?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
 	    />
+	    <label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
 	    <br />
-	    <input
-		type="text"
-		name="mail"
-		placeholder="<?=$Dictionnary["Mail"]; ?>"
-		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
-	    />
-	    <br />
-
-	    <input
-		type="password"
-		name="password"
-		placeholder="<?=$Dictionnary["Password"]; ?>"
-	    />
-	    <br />
-	    <input
-		type="password"
-		name="repassword"
-		placeholder="<?=$Dictionnary["RepeatPassword"]; ?>"
-	    />
-	    <br />
-
+	    	    
 	    <input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
 	</p>
     <?php } ?>

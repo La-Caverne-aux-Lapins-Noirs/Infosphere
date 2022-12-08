@@ -253,7 +253,7 @@
 {
     position: absolute;
     top: 20%;
-    width: 100%;
+    width: 99%;
     text-align: center;
 }
 
@@ -261,7 +261,7 @@
 {
     position: absolute;
     top: 10%;
-    width: 100% !important
+    width: 99% !important
 }
 
 #fullpage_form input, #fullpage_form h2, #fullpage_form select, #fullpage_form label, #fullpage_form textarea
@@ -272,6 +272,19 @@
     font-size: 40px;
     line-height: 50px;
     text-align: center;
+}
+
+input[type="checkbox"]
+{
+    width: 50px !important;
+}
+
+label
+{
+    vertical-align: top;
+    font-size: 25px !important;
+    width: calc(50% - 56px) !important;
+    display: inline-block;
 }
 
 .edit_column input[type="submit"]
