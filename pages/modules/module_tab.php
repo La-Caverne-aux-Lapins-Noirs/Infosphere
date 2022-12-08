@@ -74,6 +74,16 @@
 		    <?php } else { ?>
 			<?=$Dictionnary["SingleSubscribed"]; ?>
 		    <?php } ?>
+		<?php } else { ?>
+		    <?php
+		    $link = [
+			"p" => "ActivityMenu",
+			"a" => $act->id
+		    ];
+		    ?>
+		    <a href="<?=unrollurl($link); ?>">
+			<?=$Dictionnary["SeeActivityPage"]; ?><?=$date; ?>
+		    </a><br />
 		<?php } ?>
 		<br />
 	    </div>

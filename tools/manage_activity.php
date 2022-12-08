@@ -17,9 +17,9 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
 	$tfields["parent_activity"] = $parent->value;
     }
     else
-	$tfields["parent_activity"] = -1;
+	$tfields["parent_activity"] = NULL;
 
-    if ($tfields["parent_activity"] == -1)
+    if ($tfields["parent_activity"] == NULL)
 	$tfields["type"] = 18; // Module
 
     if (isset($fields["reference_activity"])

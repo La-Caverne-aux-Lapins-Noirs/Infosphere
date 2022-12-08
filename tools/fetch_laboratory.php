@@ -23,7 +23,7 @@ function fetch_laboratory($id = -1, $by_name = false)
     $id = $err->value;
     
     $lab = db_select_one("
-        id, id as id_laboratory, codename, icon, {$Language}_name as name, {$Language}_description as description
+        id, id as id_laboratory, codename, {$Language}_name as name, {$Language}_description as description
         FROM laboratory
         WHERE id = $id AND deleted IS NULL
     ");
@@ -46,6 +46,9 @@ function fetch_laboratory($id = -1, $by_name = false)
 	    $usr["photo"] = $pic;
     }
 
+    $lab["icon"] = $Configuration->GroupsDir($lab["codename"])."icon.png";
+    if (!file_exists($lab["icon"]))
+	$lab["icon"] = "res/no_avatar_lab.png";
     $lab["school"] = db_select_all("
 	school.*, school.{$Language}_name as name
 	FROM school

@@ -167,7 +167,7 @@
 			<input type="text" name="login" placeholder="<?=$Dictionnary["Login"]; ?>" />
 			<input type="password" name="password" placeholder="<?=$Dictionnary["Password"]; ?>" />
 			<input type="submit" value="&#10003;" />
-			<?php if ($Configuration->Properties["subscription_possible"]) { ?>
+			<?php if ($Configuration->Properties["subscription_possible"] == 1) { ?>
 			    <a href="index.php?p=Subscribe&amp;pp=<?=$Position; ?>">
 				<input type="button" value="<?=$Dictionnary["Subscribe"]; ?>" />
 			    </a>

@@ -1,0 +1,21 @@
+<div id="gametopbar">
+    <?php foreach ([
+	"agri" => $Dictionnary["Agriculture"],
+	"purifier" => $Dictionnary["Purifier"],
+	"indus" => $Dictionnary["Industry"],
+	"power" => $Dictionnary["Energy"],
+	"well" => $Dictionnary["Well"],
+	
+	"food" => $Dictionnary["Food"],
+	"metal" => $Dictionnary["Metal"],
+	"water" => $Dictionnary["Water"],
+	"fuel" => $Dictionnary["Fuel"],
+
+	"score" => $Dictionnary["Score"],
+    ] as $cn => $name) { ?>
+	<div style="text-align: center;">
+	    <img src="res/<?=$cn; ?>" /><br />
+	    <?=ucfirst($name); ?>
+	</div>
+    <?php } ?>
+</div>

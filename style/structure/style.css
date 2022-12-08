@@ -102,7 +102,6 @@
     position: absolute;
     right: 0px;
     top: 0px;
-    width: 20%;
     text-align: right;
 }
 
@@ -265,7 +264,7 @@
     width: 100% !important
 }
 
-#fullpage_form input, #fullpage_form h2, #fullpage_form select, #fullpage_form label
+#fullpage_form input, #fullpage_form h2, #fullpage_form select, #fullpage_form label, #fullpage_form textarea
 {
     margin-bottom: 25px;
     width: 50%;

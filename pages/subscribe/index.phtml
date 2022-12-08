@@ -1,0 +1,130 @@
+<?php
+function pf($str)
+{
+    if (isset($_POST[$str]))
+	return ('value="'.$_POST[$str].'"');
+    return ('value=""');
+}
+?>
+<form id="fullpage_form" method="POST" action="index.php?p=<?=$PreviousPosition; ?>">
+    <?php if (isset($_GET["prospect"]) && $_GET["prospect"]) { ?>
+	<h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
+	<p>
+	    <input type="hidden" name="logaction" value="conv_subscribe" />
+	    <?=$Dictionnary["ThatWillCreateAnAccount"]; ?><br />
+	    <br />
+	    <textarea
+		style="resize: none;
+		       height: 100px;
+		       font-size: 1em;
+		       line-height: 1em;
+		       text-align: justify;
+		       "
+	    ><?php require ("cgu.txt"); ?></textarea>
+
+	    <input
+		type="text"
+		name="first_name"
+		placeholder="<?=$Dictionnary["FirstName"]; ?>"
+		<?=pf("first_name"); ?>
+	    />
+	    <br />
+	    <input
+		type="text"
+		name="family_name"
+		placeholder="<?=$Dictionnary["FamilyName"]; ?>"
+		<?=pf("family_name"); ?>
+	    />
+	    <br />
+	    <input
+		type="text"
+		name="postal_code"
+		placeholder="<?=$Dictionnary["PostalCode"]; ?>"
+		<?=pf("postal_code"); ?>
+	    />
+	    <br />
+	    <?=$Dictionnary["CurrentClass"]; ?><br />
+	    <select name="current_class">
+		<?php if ($Language == "fr") { ?>
+		    <option value="-4">Primaire</option>
+		    <option value="-3">Coll&egrave;ge</option>
+		    <option value="-2">Seconde</option>
+		    <option value="-1">Premi&egrave;</option>
+		    <option value="0" default>Terminale</option>
+		    <option value="1">Bac+1</option>
+		    <option value="2">Bac+2</option>
+		    <option value="3">Bac+3</option>
+		    <option value="4">Bac+4</option>
+		    <option value="5">Bac+5</option>
+		    <option value="6">Bac+6</option>
+		    <option value="7">Bac+7</option>
+		    <option value="8">Bac+8</option>
+		    <option value="9">En reconversion</option>
+		<?php } ?>
+	    </select>
+	    <br />
+	    <?=$Dictionnary["TargetedClass"]; ?><br />
+	    <select name="target_class">
+		<option value="1"><?=$Dictionnary["Year"]; ?> 1</option>
+		<option value="2"><?=$Dictionnary["Year"]; ?> 2</option>
+		<option value="3"><?=$Dictionnary["Year"]; ?> 3</option>
+		<option value="4"><?=$Dictionnary["Year"]; ?> 4</option>
+		<option value="5"><?=$Dictionnary["Year"]; ?> 5</option>
+		<option value="6"><?=$Dictionnary["ShortTraining"]; ?></option>
+		<option value="7"><?=$Dictionnary["LongTraining"]; ?></option>
+	    </select>
+	    <br />
+	    <?=$Dictionnary["TargetedEntry"]; ?><br />
+	    <select name="target_entry">
+		<option value="0"><?=$Dictionnary["EndOfSeptember"]; ?></option>
+		<option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
+		<option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
+	    </select>
+
+	    <input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
+	</p>
+    <?php } else { ?>
+	<h2><?=$Dictionnary["Subscribe"]; ?></h2>
+	<p>
+	    <input type="hidden" name="logaction" value="subscribe" />
+	    <textarea
+		style="resize: none;
+		       height: 100px;
+		       font-size: 1em;
+		       line-height: 1em;
+		       text-align: justify;
+		       "
+	    ><?php require ("cgu.txt"); ?></textarea>
+	    <br />
+	    <input
+		type="text"
+		name="login"
+		placeholder="<?=$Dictionnary["Login"]; ?>"
+		value="<?=isset($_POST["login"]) ? $_POST["login"] : ""; ?>"
+	    />
+	    <br />
+	    <input
+		type="text"
+		name="mail"
+		placeholder="<?=$Dictionnary["Mail"]; ?>"
+		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
+	    />
+	    <br />
+
+	    <input
+		type="password"
+		name="password"
+		placeholder="<?=$Dictionnary["Password"]; ?>"
+	    />
+	    <br />
+	    <input
+		type="password"
+		name="repassword"
+		placeholder="<?=$Dictionnary["RepeatPassword"]; ?>"
+	    />
+	    <br />
+
+	    <input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
+	</p>
+    <?php } ?>
+</form>

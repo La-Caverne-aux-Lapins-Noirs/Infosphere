@@ -1,0 +1,43 @@
+<style>
+ #warfield
+ {
+     position: relative;
+     width: 500px;
+     height: 500px;
+     background-color: black;
+     border: 10px solid white;
+ }
+ #warfield div
+ {
+     position: absolute;
+     width: 1%;
+     height: 1%;
+     background-color: red;
+     box-shadow: 0px 10px 10px red;
+ }
+</style>
+<script>
+ function display_info(json)
+ {
+     var info = document.getElementyId("info");
+     
+     json = JSON.parse(json);
+     info.innerHTML =
+	 "Player: " + json["login"] + "<br />" +
+	 "X: " + json["x"] + "<br />" +
+	 "Y: " + json["y"]
+     ;
+ }
+</script>
+<div id="info">
+
+</div>
+<div id="warfield" style="background-image: url('dres/warfield.png');">
+    <?php foreach ($Bases as $base) { ?>
+	<div
+	    onmouseover="display_info('<?=json_encode($base, JSON_UNESCAPED_SLAHSES); ?>');"
+	    onmouseout="display_info('{}');"
+	    style="top: <?=$base["y"]; ?>%; left: <?=$base["x"]; ?>%;">
+	</div>
+    <?php } ?>
+</div>
