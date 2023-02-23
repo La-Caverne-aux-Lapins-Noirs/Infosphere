@@ -22,7 +22,7 @@ function display_avatar($usr, $siz = 200)
     {
 ?>
     <img
-	style="width: <?=$siz; ?>px; height: <?=$siz; ?>px"
+	style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;"
 	src="<?=$nw["avatar"]; ?>"
 	onmouseover="this.src='<?=$nw["photo"]; ?>';"
 	onmouseout="this.src='<?=$nw["avatar"]; ?>';"
@@ -31,15 +31,15 @@ function display_avatar($usr, $siz = 200)
     }
     else if (@strlen($nw["avatar"])) // Désactivé temporairement
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px" src="<?=$nw["avatar"]; ?>" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="<?=$nw["avatar"]; ?>" /><?php
     }
     else if (@strlen($nw["photo"]))
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px" src="<?=$nw["photo"]; ?>" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="<?=$nw["photo"]; ?>" /><?php
     }
     else
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px" src="res/no_avatar.png" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="res/no_avatar.png" /><?php
     }
     echo '</a>';
 }

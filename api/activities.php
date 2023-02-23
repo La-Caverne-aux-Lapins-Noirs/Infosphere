@@ -26,6 +26,7 @@ function DisplayModule($id, $data, $method, $output, $module)
 	    forbidden();
 	if (($module = new FullActivity)->build($id) == false)
 	    return (new ValueResponse(["content" => $Dictionnary["Empty"]]));
+
 	if ($output == "json")
 	    return (new ValueResponse(["content" => json_encode($module, JSON_UNESCAPED_SLASHES)]));
 	ob_start();
@@ -45,6 +46,21 @@ function DisplayModule($id, $data, $method, $output, $module)
 	}
     }
     return (new ValueResponse(["content" => ob_get_clean()]));
+}
+
+function MoveActivity($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    
+    if ($id == -1 || !isset($data["new_father"]))
+	bad_request();
+    ($target_act = new FullActivity)->build($data["new_father"], false, false);
+    if ($target_act->parent_activity != -1)
+	bad_request();
+    if ($target_act->is_teacher == false)
+	return (new ErrorResponse("PermissionDenied"));
+    db_update_one("activity", $id, ["parent_activity" => $target_act->id]);
+    return (new ValueResponse(["msg" => $Dictionnary["Moved"]]));
 }
 
 function AddModule($id, $data, $method, $output, $module)
@@ -134,6 +150,62 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
     ]));
 }
 
+function PickupActivity($id, $data, $method, $output, $module)
+{
+    global $Configuration;
+    
+    if ($id == -1)
+	bad_request();
+    $team = $data["pickup"];
+    $team_leader = db_select_one("
+	user.codename
+	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
+	WHERE id_team = $team AND status = 2
+    ");
+    $activity = db_select_one("
+	codename
+	FROM activity
+	WHERE id = $id
+    ");
+    
+    $ret = hand_request([
+	"login" => $team_leader,
+	"work" => $activity
+    ]);
+    $target = $Configuration->UsersDir($team_leader);
+    ///
+}
+
+function EditTemplateLink($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    ($activity = new FullActivity)->build($id);
+    if ($activity->id_template == -1 || $activity->id_template == NULL)
+	return (new ErrorResponse("NoTemplate"));
+    if ($activity->template_link == false)
+	return (new ErrorResponse("CannotRestoreLink"));
+    if (($ret = break_template_link($activity, $module == "template"))->is_error())
+	return ($ret);
+    return (new ValueResponse([
+	"msg" => "Done"
+    ]));
+}
+
+function ResetTemplateLink($id, $data, $method, $output, $module)
+{
+    if ($id != -1)
+	bad_request();
+    ($activity = new FullActivity)->build($id);
+    if ($activity->id_template == -1 || $activity->id_template == NULL)
+	return (new ErrorResponse("NoTemplate"));
+    if ($activity->template_link == false)
+	return (new ErrorResponse("CannotRestoreLink"));
+    return (new ErrorResponse([
+	"msg" => "CannotReset"
+    ]));
+}
+
 // Instantie autant les activités que les modules.
 function Instantiate($id, $data, $method, $output, $module)
 {
@@ -154,7 +226,10 @@ function Instantiate($id, $data, $method, $output, $module)
 	}
     }
     else
-	$data["parent"] = -1;
+    {
+	$data["type"] = 18;
+	$data["parent"] = NULL;
+    }
     if (!isset($data["prefix"]))
 	$data["prefix"] = "";
     if (!isset($data["suffix"]))
@@ -185,7 +260,7 @@ function Instantiate($id, $data, $method, $output, $module)
 	"content" => ob_get_clean()
     ]));
 }
-
+    
 function DisplayActivity($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -404,6 +479,10 @@ function DeleteActivity($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
 
+    $sb = db_select_all("id FROM activity WHERE parent_activity = $id");
+    foreach ($sb as $s)
+	if (($request = mark_as_deleted("activity", $s["id"], "codename", false, true))->is_error())
+	    return ($request);
     if (($request = mark_as_deleted("activity", $id, "codename", false, true))->is_error())
 	return ($request);
     return (new ValueResponse([
@@ -458,13 +537,13 @@ function EditActivity($id, $data, $method, $output, $module)
     if (isset($data["type"]))
     {
 	if (($ret = db_select_one("* FROM activity_type WHERE id = {$data["type"]}")) == NULL)
-	    return (new ErrorValue("NotFound", $data["type"]));
-	if (($ret == 0 && $activity->parent_activity != -1) || ($ret != 0 && $activity->parent_activity == -1))
-	    return (new ErrorValue("InvalidValue", $data["type"]));
+	    return (new ErrorResponse("NotFound", $data["type"]));
+	if (($ret["type"] == 0 && $activity->parent_activity != -1) || ($ret["type"] != 0 && $activity->parent_activity == -1))
+	    return (new ErrorResponse("InvalidValue", $data["type"]));
     }
     if (isset($data["subscription"]))
 	if ($data["subscription"] < 0 || $data["subscription"] > 2)
-	    return (new ErrorValue("InvalidValue", $data["subscription"]));
+	    return (new ErrorResponse("InvalidValue", $data["subscription"]));
     if (isset($data["reference_activity"]) && $data["reference_activity"] != NULL)
     {
 	if (($ret = resolve_codename("activity", $data["reference_activity"]))->is_error())
@@ -508,10 +587,7 @@ function AddMedal($id, $data, $method, $output, $module)
     else if (isset($data["codename"]))
 	$medal = $data["codename"];
     else
-    {
-	debug_response("prout");
 	bad_request();
-    }
     if (($err = handle_linksf([
 	"left_value" => $id,
 	"right_value" => $medal,
@@ -549,8 +625,10 @@ function EditMedal($id, $data, $method, $output, $module)
     if (count($fields) == 0)
 	bad_request();
     if (db_update_one(
-	"activity_medal",
-	["id_activity" => $id, "id_medal" => $data["medal"]],
+	"activity_medal", [
+	    "id_activity" => $id,
+	    "id_medal" => $data["medal"]
+	],
 	$fields,
     ) == NULL) {
 	return (new ErrorResponse("NotFound"));

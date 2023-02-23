@@ -14,7 +14,7 @@ function add_cycle($codename, $year, $lng, $first_week = NULL, $id_template = NU
     $fields = [
 	"cycle" => $year,
 	"first_day" => $first_week,
-	"is_template" => $first_week === NULL || $id_template !== NULL ? 1 : 0,
+	"is_template" => $first_week === NULL || $id_template === NULL ? 1 : 0,
 	"id_template" => $id_template
     ];
     return (@try_insert("cycle", $codename, $fields, "", "", ["name"], $lng));

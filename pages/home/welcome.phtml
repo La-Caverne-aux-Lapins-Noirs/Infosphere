@@ -4,7 +4,7 @@ $mail = db_select_one("mail FROM user WHERE id = 1")["mail"];
 <h1><?=$Dictionnary["Welcome"]; ?></h1>
 <br />
 <br />
-<p style="text-align: center; width: 60%; margin-left: 20%; background-color: rgba(0, 0, 0, 0.2); border-radius: 50px; padding: 10px 10px 10px 10px;">
+<p style="text-align: center; width: 60%; margin-left: 20%; border-radius: 50px; padding: 10px 10px 10px 10px; box-shadow: inset 0px 1px 3px rgb(55, 55, 55);">
     <?=$Dictionnary["TodayQuote"]; ?><br />
     <?=famous_quote((int)(now() / 60 / 60 / 24)); ?>.
 </p>

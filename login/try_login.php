@@ -1,4 +1,5 @@
 <?php
+$Convention = false;
 
 // On cherche à modifier son status de connexion
 if (isset($_POST["logaction"]))
@@ -48,6 +49,7 @@ if (isset($_POST["logaction"]))
 	if (!isset($_POST["password"]))
 	    $_POST["password"] = $_POST["repeat_password"] = NULL;
 
+	/// On accepte de s'inscrire sur l'Infosphere
 	if (isset($_POST["accept_rules"]))
 	{
 	    unset($_POST["accept_rules"]);
@@ -66,18 +68,24 @@ if (isset($_POST["logaction"]))
 	else if ($_POST["logaction"] == "subscribe")
 	    $Msg = new ErrorResponse("MissingField", "accept_rules");
 
-	if (isset($_POST["accept_privacy"]))
+	if (isset($_POST["accept_privacy"]) && $_POST["logaction"] == "conv_subscribe")
 	{
 	    $_POST["codename"] = $_POST["login"];
 	    unset($_POST["login"]);
 	    unset($_POST["accept_privacy"]);
 	    unset($_POST["logaction"]);
 	    unset($_POST["repeat_password"]);
-	    if (($Msg = set_user_data(-1, $_POST, [], true))->is_error())
+	    if (($Msg = set_user_data(-1, $_POST, [], true, true))->is_error())
 	    {
 		$PreviousPosition = $Position;
 		$Position = "Subscribe";
 		goto TLEnd;
+	    }
+	    else
+	    {
+		$Convention = true;
+		$LogMsg = "DataStored";
+		$_POST = [];
 	    }
 	}
 	else
@@ -92,6 +100,8 @@ else if (isset($_COOKIE["login"]) && isset($_COOKIE["password"]))
 // On est pas connecté
 else
     $Msg = new ErrorResponse();
+if ($Convention)
+    return ;
 TLEnd:
 $User = NULL;
 $ErrorMsg = "";

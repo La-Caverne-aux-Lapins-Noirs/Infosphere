@@ -4,6 +4,7 @@ $meds = db_select_all("
   codename, command FROM medal WHERE command IS NOT NULL
 ");
 
+
 foreach ($meds as $m)
 {
     if (strstr($m["command"], " band "))

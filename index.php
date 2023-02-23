@@ -115,7 +115,6 @@ $BottomMenu = [
 
     "CycleTemplateMenu" => "./pages/cycle/",
     "ActivityTemplatesMenu" => "./pages/activity/",
-    "AdminClassMenu" => "./pages/class/admin/",
     "ScaleMenu" => "./pages/scale/",
     
     "SchoolMenu" => "./pages/school/",

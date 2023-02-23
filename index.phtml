@@ -181,14 +181,18 @@
 			    <a href="index.php?p=Subscribe&amp;pp=<?=$Position; ?>">
 				<input type="button" value="<?=$Dictionnary["Subscribe"]; ?>" />
 			    </a>
+			<?php } else { ?>
+			    <a href="index.php?p=Subscribe&amp;pp=<?=$Position; ?>&amp;prospect=1">
+				<input type="button" value="<?=$Dictionnary["ToApply"]; ?>" />
+			    </a>
 			<?php } ?>
 			<input type="hidden" name="logaction" value="login" />
 		    </form>
 		<?php } else { ?>
 		    <form target="index.php?p=<?=$Position; ?>" method="POST">
 			<p class="menubartext">
-			    <span><?=$Dictionnary["LoggedAs"]; ?>&nbsp;<?=$User["codename"]; ?></span>
-			    <input type="submit" name"logout" value="&#10007;" style="float: right;" />
+			    <span style="margin-right: 10px;"><?=$Dictionnary["LoggedAs"]; ?>&nbsp;<b><?=$User["codename"]; ?></b></span>
+			    <input type="submit" name"logout" value="&#x1F6AA;&#xFE0E;" style="float: right;" />
 			</p>
 			<input type="hidden" name="logaction" value="logout" />
 		    </form>

@@ -25,7 +25,9 @@ function get_instance_medal($user, $inst)
        LEFT JOIN instance ON instance_user_medal.id_instance = instance.id
        LEFT JOIN activity ON instance.id_activity = activity.id
        LEFT JOIN activity_medal ON activity.id = activity_medal.id AND activity_medal.id_medal = medal.id
-       WHERE user_medal.id_user = $user AND instance_user_medal.id_instance = $inst
+       WHERE user_medal.id_user = $user
+         AND instance_user_medal.id_instance = $inst
+         AND medal.deleted IS NULL
        ORDER BY medal.{$Language}_name ASC
     ", "codename");
 

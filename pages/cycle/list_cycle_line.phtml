@@ -5,6 +5,9 @@
     <b><?=$content["codename"]; ?></b><br />
     <?=@$content["name"]; ?>
 </td>
+<td>
+    <?=$content["min_credit"]; ?> - <?=$content["max_credit"]; ?>
+</td>
 <?php if ($content["is_template"] == 0) { ?>
     <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["first_day"]); ?></td>
     <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["last_day"]); ?></td>

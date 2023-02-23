@@ -45,6 +45,7 @@ class Layer extends ArrayObject
 	{
 	    if (!isset($this[$n]))
 	    {
+		AddDebugLogR("$n does not exists");
 		backtrack();
 		return (NULL);
 	    }

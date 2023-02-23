@@ -19,8 +19,10 @@ foreach ($user->sublayer as $cycle)
        FROM activity_cycle
        LEFT JOIN activity ON activity_cycle.id_activity = activity.id
        WHERE activity_cycle.id_cycle = {$cycle->id}
-       AND activity.parent_activity IS NULL
+       AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)
     ");
+
+    $acquired_credits = 0; // Pas encore construit.
     foreach ($matters as $nact)
     {
 	$nact = (object)$nact;
@@ -43,7 +45,7 @@ foreach ($user->sublayer as $cycle)
 	if ($outact == NULL)
 	{
 	    $id = $nact->id;
-	    ($nact = new FullActivity)->build($id, false, false);
+	    ($nact = new FullActivity)->build($id, false, false);    
 	    $nact->registered = false;
 	}
 	else
@@ -68,10 +70,13 @@ foreach ($user->sublayer as $cycle)
 <table>
     <tr><td colspan="3" style="text-align: center;">
 	<br />
-	<h1 style="width: 100%;"><?=$Dictionnary["Cycle"]; ?> <?=strlen($cycle->name) ? $cycle->name : $cycle->codename; ?></h1>
+	<h1 style="width: 100%;">
+	    <?=$Dictionnary["Cycle"]; ?> <?=strlen($cycle->name) ? $cycle->name : $cycle->codename; ?>
+	</h1>
 	<br /><br />
     </td></tr>
     <tr><td>
+	<!-- <?=$Dictionnary["AcquiredCredits"]; ?> : <?=$acquired_credits; ?> -->
 	<a href="<?=unrollurl(["p" => "CycleMenu", "a" => $cycle["id"]]); ?>">
 	    <?=$Dictionnary["SeeSubscribedList"]; ?>
 	</a><br />

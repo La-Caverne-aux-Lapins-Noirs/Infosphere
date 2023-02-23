@@ -2,14 +2,15 @@
 .submenutr > td:first-of-type
 {
     padding: 10px;
-    background-color: #181818;
+    box-shadow: 0px 1px 3px rgb(55, 55, 55);
+    background-color: rgb(67, 70, 88);
     border-radius: 10px;
 }
 
 .submenutr > td:first-of-type, .submenutd a
 {
-    color: lightgray;
     text-decoration: none;
+    color: rgb(250, 249, 249);
 }
 
 .submenutd a:hover
@@ -17,10 +18,15 @@
     text-decoration: underline;
 }
 
+.submenutd ul, .submenutd li
+{
+    list-style-type: none;
+}
+
 .module_tab
 {
     border-radius: 15px;
-    background-color: gray;
+    box-shadow: 0px 1px 3px rgb(55, 55, 55);
 }
 
 .module_tab td
@@ -31,7 +37,7 @@
 
 .medalscroll
 {
-    height: 100px;
+    height: 110px;
 }
 
 .medalscroll > div
@@ -40,8 +46,37 @@
     height: 105px;
     text-align: left;
     overflow-x: auto;
-    background-color: lightgray;
+    background-color: rgba(45, 48, 59, 0.2);
+    box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
+    border-radius: 5px;	
+}
+
+.medalscroll > div::-webkit-scrollbar
+{
     border-radius: 5px;
+    width: 5px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.medalscroll > div::-webkit-scrollbar-thumb
+{
+    border-radius: 5px;
+    background-color: rgb(55, 55, 55);
+}
+
+.modulebutton
+{
+    width: 100%;
+    height: 100%;
+    background-color: rgb(200, 143, 26) !important;
+    box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
+    border-radius: 5px;
+}
+
+.modulebutton, .modulebutton a
+{
+    color: rgb(250, 249, 249) !important;
+    font-weight: bold;
 }
 
 .gradetab td

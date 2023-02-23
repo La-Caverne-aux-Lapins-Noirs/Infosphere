@@ -14,7 +14,6 @@ function by_name($a, $b)
 {
     $aa = strlen($a["name"]) ? $a["name"] : $a["codename"];
     $bb = strlen($b["name"]) ? $b["name"] : $b["codename"];
-    AddDebugLogR($aa." ".$bb." ".mstrcmp($aa, $bb));
     return (mstrcmp($aa, $bb));
 }
 

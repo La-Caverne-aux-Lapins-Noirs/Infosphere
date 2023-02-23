@@ -161,7 +161,7 @@
 
 		<?php if (@strlen($activity->repository_name) && $activity->user_team != NULL) { ?>
 		    <?php if (substr($activity->repository_name, 0, 4) != "git") { ?>
-			<input type="button" value="<?=$Dictionnary["PickupDirectory"]." ".$PickupDirectories[$activity->type]."/".$activity->repository_name; ?>" />
+			<input type="button" value="<?=$Dictionnary["PickupDirectory"]." /home/users/login/work/".$activity->repository_name; ?>" />
 		    <?php } else { ?>
 			<input type="submit" onclick="window.open('http://<?=$Configuration->Properties["forge"]; ?>/<?=$activity->user_team["leader"]["codename"]; ?>/<?=$activity->repository_name; ?>');" value="<?=$Dictionnary["JoinRepository"].": ".$activity->repository_name; ?>" />
 		    <?php } ?>

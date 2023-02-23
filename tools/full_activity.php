@@ -66,7 +66,7 @@ class FullActivity extends Response
     const RANK_VALIDATION = 3;
     const GRADE_VALIDATION = 2;
     const PERCENT_VALIDATION = 1;
-    const NO_VALODATION = 0;
+    const NO_VALIDATION = 0;
     public $validation = FullActivity::RANK_VALIDATION;
 
     const MANUAL_SUBSCRIPTION = 0;
@@ -168,7 +168,6 @@ class FullActivity extends Response
            activity.{$Language}_method as method,
            activity.{$Language}_objective as objective,
            activity.{$Language}_reference as reference,
-           activity.validation as validation,
            parent.id_template as parent_id_template,
            parent.codename as parent_codename,
            parent.{$Language}_name as parent_name,
@@ -201,11 +200,14 @@ class FullActivity extends Response
 	templated_fill("activity", $data, $datefields);
 	$fields = [
 	    "id", "codename", "type", "type_name", "type_type", "hidden", "parent_activity", "reference_activity", "parent_codename",
-	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "credit_a", "credit_b", "credit_c", "credit_d", "mark",
+	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "mark",
 	    "subscription", "slot_duration", "estimated_work_duration", "configuration", "subject", "emergence_date", "done_date", "registration_date",
 	    "close_date", "subject_appeir_date", "subject_disappeir_date", "pickup_date", "id_template",
 	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "deleted", "parent_name",
-	    "maximum_subscription", "validation", "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "repository_name"
+	    "maximum_subscription", "validation", "repository_name",
+
+	     "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus",
+	    "credit_a", "credit_b", "credit_c", "credit_d",
 	];
 	foreach ($LanguageList as $k => $v)
 	{
@@ -217,6 +219,7 @@ class FullActivity extends Response
 	    $fields[] = $k."_syllabus";
 	}
 	transfert($fields, $this, $data);
+
 	// Juste au cas ou...
 	$this->id = $activity_id;
 	$this->name = $data[$Language."_name"];
@@ -365,9 +368,8 @@ class FullActivity extends Response
                   AND user_medal.id_medal = {$med["id"]}
                   AND activity_user_medal.id_activity = $this->id
 		  ");
-	    if ($got != NULL)
-		foreach (["result"] as $f)
-		    $this->medal[$k][$f] = $got[$f];
+	    foreach (["result"] as $f)
+		$this->medal[$k][$f] = $got != NULL ? $got[$f] : 0;
 	}
 
 	// On regarde les propriétés du module parent...
@@ -603,7 +605,7 @@ class FullActivity extends Response
 	    if ($topsub)
 		$this->can_subscribe = true;
 	}
-
+	
 	// Si on ne veut pas les sous activités...
 	if ($recursive == false)
 	    return (true);

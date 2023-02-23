@@ -2,5 +2,6 @@
 [Hard
   InsideColor = 255, 165, 0
   MiddleColor = 255, 200, 128
+  ColorMask = 255, 165, 0
 ]
 

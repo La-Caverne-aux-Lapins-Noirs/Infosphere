@@ -1,0 +1,88 @@
+<div class="page">
+
+    <div style="text-align: center; width: 100%; height: 100px; padding-top: 15px; padding-bottom: 15px; background-color: lightgray;">
+	<?php if (file_exists(__DIR__."/../../../dres/logo.png")) { ?>
+	    <img src="/dres/logo.png" style="widht: 100px; height: 100px;" />
+	<?php } else { ?>
+	    <img src="/res/logo.png" style="widht: 100px; height: 100px;" />
+	<?php } ?>
+    </div>
+    <br />
+    <br />
+
+    <div>
+	<div style="width: 50%; float: left;">
+	    <div>
+		<div style="width: 50%; font-weight: bold; float: left;">
+		    <?=$Dictionnary["StudentName"]; ?>:
+		</div>
+		<div style="width: 50%; float: left;">
+		    <?=ucfirst($user->first_name); ?> <?=strtoupper($user->family_name); ?>
+		</div>
+	    </div>
+
+	    <div>
+		<div style="width: 50%; font-weight: bold; float: left;">
+		    <?=$Dictionnary["WithdrawnDate"]; ?>:
+		</div>
+		<div style="width: 50%; float: left;">
+		    <?=date("d/m/Y", time()); ?>
+		</div>
+	    </div>
+	</div>
+
+	<div style="width: 50%; float: left;">
+	    <div>
+		<div style="width: 50%; font-weight: bold; float: left;">
+		    <?=$Dictionnary["ProvidedFor"]; ?>:
+		</div>
+		<div style="width: 50%; float: left; font-size: x-small;">
+		    <?=$user->address_name; ?><br />
+		    <?=$user->street_name; ?><br />
+		    <?=$user->postal_code; ?>
+		    <?=strtoupper($user->city); ?><br />
+		    <?=$user->country; ?>
+		</div>
+	    </div>
+	</div>
+    </div>
+    <br />
+    <br />
+    <br />
+    <br />
+
+
+    <div style="width: 100%; background-color: gray;">
+	<br />
+	<?=$cycle->codename; ?>
+	(<?=$Dictionnary["Year"]; ?> <?=floor($cycle->cycle / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$cycle->cycle % 4 + 1; ?>)
+	<?=date("d/m/Y", date_to_timestamp($cycle->first_day)); ?> - <?=date("d/m/Y", date_to_timestamp($cycle->first_day) + 12 * 7 * 24 * 60 * 60); ?>
+	<br />
+	<br />
+    </div>
+
+    <br />
+    <br />
+
+    <table>
+	<tr>
+	    <th style="width: 3cm;"><?=$Dictionnary["CodeName"]; ?></th>
+	    <!--th><?=$Dictionnary["InstanceCode"]; ?></th-->
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><?=$Dictionnary["Commentaries"]; ?></th>
+	    <th><?=$Dictionnary["Grade"]; ?></th>
+	    <th><?=$Dictionnary["Credits"]; ?></th>
+	    <th>
+		<?=str_replace(
+		    " ", "<br />",
+		    $Dictionnary["AvailableCredits"]
+		); ?>
+	    </th>
+	</tr>
+
+	<?php $cnt = 0; ?>
+	<?php $grade_avg = 0; ?>
+	<?php $credit_sum = 0; ?>
+	<?php $credit_available = 0; ?>
+
+	

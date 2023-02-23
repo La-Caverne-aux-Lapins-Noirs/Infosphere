@@ -95,16 +95,19 @@ function generate_password($len = 12)
     return ($rnd);
 }
 
-function subscribe($login, $mail, $password = NULL, $cookie = true)
+function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = false)
 {
     global $Database;
 
-    if ($password == NULL)
+    if ($password == NULL && $fake == false)
 	$password = generate_password();
     if (@strlen($login) < 2)
 	return (new ErrorResponse("BadLogin", $login));
-    if (@strlen($password) < 8 || !preg_match("#[0-9]+#", $password) || !preg_match("#[a-zA-Z]+#", $password))
-	return (new ErrorResponse("BadPassword"));
+    if ($fake == false)
+    {
+	if (@strlen($password) < 8 || !preg_match("#[0-9]+#", $password) || !preg_match("#[a-zA-Z]+#", $password))
+	    return (new ErrorResponse("BadPassword"));
+    }
     if (filter_var($mail, FILTER_VALIDATE_EMAIL) == false)
 	return (new ErrorResponse("BadMail", $mail));
 
@@ -116,7 +119,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
       SELECT codename, mail
       FROM user
       WHERE codename = '$login' OR mail = '$mail'
-    ");
+    ");    
     if (($usr = $user_query->fetch_assoc()) != NULL)
     {
 	if ($usr["codename"] == $login && $usr["mail"] == $mail)
@@ -126,16 +129,26 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
 	return (new ErrorResponse("MailUsed", $mail));
     }
 
-    $local_salt = openssl_random_pseudo_bytes(256);
-    $salt = openssl_random_pseudo_bytes(256);
+    if ($fake == false)
+    {
+	$local_salt = openssl_random_pseudo_bytes(256);
+	$salt = openssl_random_pseudo_bytes(256);
 
-    if (($cookiehash = hash_method($local_salt.$password)) == false)
-	return (new ErrorResponse("CannotHash")); // @codeCoverageIgnore
-    if (($hash = hash_method($salt.$cookiehash)) == false)
-	return (new ErrorResponse("CannotHash")); // @codeCoverageIgnore
+	if (($cookiehash = hash_method($local_salt.$password)) == false)
+	    return (new ErrorResponse("CannotHash")); // @codeCoverageIgnore
+	if (($hash = hash_method($salt.$cookiehash)) == false)
+	    return (new ErrorResponse("CannotHash")); // @codeCoverageIgnore
 
-    $salt = base64_encode($salt);
-    $local_salt = base64_encode($local_salt);
+	$salt = base64_encode($salt);
+	$local_salt = base64_encode($local_salt);
+    }
+    else
+    {
+	$hash = "";
+	$salt = "";
+	$local_salt = "";
+    }
+    
 
     if (($Database->query("
       INSERT INTO user (codename, password, registration_date, salt, local_salt, mail)
@@ -146,7 +159,34 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
 	    add_log(TRACE, "Insertion failed.", 0); // @codeCoverageIgnore
 	return (new ErrorResponse("CannotRegister")); // @codeCoverageIgnore
     }
-    if (!UNIT_TEST && $cookie)
+
+    if ($fake == false)
+    {
+	if (count($fl = explode(".", $login)) == 2)
+	{
+	    $first = $fl[0];
+	    $last = $fl[1];
+	}
+	else
+	{
+	    $first = "First";
+	    $last = "Last";
+	}
+    
+	$out = hand_request([
+	    "command" => "newuser",
+	    "user" => $login,
+	    "first_name" => $first,
+	    "last_name" => $last,
+	    "mail" => $mail,
+	    "password" => $password,
+	    "school" => "efrits"
+	]);
+	if ($out != NULL)
+	    $Database->query("UPDATE user SET uid = ".$out["uid"]." WHERE codename = '$login'");
+    }
+    
+    if (!UNIT_TEST && $cookie && $fake == false)
     {
 	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
 	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
@@ -157,7 +197,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
     unset($usr["salt"]);
     unset($usr["local_salt"]);
     unset($usr["password"]);
-    if (!INSTALLATION)
+    if (!INSTALLATION && $fake == false)
     {
 	send_subscribe_mail($usr["id"], $login, $mail, $password);
 	add_log(CRITICAL_USER_DATA, "User ".$usr["codename"]." added", $usr["id"]);
@@ -165,11 +205,11 @@ function subscribe($login, $mail, $password = NULL, $cookie = true)
     return (new ValueResponse($usr));
 }
 
-function try_subscribe($login, $mail, $password, $repassword)
+function try_subscribe($login, $mail, $password, $repassword, $fake = false)
 {
-    if ($password != $repassword)
+    if ($password != $repassword && $fake == false)
 	return (new ErrorResponse("PasswordDoesNotMatch"));
-    return (subscribe($login, $mail, $password));
+    return (subscribe($login, $mail, $password, !$fake, $fake));
 }
 
 function regenerate_password($usr, $newpass)
@@ -196,18 +236,18 @@ function regenerate_password($usr, $newpass)
 }
 
 // Cette fonction ne peut éditer aucun aspect critique lié a l'authentification ou au contact.
-function set_user_data($id, $vals, $misc_fields = [], $adduser = false)
+function set_user_data($id, $vals, $misc_fields = [], $adduser = false, $fake_account = false)
 {
     global $Database;
     global $User;
 
     if (isset($vals["id"]))
 	$id = $vals["id"];
-    if (($id = resolve_codename("user", $id))->is_error())
+    if ($id == -1 || ($id = resolve_codename("user", $id))->is_error())
     {
-	if ($id->label != "CodeNameAlreadyUsed" || $adduser == false)
+	if ($id != -1 && ($id->label != "CodeNameAlreadyUsed" || $adduser == false))
 	    return ($id);
-	if (($ret = try_subscribe($vals["codename"], $vals["mail"], NULL, NULL))->is_error())
+	if (($ret = try_subscribe($vals["codename"], $vals["mail"], NULL, NULL, $fake_account))->is_error())
 	{
 	    if ($ret->label != "LoginAndMailUsed"
 		&& $ret->label != "MailUsed"
@@ -216,6 +256,7 @@ function set_user_data($id, $vals, $misc_fields = [], $adduser = false)
 	}
 	$id = resolve_codename("user", $vals["codename"]);
     }
+
     if (($id = $id->value) == 1) // && !UNIT_TEST && 0)
 	return (new ErrorResponse("CannotEditAdministrator")); // @codeCoverageIgnore
     if (!isset($vals))

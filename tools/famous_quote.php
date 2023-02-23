@@ -43,6 +43,9 @@ $FamousQuote["fr"] = [
     "La clémence qui compose avec la tyrannie est barbare",
     "Après le pain, l'éducation est le premier besoin du peuple",
     "Pour enchaîner les peuples, on commence par les endormir",
+    "La plupart des gens échouent car ils ont peur de se dresser contre leurs proches.",
+    "Vous ne pouvez réussir qu'en acceptant les responsabilités de vos actions.",
+    "Ne jugez pas quelqu'un sur les ragots des autres",
 ];
 
 $FamousQuote["en"] = [

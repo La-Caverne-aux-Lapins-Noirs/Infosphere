@@ -66,6 +66,8 @@ if ($percents[4] == 0)
     $nbr_cols -= 1;
 
 $img = imagecreatetruecolor($w, $h);
+imagesavealpha($img, true);
+$alpha = imagecolorallocatealpha($img, 0, 0, 0, 127);
 $white = imagecolorallocatealpha($img, 255, 255, 255, 0);
 $gray = imagecolorallocatealpha($img, 128, 128, 128, 0);
 $black = imagecolorallocatealpha($img, 0, 0, 0, 0);
@@ -76,6 +78,10 @@ $green = imagecolorallocatealpha($img, 0, 255, 0, 0);
 $orange = imagecolorallocatealpha($img, 0, 255, 0xA5, 0);
 $pink = imagecolorallocatealpha($img, 0xFF, 0x69, 0xB4, 0);
 $purple = imagecolorallocatealpha($img, 255, 0, 255, 0);
+imagefill($img, 0, 0, $alpha);
+
+$dead_stack = $gray;
+$line_color = $black;
 
 $cols = [$green, $blue, $red, $purple, $pink];
 
@@ -85,7 +91,7 @@ for ($i = 0; $i < $nbr_cols; ++$i)
     imageline($img,
 	      ($i + 0.5) * $w / $nbr_cols,  $h * 0.1,
 	      ($i + 0.5) * $w / $nbr_cols,  $h * 0.7,
-	      $white);
+	      $line_color);
     if ($percents[4] == 0 && $i > 3)
 	break ;
     if ($i > 4)
@@ -93,10 +99,10 @@ for ($i = 0; $i < $nbr_cols; ++$i)
     imageline($img,
 	      ($i + 0.5) * $w / $nbr_cols, $h * 0.7 - $h * 0.55 * $percents[$i],
 	      ($i + 1.5) * $w / $nbr_cols, $h * 0.7 - $h * 0.55 * $percents[$i],
-	      $white);
+	      $line_color);
     imagettftext($img, 10, 0,
 		 ($i + 0.5) * $w / $nbr_cols + 5, $h * 0.7 - $h * 0.55 * $percents[$i] - 5,
-		 $white, __DIR__."/../res/futura.ttf",
+		 $line_color, __DIR__."/../res/futura.ttf",
 		 sprintf("%d%%", $percents[$i] * 100)
     );
 
@@ -105,7 +111,7 @@ for ($i = 0; $i < $nbr_cols; ++$i)
     else if ($i < 4 && $i <= $final_grade && $score[$i] >= $percents[$i])
 	$ccol = $cols[$i];
     else
-	$ccol = $gray;
+	$ccol = $dead_stack;
 
     imagefilledrectangle(
 	$img,
@@ -116,7 +122,7 @@ for ($i = 0; $i < $nbr_cols; ++$i)
 
     imagettftext($img, 15, 0,
 		 ($i + 1.0) * $w / $nbr_cols - 10, $h * 0.68,
-		 $white, __DIR__."/../res/futura.ttf",
+		 $line_color, __DIR__."/../res/futura.ttf",
 		 sprintf("%d%%", $score[$i] * 100)
     );
     $offset = $i == 4 ? 50 : 10;

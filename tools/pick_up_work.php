@@ -4,30 +4,6 @@ define("AUTOMATIC_PICKUP", 0);
 define("TEACHER_PICKUP", 1);
 define("STUDENT_PICKUP", 2);
 
-$PickupDirectories = [
-    "",
-    "hyperespace",
-    "tp",
-    "misc",
-    "misc",
-    "exam",
-    "mcq",
-    "recode",
-    "colle",
-    "marathon",
-    "misc",
-    "misc",
-    "misc",
-    "misc",
-    "projets",
-    "rue",
-    "projets",
-    "misc",
-    "misc",
-    "misc",
-    "misc"
-];
-
 function pick_up_work(
     $activity,
     $username = NULL,
@@ -38,7 +14,6 @@ function pick_up_work(
     global $Dictionnary;
     global $Configuration;
     global $User;
-    global $PickupDirectories;
 
     $status_list = ["automatic", "teacher", "student"];
     $status = $status_list[$author];
@@ -142,7 +117,7 @@ function pick_up_work(
     // C'est un ramassage via la NFS
     else if ($format == "nfs")
     {
-	$target = $PickupDirectories[$type]."/".$repository_name;
+	$target = "work/".$repository_name;
 	// Le fichier est le "repository_name"
 	$cmd = "echo '$username\\n$target\\n'".
 	       " | ".

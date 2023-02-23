@@ -9,6 +9,12 @@ $user = get_full_profile($user, []);
 $edit_profile = try_get($_GET, "edit_profile", "0");
 $allow_edit = is_admin() || $user == $User;
 
+if (isset($_GET["modules"]) && (is_admin() || $user->id == $User["id"]))
+{
+    require_once (__DIR__."/report/request.php");
+    return ;
+}
+
 /*
 ** Il faut faire un systeme de calcul d'"implication", basé sur les logs,
 ** la partition et les rendus, qui soit lissé dans le temps pour former une tendance
@@ -21,61 +27,34 @@ $allow_edit = is_admin() || $user == $User;
 	<table class="full_size_table"><tr><td style="width: 300px; vertical-align: top;">
 	    <p style="text-align: center;">
 		<b style="font-size: large;"><?php display_nickname($user, false); ?></b><br />
-		<?php display_avatar($user); ?>
+		<?php display_avatar($user); ?><br />
+		<br />
+		<b><?=$user->codename; ?></b><br />
+		<?=ucfirst($user->first_name)." ".strtoupper($user->family_name); ?><br />
+		<i><?=$user->nickname; ?></i><br />
+		<br />
+		<b><?=$Dictionnary["MemberSince"]; ?></b>:
+		<?=human_date($user->registration_date, true); ?><br />
+		<br />
+		<?php
+		$credits = 0;
+		foreach ($user->sublayer as $cyc)
+		{
+		    foreach ($cyc->sublayer as $mod)
+		    {
+			$credits += $mod->get_credit();
+		    }
+		}
+		?>
+		<b><?=$credits." ".$Dictionnary["Credits"]; ?></b>
 	    </p>
-	    <form method="post" action="">
-		<table class="uservalues">
-		    <?php
-		    $fields = [
-			"CodeName" => "codename",
-			"Mail" => "mail",
-			"Nickname" => "nickname",
-			"FirstName" => "first_name",
-			"FamilyName" => "family_name",
-			"BirthDate" => "birth_date",
-			"Phone" => "phone",
-			"AddressName" => "address_name",
-			"Address" => "street_name",
-			"PostalCode" => "postal_code",
-			"City" => "city",
-			"Country" => "country",
-		    ];
-		    foreach ($fields as $k => $v) { ?>
-			<tr><td>
-			    <b><?=$Dictionnary[$k]; ?></b>:
-			</td><td>
-			    <?php if (strstr($v, "date")) $user->$v = human_date($user->$v, true); ?>
-			    <input
-				<?=is_admin() && $v != "codename" ? "" : 'readonly disabled="disabled"'; ?>
-				type="text"
-				name="<?=$v; ?>"
-				style="width: 100%; text-align: center;"
-				value="<?=@strlen($user->$v) ? $user->$v : ""; ?>"
-			    />
-			</td></tr>
-		    <?php } ?>
-		    <tr><td>
-			<b><?=$Dictionnary["MemberSince"]; ?></b>:
-		    </td><td>
-			<?=human_date($user->registration_date, true); ?>
-			<?php if ($allow_edit) { ?>
-		    </td></tr><tr><td colspan="2">
-			<input type="submit" value="&#10003;" style="width: 100%;" />
-			<?php } ?>
-		    </td></tr>
-		</table>
-	    </form>
 	</td><td style="overflow: auto;">
 	    <?php
-	    $type = NULL;
-	    $language = "NA";
-	    $page = "user";
-	    $id = $user->id;
-	    $path = "";
-	    $target = $Configuration->UsersDir($user->codename);
-	    if (!(is_admin() || $id == $User["id"]))
-		$target .= "/public/";
-	    require ("./tools/template/path_browser.phtml");
+	    $panel = [
+		$Dictionnary["PersonnalInformations"] => __DIR__."/data.phtml",
+		$Dictionnary["Files"] => __DIR__."/files.phtml"
+	    ];
+	    tabpanel($panel, $Position.$user->id."datafiles", $Dictionnary["PersonnalInformations"]);
 	    ?>
 	</td></tr></table>
     </td><td rowspan="2">
@@ -85,6 +64,7 @@ $allow_edit = is_admin() || $user == $User;
 	    $panel[$fdmy] = __DIR__."/cycle.phtml";
 	if ($user->assistant || $user->teacher || $user->director)
 	    $panel[$Dictionnary["ManagedActivities"]] = __DIR__."/managed_activities.phtml";
+	$panel[$Dictionnary["Intercom"]] = __DIR__."/intercom.phtml";
 	tabpanel($panel, $Position.$user->id."cursus", "#");
 	?>
     </td></tr><tr>
@@ -102,7 +82,6 @@ $allow_edit = is_admin() || $user == $User;
 		$Dictionnary["Medals"] => __DIR__."/medals.phtml",
 		$Dictionnary["DeliveryDone"] => __DIR__."/delivery.phtml",
 		$Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
-		$Dictionnary["Intercom"] => __DIR__."/intercom.phtml",
 		$Dictionnary["Laboratory"] => __DIR__."/laboratories.phtml",
 	    ];
 	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext");

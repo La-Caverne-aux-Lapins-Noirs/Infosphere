@@ -1,6 +1,7 @@
 <?php
 $matters = db_select_all("
-  activity.id
+  activity.id,
+  activity.done_date
   FROM activity
   LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
   LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
@@ -35,12 +36,14 @@ if (count($matters)) { ?>
 	<?php foreach ($matters as $mat) { ?>
 	    <?php ($matter = new FullActivity)->build($mat["id"], false, false); ?>
 	    <?php if (!@strlen($matter->codename)) continue ; ?>
-	    <li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
-		<h4>
-		    <?=$matter->codename; ?>: <?=$matter->fr_name; ?>
-		</h4>
-		<?php $valid_activities[$matter->id] = 2; ?>
-	    </a></li>
+	    <?php if ($mat["done_date"] == NULL || date_to_timestamp($mat["done_date"]) > now()) { ?>
+		<li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
+		    <h4>
+			<?=$matter->codename; ?>: <?=$matter->fr_name; ?>
+		    </h4>
+		</a></li>
+	    <?php } ?>
+	    <?php $valid_activities[$matter->id] = 2; ?>
 	<?php } ?>
     </ul>
 <?php } ?>

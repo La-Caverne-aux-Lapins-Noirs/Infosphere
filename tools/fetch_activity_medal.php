@@ -23,7 +23,8 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
        activity_medal.id as id_activity_medal
        FROM activity_medal
        LEFT JOIN medal ON activity_medal.id_medal = medal.id
-       WHERE activity_medal.id_activity = $id AND deleted IS NULL
+       WHERE activity_medal.id_activity = $id
+       AND medal.deleted IS NULL
        ORDER BY medal.codename ASC
     ", $by_name ? "codename" : "");
     foreach ($all as $k => &$v)

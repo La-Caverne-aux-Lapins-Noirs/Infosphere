@@ -1,32 +1,21 @@
 <?php
 
+/*
+** files: tableau [ONGLET => FICHIER]
+** position: marqueur unique du tabpanel
+** default: ONGLET
+*/
 function tabpanel(array $files, $position, $default, $listclass = "", $contentclass = "")
 {
     extract($GLOBALS);
 
     $PanelScript = true;
-    $id = uniqid();
-    if (isset($_COOKIE[$position]))
-    {
-	$found = false;
-	foreach ($files as $k => $val) {
-	    if ($k == $default) {
-		$found = true;
-		break ;
-	    }
-	}
-	if ($found)
-	    $default = $_COOKIE[$position];
-	else
-	    $position = $default;
-    }
-    else
-	$position = $default;
+    $idd = uniqid();
 ?>
     <div class="tabpanel">
 	<div class="tablist">
 	    <?php foreach ($files as $k => $val) { ?>
-		<a onclick="dis<?=$id; ?>('tab_<?=md5($val); ?>', '<?=addslashes($k); ?>');">
+		<a onclick="dis<?=$idd; ?>('<?=md5($k); ?>');">
 		    <div class="<?=$listclass; ?>" style="width: <?=100 / count($files) - 0.1; ?>%;">
 			<?=$k; ?>
 		    </div>
@@ -35,7 +24,11 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	</div>
 	<div class="tabcontent">
 	    <?php foreach ($files as $k => $val) { ?>
-		<div id="tab_<?=md5($val); ?>" class="<?=$contentclass; ?>" style="visibility: <?=$k == $default ? "visible" : "hidden"; ?>;">
+		<div
+		    id="<?=md5($k); ?>"
+		    class="<?=$contentclass; ?>"
+		    style="visibility: hidden;"
+		>
 		    <?php require ($val); ?>
 		</div>
 	    <?php } ?>
@@ -44,20 +37,31 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
     <script>
      var tablist_<?=md5($position); ?> = [
 	 <?php foreach ($files as $k => $val) { ?>
-	 "tab_<?=md5($val); ?>",
+	     "<?=md5($k); ?>",
 	 <?php } ?>
      ];
-     function dis<?=$id; ?>(lst, label)
+     function dis<?=$idd; ?>(lst)
      {
 	 var i;
 
+	 localStorage.setItem('<?=addslashes($position); ?>', lst);
 	 for (i = 0; i < tablist_<?=md5($position); ?>.length; ++i)
 	 {
-	     document.getElementById(tablist_<?=md5($position); ?>[i]).style.visibility = "hidden";
+	     var nod = document.getElementById(tablist_<?=md5($position); ?>[i]);
+
+	     if (nod.id == lst)
+		 nod.style.visibility = "visible";
+	     else
+		 nod.style.visibility = "hidden";
 	 }
-	 setCookie('<?=addslashes($position); ?>', label);
-	 document.getElementById(lst).style.visibility = "visible";
      }
+     var ls;
+
+     if ((ls = localStorage.getItem('<?=addslashes($position); ?>')) == null)
+	 dis<?=$idd; ?>('<?=md5($default); ?>');
+     else
+	 dis<?=$idd; ?>(ls);
+     // console.log(ls);
     </script>
 <?php
 }

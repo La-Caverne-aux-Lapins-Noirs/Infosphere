@@ -7,18 +7,16 @@ function break_template_link($activity, $template = false)
     if ($activity->is_template && $template == false)
 	return (new ErrorResponse("InvalidParameter"));
     // On fait pareil avec les sous activités
-    if (($subs = db_select_all("* FROM activity WHERE parent_activity = $activity->id")) != NULL)
+    if (($subs = db_select_all("* FROM activity WHERE parent_activity = $activity->id AND deleted IS NULL")) != NULL)
     {
 	foreach ($subs as $sub)
 	{
-	    $obj = new FullActivity;
-	    $obj->id = $sub["id"];
-	    $obj->id_template = $sub["id_template"];
+	    ($obj = new FullActivity)->build($sub["id"]);
 	    if (($req = break_template_link($obj, $template))->is_error())
 		return ($req);
 	}
     }
-    if (($instance = db_select_one("* FROM activity WHERE id = $activity->id")) == NULL)
+    if (($instance = db_select_one("* FROM activity WHERE id = $activity->id AND deleted IS NULL")) == NULL)
 	return (new ErrorResponse("NotAnId", $activity->id, "Activity"));
     if ($instance["template_link"] == false && 0)
 	return (new ValueResponse);

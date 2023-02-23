@@ -92,8 +92,11 @@ class FullProfile extends Layer
     // Le sublayer sera des cycle layer
     function validate_this_module(&$mod)
     {
+	if ($mod->validation == FullActivity::NO_VALIDATION)
+	    return ;
+	
 	// On regarde si c'est un module a note. C'est la moyenne qui compte.
-	if ($mod->grade_module)
+	if ($mod->validation == FullActivity::GRADE_VALIDATION)
 	{
 	    $avg = 0;
 	    $not = 0;
@@ -101,8 +104,7 @@ class FullProfile extends Layer
 	    {
 		if (is_note($medal["codename"]))
 		{
-		    // En dur mour l'instant...
-		    $avg += (int)substr($medal["codename"], 4);
+		    $avg += atoi(substr($medal["codename"], strlen("token")));
 		    $not += 1;
 		}
 	    }
@@ -111,8 +113,10 @@ class FullProfile extends Layer
 	}
 
 	// Est un module a pourcentage total ? C'est le pourcentage d'acquisition qui compte
-	if ($mod->validation_by_percent)
+	if ($mod->validation == FullActivity::PERCENT_VALIDATION)
 	{
+	    $acquired_medal = 0;
+	    $medal_count = 0;
 	    foreach ($mod->medal as $medal)
 	    {
 		if ($medal["module_medal"] == false)
@@ -121,8 +125,8 @@ class FullProfile extends Layer
 		    $acquired_medal += 1;
 		$medal_count += 1;
 	    }
-	    $tmp = $acquired_medal / $medal_count;
-	    set_grade($mod, $tmp * 100);
+	    $mod->current_percent = $tmp = $acquired_medal / $medal_count;
+	    $this->set_grade($mod, $tmp);
 	    return ;
 	}
 
@@ -178,29 +182,34 @@ class FullProfile extends Layer
 	    }
 	}
 
+	$mod->grade = 0;
+	if (count($mod->medal) == 0)
+	    return ;
+	
 	// Si on on a deja le grade D, on a le droit au grade C
 	// si on a deja le grade C, on a le droit au grade B, etc.
-	$mod->grade = 0;
-	if ($medald_cnt > 0 && $medald / $medald_cnt >= $mod->grade_d / 100.0)
+	if ($medald_cnt == 0 || $medald / $medald_cnt >= $mod->grade_d / 100.0)
 	{
 	    $mod->grade += 1;
-	    if ($medalc_cnt > 0 && $medalc / $medalc_cnt >= $mod->grade_c / 100.0)
+	    if ($medalc_cnt == 0 || $medalc / $medalc_cnt >= $mod->grade_c / 100.0)
 	    {
 		$mod->grade += 1;
-		if ($medalb_cnt > 0 && $medalb / $medalb_cnt >= $mod->grade_b / 100.0)
+		if ($medalb_cnt == 0 || $medalb / $medalb_cnt >= $mod->grade_b / 100.0)
 		{
 		    $mod->grade += 1;
-		    if ($medala_cnt > 0 && $medala / $medala_cnt >= $mod->grade_a / 100.0)
+		    if ($medala_cnt == 0 || $medala / $medala_cnt >= $mod->grade_a / 100.0)
 		    {
 			$mod->grade += 1;
 		    }
 		}
 	    }
 	}
+
 	// Par tranche de "grade_bonus", on obtient un grade supplémentaire.
 	// Ce grade ne permet pas de revenir d'un grade echec.
 	if ($mod->grade != 0 && $medale_cnt)
 	    $mod->grade += ((int)(100 * ($medale / $medale_cnt))) >= ((int)$mod->grade_bonus) ? 1 : 0;
+	
 	if ($medala_cnt)
 	    $mod->valid_grade_a = 100 * $medala / $medala_cnt;
 	if ($medalb_cnt)
@@ -237,7 +246,7 @@ class FullProfile extends Layer
 			$module->acquired_credit = $module->manual_credit;
 		}
 		$total += $module->acquired_credit;
-		$max += $module->credit[$module->grade];
+		$max += $module->credit[$module->grade > 4 ? 4 : $module->grade];
 		$grade[] = $module->grade;
 		$grade_cnt += 1;
 	    }
@@ -389,7 +398,7 @@ class FullProfile extends Layer
            LEFT JOIN activity_user_medal
            ON user_medal.id = activity_user_medal.id_user_medal
            LEFT JOIN medal
-           ON medal.id = user_medal.id_medal
+           ON medal.id = user_medal.id_medal AND medal.deleted IS NULL
            WHERE user_medal.id_user = {$this->id}
            AND activity_user_medal.id_activity = -1
            AND activity_user_medal.result = 1
@@ -431,8 +440,9 @@ class FullProfile extends Layer
 	    }
 	}
 	
-	foreach ($this->sublayer as $l)
+	foreach ($this->sublayer as $l) // Parcours des cycles
 	{
+	    // On identifie les cycles regroupés du fait de leur date
 	    $fd = datex("m/y", $l->first_day);
 	    if (!isset($this->merged_sublayers[$fd]))
 	    {
@@ -442,9 +452,12 @@ class FullProfile extends Layer
 	    }
 	    else
 		$this->merged_sublayers[$fd]->cycles[] = $l->id;
-	    foreach ($l->sublayer as $matter)
-		$this->merged_sublayers[$fd]->matters[$matter->codename] = $matter;
-	    uasort($this->merged_sublayers, "sort_year_month");
+
+	    // On parcoure les modules du cycle qu'on range dans la case
+	    // mergeante par date de debut
+	    foreach ($l->sublayer as $matt)
+		$this->merged_sublayers[$fd]->matters[$matt->codename] = $matt;
+	    uksort($this->merged_sublayers, "sort_year_month");
 	}
 	return (true);
     }

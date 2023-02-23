@@ -35,7 +35,9 @@ function get_medal_status($user, $instance)
        LEFT JOIN instance ON instance.id = instance_user_medal.id_instance
        LEFT JOIN activity_medal ON activity_medal.id_medal = medal.id AND activity_medal.id_activity = instance.id_activity
        WHERE user_medal.id_user = $user
-       AND instance_user_medal.id_instance = $instance AND instance.id = $instance
+       AND instance_user_medal.id_instance = $instance
+       AND instance.id = $instance
+       AND medal.deleted IS NULL
        GROUP BY user_medal.id_medal
     ", "id"));
 }
@@ -61,7 +63,9 @@ function get_module_medals($user, $instance, $activity)
        LEFT JOIN instance ON activity_medal.id_activity = instance.id_activity
        LEFT JOIN instance_school_year ON instance.id = instance_school_year.id_instance
        LEFT JOIN user_school_year ON user_school_year.id_school_year = instance_school_year.id_school_year
-       WHERE user_school_year.id_user = $user AND instance.id = $instance AND medal.deleted = 0
+       WHERE user_school_year.id_user = $user
+       AND instance.id = $instance
+       AND medal.deleted IS NULL
     ", "id");
     if ($medals == [])
 	return ([]);

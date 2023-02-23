@@ -68,20 +68,14 @@
     text-align: center;
 }
 
-#head
-{
-}
-
 .menu
 {
-    background-image: url("/res/menu.png");
     overflow: display;
     position: absolute;
     top: 0px;
     left: 0px;
     width: 100%;
     height: 50px;
-    color: lightgray;
 }
 
 #foot .menu
@@ -123,30 +117,8 @@
 
 .menu a div
 {
-    color: lightgray;
-    font-size: small;
     padding-left: 10px;
     padding-right: 10px;
-    transition:
-	background-color 0.2s linear,
-	color 0.2s linear
-    ;
-}
-
-.menu .current_page > div
-{
-    background-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-.menu a div:hover
-{
-    color: white;
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.menu a div:active
-{
-    font-weight: bold;
 }
 
 .menu div img
@@ -161,19 +133,8 @@
     opacity: 1.0;
 }
 
-#logo
-{
-    opacity: 0.8;
-}
-
-#logo:hover
-{
-    opacity: 1;
-}
-
 #clock
 {
-    background-color: rgba(0, 0, 0, 0);
     padding-right: 30px;
 }
 
@@ -241,7 +202,6 @@
     padding-left: 10px;
     padding-right: 10px;
     height: calc(100% - 50px - 50px - 10px - 10px);
-    background-color: lightgray;
 }
 
 .body_height
@@ -272,19 +232,6 @@
     font-size: 40px;
     line-height: 50px;
     text-align: center;
-}
-
-input[type="checkbox"]
-{
-    width: 50px !important;
-}
-
-label
-{
-    vertical-align: top;
-    font-size: 25px !important;
-    width: calc(50% - 56px) !important;
-    display: inline-block;
 }
 
 .edit_column input[type="submit"]
@@ -373,14 +320,6 @@ label
     vertical-align: top;
     line-height: 15px;
     border: 1px solid gray;
-}
-
-input[type="submit"], input[type="button"]
-{
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 2px outset rgb(32, 32, 32);
-    border-radius: 5px;
-    color: lightgray;
 }
 
 .add_formular > div input[type="checkbox"]
@@ -664,7 +603,7 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     color: green;
     position: absolute;
     right: 0px;
-    bottom: 0px;
+    bottom: 50px;
     z-index: 1;
     width: 50px;
     height: 50px;
@@ -959,23 +898,9 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 {
     height: 30px;
     line-height: 30px;
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.5);
     display: inline-block;
     float: left;
     text-align: center;
-}
-
-.tablist div:hover
-{
-    background-color: white;
-}
-
-.tablist div:active
-{
-    background-color: black;
-    color: white;
-    font-weight: bold;
 }
 
 .tabcontent
@@ -986,7 +911,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     left: 0px;
     width: 100%;
     height: calc(100% - 50px);
-    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .tabcontent > div
@@ -1144,10 +1068,5 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     background-size: 100% 100%;
     width: 100%;
     height: 100%;
-}
-
-.uservalues b, .uservalues input, .uservalues td
-{
-    font-size: x-small;
 }
 

@@ -16,6 +16,7 @@
 		<h4><?=$medal["name"]; ?><?=is_teacher() ? " (".$medal["codename"].")" : ""; ?></h4>
 		<h5><?=$Dictionnary["Tags"]; ?>: <?=$medal["tags"]; ?></h5>
 		<p style="font-size: small;">
+		    <?=$Dictionnary[["PositiveMedal", "NegativeMedal", "CriticalNegativeMedal"][$medal["type"]]]; ?><br />
 		    <?=$medal["description"]; ?>
 		</p>
 	    </div>

@@ -8,10 +8,27 @@ else
 <?php if ($Position == "InstancesMenu") { ?>
     <h2 class="alignable_blocks"><?=$Dictionnary["Instances"]; ?></h2>
     <?php $page = "module"; ?>
+    <label for="get_old_activity">
+	<input
+	    type="checkbox"
+	    name="get_old_activity"
+	    onchange="setCookie('get_old_activity', this.checked); list_modules();"
+	    <?=isset($_COOKIE["get_old_activity"]) && $_COOKIE["get_old_activity"] ? "checked" : ""; ?> />
+	<?=$Dictionnary["GetOldActivities"]; ?>
+    </label>
 <?php } else { ?>
     <h2 class="alignable_blocks"><?=$Dictionnary["ActivityTemplates"]; ?></h2>
     <?php $page = "template"; ?>
 <?php } ?>
+
+<input type="text"
+       id="filter_form"
+       name="filter_activity_<?=$page; ?>"
+       onchange="setCookie('filter_activity_<?=$page; ?>', this.value); list_modules();"
+       placeholder="<?=$Dictionnary["FilterActivities"]; ?>"
+       value="<?=isset($_COOKIE["filter_activity_$page"]) ? $_COOKIE["filter_activity_$page"] : ""; ?>"
+/>
+<input type="button" onclick="document.getElementById('filter_form').value = ''; document.getElementById('filter_form').onchange();" value="&#10007;" style="color: red;" />
 
 <table id="activity_tab"><tr id="selectlist"><td>
     <!-- MODULES -->

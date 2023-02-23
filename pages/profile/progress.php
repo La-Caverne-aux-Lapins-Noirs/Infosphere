@@ -1,9 +1,8 @@
 
-<?php if ($module->validation_by_percent || $module->grade_module) { ?>
-
+<?php if ($module->validation == FullActivity::PERCENT_VALIDATION || $module->validation == FullActivity::GRADE_VALIDATION) { ?>
+    
     <?php
     $module->configuration["Completion"] = $module->current_percent;
-    $module->configuration["Mandatory"] = $module->grade >= 2;
     $module->configuration["Note"] = [];
     $module->configuration["Grade"]["A"] = $module->grade_a / 100.0;
     $module->configuration["Grade"]["B"] = $module->grade_b / 100.0;
@@ -19,10 +18,10 @@
     }
     
     ?>
-    <div class="final_box" style="width: 100%; height: 50px; overflow-y: auto; background-color: black !important; background-image: url('./tools/progress_bar.php?w=900&amp;h=50&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center;">
+    <div class="final_box" style="width: 100%; height: 50px; overflow-y: auto; background-color: white !important; background-image: url('./tools/progress_bar.php?w=900&amp;h=50&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
     </div>
 
-<?php } else { ?>
+<?php } else if ($module->validation != FullActivity::NO_VALIDATION) { ?>
     
     <?php
     $module->configuration["Grade"]["A"] = $module->grade_a / 100.0;
@@ -39,7 +38,7 @@
     else
 	$module->configuration["Validation"]["E"] = $module->valid_grade_e / 100.0;
     ?>
-    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-color: black !important; background-image: url('./tools/histo_bar.php?w=900&amp;h=200&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center;">
+    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-color: white !important; background-image: url('./tools/histo_bar.php?w=900&amp;h=200&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
     </div>
     
 <?php } ?>

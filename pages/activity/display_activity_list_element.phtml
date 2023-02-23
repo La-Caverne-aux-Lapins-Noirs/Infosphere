@@ -27,7 +27,7 @@
 	<?php if (!$act->is_template) { ?>
 
 	    <?php $txt = 'title="'.$Dictionnary["IsTemplateLinkActive"].'"'; ?>
-	    <?php if ($act->template_link) { ?>
+	    <?php if ($act->template_link && $act->id_template != -1) { ?>
 		<span style="color: green;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
 	    <?php } else { ?>
 		<span style="color: red;" <?=$txt; ?>>&#128279;&#xFE0E;</span>

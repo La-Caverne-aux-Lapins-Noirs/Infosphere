@@ -24,7 +24,14 @@ $projects = collect_projects($start, $end, $wlist);
 ?>
 
 <div class="calendar_menu">
-    <h2><?=$Dictionnary["Calendar"]; ?>: <?=datex("d/m/Y", $start)." - ".datex("d/m/Y", $end); ?></h2>
+    <h2>
+	<?=$Dictionnary["Calendar"]; ?>:
+	<?php if (datex("Y", $start) < 1971) { ?>
+	    <?=datex("d/m/Y", $start)." - ".datex("d/m/Y", $end); ?>
+	<?php } else { ?>
+	    <?=datex("d/m/Y", $start)." - ".datex("d/m/Y", $end); ?>
+	<?php } ?>
+    </h2>
     <?php print_control_buttons($start, $end, $wlist); ?>
 </div>
 
@@ -39,7 +46,7 @@ $projects = collect_projects($start, $end, $wlist);
 
      val = parseInt(obj.style.minWidth);
      if (wat)
-	 obj.style.width = val * 1.5 + "px";
+	 obj.style.width = val * 3.0 + "px";
      else
 	 obj.style.width = val + "px";
  }

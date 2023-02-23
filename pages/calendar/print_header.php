@@ -4,7 +4,7 @@ function print_header()
 {
     global $Dictionnary;
 
-    $CurrentWorkWidth = 250;
+    $CurrentWorkWidth = 400;
     require ("print_header.phtml");
 }
 

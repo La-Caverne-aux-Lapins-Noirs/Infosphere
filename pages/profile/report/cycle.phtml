@@ -1,0 +1,43 @@
+<?php foreach ($cycle->sublayer as $module) { ?>
+    <?php if ($module->credit_a == 0) continue ; ?>
+    <tr>
+	<td><?=explode("_", $module->codename)[0]; ?></td>
+	<td><?=$module->name; ?></td>
+	<td>
+	    <?php if ($module->commentaries) { ?>
+		<p><?=$module->commentaries; ?></p>
+	    <?php } ?>
+	    <div style="column-count: 2; font-size: xx-small;">
+
+		<!--
+		
+		<?php if ($module->late->get()) { ?>
+		    <?=$Dictionnary["Late"]." : ".$module->late; ?><br />
+		<?php } ?>
+
+		<?php if ($module->missing->get()) { ?>
+		    <?=$Dictionnary["Missing"]; ?> : <?=$module->missing; ?><br />
+		<?php } ?>
+		
+		<?php if ($module->nowork->get()) { ?>
+		    <?=$Dictionnary["NoWork"]; ?> : <?=$module->nowork->cumulated; ?><br :>
+		<?php } ?>
+		-->
+
+	    </div>
+	</td>
+	<?php if ($module->done_date == NULL || date_to_timestamp($module->done_date) > now()) { ?>
+	    <td></td>
+	    <td></td>
+	<?php } else { ?>
+	    <td><?=$Grade[$module->grade]; ?></td>
+	    <td><?=$module->get_credit(); ?></td>
+	    <?php $grade_avg += $module->grade; ?>
+	    <?php $credit_sum += $module->get_credit(); ?>
+	<?php } ?>
+	<td><?=$module->credit_d." - ".$module->credit_a; ?></td>
+    </tr>
+    <?php $credit_available += $module->credit_a; ?>
+    <?php $cnt += 1; ?>
+<?php } ?>
+

@@ -286,6 +286,8 @@ table
 .formular_slot
 {
     vertical-align: top;
+    border-radius: 5px;
+    box-shadow: 0px 1px 3px rgb(55, 55, 55);
 }
 
 .formular_slot input, .formular_slot select

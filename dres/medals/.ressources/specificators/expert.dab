@@ -2,5 +2,6 @@
 [Expert
   InsideColor = 200, 0, 0
   MiddleColor = 0, 0, 0
+  ColorMask = 200, 0, 0
 ]
 

@@ -153,6 +153,14 @@ function is_director_for_cycle($id)
     return (true);
 }
 
+function is_director_for_student($id)
+{
+    if (is_admin())
+	return (true);
+    // A faire
+    return (false);
+}
+
 function is_director_for_session($id)
 {
     global $Database;

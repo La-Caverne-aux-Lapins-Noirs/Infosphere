@@ -28,17 +28,17 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize)
 	  ");
     foreach ($sesstmp as $sess)
     {
-	$s = new FullActivity;
-	$s->build($sess["id_activity"], false, false, $sess["id"]);
+	($s = new FullActivity)->build($sess["id_activity"], false, false, $sess["id"]);
+	($module = new FullActivity)->build($s->parent_activity, false, false);
 
 	/*
-	if (!have_rights($sess["id_activity"], false) && filter_out_sessions($s, $wlist))
-	    continue ;
+	   if (!have_rights($sess["id_activity"], false) && filter_out_sessions($s, $wlist))
+	   continue ;
 	 */
 
 	// Si filter renvoit faux, c'est que l'activité nous concerne pas en tant qu'éleve
 	// Mais si on est assistant ou plus, alors il faut la garder.
-	if ($s->is_assistant == false && filter_out_sessions($s, $wlist))
+	if ($s->is_assistant == false && ($module->registered == false || filter_out_sessions($s, $wlist)))
 	    continue ;
 	if (datex("G", $s->unique_session->begin_date) < 7)
 	    continue ;

@@ -15,6 +15,7 @@ function get_activity_medal_for_user(&$student, $idact)
         LEFT JOIN medal ON medal.id = user_medal.id_medal
 	WHERE activity_user_medal.id_activity = $idact
           AND user_medal.id_user = {$student["id"]}
+          AND medal.deleted IS NULL
 	  ");
     foreach ($student["medal"] as &$med)
 	$med["icon"] = "/genicon.php?function=".$med["codename"];

@@ -18,14 +18,15 @@ class ModuleLayer extends Layer
     public $grade_bonus = 75;
     public $grade_module = 0;
     public $no_grade = 0;
-    public $validation_by_percent = false;
-    public $old_validation = false;
+    
+    public $validation = FullActivity::RANK_VALIDATION;
+    
     public $configuration = [];
     public $allow_unregistration = true;
-    public $emergence_date;
-    public $done_date;
-    public $registration_date;
-    public $close_date;
+    public $emergence_date = NULL;
+    public $done_date = NULL;
+    public $registration_date = NULL;
+    public $close_date = NULL;
     public $type_type = 0; // Const
 
     // Les scores de la validation principale
@@ -43,6 +44,15 @@ class ModuleLayer extends Layer
     
     public $id_team = -1; // Le lien module-utilisateur.
 
+    public function get_credit()
+    {
+	if ($this->done_date == NULL || $this->done_date > now())
+	    return (0);
+	if ($this->grade > 4)
+	    return ($this->credit[4]);
+	return ($this->credit[$this->grade]);
+    }
+    
     // $sublayer sera des activity layer
     public function buildsub($user_id, $module_id, $blist = [])
     {
@@ -69,6 +79,20 @@ class ModuleLayer extends Layer
              AND activity.deleted IS NULL
            GROUP BY activity.id
 	");
+	$fake = false;
+	if (count($activities) == 0)
+	{
+	    $activities[] = [
+		"id" => $module_id,
+		"codename" => $this->codename,
+		"id_session" => -1,
+		"commentaries" => "",
+		"manual_credit" => NULL,
+		"manual_grade" => NULL,
+		"type_type" => 0
+	    ];
+	    $fake = true;
+	}
 	foreach ($activities as $act)
 	{
 	    $sub = new ActivityLayer;
@@ -127,8 +151,12 @@ class ModuleLayer extends Layer
                WHERE user_medal.id_user = $user_id
                  AND (activity_user_medal.id_activity = $activity_id
                   OR activity_user_medal.id_activity = $module_id
-		)
-	       ");
+		) AND medal.deleted IS NULL
+	    ");
+	    $eliminatory = false;
+	    foreach ($acquired as $med)
+		if ($med["type"] == 2) // Eliminatoire
+		    $eliminatory = true;
 	    foreach ($acquired as $med)
 	    {
 		$med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
@@ -158,7 +186,7 @@ class ModuleLayer extends Layer
 		    unset($target->medal[$med["codename"]]["result"]);
 		    unset($target->medal[$med["codename"]]["activity_name"]);
 		}
-		if ($med["result"] == -1)
+		if ($med["result"] == -1 || $eliminatory)
 		{
 		    $target->medal[$med["codename"]]["failure"] += 1;
 		    $target->medal[$med["codename"]]["failure_list"][] = $med["activity_name"];
@@ -215,7 +243,8 @@ class ModuleLayer extends Layer
 		}
 	    }
 
-	    $this->sublayer[] = $sub;
+	    if ($fake == false)
+		$this->sublayer[] = $sub;
 	}
     }
 
@@ -231,3 +260,4 @@ class ModuleLayer extends Layer
 	    $this->configuration = $tmp->value;
     }
 }
+

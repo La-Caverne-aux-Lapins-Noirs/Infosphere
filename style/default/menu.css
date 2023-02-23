@@ -1,4 +1,13 @@
 
+/*
+** Charte EFRITS Lisa:
+** Doré: 200, 143, 26
+** Blanche: 250, 249, 249
+** Gris foncé: 55, 55, 55
+** Marron clair: 180, 165, 165
+** Bleu: 45, 48, 59
+*/
+
 @font-face
 {
     src: url("/res/futura.ttf");
@@ -8,4 +17,61 @@
 *
 {
     font-family: futura;
+}
+
+#head
+{
+    background-image: url("/res/menu.png");
+}
+
+.menu a div
+{
+    color: rgb(250, 249, 249); /* Blanc */
+    font-size: small;
+    transition:
+	background-color 0.2s linear,
+	color 0.2s linear
+    ;
+}
+
+.menu a div:hover
+{
+    background-color: rgb(200, 143, 26); /* Doré */
+    /* background-color: rgba(55, 55, 55, 1.0); /* Gris foncé */
+    /* color: rgb(180, 165, 165); /* Gris clair */
+    color: rgb(250, 249, 249); /* Blanc */
+}
+
+.menu a div:active
+{
+    font-weight: bold;
+}
+
+.menu .current_page > div
+{
+    background-color: rgb(200, 143, 26) !important; /* Doré */
+}
+
+.menu b
+{
+    text-shadow:
+	0px 0px 0px rgb(250, 249, 249)
+    ;
+}
+
+#clock
+{
+    background-color: rgb(200, 143, 26);
+    color: rgb(250, 249, 249);
+    font-weight: bold;
+}
+
+#logo
+{
+    opacity: 0.8;
+}
+
+#logo:hover
+{
+    opacity: 1;
 }

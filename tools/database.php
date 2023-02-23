@@ -246,8 +246,11 @@ function db_update_one($table, $id, array $fields, $fetch = false, $display = fa
     global $Database;
     
     if (is_symbol($id))
+    {
 	if (($id = resolve_codename($table, $id))->is_error())
 	    return (NULL);
+	$id = $id->value;
+    }
     $mods = [];
     foreach ($fields as $k => $v)
     {
@@ -280,7 +283,7 @@ function db_update_one($table, $id, array $fields, $fetch = false, $display = fa
 	$filter = implode(" AND ", $filter);
     }
     $mods = implode(", ", $mods);
-    if (($ret = $Database->query("UPDATE `$table` SET $mods WHERE $filter ", $display)) == NULL)
+    if (($ret = $Database->query($req = "UPDATE `$table` SET $mods WHERE $filter ", $display)) == NULL)
 	return (NULL);
     if ($fetch && $Database->affected_rows)
 	return (db_select_one("* FROM `$table` WHERE $filter "));

@@ -28,7 +28,7 @@ class ErrorResponse extends Response
 	if (!isset($label) || $label == "")
 	    return ;
 	if (!isset($Dictionnary[$this->label = $label]))
-	    throw "Invalid error label";
+	    throw new ErrorException("Invalid error label");
 	if (isset($details))
 	    $this->details = $details;
 	if ($recommandation != "")

@@ -1,0 +1,86 @@
+<?php
+if ($user->visibility == HIDDEN && !is_director_for_student($user->id))
+    return ;
+$js = "silent_submit(this);";
+?>
+<form method="put" onsubmit="return <?=$js; ?>" action="/api/user/<?=$user->id; ?>/properties">
+    <table>
+	<?php
+	$fields = [
+	    "Mail" => "mail",
+	    "Nickname" => "nickname",
+	    "FirstName" => "first_name",
+	    "FamilyName" => "family_name",
+	    "BirthDate" => "birth_date",
+	    "Phone" => "phone",
+	    "AddressName" => "address_name",
+	    "Address" => "street_name",
+	    "PostalCode" => "postal_code",
+	    "City" => "city",
+	    //"Country" => "country",
+	];
+	foreach ($fields as $k => $v) { ?>
+	    <tr><td>
+		<b><?=$Dictionnary[$k]; ?></b> :
+	    </td><td>
+		<?php if (strstr($v, "date")) $user->$v = human_date($user->$v, true); ?>
+		<input
+		    <?=(is_admin() || $user->id == $User["id"]) && $v != "codename" ? "" : 'readonly disabled="disabled"'; ?>
+		    type="text"
+		    name="<?=$v; ?>"
+		    style="width: 100%; text-align: center;"
+		    value="<?=@strlen($user->$v) ? $user->$v : ""; ?>"
+		/>
+	    </td></tr>
+	<?php } ?>
+	<?php if (is_admin() || $user->id == $User["id"]) { ?>
+	    <tr><td>
+		<b><?=$Dictionnary["ProfileVisibility"]; ?></b> :
+	    </td><td>
+		<select name="visibility">
+		    <?php foreach ([
+			HIDDEN => "HideEverything",
+			PROFILE_ONLY => "ShowProfileOnly",
+			SUCCESSFUL_ACTIVITIES => "ShowProfileAndSuccessfulActivities",
+			COMPLETE_PROFILE => "ShowEverything",
+		    ] as $vis => $visi) { ?>
+			<option value="<?=$vis; ?>" <?=$user->visibility == $vis ? "selected" : ""; ?>>
+			    <?=$Dictionnary[$visi]; ?>
+			</option>
+		    <?php } ?>
+		</select>
+	    </td></tr>
+	<?php } ?>
+    </table>
+    <?php if (is_admin() || $user->id == $User["id"]) { ?>
+    <br />
+    <p style="text-align: center;">
+	<input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
+    </p>
+    <?php } ?>
+</form>
+<?php if (is_admin() || $user->id == $User["id"]) { ?>
+    <br />
+    <form method="put" action="/api/user/<?=$user->id; ?>/properties" onsubmit="return <?=$js; ?>">
+	<table>
+	    <tr><td>
+		<b><?=$Dictionnary["Avatar"]; ?></b>:
+	    </td><td>
+		<?php if (is_admin()) { ?>
+		    <select name="type">
+			<option value="set_avatar">Avatar</option>
+			<option value="set_photo">Photo</option>
+		    </select>
+		<?php } else { ?>
+		    <input type="hidden" name="action" value="set_avatar" />
+		<?php } ?>
+		<input type="file" name="avatar" />
+	    </td></tr>
+	</table>
+	<br />
+	<p style="text-align: center;">
+	    <input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
+	</p>
+    </form>
+<?php } ?>
+    

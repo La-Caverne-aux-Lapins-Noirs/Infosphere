@@ -78,7 +78,7 @@ $js = "silent_submit(this)";
 		<input
 		    type="date"
 		    name="day"
-		    value="<?=datex("Y-m-d", $session->begin_date); ?>"
+		    value="<?=datex("Y-m-d", $session->begin_date ?: now()); ?>"
 		/>
 		<label for="begin"><?=$Dictionnary["Begin"]; ?></label>
 		<input

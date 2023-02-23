@@ -60,9 +60,9 @@ function collect_projects($start, $end, $wlist)
 	 ");
     foreach ($sesstmp as $sess)
     {
-	$s = new FullActivity;
-	$s->build($sess["id"], false, false);
-	if ($s->is_assistant == false && filter_out_activity($s, $wlist))
+	($s = new FullActivity)->build($sess["id"], false, false);
+	($module = new FullActivity)->build($s->parent_activity, false, false);
+	if ($s->is_assistant == false && ($module->registered == false || filter_out_activity($s, $wlist)))
 	    continue ;
 	if ($s->type_type != 1 || $ActivityType[$s->type]["id"] == 15)
 	    continue ;

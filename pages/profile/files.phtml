@@ -1,0 +1,27 @@
+<?php
+$type = NULL;
+$language = "NA";
+$page = "user";
+$id = $user->id;
+$path = "";
+$target = $Configuration->UsersDir($user->codename);
+if (is_admin())
+{
+    $target .= "";
+    $fordidden_dirs = ["personnal"];
+}
+else
+{
+    if ($id != $User["id"])
+    {
+	$target .= "public";
+	$forbidden_dirs = [];
+    }
+    else
+    {
+	$target .= "";
+	$forbidden_dirs = ["admin"];
+    }
+}
+require ("./tools/template/path_browser.phtml");
+

@@ -39,6 +39,20 @@ else
 		    <input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
 		    <input type="submit" value="X" style="color: red; width: 25px; height: 25px;" />
 		</form>
+		<?php $js = "silent_submit(this)"; ?>
+		<form
+		    onsubmit="return <?=$js; ?>;"
+		    method="put"
+		    action="/api/activity/<?=$activity->id; ?>/pickup/<?=$cteam["id"]; ?>"
+		    style="display: inline-block"
+		>
+		    <input
+			type="button"
+			value="&nearr;"
+			onclick="<?=$js; ?>;"
+			style="color: white; font-weight: bold; width: 25px; height: 25px;"
+		    />
+		</form>
 	    </div>
 	<?php } ?>
 

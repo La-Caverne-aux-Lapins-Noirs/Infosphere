@@ -12,11 +12,36 @@
 		<?php require_once ("last_medals.php"); ?>
 	    </div>
 	</td><td>
-	    <table id="activity_table"><tr><td>
-		<div><?php require_once ("activities.phtml"); ?></div>
-	    </td></tr><tr><td>
-		<div><?php require_once ("managed.phtml"); ?></div>
-	    </td></tr></table>
+	    <?php
+	    $participate = collect_dashboard_activities(
+		time(),
+		first_second_of_day(time()) + 60 * 60 * 24 * 2,
+		false
+	    );
+	    $managed = collect_dashboard_activities(
+		time(),
+		first_day_of_week(time()) + 60 * 60 * 24 * 14,
+		true
+	    );
+	    $activities["participate"] = $participate["participate"];
+	    $activities["managed"] = $managed["managed"];
+	    ?>
+	    <table id="activity_table">
+		<?php if (count($activities["participate"])) { ?>
+		    <tr><td>
+			<div><?php require_once ("activities.phtml"); ?></div>
+		    </td></tr>
+		<?php } ?>
+		<?php if (count($activities["managed"])) { ?>
+		    <tr><td>
+			<div><?php require_once ("managed.phtml"); ?></div>
+		    </td></tr>
+		<?php } ?>
+		<?php if (count($activities["managed"]) == 0 &&
+			  count($activities["participate"]) == 0) { ?>
+		    <tr><td>&nbsp;</td></tr>
+		<?php } ?>
+	    </table>
 	</td><td>
 	    <div><?php require_once ("projects.phtml"); ?></div>    
 	</td></tr><tr><td>

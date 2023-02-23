@@ -1,3 +1,3 @@
 <?php
 
-$access = is_teacher() || is_director();
+$access = logged_in();

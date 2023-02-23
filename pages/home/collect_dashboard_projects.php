@@ -8,7 +8,7 @@ function collect_dashboard_projects($now)
     $wlist["cycle"] = [];
     foreach ($User["cycle"] as $cycle)
     {
-	$wlist["cycle"][] = $cycle["id"];
+	$wlist["cycle"][] = $cycle["id_cycle"];
     }
     $activities = [];
     $sesstmp = db_select_all("
@@ -18,7 +18,7 @@ function collect_dashboard_projects($now)
        LEFT JOIN user_team ON team.id = user_team.id_team
        WHERE subject_appeir_date <= '".db_form_date($now - 60 * 60 * 24)."'
          AND pickup_date >= '".db_form_date($now)."'
-         AND deleted = 0
+         AND deleted IS NULL
          AND user_team.id_user = {$User["id"]}
        ORDER BY pickup_date ASC
 	 ");

@@ -7,7 +7,7 @@ function convert_to_codename($str)
     for ($i = 0, $len = strlen($str); $i < $len; ++$i)
     {
 	if (preg_match('/[a-zA-Z]/', $str[$i]))
-	    $out .= $str[$i];
+	    $out .= strtolower($str[$i]);
     }
     return ($out);
 }

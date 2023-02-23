@@ -8,7 +8,7 @@ function test_single_filter($session, $wlist, $field)
     // On parcoure toutes les propositions, si on en trouve une, on ne retire pas l'element
     foreach ($session->$field as $cyc)
     {
-	if (array_search($cyc["id"], $wlist[$field]) !== false)
+	if (array_search($cyc["id_$field"], $wlist[$field]) !== false)
 	    return (false);
     }
     // On a pas trouvé la proposition sur un filtre donné, on retire

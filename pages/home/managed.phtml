@@ -1,10 +1,3 @@
-<?php
-$activities = collect_dashboard_activities(
-    time(),
-    first_day_of_week(time()) + 60 * 60 * 24 * 14,
-    true
-);
-?>
 <h2><?=$Dictionnary["ManagedActivities"]; ?>:</h2>
 <?php if (count($activities["managed"])) { ?>
     <table style="text-align: center;">
@@ -14,7 +7,7 @@ $activities = collect_dashboard_activities(
 	    <th><?=$Dictionnary["Hour"]; ?></th>
 	</tr>
 	<?php foreach ($activities["managed"] as $act) { ?>
-	    <tr>
+	    <tr class="home_activity">
 		<td>
 		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>&amp;b=<?=$act["id_session"]; ?>">
 			<?=$act["name"]; ?>

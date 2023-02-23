@@ -1,0 +1,17 @@
+
+.roomdiv
+{
+    box-shadow: 0px 1px 5px rgb(55, 55, 55);
+    border-radius: 5px;
+}
+
+.desk
+{
+    border: 3px solid black;
+    border-radius: 15px;
+}
+
+.roomdiv .info .scrollable
+{
+    background-color: red;
+}

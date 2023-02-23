@@ -106,7 +106,7 @@ if ($result != "")
 		<th style="width: 12%;"><img src="./res/configuration.png" /></th>
 	    </tr>
 	    <?php foreach ($Operations as $i => $ope) { ?>
-		<tr>
+		<tr style="border: 1px solid black;">
 		    <td><?=$i; ?></td>
 		    <td>
 			<div style="overflow: auto; width; height: 200px; text-align: left;">

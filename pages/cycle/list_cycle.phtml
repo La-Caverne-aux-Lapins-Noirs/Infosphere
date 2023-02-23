@@ -1,6 +1,6 @@
 <table class="content_table">
     <?php require ("head_cycle.phtml"); ?>
-    <?php if (count($cycles = fetch_cycle($page, $id, true, false, true)) == 0) { ?>
+    <?php if (count($cycles = fetch_cycle($page, $id, false, false, true)) == 0) { ?>
 	<tr><td colspan="<?=$columns; ?>"><?=$Dictionnary["NoCycle"]; ?></td></tr>
     <?php } else { ?>
 	<?php $cnt = 0; ?>

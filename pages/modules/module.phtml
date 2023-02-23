@@ -17,8 +17,8 @@ if ($module == NULL)
     <tr><td colspan="3" style="position: relative;">
 	<h2><?=$module->name ?: $module->codename; ?></h2>
 	<?php if (is_teacher_for_activity($module->id)) { ?>
-	    <a href="<?=unrollurl(["b" => 1]); ?>" style="position: absolute; width: 20%; left: calc((100% - 20%) / 2); top: 10px; text-align: center; z-index: 1;">
-		<?=$Dictionnary["ManageModule"]; ?>
+	    <a href="<?=unrollurl(["b" => 1]); ?>" style="position: absolute; width: 40%; left: calc((100% - 40%) / 2); top: 10px; text-align: center; z-index: 1; color: black;">
+		<?=$Dictionnary["ManageModule"]; ?> (<?=$module->codename; ?>)
 	    </a>
 	    <?php
 	    $link = [
@@ -26,7 +26,7 @@ if ($module == NULL)
 		"a" => $module->id
 	    ];
 	    ?>
-	    <a href="<?=unrollurl($link); ?>" style="position: absolute; right: 40px; top: 10px; z-index: 1;">
+	    <a href="<?=unrollurl($link); ?>" style="position: absolute; right: 40px; top: 10px; z-index: 1; color: black;">
 		<?=$Dictionnary["SeeInstanceConfiguration"]; ?>
 	    </a>
 	<?php } ?>
@@ -66,7 +66,7 @@ if ($module == NULL)
     <?php require_once ("grade_array.phtml"); ?>
 </td><td style="padding-top: 0px; text-align: center;">
 
-    <?php if ($module->subscription != FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
+    <?php if ($module->subscription != FullActivity::AUTOMATIC_SUBSCRIPTION || 1) { ?>
 
 	<?php if (!period($module->registration_date, $module->close_date)) { ?>
 	    <b><?=$Dictionnary["SubscriptionPeriodIsClose"]; ?></b>
@@ -76,20 +76,21 @@ if ($module == NULL)
 		<?php if ($module->registered) { ?>
 		    
 		    <?php if ($module->allow_unregistration == false) { ?>
-			<input type="button" value="<?=$Dictionnary["Subscribed"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
+			<input type="button" class="modulebutton" value="<?=$Dictionnary["Subscribed"]; ?>" style="width: 100%; height: 70px; font-size: large; border: 0;" />
 		    <?php } else { ?>
-			<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Unsubscribe"]; ?>" style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;" />
+			<input type="button" class="modulebutton" onclick="<?=$js; ?>" value="<?=$Dictionnary["Unsubscribe"]; ?>" style="width: 100%; height: 70px; font-size: large; border: 0;" />
 		    <?php } ?>
 		    
 		<?php } else if ($module->registered == false) { ?>
 		    <input
 			type="button"
 			onclick="<?=$js; ?>"
+			class="modulebutton" 
 			value="<?=$Dictionnary["Subscribe"]; ?>"
-			style="width: 100%; height: 70px; border-radius: 10px; font-size: large; border: 0;"
+			style="width: 100%; height: 70px; font-size: large; border: 0;"
 		    /><br /><br />
 		    <?php if ($module->allow_unregistration == false) { ?>
-			<b style="color: white;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>.</b><br />
+			<b style="color: red;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>.</b><br />
 		    <?php } ?>
 		<?php } ?>
 	    </form>
@@ -107,6 +108,7 @@ if ($module == NULL)
 	    </span>
 	<?php } ?>
 	<?php foreach ($module->medal as $medal) { ?>
+	    <?php if ($medal["role"] == 0) continue ; ?>
 	    <div
 		class="medal_box_picture"
 		style="
@@ -120,7 +122,7 @@ if ($module == NULL)
 		       <?php } ?>
 		       "
 	    >
-		<?php if (!isset($medal["module_medal"]) || $medal["module_medal"]) { ?>
+		<?php if ((!isset($medal["module_medal"]) || $medal["module_medal"])) { ?>
 		    <img
 			src="res/grade_<?=["d", "c", "b", "a"][$medal["role"] - 1]; ?>.png"
 			style="position: absolute; top: 0px; right: -10px; width: 40px; height: 40px;"

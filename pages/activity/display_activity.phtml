@@ -12,6 +12,14 @@ $js = "silent_submit(this)";
 <table id="down_edit_formular">
     <tr>
 	<td colspan="2"><div>
+	    <input type="text" readonly style="width: 100%; text-align: center;"
+		   <?php if ($module->id_template == -1) { ?>
+		   value="<?=$Dictionnary["NoTemplate"]; ?>"
+		   <?php } else { ?>
+		   value="<?=$Dictionnary["BasedOn"]." ".$module->template_codename." - ".($module->template_link ? $Dictionnary["ActiveLink"] : $Dictionnary["BrokenLink"]); ?>"
+		   <?php } ?>
+	    />
+	    <input type="text" readonly style="width: 100%; text-align: center;" value="<?=$module->codename; ?>" />
 	    <?php edit_codename_form($page, $module); ?>
 	    <?php edit_type_form($page, $module); ?>
 	    <form
@@ -191,13 +199,13 @@ $js = "silent_submit(this)";
 	    ?>
 	    <form
 		method="delete"
-		onsubmit="return <?=$js; ?>;"
+		onsubmit="return window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
 		action="/api/<?=$page; ?>/<?=$module->id; ?>"
 	    >
 		<input
 		    type="button"
 		    class="delete_wide"
-		    onclick="<?=$js; ?>;"
+		    onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
 		    value="&#10007;"
 		/>
 	    </form>
@@ -316,7 +324,7 @@ $js = "silent_submit(this)";
 		    <?php if ($k != "NA") { ?>
 			<?php $js = "silent_submit(this)"; ?>
 			<?php $field = "name"; ?>
-			<form onsubmit="<?=$js; ?>" method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>">
+			<form onsubmit="return <?=$js; ?>;" method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>">
 			    <?php if (is_teacher_for_activity($module->id) && $k != "NA") { ?>
 				<input type="button" onclick="<?=$js; ?>" value="&#10003;" />
 			    <?php } ?>
@@ -469,7 +477,7 @@ $js = "silent_submit(this)";
 				type="file"
 				name="file"
 				multiple="true"
-				onchange="document.getElementById('path<?=$k; ?>2').value = document.getElementById('path<?=$k; ?>').value; <?=$js; ?>"
+				onchange="document.getElementById('path<?=$k; ?>2').value = document.getElementById('pathfile_browser<?=$k; ?>').value; <?=$js; ?>"
 			    />
 			</form>
 		    <?php } ?>

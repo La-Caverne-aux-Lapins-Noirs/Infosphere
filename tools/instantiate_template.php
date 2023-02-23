@@ -110,6 +110,14 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
     else
 	$template = "1, $act->id, 1, 1, 1";
 
+    $ret = db_select_one("
+      * FROM activity
+      WHERE is_template = 0
+      AND id_template = {$act->id}
+      AND codename = '$codename'
+    ");
+    if ($ret != NULL)
+	return (new ValueResponse($ret["id"]));
     if ($Database->query("
       INSERT INTO activity
         (is_template,
@@ -154,6 +162,8 @@ function instantiate_template($activity, $sdate, $prefix = "", $suffix = "", $pa
 {
     global $Database;
 
+    if ($parent === NULL)
+	$parent = -1;
     if ($activity->is_template == false)
 	return (new ErrorResponse("InvalidParameter"));
     $sdate = first_second_of_day($sdate);

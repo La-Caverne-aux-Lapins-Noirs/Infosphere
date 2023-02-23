@@ -41,6 +41,7 @@ $MedalColor = [
 		/>
 	    <?php } ?>
 	</a>
+	<br /><span style="font-size: x-small;"><?=$medal["codename"]; // Temporaire, utile car les médailles sont illisibles pour l'instant ?></span><br />
 	<?php if (is_teacher_for_activity($module->id)) { ?>
 
 	    <form
@@ -84,7 +85,21 @@ $MedalColor = [
 		    </select>
 		</form>
 	    <?php } else { ?>
-		<?php single_field_form($page, $module, "mark", "Mark"); ?>
+
+		<form
+		    method="put"
+		    onsubmit="return <?=$js; ?>;"
+		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+		>
+		    <label for="mark"><?=$Dictionnary["Mark"]; ?></label>
+		    <input type="hidden" id="previous_value_mark" value="<?=$medal["mark"]; ?>" />
+		    <input
+			type="text"
+			name="mark"
+			value="<?=$medal["mark"]; ?>"
+			onchange="delay_before_submit(1000, this, 'mark');"
+		    />
+		</form>
 	    <?php } ?>
 	    <form
 		class="check_formular"

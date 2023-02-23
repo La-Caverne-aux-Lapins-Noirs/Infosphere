@@ -4,10 +4,10 @@ $Full = ["activity", "instance", "session"];
 $Instance = ["activity", "instance"];
 $Activity = ["activity"];
 
-function	have_rights($id_activity, $teacher = true) // teacher (true) or assistant (false)
+function have_rights($id_activity, $teacher = true) // teacher (true) or assistant (false)
 {
-    global	$User;
-    global	$Full;
+    global $User;
+    global $Full;
 
     if (!isset($User))
 	return (false);

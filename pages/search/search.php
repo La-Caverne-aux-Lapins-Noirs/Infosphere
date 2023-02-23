@@ -38,7 +38,7 @@ function search($codename)
 		    continue ;
 		if ($name == "user")
 		{
-		    $r["icon"] = $Configuration->UsersDir($r["codename"])."/icon.png";
+		    $r["icon"] = $Configuration->UsersDir($r["codename"])."/photo.png";
 		    if (!file_exists($r["icon"]))
 			$r["icon"] = "res/no_avatar.png";
 		}

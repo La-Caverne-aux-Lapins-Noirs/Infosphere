@@ -83,6 +83,11 @@ function try_insert(
 		$icon = base64_decode($icon);
 	    if (file_put_contents($icon_file, $icon) === false)
 		return (new ErrorResponse("CannotWritePngFile"));
+	    if (imagecreatefrompng($icon_file) === false)
+	    {
+		unlink($icon_file);
+		return (new ErrorResponse("BadFileFormat"));
+	    }
 	}
     }
     $forge = "

@@ -1,0 +1,28 @@
+    <tr>
+	<td colspan="4" style="text-align: right;">
+	    <?=$Dictionnary["CreditTotal"]; ?> :&nbsp;&nbsp;
+	</td>
+	<!--<td><?=$Grade[round($grade_avg / $cnt)]; ?></td>-->
+	<td><?=$credit_sum; ?></td>
+	<td><?=$credit_available; ?></td>
+    </tr>
+    <tr>
+	<td colspan="4" style="text-align: right;">
+	    <?=$Dictionnary["ECTSEquivalent"]; ?> :&nbsp;&nbsp;
+	</td>
+	<td><?=sprintf("%d", round($credit_sum / (1000 / 180))); ?></td>
+	</td>
+	<td><?=sprintf("%d", round($credit_available / (1000 / 180))); ?></td>
+    </tr>
+</table>
+<br />
+<div style="width: 100%; min-height: 200px; border: 1px solid gray; text-align: justify;">
+    <b style="position: relative; top: 5px; left: 5px;">
+	<?=$Dictionnary["GeneralComment"]; ?>:
+    </b><br /><br />
+    <?php foreach ($user->sublayer as $cycle) { ?>
+	<?=$cycle->commentaries; ?>
+    <?php } ?>
+</div>
+</div>
+

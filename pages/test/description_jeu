@@ -1,0 +1,29 @@
+"Le Dérision PHP" est un jeu de gestion et stratégie en temps réel.
+Ses spécificités sont les suivantes: l'existence de carburant et de nourriture, la possibilité
+d'envoyer des troupes sur un territoire et d'y rester (en consommant carburant et nourriture)
+ainsi que le fait que la transmission d'ordre depuis une base "connecté" (c'est à dire sans délai
+de transmision) prenne un certain temps et puisse être intercepté voir bloqué.
+
+Il est possible de construire à l'exterieur de toute base, il est possible d'établir des
+connexions entre base afni de permettre le fameux niveau de transmission sans délai, il est donc
+aussi possible de détruire ces connexions chez les adversaires.
+
+Les transmetteurs porté par les sondes d'espionnage et les troupes peuvent etre comprises par
+un adversaire qui peut donc voir d'ou viennent les ordres, quels sont les derniers ordres, etc,
+cela a condition d'effectuer une prise "surprise" ou que le propriétaire eu fait preuve de negligeance
+quand il a manipulé la sonde.
+
+Il y a un brouillard de guerre, donc pour être sur qu'une troupe/base externe non connecté existe,
+il faut le temps d'un message aller-retour.
+
+Il existe des bassins de ressource naturelle, des constructions specifiques peuvent etre
+faite dessus et sont plutot couteuse quand elles sont efficace: il s'agit donc de travailler
+en alliance et de les financer.
+
+La construction d'un batiment neccessite d'y déplacer les ressources requises
+=> il faut une unité un peu comme un dupliquant capable de se déplacer et tout et tout...
+
+Le fonctionnement des batiments neccessite de la main d'oeuvre
+=> cela veut dire qu'on peut construire une nouvelle usine... sans main d'oeuvre ca ne sert a rien
+=> cela veut dire que pour déménager, il suffit de construire, et de déplacer ensuite la main d'oeuvre
+=> cela veut dire qu'on peut trouver des technos "a l'abandon": on peut produire avec, mais pas les reproduire sans recherche

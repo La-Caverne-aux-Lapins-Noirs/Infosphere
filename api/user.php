@@ -81,6 +81,54 @@ function RegeneratePassword($id, $data, $method, $output, $module)
     ]));
 }
 
+function SetUserProperties($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $Configuration;
+
+    if ($id == -1)
+	bad_request();
+    $id = (int)$id;
+
+    $usr = db_select_one("codename, mail FROM user WHERE id = $id");
+    if ($usr == NULL)
+	bad_request();
+    $codename = $usr["codename"];
+    $mail = $usr["mail"];
+    if (isset($data["mail"]) && $data["mail"] == $mail)
+	unset($data["mail"]);
+    unset($data["action"]);
+    if (isset($data["birth_date"]))
+	$data["birth_date"] = db_form_date($data["birth_date"]);
+    if (isset($data["avatar"]))
+    {
+	if (!isset($data["type"]))
+	    $data["type"] = "set_avatar";
+	if (!is_admin() && $data["type"] != "set_avatar")
+	    $data["type"] = "set_avatar";
+	
+	$target = $Configuration->UsersDir($codename);
+	if ($data["type"] == "set_avatar")
+	    $target .= "avatar.png";
+	else
+	    $target .= "photo.png";
+
+	$data["avatar"] = base64_decode($data["avatar"][0]["content"]);
+	if (file_put_contents($target, $data["avatar"]) === false)
+	    return (new ErrorResponse("CannotWritePngFile"));
+	unset($data["type"]);
+	unset($data["avatar"]);
+    }
+    if (count($data))
+    {
+	if (($request = set_user_data($id, $data))->is_error())
+	    return ($request);
+    }
+    return (new ValueResponse([
+	"msg" => $Dictionnary["Edited"]
+    ]));
+}
+
 function SetUserLink($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -161,6 +209,14 @@ $Tab = [
 	    "is_me_or_admin",
 	    "RegeneratePassword"
 	],
+	"properties" => [
+	    "is_me_or_admin",
+	    "SetUserProperties",
+	],
+	"set_avatar" => [
+	    "is_me_or_admin",
+	    "SetUserProperties",
+	],
 	"user" => [
 	    "only_admin",
 	    "SetUserLink",
@@ -185,6 +241,7 @@ $Tab = [
 	],
 	"user" => [
 	    "only_admin",
+
 	    "SetUserLink",
 	],
 	"school" => [

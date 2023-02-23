@@ -8,8 +8,17 @@ function pf($str)
 $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 ?>
 <style>
+ 
+ input[type="checkbox"]
+ {
+     width: 50px !important;
+ }
  label
  {
+     vertical-align: top;
+     font-size: 25px !important;
+     width: calc(50% - 56px) !important;
+     display: inline-block;
      text-align: left !important;
      margin-left: 10px;
  }
@@ -21,6 +30,18 @@ $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
  #fullpage_form p
  {
      top: 6%;
+ }
+ <?php } else { ?>
+ #prospect
+ {
+     position: absolute;
+     top: 10px;
+     right: 10px;
+     opacity: 0.5;
+     width: 20px !important;
+     height: 20px !important;
+     font-size: 15px !important;
+     line-height: 15px !important;
  }
  <?php } ?>
 </style>
@@ -36,8 +57,12 @@ $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 <form
     id="fullpage_form"
     method="POST"
-    action="index.php?p=<?=$PreviousPosition; ?>"
->
+    <?php if ($prospect == false) { ?>
+	action="index.php?p=<?=$PreviousPosition; ?>"
+    <?php } else { ?>
+	action="<?=unrollurl(); ?>"
+    <?php } ?>
+    >
     <?php if ($prospect) { ?>
 	<h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
 	<p>
@@ -86,6 +111,16 @@ $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 		name="phone"
 		placeholder="<?=$Dictionnary["Phone"]; ?>*"
 		value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
+		required
+	    />
+	    <br />
+
+	    <?=$Dictionnary["PreferedHourToBeCalledBack"] ?><br />
+	    <input
+		type="time"
+		name="prefered_hour"
+		placeholder="<?=$Dictionnary["CallbackHour"]; ?>*"
+		value="<?=isset($_POST["prefered_hour"]) ? $_POST["prefered_hour"] : ""; ?>"
 		required
 	    />
 	    <br />
@@ -151,30 +186,40 @@ $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 		name="accept_privacy"
 		type="checkbox"
 		<?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
+		required
 	    />
 	    <label for="accept_privacy"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
 	    <br />
 
-	    <textarea readonly
-		style="resize: none;
-		       height: 100px;
-		       font-size: small;
-		       line-height: 1em;
-		       text-align: justify;
-		       "
-	    ><?php require ("rules.txt"); ?></textarea>
-	    <br />
-	    <input
-		name="accept_rules"
-		type="checkbox"
-		<?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
-	    />
-	    <label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
-	    <br />
+	    <?php if ($Configuration->Properties["subscription_possible"]) { ?>
+		<textarea readonly
+			  style="resize: none;
+				 height: 100px;
+				 font-size: small;
+				 line-height: 1em;
+				 text-align: justify;
+				 "
+		><?php require ("rules.txt"); ?></textarea>
+		<br />
+		<input
+		    name="accept_rules"
+			  type="checkbox"
+			  <?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
+		/>
+		<label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
+		<br />
+	    <?php } ?>
 
 	    <input type="submit" value="<?=$Dictionnary["Send"]; ?>" />
 	</p>
     <?php } else { ?>
+	<input
+	    id="prospect"
+	    type="button"
+	    onclick="document.location='index.php?p=Subscribe&amp;prospect=1';"
+	    value="P"
+	/>
+
 	<h2><?=$Dictionnary["Subscribe"]; ?></h2>
 	<p>
 	    <input type="hidden" name="logaction" value="subscribe" />

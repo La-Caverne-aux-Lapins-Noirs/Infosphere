@@ -21,6 +21,7 @@
 		<?php foreach ($all as $ma) { ?>
 		    <?php if ($ma["parent_activity"] == NULL) continue ; ?>
 		    <?php if ($ma["is_template"] != 0) continue ; ?>
+		    <?php if (date_to_timestamp($ma["end_date"]) < now() - 60 * 60 * 24 * 50) continue ; ?>
 		    <tr><td>
 			<a href="index.php?p=ModulesMenu&amp;a=<?=$ma["parent_activity"]; ?>">
 			    <?=@strlen($ma["matter_name"]) ? $ma["matter_name"] : $ma["matter_codename"]; ?>

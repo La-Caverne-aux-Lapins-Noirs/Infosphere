@@ -7,9 +7,9 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
 
     if (($years = fetch_data(
 	"cycle", $id, ["name"], "codename", $by_name, true, true, ["is_template" => $type == "cursus"], [
-	    // En SQL, l'index 0 est l'index 1... WTF.
-	    "cycle.done ASC, SUBSTRING(cycle.codename, 1, 4) ASC, cycle.cycle ASC"
-	    // "SUBSTRING(cycle.codename, 1, 8) ASC, cycle.cycle ASC"
+	    "cycle.done ASC",
+	    "SUBSTRING(cycle.codename, 1, 4) ASC", // En SQL, l'index 0 est l'index 1... WTF.
+	    "cycle.cycle ASC" // "SUBSTRING(cycle.codename, 1, 8) ASC, cycle.cycle ASC"
     ])
     )->is_error())
 	return ([]);
@@ -103,6 +103,8 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               activity.codename as codename,
               activity.emergence_date as emergence_date,
               activity.subscription as subscription,
+	      activity.credit_d,
+              activity.credit_a,
               template.{$Language}_name as name
               FROM activity_cycle
               LEFT JOIN activity ON activity_cycle.id_activity = activity.id
@@ -111,6 +113,13 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
                 AND activity.deleted IS NULL
                 AND activity.disabled IS NULL
 	      ");
+	    $v["min_credit"] = 0;
+	    $v["max_credit"] = 0;
+	    foreach ($v["activity"] as $act)
+	    {
+		$v["min_credit"] += $act["credit_d"];
+		$v["max_credit"] += $act["credit_a"];
+	    }
 	}
     }
     if ($id != -1 && 0)

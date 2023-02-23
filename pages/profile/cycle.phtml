@@ -1,7 +1,15 @@
 <?php
 if (!isset($cycle_stack))
     $cycle_stack = $user->merged_sublayers;
-$curcycle = $cycle_stack[array_key_first($cycle_stack)]->matters;
+$curcycle = ($cyc = $cycle_stack[array_key_first($cycle_stack)])->matters;
+$min_credit = 0;
+$max_credit = 0;
+$cur_credit = 0;
+foreach ($curcycle as $module) {
+    $min_credit += $module->credit_d;
+    $max_credit += $module->credit_a;
+    $cur_credit += $module->get_credit();
+}
 ?>
 <style>
  .profile_matter td, .profile_matter th
@@ -22,7 +30,29 @@ $curcycle = $cycle_stack[array_key_first($cycle_stack)]->matters;
  }
 
 </style>
-<table class="profile_matter" style="width: 100%;"><tr><th style="width: 20%;">
+<table><tr><td style="text-align: center; font-size: small;">
+    <br />
+    <?=$Dictionnary["Credits"]." : $cur_credit / ($min_credit - $max_credit)"; ?>
+    <br /><br />
+</td><td>
+    
+</td><td>
+    <?php if (is_admin()) { ?>
+	<?php
+	$modules = [];
+	foreach ($curcycle as $module)
+	    $modules[] = $module->id;
+	?>
+	<form method="post" action="<?=unrollurl(["silent" => 1, "modules" => implode(",", $modules), "id_cycle" => $cyc->id]); ?>" target="_blank">
+	    <input
+		type="submit"
+		value="<?=$Dictionnary["GenerateReportCard"]; ?>"
+		style="width: 100%; height: 30px;"
+	    />
+	</form>
+    <?php } ?>
+</td></tr></table>
+<table class="profile_matter" style="width: 100%; border-top: 1px solid black;"><tr><th style="width: 20%;">
     <?=$Dictionnary["Module"]; ?>
 </th><th style="width: 10%;">
     <?=$Dictionnary["AvailableCredits"]; ?>
@@ -53,15 +83,23 @@ $neutral = "255, 255, 255, 0.0";
 	<?=sprintf("%02d", $module->credit_b); ?>
 	<?=sprintf("%02d", $module->credit_a); ?>
     </td><td style="font-size: x-small;">
-	<?=$module->acquired_credit; ?>
+	<?=$module->get_credit(); ?>
     </td><td style="font-size: x-small;">
 	<div
-	    <?php $grade = ["empty", "grade_e", "grade_d", "grade_c", "grade_b", "grade_a"]; ?>
+	    <?php
+	    $grade = [
+		"empty", "grade_e", "grade_d", "grade_c", "grade_b", "grade_a", "grade_a"
+	    ];
+	    if ($module->done_date != NULL && date_to_timestamp($module->done_date) < now())
+		$func = $grade[$module->grade + 1];
+	    else
+		$func = "";
+	    ?>
 	    class="medal_box_picture"
 	    style="
 		   margin-left: 10px; margin-right: 10px;
 		   background-position: center center;
-		   background-image: url('dres/medals/<?=$grade[$module->grade + 1]; ?>/icon.png;');
+		   background-image: url('/genicon.php?function=<?=$func; ?>');
 		   width: 50px !important;
 		   height: 50px !important;
 		   border-radius: 50px;
@@ -71,7 +109,7 @@ $neutral = "255, 255, 255, 0.0";
     </td><td style="height: 56px;">
 	<div class="full_size_table" style="overflow-y: auto; height: 56px; scrollbar-width: 5px;">
 	    <?php foreach ($module->medal as $medal) { ?>
-		<?php if ($medal["type"] != 0) continue ; ?>
+		<?php if ($medal["type"] != 0 || ($medal["role"] == 0 && $medal["success"] == 0)) continue ; ?>
 		<div
 		    class="medal_box_picture"
 		    style="
@@ -93,9 +131,9 @@ $neutral = "255, 255, 255, 0.0";
 			   <?php } ?>
 			   "
 		>
-		    <?php if ($medal["module_medal"]) { ?>
+		    <?php if ($medal["module_medal"] && $module->validation == FullActivity::RANK_VALIDATION && $medal["role"] != 0) { ?>
 			<img
-			    src="res/grade_<?=["d", "c", "b", "a"][$medal["role"] - 1]; ?>.png"
+			    src="res/grade_<?=["d", "c", "b", "a", "a"][$medal["role"] - 1]; ?>.png"
 			    style="position: absolute; top: 0px; right: -10px; width: 20px; height: 20px;"
 			/>
 		    <?php } ?>
@@ -103,6 +141,12 @@ $neutral = "255, 255, 255, 0.0";
 			<img
 			    src="res/local.png"
 			    style="position: absolute; bottom: 0px; right: -10px; width: 20px; height: 20px;"
+			/>
+		    <?php } ?>
+		    <?php if ($medal["success"] == 0 && $medal["failure"] > 0) { ?>
+			<img
+			    src="res/cross.png"
+			    style="position: absolute; bottom: 0px; left: -10px; width: 30px; height: 30px;"
 			/>
 		    <?php } ?>
 		</div>
@@ -138,7 +182,11 @@ $neutral = "255, 255, 255, 0.0";
 			    <?=$activity->name ?: $activity->codename; ?>
 			</a>
 		    </td><td>
-			<?=$Dictionnary[$ActivityType[$activity->type]["codename"]]; ?>
+			<?php if ($activity->type != -1) { ?>
+			    <?=$Dictionnary[$ActivityType[$activity->type]["codename"]]; ?>
+			<?php } else { ?>
+			    /
+			<?php } ?>
 		    </td><td>
 			<?php ($sess = new FullActivity)->build($activity->id, false, true, $activity->id_session); ?>
 			<?php if ($activity->id_session != -1 && $sess->type_type == 2) { ?>

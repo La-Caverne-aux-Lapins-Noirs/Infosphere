@@ -52,6 +52,7 @@ function AddMedal($id, $data, $method, $output, $module)
     // Est ce qu'on va générer l'icone?
     else
     {
+	$content = "";
 	// Y a t il une configuration determinée?
 	if (isset($data["configuration"]) && @strlen($data["configuration"]))
 	    $conf = resolve_path($data["configuration"]);
@@ -63,7 +64,7 @@ function AddMedal($id, $data, $method, $output, $module)
 	$command = "genicon $shape $codename -c $conf";
 
 	// Y a t il une icone issue de la réserve de ressources?
-	if (isset($data["picture"]))
+	if (isset($data["picture"]) && $data["picture"] != "")
 	{
 	    $picture = $Configuration->MedalsDir(".ressources").resolve_path($data["picture"]);
 	    if (!file_exists($picture))
@@ -76,6 +77,10 @@ function AddMedal($id, $data, $method, $output, $module)
 	    $command .= " -s $specificator";
     }
 
+    new_directory($target."/icon.png");
+    if ($content == "")
+	if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
+	    bad_request();
 End:
     if (isset($data["edit"]) && $data["edit"])
 	$ins = @try_update("medal", $codename, [
@@ -91,9 +96,7 @@ End:
 	], $content, $target, ["name" => false, "description" => false], $data);
     if ($ins->is_error())
 	return ($ins);
-    
-    if (($content = shell_exec("DISPLAY=:1 $command | base64 -w 0")) === false)
-	bad_request();
+
     if (isset($data["icon"][0]["content"]))
     {
 	if ($shape == "sband")

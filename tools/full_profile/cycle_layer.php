@@ -48,7 +48,7 @@ class CycleLayer extends Layer
            LEFT JOIN activity as template ON activity.id_template = template.id
            WHERE activity_cycle.id_cycle = $cycle_id
 	     AND user_team.id_user = $user_id
-             AND activity.parent_activity IS NULL
+             AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)
              AND activity.is_template = 0
            AND activity.deleted IS NULL GROUP BY activity.id
 	");
@@ -64,7 +64,7 @@ class CycleLayer extends Layer
 		"id", "codename", "name", "description", "credit_a", "credit_b", "credit_c", "credit_d", "hidden", "template_codename",
 		"is_teacher", "closed", "commentaries", "validation_by_percent", "old_validation", "subscription",
 		"grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "grade_module", "allow_unregistration", "no_grade",
-		"emergence_date", "done_date", "registration_date", "close_date"
+		"emergence_date", "done_date", "registration_date", "close_date", "validation"
 	    ];
 	    transfert($fields, $sub, $module);
 	    if ($module->user_team)
@@ -83,7 +83,7 @@ class CycleLayer extends Layer
 		    "success" => 0,
 		    "success_list" => [],
 		    "local_sum" => 0
-		]);
+		], isset($sub->medal[$med["codename"]]) ? $sub->medal[$med["codename"]] : []);
 		$sub->medal[$med["codename"]]["module_medal"] = true;
 	    }
 	    $sub->buildsub($user_id, $module_id, $blist);

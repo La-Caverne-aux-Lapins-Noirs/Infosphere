@@ -13,6 +13,17 @@
     
 <?php } else { ?>
 
+    <?php
+    $instances = db_select_all("
+                id, codename
+                FROM activity
+                WHERE id_template = {$module->id}
+                AND deleted IS NULL
+                AND template_link = 1
+                AND (done_date > NOW() OR done_date IS NULL)
+    ");
+    ?>
+
     <div>
 	<?php $js = "silent_submit(this, 'list_of_instances{$module->id}');"; ?>
 	<h4 style="text-align: center;"><?=$Dictionnary["Instantiate"]; ?></h4>
@@ -26,6 +37,9 @@
 	    <input type="date" name="start_date" value="" style="width: 49%;" />
 	    <select name="parent" style="width: 49%;">
 		<option value=""><?=$Dictionnary["ParentInstanceName"]; ?></option>
+		<?php foreach ($instances as $instance) { ?>
+		    <option value="<?=$instance["codename"]; ?>"><?=$instance["codename"]; ?></option>
+		<?php } ?>
 	    </select>
 	    <br />
 	    <input type="hidden" name="action" value="instantiate" />
@@ -33,22 +47,14 @@
 	</form>
 	<br />
 	<h4 style="text-align: center;"><?=$Dictionnary["LivingInstances"]; ?></h4>
-	<?php
-	$instances = db_select_all("
-                id, codename
-                FROM activity
-                WHERE id_template = {$module->id}
-                AND deleted IS NULL
-                AND template_link = 1
-                AND done_date > NOW()
-	");
-	?>
 	<div class="sublist_of_link" id="list_of_instances<?=$module->id; ?>">
 	    <?php if (count($instances)) { ?>
 		<?php foreach ($instances as $instance) { ?>
-		    <div><a href="<?=inside_link("instances", $instance["id"]); ?>">
-			<?=$instance["codename"]; ?>
-		    </a></div>
+		    <div>
+			<a href="<?=inside_link("instances", $instance["id"]); ?>">
+			    <?=$instance["codename"]; ?>
+			</a>
+		    </div>
 		<?php } ?>
 	    <?php } else { ?>
 		<div>/</div>
@@ -76,13 +82,34 @@
 <?php } ?>
 
 <?php if ($module->parent_activity != -1) { ?>
-
+   
     <br />
-    <?php single_field_with_ok_form($page, ["id" => $module->id, "codename" => ""], "new_father", "NewParentModule", NULL, NULL, "", "", "silent_submit(this); location.reload();"); ?>
+    <?php single_field_with_ok_form($page, ["id" => $module->id, "codename" => ""], "new_father", "NewParentModule", "move", NULL, "", "put", "silent_submit(this);"); ?>
 <?php } else { ?>
 
     <br />
     <a class="button_link" href="A FAIRE"><?=$Dictionnary["ExportSyllabus"]; ?></a>
     <a class="button_link" href="A FAIRE"><?=$Dictionnary["ExportModel"]; ?></a>
 
+    <?php if ($module->id_template != -1) { ?>
+	<?php $js = "silent_submit(this);"; ?>
+	<form method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>/template_link">
+	<?php if ($module->template_link) { ?>
+	    <input type="button" class="button_link" style="font-size: x-small; width: 100%; border-radius: 5px; color: orange;"
+		   onclick="<?=$js; ?>" value="<?=$Dictionnary["FullBreakTemplateLink"]; ?>"
+	    />
+	<?php } else { ?>
+	    <input type="button" class="button_link" style="font-size: x-small; width: 100%; border-radius: 5px; color: yellow;"
+		   onclick="<?=$js; ?>" value="<?=$Dictionnary["RestoreTemplateLink"]; ?>"
+	    />
+	<?php } ?>
+	</form>
+	<form method="put" action="/api/<?=$page; ?>/<?=$module->id; ?>/reset_template_link">
+	    <input type="button" class="button_link" style="font-size: x-small; width: 100%; border-radius: 5px; color: red;"
+		   onclick="<?=$js; ?>" value="<?=$Dictionnary["ResetTemplateLink"]; ?>"
+	    />
+	</form>
+    <?php } ?>
+
 <?php } ?>
+

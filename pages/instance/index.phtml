@@ -38,7 +38,7 @@ if (count($activity->medal) > 0)
     $left_panel[$Dictionnary["Medals"]] = __DIR__."/medals.php";
 if (count($activity->session) > 1)
     $left_panel[$Dictionnary["OtherSessions"]] = __DIR__."/other_sessions.php";
-if (isset($activity->user_team["id"]) && $activity->min_team_size > 1)
+if (isset($activity->user_team["id"]) && $activity->max_team_size > 1)
     $left_panel[$Dictionnary["Team"]] = __DIR__."/team.php";
 
 ob_start();
@@ -74,8 +74,8 @@ $right_panel = [
 
 ob_start();
 $cnt = 0;
-$cnt += display_ressources("./dres/activity/".$activity->template_codename."/ressources/*");
-$cnt += display_ressources("./dres/activity/".$activity->codename."/ressources/*");
+$cnt += display_ressources("./dres/activity/".$activity->template_codename."/".$Language."/ressource/*");
+$cnt += display_ressources("./dres/activity/".$activity->codename."/".$Language."/ressource/*");
 $list = ob_get_contents();
 ob_get_clean();
 if ($cnt > 0)
@@ -109,6 +109,7 @@ if ($activity->is_teacher)
  .background
  {
      background-size: cover;
+     background-position: center center;
      color: white;
      font-weight: bold;
      text-shadow: -1px -0px 0px white;

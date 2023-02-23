@@ -48,6 +48,18 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "EditActivity"
 	],
+	"template_link" => [
+	    "is_teacher_for_activity",
+	    "EditTemplateLink"
+	],
+	"reset_template_link" => [
+	    "is_teacher_for_activity",
+	    "ResetTemplateLink"
+	],
+	"move" => [
+	    "is_teacher_for_activity",
+	    "MoveActivity",
+	],
 	"cycle" => [
 	    "is_director_for_activity",
 	    "SetActivityLink"
@@ -95,6 +107,10 @@ $Tab = [
 	"registration" => [
 	    "everybody", // Autorisation trop complexe pour etre ici.
 	    "SetActivityRegistration",
+	],
+	"pickup" => [
+	    "is_teacher_for_activity",
+	    "PickupActivity",
 	],
     ],
     "DELETE" => [

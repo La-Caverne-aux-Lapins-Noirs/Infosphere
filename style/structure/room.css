@@ -4,7 +4,6 @@
     margin-top: 10px;
     width: calc(100% - 10px);
     height: 500px;
-    border: 1px solid black;
     position: relative;
     overflow-x: auto;
 }
@@ -36,8 +35,6 @@
     position: absolute;
     width: 15px;
     height: 15px;
-    border: 3px solid black;
-    border-radius: 15px;
     background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -55,7 +52,6 @@
 .roomdiv .info .scrollable
 {
     height: 100px;
-    background-color: red;
 }
 
 .roomdiv .info .deskinfo

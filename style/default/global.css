@@ -11,20 +11,6 @@
     font-family: futura;
 }
 
-.content_table
-{
-}	
-
-.content_even
-{
-    background-color: rgba(255, 0, 0, 0.1);
-}
-
-.content_odd
-{
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
 #loading_screen1, #loading_screen2
 {
     background-color: black;
@@ -65,7 +51,21 @@
 
 .sublist_of_link div input[type="button"]
 {
-    border-radius: 10px;
+    border-radius: 5px;
+}
+
+input[type="submit"], input[type="button"]
+{
+    border-radius: 5px;
+    border: 0; /* 2px outset rgb(180, 165, 165); */
+    background-color: rgb(55, 55, 55);
+    color: rgb(200, 143, 26);
+    transition: background-color 0.4s;
+}
+
+input[type="submit"]:hover, input[type="button"]:hover
+{
+    background-color: rgba(45, 48, 59);
 }
 
 .click_list
@@ -136,4 +136,10 @@
 .big_top_table td
 {
     vertical-align: top;
+}
+
+#body
+{
+    background-color: rgb(250, 249, 249);
+    box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
 }

@@ -5,7 +5,11 @@ function DisplayCycles($id, $data, $method, $output, $module)
     global $Dictionnary;
 
     $page = $module;
-    $cycles = fetch_cycle($module, $id, true, false, true);
+    $cycles = fetch_cycle($module, $id, false, false, true);
+    if ($module == "cursus")
+	$_GET["p"] = "CycleTemplateMenu";
+    else
+	$_GET["p"] = "CycleMenu";
     if ($output == "json")
 	return (new ValueResponse(["content" => json_encode($cycles, JSON_UNESCAPED_SLASHES)]));
     ob_start();
@@ -205,6 +209,7 @@ function SetSchool($id, $data, $method, $output, $module)
 
 function InstantiateCycle($id, $data, $method, $output, $module)
 {
+    global $Dicitonnary;
     global $Database;
     
     if ($id == -1)
@@ -222,7 +227,7 @@ function InstantiateCycle($id, $data, $method, $output, $module)
 	$name = $cycle["codename"]."_".datex("d_m_Y", $first_week);
     else
 	$name = $data["instance_name"];
-    if (($ret = add_cycle($name, $cycle["cycle"], $first_week, $cycle["id"]))->is_error())
+    if (($ret = add_cycle($name, $cycle["cycle"], $cycle, $first_week, $cycle["id"]))->is_error())
 	return ($ret);
     $ret = $ret->value;
     // L'id du cycle créé

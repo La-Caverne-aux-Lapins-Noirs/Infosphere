@@ -26,6 +26,7 @@ class CConfiguration
 	if (!is_dir($dir))
 	{
 	    new_directory($dir."public/index.php");
+	    new_directory($dir."www/index.php");
 	    new_directory($dir."personnal/index.php");
 	    new_directory($dir."admin/index.php");
 	}

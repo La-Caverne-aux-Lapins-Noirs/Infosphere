@@ -9,7 +9,10 @@ function transfert($fields, &$obj, $array)
 	{
 	    if (isset($array[$label]) && $array[$label] != NULL)
 	    {
-		$obj->$label = $array[$label];
+		if (is_array($obj))
+		    $obj[$label] = $array[$label];
+		else
+		    $obj->$label = $array[$label];
 	    }
 	}
     }
@@ -17,9 +20,12 @@ function transfert($fields, &$obj, $array)
     {
 	foreach ($fields as $label)
 	{
-	    if (isset($array->$label) && $array->$label != NULL && isset($obj->$label))
+	    if (isset($array->$label) && $array->$label != NULL)
 	    {
-		$obj->$label = $array->$label;
+		if (is_array($obj))
+		    $obj[$label] = $array->$label;
+		else
+		    $obj->$label = $array->$label;
 	    }
 	}
     }

@@ -1,7 +1,13 @@
 <div
     id="module_<?=$mod["id"]; ?>"
     onclick="list_activities(<?=$mod["id"]; ?>);"
-    style="width: 99%; float: left;"
+    style="
+	width: 99%;
+	float: left;
+	<?php if ($mod["done_date"] != NULL && date_to_timestamp($mod["done_date"]) < now() && $mod["is_template"] == false) { ?>
+	color: rgba(0, 0, 0, 0.4);
+	<?php } ?>
+	"
     class="entry select_module"
     >
     <div class="activity_name_list_item">
@@ -14,7 +20,7 @@
 	<?php if ($template == false) { ?>
 
 	    <?php $txt = 'title="'.$Dictionnary["IsTemplateLinkActive"].'"'; ?>
-	    <?php if ($mod["template_link"]) { ?>
+	    <?php if ($mod["template_link"] && $mod["id_template"] != -1) { ?>
 		<span style="color: green;" <?=$txt; ?>>&#128279;&#xFE0E;</span>
 	    <?php } else { ?>
 		<span style="color: red;" <?=$txt; ?>>&#128279;&#xFE0E;</span>

@@ -24,6 +24,11 @@ class IntByDate
 	$this->cumulated += $val;
     }
 
+    public function get()
+    {
+	return ($this->cumulated);
+    }
+    
     function __toString()
     {
 	return ((string)$this->cumulated);

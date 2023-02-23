@@ -1,5 +1,12 @@
 
 .medal_box
 {
-    border: 1px solid black;
+    box-shadow: 0px 1px 3px rgb(55, 55, 55);
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.medal_box:hover
+{
+    background-color: rgba(180, 165, 165, 0.2);
 }

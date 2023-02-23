@@ -397,11 +397,11 @@ if ($User != NULL && isset($_POST["action"]))
 	    if (period(date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute,
 		       date_to_timestamp($activity->unique_session->begin_date) + $five_minute * 3))
 	    $request = @update_table(
-		"team", $activity->user_team["id"], ["present" => 1, "declaration_date" => now()]
+		"team", $activity->user_team["id"], ["present" => 1, "declaration_date" => db_form_date(now())]
 	    );
 	    else
 		$request = @update_table(
-		    "team", $activity->user_team["id"], ["present" => -1, "declaration_date" => now()]
+		    "team", $activity->user_team["id"], ["present" => -1, "declaration_date" => db_form_date(now())]
 		);
 	    $LogMsg = "PresenceDeclared";
 	}

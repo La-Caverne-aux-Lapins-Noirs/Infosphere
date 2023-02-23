@@ -9,12 +9,16 @@ function is_day_off($ts)
     {
 	if (datex("d/m", $ts) == "01/01")
 	    return (true);
-	$paque = easter_date(datex("Y", $ts));
-	$d = new DateTime("today", $NoLocalisation);
-	$d->setTimestamp($paque);
-	$d->modify("next monday");
-	if (datex("d/m", $ts) == datex("d/m", $d->getTimestamp()))
-	    return (true);
+	if (datex("Y", $ts) > 1970)
+	{
+	    // To avoid the warning while browsing templates
+	    $paque = easter_date(datex("Y", $ts));
+	    $d = new DateTime("today", $NoLocalisation);
+	    $d->setTimestamp($paque);
+	    $d->modify("next monday");
+	    if (datex("d/m", $ts) == datex("d/m", $d->getTimestamp()))
+		return (true);
+	}
 	if (datex("d/m", $ts) == "01/05")
 	    return (true);
 	if (datex("d/m", $ts) == "08/05")

@@ -2,7 +2,11 @@
 // Ajouter et retirer des inscrits
 // Mettre des médailles et les enlever
 
-($matter = new FullActivity)->build($module);
+($matter = new FullActivity)->build($id_module);
+$subids = [];
+foreach ($matter->subactivities as $subs)
+    $subids[] = $subs->id;
+$subids = "(".implode(",", $subids).")";
 ?>
 <script>
  function sync_all_scrolls(scr)
@@ -19,7 +23,46 @@
      color: black !important;
  }
 </style>
-<table class="content_table" style="margin-left: 20px; width: calc(100% - 30px);">
+<style>
+ .content_table
+ {
+     margin-left: 20px;
+     width: calc(100% - 30px);
+ }
+</style>
+<table class="content_table">
+    <tr>
+	<th style="width: 50px;"><?=$Dictionnary["Avatar"]; ?></th>
+	<th style="width: 150px;"><?=$Dictionnary["User"]; ?></th>
+	<th style="width: 60px;"><?=$Dictionnary["Grade"]; ?></th>
+	<th style="width: 50px;"><?=$Dictionnary["Credits"]; ?></th>
+	<th style="width: 60px;">
+	    <img src="res/cog.png" width="50" height="50" />
+	</th>
+	<th style="width: calc(65% - 50px);">
+	    <div class="hscrolls" onscroll="sync_all_scrolls(this);">
+		<table><tr>
+		    <?php foreach ($matter->medal as $medal) { ?>
+			<td style="width: 50px;">
+			    <div
+				class="medal_box_picture"
+				style="
+				       display: inline-block; margin-left: 1px; margin-right: 1px; margin-top: 2px; margin-bottom: 2px;
+				       background-image: url('<?=$medal["icon"]; ?>');
+				       <?php if ($medal["band"] != NULL) { ?>
+				       border-radius: 25px;
+				       border: 2px black solid;
+				       <?php } ?>
+				       width: 46px !important; height: 46px !important;
+				       "
+			    ></div> 
+			</td>
+		    <?php } ?>
+		</tr></table>
+	    </div>
+	</th>
+    </tr>
+
     <tr>
 	<td colspan="6" style="text-align: left; padding-left: 20px;">
 	    <br />
@@ -36,75 +79,79 @@
 	    <br />
 	</td>
     </tr>
-    <tr>
-	<th style="width: 50px;"><?=$Dictionnary["Avatar"]; ?></th>
-	<th style="width: 15%;"><?=$Dictionnary["User"]; ?></th>
-	<th style="width: calc(65% - 50px);">
-	    <div class="hscrolls" onscroll="sync_all_scrolls(this);">
-		<table><tr>
-		    <?php foreach ($matter->medal as $medal) { ?>
-			<td>
-			    <div
-				class="medal_box_picture"
-				style="
-				       display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
-				       background-image: url('<?=$medal["icon"]; ?>');
-				       <?php if ($medal["band"] != NULL) { ?>
-				       border-radius: 25px;
-				       border: 2px black solid;
-				       <?php } ?>
-				       width: 46px !important; height: 46px !important;
-				       "
-			    ></div> 
-			</td>
-		    <?php } ?>
-		</tr></table>
-	    </div>
-	</th>
-	<th><?=$Dictionnary["Grade"]; ?></th>
-	<th><?=$Dictionnary["Credits"]; ?></th>
-	<th style="width: 10%;">
-	    <img src="res/cog.png" width="50" height="50" />
-	</th>
-    </tr>
 
     <?php $cnt = 0; ?>
     <?php foreach ($matter->team as $team) { ?>
 	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
-	    <?php $id = array_key_first($team["user"]); ?>
+	    <?php
+	    $id = array_key_first($team["user"]);
+	    $cuser = $team["user"][$id];
+	    ($puser = new FullProfile)->build($id);
+	    $cact = NULL;
+	    foreach ($puser->sublayer as $cyc)
+	    {
+		foreach ($cyc->sublayer as $act)
+		{
+		    if ($act->id == $matter->id)
+		    {
+			$cact = $act;
+			break ;
+		    }
+		}
+	    }
+	    ?>
 	    <td>
-		<?php display_avatar($team["user"][$id], 50); ?>
+		<?php display_avatar($cuser, 50); ?>
 	    </td>
 	    <td>
-		<?php display_nickname($team["user"][$id]); ?>
+		<?php display_nickname($cuser); ?>
 	    </td>
 	    <td>
-		<div class="hscrolls" onscroll="sync_all_scrolls(this);">
-		    <table><tr>
-			<?php foreach ($matter->medal as $medal) { ?>
-			    <td>
-				<?php // Check ou pas ?>
-			    </td>
-			<?php } ?>
-		    </tr></table>
-		</div>
+		<?php if ($matter->done_date != NULL && date_to_timestamp($matter->done_date) < now()) { ?>
+		    <div
+			class="medal_box_picture"
+			       style="
+			       display: inline-block; margin-left: 1px; margin-right: 1px; margin-top: 2px; margin-bottom: 2px;
+			       background-image: url('/genicon.php?function=grade_<?=["x", "e", "d", "c", "b", "a", "a"][$cact->grade + 1]; ?>');
+			       <?php if ($medal["band"] != NULL) { ?>
+			       border-radius: 25px;
+			       border: 2px black solid;
+			       <?php } ?>
+			       width: 46px !important; height: 46px !important;
+			       "
+		    ></div>
+		<?php } ?>
 	    </td>
 	    <td>
-		<?php // Le grade acquis ?>
+		<?=$cact->get_credit(); ?>
 	    </td>
 	    <td>
-		<?php // Les flammes acquises ?>
-	    </td>
-	    <td>
-		<form method="put" action="/api/module/<?=$matter->id; ?>/registration">
+		<form method="put" action="/api/module/<?=$matter->id; ?>/registration" style="display: inline;">
 		    <input type="hidden" name="id_user" value="<?=$id; ?>" />
-		    <input type="text" value="" placeholder="<?=$Dictionnary["Grade"]; ?>" />
-		    <input type="button" onclick="" value="&#10007;" />
-		</form>
-		<form method="put" action="/api/module/<?=$matter->id; ?>/registration">
-		    <input type="hidden" name="id_user" value="<?=$id; ?>" />
+		    <input type="text" value="" placeholder="<?=$Dictionnary["Grade"]; ?>" style="width: 40px;"/>
 		    <input type="button" onclick="" value="&#10003;" />
 		</form>
+		<form method="put" action="/api/module/<?=$matter->id; ?>/registration" style="display: inline;">
+		    <input type="hidden" name="id_user" value="<?=$id; ?>" />
+		    <input type="button" onclick="" value="&#10007;" />
+		</form>
+	    </td>
+	    <td style="border: none;">
+		<table style="height: 100%; width: 100%;"><tr>
+		    <?php foreach ($matter->medal as $medal) { ?>
+			<td style="width: 50px; height: 50px;">
+			    <?php if ($cact != NULL) { ?>
+				<?php foreach ($cact->medal as $med) { ?>
+				    <?php if ($med["codename"] == $medal["codename"]) { ?>
+					<?php if ($med["success"] > 0) { ?>
+					    OK
+					<?php } ?>
+				    <?php } ?>
+				<?php } ?>
+			    <?php } ?>
+			</td>
+		    <?php } ?>
+		</tr></table>
 	    </td>
 	</tr>
     <?php } ?>

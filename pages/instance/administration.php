@@ -29,69 +29,6 @@
 	    />
 	</p>
 
-	<form
-	    method="POST"
-	    action="index.php?<?=unrollget(); ?>"
-	>
-	    <input type="hidden" name="action" value="edit_date" />
-	    <input type="hidden" name="activity" value="<?=$activity->id; ?>" />
-
-	    <label for="emergence_date">
-		<?=$Dictionnary["EmergenceDate"]; ?>
-	    </label>
-	    <?=print_datetime("emergence_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <label for="registration_date">
-		<?=$Dictionnary["RegistrationDate"]; ?>
-	    </label>
-	    <?=print_datetime("registration_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <label for="close_date">
-		<?=$Dictionnary["CloseDate"]; ?>
-	    </label>
-	    <?=print_datetime("close_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <label for="subject_appeir_date">
-		<?=$Dictionnary["SubjectDate"]; ?>
-	    </label>
-	    <?=print_datetime("subject_appeir_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <label for="pickup_date">
-		<?=$Dictionnary["PickupDate"]; ?>
-	    </label>
-	    <?=print_datetime("pickup_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <label for="subject_disappeir_date">
-		<?=$Dictionnary["Subject_removeDate"]; ?>
-	    </label>
-	    <?=print_datetime("subject_disappeir_date", $activity, true, "fdw", "bcb"); ?>
-	    <br />
-
-	    <?php if ($activity->unique_session) { ?>
-		<input type="hidden" name="session" value="<?=$activity->unique_session->id; ?>" />
-		<label for="begin_date">
-		    <?=$Dictionnary["SessionBeginDate"]; ?>
-		</label>
-		<?=print_datetime("begin_date", $activity->unique_session, true, "fdw", "bcb"); ?>
-		<br />
-
-		<label for="end_date">
-		    <?=$Dictionnary["SessionEndDate"]; ?>
-		</label>
-		<?=print_datetime("end_date", $activity->unique_session, true, "fdw", "bcb"); ?>
-		<br />
-	    <?php } ?>
-
-	    <input type="submit" style="width: 96%;" value="&#10003;" />
-	    <br />
-	    <br />
-	</form>
-
 	<?php if ($activity->unique_session) { ?>
 	    <form method="POST" action="index.php?<?=unrollget(); ?>">
 		<label for="rooms" style="width: 96%; text-align: center;">

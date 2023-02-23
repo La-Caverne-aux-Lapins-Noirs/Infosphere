@@ -26,7 +26,7 @@
 
 <?php } else { ?>
 
-    <?=$list; ?>
+    <ul><?=$list; ?></ul>
 
 <?php } ?>
 

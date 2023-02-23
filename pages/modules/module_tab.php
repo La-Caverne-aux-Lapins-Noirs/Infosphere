@@ -1,21 +1,27 @@
+<?php
+$link = [
+    "p" => "ModulesMenu",
+    "a" => $act->id
+];
+?>
 <br />
 <table class="module_tab">
     <tr><td colspan="<?=isset($_GET["a"]) ? 2 : 1; ?>">
-	<h3><?=$act->name ?: $act->codename; ?></h3>
+	<h3 onclick="document.location = '<?=unrollurl($link); ?>';"><?=$act->name ?: $act->codename; ?></h3>
 	<?php if (!isset($_GET["a"])) { ?>
           </td><td rowspan="2">
 	      <?php require ("grade_array.phtml"); ?>
 	  </td>
 	<?php } ?>
+	<?php
+	$link = [
+	    "p" => "InstancesMenu",
+	    "a" => $act->id,
+	    "b" => $act->type_type == 2 && $act->session_registered != NULL ? $act->session_registered->id : -1
+	];
+	?>
 	<td rowspan="2">
-	    <div style="width: 100%; height: 100%; background-color: #181818; color: lightgrey; border-radius: 10px; text-align: center;">
-		<?php
-		$link = [
-		    "p" => "InstancesMenu",
-		    "a" => $matter->id,
-		    "b" => $act->id
-		];
-		?>
+	    <div class="modulebutton" style="width: 100%; height: 100%; text-align: center;">
 		<br />
 		<?php if (is_teacher_for_activity($act->id)) { ?>
 		    <a href="<?=unrollurl($link); ?>">
@@ -70,9 +76,9 @@
 			<?=$Dictionnary["SeeMatter"]; ?>
 		    </a><br /><br />
 		    <?php if ($act->registered == false) { ?>
-			<?=$Dictionnary["NotSubscribed"]; ?>
+			- <?=$Dictionnary["NotSubscribed"]; ?> -
 		    <?php } else { ?>
-			<?=$Dictionnary["SingleSubscribed"]; ?>
+			- <?=$Dictionnary["SingleSubscribed"]; ?> -
 		    <?php } ?>
 		<?php } else { ?>
 		    <?php
@@ -82,7 +88,7 @@
 		    ];
 		    ?>
 		    <a href="<?=unrollurl($link); ?>">
-			<?=$Dictionnary["SeeActivityPage"]; ?><?=$date; ?>
+			<?=$Dictionnary["SeeActivityPage"]; ?>
 		    </a><br />
 		<?php } ?>
 		<br />

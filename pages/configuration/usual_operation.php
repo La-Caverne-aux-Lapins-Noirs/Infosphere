@@ -2,10 +2,11 @@
 
 $Operations = [
     "run_albedo.php",
+    "ping_hand.php",
+    "new_ldap_user.php",
     "test_mail.php",
     "regen_medals.php",
     "cipher.php",
-    "ping_hand.php",
 ];
 
 $out = "

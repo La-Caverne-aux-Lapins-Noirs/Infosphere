@@ -48,7 +48,27 @@ if ($type == "activity")
 {
     if (count($target) < 3)
 	bad_request();
-    if (($activity = new FullActivity)->build($target[1]) == false)
+
+    // Au cas ou l'activité soit basé sur un template
+    $codename = $target[1];
+    $codename = $Database->real_escape_string($codename);
+    $instances = db_select_one("
+	activity.id as id FROM activity as template
+	LEFT JOIN activity
+	ON activity.id_template = template.id AND activity.template_link = 1
+        LEFT JOIN team
+        ON team.id_activity = activity.id
+        LEFT JOIN user_team
+        ON user_team.id_team = team.id
+	WHERE template.codename = '$codename'
+        AND user_team.id_user = {$User["id"]}
+	");
+    if (count($instances))
+	$id = $instances["id"];
+    else
+	$id = $codename;
+    
+    if (($activity = new FullActivity)->build($id) == false)
 	not_found(); // Le dossier peut exister mais l'activité peut avoir été supprimée
     // On est responsable?
     if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
