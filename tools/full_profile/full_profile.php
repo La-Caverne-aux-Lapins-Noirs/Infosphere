@@ -10,6 +10,16 @@ function sort_year_month($a, $b)
     return (strcmp($aa[0], $bb[0]));
 }
 
+function sort_year_month_reverse($a, $b)
+{
+    $aa = explode("/", $a);
+    $bb = explode("/", $b);
+
+    if (($ret = strcmp($bb[1], $aa[1])) != 0)
+	return ($ret);
+    return (strcmp($bb[0], $aa[0]));
+}
+
 class FullProfile extends Layer
 {
     public $LAYER = "TOP";
@@ -345,7 +355,7 @@ class FullProfile extends Layer
 	    foreach ($data["cycle"] as $cycle)
 	    {
 		$l = new CycleLayer;
-		foreach (["id", "codename", "done", "cycle", "first_day", "commentaries", "hidden", "id_user_cycle"] as $label)
+		foreach (["id", "codename", "done", "cycle", "first_day", "commentaries", "hidden", "id_user_cycle", "cursus"] as $label)
 		    $l->$label = $cycle[$label];
 		$l->id = $cycle["id_cycle"];
 		$l->buildsub($user_id, $cycle["id_cycle"], $blist);
@@ -447,6 +457,10 @@ class FullProfile extends Layer
 	    if (!isset($this->merged_sublayers[$fd]))
 	    {
 		$this->merged_sublayers[$fd] = $l;
+		$this->merged_sublayers[$fd]->cursus =
+		    array_merge($this->merged_sublayers[$fd]->cursus, $l->cursus);
+		$this->merged_sublayers[$fd]->cursus =
+		    array_unique($this->merged_sublayers[$fd]->cursus);
 		$this->merged_sublayers[$fd]->cycles = [$l->id];
 		$this->merged_sublayers[$fd]->matters = [];
 	    }

@@ -1,7 +1,12 @@
 <?php
 
 $modules = explode(",", $_GET["modules"]);
-$id_cycle = (int)$_GET["id_cycle"];
+$id_cycle = explode(",", $_GET["id_cycle"]);
+
+foreach ($modules as &$mods)
+    $mods = (int)$mods;
+foreach ($id_cycle as &$ic)
+    $ic = (int)$ic;
 
 $Grade = ["E", "D", "C", "B", "A", "A"];
 require_once (__DIR__."/open.phtml");
@@ -13,19 +18,26 @@ if (count($user->sublayer) > 1 && 0) // Sabotage
     require (__DIR__."/footer.phtml");
 }
 
-$cycle = NULL;
+$cycles = [];
+$cyclesid = [];
+foreach ($id_cycle as $cyc)
+    $cyclesid[] = $cyc;
+$first_cycle = NULL;
 foreach ($user->sublayer as $cyc)
 {
-    if ($cyc->id == $id_cycle)
+    if (array_search($cyc->id, $id_cycle) !== false)
     {
-	$cycle = $cyc;
+	if ($cyc->id == $id_cycle[0])
+	    $first_cycle = $cyc;
+	$cycles[] = $cyc;
+	$cyclesid[] = $cyc->id;
 	break ;
     }
 }
-if ($cycle == NULL)
+if (count($cycles) == 0 || $first_cycle == NULL)
     return ;
 require (__DIR__."/header.phtml");
-foreach ($user->sublayer as $cycle)
+foreach ($cycles as $cycle)
 {
     $fnd = 0;
     foreach ($cycle->sublayer as $mod)

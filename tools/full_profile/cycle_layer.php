@@ -8,6 +8,7 @@ class CycleLayer extends Layer
     public $first_day = NULL;
     public $last_day = NULL;
     public $id_user_cycle = -1;
+    public $cursus = []; // Y a t il une spécialité choisi au cursus?
     
     // $sublayer sera des module layer
     public function buildsub($user_id, $cycle_id, $blist = [])
@@ -40,7 +41,8 @@ class CycleLayer extends Layer
            team.id as id_team,
            team.closed as closed,
            team.commentaries as commentaries,
-           template.codename as template_codename
+           template.codename as template_codename,
+           activity_cycle.cursus as cursus
            FROM activity_cycle
            LEFT JOIN team ON team.id_activity = activity_cycle.id_activity
            LEFT JOIN user_team ON user_team.id_team = team.id
@@ -72,6 +74,7 @@ class CycleLayer extends Layer
 		$sub->id_team = $module->user_team["id"];
 		$sub->commentaries = $module->user_team["commentaries"];
 	    }
+	    $sub->cursus = explode(";", $mod["cursus"]);
 	    $sub->acquired_credit = 0;
 	    $sub->load_configuration($module->codename, $module->template_codename);
 	    $sub->registered = $module->registered;

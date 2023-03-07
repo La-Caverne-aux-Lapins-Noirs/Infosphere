@@ -29,6 +29,8 @@
 	     $medal["shape"] = $mcli[0] == "pins" ? "0" : "1";
 	     array_shift($mcli); // [sband, band, pins]
 	     array_shift($mcli); // medal_name
+	     $medal["specificator"] = "";
+	     $medal["picture"] = "";
 	     for ($imcli = 0; $imcli < count($mcli); ++$imcli)
 	     {
 		 if ($mcli[$imcli] == "-p")
@@ -46,7 +48,16 @@
 		 {
 		     $imcli += 1;
 		     if (!strstr($mcli[$imcli], ".default_style.dab"))
+		     {
 			 $medal["configuration"] = $mcli[$imcli];
+			 $path = "dres/medals/.ressources/";
+			 if (strncmp($path, $medal["configuration"], strlen($path))
+			     == 0)
+			     $medal["configuration"] =
+				 substr($medal["configuration"], strlen($path));
+		     }
+		     else
+			 $medal["configuration"] = "";
 		 }
 	     }
 	     foreach ([

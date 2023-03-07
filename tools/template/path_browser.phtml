@@ -37,7 +37,7 @@ $js = "silent_submit(this, '$fbid$language');";
     class="file_browser"
     id="<?=$fbid.$language; ?>"
     <?php if (isset($file_browser_height)) { ?>
-	style="height: <?=$file_browser_height; ?>"
+	style="height: <?=$file_browser_height; ?>; overflow: auto;"
         <?php unset($file_browser_height); ?>
     <?php } ?>
 >

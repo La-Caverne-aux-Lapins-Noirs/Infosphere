@@ -16,6 +16,7 @@ function get_user_promotions(array &$usr, $by_name = false)
         cycle.*,
         user_cycle.commentaries as commentaries,
         user_cycle.hidden as hidden,
+        user_cycle.cursus as cursus,
         user_cycle.id as id,
         user_cycle.id as id_user_cycle
         FROM cycle
@@ -28,7 +29,9 @@ function get_user_promotions(array &$usr, $by_name = false)
     $usr["greatest_cycle"] = -1;
     foreach ($usr["cycle"] as $i => $v)
     {
-	$usr["cycle"][$i]["last_day"] = date_to_timestamp($usr["cycle"][$i]["first_day"]) + 15 * $one_week;
+	$usr["cycle"][$i]["cursus"] = explode(";", $v["cursus"]);
+	
+	$usr["cycle"][$i]["last_day"] = date_to_timestamp($v["first_day"]) + 15 * $one_week;
 	$usr["cycle"][$i]["year"] = floor($v["cycle"] / 4); // Fait ici car SQLite n'a pas FLOOR.
 	if ($usr["greatest_cycle"] < $v["cycle"])
 	    $usr["greatest_cycle"] = $v["cycle"];

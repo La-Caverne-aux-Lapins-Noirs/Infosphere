@@ -141,17 +141,66 @@ function SetUser($id, $data, $method, $output, $module)
 	return ($users);
     $users = $users->value;
     if (($ret = handle_links($users, $id, "user", "cycle"))->is_error())
-	return ($ret);
+	return ($ret);   
     $cycle = fetch_cycle($module, $id, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];
     return (new ValueResponse([
 	"msg" => "Edited",
 	"content" => list_of_linksb([
+	    "method" => "post",
 	    "hook_name" => $module,
 	    "hook_id" => $cycle["id"],
 	    "linked_name" => "user",
 	    "linked_elems" => $cycle["user"],
-	    "admin_func" => "is_director_for_cycle"
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => [
+		[
+		    "name" => $Dictionnary["Curriculum"],
+		    "codename" => "cursus",
+		]
+	    ]
+    ])]));
+}
+
+function SetUserProps($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    
+    if ($id == -1 || $module != "cycle")
+	bad_request();
+    if (($users = resolve_codename("user", $data["user"]))->is_error())
+	return ($users);
+    $users = $users->value;
+    if (($cyc = resolve_codename("cycle", $id))->is_error())
+	return ($cyc);
+    $cyc = $cyc->value;
+
+    $usrcyc = db_select_one("id FROM user_cycle WHERE id_user = $users AND id_cycle = $cyc");
+    if (($ret = update_table(
+	"user_cycle",
+	$usrcyc,
+	$data,
+	["id", "id_user", "id_cycle", "user", "action"]
+    ))->is_error())
+        return ($ret);
+    
+    $cycle = fetch_cycle($module, $id, true, false, true);
+    $cycle = $cycle[array_key_first($cycle)];
+    return (new ValueResponse([
+	"msg" => "Edited",
+	"content" => list_of_linksb([
+	    "method" => "post",
+	    "hook_name" => $module,
+	    "hook_id" => $cycle["id"],
+	    "linked_name" => "user",
+	    "linked_elems" => $cycle["user"],
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => [
+		[
+		    "name" => $Dictionnary["Curriculum"],
+		    "codename" => "cursus",
+		]
+	    ]
     ])]));
 }
 
@@ -178,11 +227,74 @@ function SetMatter($id, $data, $method, $output, $module)
     return (new ValueResponse([
 	"msg" => "Edited",
 	"content" => list_of_linksb([
+	    "method" => "post",
 	    "hook_name" => $module,
 	    "hook_id" => $cycle["id"],
 	    "linked_name" => "activity",
 	    "linked_elems" => $cycle["activity"],
-	    "admin_func" => "is_director_for_cycle"
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => [
+		[
+		    "name" => $Dictionnary["Curriculum"],
+		    "codename" => "cursus",
+		]
+	    ]
+    ])]));    
+    }
+
+function SetMatterProps($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    
+    if ($id == -1 || !isset($data["activity"]))
+	bad_request();
+    if (($act = resolve_codename("activity", $data["activity"], "codename", true))->is_error())
+	return ($act);
+    $act = $act->value;
+    if (($actid = resolve_codename("activity", $data["activity"]))->is_error())
+	return ($act);
+    $actid = $actid->value;
+
+    // Templates dans templates, instances dans instances.
+    if (isset($act[0]))
+    {
+	if ($act[0]["is_template"] != ($module == "cursus"))
+	    bad_request();
+    }
+    else if ($act["is_template"] != ($module == "cursus"))
+	bad_request();
+
+    if (($cyc = resolve_codename("cycle", $id))->is_error())
+	return ($cyc);
+    $cyc = $cyc->value;
+
+    $actcyc = db_select_one("id FROM activity_cycle WHERE id_activity = $actid AND id_cycle = $cyc");
+    
+    if (($ret = update_table(
+	"activity_cycle",
+	$actcyc,
+	$data,
+	["id", "id_activity", "id_cycle", "activity", "action"]
+    ))->is_error())
+	return ($ret);
+        
+    $cycle = fetch_cycle($module, $id, true, false, true);
+    $cycle = $cycle[array_key_first($cycle)];
+    return (new ValueResponse([
+	"msg" => "Edited",
+	"content" => list_of_linksb([
+	    "method" => "post",
+	    "hook_name" => $module,
+	    "hook_id" => $cycle["id"],
+	    "linked_name" => "activity",
+	    "linked_elems" => $cycle["activity"],
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => [
+		[
+		    "name" => $Dictionnary["Curriculum"],
+		    "codename" => "cursus",
+		]
+	    ]
     ])]));    
 }
 
@@ -244,7 +356,15 @@ function InstantiateCycle($id, $data, $method, $output, $module)
 	if (($error_msg = instantiate_template($act, $first_week))->is_error())
 	    goto Clear;
 	$matter[] = $activity = $error_msg->value;
-	if (($error_msg = handle_links($activity, $id, "activity", "cycle"))->is_error())
+	if (($error_msg = handle_links([
+	    "left_value" => $activity,
+	    "right_value" => $id,
+	    "left_field_name" => "activity",
+	    "right_field_name" => "cycle",
+	    "properties" => [
+		"cursus" => $cycle["cursus"]
+	    ]
+	]))->is_error())
 	    goto Clear;
     }
     // A ce stade, les matières, les activités, les sessions, les rendez vous existent.

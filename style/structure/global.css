@@ -163,7 +163,7 @@ table
 
 .afullscreen
 {
-    height: calc(100% - 50px);
+    height: calc(100% - 75px);
     width: 100%;
 }
 

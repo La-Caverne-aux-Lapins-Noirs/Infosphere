@@ -1,34 +1,57 @@
 
 <div class="control_buttons">
 
-    <!--div>
-	 <form action="index.php?<?=unrollget(); ?>" method="post">
+    <div>
+	<form
+	    action="index.php?<?=unrollget(); ?>"
+	    method="post"
+	    onsubmit="
+		return setCookie('filter_cycle', document.getElementById('filter_cycle').value) &&
+		location.reload() && 0
+;
+	    "
+	>
 	    <div style="float: left; padding-left: 10px;">
 		<input type="hidden" name="action" value="filter" />
+		<br /><br />
 		<?php
 		$cnt = 0;
 		$filters = [
-		  "filter_cycle" => "Cycle",
-		  "filter_room" => "Room",
-		  "filter_teacher" => "Teacher"
+		    "filter_cycle" => "Cycle"
+		    /*
+		,
+		    "filter_room" => "Room",
+		    "filter_teacher" => "Teacher"
+		    */
 		];
-		foreach ($filters as $filter => $label) {
+		foreach ($filters as $filter => $label)
+		{
 		?>
-		<input
-		    type="text"
-		    name="<?=$filter; ?>"
-		    value="<?=implode(";", try_get(@$User["misc_configuration"]["calendar"], $filter, [])); ?>"
-		    placeholder="<?=$Dictionnary[$label]; ?>"
-		/><?=$cnt++ % 2 ? "<br />" : ""; ?>
+		    <input
+			type="text"
+			name="<?=$filter; ?>"
+			value="<?=isset($_COOKIE[$filter]) ? $_COOKIE[$filter] : ""; ?>"
+			placeholder="<?=$Dictionnary[$label]; ?>"
+			onchange="setCookie('<?=$filter; ?>', this.value);"
+		    />
 		<?php } ?>
+		<script>
+		</script>
 		<input
-		    type="submit"
+		    type="button"
+		    onclick="
+			setCookie(
+				'filter_cycle',
+				document.getElementById('filter_cycle').value
+			);
+			location.reload();
+		    "
 		    value="&#10003;"
 		    style="width: 150px;"
 		/>
 	    </div>
 	</form>
-    </div-->
+    </div>
 
     <div>
 	<form action="index.php?p=<?=$Position; ?>" method="post">

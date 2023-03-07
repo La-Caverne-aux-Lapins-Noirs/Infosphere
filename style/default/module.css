@@ -37,13 +37,14 @@
 
 .medalscroll
 {
-    height: 110px;
+    /* height: 110px; */
 }
 
 .medalscroll > div
 {
     width: 100%;
-    height: 105px;
+    /* height: 105px; */
+    max-height: 500px;
     text-align: left;
     overflow-x: auto;
     background-color: rgba(45, 48, 59, 0.2);

@@ -159,7 +159,7 @@
 		    />
 		</form>
 	    <?php } ?>
-	    <div id="medalres" style="height: calc(100% - 170px);">
+	    <div id="medalres" style="height: calc(800px - 140px);">
 		<?php
 		$page = "medal";
 		$language = "";

@@ -10,6 +10,8 @@ if ($BaseDir == "")
     function debug_response() {}
 }
 
+require_once ("medal_tooltip.php");
+require_once ("cursus_match.php");
 require_once ("merge_cycles.php");
 require_once ("new_directory.php");
 require_once ("get_dir.php");

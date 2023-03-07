@@ -107,6 +107,7 @@ if ($module == NULL)
 		<?=$Dictionnary["NoAssociatedMedalToMatter"]; ?>
 	    </span>
 	<?php } ?>
+	<?php $module->medal = sort_by_medal_grade($module->medal, false); ?>
 	<?php foreach ($module->medal as $medal) { ?>
 	    <?php if ($medal["role"] == 0) continue ; ?>
 	    <div
@@ -117,7 +118,6 @@ if ($module == NULL)
 		       background-image: url('<?=$medal["icon"]; ?>');
 		       <?php if ($medal["band"] != NULL) { ?>
 		       border-radius: 50px;
-		       border: 4px black solid;
 		       width: 92px !important; height: 92px !important;
 		       <?php } ?>
 		       "

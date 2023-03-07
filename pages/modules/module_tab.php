@@ -7,7 +7,12 @@ $link = [
 <br />
 <table class="module_tab">
     <tr><td colspan="<?=isset($_GET["a"]) ? 2 : 1; ?>">
-	<h3 onclick="document.location = '<?=unrollurl($link); ?>';"><?=$act->name ?: $act->codename; ?></h3>
+	<h3 onclick="document.location = '<?=unrollurl($link); ?>';">
+	    <?=$act->name ?: $act->codename; ?>
+	    <?php if (isset($cycle) && cursus_match($cycle->id, $act->cursus, $User["cycle"])) { // Seulement pour la liste de matières ?>
+		<img src="res/mandatory.png" style="float: left; width: 20px; height: 20px; position: relative; left: -5px;" title="<?=$Dictionnary["Mandatory"]; ?>" />
+	    <?php } ?>
+	</h3>
 	<?php if (!isset($_GET["a"])) { ?>
           </td><td rowspan="2">
 	      <?php require ("grade_array.phtml"); ?>

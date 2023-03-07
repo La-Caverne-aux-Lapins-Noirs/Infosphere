@@ -34,11 +34,18 @@
 
     <td>
 	<?php list_of_links([
+	    "method" => "post",
 	    "hook_name" => "cycle",
 	    "hook_id" => $cycle["id"],
 	    "linked_name" => "user",
 	    "linked_elems" => $cycle["user"],
 	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => [
+		[
+		    "name" => $Dictionnary["Curriculum"],
+		    "codename" => "cursus",
+		]
+	    ]
 	]); ?>
     </td>
 <?php } ?>
@@ -79,9 +86,16 @@
 <td>
     <?php list_of_links([
 	"hook_name" => $page,
+	"method" => "post",
 	"hook_id" => $cycle["id"],
 	"linked_name" => "activity",
 	"linked_elems" => $cycle["activity"],
 	"admin_func" => "is_director_for_cycle",
+	"extra_properties" => [
+	    [
+		"name" => $Dictionnary["Curriculum"],
+		"codename" => "cursus",
+	    ]
+	]
     ]); ?>
 </td>

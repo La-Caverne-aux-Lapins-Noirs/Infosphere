@@ -1,34 +1,30 @@
 <?php
 
+$_medal_grade_consider_acquisition = false;
+
 function _sort_by_medal_grade($a, $b)
 {
-    $aa = $a["role"];
-    if (isset($a["module_medal"]) && $a["module_medal"])
-	$aa = 1; // Grade D.
-    $bb = $b["role"];
-    if (isset($b["module_medal"]) && $b["module_medal"])
-	$bb = 1; // Grade D;
-
-    if ($bb - $aa == 0 && isset($b["success"]))
+    global $_medal_grade_consider_acquisition;
+        
+    if ($_medal_grade_consider_acquisition)
     {
-	if ($a["success"] > 0)
-	    $aa = 2;
-	else if ($a["failure"] > 0)
-	    $aa = 1;
-	else
-	    $aa = 0;
-	if ($b["success"] > 0)
-	    $bb = 2;
-	else if ($b["failure"] > 0)
-	    $bb = 1;
-	else
-	    $bb = 0;
+	$left = 0;
+	$right = 0;
+	if (isset($a["success"]) && $a["success"] != 0)
+	    $left = 1;
+	if (isset($b["success"]) && $b["success"] != 0)
+	    $right = 1;
+	if ($left != $right)
+	    return ($right - $left);
     }
-    return ($bb - $aa);
+    return ($b["role"] - $a["role"]);
 }
 
-function sort_by_medal_grade(&$meds)
+function sort_by_medal_grade(&$meds, $profile = true)
 {
+    global $_medal_grade_consider_acquisition;
+
+    $_medal_grade_consider_acquisition = $profile;
     usort($meds, "_sort_by_medal_grade");
     return ($meds);
 }

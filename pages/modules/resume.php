@@ -15,7 +15,8 @@ foreach ($user->sublayer as $cycle)
     $total = 0;
     $nmatters = [];
     $matters = db_select_all("
-       activity.{$Language}_name as name, activity.*
+       activity.{$Language}_name as name, activity.*,
+       activity_cycle.cursus as cursus
        FROM activity_cycle
        LEFT JOIN activity ON activity_cycle.id_activity = activity.id
        WHERE activity_cycle.id_cycle = {$cycle->id}

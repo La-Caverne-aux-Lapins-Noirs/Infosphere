@@ -41,47 +41,25 @@ else
 if ($end < $start)
     $end = $start + $one_week - 1;
 
-if (!isset($User["misc_configuration"]["calendar"]["filter_cycle"])
-    || $User["misc_configuration"]["calendar"]["filter_cycle"] == "")
+$fix = [];
+$wlist["cycle"] = [];
+if (isset($_COOKIE["filter_cycle"]) && $_COOKIE["filter_cycle"] != "")
 {
-    $wlist["cycle"] = [];
-    $tmp = [];
+    $cys = explode(";", $_COOKIE["filter_cycle"]);
+    foreach ($cys as $c)
+    {
+	if (($c = resolve_codename("cycle", $c))->is_error())
+	    continue ;
+	$fix[] = $c->value;
+	$wlist["cycle"][] = $c->value;
+    }
+}
+else
+{
     foreach ($User["cycle"] as $cycle)
     {
 	$wlist["cycle"][] = $cycle["id_cycle"];
 	$tmp[] = $cycle["codename"];
-    }
-    $User["misc_configuration"]["calendar"]["filter_cycle"] = implode(";", $tmp);
-}
-else
-{
-    if (($cycle = resolve_codename("cycle", $User["misc_configuration"]["calendar"]["filter_cycle"], "codename", true))->is_error())
-	$wlist["cycle"] = [];
-    else
-    {
-	if (!isset(($wlist["cycle"] = $cycle->value)[0]))
-	    $wlist["cycle"] = [$wlist["cycle"]];
-	$User["misc_configuration"]["calendar"]["filter_cycle"] = [];
-	foreach ($wlist["cycle"] as $c)
-	{
-	    $User["misc_configuration"]["calendar"]["filter_cycle"][] = $c["codename"];
-	}
-    }
-}
-
-if (isset($User["misc_configuration"]["calendar"]["filter_room"]) && $User["misc_configuration"]["calendar"]["filter_room"] != "")
-{
-    if (($cycle = resolve_codename("room", $User["misc_configuration"]["calendar"]["filter_room"], "codename", true))->is_error())
-	$wlist["room"] = [];
-    else
-    {
-	if (!isset(($wlist["room"] = $cycle->value)[0]))
-	    $wlist["room"] = [$wlist["room"]];
-	$User["misc_configuration"]["calendar"]["filter_room"] = [];
-	foreach ($wlist["room"] as $c)
-	{
-	    //$User["misc_configuration"]["calendar"]["filter_room"][] = $c["codename"];
-	}
     }
 }
 

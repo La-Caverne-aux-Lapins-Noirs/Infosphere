@@ -5,7 +5,8 @@
 <?php
 $medals = db_select_all("
     medal.*,
-    medal.{$Language}_name as name
+    medal.{$Language}_name as name,
+    medal.{$Language}_description as description
     FROM user_medal
     LEFT JOIN medal ON user_medal.id_medal = medal.id
     WHERE user_medal.id_user = {$User["id"]}
@@ -21,8 +22,9 @@ foreach ($medals as $med)
     <a href="index.php?p=MedalsMenu&amp;a=<?=$med["id"]; ?>" style="text-decoration: none;">
 	<img
 	    src="<?=$med["icon"]; ?>"
-	    style="width: 75px; height: 75px; border-radius: 50px; border: 5px solid black;"
-	    alt="<?=$med["name"]; ?>"
+	    style="width: 75px; height: 75px; border-radius: 50px;"
+	    alt="<?=medal_tooltip($med); ?>"
+	    title="<?=medal_tooltip($med); ?>"
 	/>
     </a>
 <?php

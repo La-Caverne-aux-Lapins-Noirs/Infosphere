@@ -18,12 +18,14 @@ function sort_by_name($a, $b)
 
 if (!count($user->merged_sublayers))
     return ;
+uksort($user->merged_sublayers, "sort_year_month_reverse");
 ?>
 <h2><?=$Dictionnary["Matter"]; ?></h2>
 <a href="index.php?p=ModulesMenu">
     <?=$Dictionnary["AllMatters"]; ?>
 </a>
 <br />
+
 <?php foreach ($user->merged_sublayers as $cycle) { ?>
 
     <?php
@@ -32,7 +34,7 @@ if (!count($user->merged_sublayers))
 	$or[] = " activity_cycle.id_cycle = $cyc ";
     $or = " ( ".implode(" OR ", $or)." ) ";
     $matters = db_select_all("
-          activity.id
+          activity.id, activity_cycle.cursus as cursus
           FROM activity_cycle
           LEFT JOIN activity ON activity_cycle.id_activity = activity.id
           WHERE $or
@@ -49,6 +51,8 @@ if (!count($user->merged_sublayers))
 	($matter = new FullActivity)->build($matid["id"]);
 	if ($matter->hidden)
 	    continue ;
+	$matter->cycle = $cyc;
+	$matter->cursus = explode(";", $matid["cursus"]);
 	$min_cred += $matter->credit_d;
 	$max_cred += $matter->credit_a;
 	$matter_to_sort[] = $matter;
@@ -67,8 +71,13 @@ if (!count($user->merged_sublayers))
     </h3>
     <ul>
 	<?php foreach ($matter_to_sort as $matter) { ?>
-	    <li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
-		<h4 style="position: relative; <?=$matter->registered ? "font-weight!: bold; color: white;" : "font-weight: lighter; color: darkgrey;"; ?>">
+
+	    <li>
+		<?php if (cursus_match($matter->cycle, $matter->cursus, $User["cycle"])) { ?>
+		    <img src="res/mandatory.png" style="float: left; width: 20px; height: 20px; position: relative; left: -5px;" title="<?=$Dictionnary["Mandatory"]; ?>" />
+		<?php } ?>
+		<a href="<?=unrollurl(["a" => $matter->id]); ?>">
+		<h4 style="z-index: 0; padding-left: 20px; position: relative; <?=$matter->registered ? "font-weight!: bold; color: white;" : "font-weight: lighter; color: darkgrey;"; ?>">
 		    <?=$matter->name ?:
 		       $matter->template_codename ?:
 		       $matter->codename

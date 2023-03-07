@@ -14,6 +14,14 @@ $Tab = [
 	    "is_director",
 	    "AddCycle",
 	],
+	"activity" => [
+	    "is_director_for_cycle",
+	    "SetMatter",
+	],
+	"user" => [
+	    "is_director_for_cycle",
+	    "SetUser",
+	],
     ],
     "PUT" => [
 	"" => [
@@ -24,17 +32,17 @@ $Tab = [
 	    "is_director_for_cycle",
 	    "SetCycleTeacher",
 	],
+	"activity" => [
+	    "is_director_for_cycle",
+	    "SetMatterProps",
+	],
 	"laboratory" => [
 	    "is_director_for_cycle",
 	    "SetCycleTeacher",
 	],
 	"user" => [
 	    "is_director_for_cycle",
-	    "SetUser",
-	],
-	"activity" => [
-	    "is_director_for_cycle",
-	    "SetMatter",
+	    "SetUserProps",
 	],
 	"school" => [
 	    "is_director_for_cycle",

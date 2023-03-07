@@ -145,6 +145,10 @@ class FullActivity extends Response
     public $left;
     public $width;
 
+    // Attribut de transport seulement
+    // Sera établi a l'exterieur <=
+    public $cursus = [];
+
     public function build($activity_id, $deleted = false, $recursive = true, $session_id = -1, $module = NULL, $user = NULL, $get_medal = false, $only_user = false)
     {
 	global $User;

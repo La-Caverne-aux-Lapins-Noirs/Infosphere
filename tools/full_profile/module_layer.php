@@ -43,6 +43,7 @@ class ModuleLayer extends Layer
     public $credit = [];
     
     public $id_team = -1; // Le lien module-utilisateur.
+    public $cursus = []; // Matiere obligatoire pour certains cursus
 
     public function get_credit()
     {
@@ -132,6 +133,7 @@ class ModuleLayer extends Layer
 	    // On récupère les médailles acquises
 	    $acquired = db_select_all("
                activity.{$Language}_name as activity_name,
+               activity.codename as activity_codename,
                activity_user_medal.id_activity as id_activity,
                activity_user_medal.result as result,
                medal.id as id,
@@ -189,12 +191,14 @@ class ModuleLayer extends Layer
 		if ($med["result"] == -1 || $eliminatory)
 		{
 		    $target->medal[$med["codename"]]["failure"] += 1;
-		    $target->medal[$med["codename"]]["failure_list"][] = $med["activity_name"];
+		    $target->medal[$med["codename"]]["failure_list"][] =
+			($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
 		}
 		else if ($med["result"] == 1)
 		{
 		    $target->medal[$med["codename"]]["success"] += 1;
-		    $target->medal[$med["codename"]]["success_list"][] = $med["activity_name"];
+		    $target->medal[$med["codename"]]["success_list"][] =
+			($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
 		    if ($med["local"] == 1)
 			$target->medal[$med["codename"]]["local_sum"] += 1;
 		}

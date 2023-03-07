@@ -54,9 +54,9 @@
 
     <div style="width: 100%; background-color: gray;">
 	<br />
-	<?=$cycle->codename; ?>
-	(<?=$Dictionnary["Year"]; ?> <?=floor($cycle->cycle / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$cycle->cycle % 4 + 1; ?>)
-	<?=date("d/m/Y", date_to_timestamp($cycle->first_day)); ?> - <?=date("d/m/Y", date_to_timestamp($cycle->first_day) + 12 * 7 * 24 * 60 * 60); ?>
+	<?=$first_cycle->codename; ?>
+	(<?=$Dictionnary["Year"]; ?> <?=floor($first_cycle->cycle / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$first_cycle->cycle % 4 + 1; ?>)
+	<?=date("d/m/Y", date_to_timestamp($first_cycle->first_day)); ?> - <?=date("d/m/Y", date_to_timestamp($first_cycle->first_day) + 12 * 7 * 24 * 60 * 60); ?>
 	<br />
 	<br />
     </div>

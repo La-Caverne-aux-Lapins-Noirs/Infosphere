@@ -67,6 +67,29 @@ function single_link($params)
 	    <?php } ?>
 	</div>
     </form>
+    <?php if (isset($extra_properties)) { ?>
+	<form
+	    method="put"
+	    action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
+	    onsubmit="return <?=$submit; ?>;"
+	>
+	    <?php foreach ($extra_properties as $epv) { ?>
+		<input
+		    type="text"
+		    name="<?=$epv["codename"]; ?>"
+		    placeholder="<?=$epv["name"]; ?>"
+		    value="<?=isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : ""; ?>"
+		/>
+	    <?php } ?>
+	    <input
+		type="button"
+		value="&#10003;"
+		onclick="<?=$submit; ?>"
+	    />
+	</form>
+	<br />
+	<br />
+    <?php } ?>
 <?php
 }
 
