@@ -17,11 +17,11 @@ function filter_out_activity($session, $wlist)
     //////////////////////
     // Temporaire : Cette fonction est censé gerer seulement les filtres manuels
     /////////////////////
-    foreach ($session->team as $tm)
-    {
-	if (isset($tm["user"][$User["id"]]))
-	    return (false);
-    }
+    // foreach ($session->team as $tm)
+    // {
+    // if (isset($tm["user"][$User["id"]]))
+    // return (false);
+    // }
     return (test_single_filter($session, $wlist, "cycle") || test_single_filter($session, $wlist, "teacher")
     );
 }
@@ -31,7 +31,7 @@ function fullpart($x, $y)
     return ($x - $x % $y);
 }
 
-function collect_projects($start, $end, $wlist)
+function collect_projects($start, $end, $wlist, $is_filtered = false)
 {
     global $User;
     global $one_week;
@@ -52,17 +52,23 @@ function collect_projects($start, $end, $wlist)
 	$total_len = 0;
     $total_len += 1;
     $sesstmp = db_select_all("
-       id
-       FROM activity
+       activity.id
+       FROM activity LEFT JOIN activity_type ON activity_type.id = activity.type
        WHERE subject_appeir_date <= '".db_form_date($end)."'
          AND pickup_date >= '".db_form_date($start)."'
+         AND activity_type.type = 1
          AND deleted IS NULL
 	 ");
     foreach ($sesstmp as $sess)
     {
 	($s = new FullActivity)->build($sess["id"], false, false);
 	($module = new FullActivity)->build($s->parent_activity, false, false);
-	if ($s->is_assistant == false && ($module->registered == false || filter_out_activity($s, $wlist)))
+	if (!$is_filtered)
+	{
+	    if ($s->is_assistant == false && $module->registered == false)
+		continue ;	    
+	}
+	else if (filter_out_activity($s, $wlist))
 	    continue ;
 	if ($s->type_type != 1 || $ActivityType[$s->type]["id"] == 15)
 	    continue ;

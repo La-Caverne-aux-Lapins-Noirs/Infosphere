@@ -43,9 +43,11 @@ if ($end < $start)
 
 $fix = [];
 $wlist["cycle"] = [];
+$is_filtered = false;
 if (isset($_COOKIE["filter_cycle"]) && $_COOKIE["filter_cycle"] != "")
 {
-    $cys = explode(";", $_COOKIE["filter_cycle"]);
+    $is_filtered = true;
+    $cys = explode("XXXSEPARATORXXX", $_COOKIE["filter_cycle"]);
     foreach ($cys as $c)
     {
 	if (($c = resolve_codename("cycle", $c))->is_error())

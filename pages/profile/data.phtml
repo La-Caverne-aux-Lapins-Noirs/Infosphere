@@ -20,6 +20,7 @@ $js = "silent_submit(this);";
 	    //"Country" => "country",
 	];
 	foreach ($fields as $k => $v) { ?>
+	    <?php if ($k == "AddressName" && !is_admin() && $user->id != $User["id"]) break ; ?>
 	    <tr><td>
 		<b><?=$Dictionnary[$k]; ?></b> :
 	    </td><td>

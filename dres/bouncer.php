@@ -63,7 +63,7 @@ if ($type == "activity")
 	WHERE template.codename = '$codename'
         AND user_team.id_user = {$User["id"]}
 	");
-    if (count($instances))
+    if ($instances != NULL)
 	$id = $instances["id"];
     else
 	$id = $codename;

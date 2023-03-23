@@ -1,13 +1,20 @@
 <div class="page">
 
-    <div style="text-align: center; width: 100%; height: 100px; padding-top: 15px; padding-bottom: 15px; background-color: lightgray;">
-	<?php if (file_exists(__DIR__."/../../../dres/logo.png")) { ?>
-	    <img src="/dres/logo.png" style="widht: 100px; height: 100px;" />
-	<?php } else { ?>
-	    <img src="/res/logo.png" style="widht: 100px; height: 100px;" />
-	<?php } ?>
+    <div style="text-align: center; width: 100%; height: 50px; padding-top: 15px; padding-bottom: 15px; background-color: lightgray;">
+	AU LIEU DE L'IMAGE DE L'INFOSPHERE, IL FAUT METTRE LE LOGO
+	CONFIGURE DANS L'ECOLE
+	<img 
+	    <?php if (file_exists(__DIR__."/../../../dres/logo.png")) { ?>
+		src="/dres/logo.png"
+	    <?php } else { ?>
+	    src="/dres/logo.png"
+	    <?php } ?>
+	    style="width: 120px; height: 120px; position: relative; top: -35px; left: -40%;"
+	/>
+	<p style="width: calc(100% - 200px); position: absolute; left: 200px; top: 10px; height: calc(100% - 20px); text-align: left;">
+	    ICI  LES PROPRIETES DE L'ECOLE
+	</p>
     </div>
-    <br />
     <br />
 
     <div>
@@ -37,10 +44,11 @@
 		    <?=$Dictionnary["ProvidedFor"]; ?>:
 		</div>
 		<div style="width: 50%; float: left; font-size: x-small;">
-		    <?=$user->address_name; ?><br />
-		    <?=$user->street_name; ?><br />
+		    <?php if ($user->first_name) $user->address_name = ucfirst($user->first_name)." ".strtoupper($user->family_name); ?>
+		    <?=$user->address_name.($user->address_name != "" ? "<br />" : ""); ?>
+		    <?=$user->street_name.($user->street_name != "" ? "<br />" : ""); ?>
 		    <?=$user->postal_code; ?>
-		    <?=strtoupper($user->city); ?><br />
+		    <?=strtoupper($user->city).($user->city != "" ? "<br />" : ""); ?>
 		    <?=$user->country; ?>
 		</div>
 	    </div>
@@ -49,19 +57,14 @@
     <br />
     <br />
     <br />
-    <br />
 
 
-    <div style="width: 100%; background-color: gray;">
-	<br />
+    <div style="width: 100%; background-color: gray; padding-top: 10px; padding-bottom: 10px;">
 	<?=$first_cycle->codename; ?>
 	(<?=$Dictionnary["Year"]; ?> <?=floor($first_cycle->cycle / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$first_cycle->cycle % 4 + 1; ?>)
 	<?=date("d/m/Y", date_to_timestamp($first_cycle->first_day)); ?> - <?=date("d/m/Y", date_to_timestamp($first_cycle->first_day) + 12 * 7 * 24 * 60 * 60); ?>
-	<br />
-	<br />
     </div>
 
-    <br />
     <br />
 
     <table>

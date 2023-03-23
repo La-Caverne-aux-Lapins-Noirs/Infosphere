@@ -5,15 +5,17 @@ if (($user = fetch_user($_GET["a"]))->is_error())
     $user = $User;
 else
     $user = $user->value;
-$user = get_full_profile($user, []);
 $edit_profile = try_get($_GET, "edit_profile", "0");
 $allow_edit = is_admin() || $user == $User;
 
 if (isset($_GET["modules"]) && (is_admin() || $user->id == $User["id"]))
 {
+    $user = get_full_profile($user, [], true, false);
     require_once (__DIR__."/report/request.php");
     return ;
 }
+$user = get_full_profile($user, [], true);
+
 
 /*
 ** Il faut faire un systeme de calcul d'"implication", basé sur les logs,

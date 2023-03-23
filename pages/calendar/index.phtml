@@ -20,7 +20,7 @@ require_once (__DIR__."/print_header.php");
 require_once (__DIR__."/print_control_buttons.php");
 
 $in_template = $start < $one_day * 7 * 20;
-$projects = collect_projects($start, $end, $wlist);
+$projects = collect_projects($start, $end, $wlist, $is_filtered);
 ?>
 
 <div class="calendar_menu">
@@ -100,7 +100,7 @@ $projects = collect_projects($start, $end, $wlist);
 	</tr>
 
 	<tr>
-	    <?php $short_projects = collect_short_projects($period, $wlist);  ?>
+	    <?php $short_projects = collect_short_projects($period, $wlist, $is_filtered);  ?>
 	    <td colspan="7" style="height: <?=20 * (count($short_projects) == 0 ? 1 : count($short_projects)); ?>px;">
 		<div class="short_projects_container" style="height: <?=20 * count($short_projects); ?>px;">
 		    <?php print_short_projects($short_projects); ?>
@@ -137,7 +137,8 @@ $projects = collect_projects($start, $end, $wlist);
 			$wlist,
 			7 * 60 * 60,
 			24 * 60 * 60,
-			15 * 60
+			15 * 60,
+			$is_filtered
 		    );
 
 		    print_day_activities($out);

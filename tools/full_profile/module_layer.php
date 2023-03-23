@@ -44,7 +44,8 @@ class ModuleLayer extends Layer
     
     public $id_team = -1; // Le lien module-utilisateur.
     public $cursus = []; // Matiere obligatoire pour certains cursus
-
+    public $registered = false;
+    
     public function get_credit()
     {
 	if ($this->done_date == NULL || $this->done_date > now())
@@ -204,6 +205,11 @@ class ModuleLayer extends Layer
 		}
 		if (!isset($target->medal[$med["codename"]]["module_medal"]))
 		    $target->medal[$med["codename"]]["module_medal"] = false;
+		// Médaille éliminatoire directement sur la matiere
+		// La matière est perdue, et la medaille doit etre affichée
+		// clairement
+		if ($med["id_activity"] == $module_id && $med["type"] == 2)
+		    $target->medal[$med["codename"]]["eliminatory"] = true;
 	    }
 
 	    // Presence et absences

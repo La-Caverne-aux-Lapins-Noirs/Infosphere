@@ -1,5 +1,7 @@
 <?php
 
+$LoadedProfiles = [];
+
 function sort_year_month($a, $b)
 {
     $aa = explode("/", $a);
@@ -315,7 +317,7 @@ class FullProfile extends Layer
 	}
     }
 
-    public function build($user_id, $blist = [])
+    public function build($user_id, $blist = [], $only_registered = true)
     {
 	global $Language;
 	global $Configuration;
@@ -358,7 +360,7 @@ class FullProfile extends Layer
 		foreach (["id", "codename", "done", "cycle", "first_day", "commentaries", "hidden", "id_user_cycle", "cursus"] as $label)
 		    $l->$label = $cycle[$label];
 		$l->id = $cycle["id_cycle"];
-		$l->buildsub($user_id, $cycle["id_cycle"], $blist);
+		$l->buildsub($user_id, $cycle["id_cycle"], $blist, $only_registered);
 		$this->sublayer[] = $l;
 	    }
 	}

@@ -1,40 +1,4 @@
-<?php
-$all_matters = [];
-$modules = $cycle->sublayer;
-foreach ($user->sublayer as $ccc)
-{
-    $cycid = $ccc->id;
-    if (array_search($cycid, $cyclesid) === false)
-	continue ;
-    $cm = db_select_all("
-      activity.id,
-      activity.{$Language}_name as name,
-      activity.codename,
-      activity.credit_a,
-      activity.credit_b,
-      activity.credit_c,
-      activity.credit_d
-      FROM activity_cycle
-      LEFT JOIN activity ON activity_cycle.id_activity = activity.id
-      WHERE activity_cycle.id_cycle = $cycid
-      AND activity.deleted IS NULL
-      AND (activity.parent_activity = -1 OR activity.parent_activity IS NULL)
-    ");
-    $all_matters = array_merge($all_matters, $cm);
-}
-foreach ($all_matters as $matt)
-{
-    $matt = (object)$matt;
-    $matt->registered = false;
-    $fnd = false;
-    foreach ($modules as $check)
-	if ($check->id == $matt->id)
-	    $fnd = true;
-    if ($fnd == false)
-	$modules[] = $matt;
-}
-?>
-<?php foreach ($modules as $module) { ?>
+<?php foreach ($mods as $module) { ?>
     <?php if ($module->credit_a == 0) continue ; ?>
     <tr>
 	<td><?=explode("_", $module->codename)[0]; ?></td>
@@ -43,23 +7,19 @@ foreach ($all_matters as $matt)
 	    <?php if (@$module->commentaries) { ?>
 		<p><?=$module->commentaries; ?></p>
 	    <?php } ?>
-	    <div style="column-count: 2; font-size: xx-small;">
-
-		<!--	
-		     <?php if (isset($module->late) && $module->late->get()) { ?>
-		     <?=$Dictionnary["Late"]." : ".$module->late; ?><br />
-		     <?php } ?>
+	    <!--div style="column-count: 2; font-size: xx-small;">
+	    <?php if (isset($module->late) && $module->late->get()) { ?>
+		<?=$Dictionnary["Late"]." : ".$module->late; ?><br />
+	    <?php } ?>
 		     
-		     <?php if (isset($module->missing) && $module->missing->get()) { ?>
-		     <?=$Dictionnary["Missing"]; ?> : <?=$module->missing; ?><br />
-		     <?php } ?>
+	    <?php if (isset($module->missing) && $module->missing->get()) { ?>
+		<?=$Dictionnary["Missing"]; ?> : <?=$module->missing; ?><br />
+	    <?php } ?>
 		     
-		     <?php if (isset($module->nowork) && $module->nowork->get()) { ?>
-		     <?=$Dictionnary["NoWork"]; ?> : <?=$module->nowork->cumulated; ?><br />
-		     <?php } ?>
-		-->
-
-	    </div>
+		 <?php if (isset($module->nowork) && $module->nowork->get()) { ?>
+		 <?=$Dictionnary["NoWork"]; ?> : <?=$module->nowork->cumulated; ?><br />
+		 <?php } ?>
+		 </div-->
 	</td>
 	<?php if ($module->registered == false) { ?>
 	    <td colspan="2">

@@ -8,7 +8,7 @@
 	    onsubmit="
 		return setCookie('filter_cycle', document.getElementById('filter_cycle').value) &&
 		location.reload() && 0
-;
+		;
 	    "
 	>
 	    <div style="float: left; padding-left: 10px;">
@@ -30,7 +30,8 @@
 		    <input
 			type="text"
 			name="<?=$filter; ?>"
-			value="<?=isset($_COOKIE[$filter]) ? $_COOKIE[$filter] : ""; ?>"
+			id="<?=$filter; ?>"
+			value="<?=isset($_COOKIE[$filter]) ? str_replace("XXXSEPARATORXXX", ";",  $_COOKIE[$filter]) : ""; ?>"
 			placeholder="<?=$Dictionnary[$label]; ?>"
 			onchange="setCookie('<?=$filter; ?>', this.value);"
 		    />

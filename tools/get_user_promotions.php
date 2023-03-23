@@ -22,7 +22,8 @@ function get_user_promotions(array &$usr, $by_name = false)
         FROM cycle
         LEFT JOIN user_cycle
         ON user_cycle.id_cycle = cycle.id
-        WHERE user_cycle.id_user = ".$usr["id"]." AND deleted IS NULL
+        WHERE user_cycle.id_user = ".$usr["id"]."
+        AND deleted IS NULL
 	ORDER BY cycle.cycle DESC
 	";
     $usr["cycle"] = db_select_all($forge, $by_name ? "codename" : "");

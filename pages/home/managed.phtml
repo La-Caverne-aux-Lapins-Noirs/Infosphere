@@ -2,15 +2,29 @@
 <?php if (count($activities["managed"])) { ?>
     <table style="text-align: center;">
 	<tr>
-	    <th><?=$Dictionnary["Name"]; ?></th>
-	    <th><?=$Dictionnary["Date"]; ?></th>
-	    <th><?=$Dictionnary["Hour"]; ?></th>
+	    <th style="width: 50%;"><?=$Dictionnary["Name"]; ?></th>
+	    <th style="width: 30%;"><?=$Dictionnary["Date"]; ?></th>
+	    <th style="widht: 20%;"><?=$Dictionnary["Hour"]; ?></th>
 	</tr>
 	<?php foreach ($activities["managed"] as $act) { ?>
 	    <tr class="home_activity">
 		<td>
 		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>&amp;b=<?=$act["id_session"]; ?>">
-			<?=$act["name"]; ?>
+			<?=$act["name"] ?: '<span style="font-size: xx-small;">'.$act["codename"].'</span>'; ?>
+			<span style="font-size: 0.1em;">
+			    <?php if ($act["subject"] == NULL) { ?>
+				<span style="color: red;">&#128203;&#xFE0E;</span>
+			    <?php } ?>
+			    <?php if ($act["medal"] == false) { ?>
+				<span style="color: red;">&#127894;&#xFE0E;</span>
+			    <?php } ?>
+			    <?php if ($act["teacher"] == false) { ?>
+				<span style="color: red;">&#9786;&#xFE0E;</span>
+			    <?php } ?>
+			    <?php if ($act["room"] == false) { ?>
+				<span style="color: red;">&#127979;&#xFE0E;</span>
+			    <?php } ?>
+			</span>
 		    </a>
 		</td>
 		<td>

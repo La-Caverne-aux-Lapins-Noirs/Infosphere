@@ -38,7 +38,7 @@
     else
 	$module->configuration["Validation"]["E"] = $module->valid_grade_e / 100.0;
     ?>
-    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-color: white !important; background-image: url('./tools/histo_bar.php?w=450&amp;h=200&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
+    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-image: url('./tools/histo_bar.php?w=450&amp;h=200&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
     </div>
     
 <?php } ?>

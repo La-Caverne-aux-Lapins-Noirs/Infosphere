@@ -5,6 +5,7 @@ $Dictionnary = [
     "" => "",
     "no_room" => "Pas de salle",
     "Empty" => "Vide",
+    "DirectorSignature" => "Signature du directeur",
     "PreferedHourToBeCalledBack" => "Heure d'appel préférée",
     "CallbackHour" => "Heure approximative d'appel préférée",
     "CreditTotal" => "Total en flammes",

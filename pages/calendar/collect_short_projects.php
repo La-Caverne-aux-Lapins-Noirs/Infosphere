@@ -1,6 +1,6 @@
 <?php
 
-function collect_short_projects($week, $wlist)
+function collect_short_projects($week, $wlist, $is_filtered = false)
 {
     global $User;
     global $one_week;
@@ -30,10 +30,14 @@ function collect_short_projects($week, $wlist)
     {
 	($s = new FullActivity)->build($sess["id"], false, false);
 	($module = new FullActivity)->build($s->parent_activity, false, false);
-
-	if ($s->is_assistant == false && ($module->registered == false || filter_out_activity($s, $wlist)))
+	if (!$is_filtered)
+	{
+	    if ($s->is_assistant == false && $module->registered == false)
+		continue ;	    
+	}
+	else if (filter_out_activity($s, $wlist))
 	    continue ;
-	if ($s->type_type != 1)
+	if ($s->type_type != 1 || $ActivityType[$s->type]["id"] != 15)
 	    continue ;
 	$projects[] = $s;
     }

@@ -9,6 +9,8 @@ function setCookie(name, value, days = 365)
         date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
         expires = "; expires=" + date.toUTCString();
     }
+    if (value && typeof value == "string")
+	value = value.replaceAll(';', 'XXXSEPARATORXXX');
     var tmp = name + "=" + (value || "") + expires + "; path=/";
     document.cookie = tmp;
     return (tmp);

@@ -1,10 +1,17 @@
 <?php
 
-function get_full_profile($user, $blist = [], $recalculate = true)
+function get_full_profile($user, $blist = [], $recalculate = true, $only_registered = true)
 {
+    global $LoadedProfiles;
+
+    // J'experimente ca pour augmenter les perfs.
+    // Ca aura peut etre des effets negatifs: a voir.
+    if (isset($LoadedProfiles[$user["id"]]))
+	return ($LoadedProfiles[$user["id"]]);
+    
     // recalculate n'est pas utilisé actuellement...
     $data = new FullProfile;
-    $data->build($user["id"], $blist);
+    $data->build($user["id"], $blist, $only_registered);
     return ($data);
 }
 

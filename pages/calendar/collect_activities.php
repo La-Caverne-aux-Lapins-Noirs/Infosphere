@@ -4,7 +4,7 @@
 // Matin et soir indique les points de départ et fin d'affichage seulement
 // Debut et fin DOIVENT etre entre matin et soir
 // Slotsize est la granularité des positions
-function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize)
+function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize, $is_filtered = false)
 {
     global $User;
     global $one_day;
@@ -38,8 +38,17 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize)
 
 	// Si filter renvoit faux, c'est que l'activité nous concerne pas en tant qu'éleve
 	// Mais si on est assistant ou plus, alors il faut la garder.
-	if ($s->is_assistant == false && ($module->registered == false || filter_out_sessions($s, $wlist)))
+	
+	if (!$is_filtered)
+	{
+	    if ($s->is_assistant == false && $module->registered == false)
+		continue ;	    
+	}
+	else if (filter_out_activity($s, $wlist))
 	    continue ;
+	if ($s->type_type != 2)
+	    continue ;
+	
 	if (datex("G", $s->unique_session->begin_date) < 7)
 	    continue ;
 	if ($s->registered)

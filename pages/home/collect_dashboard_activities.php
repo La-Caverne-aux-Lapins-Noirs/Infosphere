@@ -42,6 +42,13 @@ function collect_dashboard_activities($start, $end, $managed)
 	    if (filter_out_sessions($s, $wlist))
 		continue ;
 	}
+	$session["subject"] = $s->current_subject;
+	$session["medal"] = count($s->medal);
+	$session["teacher"] = count($s->teacher);
+	$session["room"] = true;
+	foreach ($s->session as $ses)
+	    if (count($ses->room) == 0)
+		$session["room"] = false;
 	$session["name"] = $s->name;
 	$session["id_session"] = $session["sid"];
 	$session["soon"] = datex("z", date_to_timestamp($session["begin_date"])) - datex("z", time());

@@ -11,7 +11,7 @@ class CycleLayer extends Layer
     public $cursus = []; // Y a t il une spécialité choisi au cursus?
     
     // $sublayer sera des module layer
-    public function buildsub($user_id, $cycle_id, $blist = [])
+    public function buildsub($user_id, $cycle_id, $blist = [], $only_registered = true)
     {
 	global $Language;
 	global $Database;
@@ -35,9 +35,13 @@ class CycleLayer extends Layer
 	$this->is_assistant = $auth >= ASSISTANT;
 
 	////// ON RECUPERE LES MODULES OU L'ON EST INSCRIT
+	$only_registered = $only_registered ? "
+          AND user_team.id_user = $user_id
+	" : "";
 	$modules = db_select_all("
            activity.id,
            user_team.id_user as id_user,
+	   user_team.commentaries as user_commentaries,
            team.id as id_team,
            team.closed as closed,
            team.commentaries as commentaries,
@@ -49,7 +53,7 @@ class CycleLayer extends Layer
            LEFT JOIN activity ON activity.id = activity_cycle.id_activity
            LEFT JOIN activity as template ON activity.id_template = template.id
            WHERE activity_cycle.id_cycle = $cycle_id
-	     AND user_team.id_user = $user_id
+	     $only_registered
              AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)
              AND activity.is_template = 0
            AND activity.deleted IS NULL GROUP BY activity.id
@@ -72,7 +76,10 @@ class CycleLayer extends Layer
 	    if ($module->user_team)
 	    {
 		$sub->id_team = $module->user_team["id"];
-		$sub->commentaries = $module->user_team["commentaries"];
+		$sub->commentaries = $module->commentaries;
+		if ($module->commentaries != "" && $module->user_commentaries != "")
+		    $sub->commentaries .= "\n";
+		$sub->commentaries .= $module->user_commentaries;
 	    }
 	    $sub->cursus = explode(";", $mod["cursus"]);
 	    $sub->acquired_credit = 0;

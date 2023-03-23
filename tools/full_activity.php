@@ -131,6 +131,8 @@ class FullActivity extends Response
     public $is_teacher = false;
     public $is_assistant = false;
     public $is_director = false;
+    public $commentaries = ""; // Commentaire sur l'équipe
+    public $user_commentaries = ""; // Commentaire sur le membre de l'equipe
 
     public $evaluation = NULL;
     public $unique_session = NULL;
@@ -474,6 +476,8 @@ class FullActivity extends Response
 			    $this->user_team = $team;
 			    $this->leader = $uu["status"];
 			    $this->registered = true;
+			    $this->commentaries = $team["commentaries"];
+			    $this->user_commentaries = $uu["commentaries"];
 			    break ;
 			}
 		    }
