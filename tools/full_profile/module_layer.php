@@ -41,6 +41,12 @@ class ModuleLayer extends Layer
     public $credit_c = 0;
     public $credit_d = 0;
     public $credit = [];
+
+    public $bonus_grade_a = 0;
+    public $bonus_grade_b = 0;
+    public $bonus_grade_c = 0;
+    public $bonus_grade_d = 0;
+    public $bonus_grade_bonus = 0;
     
     public $id_team = -1; // Le lien module-utilisateur.
     public $cursus = []; // Matiere obligatoire pour certains cursus

@@ -41,7 +41,29 @@ $js = "silent_submit(this)";
 		    </option>
 		</select>
 	    </form>
+	    <?php if ($module->parent_activity != -1 && $module->type_type == 2) { ?>
+		<form
+		    method="put"
+		    onsubmit="return <?=$js; ?>;"
+		    action="/api/<?=$page; ?>/<?=$module->id; ?>"
+		    <?=$Background ? $BackgroundColor : ""; ?>
+		>
+		    <label for="declaration_type"><?=$Dictionnary["DeclarationType"]; ?></label>
+		    <select name="declaration_type" onchange="<?=$js; ?>">
+			<option value="0" <?=$module->declaration_type == 0 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["NoDeclaration"]; ?>
+			</option>
+			<option value="1" <?=$module->declaration_type == 1 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["LocalDeclaration"]; ?>
+			</option>
+			<option value="2" <?=$module->declaration_type == 2 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["GlobalDeclaration"]; ?>
+			</option>
+		    </select>
+		</form>
+	    <?php } ?>
 	    <?php check_form($page, $module, "allow_unregistration", "AllowUnregistration"); ?>
+
 	    <?php if ($module->parent_activity == -1) { ?>
 		<?php check_form($page, $module, "hidden", "Hidden"); ?>
 	    <?php } ?>

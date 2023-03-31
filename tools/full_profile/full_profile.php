@@ -223,15 +223,21 @@ class FullProfile extends Layer
 	    $mod->grade += ((int)(100 * ($medale / $medale_cnt))) >= ((int)$mod->grade_bonus) ? 1 : 0;
 	
 	if ($medala_cnt)
-	    $mod->valid_grade_a = 100 * $medala / $medala_cnt;
+	    $mod->valid_grade_a = 100 * $medala / $medala_cnt + $mod->bonus_grade_a;
 	if ($medalb_cnt)
-	    $mod->valid_grade_b = 100 * $medalb / $medalb_cnt;
+	    $mod->valid_grade_b = 100 * $medalb / $medalb_cnt + $mod->bonus_grade_b;
 	if ($medalc_cnt)
-	    $mod->valid_grade_c = 100 * $medalc / $medalc_cnt;
+	    $mod->valid_grade_c = 100 * $medalc / $medalc_cnt + $mod->bonus_grade_c;
 	if ($medald_cnt)
-	    $mod->valid_grade_d = 100 * $medald / $medald_cnt;
+	    $mod->valid_grade_d = 100 * $medald / $medald_cnt + $mod->bonus_grade_d;
 	if ($medale_cnt)
-	    $mod->valid_grade_e = 100 * $medale / $medale_cnt;
+	    $mod->valid_grade_e = 100 * $medale / $medale_cnt + $mod->bonus_grade_bonus;
+
+	$mod->valid_grade_a = $mod->valid_grade_a <= 100 ? $mod->valid_grade_a : 100;
+	$mod->valid_grade_b = $mod->valid_grade_b <= 100 ? $mod->valid_grade_b : 100;
+	$mod->valid_grade_c = $mod->valid_grade_c <= 100 ? $mod->valid_grade_c : 100;
+	$mod->valid_grade_d = $mod->valid_grade_d <= 100 ? $mod->valid_grade_d : 100;
+	$mod->valid_grade_e = $mod->valid_grade_e <= 100 ? $mod->valid_grade_e : 100;
     }
 
     function validate_modules()
@@ -377,7 +383,7 @@ class FullProfile extends Layer
 	        LEFT JOIN user_school
 	        ON user_school.id_school = school.id
 	        WHERE user_school.id_user = $user_id AND school.deleted IS NULL
-		");
+	    ");
 	}
 
 	if (array_search("laboratory", $blist) === false)

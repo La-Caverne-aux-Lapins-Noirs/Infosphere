@@ -33,6 +33,12 @@
     $module->configuration["Validation"]["B"] = $module->valid_grade_b / 100.0;
     $module->configuration["Validation"]["C"] = $module->valid_grade_c / 100.0;
     $module->configuration["Validation"]["D"] = $module->valid_grade_d / 100.0;
+    $module->configuration["Bonus"]["A"] = $module->bonus_grade_a / 100.0;
+    $module->configuration["Bonus"]["B"] = $module->bonus_grade_b / 100.0;
+    $module->configuration["Bonus"]["C"] = $module->bonus_grade_c / 100.0;
+    $module->configuration["Bonus"]["D"] = $module->bonus_grade_d / 100.0;
+    $module->configuration["Bonus"]["Bonus"] = $module->bonus_grade_bonus / 100.0;
+    
     if ($module->grade_bonus == 0)
 	$module->configuration["Validation"]["E"] = 0;
     else

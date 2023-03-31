@@ -9,6 +9,7 @@ class CycleLayer extends Layer
     public $last_day = NULL;
     public $id_user_cycle = -1;
     public $cursus = []; // Y a t il une spécialité choisi au cursus?
+    public $schools = []; // Les école associé au cycle (construit par FullProfile)
     
     // $sublayer sera des module layer
     public function buildsub($user_id, $cycle_id, $blist = [], $only_registered = true)
@@ -34,6 +35,18 @@ class CycleLayer extends Layer
 	$this->is_teacher = $auth >= TEACHER;
 	$this->is_assistant = $auth >= ASSISTANT;
 
+	if (array_search("school", $blist) === false)
+	{
+	    $this->school = db_select_all("
+		school.*,
+		school.{$Language}_name as name
+		FROM school_cycle
+		LEFT JOIN school
+		ON school.id = school_cycle.id_school
+		WHERE school_cycle.id_cycle = $this->id
+	    ");
+	}
+	
 	////// ON RECUPERE LES MODULES OU L'ON EST INSCRIT
 	$only_registered = $only_registered ? "
           AND user_team.id_user = $user_id
@@ -80,6 +93,11 @@ class CycleLayer extends Layer
 		if ($module->commentaries != "" && $module->user_commentaries != "")
 		    $sub->commentaries .= "\n";
 		$sub->commentaries .= $module->user_commentaries;
+		$sub->bonus_grade_a = $module->bonus_grade_a;
+		$sub->bonus_grade_b = $module->bonus_grade_b;
+		$sub->bonus_grade_c = $module->bonus_grade_c;
+		$sub->bonus_grade_d = $module->bonus_grade_d;
+		$sub->bonus_grade_bonus = $module->bonus_grade_bonus;
 	    }
 	    $sub->cursus = explode(";", $mod["cursus"]);
 	    $sub->acquired_credit = 0;

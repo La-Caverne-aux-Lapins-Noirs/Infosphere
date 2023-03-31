@@ -30,6 +30,11 @@ if (isset($_GET["data"]))
     $score[2] = $data["Validation"]["B"];
     $score[1] = $data["Validation"]["C"];
     $score[0] = $data["Validation"]["D"];
+    $bonus[4] = $data["Bonus"]["Bonus"];
+    $bonus[3] = $data["Bonus"]["A"];
+    $bonus[2] = $data["Bonus"]["B"];
+    $bonus[1] = $data["Bonus"]["C"];
+    $bonus[0] = $data["Bonus"]["D"];
     $final_grade = 0;
     if ($score[0] >= $percents[0])
     {
@@ -120,6 +125,21 @@ for ($i = 0; $i <= $nbr_cols; ++$i)
 	($i + 0.5 + 0.2) * $gw / $nbr_cols + ($w - $gw) / 2, $h * 0.7,
 	$ccol
     );
+
+    $pix = 0;
+    for ($left = 0; $left <= ceil(0.4 * $gw / $nbr_cols); ++$left)
+    {
+	for ($top = 0; $top < $bonus[$i] * $h * 0.7; ++$top)
+	{
+	    if ($pix % 2 == 0)
+		imagesetpixel(
+		    $img,
+		    $left + ($i + 0.5 - 0.2) * $gw / $nbr_cols + ($w - $gw) / 2,
+		    $top + $h * 0.7 - $h * 0.55 * $score[$i],
+		    $black);
+	    $pix += 1;
+	}
+    }
 
     imagettftext($img, 15, 0,
 		 ($i + 0.5) * $gw / $nbr_cols - 15 + ($w - $gw) / 2, $h * 0.68,

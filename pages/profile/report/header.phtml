@@ -1,18 +1,35 @@
 <div class="page">
 
     <div style="text-align: center; width: 100%; height: 50px; padding-top: 15px; padding-bottom: 15px; background-color: lightgray;">
-	AU LIEU DE L'IMAGE DE L'INFOSPHERE, IL FAUT METTRE LE LOGO
-	CONFIGURE DANS L'ECOLE
-	<img 
-	    <?php if (file_exists(__DIR__."/../../../dres/logo.png")) { ?>
-		src="/dres/logo.png"
-	    <?php } else { ?>
-	    src="/dres/logo.png"
+	<?php
+	$schools = [];
+	foreach ($user->school as $school)
+	{
+	    foreach ($first_cycle->school as $sch)
+	    {
+		if ($school["id_school"] == $sch["id"])
+		{
+		    $schools[] = array_merge($sch, [
+			"picture" => $Configuration->SchoolsDir($school["codename"])."icon.png"
+		    ]);
+		}
+	    }
+	}
+	?>
+	<?php $x = 0; ?>
+	<?php foreach ($schools as $sc) { ?>
+	    <img
+		src="<?=$sc["picture"]; ?>"
+		style="width: 100px; height: 100px; position: relative; top: -30px; left: calc(-40% + <?=$x; ?>px - 20px);"
+	    />
+	    <?php $x += 110; ?>
+	<?php } ?>
+	<?php $x += 10; ?>
+	<p style="width: calc(100% - 200px); position: absolute; left: <?=$x; ?>px; top: 15px; height: calc(100% - 20px); text-align: left;">
+	    <?php foreach ($schools as $sc) { ?>
+		<b><?=$Dictionnary["School"]; ?> <?=$sc["name"]; ?></b><br />
+		<?=str_replace("\n", "<br />", $sc["address"]); ?>
 	    <?php } ?>
-	    style="width: 120px; height: 120px; position: relative; top: -35px; left: -40%;"
-	/>
-	<p style="width: calc(100% - 200px); position: absolute; left: 200px; top: 10px; height: calc(100% - 20px); text-align: left;">
-	    ICI  LES PROPRIETES DE L'ECOLE
 	</p>
     </div>
     <br />

@@ -135,6 +135,8 @@ function SetCycleTeacher($id, $data, $method, $output, $module)
 
 function SetUser($id, $data, $method, $output, $module)
 {
+    global $Dictionnary;
+    
     if ($id == -1 || $module != "cycle")
 	bad_request();
     if (($users = resolve_codename("user", $data["user"]))->is_error())
@@ -206,6 +208,8 @@ function SetUserProps($id, $data, $method, $output, $module)
 
 function SetMatter($id, $data, $method, $output, $module)
 {
+    global $Dictionnary;
+
     if ($id == -1 || !isset($data["activity"]))
 	bad_request();
     if (($act = resolve_codename("activity", $data["activity"], "codename", true))->is_error())

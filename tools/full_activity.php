@@ -63,6 +63,8 @@ class FullActivity extends Response
     public $grade_d = 50;
     public $grade_bonus = 75;
 
+    public $declaration_type = 1;
+    
     const RANK_VALIDATION = 3;
     const GRADE_VALIDATION = 2;
     const PERCENT_VALIDATION = 1;
@@ -212,7 +214,7 @@ class FullActivity extends Response
 	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "deleted", "parent_name",
 	    "maximum_subscription", "validation", "repository_name",
 
-	     "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus",
+	     "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "declaration_type",
 	    "credit_a", "credit_b", "credit_c", "credit_d",
 	];
 	foreach ($LanguageList as $k => $v)
@@ -446,7 +448,12 @@ class FullActivity extends Response
                   user.visibility as visibility,
                   user_team.status as status,
                   user_team.commentaries as commentaries,
-                  user_team.code as code
+                  user_team.code as code,
+                  user_team.bonus_grade_a,
+                  user_team.bonus_grade_b,
+                  user_team.bonus_grade_c,
+                  user_team.bonus_grade_d,
+                  user_team.bonus_grade_bonus
                   FROM user_team
                   LEFT JOIN user ON user_team.id_user = user.id
                   WHERE user_team.id_team = {$team["id"]} $limit
@@ -478,6 +485,11 @@ class FullActivity extends Response
 			    $this->registered = true;
 			    $this->commentaries = $team["commentaries"];
 			    $this->user_commentaries = $uu["commentaries"];
+			    $this->bonus_grade_a = $uu["bonus_grade_a"];
+			    $this->bonus_grade_b = $uu["bonus_grade_b"];
+			    $this->bonus_grade_c = $uu["bonus_grade_c"];
+			    $this->bonus_grade_d = $uu["bonus_grade_d"];
+			    $this->bonus_grade_bonus = $uu["bonus_grade_bonus"];
 			    break ;
 			}
 		    }
