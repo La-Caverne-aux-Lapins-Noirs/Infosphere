@@ -1,4 +1,4 @@
-<?php $js = "silent_submit(this, 'robotlist');"; ?>
+<?php $js = "silent_submit(this, 'doclist');"; ?>
 <style>
  .robottab input
  {
@@ -6,9 +6,9 @@
      padding: 5px 5px 5px 5px;
  }
 </style>
-<h2 class="alignable_blocks"><?=$Dictionnary["Robot"]; ?></h2>
-<table><tr><td style="width: 80%;" id="robotlist" class="robottab">
-    <?php require_once ("robots.phtml"); ?>
+<h2 class="alignable_blocks"><?=$Dictionnary["Documents"]; ?></h2>
+<table><tr><td style="width: 80%;" id="doclist" class="robottab">
+    <?php require_once ("docs.phtml"); ?>
 </td><td>
     <form
 	method="post"

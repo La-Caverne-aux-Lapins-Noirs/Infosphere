@@ -94,14 +94,32 @@
 		<br />
 	    </div>
 	</form>
-	<?php if (is_admin()) { ?>
-	<form action="index.php?p=<?=$Position; ?>" method="post">
-	    <div style="float: right;">
-		<input type="hidden" name="start" value="<?=!$in_template ? $date0 : db_form_date(time()); ?>" />
-		<input type="hidden" name="end" value="<?=!$in_template ? db_form_date(date_to_timestamp($date0) + $one_week) : db_form_date(time() + $one_week); ?>" />
-		<input type="submit" value="<?=$in_template ? "Instance" : "Template"; ?>" style="width: 60px; height: 60px;" />
-	    </div>
-	</form>
+	<?php if (is_teacher()) { ?>
+	    <form
+		action="index.php?p=<?=$Position; ?>"
+		method="post"
+		id="template_instance_form"
+	    >
+		<div style="float: right;">
+		    <input
+			type="hidden"
+			name="start"
+			value="<?=!$in_template ? $date0 : db_form_date(time()); ?>"
+		    />
+		    <input
+			type="hidden"
+			name="end"
+			value="<?=!$in_template ? db_form_date(date_to_timestamp($date0) + $one_week) : db_form_date(time() + $one_week); ?>"
+		    />
+		    <input
+			type="button"
+			id="filter_type"
+			value="<?=$in_template ? "Instance" : "Template"; ?>"
+			onclick="setCookie('filter_type', this.value); document.getElementById('template_instance_form').submit();"
+			style="width: 60px; height: 60px;"
+		    />
+		</div>
+	    </form>
 	<?php } ?>
     </div>
 </div>

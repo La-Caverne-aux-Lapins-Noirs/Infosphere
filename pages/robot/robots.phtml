@@ -1,0 +1,59 @@
+<?php $nbrcols = 6; ?>
+<?php $js = "silent_submit(this, 'robotlist');"; ?>
+<table class="content_table">
+    <tr>
+	<?php for ($i = 0; $i < $nbrcols; ++$i) { ?>
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><img src="res/cog.png" style="width: 30px; height; 30px;" /></th>
+	<?php } ?>
+    </tr>   
+    <?php
+    $robots = hand_request([
+	"command" => "getrobot"
+    ]);
+    ?>
+    <?php if (!isset($robots["result"]) || $robots["result"] != "ok" || !count($robots["content"])) { ?>
+	<tr><td colspan="<?=$nbrcols * 2; ?>"><?=$Dictionnary["Empty"]; ?></td>
+    <?php } else { ?>
+	<?php $col = 0; ?>
+	<?php foreach ($robots["content"] as $robot) { ?>
+	    <?php if ($col % $nbrcols == 0) { ?>
+		<tr>
+	    <?php } ?>
+	    <td>
+		<form
+		    method="get"
+		    action="/api/robot/<?=$robot; ?>"
+		    target="_blank"
+		    onsubmit="return silent_submit(this);"
+		>
+		    <input
+			type="button"
+			onclick="return silent_submit(this);"
+			value="<?=$robot; ?>"
+		    />
+		</form>
+	    </td>
+	    <td>
+		<form
+		    method="delete"
+		    action="/api/robot/<?=$robot; ?>"
+		    onsubmit="return <?=$js; ?>"
+		>
+		    <input
+			type="button"
+			onclick="return <?=$js; ?>"
+			value="<?=$Dictionnary["Delete"]; ?>"
+		    />
+		</form>
+	    </a></td>
+	    <?php if ($col % $nbrcols == $nbrcols - 1) { ?>
+		</tr>
+	    <?php } ?>
+	    <?php $col += 1; ?>
+	<?php } ?>
+	<?php if ($col % $nbrcols != 0) { ?>
+	    <?php echo "</tr>"; ?>
+	<?php } ?>
+    <?php } ?>
+</table>

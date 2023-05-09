@@ -4,6 +4,7 @@
 	<tr><td style="width: 100px;">
 	    <div
 		class="medal_box_picture"
+		onclick="document.location='index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>';"
 		style="
 		       background-image: url('<?=$medal["icon"]; ?>');
 		       <?php if ($medal["band"] != NULL) { ?>
@@ -70,9 +71,9 @@
 	     ] as $cc)
 	         unset($medal[$cc]);
 	     ?>
-	     var <?=$medal["codename"]; ?> = {
+	     var _<?=$medal["codename"]; ?> = {
 		 <?php foreach ($medal as $kmed => $med) { ?>
-		     <?=$kmed; ?>: "<?=$med; ?>",
+		     <?=$kmed; ?>: "<?=str_replace("\n", "\\n", addslashes($med)); ?>",
 		 <?php } ?>
 		 edit: true
 	     };
@@ -82,9 +83,16 @@
 		<form method="delete" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="confirm() && <?=$js; ?>;">
 		    <input type="button" value="&#10007;" onclick="confirm() && <?=$js; ?>;" style="color: red;" />
 		</form>
-		<form method="put" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="load_form(document.getElementById('medal_formular'), <?=$medal["codename"]; ?>);">
-		    <input type="button" value="E" onclick="load_form(document.getElementById('medal_formular'), <?=$medal["codename"]; ?>);" style="color: #00FFFF;" />
+		<form method="put" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="load_form(document.getElementById('medal_formular'), _<?=$medal["codename"]; ?>);">
+		    <input type="button" value="E" onclick="load_form(document.getElementById('medal_formular'), _<?=$medal["codename"]; ?>);" style="color: #00FFFF;" />
 		</form>
+		<input type="button"
+		       <?php if (isset($srvmeds[$medal["codename"]])) { ?>
+		       style="background-color: green;"
+		       <?php } else { ?>
+		       style="background-color: red;"
+		       <?php } ?>
+		/>
 	    </td>
 	<?php } ?>
 	</tr>

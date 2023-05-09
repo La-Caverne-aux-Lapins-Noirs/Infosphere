@@ -97,6 +97,31 @@ End:
     if ($ins->is_error())
 	return ($ins);
 
+    $Hand = "";
+    if (($med = fetch_medal($codename)) != [])
+    {
+	$icon = file_get_contents($med["icon"]);
+	unset($med["icon"]);
+	unset($med["command"]);
+	unset($med["id"]);
+	unset($med["band"]);
+	unset($med["type"]);
+	unset($med["deleted"]);
+	$ret = hand_request([
+	    "command" => "installmedal",
+	    "medal" => [
+		[
+		    "data" => base64_encode(json_encode($med)),
+		    "icon" => base64_encode($icon)
+		]
+	    ]
+	]);
+	if (isset($ret["result"]) && $ret["result"] == "ok")
+	    $Hand = " - Hand success (".implode(",", $ret["content"]).")";
+	else
+	    $Hand = " - Hand failure";
+    }
+    
     if (isset($data["icon"][0]["content"]))
     {
 	if ($shape == "sband")
@@ -108,7 +133,7 @@ End:
     }
 
     $ret = DisplayMedals($id, $data, $method, $output, $module);
-    $ret->value["msg"] = "MedalAdded";
+    $ret->value["msg"] = "MedalAdded$Hand";
     return ($ret);
 }
 

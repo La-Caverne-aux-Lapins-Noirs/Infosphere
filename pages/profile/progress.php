@@ -8,6 +8,7 @@
     $module->configuration["Grade"]["B"] = $module->grade_b / 100.0;
     $module->configuration["Grade"]["C"] = $module->grade_c / 100.0;
     $module->configuration["Grade"]["D"] = $module->grade_d / 100.0;
+    $module->configuration["Bonus"] = $module->bonus_grade_d / 100.0;
     if ($module->grade_module)
     {
 	foreach ($module->medal as $i => $med)

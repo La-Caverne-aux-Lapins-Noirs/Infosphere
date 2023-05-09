@@ -197,3 +197,14 @@ function select_ressource(res, thx)
     setCookie("<?=$page; ?>-ressource", current_ressource = res);
     select_formular();
 }
+
+function autocomplete_form()
+{
+    var type = document.getElementById("ac_type").value;
+    var start = document.getElementById("ac_subject");
+
+    if (type == 1) // Learning day
+    {
+
+    }	
+}

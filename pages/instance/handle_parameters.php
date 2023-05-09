@@ -13,6 +13,11 @@ if (@is_number($_GET["b"]))
 else
     $session = -1;
 
+if (@is_number($_GET["t"]))
+    $wteam = $_GET["t"];
+else
+    $wteam = -1;
+
 require ("build_activity.php");
 
 if (try_get($_GET, "fetch") == 1)

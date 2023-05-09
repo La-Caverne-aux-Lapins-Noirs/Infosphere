@@ -65,4 +65,8 @@ else
     }
 }
 
+$wlist["type"] = "";
+if (isset($_COOKIE["filter_type"]) && strtolower($_COOKIE["filter_type"]) == "template")
+    if (is_teacher())
+	$wlist["type"] = "template";
 

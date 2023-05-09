@@ -4,7 +4,7 @@ function filter_out_activity($session, $wlist)
 {
     global $User;
 
-    if (isset($wlist["type"]) && $wlist["type"] == "template")
+    if (isset($wlist["type"]) && strtolower($wlist["type"]) == "template")
     {
 	if ($session->is_template == false)
 	    return (true);

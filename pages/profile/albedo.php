@@ -2,7 +2,7 @@
 if (!isset($albedo) || $albedo != 1)
     return ;
 $logcnt = 0;
-if (($logs = hand_request(["command" => "getlog"])) === false)
+if (($logs = hand_request(["command" => "getlog"], false)) === false)
     add_log(TRACE, "Failed to get log from TechnoCore", 1);
 else if (isset($logs["content"]))
 {
@@ -22,6 +22,9 @@ else if (isset($logs["content"]))
 	);
 	++$logcnt;
     }
-    add_log(EDITING_OPERATION, "Setting $logcnt activity logs from TechnoCore", 1);
-    //hand_request(["command" => "clearlog"]);
+    if ($logcnt)
+    {
+	add_log(EDITING_OPERATION, "Setting $logcnt activity logs from TechnoCore", 1);
+	//hand_request(["command" => "clearlog"]);
+    }
 }

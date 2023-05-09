@@ -162,18 +162,26 @@ function PickupActivity($id, $data, $method, $output, $module)
 	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
 	WHERE id_team = $team AND status = 2
     ");
-    $activity = db_select_one("
-	codename
-	FROM activity
-	WHERE id = $id
-    ");
+    if ($team_leader == NULL)
+	not_found();
+    $team_leader = $team_leader["codename"];
+    if (($activity = new FullActivity)->build($id) == false)
+	not_found();
+    if (strlen($activity = $activity->repository_name) == 0)
+	return (new ErrorResponse("NoRepositoryConfigured"));
     
     $ret = hand_request([
+	"command" => "pickup",
 	"login" => $team_leader,
 	"work" => $activity
     ]);
-    $target = $Configuration->UsersDir($team_leader);
-    ///
+    if (!isset($ret["result"]) || $ret["result"] != "ok")
+	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
+
+    return (new ValueResponse([
+	"filename" => str_replace("-", "_", basename($activity))."_".str_replace(".", "_", $team_leader).".tar.gz",
+	"content" => base64_decode($ret["content"])
+    ]));
 }
 
 function EditTemplateLink($id, $data, $method, $output, $module)
@@ -309,6 +317,15 @@ function AddActivity($id, $data, $method, $output, $module)
     return (DisplayModule($module->id, [], "GET", $output, $module));
 }
 
+function DuplicateActivity($id, $data, $method, $output, $module)
+{
+    // copy_template.php
+    ($original = new FullActivity)->build($id);
+    if (($ret = copy_template($original, $data["codename"]))->is_error())
+	return ($ret);
+    return (DisplayModule(-1, $data, "GET", $output, $module));
+}
+    
 function SetActivityLink($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -555,7 +572,8 @@ function EditActivity($id, $data, $method, $output, $module)
     $fields = array_merge([
 	"type", "subscription", "allow_unregistration", "hidden", "grade_a", "grade_b", "grade_c", "grade_d",
 	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration", "repository_name",
-	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation"
+	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation",
+	"declaration_type"
     ], $lng_fields);
     $edit = [];
     foreach ($fields as $field)

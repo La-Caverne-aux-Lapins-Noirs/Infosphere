@@ -30,28 +30,28 @@ else
 />
 <input type="button" onclick="document.getElementById('filter_form').value = ''; document.getElementById('filter_form').onchange();" value="&#10007;" style="color: red;" />
 
-<table id="activity_tab"><tr id="selectlist"><td>
+<table id="activity_tab"><tr id="selectlist" style="height: 100%;"><td>
     <!-- MODULES -->
     <h5><?=$Dictionnary["Module"]; ?></h5>
-    <div id="module_list">
+    <div id="module_list" style="height: 100%;">
     </div>
     
 </td><td>
     <!-- ACTIVITES -->
     <h5><?=$Dictionnary["Activity"]; ?></h5>
-    <div id="activity_list">
+    <div id="activity_list" style="height: 100%;">
     </div>
     
 </td><td>
     <!-- SESSIONS -->
     <h5><?=$Dictionnary["Session"]; ?></h5>
-    <div id="session_list">
+    <div id="session_list" style="height: 100%;">
     </div>
     
 </td><td rowspan="2" style="width: 60%; height: 100%;">
     <!-- FORMULAIRE D'EDITION -->
     <h5 id="edit_formular_title"></h5>
-    <div id="edit_formular">
+    <div id="edit_formular" style="height: 100% !important;">
     </div>
 </td></tr><tr id="down_formular"><td>
     <!-- FORMULAIRE D'AJOUT DE MODULE -->

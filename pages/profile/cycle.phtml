@@ -6,8 +6,8 @@ $merged_cycles = $cyc->cycles;
 
 $cursuses = [];
 foreach ($cyc->cursus as $cs)
-    if ($cs != "")
-	$cursuses[] = $cs;
+    if (trim($cs) != "" )
+	$cursuses[] = trim($cs);
 
 $min_credit = 0;
 $max_credit = 0;
@@ -42,6 +42,8 @@ foreach ($curcycle as $module) {
 	<br />
 	<b><?=$Dictionnary["Credits"]."</b> : $cur_credit / ($min_credit - $max_credit)"; ?>
 	    <?php $first_time = true; ?>
+	    <?php $cursus = ""; ?>
+	    <?php $cursuses = array_filter($cursuses); ?>
 	    <?php foreach ($cursuses as $cursus) { ?>
 		<?php if ($first_time) { ?>
 		    <br /><b><?=$Dictionnary["Curriculum"]; ?></b> :

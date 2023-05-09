@@ -119,6 +119,16 @@ if ($request->is_error())
 }
 else if ($request instanceof ValueResponse)
 {
+    if (isset($request->value["filename"]))
+    {
+	header("Content-Type: application/octet-stream");
+	header("Content-Disposition: attachment; filename=".
+	       $request->value["filename"]
+	);
+	echo $request->value["content"];
+	return ;
+    }
+ 
     // On complète le paquet
     if (!isset($request->value["content"]))
 	$request->value["content"] = "";

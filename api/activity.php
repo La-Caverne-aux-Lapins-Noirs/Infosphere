@@ -42,6 +42,10 @@ $Tab = [
 	    "is_director_for_activity",
 	    "Instantiate",
 	],
+	"duplicate" => [
+	    "is_teacher",
+	    "DuplicateActivity",
+	],
     ],
     "PUT" => [
 	"" => [
