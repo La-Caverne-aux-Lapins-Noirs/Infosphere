@@ -1,4 +1,4 @@
-<h2><?=$Dictionnary["NextActivities"]; ?>:</h2>
+<h3><?=$Dictionnary["NextActivities"]; ?>:</h3>
 <?php if (count($activities["participate"])) { ?>
     <table style="text-align: center;">
 	<tr>
@@ -31,5 +31,7 @@
 	    </tr>
 	<?php } ?>
     </table>
+<?php } else { ?>
+    <i><?=$Dictionnary["NoActivitiesToCome"]; ?></i><br />
 <?php } ?>
-
+<br />

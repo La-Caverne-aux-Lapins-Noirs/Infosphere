@@ -1,4 +1,4 @@
-<?php $medal = fetch_medal($_GET["a"]); ?>
+<?php $medal = fetch_medal($_GET["a"], true); ?>
 <div style="position: absolute; top: 10px; left: 10px; width: 420px;">
     <img src="<?=$medal["icon"]; ?>" alt="" />
     <br />

@@ -10,6 +10,16 @@
 
 <div style="text-align: center;">
     <?php foreach ($activity->medal as $medal) { ?>
+	<?php
+	// Si c'est un examen ou assimilé et qu'on est pas prof, pas inscrit
+	// ou que l'heure de l'exam est pas arrivé, on cache les médailles
+	if (in_array($activity->type, [5, 6, 7, 8, 9])) {
+	    if ($activity->is_teacher == false && $activity->is_registered == false)
+		break ;
+	    if ($activity->subject_appeir_date != NULL && $activity->subject_appeir_date < now())
+		break ;
+	}
+	?>
 	<div class="activity_single_medal_box">
 	    <?php if ($medal["icon"] != "") { ?>
 		<div style="float: left; height: 100%;">

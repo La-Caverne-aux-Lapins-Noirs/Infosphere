@@ -18,7 +18,13 @@ $MedalColor = [
 ];
 ?>
 <br />
-<?php foreach (sort_by_medal_grade($module->medal) as $medal) { ?>
+<?php
+if ($module->parent_activity == -1)
+    $sorted_medal = sort_by_medal_grade($module->medal);
+else
+    $sorted_medal = sort_by_medal_origin($module->medal);
+?>
+<?php foreach ($sorted_medal as $medal) { ?>
     <?php
     $medx[] = $medal["codename"];
     $color = $MedalColor[$medal["role"]];
@@ -40,22 +46,33 @@ $MedalColor = [
 		    title="<?=$medal["name"]." : ".$medal["description"]; ?>"
 		/>
 	    <?php } ?>
-	</a>
-	<br /><span style="font-size: x-small;"><?=$medal["codename"]; // Temporaire, utile car les médailles sont illisibles pour l'instant ?></span><br />
+	</a><br />
+	<span style="font-size: x-small;">
+	    <?=$medal["codename"]; ?>
+	</span><br />
 	<?php if (is_teacher_for_activity($module->id)) { ?>
 
-	    <form
-		method="delete"
-		onsubmit="return <?=$js; ?>;"
-		action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
-	    >
+	    <?php if (!isset($medal["referenced"]) && !isset($medal["templated"])) { ?>
+		<form
+		    method="delete"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+		>
+		    <input
+			type="button"
+			class="delete_round"
+			onclick="<?=$js; ?>;"
+			value="&#10007;"
+		    />
+		</form>
+	    <?php } else { ?>
 		<input
 		    type="button"
 		    class="delete_round"
-		    onclick="<?=$js; ?>;"
-		    value="&#10007;"
+		    value="&nearr;"
+		    style="font-size: large; color: pink;"
 		/>
-	    </form>
+	    <?php } ?>
 
 	    <?php if ($module->parent_activity == -1) {?>
 		<form

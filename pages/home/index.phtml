@@ -11,7 +11,9 @@
 	    <div style="text-align: center;">
 		<?php require_once ("last_medals.php"); ?>
 	    </div>
-	</td><td>
+	</td><td rowspan="2">
+	    <div><?php require_once ("intercom.php"); ?></div>
+	</td><td rowspan="2">
 	    <?php
 	    $participate = collect_dashboard_activities(
 		time(),
@@ -26,30 +28,18 @@
 	    $activities["participate"] = $participate["participate"];
 	    $activities["managed"] = $managed["managed"];
 	    ?>
-	    <table id="activity_table">
-		<?php if (count($activities["participate"])) { ?>
-		    <tr><td>
-			<div><?php require_once ("activities.phtml"); ?></div>
-		    </td></tr>
-		<?php } ?>
+	    <div>
+		<?php require_once ("assistant.php"); ?>
+		<?php require_once ("projects.phtml"); ?>
+		<?php require_once ("activities.phtml"); ?>
 		<?php if (count($activities["managed"])) { ?>
-		    <tr><td>
-			<div><?php require_once ("managed.phtml"); ?></div>
-		    </td></tr>
+		    <?php require_once ("managed.phtml"); ?>
 		<?php } ?>
-		<?php if (count($activities["managed"]) == 0 &&
-			  count($activities["participate"]) == 0) { ?>
-		    <tr><td>&nbsp;</td></tr>
-		<?php } ?>
-	    </table>
-	</td><td>
-	    <div><?php require_once ("projects.phtml"); ?></div>    
+	    </div>    
 	</td></tr><tr><td>
 	    <div id="about_you"><?php require ("about_you.phtml"); ?></div>
 	</td><td>
 	    <div id="powerbox"><?php require ("power.phtml"); ?></div>
-	</td><td colspan="2">
-	    <div><?php require_once ("intercom.php"); ?></div>
 	</td></tr>
     </table>
     <?php if (count($alerts)) { ?>

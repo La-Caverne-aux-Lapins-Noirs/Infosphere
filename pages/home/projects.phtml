@@ -1,5 +1,5 @@
 <?php $projects = collect_dashboard_projects(time()); ?>
-<h2><?=$Dictionnary["CurrentProjects"]; ?>:</h2>
+<h3><?=$Dictionnary["CurrentProjects"]; ?>:</h3>
 <?php if (count($projects)) { ?>
     <table style="text-align: center;">
 	<tr>
@@ -9,17 +9,32 @@
 	<?php foreach ($projects as $act) { ?>
 	    <tr class="home_activity">
 		<td>
-		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>">
+		    <a
+			href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>"
+			<?php if ($act["subscribed"] == false) { ?>
+			    style="color: gray;"
+			<?php } ?>
+		    >
 			<?=$act["name"]; ?>
 		    </a>
 		</td>
 		<td>
-		    <?=datex("d/m", date_to_timestamp($act["pickup_date"])); ?>
-		    <?php if ($act["soon"]) { ?>
-			<?=$Dictionnary["EndThisWeek"]; ?>
+		    <?php if ($act["subscribed"] && $act["pickup_date"] != NULL) { ?>
+			<?=datex("d/m", date_to_timestamp($act["pickup_date"])); ?>
+			<?php if ($act["soon"]) { ?>
+			    <?=$Dictionnary["EndThisWeek"]; ?>
+			<?php } ?>
+		    <?php } else if ($act["close_date"] != NULL) { ?>
+			<?=datex("d/m", date_to_timestamp($act["close_date"])); ?>
+			<?php if ($act["subsoon"]) { ?>
+			    <?=$Dictionnary["EndThisWeek"]; ?>
+			<?php } ?>
 		    <?php } ?>
 		</td>
 	    </tr>
 	<?php } ?>
     </table>
+<?php } else { ?>
+    <p><i><?=$Dictionnary["NoProject"]; ?></i></p>
 <?php } ?>
+<br />
