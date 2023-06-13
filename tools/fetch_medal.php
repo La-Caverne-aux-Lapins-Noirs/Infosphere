@@ -1,13 +1,35 @@
 <?php
 
-function fetch_medal($id = -1)
+function fetch_medal($id = -1, $one = false)
 {
+    global $Database;
     global $Language;
     global $Configuration;
-    
-    $id = (int)$id;
+
     if ($id !== -1)
-	$id = " AND id = $id ";
+    {
+	$tmp = $id;
+	if (($id = resolve_codename("medal", $id))->is_error())
+	{
+	    if ($one)
+		return ([]);
+	    $id = " AND ( 0 ";
+	    $tmp = explode(";", $tmp);
+	    foreach ($tmp as $t)
+	    {
+		if (($t = trim($t)) == "")
+		    continue ;
+		$t = $Database->real_escape_string($t);
+		$id .= " OR tags LIKE \"%$t%\" ";
+	    }
+	    $id .= " )";
+	}
+	else
+	{
+	    $id = $id->value;
+	    $id = " AND id = $id ";
+	}
+    }
     else
 	$id = "";
     $out = db_select_all("
@@ -23,5 +45,6 @@ function fetch_medal($id = -1)
 	if (!file_exists($v["band"]))
 	    $v["band"] = NULL;
     }
-    return ($id == "" ? $out : $out[0]);
+    return ($one ? $out[0] : $out);
 }
+

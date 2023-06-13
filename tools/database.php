@@ -6,6 +6,7 @@ $DBPerf = 0;
 $DBHistory = [];
 $DBMerge = [];
 $DBCount = 0;
+$DBCache = false;
 
 function formatstr($str)
 {
@@ -201,10 +202,16 @@ class DBSelect
     }
 }
 
+$QueryCacheAll = [];
+
 function db_select_all($query, $key_field = "", $display = false)
 {
     global $DBSelect;
+    global $QueryCacheAll;
+    global $DBCache;
 
+    if ($DBCache && isset($QueryCacheAll[$query]))
+	return ($QueryCacheAll[$query]);
     $data = [];
     while (($r = $DBSelect->query($query, $display)))
     {
@@ -229,16 +236,27 @@ function db_select_all($query, $key_field = "", $display = false)
 	else
 	    $data[] = $r;
     }
+    if ($DBCache)
+	$QueryCacheAll[$query] = $data;
     return ($data);
 }
+
+$QueryCacheOne = [];
 
 function db_select_one($query, $display = false)
 {
     global $Database;
+    global $QueryCacheOne;
+    global $DBCache;
 
+    if ($DBCache && isset($QueryCacheOne[$query]))
+	return ($QueryCacheOne[$query]);
     if (($ret = $Database->query("SELECT ".$query." LIMIT 1  ", $display)) == NULL)
 	return (NULL); // @codeCoverageIgnore
-    return ($ret->fetch_assoc());
+    $ret = $ret->fetch_assoc();
+    if ($DBCache)
+	$QueryCacheOne[$query] = $ret;
+    return ($ret);
 }
 
 function db_update_one($table, $id, array $fields, $fetch = false, $display = false)
@@ -390,14 +408,16 @@ function edit_secured_text($msg, $cipher = "")
     return ($msg);
 }
 
-function db_select_rows($table, $blist)
+function db_select_rows($table, $blist = [])
 {
     global $Database;
 
+    $table = $Database->real_escape_string($table);
+    $dbname = $Database->real_escape_string($Database->dbname);
     $rows = db_select_all($x = "
       `COLUMN_NAME`
       FROM `INFORMATION_SCHEMA`.`COLUMNS`
-      WHERE `TABLE_SCHEMA`='{$Database->dbname}' AND `TABLE_NAME`='$table'
+      WHERE `TABLE_SCHEMA`='$dbname' AND `TABLE_NAME`='$table'
     ");
     $out = [];
     foreach ($rows as $r)

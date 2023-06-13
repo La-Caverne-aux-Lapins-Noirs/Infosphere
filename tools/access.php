@@ -131,6 +131,42 @@ function is_student($id = -1) // cycle id?
       "));
 }
 
+function is_subscribed()
+{
+}
+
+function is_my_team($id = -1)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    if (!$User)
+	return (false);
+    if ($id == -1)
+	return (false);
+    return (!!db_select_one("
+      id FROM user_team WHERE id_user = {$User["id"]} AND id_team = $id
+      "));
+}
+
+function is_my_team_or_assistant($id = -1)
+{
+    global $User;
+    
+    if (is_admin())
+	return (true);
+    if (is_my_team($id))
+	return (true);
+    return (is_teacher(NULL, [
+	"id" => $User["id"]
+    ], 1));
+}
+
+function is_subscribed_or_teacher()
+{
+}
+
 function is_director_for_cycle($id)
 {
     global $Database;

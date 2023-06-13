@@ -120,10 +120,10 @@ $BottomMenu = [
     "SchoolMenu" => "./pages/school/",
     "InstancesMenu" => "./pages/activity/",
     "CycleMenu" => "./pages/cycle/",
-    // "RobotMenu" => "./pages/robot/",
-    // "ExercisesMenu" => "./pages/exercises/",
     
     "RoomsMenu" => "./pages/room/",
+    "RobotMenu" => "./pages/robot/",
+    "DocMenu" => "./pages/docs/",
     "ConfigMenu" => "./pages/configuration/",
     "TestMenu" => "./pages/test/",
 ];

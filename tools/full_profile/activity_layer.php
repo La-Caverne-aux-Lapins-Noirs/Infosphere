@@ -13,5 +13,8 @@ class ActivityLayer extends Layer
     public $registered = false;
     public $type_type = 2;
     public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
+
+    public $full_activity = NULL;
 }
+
 

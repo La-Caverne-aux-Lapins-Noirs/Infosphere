@@ -46,7 +46,7 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
     {
 	if ($activity->can_subscribe == false)
 	    return (new ErrorResponse("NotMyActivity"));
-	if (!period($activity->registration_date, $activity->close_date, time()))
+	if (!period($activity->registration_date, $activity->close_date))
 	    return (new ErrorResponse("SubscriptionAreClosed"));
 	if ($activity->registered)
 	    return (new ErrorResponse("AlreadySubscribed"));

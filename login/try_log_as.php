@@ -18,9 +18,7 @@ if (isset($User["authority"]) && $User["authority"] >= ADMINISTRATOR)
 	    $User = $usr->value;
 	    // if (($User["misc_configuration"] = json_decode($User["misc_configuration"], true)) == NULL)
 	    // $user["misc_configuration"] = [];
-	    get_user_promotions($User);
-	    get_user_children($User);
-	    get_user_laboratories($User);
+	    get_user_public_data($User);
 	    set_cookie("log_as", $User["id"], time() + 60 * 60 * 24 * 7);
 	}
     }

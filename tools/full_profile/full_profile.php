@@ -120,7 +120,7 @@ class FullProfile extends Layer
 		    $not += 1;
 		}
 	    }
-	    $this->set_grade($mod, $avg / $not);
+	    $this->set_grade($mod, $avg / $not + $mod->bonus_grade_d);
 	    return ;
 	}
 
@@ -137,7 +137,10 @@ class FullProfile extends Layer
 		    $acquired_medal += 1;
 		$medal_count += 1;
 	    }
-	    $mod->current_percent = $tmp = $acquired_medal / $medal_count;
+	    $mod->current_percent = $tmp =
+		$acquired_medal / $medal_count +
+		$mod->bonus_grade_d / 100.0
+		;
 	    $this->set_grade($mod, $tmp);
 	    return ;
 	}
@@ -200,16 +203,16 @@ class FullProfile extends Layer
 	
 	// Si on on a deja le grade D, on a le droit au grade C
 	// si on a deja le grade C, on a le droit au grade B, etc.
-	if ($medald_cnt == 0 || $medald / $medald_cnt >= $mod->grade_d / 100.0)
+	if ($medald_cnt == 0 || $medald / $medald_cnt + $mod->bonus_grade_d >= $mod->grade_d / 100.0)
 	{
 	    $mod->grade += 1;
-	    if ($medalc_cnt == 0 || $medalc / $medalc_cnt >= $mod->grade_c / 100.0)
+	    if ($medalc_cnt == 0 || $medalc / $medalc_cnt + $mod->bonus_grade_c >= $mod->grade_c / 100.0)
 	    {
 		$mod->grade += 1;
-		if ($medalb_cnt == 0 || $medalb / $medalb_cnt >= $mod->grade_b / 100.0)
+		if ($medalb_cnt == 0 || $medalb / $medalb_cnt + $mod->bonus_grade_b >= $mod->grade_b / 100.0)
 		{
 		    $mod->grade += 1;
-		    if ($medala_cnt == 0 || $medala / $medala_cnt >= $mod->grade_a / 100.0)
+		    if ($medala_cnt == 0 || $medala / $medala_cnt + $mod->bonus_grade_a >= $mod->grade_a / 100.0)
 		    {
 			$mod->grade += 1;
 		    }
@@ -328,158 +331,113 @@ class FullProfile extends Layer
 	global $Language;
 	global $Configuration;
 
-	$fields = [
-	    "id",
-	    "codename",
-	    "nickname",
-	    "mail",
-	    "registration_date",
-	    "first_name",
-	    "family_name",
-	    "phone",
-	    "address_name",
-	    "street_name",
-	    "postal_code",
-	    "city",
-	    "country",
-	    "birth_date",
-	    "authority",
-	    "visibility"
-	];
-
 	if (($data = fetch_user($user_id))->is_error())
 	    return (false);
 	$data = $data->value;
 	if (array_search("profile", $blist) === false)
 	{
+	    $fields = [
+		"id", "codename", "nickname", "mail", "registration_date", "first_name", "family_name",
+		"phone", "address_name", "street_name", "postal_code", "city", "country", "birth_date",
+		"authority", "visibility"
+	    ];
 	    foreach ($fields as $label)
-	    {
 		$this->$label = $data[$label];
+	    $this->medals = db_select_all("
+               medal.*,
+               medal.{$Language}_name as name,
+               medal.{$Language}_description as description
+               FROM user_medal
+               LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
+               LEFT JOIN medal ON medal.id = user_medal.id_medal AND medal.deleted IS NULL
+               WHERE user_medal.id_user = {$this->id}
+               AND activity_user_medal.id_activity = -1
+               AND activity_user_medal.result = 1
+	    ");
+	    foreach ($this->medals as &$medx)
+	    {
+		$medx["success"] = 1;
+		$medx["failure"] = 0;
+		$medx["mandatory"] = false;
+		$medx["local"] = false;
 	    }
 	}
-
-	if (array_search("module", $blist) === false)
+	if (array_search("profile_cycle", $blist) === false)
 	{
 	    foreach ($data["cycle"] as $cycle)
 	    {
 		$l = new CycleLayer;
-		foreach (["id", "codename", "done", "cycle", "first_day", "commentaries", "hidden", "id_user_cycle", "cursus"] as $label)
+		$fields = [
+		    "id", "codename", "done", "cycle", "first_day", "commentaries", "hidden",
+		    "id_user_cycle", "cursus"
+		];
+		foreach ($fields as $label)
 		    $l->$label = $cycle[$label];
 		$l->id = $cycle["id_cycle"];
 		$l->buildsub($user_id, $cycle["id_cycle"], $blist, $only_registered);
 		$this->sublayer[] = $l;
-	    }
+	    }	    
 	}
-
-	if (array_search("school", $blist) === false)
-	{
-	    $this->school = db_select_all("
-	        school.id as id_school,
-		school.codename as codename,
-		school.{$Language}_name as name,
-	        user_school.authority as authority,
-	        user_school.id as id
-	        FROM school
-	        LEFT JOIN user_school
-	        ON user_school.id_school = school.id
-	        WHERE user_school.id_user = $user_id AND school.deleted IS NULL
-	    ");
-	}
-
-	if (array_search("laboratory", $blist) === false)
-	{
-	    $this->group = db_select_all("
-               laboratory.id,
-               laboratory.codename,
-	       user_laboratory.authority,
-               laboratory.{$Language}_name as name,
-               laboratory.{$Language}_description as description
-               FROM user_laboratory
-               LEFT JOIN laboratory ON laboratory.id = user_laboratory.id_laboratory
-               WHERE user_laboratory.id_user = $user_id
-                 AND deleted IS NULL
-	    ");
-	}
-
-	if (array_search("teacher", $blist) === false)
+	$user_ida = ["id" => $user_id];
+	if (array_search("profile_school", $blist) === false)
+	    $this->school = get_user_school($user_ida, true);
+	if (array_search("profile_laboratory", $blist) === false)
+	    $this->group = get_user_laboratories($user_ida);
+	if (array_search("profile_teacher", $blist) === false)
 	    $this->managed_activities = list_of_managed_activities($this);
 
 	$this->retrieve();
 	$this->share_medals();
 	$this->validate_modules();
 
-	$this->medals = db_select_all("
-           medal.*,
-           medal.{$Language}_name as name,
-           medal.{$Language}_description as description
-           FROM user_medal
-           LEFT JOIN activity_user_medal
-           ON user_medal.id = activity_user_medal.id_user_medal
-           LEFT JOIN medal
-           ON medal.id = user_medal.id_medal AND medal.deleted IS NULL
-           WHERE user_medal.id_user = {$this->id}
-           AND activity_user_medal.id_activity = -1
-           AND activity_user_medal.result = 1
-	");
-	foreach ($this->medals as &$medx)
+	if (array_search("module", $blist) === false)
 	{
-	    $medx["success"] = 1;
-	    $medx["failure"] = 0;
-	    $medx["mandatory"] = false;
-	    $medx["local"] = false;
-	}
-
-	foreach ($this->sublayer as $cycle)
-	{
-	    foreach ($cycle->sublayer as $module)
-	    {
-		if ($module->hidden)
-		    continue ;
-		foreach ($module->sublayer as $act)
+	    foreach ($this->sublayer as $cycle)
+		foreach ($cycle->sublayer as $module)
 		{
-		    foreach ($act->medal as $med)
+		    if ($module->hidden)
+			continue ;
+		    foreach ($module->sublayer as $act)
 		    {
-			if (is_note($med["codename"])
-			    || !isset($med["id"])
-			    || $med["success"] <= 0)
-			    continue ;
-			$tmp = db_select_all("
-                          function.codename
-                          FROM function_medal
-                          LEFT JOIN function ON function_medal.id_function = function.id
-                          WHERE function_medal.id_medal = {$med["id"]}
-			  ");
-			foreach ($tmp as $t)
+			foreach ($act->medal as $med)
 			{
-			    $this->functions[$t["codename"]] = $t["codename"];
+			    if (is_note($med["codename"]) || !isset($med["id"]) || $med["success"] <= 0)
+				continue ;
+			    $tmp = db_select_all("
+                              function.codename
+                              FROM function_medal
+                              LEFT JOIN function ON function_medal.id_function = function.id
+                              WHERE function_medal.id_medal = {$med["id"]}
+			      ");
+			    foreach ($tmp as $t)
+				$this->functions[$t["codename"]] = $t["codename"];
 			}
 		    }
 		}
-	    }
-	}
 	
-	foreach ($this->sublayer as $l) // Parcours des cycles
-	{
-	    // On identifie les cycles regroupés du fait de leur date
-	    $fd = datex("m/y", $l->first_day);
-	    if (!isset($this->merged_sublayers[$fd]))
+	    foreach ($this->sublayer as $l) // Parcours des cycles
 	    {
-		$this->merged_sublayers[$fd] = $l;
-		$this->merged_sublayers[$fd]->cursus =
-		    array_merge($this->merged_sublayers[$fd]->cursus, $l->cursus);
-		$this->merged_sublayers[$fd]->cursus =
-		    array_unique($this->merged_sublayers[$fd]->cursus);
-		$this->merged_sublayers[$fd]->cycles = [$l->id];
-		$this->merged_sublayers[$fd]->matters = [];
-	    }
-	    else
-		$this->merged_sublayers[$fd]->cycles[] = $l->id;
+		// On identifie les cycles regroupés du fait de leur date
+		$fd = datex("m/y", $l->first_day);
+		if (!isset($this->merged_sublayers[$fd]))
+		{
+		    $this->merged_sublayers[$fd] = $l;
+		    $this->merged_sublayers[$fd]->cursus =
+			array_merge($this->merged_sublayers[$fd]->cursus, $l->cursus);
+		    $this->merged_sublayers[$fd]->cursus =
+			array_unique($this->merged_sublayers[$fd]->cursus);
+		    $this->merged_sublayers[$fd]->cycles = [$l->id];
+		    $this->merged_sublayers[$fd]->matters = [];
+		}
+		else
+		    $this->merged_sublayers[$fd]->cycles[] = $l->id;
 
-	    // On parcoure les modules du cycle qu'on range dans la case
-	    // mergeante par date de debut
-	    foreach ($l->sublayer as $matt)
-		$this->merged_sublayers[$fd]->matters[$matt->codename] = $matt;
-	    uksort($this->merged_sublayers, "sort_year_month");
+		// On parcoure les modules du cycle qu'on range dans la case
+		// mergeante par date de debut
+		foreach ($l->sublayer as $matt)
+		    $this->merged_sublayers[$fd]->matters[$matt->codename] = $matt;
+		uksort($this->merged_sublayers, "sort_year_month");
+	    }
 	}
 	return (true);
     }

@@ -5,7 +5,7 @@
 ** position: marqueur unique du tabpanel
 ** default: ONGLET
 */
-function tabpanel(array $files, $position, $default, $listclass = "", $contentclass = "")
+function tabpanel(array $files, $position, $default, $listclass = "", $contentclass = "", $add_data = [])
 {
     extract($GLOBALS);
 
@@ -23,14 +23,21 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	    <?php } ?>
 	</div>
 	<div class="tabcontent">
+	    <?php $i = 0; ?>
 	    <?php foreach ($files as $k => $val) { ?>
 		<div
 		    id="<?=md5($k); ?>"
 		    class="<?=$contentclass; ?>"
-		    style="visibility: hidden;"
+		    style="display: none;"
 		>
+		    <?php if (!isset($add_data[$i])) { ?>
+			<?php $tab_data = NULL; ?>
+		    <?php } else { ?>
+			<?php $tab_data = $add_data[$i]; ?>
+		    <?php } ?>
 		    <?php require ($val); ?>
 		</div>
+		<?php $i += 1; ?>
 	    <?php } ?>
 	</div>
     </div>
@@ -50,9 +57,9 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	     var nod = document.getElementById(tablist_<?=md5($position); ?>[i]);
 
 	     if (nod.id == lst)
-		 nod.style.visibility = "visible";
+		 nod.style.display = "block";
 	     else
-		 nod.style.visibility = "hidden";
+		 nod.style.display = "none";
 	 }
      }
      var ls;

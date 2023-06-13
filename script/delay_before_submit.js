@@ -3,12 +3,14 @@ function delay_before_submit(delay, obj, field)
 {
     if (obj.old_value == undefined)
 	obj.old_value = obj.value;
-    else if (obj.old_value != obj.value)
-	obj.old_value = obj.value;
-    else
+    else if (obj.old_value == obj.value)
+	return (silent_submit(obj));
+    obj.old_value = obj.value;
+	
+    if (obj.timeout != undefined && obj.timeout != null)
     {
-	silent_submit(obj);
-	return ;
+	clearTimeout(obj.timeout);
+	obj.timeout = null;
     }
-    setTimeout(delay_before_submit, delay, delay, obj, field);
+    obj.timeout = setTimeout(delay_before_submit, delay, delay, obj, field);
 }

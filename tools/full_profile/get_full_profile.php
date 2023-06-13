@@ -6,12 +6,13 @@ function get_full_profile($user, $blist = [], $recalculate = true, $only_registe
 
     // J'experimente ca pour augmenter les perfs.
     // Ca aura peut etre des effets negatifs: a voir.
-    if (isset($LoadedProfiles[$user["id"]]))
-	return ($LoadedProfiles[$user["id"]]);
+    // if (isset($LoadedProfiles[$user["id"]]))
+    // return ($LoadedProfiles[$user["id"]]);
     
     // recalculate n'est pas utilisé actuellement...
     $data = new FullProfile;
     $data->build($user["id"], $blist, $only_registered);
+    // $LoadedProfiles[$user["id"]] = $data;
     return ($data);
 }
 

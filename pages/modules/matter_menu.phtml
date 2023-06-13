@@ -1,96 +1,54 @@
-<?php
-function sort_by_name($a, $b)
-{
-    if (strlen($a->name))
-	$aa = $a->name;
-    else if (strlen($a->template_codename))
-	$aa = $a->template_codename;
-    else
-	$aa = $a->codename;
-    if (strlen($b->name))
-	$bb = $b->name;
-    else if (strlen($b->template_codename))
-	$bb = $b->template_codename;
-    else
-	$bb = $b->codename;
-    return (strcmp($aa, $bb));
-}
-
-if (!count($user->merged_sublayers))
-    return ;
-uksort($user->merged_sublayers, "sort_year_month_reverse");
-?>
 <h2><?=$Dictionnary["Matter"]; ?></h2>
-<a href="index.php?p=ModulesMenu">
+<a onclick="display_matter(-1);">
     <?=$Dictionnary["AllMatters"]; ?>
 </a>
 <br />
+<?php foreach ($datas as $data) { ?>
 
-<?php foreach ($user->merged_sublayers as $cycle) { ?>
-
-    <?php
-    $or = [];
-    foreach ($cycle->cycles as $cyc)
-	$or[] = " activity_cycle.id_cycle = $cyc ";
-    $or = " ( ".implode(" OR ", $or)." ) ";
-    $matters = db_select_all("
-          activity.id, activity_cycle.cursus as cursus
-          FROM activity_cycle
-          LEFT JOIN activity ON activity_cycle.id_activity = activity.id
-          WHERE $or
-          AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)
-          AND activity.deleted IS NULL
-    ");
-    if (count($matters) == 0)
-	echo $Dictionnary["Empty"];
-    $matter_to_sort = [];
-    $min_cred = 0;
-    $max_cred = 0;
-    foreach ($matters as $matid)
-    {
-	($matter = new FullActivity)->build($matid["id"]);
-	if ($matter->hidden)
-	    continue ;
-	$matter->cycle = $cyc;
-	$matter->cursus = explode(";", $matid["cursus"]);
-	$min_cred += $matter->credit_d;
-	$max_cred += $matter->credit_a;
-	$matter_to_sort[] = $matter;
-    }
-    uasort($matter_to_sort, "sort_by_name");
-    ?>
+    <?php $cycle = $data["cycle"]; ?>
+    <?php $matter_to_sort = $data["matter_to_sort"]; ?>
     
     <h3 style="border-top: 1px solid gray; padding-top: 5px;">
-	<?=$Dictionnary["Cycle"]; ?> <?=strlen(@$cycle->name) ? $cycle->name : $cycle->codename; ?><br />
+	<?=$Dictionnary["Cycle"]; ?>
+	<?=strlen(@$cycle->name) ? $cycle->name : $cycle->codename; ?>
+	<br />
 	<span style="font-size: small;">
 	    (<?=$Dictionnary["Year"]; ?> <?=ceil(($cycle->cycle + 1) / 4); ?>,
 	    <?=$Dictionnary["Trimester"]; ?> <?=(int)$cycle->cycle % 4 + 1; ?>,
-	    <?="$min_cred-$max_cred ".$Dictionnary["Credit(s)"]; ?>)
+	    <?=$data["min_cred"]."-".$data["max_cred"]." ".$Dictionnary["Credit(s)"]; ?>)
 	</span>
 	<br /><br />
     </h3>
+    
     <ul>
 	<?php foreach ($matter_to_sort as $matter) { ?>
-
 	    <li>
 		<?php if (cursus_match($matter->cycle, $matter->cursus, $User["cycle"])) { ?>
-		    <img src="res/mandatory.png" style="float: left; width: 20px; height: 20px; position: relative; left: -5px;" title="<?=$Dictionnary["Mandatory"]; ?>" />
+		    <img
+			src="res/mandatory.png"
+			style="float: left; width: 20px; height: 20px;
+			     position: relative; left: -5px;"
+			title="<?=$Dictionnary["Mandatory"]; ?>"
+		    />
 		<?php } ?>
-		<a href="<?=unrollurl(["a" => $matter->id]); ?>">
-		<h4 style="z-index: 0; padding-left: 20px; position: relative; <?=$matter->registered ? "font-weight!: bold; color: white;" : "font-weight: lighter; color: darkgrey;"; ?>">
-		    <?=$matter->name ?:
-		       $matter->template_codename ?:
-		       $matter->codename
-		    ; ?>
-		    <span class="flammes">
-			(<?=$matter->credit_d."-".$matter->credit_a; ?>
-			<?=$Dictionnary["Credit(s)"]; ?>)
-		    </span>
-		    <?php
-		    $valid_activities[$matter->id] = $matter->registered ? 1 : 0;
-		    ?>
-		</h4>
-	    </a></li>
+		
+		<a onclick="display_matter(<?=$matter->id; ?>);" style="cursor: pointer;">
+		    <div style="z-index: 0; padding-left: 20px; position: relative;" id="module_link<?=$matter->id; ?>" class="module_link">
+			<h4 style="width: 70%; <?=$matter->registered ? "font-weight: bold; color: white;" : "font-weight: lighter; color: lightgrey;"; ?>">
+			    <?=$matter->name ?:
+			       $matter->template_codename ?:
+			       $matter->codename
+			    ; ?>
+			</h4>
+			<h4 class="flammes" style="<?=$matter->registered ? "font-weight: bold; color: white;" : "font-weight: lighter; color: darkgrey;"; ?>">
+			    (<?=$matter->credit_d."-".$matter->credit_a; ?>
+			    <?=$Dictionnary["Credit(s)"]; ?>)
+			</h4>
+			<?php
+			// $valid_activities[$matter->id] = $matter->registered ? 1 : 0;
+			?>
+		    </div>
+		</a></li>
 	<?php } ?>
     </ul>
     <br />

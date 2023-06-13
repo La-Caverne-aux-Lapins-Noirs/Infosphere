@@ -161,7 +161,7 @@ function edit_type_form($page, $obj)
 	<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
     >
 	<label for="type"><?=$Dictionnary["Type"]; ?></label>
-	<select name="type" onchange="<?=$js; ?>">
+	<select id="ac_type" name="type" onchange="<?=$js; ?>">
 	    <?php if ($obj->type == NULL) { ?>
 		<option value=""></option>
 	    <?php } ?>
@@ -184,6 +184,11 @@ function edit_type_form($page, $obj)
 		<?php } ?>
 	    <?php } ?>
 	</select>
+	<input
+	    type="button"
+	    value="C"
+	    onclick="autocomplete_form();"
+	/>
     </form>
 <?php
 }

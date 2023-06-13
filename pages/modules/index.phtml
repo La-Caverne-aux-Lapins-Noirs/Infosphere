@@ -1,24 +1,161 @@
+<style>
+ .gradetab
+ {
+     height: 100%;
+ }
+ .gradetab th, .gradetab td
+ {
+     border-radius: 5px;
+     box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
+     padding: 2px 2px 2px 2px;
+ }
+</style>
+<script>
+ function display_matter(panel)
+ {
+     var panels = document.getElementsByClassName("module_panel");
+     var links = document.getElementsByClassName("module_link");
+
+     Array.prototype.forEach.call(panels, function(el) {
+	 el.style.display = "none";
+     });
+     Array.prototype.forEach.call(links, function(el) {
+	 el.style.backgroundColor = "";
+     });
+     if (panel == -1)
+	 document.getElementById("resume").style.display = "block";
+     else
+     {
+	 console.log("module_" + panel);
+	 document.getElementById("module_" + panel).style.display = "block";
+	 document.getElementById("module_link" + panel).style.backgroundColor = "rgb(200, 146, 26)";
+     }
+     localStorage.setItem('module<?=$User["id"]; ?>', panel);
+ }
+ function subscribe_to_matter(panel)
+ {
+     //
+     document.getElementById("resume_" + panel).style.display = "none";
+ }
+</script>
 <?php
+$DBCache = true;
 require_once ("fetch_matters.php");
-$user = get_full_profile($User, []);
+$blacklist = [
+    "profile",
+    "profile_school",
+    "profile_laboratory",
+    "profile_teacher",
+
+    "cycle_teacher",
+    "cycle_school",
+    "activity_acquired_medal",
+    "activity_presence",
+    "activity_delivery",
+    "activity_teacher",
+    "activity_cycle",
+    "activity_team_content",
+    "activity_support",
+    "activity_details",
+];
+$user = get_full_profile($User, $blacklist, false, false);
+$valid_activities = []; // [id] = 0, 1, 2; // not sub, sub, teacher
+
+function sort_by_name($a, $b)
+{
+    if (strlen($a->name))
+	$aa = $a->name;
+    else if (strlen($a->template_codename))
+	$aa = $a->template_codename;
+    else
+	$aa = $a->codename;
+    if (strlen($b->name))
+	$bb = $b->name;
+    else if (strlen($b->template_codename))
+	$bb = $b->template_codename;
+    else
+	$bb = $b->codename;
+    return (strcmp($aa, $bb));
+}
+
+if (!count($user->merged_sublayers))
+    return ;
+uksort($user->merged_sublayers, "sort_year_month_reverse");
+
+$data = [];
+foreach ($user->merged_sublayers as $cycle)
+{
+    $min_cred = 0;
+    $max_cred = 0;
+    $matter_to_sort = [];
+    foreach ($cycle->cycles as $cyc)
+    {
+	$fnd = false;
+	$out = array_filter(
+	    $user->sublayer,
+	    function ($elm) use ($cyc) { return $elm->id == $cyc; }
+	);
+	$out = $out[array_key_first($out)];
+	foreach ($out->sublayer as $mod)
+	{
+	    if ($mod->hidden)
+		continue ;
+	    $min_cred += $mod->credit_d;
+	    $max_cred += $mod->credit_a;
+	    $mod->cursus = $cycle->cursus;
+	    $mod->cycle = $cyc;
+	    $matter_to_sort[] = $mod;
+	}
+    }
+    if (count($matter_to_sort) == 0)
+	echo $Dictionnary["Empty"];
+    uasort($matter_to_sort, "sort_by_name");
+    $datas[] = [
+	"cycle" => $cycle,
+	"matter_to_sort" => $matter_to_sort,
+	"min_cred" => $min_cred,
+	"max_cred" => $max_cred,
+    ];
+}
 ?>
-<?php $valid_activities = []; // [id] = 0, 1, 2; // not sub, sub, teacher ?>
+
 <table class="submenu"><tr class="submenutr"><td class="submenutd">
-    <?php require_once ("matter_menu.phtml"); ?>
-    <?php require_once ("managed_menu.phtml"); ?>
+    <div id="module_menubar">
+	<?php
+	require_once ("matter_menu.phtml");
+	// require_once ("managed_menu.phtml");
+	?>
+    </div>
 </td><td class="submenutd">
-    <?php if (isset($_GET["a"])) { ?>
-	<?php if (isset($valid_activities[$id_module = (int)$_GET["a"]])) { ?>
-	    <?php if (is_teacher_for_activity($id_module) && (int)@$_GET["b"]) { ?>
-		<?php require_once ("admin.phtml"); ?>
-	    <?php } else { ?>
-		<?php require_once ("module.phtml"); ?>
-	    <?php } ?>
-	<?php } else { ?>
-	    <?=$Dictionnary["NotFound"]; ?>
+    <?php foreach ($datas as $data) { ?>
+	<?php foreach ($data["matter_to_sort"] as $matter) { ?>
+	    <div
+		class="module_panel"
+		id="module_<?=$matter->id; ?>"
+		style="display: none;"		
+	    >
+	        <?php require ("module.phtml"); ?>
+	    </div>
 	<?php } ?>
-    <?php } else { ?>
-	<?php require ("resume.php"); ?>
     <?php } ?>
+
+    <div
+	class="module_panel"
+	id="resume"
+	style="display: none;"		
+    >
+        <?php require_once ("resume.php"); ?>
+    </div>
 </td></tr></table>
 
+<script>
+ <?php if (isset($_GET["a"])) { ?>
+ display_matter(<?=$_GET["a"]; ?>);
+ <?php } else { ?>
+ var ls = localStorage.getItem('module<?=$User["id"]; ?>');
+ if (ls == null)
+     display_matter(-1);
+ else
+     display_matter(ls);
+ <?php } ?>
+</script>

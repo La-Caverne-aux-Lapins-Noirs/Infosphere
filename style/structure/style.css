@@ -932,7 +932,7 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 
 .bigbuttons input[type="button"]
 {
-    background-color: gray;
+    background-color: black;
 }
 
 .button_paragraph

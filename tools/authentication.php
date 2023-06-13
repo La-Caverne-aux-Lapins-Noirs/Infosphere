@@ -57,9 +57,18 @@ function get_login_info($login, $password, $clear_password=true)
 	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
 	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
     }
-    get_user_promotions($usr);
-    get_user_laboratories($usr);
+
+    get_user_public_data($usr);
+    
     return (new ValueResponse($usr));
+}
+
+function get_user_public_data(&$usr)
+{
+    get_user_promotions($usr);
+    get_user_children($usr);
+    get_user_laboratories($usr);
+    $usr["todo"] = db_select_all("id, content FROM user_todolist WHERE id_user = {$usr["id"]} ORDER BY id ASC");
 }
 
 function generate_password($len = 12)

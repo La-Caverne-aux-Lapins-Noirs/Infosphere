@@ -517,7 +517,13 @@ function EditActivity($id, $data, $method, $output, $module)
     ($activity = new FullActivity)->build($id);
     // Specific treatment
     if (isset($data["codename"]))
-	return (edit_codename("activity", $activity->codename, $data["codename"]));
+    {
+	if (($ret = edit_codename("activity", $activity->codename, $data["codename"]))->is_error())
+	    return ($ret);
+	return (new ValueResponse([
+	    "msg" => $Dictionnary["Renamed"],
+	]));
+    }
     foreach (["emergence", "registration", "close", "subject_appeir", "subject_disappeir", "pickup", "done"] as $d)
     {
 	if (!isset($data["{$d}_check"]))

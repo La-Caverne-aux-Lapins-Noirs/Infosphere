@@ -22,6 +22,7 @@ if (isset($_GET["data"]))
     $percents[2] = $data["Grade"]["B"];
     $percents[1] = $data["Grade"]["C"];
     $percents[0] = $data["Grade"]["D"];
+    $bonus = $data["Bonus"];
     $current = $data["Completion"];
     $note = isset($data["Note"]) ? $data["Note"] : [];
 }
@@ -32,6 +33,7 @@ else
     $percents[2] = 0.70;
     $percents[1] = 0.60;
     $percents[0] = 0.50;
+    $bonus = 0;
     $current = 0;
     $note = [];
 }
@@ -125,6 +127,18 @@ else
 
     // Les données
     imagefilledrectangle($img, 10, $h * 0.2, $current * ($w - 10), $h * 0.8, $color);
+
+    $pixblack = 0;
+    for ($j = $h * 0.2; $j < $h * 0.8; ++$j)
+    {
+	for ($i = $current * ($w - 10); $i > ($current - $bonus) * ($w - 10); --$i)
+	{
+	    if ($pixblack % 2 == 0)
+		imagesetpixel($img, $i, $j, $black);
+	    $pixblack += 1;
+	}
+    }
+
 
 
     // Ligne allant de gauche a droite

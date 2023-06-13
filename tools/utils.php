@@ -96,10 +96,12 @@ function date_to_timestamp($s)
     return ($ret->getTimestamp());
 }
 
-function datex($format, $tm)
+function datex($format, $tm = NULL)
 {
     global $NoLocalisation;
 
+    if ($tm == NULL)
+	$tm = now();
     $dt = new DateTime("now", $NoLocalisation);
     if (is_string($tm))
 	$tm = date_to_timestamp($tm);

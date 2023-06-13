@@ -148,7 +148,7 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
 	"*/2 * * * * /usr/bin/php ".getcwd()."/albedo.php ".
 	escapeshellarg($_POST["admin_login"])." ".
 	escapeshellarg($_POST["admin_password"])." ".
-	" >> /tmp/albedo 2>> /tmp/albedo\n",
+	" > /tmp/albedo 2> /tmp/albedo\n",
 	FILE_APPEND
     ) == false)
     {

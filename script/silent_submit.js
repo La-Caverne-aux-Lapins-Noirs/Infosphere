@@ -125,6 +125,8 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
 		    fields[name].value = "";
 		else if (fields[name].type == "file")
 		    fields[name].value = "";
+		else if (fields[name].tagName == "TEXTAREA")
+		    fields[name].value = "";
 	    }
 	},
 	function ()

@@ -13,13 +13,15 @@ function copy_template($activity, $new)
 
     $codename = $new;
 
-    if (($id = insert_activity($activity, -1, $codename, 0, true)) == -1)
-	return (new ErrorResponse("CannotAdd"));
+    if (($id = insert_activity($activity, -1, $codename, 0, true))->is_error())
+	return ($id);
+    $id = $id->value;
     foreach ($activity->subactivities as $sub)
     {
 	$codename = str_replace($activity->codename, $new, $sub->codename);
-	if (($newid = insert_activity($sub, $id, $codename, 0, true)) == -1)
-	    return (new ErrorResponse("CannotAdd"));
+	if (($newid = insert_activity($sub, $id, $codename, 0, true))->is_error())
+	    return ($newid);
+	$newid = $newid->value;
 
 	// On enregistre la transformation [ancien] = nouveau
 	$ref_switch[$sub->id]["newid"] = $newid;

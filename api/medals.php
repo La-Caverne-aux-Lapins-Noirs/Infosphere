@@ -4,7 +4,7 @@ function DisplayMedals($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
 
-    $medals = fetch_medal();
+    $medals = fetch_medal($id);
     if ($output == "json")
 	return (new ValueResponse(["content" => json_encode($medals, JSON_UNESCAPED_SLASHES)]));
     ob_start();
@@ -98,7 +98,7 @@ End:
 	return ($ins);
 
     $Hand = "";
-    if (($med = fetch_medal($codename)) != [])
+    if (($med = fetch_medal($codename, true)) != [])
     {
 	$icon = file_get_contents($med["icon"]);
 	unset($med["icon"]);

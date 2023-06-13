@@ -51,17 +51,48 @@ if ($alerts != "")
 
 <h3><?=$Dictionnary["CurrentTickets"]; ?></h3>
 <ul>
-    <?php if (isset($User["tickets"])) { ?>
-	<?php foreach ($User["tickets"] as $ticket) { ?>
-	    <li>
+    <?php
+    function sort_ticket_by_activity($a, $b)
+    {
+	return (strcmp($a["activity_name"], $b["activity_name"]));
+    }
+    
+    $tickets = db_select_all("
+      ticket.title as title,
+      activity.{$Language}_name as activity_name,
+      activity.id as activity_id,
+      ticket.id_user as id_user
+      FROM ticket
+      LEFT JOIN sprint ON ticket.id_sprint = sprint.id
+      LEFT JOIN team ON sprint.id_team = team.id
+      LEFT JOIN user_team ON team.id = user_team.id_team
+      LEFT JOIN activity ON team.id_activity = activity.id
+      WHERE ( ticket.id_user = {$User["id"]} || user_team.id_user = {$User["id"]} )
+      AND ticket.deleted IS NULL AND sprint.deleted IS NULL
+      ");
+    $prev_name = "";
+    usort($tickets, "sort_ticket_by_activity");
+    ?>
+    <?php if (count($tickets)) { ?>
+	<?php foreach ($tickets as $ticket) { ?>
+	    <?php if ($prev_name != $ticket["activity_name"]) { ?>
 		<a href="<?=unrollurl([
 			 "p" => "InstanceMenu",
 			 "a" => $ticket["activity_id"],
-			 "c" => $ticket["id"]
+			 // "c" => $ticket["id"]
 			 ]); ?>">
-		    <?=$ticket["name"]; ?><br />
-		    <i><?=$Dictionnary["From"]; ?> <?=$ticket["activity_name"]; ?></i>
+		    <?=$Dictionnary["from"]; ?> <?=$ticket["activity_name"]; ?>
 		</a>
+		<?php $prev_name = $ticket["activity_name"]; ?>
+	    <?php } ?>
+	    <li>
+		<?php if ($ticket["id_user"] == $User["id"]) { ?>
+		    <b>
+		<?php } ?>
+		- <?=$ticket["title"]; ?>
+		<?php if ($ticket["id_user"] == $User["id"]) { ?>
+		    </b>
+		<?php } ?>
 	    </li>
 	<?php } ?>
     <?php } else { ?>

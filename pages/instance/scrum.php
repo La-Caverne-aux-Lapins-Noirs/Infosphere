@@ -29,7 +29,7 @@ $sprints[$Dictionnary["ConfigureSprint"]] = __DIR__."/configure_sprint.php";
 $tab_data = [-1];
 foreach ($activity->user_team["sprints"] as $sprint)
 {
-    $sprints[datex("d/m", $sprint["start_date"])." - ".datex("d/m", $sprint["done_date"])] = __DIR__."/configure_tickets.php";
+    $sprints["#".$sprint["id"]." ".datex("d/m", $sprint["start_date"])." - ".datex("d/m", $sprint["done_date"])] = __DIR__."/configure_tickets.php";
     $tab_data[] = $sprint["id"];
 }
 

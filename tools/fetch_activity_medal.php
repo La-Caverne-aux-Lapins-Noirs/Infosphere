@@ -1,10 +1,15 @@
 <?php
 
+$LoadedActivityMedal = [];
+
 function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
 {
     global $Language;
     global $Configuration;
 
+    if (isset($LoadedActivityMedal[$id]))
+	return ($LoadedActivityMedal[$id]);
+    
     $strong = in_array($type, [
 	5, // Examen
 	6, // QCM
@@ -54,7 +59,8 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
 	if (!file_exists($v["band"]))
 	    $v["band"] = NULL;
     }
-    
+
+    $LoadedActivityMedal[$id] = $all;
     return ($all);
 }
 

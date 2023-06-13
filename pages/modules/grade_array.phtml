@@ -1,20 +1,3 @@
-<?php
-if (!isset($act))
-    $act = $module;
-
-?>
-<style>
- .gradetab
- {
-     height: 100%;
- }
- .gradetab th, .gradetab td
- {
-     border-radius: 5px;
-     box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
-     padding: 2px 2px 2px 2px;
- }
-</style>
 <table class="gradetab">
     <tr><th style="width: 30%; box-shadow: 0px 0px 0px transparent;"></th>
 	<th><?=$Dictionnary["GradeD"]; ?></th>
@@ -23,19 +6,20 @@ if (!isset($act))
 	<th><?=$Dictionnary["GradeA"]; ?></th>
     </tr><tr>
 	<td style="font-size: small;"><?=$Dictionnary["RequiredMedalAcquistionPercentage"]; ?></td>
-	<td><?=$act->grade_d; ?>%</td>
-	<td><?=$act->grade_c; ?>%</td>
-	<td><?=$act->grade_b; ?>%</td>
-	<td><?=$act->grade_a; ?>%</td>
+	<td><?=$matter->grade_d; ?>%</td>
+	<td><?=$matter->grade_c; ?>%</td>
+	<td><?=$matter->grade_b; ?>%</td>
+	<td><?=$matter->grade_a; ?>%</td>
     </tr><tr>
 	<td style="font-size: small;"><?=$Dictionnary["AcquiredCredit"]; ?></td>
-	<td><?=$act->credit_d; ?></td>
-	<td><?=$act->credit_c; ?></td>
-	<td><?=$act->credit_b; ?></td>
-	<td><?=$act->credit_a; ?></td>
+	<td><?=$matter->credit_d; ?></td>
+	<td><?=$matter->credit_c; ?></td>
+	<td><?=$matter->credit_b; ?></td>
+	<td><?=$matter->credit_a; ?></td>
     </tr><tr>
 	<td colspan="5" style="border-bottom-right-radius: 5px; border-bottom-left-radius: 5px;">
-	    <b><?=$Dictionnary["GradeBonus"]; ?></b>: <?=$act->grade_bonus; ?>%
+	    <b><?=$Dictionnary["GradeBonus"]; ?></b>: <?=$matter->grade_bonus; ?>%
 	</td>
     </tr>
 </table>
+

@@ -1,101 +1,117 @@
 <?php
-// Cette page affiche les matières du cycle en cours le plus avancé.
-// Les blocs sont illustrés par les wallpaper des modules
-
-$already_done = [];
-foreach ($user->sublayer as $cycle)
-{
-    if (now() > date_to_timestamp($cycle->last_day))
-	continue ;
-    $max_credit = 0;
-    $min_credit = 0;
-    $min_mandatory_credit = 0;
-    $max_mandatory_credit = 0;
-    $mandatory = 0;
-    $total = 0;
-    $nmatters = [];
-    $matters = db_select_all("
-       activity.{$Language}_name as name, activity.*,
-       activity_cycle.cursus as cursus
-       FROM activity_cycle
-       LEFT JOIN activity ON activity_cycle.id_activity = activity.id
-       WHERE activity_cycle.id_cycle = {$cycle->id}
-       AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)
-    ");
-
-    $acquired_credits = 0; // Pas encore construit.
-    foreach ($matters as $nact)
-    {
-	$nact = (object)$nact;
-	if (!isset($already_done[$nact->id]))
-	    $already_done[$nact->id] = 1;
-	else
-	    continue ;
-
-	$outact = NULL;
-	foreach ($user->merged_sublayers as $mcyc)
-	{
-	    foreach ($mcyc->matters as $mmatt)
-	    {
-		if ($mmatt->id == $nact->id)
-		{
-		    $outact = $mmatt;
-		}
-	    }
-	}
-	if ($outact == NULL)
-	{
-	    $id = $nact->id;
-	    ($nact = new FullActivity)->build($id, false, false);    
-	    $nact->registered = false;
-	}
-	else
-	{
-	    $nact = $outact;
-	    $nact->registered = true;
-	}
-	$max_credit += $nact->credit_a;
-	$min_credit += $nact->credit_d;
-	if ($nact->subscription != FullActivity::MANUAL_SUBSCRIPTION)
-	{
-	    $max_mandatory_credit += $nact->credit_a;
-	    $min_mandatory_credit += $nact->credit_d;
-	    $mandatory += 1;
-	}
-	$total += 1;
-	$nmatters[] = $nact;
-    }
-    $matters = $nmatters;
+// Cette page affiche les matières encore ouvertes, tout cycle confondu
+// et ou l'utilisateur n'est pas encore inscrit.
+$min_cred = 0;
+$max_cred = 0;
+$opt_min_cred = 0;
+$opt_max_cred = 0;
+$man_min_cred = 0;
+$man_max_cred = 0;
+$total = 0;
+$mandatory = 0;
+$option = 0;
+$min_cycle_credits = 0;
+$max_cycle_credits = 0;
+ob_start();
 ?>
+###RESUME
+<?php foreach ($datas as $data) { ?>
+    <?php $cycle = $data["cycle"]; ?>
+    <?php if (date_to_timestamp($cycle->first_day) > now()) continue ; ?>
+    <?php if (date_to_timestamp($cycle->last_day) < now()) continue ; ?>
 
-<table>
-    <tr><td colspan="3" style="text-align: center;">
-	<br />
-	<h1 style="width: 100%;">
-	    <?=$Dictionnary["Cycle"]; ?> <?=strlen($cycle->name) ? $cycle->name : $cycle->codename; ?>
-	</h1>
-	<br /><br />
-    </td></tr>
-    <tr><td>
-	<!-- <?=$Dictionnary["AcquiredCredits"]; ?> : <?=$acquired_credits; ?> -->
-	<a href="<?=unrollurl(["p" => "CycleMenu", "a" => $cycle["id"]]); ?>">
-	    <?=$Dictionnary["SeeSubscribedList"]; ?>
-	</a><br />
-    </td><td>
-	<?=$Dictionnary["AvailableCredits"]; ?> : <?=$min_credit; ?> - <?=$max_credit; ?><br />
-	<?=$Dictionnary["MandatoryCredits"]; ?> : <?=$min_mandatory_credit; ?> - <?=$max_mandatory_credit; ?><br />
-	<?=$Dictionnary["OptionCredits"]; ?> : <?=$min_credit - $min_mandatory_credit; ?> - <?=$max_credit - $max_mandatory_credit; ?>
-    </td><td>
-	<?=$Dictionnary["Matters"]; ?> : <?=$total; ?><br />
-	<?=$Dictionnary["MandatoryMatters"]; ?> : <?=$mandatory; ?><br />
-	<?=$Dictionnary["OptionalMatters"]; ?> : <?=$total - $mandatory; ?>
-    </td></tr>
-</table>
+    <?php foreach ($data["matter_to_sort"] as $matter) { ?>
 
-<?php foreach ($matters as $act) { ?>
-    <?php require ("module_tab.php"); ?>
+	<?php if ($matter->registered) { ?>
+	    <?php $min_cycle_credits += $matter->credit_d; ?>
+	    <?php $max_cycle_credits += $matter->credit_a; ?>
+	    <?php continue ; ?>
+	<?php } ?>
+	<?php if ($matter->registration_date && date_to_timestamp($matter->registration_date) > now()) continue ; ?>
+	<?php if ($matter->close_date && date_to_timestamp($matter->close_date) < now()) continue ; ?>
+	<?php if ($matter->subscription == FullActivity::MANUAL_SUBSCRIPTION) {?>
+	    <?php $opt_min_cred += $matter->credit_d; ?>
+	    <?php $opt_max_cred += $matter->credit_a; ?>
+	    <?php $option += 1; ?>
+	<?php } else { ?>
+	    <?php $man_min_cred += $matter->credit_d; ?>
+	    <?php $man_max_cred += $matter->credit_a; ?>
+	    <?php $mandatory += 1; ?>
+	<?php } ?>
+	<?php $min_cred += $matter->credit_d; ?>
+	<?php $max_cred += $matter->credit_a; ?>
+	<?php $total += 1; ?>
+	
+	<?php if ($matter->subscription == FullActivity::AUTOMATIC_SUBSCRIPTION) continue ; ?>
+
+	<div
+	    class="resume_module"
+	    <?php if ($matter->full_activity->current_wallpaper) { ?>
+		style="background-image: url('<?=$matter->full_activity->current_wallpaper; ?>');"
+	    <?php } ?>
+	    id="resume_matter_<?=$matter->id; ?>"
+	>
+	    <?php if ((isset($cycle) && cursus_match($cycle->id, $matter->cursus, $User["cycle"]))) { ?>
+		<img
+		    src="res/mandatory.png"
+		    style="float: left; width: 20px; height: 20px; position: relative; left: -5px;"
+		    title="<?=$Dictionnary["Mandatory"]; ?>"
+		/>
+	    <?php } ?>
+	    <h3 style="width: 70%;">
+		<?=strlen($matter->name) ? $matter->name : $matter->codename; ?>
+	    </h3>
+	    <div class="registration">
+		<?=datex("d/m", $matter->registration_date); ?>
+		-
+		<?=datex("d/m", $matter->close_date); ?>
+	    </div>
+	    <p
+		class="module_description"
+		style="text-indent: 40px;"
+	    >
+		<?=$matter->description; ?>
+	    </p>
+	    <table class="module_scale">
+		<tr class="grade_a">
+		    <td>A</td><td><?=$matter->credit_a; ?></td>
+		</tr><tr class="grade_b">
+		    <td>B</td><td><?=$matter->credit_b; ?></td>
+		</tr><tr class="grade_c">
+		    <td>C</td><td><?=$matter->credit_c; ?></td>
+		</tr><tr class="grade_d">
+		    <td>D</td><td><?=$matter->credit_d; ?></td>
+		</tr>
+	    </table>
+	    <div class="module_button" onclick="display_matter('matter_<?=$matter->id; ?>');">
+		<?=$Dictionnary["SeeMore"]; ?>
+	    </div>
+	</div>
+
+    <?php } ?>
+<?php } ; ?>
+<?php $Content = ob_get_clean(); ?>
+<?php ob_start(); ?>
+
+<h2 style="width: 95%; margin-left: 10px;"><?=$Dictionnary["AvailableMatters"]; ?></h2>
+<div class="resume_module" style="height: 70px;">
+    <?=$Dictionnary["AvailableCredits"]; ?> : <?=$min_cred; ?> - <?=$max_cred; ?><br />
+    <?=$Dictionnary["MandatoryCredits"]; ?> : <?=$man_min_cred; ?> - <?=$man_max_cred; ?><br />
+    <?=$Dictionnary["OptionCredits"]; ?> : <?=$opt_min_cred; ?> - <?=$opt_max_cred; ?>
+</div>
+<div class="resume_module" style="height: 70px;">
+    <?=$Dictionnary["AvailableMatters"]; ?> : <?=$total; ?><br />
+    <?=$Dictionnary["MandatoryMatters"]; ?> : <?=$mandatory; ?><br />
+    <?=$Dictionnary["OptionalMatters"]; ?> : <?=$option; ?>
+</div>
+<div class="resume_module" style="height: 70px;">
+    <?=$Dictionnary["SubscribedCredits"]; ?> : <?=$min_cycle_credits; ?> - <?=$max_cycle_credits; ?><br />
+</div>
+
+<?=str_replace("###RESUME", ob_get_clean(), $Content); ?>
+
+<?php if ($total == 0) { ?>
+    <div style="width: 100%; text-align: center; margin-top: 20%; font-size: xx-large; font-style: italic;">
+	 <?php echo $Dictionnary["NoAvailableMatter"]; ?>
+    </div>
 <?php } ?>
-
-<?php
-}
-?>

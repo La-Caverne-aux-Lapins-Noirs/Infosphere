@@ -34,26 +34,13 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
     // On copie, donc on copie TOUT - sauf ce qui depend des paramètres
     else
     {
-	$rowsx = db_select_all("
-	    `COLUMN_NAME`
-            FROM `INFORMATION_SCHEMA`.`COLUMNS`
-            WHERE `TABLE_SCHEMA`='infosphere'
-            AND `TABLE_NAME`='activity'
-	");
-	$rows = [];
-	foreach ($rowsx as $x)
-	{
-	    $rows[] = $x["COLUMN_NAME"];
-	}
-	foreach (
-	    ["id", "is_template", "id_template", "template_link",
-	     "medal_template", "support_template", "type", "parent_activity",
-	     "codename", "disabled"
-	    ] as $r)
-	{
-	    unset($rows[array_search($r, $rows)]);
-	}
-	foreach (array_values($rows) as $x)
+	$dbname = $Database->real_escape_string($Database->dbname);
+	$rows = db_select_rows("activity", [
+	    "id", "is_template", "id_template", "template_link",
+	    "medal_template", "support_template", "type", "parent_activity",
+	    "codename", "disabled"
+	]);
+	foreach ($rows as $x)
 	{
 	    if (array_search($x, $dates) !== false)
 	    {
@@ -133,7 +120,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
       VALUES
         ($template, $act->type, $parent, '$codename', NULL $vals)
     ") == NULL)
-        return (new ErrorResponse("CannotAdd"));
+    return (new ErrorResponse("CannotAdd"));
     $actid = $Database->insert_id;
     foreach ($act->session as $sess)
     {

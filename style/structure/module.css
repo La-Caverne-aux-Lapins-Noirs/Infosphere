@@ -20,6 +20,30 @@
     width: calc(100% - 400px);
 }
 
+.resume_module
+{
+    display: inline-block;
+    vertical-align: top;
+    width: calc(33% - 40px);
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    padding: 0;
+    height: 200px;
+    padding: 10px 10px 10px 10px;
+    position: relative;
+}
+
+.resume_module > .registration
+{
+    font-size: small;
+    width: 29%;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    text-align: right;
+}
+
 .module_tab
 {
     width: calc(100% - 20px);
@@ -35,5 +59,37 @@
 .flammes
 {
     position: absolute;
+    top: 0px;
     right: 0px;
+}
+
+.module_scale
+{
+    border-radius: 15px;
+    position: absolute;
+    top: 30px;
+    width: 40px;
+    height: calc(100% - 40px);
+    right: 10px;
+}	
+
+.module_description
+{
+    position: absolute;
+    top: 40px;
+    left: 10px;
+    width: calc(100% - 80px);
+    height: calc(100% - 100px);
+    font-size: x-small;
+}
+
+.module_button
+{
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: calc(100% - 80px);
+    height: 40px;
+    line-height: 40px !important;
+    vertical-align: middle;
 }

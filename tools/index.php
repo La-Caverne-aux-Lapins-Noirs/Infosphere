@@ -151,6 +151,7 @@ require_once ("pick_up_work.php");
 require_once ("student_log.php");
 require_once ("set_cookie.php");
 require_once ("sort_by_medal_grade.php");
+require_once ("sort_by_medal_origin.php");
 require_once ("print_medal.php");
 require_once ("raise_alert.php");
 require_once ("language_field.php");

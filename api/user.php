@@ -34,17 +34,24 @@ function SubscribeUser($id, $data, $method, $output, $module)
 	    ob_end_clean();
 	    return ($request);
 	}
+	$id_user = $request->value["id"];
 	$request = @set_user_data($usr["login"], [
 	    "first_name" => strtolower(@$usr["first_name"]),
 	    "family_name" => strtolower(@$usr["family_name"]),
 	    "birth_date" => db_form_date(@$usr["birth_date"]),
-	    "phone" => @$usr["phone"]
+	    "phone" => @$usr["phone"],
+	    "objectives" => $Dictionnary["DefaultUserObjectives"]
 	]);
 	if ($request->is_error())
 	{
 	    ob_end_clean();
 	    return ($request);
 	}
+	$Database->query("
+          INSERT INTO user_todolist (id_user, content) VALUES
+	  ($id_user, '".$Database->real_escape_string($Dictionnary["ThisIsATodoList"])."'),
+	  ($id_user, '".$Database->real_escape_string($Dictionnary["YouCanWriteAnything"])."')
+	  ");
 	$subs[] = $usr["login"];
 	$cnt += 1;
     }
@@ -186,6 +193,40 @@ function UndeleteUser($id, $data, $method, $output, $module)
     return (update_table("user", $id, ["deleted" => NULL]));
 }
 
+function SetTodoEntry($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $Database;
+    global $SUBID;
+    global $User;
+    
+    if ($method == "DELETE")
+    {
+	$SUBID = abs($SUBID);
+	$Database->query("
+	    DELETE FROM user_todolist WHERE id_user = $id AND id = $SUBID
+	");
+	$msg = $Dictionnary["Deleted"];
+    }
+    else
+    {
+	$cnt = $Database->real_escape_string($data["content"]);
+	$Database->query("
+	    INSERT INTO user_todolist (id_user, content) VALUE (
+		$id, '$cnt'
+	    )
+	");
+	$msg = $Dictionnary["Added"];
+    }
+    ob_start();
+    get_user_public_data($User);
+    require_once ("./pages/home/todolist.php");
+    return (new ValueResponse([
+	"msg" => $msg,
+	"content" => ob_get_clean(),
+    ]));
+}
+
 $Tab = [
     // Récupération d'utilisateur(s)
     "GET" => [
@@ -198,7 +239,11 @@ $Tab = [
 	"" => [
 	    "only_admin",
 	    "SubscribeUser"
-	]
+	],
+	"todolist" => [
+	    "is_me_or_admin",
+	    "SetTodoEntry"
+	],
     ],
     "PUT" => [
 	"set_status" => [
@@ -251,6 +296,10 @@ $Tab = [
 	"cycle" => [
 	    "only_admin",
 	    "SetUserLink"
+	],
+	"todolist" => [
+	    "is_me_or_admin",
+	    "SetTodoEntry"
 	]
     ]
 ];

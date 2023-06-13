@@ -1,10 +1,11 @@
 
-.submenutr > td:first-of-type
+#module_menubar
 {
     padding: 10px;
-    box-shadow: 0px 1px 3px rgb(55, 55, 55);
     background-color: rgb(67, 70, 88);
     border-radius: 10px;
+    box-shadow: 0px 1px 3px rgb(55, 55, 55);
+    /* transform: skew(-2deg, 0deg); */
 }
 
 .submenutr > td:first-of-type, .submenutd a
@@ -23,7 +24,7 @@
     list-style-type: none;
 }
 
-.module_tab
+.module_tab, .resume_module
 {
     border-radius: 15px;
     box-shadow: 0px 1px 3px rgb(55, 55, 55);
@@ -85,4 +86,49 @@
     text-align: center;
     padding: 0;
     vertical-align: middle;
+}
+
+.resume_module .module_scale tr td:first-of-type
+{
+    font-weight: bold;
+}
+
+.resume_module .module_scale .grade_a > td:last-of-type
+{
+    border-top-right-radius: 10px;
+}
+
+.resume_module .module_scale .grade_d > td:last-of-type
+{
+    border-bottom-right-radius: 10px;
+}
+
+.resume_module .grade_a
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), gold);
+}
+
+.resume_module .grade_b
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), silver);
+}
+
+
+.resume_module .grade_c
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), #614e1a);
+}
+
+.resume_module .grade_d
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), purple);
+}
+
+.module_button
+{
+    background-color: rgb(200, 143, 26);
+    color: white;
+    border-radius: 15px;
+    text-align: center;
+    font-size: x-large;
 }

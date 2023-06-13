@@ -18,14 +18,14 @@ if ($msg->is_error() || $msg->value["id"] != 1)
     exit ;
 $OriginalUser = $User = $msg->value;
 
-add_log(TRACE, "Albedo starts.", 1);
+add_log(TRACE, "Albedo starts.", 1, true);
 
 // Ici, on est admin, si les paramètres étaient bons
 // C'est ici que commence le travail d'Albedo.
 
-$out = hand_request(["command" => "ping", "content" => "b64:".base64_encode("ping")]);
+$out = hand_request(["command" => "ping", "content" => "b64:".base64_encode("ping")], true);
 if ($out["result"] == "ok" && $out["content"] == "ping")
-    add_log(TRACE, "Infosphere hand runs.", 1);
+    add_log(TRACE, "Infosphere hand runs.", 1, true);
 
 // Chaque fichier albedo doit commencer par vérifier les credentials
 $files = glob("*/albedo.php");
@@ -35,4 +35,4 @@ foreach ($files as $f)
 {
     require ($f);
 }
-add_log(TRACE, "Albedo stops.", 1);
+add_log(TRACE, "Albedo stops.", 1, true);

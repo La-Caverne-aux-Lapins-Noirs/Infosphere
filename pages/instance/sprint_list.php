@@ -37,7 +37,7 @@ else
 			<?php if ($id_sprint == $sprint["id"]) { ?>
 			    value="<?=$Dictionnary["Close"]; ?>"
 			<?php } else { ?>
-			    value="<?=$Dictionnary["Edit"]; ?>"
+			    value="<?=$Dictionnary["Edit/See"]; ?>"
 			<?php } ?>
 			onclick="toggle_edit_form(this, 'sprintedit<?=$sprint["id"]; ?>');"
 		    />

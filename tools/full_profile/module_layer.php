@@ -51,6 +51,8 @@ class ModuleLayer extends Layer
     public $id_team = -1; // Le lien module-utilisateur.
     public $cursus = []; // Matiere obligatoire pour certains cursus
     public $registered = false;
+
+    public $full_activity = NULL;
     
     public function get_credit()
     {
@@ -72,6 +74,7 @@ class ModuleLayer extends Layer
 	$this->credit[2] = &$this->credit_c;
 	$this->credit[3] = &$this->credit_b;
 	$this->credit[4] = &$this->credit_a;
+
 	$activities = db_select_all("
            activity.id, activity.codename,
            session.id as id_session,
@@ -108,7 +111,7 @@ class ModuleLayer extends Layer
 	    $sub->id_session = $act["id_session"];
 	    $activity = new FullActivity;
 	    $only_user = array_search("only_user", $blist) !== false;
-	    $activity->build($activity_id, false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user);
+	    $activity->build($activity_id, false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user, $blist);
 	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
 	    $sub->acquired_credit = 0;
@@ -137,128 +140,138 @@ class ModuleLayer extends Layer
 		    $sub->medal[$med["codename"]]["module_medal"] = false;
 	    }
 
-	    // On récupère les médailles acquises
-	    $acquired = db_select_all("
-               activity.{$Language}_name as activity_name,
-               activity.codename as activity_codename,
-               activity_user_medal.id_activity as id_activity,
-               activity_user_medal.result as result,
-               medal.id as id,
-               medal.codename as codename,
-               medal.{$Language}_name as name,
-               medal.{$Language}_description as description,
-               medal.type as type,
-               activity_medal.local as local,
-               activity_medal.mark as mark,
-               activity_medal.role as role
-               FROM user_medal
-               LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
-               LEFT JOIN activity ON activity.id = activity_user_medal.id_activity
-               LEFT JOIN medal ON medal.id = user_medal.id_medal
-               LEFT JOIN activity_medal ON activity_medal.id_activity = activity.id
-                                        AND activity_medal.id_medal = medal.id
-               WHERE user_medal.id_user = $user_id
-                 AND (activity_user_medal.id_activity = $activity_id
-                  OR activity_user_medal.id_activity = $module_id
-		) AND medal.deleted IS NULL
-	    ");
-	    $eliminatory = false;
-	    foreach ($acquired as $med)
-		if ($med["type"] == 2) // Eliminatoire
-		    $eliminatory = true;
-	    foreach ($acquired as $med)
+	    if (array_search("activity_acquired_medal", $blist) === false)
 	    {
-		$med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
-		if (!file_exists($med["icon"]))
-		    $med["icon"] = NULL;
-		$med["band"] = $Configuration->MedalsDir($med["codename"])."band.png";
-		if (!file_exists($med["band"]))
-		    $med["band"] = NULL;
-		if ($med["id_activity"] == $module_id)
-		    $target = &$this;
-		else
-		    $target = &$sub;
+		// On récupère les médailles acquises
+		$acquired = db_select_all("
+                   activity.{$Language}_name as activity_name,
+                   activity.codename as activity_codename,
+                   activity_user_medal.id_activity as id_activity,
+                   activity_user_medal.result as result,
+                   medal.id as id,
+                   medal.codename as codename,
+                   medal.{$Language}_name as name,
+                   medal.{$Language}_description as description,
+                   medal.type as type,
+                   activity_medal.local as local,
+                   activity_medal.mark as mark,
+                   activity_medal.role as role
+                   FROM user_medal
+                   LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
+                   LEFT JOIN activity ON activity.id = activity_user_medal.id_activity
+                   LEFT JOIN medal ON medal.id = user_medal.id_medal
+                   LEFT JOIN activity_medal ON activity_medal.id_activity = activity.id
+                                           AND activity_medal.id_medal = medal.id
+                   WHERE user_medal.id_user = $user_id
+                     AND (activity_user_medal.id_activity = $activity_id
+                     OR activity_user_medal.id_activity = $module_id
+                   ) AND medal.deleted IS NULL
+		");
+		$eliminatory = false;
+		foreach ($acquired as $med)
+		    if ($med["type"] == 2) // Eliminatoire
+			$eliminatory = true;
+		foreach ($acquired as $med)
+		{
+		    $med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
+		    if (!file_exists($med["icon"]))
+			$med["icon"] = NULL;
+		    $med["band"] = $Configuration->MedalsDir($med["codename"])."band.png";
+		    if (!file_exists($med["band"]))
+			$med["band"] = NULL;
+		    if ($med["id_activity"] == $module_id)
+			$target = &$this;
+		    else
+			$target = &$sub;
 
-		// Si c'est une note, elle est forcement locale
-		if (is_note($med["codename"]))
-		    $med["local"] = true;
-
-		if (!isset($target->medal[$med["codename"]]))
-		{
-		    $target->medal[$med["codename"]] = array_merge($med, [
-			"failure" => 0,
-			"failure_list" => [],
-			"success" => 0,
-			"success_list" => [],
-			"local_sum" => 0
-		    ]);
-		    unset($target->medal[$med["codename"]]["result"]);
-		    unset($target->medal[$med["codename"]]["activity_name"]);
-		}
-		if ($med["result"] == -1 || $eliminatory)
-		{
-		    $target->medal[$med["codename"]]["failure"] += 1;
-		    $target->medal[$med["codename"]]["failure_list"][] =
-			($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
-		}
-		else if ($med["result"] == 1)
-		{
-		    $target->medal[$med["codename"]]["success"] += 1;
-		    $target->medal[$med["codename"]]["success_list"][] =
-			($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
-		    if ($med["local"] == 1)
-			$target->medal[$med["codename"]]["local_sum"] += 1;
-		}
-		if (!isset($target->medal[$med["codename"]]["module_medal"]))
-		    $target->medal[$med["codename"]]["module_medal"] = false;
-		// Médaille éliminatoire directement sur la matiere
-		// La matière est perdue, et la medaille doit etre affichée
-		// clairement
-		if ($med["id_activity"] == $module_id && $med["type"] == 2)
-		    $target->medal[$med["codename"]]["eliminatory"] = true;
-	    }
-
-	    // Presence et absences
-	    if ($sub->registered && $activity->unique_session != NULL)
-	    {
-		if ($activity->unique_session->end_date != NULL &&
-		    date_to_timestamp($activity->unique_session->end_date) < time())
-		{
-		    if ($activity->user_team["present"] == -2)
-			$sub->missing->add($activity->unique_session->begin_date, 1);
-		    else if ($activity->user_team["present"] == -1)
+		    // Si c'est une note, elle est forcement locale
+		    if (is_note($med["codename"]))
+			$med["local"] = true;
+		    
+		    if (!isset($target->medal[$med["codename"]]))
 		    {
-			$sub->late->add($activity->unique_session->begin_date, 1);
-			if ($activity->user_team["declaration_date"] != NULL)
-			{
-			    $diff = date_to_timestamp($activity->user_team["declaration_date"])
-				  - date_to_timestamp($activity->unique_session->begin_date);
-			    $sub->cumulated_late->add($activity->unique_session->begin_date, $diff);
-			}
+			$target->medal[$med["codename"]] = array_merge($med, [
+			    "failure" => 0,
+			    "failure_list" => [],
+			    "success" => 0,
+			    "success_list" => [],
+			    "local_sum" => 0
+			]);
+			unset($target->medal[$med["codename"]]["result"]);
+			unset($target->medal[$med["codename"]]["activity_name"]);
 		    }
-		    else if ($activity->user_team["present"] == 1)
-			$sub->present->add($activity->unique_session->begin_date, 1);
+		    if ($med["result"] == -1 || $eliminatory)
+		    {
+			$target->medal[$med["codename"]]["failure"] += 1;
+			$target->medal[$med["codename"]]["failure_list"][] =
+			    ($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
+		    }
+		    else if ($med["result"] == 1)
+		    {
+			$target->medal[$med["codename"]]["success"] += 1;
+			$target->medal[$med["codename"]]["success_list"][] =
+			    ($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
+			if ($med["local"] == 1)
+			    $target->medal[$med["codename"]]["local_sum"] += 1;
+		    }
+		    if (!isset($target->medal[$med["codename"]]["module_medal"]))
+			$target->medal[$med["codename"]]["module_medal"] = false;
+		    // Médaille éliminatoire directement sur la matiere
+		    // La matière est perdue, et la medaille doit etre affichée
+		    // clairement
+		    if ($med["id_activity"] == $module_id && $med["type"] == 2)
+			$target->medal[$med["codename"]]["eliminatory"] = true;
 		}
 	    }
 
-	    // Rendu et pas rendu
-	    if ($activity->user_team != NULL && $activity->pickup_date != NULL && date_to_timestamp($activity->pickup_date) < time())
+	    if (array_search("activity_presence", $blist) === false)
 	    {
-		if (count($activity->user_team["work"]) == 0)
-		    $sub->nowork->add($activity->pickup_date, 1);
-		else
+		// Presence et absences
+		if ($sub->registered && $activity->unique_session != NULL)
 		{
-		    $sub->work->add($activity->pickup_date, 1);
-		    $sub->archive = db_select_one("
-                       repository, pickedup_date FROM pickedup_work
-                       WHERE id_team = {$activity->user_team["id"]}
-                       ORDER BY pickedup_date DESC
-		       ");
-		    $sub->pickedup_date = $sub->archive["pickedup_date"];
-		    $sub->archive = $sub->archive["repository"];
+		    if ($activity->unique_session->end_date != NULL &&
+			date_to_timestamp($activity->unique_session->end_date) < time())
+		    {
+			if ($activity->user_team["present"] == -2)
+			    $sub->missing->add($activity->unique_session->begin_date, 1);
+			else if ($activity->user_team["present"] == -1)
+			{
+			    $sub->late->add($activity->unique_session->begin_date, 1);
+			    if ($activity->user_team["declaration_date"] != NULL)
+			    {
+				$diff = date_to_timestamp($activity->user_team["declaration_date"])
+				      - date_to_timestamp($activity->unique_session->begin_date);
+				$sub->cumulated_late->add($activity->unique_session->begin_date, $diff);
+			    }
+			}
+			else if ($activity->user_team["present"] == 1)
+			    $sub->present->add($activity->unique_session->begin_date, 1);
+		    }
 		}
 	    }
 
+	    if (array_search("activity_delivery", $blist) === false)
+	    {
+		// Rendu et pas rendu
+		if ($activity->user_team != NULL && $activity->pickup_date != NULL && date_to_timestamp($activity->pickup_date) < time())
+		{
+		    if (count($activity->user_team["work"]) == 0)
+			$sub->nowork->add($activity->pickup_date, 1);
+		    else
+		    {
+			$sub->work->add($activity->pickup_date, 1);
+			$sub->archive = db_select_one("
+                           repository, pickedup_date FROM pickedup_work
+                           WHERE id_team = {$activity->user_team["id"]}
+                           ORDER BY pickedup_date DESC
+			   ");
+			$sub->pickedup_date = $sub->archive["pickedup_date"];
+			$sub->archive = $sub->archive["repository"];
+		    }
+		}
+	    }
+
+	    $sub->full_activity = $activity;
 	    if ($fake == false)
 		$this->sublayer[] = $sub;
 	}

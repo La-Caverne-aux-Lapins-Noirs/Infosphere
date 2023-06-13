@@ -10,6 +10,15 @@ $one_day = $one_hour * 24;
 $one_week = $one_day * 7;
 $five_minute = 60 * 5;
 
+$TicketStatus = [
+    -2 => $Dictionnary["Canceled"],
+    -1 => $Dictionnary["Refused"],
+    +0 => $Dictionnary["Awaiting"],
+    +1 => $Dictionnary["InProgress"],
+    +2 => $Dictionnary["ToReview"],
+    +3 => $Dictionnary["Done"],
+];
+
 $Grade = [];
 
 define("BANISHED", -1);
