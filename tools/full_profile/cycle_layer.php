@@ -85,7 +85,7 @@ class CycleLayer extends Layer
 		$sub = new ModuleLayer;
 		
 		$module = new FullActivity;
-		if ($module->build(
+		if ($module->buildp(
 		    $module_id, [
 			"recursive" => false,
 			"user" => ["id" => $user_id],

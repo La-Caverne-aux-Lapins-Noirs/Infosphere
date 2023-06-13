@@ -2,7 +2,7 @@
 <table class="module_tab">
     <tr><td colspan="3" style="position: relative;">
 	<h2><?=$matter->name ?: $matter->codename; ?></h2>
-	<?php if (is_teacher_for_activity($matter->id)) { ?>
+	<?php if ($matter->is_teacher) { ?>
 	    <a href="<?=unrollurl(["b" => 1]); ?>" style="position: absolute; width: 40%; left: calc((100% - 40%) / 2); top: 10px; text-align: center; z-index: 1; color: black;">
 		<?=$Dictionnary["ManageModule"]; ?> (<?=$matter->codename; ?>)
 	    </a>

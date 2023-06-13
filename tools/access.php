@@ -112,6 +112,8 @@ function is_teacher_for_activity($id)
     
     if (is_admin())
 	return (true);
+    if (is_object($id))
+	return ($id->is_teacher);
     ($activity = new FullActivity)->build($id, false, false);
     return ($activity->is_teacher);
 }

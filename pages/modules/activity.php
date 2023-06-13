@@ -21,7 +21,7 @@
     <td rowspan="2">
 	<div class="modulebutton" style="width: 100%; height: 100%; text-align: center;">
 	    <br />
-	    <?php if (is_teacher_for_activity($act->id)) { ?>
+	    <?php if ($act->is_teacher) { ?>
 		<a href="<?=unrollurl($link); ?>">
 		    <?=$Dictionnary["SeeInstanceConfiguration"]; ?>
 		</a><br />
