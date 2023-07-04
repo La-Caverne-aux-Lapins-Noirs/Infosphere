@@ -1,6 +1,6 @@
 <?php
 
-function display_nickname($usr, $link = true)
+function display_nickname($usr, $link = true, $name_first = false)
 {
     if (is_object($usr))
     {
@@ -22,15 +22,15 @@ function display_nickname($usr, $link = true)
 
     if (@strlen($usr["nickname"])) { ?>
         <span
-	    onmouseover="this.innerText='<?=$codename; ?>';"
-	    onmouseout="this.innerText='<?=$nick; ?>';"
+	    onmouseover="this.innerText='<?=$name_first ? $nick : $codename; ?>';"
+	    onmouseout="this.innerText='<?=$name_first ? $codename : $nick; ?>';"
         >
-            <?=$nick; ?>
+            <?=$name_first ? $codename : $nick; ?>
         </span>
     <?php } else if (strlen($names)) { ?>
         <span
-	    onmouseover="this.innerText='<?=$codename; ?>';"
-	    onmouseout="this.innerText='<?=$names; ?>';"
+	    onmouseover="this.innerText='<?=$name_first ? $nick : $codename; ?>';"
+	    onmouseout="this.innerText='<?=$name_first ? $codename : $nick; ?>';"
         >
 	    <?=$names; ?>
         </span>

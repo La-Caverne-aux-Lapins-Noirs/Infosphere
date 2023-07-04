@@ -95,7 +95,7 @@ else
 
     <?php if (isset($module)) { ?>
 
-	<?php if ($module->old_validation || $module->grade_module || $module->validation_by_percent) { ?>
+	<?php if ($module->validation == FullActivity::GRADE_VALIDATION || $module->validation == FullActivity::PERCENT_VALIDATION) { ?>
 
 	    <?php if ($medal["mandatory"] == 1) { ?>
 		<?php $style = " style='width: ".(int)($ysize / 1.5)."px; height: ".(int)($ysize / 1.5)."px;' "; ?>

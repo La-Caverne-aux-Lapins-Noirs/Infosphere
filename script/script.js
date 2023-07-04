@@ -17,6 +17,24 @@ function setcookie(id, value)
     setCookie(id, value, 365 * 10);
 }
 
+function roll_unroll(id)
+{
+    var idx = document.getElementById(id);
+    var button = document.getElementById(id + "_button");
+    
+    localStorage.setItem(id, button.value);
+    if (button.value == '+')
+    {
+	idx.style.display = "block";
+	button.value = "−";
+    }
+    else
+    {
+	idx.style.display = "none";
+	button.value = "+";
+    }
+}
+
 function toggle_roll(id, size)
 {
     var div = document.getElementById(id);
@@ -58,11 +76,14 @@ function toggle_rollc(cook, cla, size, obj, show, hide)
     setCookie(cook, ck > 0 ? "0" : "1", 365 * 10);
 }
 
+var CurrentMousePosition = {x: 0, y: 0};
+var CurrentLeftClickStatus = false;
 var last_active = 0;
 window.addEventListener('mousemove', e =>
     {
 	var cnt = Date.now();
 
+	CurrentMousePosition = {x: e.clientX, y: e.clientY};
 	if (cnt - last_active > 60000)
 	{
 	    var xhr = new XMLHttpRequest();
@@ -71,5 +92,12 @@ window.addEventListener('mousemove', e =>
 	    xhr.send();
 	    last_active = cnt;
 	}
+    }
+);
+
+window.addEventListener('click', e =>
+    {
+	CurrentLeftClickStatus = e.button == 1;
+	CurrentMousePosition = {x: e.clientX, y: e.clientY};
     }
 );

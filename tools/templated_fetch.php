@@ -4,6 +4,11 @@ function templated_fill($table, &$data, $blist = [])
 {
     global $Language;
 
+    // Rajouté le 26/06/2023 - Si cela pose probleme, etudier plus.
+    // Force la non récupération du template
+    if (isset($data["template_link"]) && $data["template_link"] == false)
+	return ($data);
+
     if (($tem = db_select_one("
         *
         FROM $table

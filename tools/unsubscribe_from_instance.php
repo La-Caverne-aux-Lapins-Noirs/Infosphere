@@ -60,7 +60,8 @@ function unsubscribe_from_instance($activity, $login = NULL, $admin = false)
 	    $login = $logins[0];
 	if (($id = resolve_codename("user", $login))->is_error())
 	    return ($id);
-	$id = $id->value;
+	if (($id = $id->value) < 0)
+	    $id = -$id;
     }
 
     // On recupere des informations sur l'equipe. C'est quel equipe?

@@ -154,12 +154,10 @@ $js = "silent_submit(this)";
 			onchange="<?=$js; ?>"
 			style="position: relative; left: -5px"
 		    >
-			<?php
-			$rank = $module->grade_module == false
-			     && $module->grade_module == false
-			     && $module->no_grade == false
-			;
-			?>
+			<!-- Il faut un nombre précis de médaille pour chaque grade -->
+			<option value="4" <?=$module->validation == 4 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["ValidationByCount"]; ?>
+			</option>
 			<!-- Il faut un pourcentage de médailles obligatoire a chaque grade -->
 			<option value="3" <?=$module->validation == 3 ? "selected" : ""; ?>>
 			    <?=$Dictionnary["ValidationByRank"]; ?>

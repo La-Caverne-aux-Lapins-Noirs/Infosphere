@@ -1,6 +1,6 @@
 <?php
 
-function display_avatar($usr, $siz = 200)
+function display_avatar($usr, $siz = 200, $photo_first = false)
 {
     global $Configuration;
 
@@ -23,9 +23,9 @@ function display_avatar($usr, $siz = 200)
 ?>
     <img
 	style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;"
-	src="<?=$nw["avatar"]; ?>"
-	onmouseover="this.src='<?=$nw["photo"]; ?>';"
-	onmouseout="this.src='<?=$nw["avatar"]; ?>';"
+	src="<?=$nw[$photo_first ? "photo" : "avatar"]; ?>"
+	onmouseover="this.src='<?=$nw[$photo_first ? "avatar" : "photo"]; ?>';"
+	onmouseout="this.src='<?=$nw[$photo_first ? "photo" : "avatar"]; ?>';"
     />
 <?php
     }

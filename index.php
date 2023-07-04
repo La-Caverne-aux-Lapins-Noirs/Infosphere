@@ -68,6 +68,9 @@ load_constants();
 // Tout ce qui concerne la connexion, le log as, le mode admin
 require_once ("login/index.php");
 
+// On trace la visite pour fournir des infos en cas de problème
+trace();
+
 ////////////////////
 // Localisation ///
 //////////////////

@@ -1,119 +1,108 @@
 <br />
-<table class="module_tab">
-    <tr><td colspan="2" style="position: relative;">
-	<h3 onclick="document.location = 'index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>';" style="cursor: pointer;">
-	    <?=$act->name ?: $act->codename; ?>
-	</h3>
-	<?php if ($act->type_type != 0) { ?>
-	    <p style="position: absolute; top: 10px; right: 10px; text-align: right;">
-		<i><?=$Dictionnary["ActivityType"]; ?> : <b><?=$Dictionnary[$ActivityType[$act->type]["codename"]]; ?></b></i>
-	    </p>
-	<?php } ?>
-
-	<?php
-	$link = [
-	    "p" => "InstancesMenu",
-	    "a" => $act->id,
-	    "b" => $act->type_type == 2 && $act->session_registered != NULL ? $act->session_registered->id : -1
-	];
-	?>
-    </td>
-    <td rowspan="2">
-	<div class="modulebutton" style="width: 100%; height: 100%; text-align: center;">
-	    <br />
-	    <?php if ($act->is_teacher) { ?>
-		<a href="<?=unrollurl($link); ?>">
-		    <?=$Dictionnary["SeeInstanceConfiguration"]; ?>
-		</a><br />
+<table
+    class="module_tab"
+    <?php if ($act->current_wallpaper) { ?>
+	style="background-image: url('<?=$act->current_wallpaper; ?>');"
+    <?php } ?>
+>
+    <tr>
+	<td colspan="2" style="position: relative;">
+	    <h3><?=$act->name ?: $act->codename; ?></h3>
+	    <?php if ($act->type_type != 0) { ?>
+		<p style="position: absolute; top: 10px; right: 10px; text-align: right;">
+		    <i><?=$Dictionnary["ActivityType"]; ?> : <b><?=$Dictionnary[$ActivityType[$act->type]["codename"]]; ?></b></i>
+		</p>
 	    <?php } ?>
-	    <?php if ($act->type_type == 2) { ?>
-		<?php
-		$date = "";
-		if (($session = $act->session_registered) != NULL)
-		{
-		    $sess = $act->session_registered;
-		    $date = " ".
-			    datex("d/m/Y H:i", $sess->begin_date)." - ".
-			    datex("H:i", $sess->end_date)
-		    ;
-		    $link = [
-			"p" => "ActivityMenu",
-			"a" => $act->id,
-			"b" => $session->id
-		    ];
-		?>
-		    <a href="<?=unrollurl($link); ?>">
-			<?=$Dictionnary["SeeActivityPage"]; ?><?=$date; ?>
-		    </a><br />
-		<?php } else { ?>
-		    <?php foreach ($act->session as $sess) { ?>
-			<?php
-			$link = [
-			    "p" => "ActivityMenu",
-			    "a" => $act->id,
-			    "b" => $sess->id
-			];
-			$date = " ".
-				datex("d/m/Y H:i", $sess->begin_date)." - ".
-				datex("H:i", $sess->end_date)
-			;
-			?>
-			<a href="<?=unrollurl($link); ?>">
-			    <?=$Dictionnary["SeeActivityPage"]; ?><?=$date; ?>
-			</a><br />
-		    <?php } ?>
-		<?php } ?>
-	    <?php } else if ($act->type_type == 0) { ?>
+
+	</td><td rowspan="2">
+	    <?php if ($act->is_teacher) { ?>
 		<?php
 		$link = [
-		    "p" => "ModulesMenu",
+		    "p" => "InstancesMenu",
 		    "a" => $act->id,
 		];
 		?>
-		<a href="<?=unrollurl($link); ?>">
-		    <?=$Dictionnary["SeeMatter"]; ?>
-		</a><br /><br />
-		<?php if ($act->registered == false) { ?>
-		    - <?=$Dictionnary["NotSubscribed"]; ?> -
-		<?php } else { ?>
-		    - <?=$Dictionnary["SingleSubscribed"]; ?> -
-		<?php } ?>
-	    <?php } else { ?>
-		<?php
-		$link = [
-		    "p" => "ActivityMenu",
-		    "a" => $act->id
-		];
-		?>
-		<a href="<?=unrollurl($link); ?>">
-		    <?=$Dictionnary["SeeActivityPage"]; ?>
-		</a><br />
+		<input
+		    type="button"
+		    class="modulebutton"
+		    value="<?=$Dictionnary["SeeInstanceConfiguration"]; ?>"
+		    onclick="document.location='<?=unrollurl($link); ?>';"
+		    style="cursor: pointer; width: 100%; height: 35px; font-size: large; border: 0; white-space: normal;"
+		/>
 	    <?php } ?>
-	    <br />
-	</div>
-    </td>
-    </tr><tr>
-	<td>
-	    <p style="text-indent: 2em; text-align: justify;">
-		<?=$act->description; ?>
-	    </p>
-	</td>
-    </tr><tr>
-	<td colspan="3" class="medalscroll" style="min-height: 57px;">
-	    <div style="height: 54px;">
-		<?php if (!count($act->medal)) { ?>
-		    <span style="position: relative; top: 10px; left: 10px; font-style: italic; color: gray;">
-			<?php if ($act->type_type == 0) { ?>
-			    <?=$Dictionnary["NoAssociatedMedalToMatter"]; ?>
-			<?php } else { ?>
-			    <?=$Dictionnary["NoAssociatedMedalToActivity"]; ?>
-			<?php } ?>
-		    </span>
+	    
+	    <?php
+	    $date = "";
+	    if (($session = $act->session_registered) != NULL)
+		$session = [$session];
+	    else if ($act->session)
+		$session = $act->session;
+	    else
+		$session = [];
+	    $link = [
+		"p" => "ActivityMenu",
+		"a" => $act->id,
+	    ];
+	    ?>
+	    <?php if (count($session) == 0) { ?>
+		<?php if ($act->type_type == 2) { ?>
+		    <input
+			type="button"
+			value="<?=$Dictionnary["NoSessionProgrammed"]; ?>"
+			style="font-weight: bold; width: 100%; height: 35px; font-size: large; border: 0; cursor: pointer;"
+		    />
+		<?php } else { // Projet ?>
+		    <input
+			type="button"
+			onclick="document.location = '<?=unrollurl($link); ?>';"
+			value="<?=$Dictionnary["SeeActivityPage"]; ?>"
+			style="font-weight: bold; width: 100%; height: 35px; font-size: large; border: 0; cursor: pointer;"
+		    /><br />    
 		<?php } ?>
+	    <?php } ?>
+	    <?php foreach ($session as $sess) { ?>
+		<?php
+		$link["b"] = $sess->id;
+		$date = " ".
+			datex("d/m/Y H:i", $sess->begin_date)." - ".
+			datex("H:i", $sess->end_date)
+		;
+		?>
+		<input
+		    type="button"
+		    onclick="document.location = '<?=unrollurl($link); ?>';"
+		    value="<?=$Dictionnary["GoToSessionOf"]; ?> <?=$date; ?>"
+		    style="font-weight: bold; width: 100%; height: 35px; font-size: large; border: 0; cursor: pointer;"
+		/><br />
+	    <?php } ?>
+
+	    <?php
+	    $date_source = $act;
+	    require ("list_of_dates.php");
+	    ?>
+	</td>
+    </tr>
+
+    <tr>
+	<td
+	    style="
+		   text-indent: 2em;
+		   text-align: justify;
+		   border-radius: 10px;
+		   background-color: rgba(255, 255, 255, 0.5);
+		   "
+	    <?php if (!count($act->medal)) { ?>
+		colspan="2"
+	    <?php } ?>
+	>
+	    <?=markdown($act->description, true); ?>
+	</td>
+	<?php if (count($act->medal)) { ?>
+	    <td class="medalscroll" style="text-align: center; vertical-align: middle;">
 		<?php foreach ($act->medal as $medal) { ?>
 		    <div
 			class="medal_box_picture"
-			       style="
+			style="
 			       display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
 			       background-image: url('<?=$medal["icon"]; ?>');
 			       width: 46px !important;
@@ -125,7 +114,7 @@
 			       "
 		    ></div>
 		<?php } ?>
-	    </div>
-	</td>
+	    </td>
+	<?php } ?>
     </tr>
 </table>

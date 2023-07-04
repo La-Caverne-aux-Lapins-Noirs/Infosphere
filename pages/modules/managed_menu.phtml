@@ -1,49 +1,46 @@
-<?php
-$matters = db_select_all("
-  activity.id,
-  activity.done_date
-  FROM activity
-  LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
-  LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
-  LEFT JOIN user_laboratory ON laboratory.id = user_laboratory.id_laboratory
-    AND user_laboratory.authority > 0
-
-  LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity.id
-  LEFT JOIN cycle_teacher ON cycle_teacher.id_cycle = activity_cycle.id_cycle
-  LEFT JOIN laboratory as lab ON cycle_teacher.id_laboratory = lab.id
-  LEFT JOIN user_laboratory as userlab ON lab.id = userlab.id_laboratory
-    AND userlab.authority > 0
-
-  LEFT JOIN school_cycle ON school_cycle.id_cycle = activity_cycle.id_cycle
-  LEFT JOIN user_school ON school_cycle.id_school = user_school.id_school
-    AND user_school.authority = 1
-
-  WHERE (activity_teacher.id_user = {$User["id"]}
-    OR user_laboratory.id_user = {$User["id"]}
-    OR cycle_teacher.id_user = {$User["id"]}
-    OR userlab.id_user = {$User["id"]}
-    OR (user_school.id_user = {$User["id"]} AND user_school.authority = 1)
-    OR ".(is_admin() ? "1" : "0")."
-  )
-  AND activity.parent_activity IS NULL
-  AND activity.is_template = 0
-  GROUP BY activity.id
-  ORDER BY activity.codename
-  ");
-if (count($matters)) { ?>
-    <h2><?=$Dictionnary["ManagedActivities"]; ?></h2>
-    <ul>
-	<?php foreach ($matters as $mat) { ?>
-	    <?php ($matter = new FullActivity)->build($mat["id"], false, false); ?>
-	    <?php if (!@strlen($matter->codename)) continue ; ?>
-	    <?php if ($mat["done_date"] == NULL || date_to_timestamp($mat["done_date"]) > now()) { ?>
-		<li><a href="<?=unrollurl(["a" => $matter->id]); ?>">
-		    <h4>
-			<?=$matter->codename; ?>: <?=$matter->fr_name; ?>
-		    </h4>
-		</a></li>
-	    <?php } ?>
-	    <?php $valid_activities[$matter->id] = 2; ?>
+<?php foreach ($mdatas as $year => $matters) { ?>
+    
+    <h3 style="border-top: 1px solid gray; padding-top: 5px; position: relative;">
+	<?php $dd = explode("/", $year); ?>
+	<?=$Dictionnary["ManagedActivities"]; ?> <?=$dd[1]."/".$dd[0]; ?>
+	<br /><br />
+	<input
+	    id="menu_managed<?=$year; ?>_button"
+	    type="button"
+	    onclick="roll_unroll('menu_managed<?=$year; ?>');"
+	    class="rollbutton"
+	    value="+"
+	/>
+	<span style="font-size: small"></span>
+	<script>
+	 var tmp = localStorage.getItem('menu_managed<?=$year; ?>');
+	 document.getElementById('menu_managed<?=$year; ?>_button').value
+	 = (tmp != null) ? tmp : '+'
+	 ;
+	</script>
+    </h3>
+    
+    <ul id="menu_managed<?=$year; ?>">
+	<?php
+	$sorted_matters = $matters;
+	usort($sorted_matters, "sort_by_codename");
+	?>
+	<?php foreach ($sorted_matters as $matter) { ?>
+	    <li>
+		<a onclick="display_matter(<?=$matter->id; ?>);" style="cursor: pointer;">
+		    <div class="module_link" id="module_link<?=$matter->id; ?>">
+			<h4>
+			    <?=$matter->codename; ?>:
+			    <?=$matter->fr_name; ?>
+			</h4>
+		    </div>
+		</a>
+	    </li>
 	<?php } ?>
+	<br />
     </ul>
+    <script>
+     roll_unroll('menu_managed<?=$year; ?>');
+    </script>
+
 <?php } ?>

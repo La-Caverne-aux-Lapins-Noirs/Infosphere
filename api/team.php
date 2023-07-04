@@ -85,7 +85,7 @@ function SetTicket($id, $data, $method, $output, $module)
 	");
     else
     {
-	if ($status == 3)
+	if ($status == 3 || $status == -2)
 	    $done_date = "'".db_form_date(now(), true)."'";
 	else
 	    $done_date = "NULL";

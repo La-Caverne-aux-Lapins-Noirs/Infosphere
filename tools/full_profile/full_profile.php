@@ -116,10 +116,12 @@ class FullProfile extends Layer
 	    {
 		if (is_note($medal["codename"]))
 		{
-		    $avg += atoi(substr($medal["codename"], strlen("token")));
+		    $avg += intval(substr($medal["codename"], strlen("token")));
 		    $not += 1;
 		}
 	    }
+	    if ($not == 0)
+		$not = 1;
 	    $this->set_grade($mod, $avg / $not + $mod->bonus_grade_d);
 	    return ;
 	}
@@ -145,6 +147,35 @@ class FullProfile extends Layer
 	    return ;
 	}
 
+	if ($mod->validation == FullActivity::COUNT_VALIDATION)
+	{
+	    $acquired_medal = 0;
+	    foreach ($mod->medal as $medal)
+	    {
+		if ($medal["module_medal"] == false)
+		    continue ;
+		if ($medal["success"] > 0)
+		    $acquired_medal += 1;
+	    }
+	    $mod->grade = 0;
+	    $full_bonus =
+		$mod->bonus_grade_a +
+		$mod->bonus_grade_b +
+		$mod->bonus_grade_c +
+		$mod->bonus_grade_d +
+		$mod->bonus_grade_bonus
+	    ;
+	    $mod->grade = 0;
+	    if ($acquired_medal + $full_bonus > $mod->grade_d)
+		$mod->grade = 1;
+	    if ($acquired_medal + $full_bonus > $mod->grade_c)
+		$mod->grade = 2;
+	    if ($acquired_medal + $full_bonus > $mod->grade_b)
+		$mod->grade = 3;
+	    if ($acquired_medal + $full_bonus > $mod->grade_a)
+		$mod->grade = 4;
+	}
+
 	// Méthode de validation définitive
 	// Il y a des médailles obligatoires pour chaque grade
 	// les médailles bonus permettent d'avoir un bonus de grade
@@ -161,7 +192,7 @@ class FullProfile extends Layer
 	$medalc_cnt = 0;
 	$medald_cnt = 0;
 	$medale_cnt = 0;
-	foreach ($mod->medal as $medal)
+	foreach ($mod->medal as $medalname => $medal)
 	{
 	    if ($medal["role"] == 4)
 	    {
@@ -189,6 +220,8 @@ class FullProfile extends Layer
 	    }
 	    else // role == 0
 	    { // Médailles optionnelles - seulement les positives
+		if (!isset($medal["type"]))
+		    AddDebugLogR($mod->codename." ".$medalname);
 		if ($medal["type"] != 0)
 		    continue ;
 		if ($medal["success"] > 0)
@@ -222,7 +255,7 @@ class FullProfile extends Layer
 
 	// Par tranche de "grade_bonus", on obtient un grade supplémentaire.
 	// Ce grade ne permet pas de revenir d'un grade echec.
-	if ($mod->grade != 0 && $medale_cnt)
+	if ($mod->grade != 0 && $medale_cnt && $mod->grade_bonus != 0)
 	    $mod->grade += ((int)(100 * ($medale / $medale_cnt))) >= ((int)$mod->grade_bonus) ? 1 : 0;
 	
 	if ($medala_cnt)
@@ -368,8 +401,8 @@ class FullProfile extends Layer
 	    {
 		$l = new CycleLayer;
 		$fields = [
-		    "id", "codename", "done", "cycle", "first_day", "commentaries", "hidden",
-		    "id_user_cycle", "cursus"
+		    "id", "codename", "done", "cycle", "first_day",
+		    "commentaries", "hidden", "id_user_cycle", "cursus"
 		];
 		foreach ($fields as $label)
 		    $l->$label = $cycle[$label];

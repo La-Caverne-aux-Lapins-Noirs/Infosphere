@@ -66,7 +66,8 @@ class FullActivity extends Response
     public $grade_bonus = 75;
 
     public $declaration_type = 1;
-    
+
+    const COUNT_VALIDATION = 4;
     const RANK_VALIDATION = 3;
     const GRADE_VALIDATION = 2;
     const PERCENT_VALIDATION = 1;
@@ -172,6 +173,7 @@ class FullActivity extends Response
 	global $LanguageList;
 	global $LoadedActivity;
 	global $DBCache;
+	global $Dictionnary;
 
 	if (($ret = resolve_codename("activity", $activity_id))->is_error())
 	    return (false);
@@ -200,6 +202,7 @@ class FullActivity extends Response
            activity.{$Language}_method as method,
            activity.{$Language}_objective as objective,
            activity.{$Language}_reference as reference,
+           activity.template_link as template_link,
            parent.id_template as parent_id_template,
            parent.codename as parent_codename,
            parent.{$Language}_name as parent_name,
@@ -311,6 +314,15 @@ class FullActivity extends Response
 	to_timestamp($this->subject_disappeir_date);
 	to_timestamp($this->pickup_date);
 
+	// Si on est sur une page de consultation et non de modification
+	// Si la fin est définie mais qu'il manque certaines dates de clotures...
+	if ($DBCache && $this->done_date != NULL)
+	{
+	    if ($this->close_date == NULL)
+		$this->close_date = $this->done_date;
+	}
+
+	
 	select_right_elem($this, "wallpaper");
 	select_right_elem($this, "ressource");
 	select_right_elem($this, "intro");
@@ -345,7 +357,18 @@ class FullActivity extends Response
 	    // les professeurs et les supports de cours... mais pas sur les équipes.
 	    $this->reference_codename = db_select_one("codename, type, {$Language}_name as name FROM activity WHERE id = $this->reference_activity");
 	    $this->reference_name = $this->reference_codename["name"];
-	    $this->type = $this->reference_codename["type"];
+	    if ($this->name == "" || $this->name == NULL)
+	    {
+		if ($this->type == DAILY)
+		    $this->name = $Dictionnary["DailyMeetingFor"]." ".$this->reference_name;
+		else if ($this->type == TUTORING)
+		    $this->name = $Dictionnary["TutoringFor"]." ".$this->reference_name;
+		else if ($this->type == DEFENSE) // Soutenance
+		    $this->name = $Dictionnary["DefenseOf"]." ".$this->reference_name;
+		else if ($this->type == RETROSPECTIVE)
+		    $this->name = $Dictionnary["RetrospectiveOf"]." ".$this->reference_name;
+	    }
+	    // $this->type = $this->reference_codename["type"]; Pas une bonne idée ca...
 	    $this->reference_codename = $this->reference_codename["codename"];
 
 	    if (!$amedal)
@@ -393,10 +416,11 @@ class FullActivity extends Response
 	foreach ($this->teacher as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 	foreach ($this->support as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 
+	if (array_search("activity_cycle", $blist) === false)
+	    $this->cycle = fetch_link("activity", "cycle", $data["id"], true, ["name"])->value;	
 	if (array_search("activity_details", $blist) === false)
 	{
 	    $this->skill = fetch_link("activity", "skill", $data["id"], true, ["description"])->value;
-	    $this->cycle = fetch_link("activity", "cycle", $data["id"], true, ["name"])->value;
 	    $this->scale = fetch_link("activity", "scale", $data["id"], true, ["name", "content"], " AND type = 0 ORDER BY chapter ")->value;
 	    $this->mcq = fetch_link("activity", "scale", $data["id"], true, ["name", "content"], " AND type = 1 ORDER BY chapter ")->value;
 	    $this->satisfaction = fetch_link("activity", "scale", $data["id"], true, ["name", "content"], " AND type = 2 ORDER BY chapter ")->value;
@@ -491,24 +515,48 @@ class FullActivity extends Response
 	{
 	    $limit = " AND user_team.id_user = {$user["id"]} ";
 	    $selteam = " LEFT JOIN user_team ON team.id = user_team.id_team ";
+	    $selfield = ",
+               user_team.code as code,
+               user_team.bonus_grade_a,
+               user_team.bonus_grade_b,
+               user_team.bonus_grade_c,
+               user_team.bonus_grade_d,
+               user_team.bonus_grade_bonus,
+               user_team.commentaries as user_com,
+               user_team.status as status
+	    ";
 	}
 	else
 	{
 	    $limit = "";
 	    $selteam = "";
+	    $selfield = "";
 	}
 	if ($user != NULL || $only_user == false)
 	{
 	    $this->team = db_select_all("
-               team.*
+               team.* $selfield
                FROM team
                $selteam
                WHERE team.id_activity = $team_pool_id
                $limit
 	    ");
-	    if ($only_user && $user && count($this->team) && 0)
+	    if ($only_user && $user && count($this->team))
+	    {
 		$this->registered = true;
-
+		if (count($this->team))
+		{
+		    $this->user_team = $this->team[0];
+		    $this->bonus_grade_a = $this->user_team["bonus_grade_a"];
+		    $this->bonus_grade_b = $this->user_team["bonus_grade_b"];
+		    $this->bonus_grade_c = $this->user_team["bonus_grade_c"];
+		    $this->bonus_grade_d = $this->user_team["bonus_grade_d"];
+		    $this->bonus_grade_bonus = $this->user_team["bonus_grade_bonus"];
+		    $this->user_commentaries = $this->user_team["user_com"];
+		    $this->commentaries = $this->user_team["commentaries"];
+		    $this->leader = $this->user_team["status"] == 2;
+		}
+	    }
 	    if (array_search("activity_team_content", $blist) === false)
 	    {
 		foreach ($this->team as &$team)
@@ -528,7 +576,7 @@ class FullActivity extends Response
                       user_team.bonus_grade_bonus
                       FROM user_team
                       LEFT JOIN user ON user_team.id_user = user.id
-                      WHERE user_team.id_team = {$team["id"]} $limit
+                      WHERE user_team.id_team = {$team["id"]} AND user_team.id_user > 0 $limit
 		      ", "id");
 		    $this->nbr_students += count($team["user"]);
 		    $team["work"] = db_select_all("
@@ -617,14 +665,17 @@ class FullActivity extends Response
 			    foreach ($this->medal as $medx)
 			    {
 				$m = db_select_one("
-   			      activity_user_medal.result as result
-                              FROM user_medal LEFT JOIN medal ON user_medal.id_medal = medal.id
-                              LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
-                              WHERE user_medal.id_user = {$usr["id"]}
-                              AND user_medal.id_medal = {$medx["id"]}
-                              AND activity_user_medal.result = 1
-                              ORDER BY medal.codename ASC
-			      ");
+   			          activity_user_medal.result as result
+                                  FROM user_medal
+                                  LEFT JOIN medal
+                                    ON user_medal.id_medal = medal.id
+                                  LEFT JOIN activity_user_medal
+                                    ON user_medal.id = activity_user_medal.id_user_medal
+                                  WHERE user_medal.id_user = {$usr["id"]}
+                                  AND user_medal.id_medal = {$medx["id"]}
+                                  AND activity_user_medal.result = 1
+                                  ORDER BY medal.codename ASC
+				  ");
 				if ($m != NULL)
 				{
 				    $medx["result"] = $m["result"];
@@ -642,9 +693,10 @@ class FullActivity extends Response
 			    $prf = new Fullprofile;
 			    $refid = $this->reference_activity;
 			    $tmp = db_select_one("
-                           activity.codename, parent.codename as template_codename
-                           FROM activity LEFT JOIN activity as parent ON parent.id = activity.id_template
-                           WHERE activity.id = $this->id
+                               activity.codename, parent.codename as template_codename
+                               FROM activity
+                               LEFT JOIN activity as parent ON parent.id = activity.id_template
+                               WHERE activity.id = $this->id
 			    ");
 			    $mod->load_configuration($tmp["codename"], $tmp["template_codename"]);
 			    $prf->validate_this_module($mod);
@@ -711,7 +763,7 @@ class FullActivity extends Response
 	}
 
 	get_user_promotions($user);
-	if ($this->parent_activity == -1)
+	if ($this->parent_activity == -1 || $this->parent_activity == NULL)
 	{
 	    foreach ($user["cycle"] as $cycle)
 	    {
@@ -748,8 +800,8 @@ class FullActivity extends Response
 	{
 	    $new = new FullActivity;
 	    if ($new->build
-		($sub["id"], $deleted, $recursive, $session_id, $this, NULL, NULL, $only_user))
-		$this->subactivities[$new->codename] = $new;
+		($sub["id"], $deleted, $recursive, $session_id, $this, NULL, NULL, $only_user, $blist))
+	    $this->subactivities[$new->codename] = $new;
 	}
 	return (true);
     }

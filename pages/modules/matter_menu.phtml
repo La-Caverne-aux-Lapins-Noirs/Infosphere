@@ -3,12 +3,21 @@
     <?=$Dictionnary["AllMatters"]; ?>
 </a>
 <br />
+<?php if (isset($_GET["a"]) && $requested_listed == false) { ?>
+    <br />
+    <?=$Dictionnary["RequestedMatter"]; ?>:<br />
+    <a onclick="display_matter(<?=(int)$_GET["a"]; ?>);">
+	<?=$requested->name; ?> (<?=$requested->codename; ?>)
+    </a>
+    <br />
+<?php } ?>
+<br />
 <?php foreach ($datas as $data) { ?>
 
     <?php $cycle = $data["cycle"]; ?>
     <?php $matter_to_sort = $data["matter_to_sort"]; ?>
     
-    <h3 style="border-top: 1px solid gray; padding-top: 5px;">
+    <h3 style="border-top: 1px solid gray; padding-top: 5px; position: relative;">
 	<?=$Dictionnary["Cycle"]; ?>
 	<?=strlen(@$cycle->name) ? $cycle->name : $cycle->codename; ?>
 	<br />
@@ -17,16 +26,29 @@
 	    <?=$Dictionnary["Trimester"]; ?> <?=(int)$cycle->cycle % 4 + 1; ?>,
 	    <?=$data["min_cred"]."-".$data["max_cred"]." ".$Dictionnary["Credit(s)"]; ?>)
 	</span>
-	<br /><br />
+	<input
+	    id="menu_<?=$cycle->codename; ?>_button"
+	    type="button"
+	    onclick="roll_unroll('menu_<?=$cycle->codename; ?>');"
+	    class="rollbutton"
+	    value="+"
+	/>
+	<script>
+	 var tmp = localStorage.getItem('menu_<?=$cycle->codename; ?>');
+	 document.getElementById('menu_<?=$cycle->codename; ?>_button').value
+	 = (tmp != null) ? tmp : '+'
+	 ;
+	</script>
     </h3>
     
-    <ul>
+    <ul id="menu_<?=$cycle->codename; ?>">
+	<br />
 	<?php foreach ($matter_to_sort as $matter) { ?>
 	    <li>
 		<?php if (cursus_match($matter->cycle, $matter->cursus, $User["cycle"])) { ?>
 		    <img
 			src="res/mandatory.png"
-			style="float: left; width: 20px; height: 20px;
+			style="float: left; width: 15px; height: 15px;
 			     position: relative; left: -5px;"
 			title="<?=$Dictionnary["Mandatory"]; ?>"
 		    />
@@ -44,12 +66,12 @@
 			    (<?=$matter->credit_d."-".$matter->credit_a; ?>
 			    <?=$Dictionnary["Credit(s)"]; ?>)
 			</h4>
-			<?php
-			// $valid_activities[$matter->id] = $matter->registered ? 1 : 0;
-			?>
 		    </div>
 		</a></li>
 	<?php } ?>
+	<br />
     </ul>
-    <br />
+    <script>
+     roll_unroll('menu_<?=$cycle->codename; ?>');
+    </script>
 <?php } ?>

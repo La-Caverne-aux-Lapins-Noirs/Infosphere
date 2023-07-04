@@ -67,7 +67,10 @@ if ($alerts != "")
       LEFT JOIN team ON sprint.id_team = team.id
       LEFT JOIN user_team ON team.id = user_team.id_team
       LEFT JOIN activity ON team.id_activity = activity.id
-      WHERE ( ticket.id_user = {$User["id"]} || user_team.id_user = {$User["id"]} )
+      WHERE ( ticket.id_user = {$User["id"]} ||
+        ( user_team.id_user = {$User["id"]} AND ticket.id_user IS NULL )
+      )
+      AND ticket.done_date IS NULL
       AND ticket.deleted IS NULL AND sprint.deleted IS NULL
       ");
     $prev_name = "";

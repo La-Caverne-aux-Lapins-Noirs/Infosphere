@@ -16,10 +16,16 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 
     $keys = [];
     $vals = [];
+    
     // On instancie, donc tous les champs sont a NULL pour faire reference
     // au template
     if ($template == false)
-     {
+    {
+	if (@$act->emergence_date == NULL)
+	    $act->emergence_date = $sdate;
+	if (@$act->registration_date == NULL)
+	    $act->registration_date = $act->emergence_date;
+
 	foreach ($dates as $d)
 	{
 	    if (@$act->$d != NULL)
@@ -70,11 +76,6 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	    }
 	}
     }
-
-    if (@$act->emergence_date === NULL)
-	$act->emergence_date = $sdate;
-    if (@$act->registration_date === NULL)
-	$act->registration_date = $act->emergence_date;
 
     if (count($keys))
     {

@@ -8,6 +8,9 @@ $Month = ["January", "February", "March", "April", "May", "June", "July", "Augus
 $one_hour = 60 * 60;
 $one_day = $one_hour * 24;
 $one_week = $one_day * 7;
+$one_month = $one_day * 31;
+$one_trimester = $one_month * 3;
+$one_year = $one_day * 365;
 $five_minute = 60 * 5;
 
 $TicketStatus = [
@@ -33,6 +36,10 @@ define("COMPLETE_PROFILE", 3);
 define("ASSISTANT", 1);
 define("TEACHER", 2);
 
+define("DAILY", 10);
+define("TUTORING", 11);
+define("DEFENSE", 12);
+define("RETROSPECTIVE", 13);
 define("MODULE", 18);
 
 function load_constants()

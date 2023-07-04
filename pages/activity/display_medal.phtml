@@ -138,3 +138,15 @@ else
 	<?php } ?>
     </div>
 <?php } ?>
+<?php
+if (count($sorted_medal))
+{
+    $listm = [];
+    foreach ($sorted_medal as $medal)
+	$listm[] = $medal["codename"];
+?>
+    <br /><br />
+    <input type="text" value="<?=implode(";", $listm); ?>" />
+<?php
+}
+?>

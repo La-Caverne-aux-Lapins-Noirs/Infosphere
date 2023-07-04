@@ -146,6 +146,7 @@ function silent_submit(form, tofill = null, toadd = null, toclear = null, toremo
     if (form == null)
     {
 	console.log("Invalid form.");
+	console.trace();
 	return (false);
     }
     var method = form.getAttribute("method");

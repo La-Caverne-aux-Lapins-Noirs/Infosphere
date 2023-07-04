@@ -15,10 +15,7 @@ class ModuleLayer extends Layer
     public $grade_b = 70;
     public $grade_c = 60;
     public $grade_d = 50;
-    public $grade_bonus = 75;
-    public $grade_module = 0;
-    public $no_grade = 0;
-    
+    public $grade_bonus = 75;    
     public $validation = FullActivity::RANK_VALIDATION;
     
     public $configuration = [];
@@ -111,7 +108,17 @@ class ModuleLayer extends Layer
 	    $sub->id_session = $act["id_session"];
 	    $activity = new FullActivity;
 	    $only_user = array_search("only_user", $blist) !== false;
-	    $activity->build($activity_id, false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user, $blist);
+	    if ($activity->buildp(
+		$activity_id, [
+		    "recursive" => false,
+		    "session_id" => $sub->id_session,
+		    "user" => ["id" => $user_id],
+		    "only_user" => $only_user,
+		    "blist" => $blist
+	    ]) == false)
+	        return (false);
+	    // false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user, $blist);
+	    
 	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
 	    $sub->acquired_credit = 0;
@@ -185,7 +192,7 @@ class ModuleLayer extends Layer
 			$target = &$sub;
 
 		    // Si c'est une note, elle est forcement locale
-		    if (is_note($med["codename"]))
+		    if (is_note($med["codename"])) //  && $this->validation == FullActivity::GRADE_VALIDATION)
 			$med["local"] = true;
 		    
 		    if (!isset($target->medal[$med["codename"]]))

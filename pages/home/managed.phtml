@@ -7,7 +7,7 @@
 	    <th style="widht: 20%;"><?=$Dictionnary["Hour"]; ?></th>
 	</tr>
 	<?php foreach ($activities["managed"] as $act) { ?>
-	    <tr class="home_activity">
+	    <tr class="home_activity" <?php if ($act["soon"] == 0) { ?> style="background-color: lightgray; border-radius: 10px;" <?php } ?>>
 		<td>
 		    <a href="index.php?p=ActivityMenu&amp;a=<?=$act["id"]; ?>&amp;b=<?=$act["id_session"]; ?>">
 			<?=$act["name"] ?: '<span style="font-size: xx-small;">'.$act["codename"].'</span>'; ?>

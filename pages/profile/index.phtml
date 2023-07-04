@@ -14,7 +14,17 @@ if (isset($_GET["modules"]) && (is_admin() || $user->id == $User["id"]))
     require_once (__DIR__."/report/request.php");
     return ;
 }
-$user = get_full_profile($user, [], true);
+$user = get_full_profile($user, [
+    "cycle_teacher",
+    "cycle_school",
+    "activity_presence",
+    "activity_delivery",
+    "activity_teacher",
+    "activity_cycle",
+    "activity_team_content",
+    "activity_support",
+    "activity_details",
+], true);
 
 
 /*

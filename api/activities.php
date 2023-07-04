@@ -48,6 +48,26 @@ function DisplayModule($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+function DisplayActivityAdmin($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+    global $one_year;
+
+    if ($id == -1)
+	bad_request();
+    ob_start();
+    $api_id_activity = $id;
+    require ("./pages/modules/load_my_activities.php");
+    require ("./pages/modules/load_managed_activities.php");
+    $matter = $mdatas[array_key_first($mdatas)][0];
+    $matter->medal_listed = true;
+    $edit_medal = true;
+    sort_by_medal_grade($matter->medal, false);
+    require ("./pages/modules/module_admin.php");
+    return (new ValueResponse(["content" => ob_get_clean()]));
+}
+
 function MoveActivity($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -546,6 +566,9 @@ function EditActivity($id, $data, $method, $output, $module)
     foreach (["type", "subscription"] as $ints)
 	if (isset($data[$ints]))
 	    $data[$ints] = (int)$data[$ints];
+    if (isset($data["repository_name"])
+	&& strchr($data["repository_name"], " ") !== false)
+        return (new ErrorResponse("InvalidRepositoryName"));
     $lng_fields = [];
     foreach (array_keys($LanguageList) as $lng)
 	foreach ($data as $k => $v)

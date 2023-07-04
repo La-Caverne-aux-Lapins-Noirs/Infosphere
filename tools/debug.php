@@ -39,7 +39,7 @@ function AddDebugLog($msg, $admin = true)
     return (0);
 }
 $TraceNbr = 0;
-function Trace()
+function TraceL()
 {
     global $TraceNbr;
 

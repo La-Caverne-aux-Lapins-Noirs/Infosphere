@@ -26,62 +26,83 @@ function sort_activities($a, $b)
     return ($ldate - $rdate);
 }
 
-function list_of_managed_activities(&$usr)
+function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess = true, $actid = 0)
 {
     global $User;
     global $Language;
 
+    if ($actid != 0)
+	$actid = " AND activity.id = $actid ";
+    else
+	$actid = "";
+    
+    $adm = "";
+    if (is_admin())
+	$adm = " OR 1 ";
+    
     $id = $usr->id;
-    $matters = db_select_all("
-      laboratory.codename as laboratory_codename,
-      laboratory.id as id_laboratory,
-      laboratory.{$Language}_name as laboratory_name,
-      user_laboratory.authority as authority,
-      activity.codename as activity_codename,
-      activity.type as type,
-      activity.codename as codename,
-      activity.parent_activity as parent_activity,
-      activity.id as id_activity,
-      activity.pickup_date as pickup_date,
-      activity.close_date as close_date,
-      activity.{$Language}_name as activity_name,
-      activity.{$Language}_name as name,
-      activity.is_template as is_template,
-      activity_teacher.teacher_pay as teacher_pay,
-      activity_teacher.assistant_pay as assistant_pay
-      FROM activity
-      LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
-      LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
-      LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
-      WHERE activity.parent_activity IS NULL
-      AND (activity_teacher.id_user = $id OR user_laboratory.id_user = $id)
-    ", "activity_codename");
-    $activities = db_select_all("
-      laboratory.codename as laboratory_codename,
-      laboratory.id as id_laboratory,
-      laboratory.{$Language}_name as laboratory_name,
-      user_laboratory.authority as authority,
-      activity.codename as activity_codename,
-      activity.codename as codename,
-      activity.type as type,
-      activity.parent_activity as parent_activity,
-      activity.id as id_activity,
-      activity.{$Language}_name as activity_name,
-      activity.{$Language}_name as name,
-      activity.is_template as is_template,
-      activity_teacher.teacher_pay as teacher_pay,
-      activity_teacher.assistant_pay as assistant_pay
-      FROM activity
-      LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
-      LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
-      LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
-      WHERE activity.parent_activity IS NOT NULL
-      AND (activity_teacher.id_user = $id OR user_laboratory.id_user = $id)
-    ", "activity_codename");
+    if (!$matter)
+	$matters = [];
+    else
+	$matters = db_select_all("
+          laboratory.codename as laboratory_codename,
+          laboratory.id as id_laboratory,
+          laboratory.{$Language}_name as laboratory_name,
+          user_laboratory.authority as authority,
+          activity.codename as activity_codename,
+          activity.codename as codename,
+          activity.type as type,
+          activity.parent_activity as parent_activity,
+          activity.id as id_activity,
+          activity.pickup_date as pickup_date,
+          activity.close_date as close_date,
+          activity.{$Language}_name as activity_name,
+          activity.{$Language}_name as name,
+          activity.is_template as is_template,
+          activity_teacher.teacher_pay as teacher_pay,
+          activity_teacher.assistant_pay as assistant_pay
+          FROM activity
+          LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
+          LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
+          LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
+          WHERE (activity.parent_activity IS NULL OR activity.parent_activity = -1)
+          AND activity.deleted IS NULL
+          AND activity.is_template = 0
+          AND (activity_teacher.id_user = $id OR user_laboratory.id_user = $id $adm)
+          $actid
+        ", "activity_codename");
+
+    if (!$activ)
+	$activities = [];
+    else
+	$activities = db_select_all("
+          laboratory.codename as laboratory_codename,
+          laboratory.id as id_laboratory,
+          laboratory.{$Language}_name as laboratory_name,
+          user_laboratory.authority as authority,
+          activity.codename as activity_codename,
+          activity.codename as codename,
+          activity.type as type,
+          activity.parent_activity as parent_activity,
+          activity.id as id_activity,
+          activity.{$Language}_name as activity_name,
+          activity.{$Language}_name as name,
+          activity.is_template as is_template,
+          activity_teacher.teacher_pay as teacher_pay,
+          activity_teacher.assistant_pay as assistant_pay
+          FROM activity
+          LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
+          LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
+          LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
+          WHERE (activity.parent_activity IS NOT NULL AND activity.parent_activity != -1)
+          AND activity.deleted IS NULL
+          AND activity.is_template = 0
+          AND (activity_teacher.id_user = $id OR user_laboratory.id_user = $id $adm)
+          $actid
+        ", "activity_codename");
+ 
     foreach ($matters as $mat)
     {
-	if ($mat["is_template"])
-	    continue ; // Niveau template, on ne s'interesse qu'aux matières
 	$act = db_select_all("
            activity.id as id_activity,
            activity.close_date as close_date,
@@ -94,6 +115,7 @@ function list_of_managed_activities(&$usr)
 	   activity.parent_activity as parent_activity
            FROM activity
            WHERE parent_activity = {$mat["id_activity"]}
+           AND activity.deleted IS NULL
 	   ", "activity_codename");
 	foreach ($act as $k => $v)
 	{
@@ -108,11 +130,15 @@ function list_of_managed_activities(&$usr)
     }
     foreach ($activities as &$act)
     {
-	$act["session"] = db_select_all("
-	   id as id_session, begin_date, end_date
-           FROM session WHERE id_activity = {$act["id_activity"]}
-           ORDER BY begin_date
-	   ");
+	if (!$sess)
+	    $act["session"] = [];
+	else
+	    $act["session"] = db_select_all("
+               id as id_session, begin_date, end_date
+               FROM session WHERE id_activity = {$act["id_activity"]}
+               WHERE activity.deleted IS NULL
+	       ORDER BY begin_date
+	       ");
     }
     $all = array_merge($matters, $activities);
     foreach ($all as $a)

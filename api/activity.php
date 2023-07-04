@@ -8,6 +8,10 @@ $Tab = [
 	    "is_teacher",
 	    "DisplayActivity"
 	],
+	"admin" => [
+	    "is_teacher",
+	    "DisplayActivityAdmin"
+	],
     ],
     "POST" => [
 	"" => [

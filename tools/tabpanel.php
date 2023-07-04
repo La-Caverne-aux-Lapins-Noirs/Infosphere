@@ -16,7 +16,11 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	<div class="tablist">
 	    <?php foreach ($files as $k => $val) { ?>
 		<a onclick="dis<?=$idd; ?>('<?=md5($k); ?>');">
-		    <div class="<?=$listclass; ?>" style="width: <?=100 / count($files) - 0.1; ?>%;">
+		    <div
+			class="<?=$listclass; ?> disbut<?=$idd; ?>"
+			style="width: <?=100 / count($files) - 0.1; ?>%; background-color: <?=$default == $k ? "lightgrey" : "initial"; ?>;"
+			id="dis<?=$idd."_".md5($k); ?>"
+		    >
 			<?=$k; ?>
 		    </div>
 		</a>
@@ -61,6 +65,14 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	     else
 		 nod.style.display = "none";
 	 }
+	 var all_buttons = document.getElementsByClassName("disbut<?=$idd; ?>");
+
+	 Array.prototype.forEach.call(all_buttons, function(el) {
+	     el.style.backgroundColor = "";
+	 });
+	 var but = document.getElementById("dis<?=$idd; ?>" + "_" + lst);
+
+	 but.style.backgroundColor = "lightgray";
      }
      var ls;
 

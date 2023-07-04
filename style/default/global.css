@@ -143,3 +143,23 @@ input[type="submit"]:hover, input[type="button"]:hover
     background-color: rgb(250, 249, 249);
     box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
 }
+
+.rollbutton
+{
+    position: absolute;
+    top: 0px;
+    border-radius: 0px !important;
+    border-bottom-right-radius: 5px !important;
+    border: 0px solid black;
+    cursor: pointer;
+    border-right: solid 1px gray !important;
+    right: 0px;
+    width: 100px;
+    height: 40px;
+    font-size: x-large;
+    font-weight: bold;
+    padding-right: 10px;
+    text-align: right;
+    background: linear-gradient(to right, transparent, gray) !important;
+    color: rgb(67, 70, 88) !important;
+}

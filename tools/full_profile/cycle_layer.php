@@ -94,11 +94,13 @@ class CycleLayer extends Layer
 		]) == false)
 		    return (false);
 		$fields = [
-		    "id", "codename", "name", "description", "credit_a", "credit_b", "credit_c",
-		    "credit_d", "hidden", "template_codename", "is_teacher", "closed", "commentaries",
-		    "validation_by_percent", "old_validation", "subscription", "grade_a", "grade_b",
-		    "grade_c", "grade_d", "grade_bonus", "grade_module", "allow_unregistration", "no_grade",
-		    "emergence_date", "done_date", "registration_date", "close_date", "validation"
+		    "id", "codename", "name", "description", "credit_a",
+		    "credit_b", "credit_c", "credit_d", "hidden",
+		    "template_codename", "is_teacher", "closed", "commentaries",
+		    "subscription", "grade_a", "grade_b", "grade_c", "grade_d",
+		    "grade_bonus", "allow_unregistration",
+		    "emergence_date", "done_date", "registration_date",
+		    "close_date", "validation"
 		];
 		transfert($fields, $sub, $module);
 		if ($module->user_team)

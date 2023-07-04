@@ -20,7 +20,11 @@ function get_user_school(array &$usr, $by_name = false)
         ON user_school.id_school = school.id
         WHERE user_school.id_user = ".$usr["id"]." AND school.deleted IS NULL
 	";
-    $usr["school"] = db_select_all($forge, $by_name ? "codename" : "");
+    if (count($usr["school"] = db_select_all($forge, $by_name ? "codename" : "")))
+	$usr["last_school"] =
+	    $usr["school"][array_key_first($usr["school"])]["codename"];
+    else
+	$usr["last_school"] = NULL;
     return ($usr["school"]);
 }
 

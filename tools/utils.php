@@ -72,6 +72,8 @@ function date_to_timestamp($s)
     }
     catch (Exception $e)
     {}
+    if (($ret = date_create_from_format("Y-m-d H:i:s.u", $s, $NoLocalisation)) != false)
+	return ($ret->getTimestamp());
     if (($ret = date_create_from_format("Y-m-d H:i:s", $s, $NoLocalisation)) != false)
 	return ($ret->getTimestamp());
     if (($ret = date_create_from_format("Y-m-d\TH:i:s", $s, $NoLocalisation)) != false)

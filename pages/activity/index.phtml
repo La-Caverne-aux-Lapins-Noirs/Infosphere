@@ -3,6 +3,14 @@ if ($_GET["p"] == "ActivitiesMenu" || $_GET["p"] == "TestMenu") // Template
     $template = 1;
 else
     $template = 0;
+
+// Si une page spécifique est demandée, on ignore temporairement les cookies
+// de recherche et de filtration CA NE MARCHE PAS BIEN CAR LES COLONNES NE SE METTENT PAS A JOUR
+if (isset($_GET["a"]))
+{
+    unset($_COOKIE);
+    $_COOKIE["get_old_activity"] = "checked";
+}
 ?>
 
 <?php if ($Position == "InstancesMenu") { ?>
@@ -26,7 +34,7 @@ else
        name="filter_activity_<?=$page; ?>"
        onchange="setCookie('filter_activity_<?=$page; ?>', this.value); list_modules();"
        placeholder="<?=$Dictionnary["FilterActivities"]; ?>"
-       value="<?=isset($_COOKIE["filter_activity_$page"]) ? $_COOKIE["filter_activity_$page"] : ""; ?>"
+       value="<?=isset($_COOKIE["filter_activity_$page"]) && !isset($_GET["a"]) ? $_COOKIE["filter_activity_$page"] : ""; ?>"
 />
 <input type="button" onclick="document.getElementById('filter_form').value = ''; document.getElementById('filter_form').onchange();" value="&#10007;" style="color: red;" />
 

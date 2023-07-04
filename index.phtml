@@ -40,14 +40,18 @@
 	</script>
     </head>
 
+    <?php $logo = ""; ?>
     <body onload="remove_loading_screen();">
 	<div id="loading_logo"
-	     <?php if (!file_exists("dres/logo.png")) { ?>
+	     <?php if (isset($User["last_school"]) && file_exists($logo = $Configuration->SchoolsDir($User["last_school"])."icon.png")) { ?>
+	     style="background-image: url('<?=$logo; ?>');"
+	     <?php } else if (!file_exists("dres/logo.png")) { ?>
 	     style="background-image: url('/res/logo.png');"
 	     <?php } else { ?>
 	     style="background-image: url('dres/logo.png');"
 	     <?php } ?>
-	></div>
+	>
+	</div>
 	<div id="loading_screen1"></div>
 	<div id="loading_screen2"></div>
 
@@ -57,7 +61,9 @@
 
 	<div id="head" class="menu">
 	    <a href="index.php" id="logo">
-		<?php if (!file_exists("dres/logo.png")) { ?>
+		<?php if ($logo != "" && file_exists($logo)) { ?>
+		    <img src="<?=$logo; ?>" alt="Logo" />
+		<?php } else if (!file_exists("dres/logo.png")) { ?>
 		    <img src="res/logo.png" alt="Logo" />
 		<?php } else { ?>
 		    <img src="dres/logo.png" alt="Logo" />

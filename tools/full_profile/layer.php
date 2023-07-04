@@ -68,6 +68,9 @@ class Layer extends ArrayObject
 
     public function retrieve()
     {
+	global $Language;
+	global $Configuration;
+
 	if ($this->LAYER == "ACTIVITY")
 	    return ;
 	$fields = [
@@ -109,20 +112,38 @@ class Layer extends ArrayObject
 		if (is_note($med["codename"]))
 		{
 		    $sub->note = true;
-		    $note += (int)(substr($med["codename"], 4));
+		    $note += intval(substr($med["codename"], 5));
 		    $nbr_note += 1;
 		}
 	    }
 	    if ($nbr_note > 0)
 	    {
 		$this->note = true;
-		$med = "note".sprintf("%02d", round($note / $nbr_note));
+		$med = "token".sprintf("%02d", round($note / $nbr_note));
+		if (!isset($this->medal[$med]))
+		    $this->medal[$med] = [];
+		$this->medal[$med] = array_merge($this->medal[$med], db_select_one("
+                   *,
+                   {$Language}_name as name,
+                   {$Language}_description as description
+                   FROM medal
+                   WHERE codename = '$med'
+		"));
+		$this->medal[$med]["type"] = 0;
+		$this->medal[$med]["local"] = true;
 		$this->medal[$med]["module_medal"] = true;
-		// $this->medal[$med]["success"] = 1;
+		$this->medal[$med]["success"] = 1;
 		$this->medal[$med]["success_list"] = [];
 		$this->medal[$med]["failure"] = 0;
 		$this->medal[$med]["failure_list"] = [];
 		$this->medal[$med]["local_sum"] = 0;
+		
+		$this->medal[$med]["icon"] = $Configuration->MedalsDir($this->medal[$med]["codename"])."icon.png";
+		if (!file_exists($this->medal[$med]["icon"]))
+		    $this->medal[$med]["icon"] = NULL;
+		$this->medal[$med]["band"] = $Configuration->MedalsDir($this->medal[$med]["codename"])."band.png";
+		if (!file_exists($this->medal[$med]["band"]))
+		    $this->medal[$med]["band"] = NULL;
 	    }
 	}
     }
