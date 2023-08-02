@@ -25,16 +25,24 @@ $url = substr($_GET["_mod"], 1);
 unset($_GET["_mod"]);
 $url = explode("/", $url);
 $MODULE = array_shift($url);
-$ID = $SUBID = -1;
+$ID = $SUBID = $SUBSUBID = -1;
 if (count($url) >= 1)
     $ID = $url[0];
 if (count($url) >= 2)
     $_GET["action"] = $DATA["action"] = $url[1];
 if (count($url) >= 3)
 {
-    if ($METHOD == "DELETE")
+    if ($METHOD == "DELETE" && count($url) < 4)
 	$url[2] = "-".$url[2];
     $SUBID = $DATA[$DATA["action"]] = $url[2];
+}
+if (count($url) >= 4)
+    $_GET["subaction"] = $DATA["subaction"] = $url[3];
+if (count($url) >= 5)
+{
+    if ($METHOD == "DELETE")
+	$url[4] = "-".$url[4];
+    $SUBSUBID = $DATA[$DATA["subaction"]] = $url[4];
 }
 
 if (!isset($_GET["_output"]))

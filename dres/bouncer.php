@@ -9,8 +9,11 @@ require_once (__DIR__."/../api/error.php");
 function render_file()
 {
     http_response_code(200);
-    if (pathinfo($_GET["target"], PATHINFO_EXTENSION) == "php")
-	not_found(); // J'ai hésité très peu de temps à permettre l'execution d'un script PHP... c'est trop risqué.
+    // Limitons les risques
+    if (in_array(pathinfo($_GET["target"], PATHINFO_EXTENSION), [
+	"php", "sh", "pl"
+    ]) !== false)
+	not_found();
     header("Content-Type: ".mime_content_type($_GET["target"]));
     echo file_get_contents($_GET["target"]);
     die();
@@ -29,7 +32,8 @@ $_GET["target"] = basename(__DIR__).$_GET["target"];
 if (!file_exists($_GET["target"]))
     not_found();
 
-$target = explode("/", $_GET["target"]);
+$target = resolve_path($_GET["target"]);
+$target = explode("/", $target);
 array_shift($target);
 if (count($target) < 1)
     bad_request();
@@ -43,6 +47,9 @@ if ($User == NULL)
     if (pathinfo($type, PATHINFO_EXTENSION) != "png" || count($target) != 1)
 	authentication_required();
 }
+
+if (is_admin())
+    render_file();
 
 if ($type == "activity")
 {
@@ -86,9 +93,32 @@ if ($type == "activity")
     forbidden();
 }
 
-if ($type == "user")
+if (($type == "user" || $type == "users"))
 {
     // Il faut empecher l'accès aux données personnelles.
+    if (count($target) < 2)
+	bad_request();
+    $user = $target[1];
+    if (($user = resolve_codename("user", $user))->is_error())
+	not_found();
+    $user = $user->value;
+    if (count($target) >= 3)
+    {
+	if ($target[2] == "public")
+	    render_file();
+	if ($target[2] == "admin")
+	{
+	    if (count($target) == 4 && $target[3] == "photo.png")
+		render_file();
+	    get_user_school($User, true);
+	    if (!is_director_for_student($user))
+		forbidden();
+	    render_file();
+	}
+    }
+    if ($user != $User["id"])
+	forbidden();
+    render_file();
 }
 
 if ($type == "groups")
@@ -96,7 +126,7 @@ if ($type == "groups")
     // Il faut empecher l'accès aux fichiers de groupes aux non membres...
 }
 
-if ($type == "elearning")
+if ($type == "support")
 {
     // Il faut empecher l'accès aux non inscrits à une activité référencant le support
 }

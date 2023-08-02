@@ -68,7 +68,7 @@ function get_user_public_data(&$usr)
     get_user_promotions($usr);
     get_user_children($usr);
     get_user_laboratories($usr);
-    get_user_school($usr);
+    get_user_school($usr, true);
     $usr["todo"] = db_select_all("id, content FROM user_todolist WHERE id_user = {$usr["id"]} ORDER BY id ASC");
 }
 
@@ -77,7 +77,10 @@ function generate_password($len = 12)
     // Pas de O majuscule (pour ne pas confondre avec zéro)
     // Pas de \, ni `, ni ", ni ', ni ~ ou ^.
     // Pas de $ ou * pour limiter les risques avec les passages dans le shell.
-    $randpool = "azertyuiopqsdfghjklmwxcvbnAZERTYUIPQSDFGHJKLMWXCVBN1234567890&#{([-|_@)]=}+%,?;.:/!";
+    $alf = "azertyuiopqsdfghjklmwxcvbnAZERYTUIPQSDFGHJKLMWXCVBN";
+    $num = "0123456789";
+    $sym = "&#{([-|_@)]=}+%,?.:/!";
+    $randpool = $alf.$num.$sym;
     $letter = false;
     $number = false;
     $symbol = false;
@@ -97,11 +100,11 @@ function generate_password($len = 12)
 	$rnd = $rnd.$c;
     }
     if ($letter == false)
-	$rnd = $rnd.substr("azertyuiopqsdfghjklmwxcvbnAZERYTUIPQSDFGHJKLMWXCVBN", rand(0, 25 * 2 - 1), 1);
+	$rnd = $rnd.substr($alf, rand(0, strlen($alf) - 1), 1);
     if ($number == false)
-	$rnd = $rnd.substr("0123456789", rand(0, 9), 1);
+	$rnd = $rnd.substr($num, rand(0, strlen($num) - 1), 1);
     if ($symbol == false)
-	$rnd = $rnd.substr("&#{([-|_@)]=}+$%*,?;.:/!", rand(0, 25), 1);
+	$rnd = $rnd.substr($sym, rand(0, strlen($sym) - 1), 1);
     return ($rnd);
 }
 

@@ -101,8 +101,10 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 {
     global $User;
 
-    if ($id == -1)
+    if ($id == -1 && $method != "delete")
 	bad_request();
+    if ($method == "delete")
+	$id = abs($id);
     ($activity = new FullActivity)->build($id);
     $auth = false;
     if (isset($data["id_user"]))
@@ -363,6 +365,10 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	if (($act = resolve_codename("activity", $id, "codename", true))->is_error())
 	    return ($act);
 	$act = $act->value;
+	if (!isset($cyc["is_template"]))
+	    $cyc["is_template"] = 0;
+	if (!isset($act["is_template"]))
+	    $act["is_template"] = 0;
 	if ($cyc["is_template"] != $act["is_template"])
 	    bad_request("CannotMixInstancesAndTemplates");
     }
@@ -394,27 +400,28 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	    "display" => "teacher"
 	],
 	///////////////////////////////////////////////////////////////////////
-	"support" => [ // gere tout support en ajout, et class_asset en suppression
+	"support" => [ // gere tout support en ajout, et support_asset en suppression
 	    "table" => "support",
-	    "" => "class_asset",
-            "#" => "class",
+	    "" => "support_asset",
+            "#" => "support",
+            "@" => "support_category",
 	    "$" => ["activity", "subactivity"], // RTable
 	    "properties" => [
 		"chapter" => 0
 	    ],
             "display" => "support"
 	],
-	"class_asset" => [ // seulement pour supprimer les supports "class_asset"
+	"support_asset" => [ // seulement pour supprimer les supports "support_asset"
 	    "table" => "support",
-	     "" => "class_asset",
+	     "" => "support_asset",
      	    "properties" => [
 		"chapter" => 0
 	    ],
 	     "display" => "support"
 	],
-	"class" => [ // seulement pour supprimer les supports "class"
+	"support_category" => [ // seulement pour supprimer les supports "category"
 	    "table" => "support",
-	     "" => "class",
+	     "" => "support_category",
      	    "properties" => [
 		"chapter" => 0
 	    ],
@@ -483,7 +490,7 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	    $idt = db_select_one("chapter FROM activity_$table WHERE id_activity = $idt ORDER BY chapter DESC");
 	    $properties["chapter"] = ($idt === NULL ? 0 : $idt["chapter"] + 1);
 	}
-	
+
 	if (($request = handle_linksf([
 	    "left_value" => $id,
 	    "right_value" => $pfx["mod"],
@@ -498,7 +505,7 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	($activity = new FullActivity())->build($id);
 
 	// L'affichage utilise les "categories" et pas les elements divers existants
-	$link_data[""] = $link_name = $link_data["display"];
+	/*$link_data[""] = */$link_name = $link_data["display"];
 	// Regénération
 	return (new ValueResponse([
 	    "msg" => $Dictionnary["Edited"],
@@ -842,7 +849,7 @@ function AddRessource($id, $data, $method, $output, $module)
     ($module = new FullActivity)->build($id);
     $path = resolve_path($data["path"]);
     $root = $Configuration->ActivitiesDir($module->codename, $data["language"] == "NA" ? "" : $data["language"])."ressource/";
-    $target = resolve_path($root.$path."/");
+    $target = resolve_path($root.$path)."/";
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))
@@ -919,7 +926,7 @@ function AddMood($id, $data, $method, $output, $module)
     ($module = new FullActivity)->build($id);
     $path = resolve_path($data["path"]);
     $root = $Configuration->ActivitiesDir($module->codename, "");
-    $target = resolve_path($root."mood/".$path."/");
+    $target = resolve_path($root."mood/".$path)."/";
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))

@@ -96,6 +96,7 @@ function edit_medal($user, $medal, $activity)
 	// On verifie qu'il n'a pas deja la médaille de cette activité.
 	$status = 1;
 	$deleted = false;
+	$weak = false;
 	if (substr($med, 0, 1) == "#") // Ajout d'une medaille en mode echec
 	{
 	    $med = substr($med, 1);
@@ -105,6 +106,11 @@ function edit_medal($user, $medal, $activity)
 	{
 	    $med = substr($med, 1);
 	    $deleted = true;
+	}
+	else if (substr($med, 0, 1) == "$") // Ajout d'une médaille en mode faible
+	{
+	    $med = substr($med, 1);
+	    $status = 2;
 	}
 
 	// On cherche si une médaille a deja été acquise - ou marquée comme perdue

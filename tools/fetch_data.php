@@ -39,10 +39,10 @@ function fetch_data(
 
     if (($ret = unroll($additional_where, WHERE)) != "")
     {
-	if ($forge != "")
-	    $forge .= " AND $ret";
-	else
+	if ($forge == "")
 	    $forge .= " WHERE $ret";
+	else
+	    $forge .= " AND $ret";
     }
     $order_by = "id ASC";
     if (count($order) && $by_name == false)

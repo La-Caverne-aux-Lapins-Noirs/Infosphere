@@ -20,6 +20,14 @@
     width: calc(100% - 400px);
 }
 
+.screen_media
+{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    display: none;
+}
+
 .resume_module
 {
     display: inline-block;

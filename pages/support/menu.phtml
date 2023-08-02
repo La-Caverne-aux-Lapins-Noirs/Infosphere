@@ -1,0 +1,99 @@
+<div class="module_menubar">
+    <h2><?=$Dictionnary["Class"]; ?></h2>
+    <a onclick="display_panel('category', -1, false, true);">
+	<?=$Dictionnary["GoToRootPage"]; ?>
+    </a>
+    <br />
+
+    <?php foreach ($categories as $category) { ?>
+	<?php if ($category["selected"] == false) continue ; ?>
+	<h3 style="
+		   border-top: 1px solid gray;
+		   padding-top: 5px;
+		   position: relative;
+		   "
+	>
+	    <a
+		onclick="display_panel('category', <?=$category["id"]; ?>, false, true);"
+		style="cursor: pointer;"
+		class="module_link"
+		id="category_link<?=$category["id"]; ?>"
+	    >
+		<?php if (@strlen($category["name"])) { ?>
+		    <?=$category["name"]; ?>
+		    <?php if (is_admin()) { ?>
+			(@<?=$category["codename"]; ?>) #<?=$category["id"]; ?>
+		    <?php } ?>
+		<?php } else { ?>
+		    <?=@$category["codename"]; ?>
+		<?php } ?>
+	    </a>
+	    <br /><br />
+	    <input
+		id="menu_category_<?=$category["id"]; ?>_button"
+		type="button"
+		onclick="roll_unroll('menu_category_<?=$category["id"]; ?>');"
+		class="rollbutton"
+		value="+"
+	    />
+	    <script>
+	     var tmp = localStorage.getItem('menu_category_<?=$category["id"]; ?>');
+	     document.getElementById('menu_category_<?=$category["id"]; ?>_button').value
+	     = (tmp != null) ? tmp : '+'
+	     ;
+	    </script>
+	</h3>
+	
+	<ul id="menu_category_<?=$category["id"]; ?>">
+	    <?php foreach ($category["support"] as $support) { ?>
+		<?php if ($support["selected"] == false) continue ; ?>
+		<li>
+		    <?php if (is_admin()) { ?>
+			<?php
+			$js = "
+			silent_submitf(this, {
+			  tofill: 'main_menu'
+			});";
+			?>
+			<form
+			    method="put"
+			    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>"
+			    style="display: inline-block;"
+			>
+			    <input type="button" name="up" value="&uarr;" onclick="<?=$js; ?>" style="width: 30px;" />
+			</form>&nbsp;
+			<form
+			    method="put"
+			    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>"
+			    style="display: inline-block;"
+			>
+			    <input type="button" name="down" value="&darr;" onclick="<?=$js; ?>" style="width: 30px;" />
+			</form>&nbsp;
+		    <?php } ?>
+		    <a onclick="display_panel('support', <?=$support["id"]; ?>, false, true);" style="cursor: pointer;">
+			<div class="module_link" id="support_link<?=$support["id"]; ?>" style="display: inline-block;">
+			    <h4 style="display: inline-block;">
+				<?php if (@strlen($support["name"])) { ?>
+				    <?=$support["name"]; ?>
+				    <?php if (is_admin()) { ?>
+					(#<?=$support["codename"]; ?>) #<?=$support["id"]; ?>
+				    <?php } ?>
+				<?php } else { ?>
+				    #<?=$support["codename"]; ?>
+				<?php } ?>
+			    </h4>
+			</div>
+		    </a>
+		</li>
+	    <?php } ?>
+	    <br />
+	</ul>
+    <?php } ?>
+    <br />
+    <script>
+     <?php if (isset($category["id"]) && 0) { ?>
+     roll_unroll('menu_category_<?=$category["id"]; ?>');
+     <?php } ?>
+    </script>
+</div>
+

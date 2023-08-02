@@ -36,7 +36,7 @@ function trace()
 	if ($now - $last < 2.0)
 	    $fast_visit_count += 1;
 	$visit_count += 1;
-	if ($fast_visit_count > 10 && $fast_visit_count % 10 == 0) // Bizarre...
+	if ($fast_visit_count > 30 && $fast_visit_count % 10 == 0) // Bizarre...
 	{
 	    add_log(REPORT, "Trace report a high fast visit count ($fast_visit_count) for $ip (".($id_user ? $OriginalUser["codename"] : "").")", 1);
 	}

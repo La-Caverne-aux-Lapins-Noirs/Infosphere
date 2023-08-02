@@ -4,7 +4,7 @@ class CConfiguration
 {
     public $_MedalsDir;
     public $_GroupsDir;
-    public $ELearningDir;
+    public $_SupportDir;
     public $_UsersDir;
     public $_ActivitiesDir;
     public $_SchoolsDir;
@@ -33,6 +33,29 @@ class CConfiguration
 	    return ($this->_GroupsDir);
 	return ($this->_GroupsDir.$grp."/");
     }
+
+    function SupportDir($cat = NULL, $dom = NULL, $asset = NULL, $lng = NULL)
+    {
+	global $Language;
+	
+	if ($cat == NULL)
+	    $target = $this->_SupportDir;
+	else if ($dom == NULL)
+	    $target = $this->_SupportDir.$cat."/";
+	else if ($asset == NULL)
+	    $target = $this->_SupportDir.$cat."/".$dom."/";
+	else
+	{
+	    if ($lng === NULL)
+		$lng = $Language;
+	    if ($lng !== "")
+		$lng .= "/";
+	    $target = $this->_SupportDir.$cat."/".$dom."/".$lng.$asset;
+	}
+	if (!is_dir($target))
+	    new_directory($target);
+	return ($target);
+    }
     
     function UsersDir($usr = NULL)
     {
@@ -42,9 +65,9 @@ class CConfiguration
 	if (!is_dir($dir))
 	{
 	    new_directory($dir."public/index.php");
-	    new_directory($dir."www/index.php");
-	    new_directory($dir."personnal/index.php");
 	    new_directory($dir."admin/index.php");
+	    // new_directory($dir."www/index.php");
+	    // new_directory($dir."personnal/index.php");
 	}
 	return ($dir);
     }
@@ -90,7 +113,7 @@ class CConfiguration
 	$this->_GroupsDir = "$DIR/groups/";
 	// Les fichiers associés aux supports de cours présents sur
 	// l'infosphere
-	$this->ELearningDir = "$DIR/elearning/";
+	$this->_SupportDir = "$DIR/support/";
 	// Les fichiers utilisateurs, y compris les bulletins, les
 	// fichiers persos et administratifs
 	// Ces fichiers devraient être chiffré et déchiffré à la volée

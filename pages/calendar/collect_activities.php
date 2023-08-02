@@ -53,6 +53,8 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
 	    continue ;
 	if ($s->registered)
 	{
+	    if (!isset($s->session_registered->id))
+		continue ;
 	    if ($s->session_registered->id != -1 && $s->session_registered->id != $sess["id"])
 		continue ;
 	    if ($s->unique_session->slot_reserved)
@@ -82,6 +84,9 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
 	    $duration = (int)($duration / $slotsize);
 	$act->unique_session->local_end = $act->unique_session->local_start + $duration;
 
+	$act->unique_session->local_start = (int)$act->unique_session->local_start;
+	$act->unique_session->local_end = (int)$act->unique_session->local_end;
+	
 	for ($i = $act->unique_session->local_start; $i < $act->unique_session->local_end; ++$i)
 	{
 	    $occupation[$i] = $occupation[$i] + 1;

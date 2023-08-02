@@ -32,6 +32,15 @@ function debug_response($data, $label = "")
     $debug_log[] = PrintR($label, true).PrintR($data, true);
 }
 
+function debug_backtrack($label = "")
+{
+    global $debug_log;
+    
+    if ($label != "")
+	$label = "$label:\n\n";
+    $debug_log[] = PrintR($label.backtrack_msg(), true);
+}
+
 function gtfo($msg = "")
 {
     throw new Exception($msg);

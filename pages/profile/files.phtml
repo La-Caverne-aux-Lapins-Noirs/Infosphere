@@ -1,27 +1,27 @@
+<?php $language = ""; ?>
+<?php if (is_director_for_student($user->id, false) || is_me($user->id)) { ?>
+    <?php $js = "silent_submit(this, 'file_browser');"; ?>
+    <form
+	method="post"
+	onsubmit="return <?=$js; ?>;"
+	action="/api/user/<?=$user->id; ?>/file"
+    >
+	<label for="file"><?=$Dictionnary["File"]; ?></label><br />
+	<input id="path2" type="hidden" name="path" value="" />
+	<input
+	    type="file"
+		  name="file"
+		  multiple="true"
+		  onchange="document.getElementById('path2').value = document.getElementById('pathfile_browser').value; <?=$js; ?>"
+	/>
+    </form>
+<?php } ?>
+
 <?php
-$type = NULL;
-$language = "NA";
+$type = "file";
 $page = "user";
 $id = $user->id;
 $path = "";
 $target = $Configuration->UsersDir($user->codename);
-if (is_admin())
-{
-    $target .= "";
-    $fordidden_dirs = ["personnal"];
-}
-else
-{
-    if ($id != $User["id"])
-    {
-	$target .= "public";
-	$forbidden_dirs = [];
-    }
-    else
-    {
-	$target .= "";
-	$forbidden_dirs = ["admin"];
-    }
-}
 require ("./tools/template/path_browser.phtml");
 

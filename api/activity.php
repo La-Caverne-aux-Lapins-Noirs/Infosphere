@@ -146,11 +146,11 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "SetActivityLink"
 	],
-	"class_asset" => [
+	"support_asset" => [
 	    "is_teacher_for_activity",
 	    "SetActivityLink"
 	],
-	"class" => [
+	"support_category" => [
 	    "is_teacher_for_activity",
 	    "SetActivityLink"
 	],
@@ -181,7 +181,11 @@ $Tab = [
 	"ressource" => [
 	    "is_teacher_for_activity",
 	    "RemoveRessource"
-	]
+	],
+	"registration" => [
+	    "everybody", // Autorisation trop complexe pour etre ici.
+	    "SetActivityRegistration",
+	],
     ]
 ];
 

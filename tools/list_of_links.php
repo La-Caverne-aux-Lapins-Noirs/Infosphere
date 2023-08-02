@@ -17,6 +17,8 @@ function single_link($params)
 	    $this_node_name = $linked_name["#"];
 	else if (isset($linked_name["$"]) && substr($elm["codename"], 0, 1) == "$")
 	    $this_node_name = $linked_name["$"];
+	else if (isset($linked_name["@"]) && substr($elm["codename"], 0, 1) == "@")
+	    $this_node_name = $linked_name["@"];
 	else
 	    $this_node_name = $linked_name[""];
 	if (is_array($this_node_name)) // Pour supporter le shift table/champ en BDD

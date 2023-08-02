@@ -1,5 +1,6 @@
 <?php
-if ($user->visibility == HIDDEN && !is_director_for_student($user->id))
+$me_or_director = is_me_or_director_for_student($user->id);
+if ($user->visibility == HIDDEN && !$me_or_director)
     return ;
 $js = "silent_submit(this);";
 ?>
@@ -20,7 +21,14 @@ $js = "silent_submit(this);";
 	    //"Country" => "country",
 	];
 	foreach ($fields as $k => $v) { ?>
-	    <?php if ($k == "AddressName" && !is_admin() && $user->id != $User["id"]) break ; ?>
+	    <?php if ($k == "AddressName") { ?>
+		<?php if (!$me_or_director) break ; else { ?>
+		    <tr><td colspan="2" style="font-size: small; font-style: italic;">
+			<br />
+			<?=$Dictionnary["PostalInformationsArePrivate"]; ?>
+		    </td></tr>
+		<?php } ?>
+	    <?php } ?>
 	    <tr><td>
 		<b><?=$Dictionnary[$k]; ?></b> :
 	    </td><td>
@@ -34,7 +42,7 @@ $js = "silent_submit(this);";
 		/>
 	    </td></tr>
 	<?php } ?>
-	<?php if (is_admin() || $user->id == $User["id"]) { ?>
+	<?php if ($me_or_director) { ?>
 	    <tr><td>
 		<b><?=$Dictionnary["ProfileVisibility"]; ?></b> :
 	    </td><td>
@@ -53,21 +61,21 @@ $js = "silent_submit(this);";
 	    </td></tr>
 	<?php } ?>
     </table>
-    <?php if (is_admin() || $user->id == $User["id"]) { ?>
-    <br />
-    <p style="text-align: center;">
-	<input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
-    </p>
+    <?php if ($me_or_director) { ?>
+	<br />
+	<p style="text-align: center;">
+	    <input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
+	</p>
     <?php } ?>
 </form>
-<?php if (is_admin() || $user->id == $User["id"]) { ?>
+<?php if ($me_or_director) { ?>
     <br />
     <form method="put" action="/api/user/<?=$user->id; ?>/properties" onsubmit="return <?=$js; ?>">
 	<table>
 	    <tr><td>
 		<b><?=$Dictionnary["Avatar"]; ?></b>:
 	    </td><td>
-		<?php if (is_admin()) { ?>
+		<?php if ($user->id != $User["id"]) { ?>
 		    <select name="type">
 			<option value="set_avatar">Avatar</option>
 			<option value="set_photo">Photo</option>

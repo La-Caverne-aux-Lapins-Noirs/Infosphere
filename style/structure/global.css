@@ -7,6 +7,11 @@
     /* box-sizing: border-box; */
 }
 
+._300pxw
+{
+    width: 300px !important;
+}
+
 #loading_screen1, #loading_screen2
 {
     position: fixed;

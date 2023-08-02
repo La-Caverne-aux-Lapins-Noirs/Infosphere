@@ -83,7 +83,7 @@ ob_start();
 		    <td>D</td><td><?=$matter->credit_d; ?></td>
 		</tr>
 	    </table>
-	    <div class="module_button" onclick="display_matter('matter_<?=$matter->id; ?>');">
+	    <div class="module_button" onclick="display_panel('module', 'matter_<?=$matter->id; ?>');">
 		<?=$Dictionnary["SeeMore"]; ?>
 	    </div>
 	</div>

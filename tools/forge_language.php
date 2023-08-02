@@ -49,7 +49,6 @@ function forge_language_insert($field, array $data, $merge = false)
 	    $symbol = $i;
 	    $mandatory = $f;
 	}
-
 	if (!is_symbol($symbol))
 	    return (new ErrorResponse("InvalidParameter", $symbol));
 	foreach ($LanguageList as $k => $v)
@@ -119,37 +118,33 @@ function forge_language_formular($fields, $prefil, $class = "language_entry")
     global $LanguageList;
     global $Dictionnary;
 
-    foreach ($LanguageList as $k => $v)
-    {
-?>
+    foreach ($LanguageList as $k => $v) { ?>
     <div class="<?=$class; ?>">
  	<span><?=$v; ?></span><br />
-	<?php
-	foreach ($fields as $f => $type)
-	{
-	    if ($type == "textarea")
-	    {
-	?>
-	    <textarea
-		name="<?=$k; ?>_<?=$f; ?>"
-		style="font-size: 15px; line-height: 15px;"
-		placeholder="<?=$Dictionnary[ucfirst(is_integer($f) ? $type : $f)]; ?>"
-	    ><?=try_get($prefil, $k."_".$f); ?></textarea>
-	<?php
-	    }
-	    else
-	    {
-	?>
-	    <input
-		type="<?=$type; ?>"
-		name="<?=$k; ?>_<?=$f; ?>"
-		placeholder="<?=$Dictionnary[ucfirst(is_integer($f) ? $type : $f)]; ?>"
-		value="<?=try_get($prefil, $k."_".$f); ?>"
-	    /><br />
-	<?php
-	}
-	}
-       ?> <br /></div> <?php
-    }
+	<?php foreach ($fields as $f => $type) { ?>
+	    <?php if ($type == "textarea") { ?>
+		<textarea
+		    name="<?=$k; ?>_<?=$f; ?>"
+		    style="font-size: 15px; line-height: 15px;"
+		    placeholder="<?=$Dictionnary[ucfirst(is_integer($f) ? $type : $f)]; ?>"
+		><?=try_get($prefil, $k."_".$f); ?></textarea>
+	    <?php } else if ($type == "file") { ?>
+		<input
+		    type="file"
+		    style="height: 50px;"
+		    name="<?=$k; ?>_<?=$f; ?>"
+		/>
+	    <?php } else { ?>
+		<input
+		    type="<?=$type; ?>"
+		    name="<?=$k; ?>_<?=$f; ?>"
+		    placeholder="<?=$Dictionnary[ucfirst(is_integer($f) ? $type : $f)]; ?>"
+		    value="<?=try_get($prefil, $k."_".$f); ?>"
+		/><br />
+	    <?php } ?>
+        <?php } ?>
+	<br /></div>
+<?php } ?>
+<?php
 }
 // @codeCoverageIgnoreEnd

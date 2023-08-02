@@ -174,12 +174,12 @@ b
 .file_browser > .icon
 {
     border-bottom: 1px solid gray;
-    background-image: url("res/file.png");
+    background-image: url("/res/file.png");
 }
 
 .file_browser > .directory
 {
-    background-image: url("res/directory.png");
+    background-image: url("/res/directory.png");
     background-position: left center;
 }
 

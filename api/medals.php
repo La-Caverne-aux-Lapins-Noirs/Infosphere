@@ -178,7 +178,7 @@ function AddRessource($id, $data, $method, $output, $module)
 	$data["path"] = "";
     $path = resolve_path($data["path"]);
     $root = $Configuration->MedalsDir(".ressources");
-    $target = resolve_path($root.$path."/");
+    $target = resolve_path($root.$path)."/";
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))

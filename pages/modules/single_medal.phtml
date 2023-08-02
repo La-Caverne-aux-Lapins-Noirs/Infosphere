@@ -1,0 +1,67 @@
+<?php
+if (isset($subuser["medal"]))
+{
+    $got = false;
+    foreach ($subuser["medal"] as $med)
+	if ($med["id"] == $medal["id"] && $med["success"])
+	{
+	    $got = true;
+	    break ;
+	}
+}
+else
+    $got = true;
+if ($edit_medal) {
+?>
+    <form
+	id="team<?=$sub["id"]; ?>_medal<?=$medal["id"]; ?>form"
+	method="put"
+	action="/api/team/<?=$sub["id"]; ?>/user/<?=$subuser["id"]; ?>"
+    >
+	<input
+	    type="hidden"
+	    name="medal"
+	    value="<?=$medal["id"]; ?>"
+	/>
+	<input
+	    type="hidden"
+	    name="status"
+	    id="team<?=$sub["id"]; ?>_medal<?=$medal["id"]; ?>status"
+	    value="<?=$got ? 1 : 0; ?>"
+	/>
+    </form>
+<?php } ?>
+<div
+    <?php if ($edit_medal) { ?>
+    onclick="switch_medal('team<?=$sub["id"]; ?>_medal<?=$medal["id"]; ?>');"
+    <?php } ?>
+    id="team<?=$sub["id"]; ?>_medal<?=$medal["id"]; ?>"
+    class="medal_box_picture"
+    title="<?=medal_tooltip($medal, true); ?>"
+    style="
+	     position: relative;
+	     display: inline-block; margin-left: 5px; margin-right: 5px;
+	     background-image: url('<?=$medal["icon"]; ?>');
+	     width: <?=$medal_size; ?>px !important;
+	     height: <?=$medal_size; ?>px !important;
+	     <?php if ($medal["band"] != NULL) { ?>
+	     border-radius: 50px;
+	     <?php } ?>
+	     <?php if (!$got) { ?>
+	     opacity: 0.30;
+	     <?php } ?>
+	     "
+>
+    <?php if ((!isset($medal["module_medal"]) || $medal["module_medal"]) && $medal["role"] != 0) { ?>
+	<img
+	    src="res/grade_<?=["d", "c", "b", "a"][$medal["role"] - 1]; ?>.png"
+	    style="position: absolute; top: 0px; right: -10px; width: <?=$medal_size / 2; ?>px; height: <?=$medal_size / 2; ?>px;"
+	/>
+    <?php } ?>
+    <?php if (@$medal["local"]) { ?>
+	<img
+	    src="res/local.png"
+	    style="position: absolute; bottom: 0px; right: -10px; width: <?=$medal_size / 2; ?>px; height: <?=$medal_size / 2; ?>px;"
+	/>
+    <?php } ?>
+</div>

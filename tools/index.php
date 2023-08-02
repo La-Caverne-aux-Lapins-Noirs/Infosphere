@@ -10,6 +10,7 @@ if ($BaseDir == "")
     function debug_response() {}
 }
 
+require_once ("require.php");
 require_once ("trace.php");
 require_once ("medal_tooltip.php");
 require_once ("cursus_match.php");
@@ -109,7 +110,10 @@ require_once ("fetch_cycle_activity.php");
 require_once ("fetch_teacher.php");
 require_once ("fetch_activity_medal.php");
 require_once ("transfert.php");
-require_once ("fetch_class.php");
+require_once ("fetch_my_support_category.php");
+require_once ("fetch_support_category.php");
+require_once ("fetch_support.php");
+require_once ("fetch_support_asset.php");
 require_once ("fetch_activity_support.php");
 require_once ("fetch_activity_template.php");
 require_once ("fetch_activity.php");
@@ -171,5 +175,6 @@ require_once ("generate_subject.php");
 require_once ("list_of_managed_activities.php");
 require_once ("hand_request.php");
 require_once ("convert_to_codename.php");
+require_once ("full_backup.php");
 // @codeCoverageIgnoreEnd
 

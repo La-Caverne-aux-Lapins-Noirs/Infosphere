@@ -11,7 +11,12 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 
 	if (xhr.responseText == "")
 	{
-	    set_error_div("Server returns an empty answer with status '" + xhr.statusText + "'", false);
+	    set_error_div(
+		"<?=$Dictionnary["ServerReturnErrorStatus"]; ?>'" +
+		    xhr.statusText +
+		    "'",
+		false
+	    );
 	    if (bcall)
 		bcall();
 	    return ("");
@@ -103,8 +108,8 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 		    toadd = document.getElementById(toadd);
 		let ext = new DOMParser().parseFromString(content, "text/html");
 
-		console.log(content);
-		// toadd.appendChild(ext.firstChild);
+		// console.log(content);
+		toadd.appendChild(ext.firstChild);
 	    }
 	}
 	else if (result == "DEBUG")

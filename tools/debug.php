@@ -12,7 +12,7 @@ function systemd($cmd, $res = null)
 
 $UniqueBacktrack = false;
 
-function backtrack($uniq = false)
+function backtrack_msg($uniq = false)
 {
     global $UniqueBacktrack;
 
@@ -24,7 +24,12 @@ function backtrack($uniq = false)
     $back = debug_backtrace();
     for ($i = 0; isset($back[$i]); ++$i)
 	$msg .= "#> ".$back[$i]["file"].":".$back[$i]["line"]."\n";
-    AddDebugLogR($msg);
+    return ($msg);
+}
+
+function backtrack($uniq = false)
+{
+    AddDebugLogR(backtrack_msg($uniq));
 }
 
 function AddDebugLog($msg, $admin = true)

@@ -69,6 +69,7 @@
            AND parent_activity IS NULL
            AND activity_cycle.id IS NULL
            AND deleted IS NULL $not_too_old
+           ORDER BY codename
 	   ");
 	if (count($acts)) { ?>
 	    <?php foreach ($acts as $act) { ?>

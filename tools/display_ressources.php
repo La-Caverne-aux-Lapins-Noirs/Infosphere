@@ -1,7 +1,7 @@
 <?php
 
 // Si rename ne vaut pas chaine vide, c'est que cod contient un nom de fichier complet (hors extension)
-function display_ressources($cod, $rename = "", $subdirs = "")
+function display_ressources($cod, $rename = "", $subdirs = "", $teacher = false)
 {
     $cnt = 0;
     if (($dir = @glob($cod)) == NULL)
@@ -18,7 +18,9 @@ function display_ressources($cod, $rename = "", $subdirs = "")
 	$d = explode("/", $d);
 	$d = $d[count($d) - 1];
 
-	if ($d == "." || $d == ".." || $d == "index.htm" || $d == "index.php")
+	// private, afin de pouvoir aussi mettre des sources en lignes
+	// comme des fichiers odt par exemple...
+	if ($d == "." || $d == ".." || $d == "index.htm" || $d == "index.php" || ($d == "private" && $teacher == false))
 	    continue ;
 	if (is_dir($cod."/".$d))
 	    $cnt += display_ressources($cod.$d."/*", "", $subdirs.$d."/");

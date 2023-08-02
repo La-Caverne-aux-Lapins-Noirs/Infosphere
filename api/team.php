@@ -29,6 +29,91 @@ function DisplaySprint($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+function SetUserTeam($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+    
+    if ($id == -1)
+	bad_request();
+    if (!isset($data["user"]) || $data["user"] == -1)
+	bad_request();
+    $id_team = $id;
+    $id_user = (int)$data["user"];
+    
+    $act = db_select_one("
+            activity.id
+            FROM team
+            LEFT JOIN activity ON activity.id = team.id_activity
+            WHERE team.id = $id_team
+    ");
+    $id_activity = $act["id"];
+    if (!is_teacher_for_activity($id_activity))
+	forbidden();
+
+    // On vire tout ce qui ne doit pas pouvoir etre modifié par ici
+    // ou ce qui regarde l'API seulement
+    unset($data["id_team"]);
+    unset($data["id_user"]);
+    unset($data["user"]);
+    unset($data["action"]);
+    unset($data["id_status"]);
+    unset($data["id"]);
+    unset($data["code"]);
+    
+    if (isset($data["medal"]))
+    {
+	if (($data["medal"] = split_symbols($data["medal"]))->is_error())
+	    return ($data["medal"]);
+	foreach ($data["medal"]->value as $medal)
+	{
+	    if ($method == "DELETE")
+		$data["medal"] = -1 * abs($data["medal"]);
+	    else
+		$data["medal"] = +1 * abs($data["medal"]);
+	    if (($ret = edit_medal(
+		$data["user"], $data["medal"], $act["id"])
+	    )->is_error())
+		return ($ret);
+	}
+	unset($data["medal"]);
+	if (!count($data))
+	    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+	if ($method == "DELETE")
+	    bad_request();
+    }
+
+    $id_user_team = db_select_one("
+        id FROM user_team WHERE id_team = $id_team AND id_user = $id_user
+    ")["id"];
+    if (db_update_one("user_team", $id_user_team, $data))
+	return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+    return (new ErrorResponse("NothingToBeDone"));
+}
+
+function SetTeamCommentaries($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    if ($id == -1)
+	bad_request();
+    $id_team = $id;
+
+    $act = db_select_one("
+            activity.id
+            FROM team
+            LEFT JOIN activity ON activity.id = team.id_activity
+            WHERE team.id = $id_team
+    ");
+    $id_activity = $act["id"];
+    if (!is_teacher_for_activity($id_activity))
+	forbidden();
+    if (db_update_one("team", $id, ["commentaries" => $data["commentaries"]]))
+	return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+    return (new ErrorResponse("NothingToBeDone"));
+}
+
 function SetTicket($id, $data, $method, $output, $module)
 {
     global $Database;
@@ -181,6 +266,14 @@ $Tab = [
 	    "is_my_team_or_assistant",
 	    "SetTicket",
 	],
+	"user" => [
+	    "is_teacher",
+	    "SetUserTeam",
+	],
+	"commentaries" => [
+	    "is_teacher",
+	    "SetTeamCommentaries",
+	],
     ],
     "DELETE" => [
 	"sprint" => [
@@ -190,6 +283,10 @@ $Tab = [
 	"ticket" => [
 	    "is_my_team_or_assistant",
 	    "SetTicket",
+	],
+	"user" => [
+	    "is_teacher",
+	    "SetUserTeam",
 	],
     ]
 ];

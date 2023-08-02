@@ -486,9 +486,13 @@ function handle_french($body, $encode = true)
     {
 	$body = str_replace("é", "&eacute;", $body);
 	$body = str_replace("è", "&egrave;", $body);
+	$body = str_replace("ê", "&ecirc;", $body);
+	$body = str_replace("ë", "&euml;", $body);
 	$body = str_replace("à", "&agrave;", $body);
 	$body = str_replace("ù", "&ugrave;", $body);
 	$body = str_replace("ç", "&ccedil;", $body);
+	$body = str_replace("ï", "&iuml;", $body);
+	$body = str_replace("î", "&icirc;", $body);
 	return ($body);
     }
     $body = str_replace("é", "e", $body);

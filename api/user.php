@@ -22,6 +22,7 @@ function DisplayUser($id, $data, $method, $output, $module)
 function SubscribeUser($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $Database;
 
     if ($id != -1 || !isset($data["users"]))
 	bad_request();
@@ -116,9 +117,9 @@ function SetUserProperties($id, $data, $method, $output, $module)
 	
 	$target = $Configuration->UsersDir($codename);
 	if ($data["type"] == "set_avatar")
-	    $target .= "avatar.png";
+	    $target .= "public/avatar.png";
 	else
-	    $target .= "photo.png";
+	    $target .= "admin/photo.png";
 
 	$data["avatar"] = base64_decode($data["avatar"][0]["content"]);
 	if (file_put_contents($target, $data["avatar"]) === false)
@@ -227,13 +228,172 @@ function SetTodoEntry($id, $data, $method, $output, $module)
     ]));
 }
 
+/*
+** Politique d'accès aux fichiers:
+** => admin: seule la direction peut accéder à ces informations,
+**           ainsi que les super administrateurs  
+** => public: tout le monde a accès en lecture
+** => autre: seul l'élève et les super administrateurs ont accès
+*/
+
+function file_access($id, $file, $public = false, $read = false)
+{
+    $file = resolve_path($file);
+    if (strlen($file) && $file[0] == "/")
+	$file = substr($file, 1);
+    $filex = explode("/", $file);
+    // On demande une modif "admin"
+    if (!isset($filex[0]) || $filex[0] == "")
+    {
+	if (!is_me($id) && !is_admin() && $read == false)
+	    forbidden();
+	return ($file);
+    }
+    if ($filex[0] == "public")
+	return ($file);
+    if ($filex[0] == "admin")
+    {
+	if (!is_director_for_student($id))
+	    forbidden();
+	return ($file);
+    }
+    if (!is_me($id) && !is_admin())
+	forbidden();
+    return ($file);
+}
+
+function GetFileDir($id, $data, $method, $output, $module, $msg = "")
+{
+    global $Configuration;
+    global $Dictionnary;
+    
+    if ($id == -1)
+	bad_request();
+    if (!isset($data["path"]))
+	$data["path"] = "";
+    $id = (int)$id;
+    if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
+	not_found();
+
+    $file = file_access($id, $data["path"], false, true);
+    $root = $Configuration->UsersDir($user["codename"]);
+    $html = get_dir($root, $file, "user", $id, "file", "file_browser", true, "");
+    $msg = $msg ? ["msg" => $msg] : [];
+    return (new ValueResponse(array_merge($msg, [
+	"content" => $html
+    ])));
+}
+
+function AddFile($id, $data, $method, $output, $module)
+{
+    global $Configuration;
+    global $User;
+
+    if ($id == -1 || !isset($data["file"]) || !isset($data["path"]))
+	bad_request();
+    $id = (int)$id;
+    $path = file_access($id, $data["path"], false);
+    if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
+	not_found();
+    $root = $Configuration->UsersDir($user["codename"]);
+    $target = $root.$path."/";
+
+    // On vérifie la taille disponible
+    $admin_size = shell_exec("du -c $root/admin | tail -n 1");
+    $total_size = shell_exec("du -c $root | tail -n 1");
+    $user_size = $total_size - $admin_size;
+    $add_size = 0;
+    foreach ($data["file"] as $files)
+    {
+	if (!isset($files["name"]) || !isset($files["content"]))
+	    bad_request();
+	if (in_array(pathinfo($files["name"], PATHINFO_EXTENSION), [
+	    "php", "sh", "pl"
+	]))
+	    forbidden();
+	$add_size += 0;
+    }
+    $required = $user_size + $add_size;
+    $available = (int)$Configuration->Properties["account_space"];
+    if ($required > $available)
+    {
+	$unit1 = 0;
+	$unit2 = 0;
+	$size = ["o", "ko", "mo", "go", "to", "po"];
+	while ($required > 1024 && $unit1 < count($size) - 1)
+	{
+	    $unit1 += 1;
+	    $required /= 1024;
+	}
+	while ($available > 1024 && $unit2 < count($size) - 1)
+	{
+	    $unit2 += 1;
+	    $available /= 1024;
+	}
+	return (new ErrorResponse(
+	    "NotEnoughSpace",
+	    "Required $required".$size[$unit1],
+	    "Available $available".$size[$unit2]
+	));
+    }
+
+    // C'est parti.
+    foreach ($data["file"] as $files)
+    {
+
+	$content = base64_decode($files["content"]);
+	new_directory($target);
+	$files["name"] = str_replace(" ", "_", $files["name"]);
+	if ($files["name"][0] == ".")
+	    $files["name"] = substr($files["name"], 1);
+	file_put_contents($target.$files["name"], $content);
+	system("chmod 640 ".$target.$files["name"]);
+    }
+    return (GetFileDir($id, $data, "GET", $output, $module, "FileAdded"));
+}
+
+function RemoveFile($id, $data, $method, $output, $module)
+{
+    global $Configuration;
+ 
+    if ($id == -1 || !isset($data["file"]))
+	bad_request();
+    $id = (int)$id;
+    if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
+	not_found();
+    $root = $Configuration->UsersDir($user["codename"]);
+    $file = $data["file"];
+    if ($file[0] == "-")
+	$file = substr($file, 1);
+    $file = str_replace("@", "/", $file);
+    if (strncmp($root, $file, strlen($root)) != 0)
+	bad_request();
+    $file = file_access($id, $file, false);
+    if (strstr($file, "*"))
+	forbidden();
+    if (strstr($file, "["))
+	forbidden();
+    
+    if (basename($file) == "admin")
+	forbidden();
+    if (basename($file) == "public")
+	forbidden();
+    $file = escapeshellarg($file);
+    system("rm -r $file");
+    return (GetFileDir($id, $data, "GET", $output, $module, "FileRemoved"));
+}
+
 $Tab = [
     // Récupération d'utilisateur(s)
     "GET" => [
 	"" => [
 	    "logged_in",
 	    "DisplayUser"
-	]
+	],
+	"file" => [
+	    "logged_in",
+	    "GetFileDir",
+	],
     ],
     "POST" => [
 	"" => [
@@ -243,6 +403,12 @@ $Tab = [
 	"todolist" => [
 	    "is_me_or_admin",
 	    "SetTodoEntry"
+	],
+	"file" => [
+	    // Une vérification supplémentaire doit être faite
+	    // car admin/ ne peut etre lu et écrit que par la direction
+	    "is_me_or_director_for_student",
+	    "AddFile",
 	],
     ],
     "PUT" => [
@@ -274,6 +440,12 @@ $Tab = [
 	    "only_admin",
 	    "SetUserLink",
 	],
+	"file" => [
+	    // Une vérification supplémentaire doit être faite
+	    // car admin/ ne peut etre lu et écrit que par la direction
+	    "logged_in",
+	    "GetFileDir",
+	],
 	"" => [
 	    "only_admin",
 	    "UndeleteUser"
@@ -300,7 +472,13 @@ $Tab = [
 	"todolist" => [
 	    "is_me_or_admin",
 	    "SetTodoEntry"
-	]
+	],
+	"file" => [
+	    // Une vérification supplémentaire doit être faite
+	    // car admin/ ne peut etre lu et écrit que par la direction
+	    "is_me_or_director_for_student",
+	    "RemoveFile",
+	],
     ]
 ];
 

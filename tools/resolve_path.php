@@ -6,7 +6,7 @@ function resolve_path($path)
     $path = [];
     foreach ($dirs as $d)
     {
-        if ($d == ".")
+        if ($d == "." || $d == "")
 	    continue;
         if ($d == "..")
             array_pop($path);

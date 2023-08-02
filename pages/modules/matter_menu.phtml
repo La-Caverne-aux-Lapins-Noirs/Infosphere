@@ -1,12 +1,12 @@
 <h2><?=$Dictionnary["Matter"]; ?></h2>
-<a onclick="display_matter(-1);">
+<a onclick="display_panel('module', -1);">
     <?=$Dictionnary["AllMatters"]; ?>
 </a>
 <br />
 <?php if (isset($_GET["a"]) && $requested_listed == false) { ?>
     <br />
     <?=$Dictionnary["RequestedMatter"]; ?>:<br />
-    <a onclick="display_matter(<?=(int)$_GET["a"]; ?>);">
+    <a onclick="display_panel('module', <?=(int)$_GET["a"]; ?>);">
 	<?=$requested->name; ?> (<?=$requested->codename; ?>)
     </a>
     <br />
@@ -54,7 +54,7 @@
 		    />
 		<?php } ?>
 		
-		<a onclick="display_matter(<?=$matter->id; ?>);" style="cursor: pointer;">
+		<a onclick="display_panel('module', <?=$matter->id; ?>);" style="cursor: pointer;">
 		    <div style="z-index: 0; padding-left: 20px; position: relative;" id="module_link<?=$matter->id; ?>" class="module_link">
 			<h4 style="width: 70%; <?=$matter->registered ? "font-weight: bold; color: white;" : "font-weight: lighter; color: lightgrey;"; ?>">
 			    <?=$matter->name ?:

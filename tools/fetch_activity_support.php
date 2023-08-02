@@ -32,23 +32,35 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
        -- activity.is_template as is_template,
        -- activity.{$Language}_name as activity_name,
 
-       clss.id as id_support,
-       clss.{$Language}_name as support_name,
-       clss.codename as support_codename,
+       support.id as id_support,
+       support.{$Language}_name as support_name,
+       support.codename as support_codename,
 
        support_asset.id as id_support_asset,
        support_asset.codename as support_asset_codename,
        support_asset.{$Language}_name as support_asset_name,
 
+       support_category.id as id_support_category,
+       support_category.codename as support_category_codename,
+       support_category.{$Language}_name as support_category_name,
+
        subactivity.id as id_activity,
        subactivity.codename as activity_codename,
+       subactivity.parent_activity as activity_parent,
        subactivity.{$Language}_name as activity_name
 
        FROM activity_support
-       LEFT JOIN support_asset ON activity_support.id_support_asset = support_asset.id
-       LEFT JOIN `support` as clss ON activity_support.id_support = clss.id
-       LEFT JOIN activity ON activity_support.id_activity = activity.id
-       LEFT JOIN activity as subactivity ON activity_support.id_subactivity = subactivity.id
+       LEFT JOIN support_asset
+         ON activity_support.id_support_asset = support_asset.id
+       LEFT JOIN support_category
+         ON activity_support.id_support_category = support_category.id
+       LEFT JOIN support
+         ON activity_support.id_support = support.id
+       LEFT JOIN activity
+         ON activity_support.id_activity = activity.id
+       LEFT JOIN activity as subactivity
+         ON activity_support.id_subactivity = subactivity.id
+
        WHERE activity_support.id_activity = $id
        ORDER BY activity_support.chapter ASC
     ");
@@ -61,37 +73,51 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
 	];
 	if ($a["id_support_asset"] !== NULL)
 	{
-	    $name = $a["support_asset_codename"];
-	    $s["position"] = "TopGalleryMenu";
-	    $s["id_support_asset"] = $a["id_support_asset"];
-	    $s["id_support"] = $a["id_support_asset"];
-	    $s["name"] = $a["support_asset_name"];
-	    $s["codename"] = $a["support_asset_codename"];
 	    $s["type"] = 0;
 	    $s["prefix"] = "";
+	    $s["codename"] = $s["prefix"].($name = $a["support_asset_codename"]);
+	    $s["position"] = "ClassMenu";
+	    $s["id_support_asset"] = $a["id_support_asset"];
+	    $s["name"] = $a["support_asset_name"];
 	}
 	else if ($a["id_support"] !== NULL)
 	{
-	    $name = $a["support_codename"];
-	    $s["position"] = "TopGalleryMenu";
-	    $s["id_support"] = $a["id_support"];
-
-	    $s["name"] = $a["support_name"];
-	    $s["codename"] = "#".$a["support_codename"];
 	    $s["type"] = 1;
 	    $s["prefix"] = "#";
+	    $s["codename"] = $s["prefix"].($name = $a["support_codename"]);
+	    $s["position"] = "ClassMenu";
+	    $s["id_support"] = $a["id_support"];
+	    $s["name"] = $a["support_name"];
+	}
+	else if ($a["id_support_category"] !== NULL)
+	{
+	    $s["type"] = 2;
+	    $s["prefix"] = "@";
+	    $s["codename"] = $s["prefix"].($name = $a["support_category_codename"]);
+	    $s["position"] = "ClassMenu";
+	    $s["id_support_category"] = $a["id_support_category"];
+	    $s["name"] = $a["support_category_name"];
+
+	}
+	else if ($a["id_activity"] !== NULL)
+	{
+	    if ($a["activity_parent"] != -1 && $a["activity_parent"] != NULL)
+	    {
+		$s["type"] = 3; // Activité
+		$s["position"] = "ActivityMenu";
+	    }
+	    else
+	    {
+		$s["type"] = 4; // Matière
+		$s["position"] = "ModulesMenu";
+	    }
+	    $s["prefix"] = "$";
+	    $s["codename"] = $s["prefix"].($name = $a["activity_codename"]);
+	    $s["id_activity"] = $a["id_activity"];
+	    $s["name"] = $a["activity_name"];
 	}
 	else
-	{
-	    $name = $a["activity_codename"];
-	    $s["position"] = "ActivityMenu";
-	    $s["id_activity"] = $a["id_activity"];
-
-	    $s["name"] = $a["activity_name"];
-	    $s["codename"] = "$".$a["activity_codename"];
-	    $s["type"] = 2;
-	    $s["prefix"] = "$";
-	}
+	    continue ;
 
 	if ($by_name)
 	    $new[$name] = $s;

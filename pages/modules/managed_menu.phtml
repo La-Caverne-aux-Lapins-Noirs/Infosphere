@@ -27,7 +27,7 @@
 	?>
 	<?php foreach ($sorted_matters as $matter) { ?>
 	    <li>
-		<a onclick="display_matter(<?=$matter->id; ?>);" style="cursor: pointer;">
+		<a onclick="display_panel('module', <?=$matter->id; ?>);" style="cursor: pointer;">
 		    <div class="module_link" id="module_link<?=$matter->id; ?>">
 			<h4>
 			    <?=$matter->codename; ?>:

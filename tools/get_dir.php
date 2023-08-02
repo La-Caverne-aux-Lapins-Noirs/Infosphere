@@ -11,6 +11,8 @@ function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $power
     if ($language === NULL)
 	$language = $Language;
 
+    if ($path == "")
+	$path = "/";
     $path = resolve_path($path);
     $target = resolve_path($root.$path);
 

@@ -191,12 +191,34 @@ function is_director_for_cycle($id)
     return (true);
 }
 
-function is_director_for_student($id)
+function is_director_for_student($id, $big_admin = true)
 {
-    if (is_admin())
+    if ($big_admin && is_admin())
 	return (true);
-    // A faire
+    global $User;
+
+    if (($user = resolve_codename("user", $id))->is_error())
+	return (false);
+    $user = ["id" => $user->value];
+    get_user_school($User, true);
+    get_user_school($user, true);
+    foreach ($user["school"] as $school)
+    {
+	if ($school["authority"] != 0)
+	    continue ;
+	if (isset($User["school"][$school["codename"]]["authority"])
+	    && $User["school"][$school["codename"]]["authority"] == 1
+	)
+	    return (true);
+    }
     return (false);
+}
+
+function is_me_or_director_for_student($id)
+{
+    if (is_me($id))
+	return (true);
+    return (is_director_for_student($id));
 }
 
 function is_director_for_session($id)

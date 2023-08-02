@@ -18,7 +18,7 @@
 <?php }?>
 
 <div class="fullscreen scrollable" id="roomlist">
-    <?php foreach (fetch_rooms() as $room) require ("display_room.phtml"); ?>
+    <?php foreach (fetch_rooms(-1, true) as $room) require ("display_room.phtml"); ?>
 </div>
 
 <?php if (is_director()) { ?>

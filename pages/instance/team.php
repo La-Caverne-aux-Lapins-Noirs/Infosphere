@@ -9,12 +9,6 @@
     </div>
 <?php } ?>
 
-<h5><?=$Dictionnary["TeamForum"]; ?></h5>
-
-<div style="min-height: 40%; overflow: auto;">
-    <?php intercom_display("team", $activity->user_team["id"], true, -1, false); ?>
-</div>
-
 <h5><?=$Dictionnary["TeamAdministration"]; ?></h5>
 
 <?php if (isset($activity->user_team["user"][$User["id"]]["status"]) && $activity->user_team["user"][$User["id"]]["status"] == 2) { ?>

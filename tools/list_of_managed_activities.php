@@ -136,7 +136,7 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
 	    $act["session"] = db_select_all("
                id as id_session, begin_date, end_date
                FROM session WHERE id_activity = {$act["id_activity"]}
-               WHERE activity.deleted IS NULL
+               AND session.deleted IS NULL
 	       ORDER BY begin_date
 	       ");
     }

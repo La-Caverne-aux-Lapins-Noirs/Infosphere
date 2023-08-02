@@ -114,6 +114,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               WHERE activity_cycle.id_cycle = ".$v["id"]."
                 AND activity.deleted IS NULL
                 AND activity.disabled IS NULL
+              ORDER BY codename
 	      ");
 	    $v["min_credit"] = 0;
 	    $v["max_credit"] = 0;

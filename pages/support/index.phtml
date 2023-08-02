@@ -1,0 +1,83 @@
+<?php
+if (file_exists(__DIR__."/handle_parameters.php"))
+    require_once (__DIR__."/handle_parameters.php");
+
+$top_support = [];
+if (($categories = fetch_my_support_category())->is_error())
+    $categories = [];
+else
+    $categories = $categories->value;
+
+require_once (__DIR__."/../error_net.php");
+
+?>
+<form method="get" action="/api/support_category/1/get_menu" id="fetch_menu_form">
+</form>
+<table class="submenu"><tr class="submenutr"><td class="submenutd" id="main_menu">
+    <?php require_once ("menu.phtml"); ?>
+</td><td class="submenutd">
+    <div
+	class="module_panel"
+	id="resume"
+	style="display: none;"
+    >
+	<?php $selcat = false; ?>
+	<?php require ("resume.php"); ?>
+    </div>
+    <?php $catsdup = $categories; ?>
+    <?php foreach ($catsdup as $catdup) { ?>
+	<div
+	    class="module_panel"
+	    id="category_<?=$catdup["id"]; ?>"
+	    style="display: none;"
+	>
+	    <?php $categories = $catdup["support"]; ?>
+	    <?php $category = $catdup; ?>
+	    <?php $selcat = true; ?>
+	    <?php require ("resume.php"); ?>
+	</div>
+	<?php foreach ($catdup["support"] as $support) { ?>
+	    <div
+		class="module_panel"
+		id="support_<?=$support["id"]; ?>"
+		style="display: none; height: 100%;"
+	    >
+		<?php require ("support.php"); ?>
+	    </div>
+	<?php } ?>
+    <?php } ?>
+</td></tr></table>
+
+<script>
+ <?php if ($gparams) { ?>
+
+     <?php if ($gtype != 0) { ?>
+       display_panel('<?=["", "support", "category"][$gtype]; ?>', <?=$gid; ?>);
+     <?php } else { ?>
+       display_panel(
+	   'support',
+	   <?=$id_support; ?>
+       );
+       switch_asset(document.getElementById("asset<?=$gid; ?>button"),
+		    'screen_<?=$id_support; ?>',
+		    '<?=$gasset["type"]; ?>',
+		    '<?=addslashes($gasset["content"]); ?>',
+       );
+     <?php } ?>
+
+ <?php } else { ?>
+
+ var lp = localStorage.getItem("<?=$Position; ?>_last_panel");
+ 
+ if (lp == null)
+     lp = "category";
+ var ls = localStorage.getItem(lp + '<?=$User["id"]; ?>');
+ 
+ if (ls == null)
+     ls = -1;
+ 
+ display_panel(lp, ls);
+
+ <?php } ?>
+
+</script>

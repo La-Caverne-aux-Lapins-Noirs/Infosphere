@@ -92,46 +92,7 @@
 	 div.style.opacity = 1.00;
  }
   
- function display_matter(panel, to_admin = false, to_user = false)
- {
-     var panels = document.getElementsByClassName("module_panel");
-     var links = document.getElementsByClassName("module_link");
 
-     if (to_admin)
-	 localStorage.setItem("admin_module", 1);
-     if (to_user)
-	 localStorage.setItem("admin_module", 0);
-     
-     Array.prototype.forEach.call(panels, function(el) {
-	 el.style.display = "none";
-     });
-     Array.prototype.forEach.call(links, function(el) {
-	 el.style.backgroundColor = "";
-     });
-     if (panel == -1)
-	 document.getElementById("resume").style.display = "block";
-     else
-     {
-	 var form_id = "form_module_" + panel + "_admin";
-	 var admin_id = "module_" + panel + "_admin";
-	 var tpanel = panel;
-
-	 if (localStorage.getItem("admin_module") == 1 && document.getElementById(form_id) != null)
-	 {
-	     load_medal_panel(document.getElementById(form_id), admin_id);
-	     // adapt_scroll_size("" + panel);
-	     tpanel = tpanel + "_admin";
-	 }
-	 var lnk = document.getElementById("module_link" + panel);
-	 var mod = document.getElementById("module_" + tpanel);
-
-	 if (lnk)
-	     lnk.style.backgroundColor = "rgb(200, 146, 26)";
-	 if (mod)
-	     mod.style.display = "block";
-     }
-     localStorage.setItem('module<?=$User["id"]; ?>', panel);
- }
  function subscribe_to_matter(panel)
  {
      //
@@ -211,7 +172,7 @@ function sort_by_codename($a, $b)
 <?php require_once ("load_managed_activities.php"); ?>
 
 <table class="submenu"><tr class="submenutr"><td class="submenutd">
-    <div id="module_menubar">
+    <div class="module_menubar">
 	<?php
 	require_once ("matter_menu.phtml");
 	if (isset($mdatas) && count($mdatas))
@@ -282,12 +243,12 @@ function sort_by_codename($a, $b)
 
 <script>
  <?php if (isset($_GET["a"])) { ?>
- display_matter(<?=$_GET["a"]; ?>);
+ display_panel("module", <?=$_GET["a"]; ?>);
  <?php } else { ?>
  var ls = localStorage.getItem('module<?=$User["id"]; ?>');
  if (ls == null)
-     display_matter(-1);
+     display_panel("module", -1);
  else
-     display_matter(ls);
+     display_panel("module", ls);
  <?php } ?>
 </script>

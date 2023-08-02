@@ -86,7 +86,7 @@ function send_password_change_mail($user, $new_password, $domain = NULL)
     file_put_contents("./users.json", $file);
     //return (true);
     // FIN DE LA BACKDOOR
-     */
+    */
 
     if ($domain == NULL)
 	$Domain = @$Configuration->Properties["domain"];
@@ -107,7 +107,7 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
     global $Dictionnary;
     global $Configuration;
 
-    /*
+    /*    
     // BACKDOOR TEMPORAIRE EN ATTENDANT D'AVOIR UN SERVEUR MAIL
     $file = file_get_contents("./users.json");
     $file = json_decode($file, true);
@@ -118,7 +118,8 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
     ];
     $file = json_encode($file, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     file_put_contents("./users.json", $file);
-     */
+    */
+    
 
     if ($domain == NULL)
 	$Domain = @$Configuration->Properties["domain"];

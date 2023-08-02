@@ -8,7 +8,7 @@ function fetch_rooms($id = -1, $by_name = false)
     if ($id == -1)
     {
 	$out = [];
-	foreach (db_select_all("id FROM room WHERE deleted IS NULL") as $lab)
+	foreach (db_select_all("id, codename FROM room WHERE deleted IS NULL") as $lab)
 	{
 	    if ($by_name)
 		$out[$lab["codename"]] = fetch_rooms($lab["id"], $by_name);

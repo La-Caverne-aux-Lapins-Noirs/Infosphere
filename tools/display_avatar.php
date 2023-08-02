@@ -8,8 +8,8 @@ function display_avatar($usr, $siz = 200, $photo_first = false)
 	$codename = $usr->codename;
     else
 	$codename = $usr["codename"];
-    $nw["avatar"] = $Configuration->UsersDir().$codename."/avatar.png";
-    $nw["photo"] = $Configuration->UsersDir().$codename."/photo.png";
+    $nw["avatar"] = $Configuration->UsersDir().$codename."/public/avatar.png";
+    $nw["photo"] = $Configuration->UsersDir().$codename."/admin/photo.png";
     $nw["id"] = $codename;
 
     if (!file_exists($nw["avatar"]))
