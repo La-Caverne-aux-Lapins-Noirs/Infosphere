@@ -130,6 +130,7 @@ require_once ("get_managed_activities.php");
 require_once ("add_medal.php");
 require_once ("by_codename.php");
 require_once ("display_avatar.php");
+require_once ("display_name.php");
 require_once ("display_nickname.php");
 require_once ("break_template_link.php");
 require_once ("edit_codename.php");

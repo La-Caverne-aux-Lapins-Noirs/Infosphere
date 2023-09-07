@@ -56,6 +56,7 @@ function get_login_info($login, $password, $clear_password=true)
     {
 	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
 	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
+	set_cookie("log_as", "", time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
     }
 
     get_user_public_data($usr);

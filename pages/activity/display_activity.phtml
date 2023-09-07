@@ -252,15 +252,15 @@ $js = "silent_submit(this)";
 		    "hook_id" => $module->id,
 		    "linked_name" => $elems,
 		    "linked_elems" => $module->teacher,
-		    "admin_func" => "is_director_for_activity"
+		    "admin_func" => "am_i_director"
 		]); ?>
 
 		<?php
 		$elems = [
 		    "placeholder" => "Category, Lesson, Chapter, Activity",
 		    "table" => "support",
-		    "" => "support_asset",
-		    "#" => "support",
+		    "" => "support",
+		    "#" => "support_asset",
 		    "@" => "support_category",
 		    "$" => "activity"
 		];

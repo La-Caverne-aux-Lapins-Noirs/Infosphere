@@ -15,6 +15,10 @@ function get_user_laboratories(&$user)
        WHERE user_laboratory.id_user = ".$user["id"]."
        AND deleted IS NULL
        ", "codename");
+    $user["laboratory_authority"] = 0;
+    foreach ($user["laboratories"] as $lab)
+	if ($user["laboratory_authority"] < $lab["authority"])
+	    $user["laboratory_authority"] = $lab["authority"];
     return ($user["laboratories"]);
 }
 

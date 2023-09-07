@@ -1,4 +1,4 @@
-<?php if (is_admin()) { ?>
+<?php if (is_teacher()) { ?>
     <?php
     $js = "silent_submitf(this, ".
 	  "{".

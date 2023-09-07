@@ -25,6 +25,11 @@ function get_user_school(array &$usr, $by_name = false)
 	    $usr["school"][array_key_first($usr["school"])]["codename"];
     else
 	$usr["last_school"] = NULL;
+
+    $usr["school_authority"] = 0;
+    foreach ($usr["school"] as $school)
+	if ($school["authority"] == 1)
+	    $usr["school_authority"] = 1;
     return ($usr["school"]);
 }
 

@@ -14,7 +14,14 @@ if (strtolower($METHOD) == "options")
 
 if (isset($Tab[$METHOD][$DATA["action"]]))
 {
-    if ($Tab[$METHOD][$DATA["action"]][0]($ID) == false)
+    // Plusieurs filtres sont possibles - C'est un OU entre chaque.
+    $Filter = $Tab[$METHOD][$DATA["action"]][0];
+    $Filter = explode(",", $Filter);
+    $Auth = false;
+    foreach ($Filter as $ft)
+	if ($ft($ID))
+	    $Auth = true;
+    if ($Auth == false)
 	forbidden();
     $request = $Tab[$METHOD][$DATA["action"]][1]($ID, $DATA, $METHOD, $OUTPUT, $MODULE);
 }

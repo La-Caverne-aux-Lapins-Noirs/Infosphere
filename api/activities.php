@@ -22,10 +22,22 @@ function DisplayModule($id, $data, $method, $output, $module)
     // On récupère UN module et ses activités
     else
     {
-	if (is_teacher_for_activity($id) == false)
+	$is_teacher = is_teacher_for_activity($id);
+	$shortcut = false;
+	if (!is_director() && !is_cycle_director() && !$is_teacher)
 	    forbidden();
+	else
+	    $shortcut = true;
 	if (($module = new FullActivity)->build($id) == false)
 	    return (new ValueResponse(["content" => $Dictionnary["Empty"]]));
+	foreach ($module->cycle as $cyc)
+	    if (is_cycle_director_of(-1, $cyc["id_cycle"]))
+	{
+	    $shortcut = true;
+	    break ;
+	}
+	if (!$shortcut)
+	    forbidden();
 
 	if ($output == "json")
 	    return (new ValueResponse(["content" => json_encode($module, JSON_UNESCAPED_SLASHES)]));
@@ -400,10 +412,10 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	    "display" => "teacher"
 	],
 	///////////////////////////////////////////////////////////////////////
-	"support" => [ // gere tout support en ajout, et support_asset en suppression
+	"support" => [ // gere tout support en ajout, et support seul en suppresion
 	    "table" => "support",
-	    "" => "support_asset",
-            "#" => "support",
+            "" => "support",
+	    "#" => "support_asset",
             "@" => "support_category",
 	    "$" => ["activity", "subactivity"], // RTable
 	    "properties" => [
@@ -413,7 +425,7 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	],
 	"support_asset" => [ // seulement pour supprimer les supports "support_asset"
 	    "table" => "support",
-	     "" => "support_asset",
+            "" => "support_asset",
      	    "properties" => [
 		"chapter" => 0
 	    ],

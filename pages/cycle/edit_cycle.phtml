@@ -10,7 +10,7 @@
 		"#" => "laboratory",
 	    ],
 	    "linked_elems" => $content["teacher"],
-	    "admin_func" => "is_director_for_cycle"
+	    "admin_func" => "am_i_director"
 	]); ?>
 	<?php if ($page == "cycle") { ?>
 	    <?php list_of_links([
@@ -18,7 +18,7 @@
 		"hook_id" => $content["id"],
 		"linked_name" => "school",
 		"linked_elems" => $content["school"],
-		"admin_func" => "is_director_for_cycle"
+		"admin_func" => "am_i_director"
 	    ]); ?>
 	<?php } ?>
 	<?php if ($page == "cursus") { ?>

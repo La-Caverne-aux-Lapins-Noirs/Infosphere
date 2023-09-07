@@ -36,11 +36,23 @@
 		    <?php require_once ("managed.phtml"); ?>
 		<?php } ?>
 	    </div>    
-	</td></tr><tr><td>
-	    <div id="about_you"><?php require ("about_you.phtml"); ?></div>
-	</td><td>
-	    <div id="powerbox"><?php require ("power.phtml"); ?></div>
 	</td></tr>
+	<tr>
+	    <?php
+	    $powerbox =
+		count($User["children"])
+		|| $OriginalUser["authority"] >= ADMINISTRATOR
+	    ;
+	    ?>
+	    <td <?=!$powerbox ? 'colspan="2"' : ""; ?>>
+		<div id="about_you"><?php require ("about_you.phtml"); ?></div>
+	    </td>
+	    <?php if ($powerbox) { ?>
+		<td>
+		    <div id="powerbox"><?php require ("power.phtml"); ?></div>
+		</td>
+	    <?php } ?>
+	</tr>
     </table>
     <?php if (count($alerts)) { ?>
 	<script>

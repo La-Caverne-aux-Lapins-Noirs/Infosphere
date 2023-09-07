@@ -17,7 +17,7 @@
     <td <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
 <?php } ?>
 <td <?=clickable($URL); ?>><?=count($content["activity"]); ?></td>
-<?php if (!is_admin()) { ?>
+<?php if (!am_i_director()) { ?>
     <td>
 	<h5><?=$Dictionnary["Teacher"]; ?></h5>
 	<?php foreach ($content["teacher"] as $teacher) { ?>

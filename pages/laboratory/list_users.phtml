@@ -10,7 +10,8 @@
     <?=$Dictionnary[$Authority[$content["authority"]]]; ?>
 </td>
 
-<?php if (is_group_admin($fetch["id"])) { ?>
+<?php if (is_group_admin($fetch["id"]) ||
+	  (am_i_director_of($fetch["school"]) && count($fetch["user"]) == 1)) { ?>
     <?php require ("edit_user.phtml"); ?>
 <?php } ?>
 

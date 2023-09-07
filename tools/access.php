@@ -169,26 +169,41 @@ function is_subscribed_or_teacher()
 {
 }
 
-function is_director_for_cycle($id)
+function is_cycle_director_of($id_user = -1, $id_cycle = -1)
 {
-    global $Database;
     global $User;
 
     if (!$User)
 	return (false);
     if (is_admin())
 	return (true);
-    if (($ida = db_select_one("
+    if ($id_user == -1)
+	$id_user = $User["id"];
+    $id_cycle = (int)$id_cycle;
+    if ($id_cycle == -1)
+	$id_cycle = "";
+    else
+	$id_cycle = " AND cycle_teacher.id_cycle = $id_cycle ";
+    return (db_select_one("
         cycle_teacher.id_user, user_laboratory.id_user
         FROM cycle_teacher
         LEFT JOIN laboratory ON cycle_teacher.id_laboratory
         LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
-        WHERE (cycle_teacher.id_user = {$User["id"]}
-        OR user_laboratory.id_user = {$User["id"]})
-        AND cycle_teacher.id_cycle = $id
-    ")) == NULL)
-	return (false);
-    return (true);
+        WHERE (cycle_teacher.id_user = $id_user
+        OR user_laboratory.id_user = $id_user
+        )
+	$id_cycle
+    ") != NULL);
+}
+
+function is_director_for_cycle($id)
+{
+    return (is_cycle_director_of(-1, $id));
+}
+
+function am_i_cycle_director()
+{
+    return (is_cycle_director_of());
 }
 
 function is_director_for_student($id, $big_admin = true)
@@ -286,6 +301,12 @@ function is_director($id = -1)
 	return (false);
     if (is_admin())
 	return (true);
+    if ($id == -1)
+	$id = $User["id"];
+    if ($User["id"] == $id)
+	return ($User["school_authority"] > 0);
+    return (false);
+    // Normalement devenu inutile
     return (db_select_one("
         cycle_teacher.id
         FROM cycle_teacher
@@ -294,6 +315,84 @@ function is_director($id = -1)
 	WHERE cycle_teacher.id_user = {$User["id"]}
 	OR user_laboratory.id_user = {$User["id"]}
 	"));
+}
+
+function am_i_director()
+{
+    global $User;
+
+    if (!$User)
+	return (false);
+    return (is_director($User["id"]));
+}
+
+function am_i_director_of($id_school)
+{
+    global $User;
+    
+    if (is_array($id_school))
+    {
+	foreach ($id_school as $sc)
+	{
+	    if (is_array($sc))
+	    {
+		if (am_i_director_of($sc["id"]))
+		    return (true);
+	    }
+	    else
+	    {
+		if (am_i_director_of($sc))
+		    return (true);
+	    }
+	}
+	return (false);
+    }
+    get_user_school($User);
+    foreach ($User["school"] as $sc)
+    {
+	if ($sc["id_school"] != $id_school)
+	    continue ;
+	if ($sc["authority"] > 0)
+	    return (true);
+    }
+    return (false);
+}
+
+function am_i_dir_or_cdir()
+{
+    if (am_i_director())
+	return (true);
+    if (am_i_cycle_director())
+	return (true);
+    return (false);
+}
+
+function is_my_director($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    $usr = ["id" => $id];
+    get_user_school($usr);
+    foreach ($usr["school"] as $school)
+    {
+	foreach ($User["school"] as $ms)
+	{
+	    if (abs($ms["id_school"]) != abs($school["id_school"]))
+		continue ;
+	    if ($ms["authority"] > $school["authority"])
+		return (true);
+	}
+    }
+    return (false);
+}
+
+function is_me_or_my_director($id)
+{
+    if (is_me($id))
+	return (true);
+    return (is_my_director($id));
 }
 
 function is_me_or_admin($id)

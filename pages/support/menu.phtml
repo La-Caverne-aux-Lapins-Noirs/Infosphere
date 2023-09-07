@@ -21,7 +21,7 @@
 	    >
 		<?php if (@strlen($category["name"])) { ?>
 		    <?=$category["name"]; ?>
-		    <?php if (is_admin()) { ?>
+		    <?php if (is_teacher()) { ?>
 			(@<?=$category["codename"]; ?>) #<?=$category["id"]; ?>
 		    <?php } ?>
 		<?php } else { ?>
@@ -48,7 +48,7 @@
 	    <?php foreach ($category["support"] as $support) { ?>
 		<?php if ($support["selected"] == false) continue ; ?>
 		<li>
-		    <?php if (is_admin()) { ?>
+		    <?php if (is_teacher()) { ?>
 			<?php
 			$js = "
 			silent_submitf(this, {
@@ -75,7 +75,7 @@
 			    <h4 style="display: inline-block;">
 				<?php if (@strlen($support["name"])) { ?>
 				    <?=$support["name"]; ?>
-				    <?php if (is_admin()) { ?>
+				    <?php if (is_teacher()) { ?>
 					(#<?=$support["codename"]; ?>) #<?=$support["id"]; ?>
 				    <?php } ?>
 				<?php } else { ?>

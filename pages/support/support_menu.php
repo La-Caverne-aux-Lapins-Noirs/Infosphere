@@ -8,7 +8,7 @@ silent_submitf(this, {
 <h2>
     <?php if (@strlen($support["name"])) { ?>
 	<?=$support["name"]; ?>
-	<?php if (is_admin()) { ?>
+	<?php if (is_teacher()) { ?>
 	    (<?=$support["codename"]; ?>)
 	<?php } ?>
     <?php } else { ?>
@@ -16,7 +16,7 @@ silent_submitf(this, {
     <?php } ?>
 </h2>
 <br />
-<?php if (is_admin()) { ?>
+<?php if (is_teacher()) { ?>
     <a
 	class="asset_link"
 	id="asset<?=$asset["id"]; ?>button"
@@ -36,7 +36,7 @@ silent_submitf(this, {
     <?php foreach ($support["asset"] as $asset) { ?>
 	<?php if ($asset["selected"] == false) continue ; ?>
 	<li>
-	    <?php if (is_admin()) { ?>
+	    <?php if (is_teacher()) { ?>
 		<form
 		    method="put"
 		    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>/asset/<?=$asset["id"]; ?>"
@@ -78,7 +78,7 @@ silent_submitf(this, {
 	    >
 		<?php if (@strlen($asset["name"])) { ?>
 		    <?=$asset["name"]; ?>
-		    <?php if (is_admin()) { ?>
+		    <?php if (is_teacher()) { ?>
 			(<?=$asset["codename"]; ?>) #<?=$asset["id"]; ?>
 		    <?php } ?>
 		<?php } else { ?>

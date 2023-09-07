@@ -31,6 +31,7 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
 	($s = new FullActivity)->build($sess["id_activity"], false, false, $sess["id"]);
 	($module = new FullActivity)->build($s->parent_activity, false, false);
 
+
 	/*
 	   if (!have_rights($sess["id_activity"], false) && filter_out_sessions($s, $wlist))
 	   continue ;

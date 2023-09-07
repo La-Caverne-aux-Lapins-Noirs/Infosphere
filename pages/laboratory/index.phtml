@@ -1,6 +1,6 @@
 <?php
 if (file_exists(__DIR__."/handle_request.php")
-    && is_admin()
+    && am_i_director()
     && isset($_POST["action"]))
     require_once (__DIR__."/handle_request.php");
 
@@ -18,7 +18,7 @@ require_once (__DIR__."/../error_net.php");
     </a>
 <?php } ?>
 
-<?php if (is_admin()) { ?>
+<?php if (am_i_director()) { ?>
     <table class="edit_console"><tr><td><div class="fullscreen scrollable">
 <?php } ?>
 
@@ -34,7 +34,9 @@ require_once (__DIR__."/../error_net.php");
 	    <th><?=$Dictionnary["Avatar"]; ?></th>
 	    <th><?=$Dictionnary["Login"]; ?></th>
 	    <th><?=$Dictionnary["Status"]; ?></th>
-	    <?php if (is_admin()) { ?>
+	    <?php if (is_group_admin($fetch["id"]) ||
+		      (am_i_director_of($fetch["school"])
+		    && count($fetch["user"]) == 1)) { ?>
 		<th class="edit_column"><img src="./res/cog.png" /></th>
 	    <?php } ?>
 	</tr>
@@ -53,7 +55,7 @@ require_once (__DIR__."/../error_net.php");
 	    <th class="name_column"><?=$Dictionnary["Name"]; ?></th>
 	    <th class="wide_column"><?=$Dictionnary["School"]; ?></th>
 	    <th><?=$Dictionnary["HowManyStudents"]; ?></th>
-	    <?php if (is_admin()) { ?>
+	    <?php if (am_i_director()) { ?>
 		<th class="edit_column"><img src="./res/cog.png" /></th>
 	    <?php } ?>
 	</tr>
@@ -66,7 +68,7 @@ require_once (__DIR__."/../error_net.php");
     <?php } ?>
 </table>
 
-<?php if (is_admin()) { ?>
+<?php if (am_i_director()) { ?>
     </div></td><td class="formular_slot">
 	<?php if ($unique) { ?>
 	    <?php require ("add_users.phtml"); ?>

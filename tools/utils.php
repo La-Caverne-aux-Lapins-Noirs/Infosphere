@@ -102,7 +102,7 @@ function datex($format, $tm = NULL)
 {
     global $NoLocalisation;
 
-    if ($tm == NULL)
+    if ($tm === NULL)
 	$tm = now();
     $dt = new DateTime("now", $NoLocalisation);
     if (is_string($tm))

@@ -18,8 +18,8 @@
 	{
     ?>
 	<a href="index.php?p=SchoolMenu&amp;a=<?=$sc["id"]; ?>">
-	    <?=$sc["codename"]; ?>
-	</a>
+	    <?=display_name($sc); ?>
+	</a><br />
     <?php
         }
     }
@@ -27,6 +27,6 @@
 </td>
 <td <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
 
-<?php if (is_admin()) { ?>
+<?php if (am_i_director()) { ?>
     <?php require ("edit_laboratory.phtml"); ?>
 <?php } ?>

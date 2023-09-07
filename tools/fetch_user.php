@@ -36,5 +36,6 @@ function fetch_user($id, $add_fields = [])
     if ($u == NULL)
 	return (new ErrorResponse("UserNotFound"));
     get_user_promotions($u);
+    get_user_school($u);
     return (new ValueResponse($u));
 }

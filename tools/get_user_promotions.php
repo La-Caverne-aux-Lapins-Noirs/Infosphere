@@ -37,6 +37,7 @@ function get_user_promotions(array &$usr, $by_name = false)
 	";
     $usr["cycle"] = db_select_all($forge, $by_name ? "codename" : "");
     $usr["greatest_cycle"] = -1;
+    $usr["cycle_authority"] = 0;
     foreach ($usr["cycle"] as $i => $v)
     {
 	$usr["cycle"][$i]["cursus"] = explode(";", $v["cursus"]);
@@ -48,7 +49,32 @@ function get_user_promotions(array &$usr, $by_name = false)
 	    $usr["greatest_cycle"] = $v["cycle"];
 	    $usr["greatest_cycle_data"] = $v;
 	}
+
+	$id = $usr["id"];
+	$auths = db_select_all("
+	    cycle_teacher.id_user as id_user,
+            user_laboratory.authority as authority
+	    FROM cycle_teacher
+	    LEFT JOIN user_laboratory
+	    ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
+	    WHERE ( cycle_teacher.id_user = $id
+	    OR user_laboratory.id_user = $id
+	    ) AND id_cycle = {$v["id"]}
+	    ");
+	foreach ($auths as $auth)
+	{
+	    if ($auth["authority"] == 1)
+		$usr["cycle"][$i]["authority"] = 1; // assistant
+	    if ($auth["authority"]  > 1)
+		$usr["cycle"][$i]["authority"] = 2; // teacher
+	    if ($auth["id_user"] != NULL)
+		$usr["cycle"][$i]["authority"] = 2; // teacher
+	    
+	    if ($usr["cycle"][$i]["authority"] > $usr["cycle_authority"])
+		$usr["cycle_authority"] = $usr["cycle"][$i]["authority"];
+	}
     }
+    
     $LoadedUserPromotions[$usr["id"]]["cycle"] = &$usr["cycle"];
     $LoadedUserPromotions[$usr["id"]]["greatest_cycle"] = &$usr["greatest_cycle"];
     return ($usr["cycle"]);

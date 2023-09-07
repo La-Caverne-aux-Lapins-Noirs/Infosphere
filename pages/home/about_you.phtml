@@ -10,7 +10,8 @@
     />
 </td></tr></table>
 
-<p style="font-size: small; width: 90%; margin-left: 5%;">
+<p style="font-size: small; width: 90%; margin-left: 5%; text-align: center;">
+    <!--
     <br />
     &nbsp;&nbsp;&nbsp;&nbsp;<?=$Dictionnary["SecretIdentity"]; ?>
     <span class="hidden_mouse">
@@ -27,14 +28,17 @@
 	    );
 	}
 	?>
+	<br /><br />
 	<?=crc32($User["outside_secret"]); ?>
     </span>
+    -->
 </p>
 
-<?php if (@strlen($User["birth_date"]) && datex("d/m/Y", time()) == datex("d/m/Y", date_to_timestamp($User["birth_date"]))) { ?>
-<p style="text-align: center;">
-    <?=$Dictionnary["HappyBirthday"]; ?>!
-</p>
+<?php if ((@strlen($User["birth_date"]) && datex("d/m/Y", time()) == datex("d/m/Y", date_to_timestamp($User["birth_date"])))) { ?>
+    <p style="text-align: center;">
+	<br />
+	<b><?=$Dictionnary["HappyBirthday"]; ?>!</b>
+    </p>
 <?php } ?>
 
 <p style="text-align: center;">

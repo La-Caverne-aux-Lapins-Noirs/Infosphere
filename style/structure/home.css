@@ -39,6 +39,6 @@
 
 #student_status
 {
-    width: calc(100% - 20px);
+    width: 200px;
     height: 200px;
 }

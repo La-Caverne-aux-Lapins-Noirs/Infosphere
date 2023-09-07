@@ -12,10 +12,23 @@ function get_modules($template, $id = -1)
     else
 	$id = "";
 
-    if (!is_admin())
-	$filter = " AND activity_teacher.id_user = {$User["id"]}";
-    else
-	$filter = "";
+    $filter = "";
+    if (!is_director())
+    {
+	if (!is_cycle_director())
+	    $filter = " AND activity_teacher.id_user = {$User["id"]}";
+	else
+	{
+	    $filter = " OR (1 ";
+	    foreach ($User["cycle"] as $cyc)
+	    {
+		if ($cyc["authority"] <= 1)
+		    continue ;
+		$filter .= " AND activity_cycle.id_cycle = {$cyc["id_cycle"]} ";
+	    }
+	    $filter .= " ) ";
+	}
+    }
 
     $oldies = " AND (activity.done_date > NOW() OR activity.done_date IS NULL) ";
     if ((isset($_COOKIE["get_old_activity"]) && $_COOKIE["get_old_activity"]) || $template)

@@ -5,7 +5,7 @@ require ("activities.php");
 $Tab = [
     "GET" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_director,am_i_cycle_director,is_teacher_for_activity",
 	    "DisplayActivity"
 	],
 	"admin" => [
@@ -15,7 +15,7 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_director",
+	    "am_i_director,am_i_cycle_director",
 	    "AddActivity"
 	],
 	"medal" => [
@@ -73,7 +73,7 @@ $Tab = [
 	    "SetActivityLink"
 	],
 	"teacher" => [
-	    "is_director_for_activity",
+	    "am_i_director,am_i_cycle_director",
 	    "SetActivityLink"
 	],
 	"support" => [
@@ -123,7 +123,7 @@ $Tab = [
     ],
     "DELETE" => [
 	"" => [
-	    "is_teacher_for_activity",
+	    "am_i_director,am_i_cycle_director",
 	    "DeleteActivity"
 	],
 	"medal" => [
@@ -135,11 +135,11 @@ $Tab = [
 	    "SetActivityLink"
 	],
 	"teacher" => [
-	    "is_teacher_for_activity",
+	    "am_i_director,am_i_cycle_director",
 	    "SetActivityLink"
 	],
 	"laboratory" => [
-	    "is_teacher_for_activity",
+	    "is_director_for_activity",
 	    "SetActivityLink"
 	],
 	"support" => [

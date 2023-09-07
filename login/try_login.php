@@ -6,13 +6,18 @@ if (isset($_POST["logaction"]))
 {
     // On veut se connecter
     if ($_POST["logaction"] == "login")
+    {
 	$Msg = get_login_info($_POST["login"], $_POST["password"]);
+	unset($_COOKIE["log_as"]);
+    }
     // On veut se deconnecter
     else if ($_POST["logaction"] == "logout")
     {
 	$Msg = new Response;
-	set_cookie("login", "", time() + 1);
-	set_cookie("password", "", time() + 1);
+	set_cookie("login", "", time() - 1);
+	set_cookie("password", "", time() - 1);
+	set_cookie("log_as", "", time() - 1);
+	unset($_COOKIE["log_as"]);
     }
     // On veut s'inscrire
     else if ($_POST["logaction"] == "subscribe" || $_POST["logaction"] == "conv_subscribe")
@@ -64,6 +69,8 @@ if (isset($_POST["logaction"]))
 	    }
 	    else // Sinon on va enrichir POST avec l'id obtenu
 		$_POST["id"] = $Msg->value["id"];
+	    set_cookie("log_as", "", time() - 1);
+	    unset($_COOKIE["log_as"]);
 	}
 	else if ($_POST["logaction"] == "subscribe")
 	    $Msg = new ErrorResponse("MissingField", "accept_rules");
@@ -90,8 +97,10 @@ if (isset($_POST["logaction"]))
 	}
 	else
 	    $Msg = new ErrorResponse("MissingField", "accept_privacy");
-	set_cookie("login", "", time() + 1);
-	set_cookie("password", "", time() + 1);
+	set_cookie("login", "", time() - 1);
+	set_cookie("password", "", time() - 1);
+	set_cookie("log_as", "", time() - 1);
+	unset($_COOKIE["log_as"]);
     }
 }
 // Peut-être qu'on est déjà connecté?

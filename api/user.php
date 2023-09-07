@@ -140,6 +140,7 @@ function SetUserProperties($id, $data, $method, $output, $module)
 function SetUserLink($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $User;
 
     foreach ([
 	"user" => ["parent_child", "parent", "child", "Profile"],
@@ -159,6 +160,30 @@ function SetUserLink($id, $data, $method, $output, $module)
 	
 	if ($data["action"] != $link)
 	    continue ;
+
+	if (!is_admin() && $link == "school")
+	{
+	    if (($schools = resolve_codename("school", $data["school"]))->is_error())
+		return ($schools);
+	    if (!is_array($schools = $schools->value))
+		$schools = [$schools];
+	    $fnd = false;
+	    foreach ($User["school"] as $sc)
+	    {
+		foreach ($schools as $sc2)
+		{
+		    if (abs($sc["id_school"]) != abs($sc2))
+			continue ;
+		    $fnd = true;
+		    break 2;
+		}
+	    }
+	    if ($fnd == false)
+		forbidden();
+	}
+	else if (!is_my_director($id))
+	    forbidden();
+	
 	if (($request = handle_links(
 	    $id, $data[$link], "user", $link, false, $table, false, $left, $right))->is_error()
 	)
@@ -397,7 +422,7 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "only_admin",
+	    "is_director",
 	    "SubscribeUser"
 	],
 	"todolist" => [
@@ -421,23 +446,23 @@ $Tab = [
 	    "RegeneratePassword"
 	],
 	"properties" => [
-	    "is_me_or_admin",
+	    "is_me_or_my_director",
 	    "SetUserProperties",
 	],
 	"set_avatar" => [
-	    "is_me_or_admin",
+	    "is_me_or_my_director",
 	    "SetUserProperties",
 	],
 	"user" => [
-	    "only_admin",
+	    "is_my_director",
 	    "SetUserLink",
 	],
 	"school" => [
-	    "only_admin",
+	    "am_i_director", // On est pas directeur avant de s'ajouter directeur
 	    "SetUserLink",
 	],
 	"cycle" => [
-	    "only_admin",
+	    "is_my_director",
 	    "SetUserLink",
 	],
 	"file" => [
@@ -457,16 +482,15 @@ $Tab = [
 	    "DeleteUser"
 	],
 	"user" => [
-	    "only_admin",
-
+	    "is_my_director",
 	    "SetUserLink",
 	],
 	"school" => [
-	    "only_admin",
+	    "is_my_director",
 	    "SetUserLink",
 	],
 	"cycle" => [
-	    "only_admin",
+	    "is_my_director",
 	    "SetUserLink"
 	],
 	"todolist" => [

@@ -1,8 +1,11 @@
 <td class="edit_panel">
-    <form method="post" action="<?=unrollurl(); ?>">
-	<input type="hidden" name="action" value="delete_group" />
-	<input type="hidden" name="laboratory" value="<?=$content["id"]; ?>" />
-	<input type="submit" value="&#10007;" style="color: red;" />
-    </form>
+    <?php if (am_i_director_of($content["school"])
+	      && count($content["school"]) == 1) { ?>
+	<form method="post" action="<?=unrollurl(); ?>">
+	    <input type="hidden" name="action" value="delete_laboratory" />
+	    <input type="hidden" name="laboratory" value="<?=$content["id"]; ?>" />
+	    <input type="submit" value="&#10007;" style="color: red;" />
+	</form>
+    <?php } ?>
 </td>
 

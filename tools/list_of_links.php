@@ -75,19 +75,27 @@ function single_link($params)
 	    action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
 	    onsubmit="return <?=$submit; ?>;"
 	>
+	    <?php $count = 0; ?>
 	    <?php foreach ($extra_properties as $epv) { ?>
+		<?php if (@strlen($epv["admin_func"]) == 0 || $epv["admin_func"]($hook_id)) { ?>
+		    <input
+			type="text"
+			name="<?=$epv["codename"]; ?>"
+			placeholder="<?=$epv["name"]; ?>"
+			value="<?=isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : ""; ?>"
+		    />
+		    <?php $count += 1; ?>
+		<?php } else { ?>
+		    <?=$epv["name"]; ?>: <?=@strlen($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : "/"; ?><br />
+		<?php } ?>
+	    <?php } ?>
+	    <?php if ($count) { ?>
 		<input
-		    type="text"
-		    name="<?=$epv["codename"]; ?>"
-		    placeholder="<?=$epv["name"]; ?>"
-		    value="<?=isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : ""; ?>"
+		    type="button"
+		    value="&#10003;"
+		    onclick="<?=$submit; ?>"
 		/>
 	    <?php } ?>
-	    <input
-		type="button"
-		value="&#10003;"
-		onclick="<?=$submit; ?>"
-	    />
 	</form>
 	<br />
 	<br />

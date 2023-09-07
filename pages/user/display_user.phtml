@@ -37,7 +37,7 @@
     </div>
     
     <?php if (is_admin()) { ?>
-    <div class="band _50hpx smalltext _100top">
+	<div class="band _50hpx smalltext _100top">
 
 	<?php if ($user["id"] != 1) { ?>
 	
@@ -97,33 +97,34 @@
     
 	<div class="band _130top" style="height: <?=300-100-30; ?>px;">
 	    <div class="left column scrollable">
-		<?php if (is_admin() || count($user["cycle"])) { ?>
+		<?php if (is_my_director($user["id"]) || count($user["cycle"])) { ?>
 		    <?php list_of_links([
 			"hook_name" => "user",
 			"hook_id" => $user["id"],
 			"linked_name" => "cycle",
 			"linked_elems" => $user["cycle"],
-			"admin_func" => "is_director"
+			"admin_func" => "is_my_director"
 		    ]); ?>
 		<?php } ?>
 	    </div>
 	    <div class="right column scrollable">
-		<?php if (is_admin() || count($user["school"])) { ?>
+		<?php if (is_director() || count($user["school"])) { ?>
 		    <?php list_of_links([
 			"hook_name" => "user",
 			"hook_id" => $user["id"],
 			"linked_name" => "school",
 			"linked_elems" => $user["school"],
-			"admin_func" => "is_director"
+			"admin_func" => "am_i_director"
 		    ]); ?>
 		<?php } ?>
-		<?php if (is_admin() || count($user["user"])) { ?>
+		<?php if (is_my_director($user["id"]) || count($user["user"])) { ?>
 		    <?php list_of_links([
 			"hook_name" => "user",
 			"hook_id" => $user["id"],
 			"linked_name" => "user",
 			"linked_elems" => $user["user"],
-			"link" => "Profile"
+			"link" => "Profile",
+			"admin_func" => "is_my_director"
 		    ]); ?>
 		<?php } ?>
 	    </div>

@@ -74,7 +74,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
 	if ($a["id_support_asset"] !== NULL)
 	{
 	    $s["type"] = 0;
-	    $s["prefix"] = "";
+	    $s["prefix"] = "#";
 	    $s["codename"] = $s["prefix"].($name = $a["support_asset_codename"]);
 	    $s["position"] = "ClassMenu";
 	    $s["id_support_asset"] = $a["id_support_asset"];
@@ -83,7 +83,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
 	else if ($a["id_support"] !== NULL)
 	{
 	    $s["type"] = 1;
-	    $s["prefix"] = "#";
+	    $s["prefix"] = "";
 	    $s["codename"] = $s["prefix"].($name = $a["support_codename"]);
 	    $s["position"] = "ClassMenu";
 	    $s["id_support"] = $a["id_support"];

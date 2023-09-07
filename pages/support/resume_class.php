@@ -5,7 +5,7 @@
     <h3 style="width: 70%;">
 	<?=strlen($category["name"]) ? $category["name"] : $category["codename"]; ?>
     </h3>
-    <?php if (is_admin()) { ?>
+    <?php if (is_teacher()) { ?>
 	<?php $js = "silent_submitf(this, {toremove: 'resume_module_".$category["type"].$category["id"]."'});"; ?>
 	<form
 	    method="delete"
@@ -45,7 +45,7 @@
 	      right: 0px;
 	      bottom: 0px;
 	      width: 30px;
-	      <?php if (is_admin()) { ?>
+	      <?php if (is_teacher()) { ?>
 	      height: calc(100% - 31px);
 	      border-top-left-radius: 3px;
 	      border-top-right-radius: 3px;
