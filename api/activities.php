@@ -138,47 +138,51 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 
     if (($id_user = resolve_codename("user", $id_user))->is_error())
 	return ($id_user);
-    $id_user = $id_user->value;
-
-    $team = db_select_one("
-	team.id
-	FROM team
-	LEFT JOIN user_team
-	ON team.id = user_team.id_team
-	WHERE team.id_activity = $id AND user_team.id_user = $id_user
-    ");
-
-    // Si on est prof, on inscrit directement. Sinon on doit verifier les règles
-    if ($auth)
+    $id_users = $id_user->value;
+    if (!is_array($id_users))
+	$id_users = [$id_users];
+    foreach ($id_users as $id_user)
     {
-	if ($team == NULL)
+	$team = db_select_one("
+	  team.id
+	  FROM team
+	  LEFT JOIN user_team
+	  ON team.id = user_team.id_team
+	  WHERE team.id_activity = $id AND user_team.id_user = $id_user
+	");
+
+	// Si on est prof, on inscrit directement. Sinon on doit verifier les règles
+	if ($auth)
 	{
-	    $ret = subscribe_to_instance($activity, $id_user, $target_team, true);
-	    $msg = "Subscribed";
+	    if ($team == NULL)
+	    {
+		$ret = subscribe_to_instance($activity, $id_user, $target_team, true);
+		$msg = "Subscribed";
+	    }
+	    else
+	    {
+		$ret = unsubscribe_from_instance($activity, $id_user, true);
+		$msg = "Unsubscribed";
+	    }
 	}
 	else
 	{
-	    $ret = unsubscribe_from_instance($activity, $id_user, true);
-	    $msg = "Unsubscribed";
+	    // On est pas prof, on doit verifier les règles
+	    if ($team == NULL)
+	    {
+		$ret = subscribe_to_instance($activity);
+		$msg = "YouHaveSubscribed";
+	    }
+	    else
+	    {
+		$ret = unsubscribe_from_instance($activity);
+		$msg = "YouHaveUnsubscribed";
+	    }
 	}
-    }
-    else
-    {
-	// On est pas prof, on doit verifier les règles
-	if ($team == NULL)
-	{
-	    $ret = subscribe_to_instance($activity);
-	    $msg = "YouHaveSubscribed";
-	}
-	else
-	{
-	    $ret = unsubscribe_from_instance($activity);
-	    $msg = "YouHaveUnsubscribed";
-	}
-    }
 
-    if ($ret->is_error())
-	return ($ret);
+	if ($ret->is_error())
+	    return ($ret);
+    }
     return (new ValueResponse([
 	"msg" => $msg
     ]));

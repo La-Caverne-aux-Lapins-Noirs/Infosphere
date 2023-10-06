@@ -4,9 +4,9 @@
 	style="background-size: contain; background-repeat: no-repeat; background-position: center center;"
     ></div>
     <iframe class="screen_media" src=""></iframe>
-    <video class="screen_media" controls>
+    <video class="screen_media" controls preload="auto">
 	<source src="" type="video/mp4">
-	<source src="" type="video/webm" />
+	<!--source src="" type="video/webm" /-->
     </video>
     <audio class="screen_media" controls src="" type="video/mp3"></audio>
 </div>

@@ -89,8 +89,20 @@ function collect_short_projects($week, $wlist, $is_filtered = false)
     // On va maintenant placer les projects
     foreach ($projects as &$act)
     {
-	$act->left = 100.0 * ($act->local_start / $total_len);
-	$act->width = 100.0 * (($act->local_end - $act->local_start + 1) / $total_len);
+	if ($act->local_start < 5)
+	    $act->left = 100.0 * ($act->local_start / 6.0);
+	else
+	    $act->left = 100.0 * ((5.0 + ($act->local_start - 5.0) / 2.0) / 6.0);
+
+	$act->width = 0;
+	for ($i = $act->local_start; $i <= $act->local_end; ++$i)
+	{
+	    if ($i < 5)
+		$act->width += 100.0 / 6.0;
+	    else
+		$act->width += (100.0 / 6.0) / 2.0;
+	}
+	$act->width -= 1.0;
 	$act->height = 100.0 / $occupation[$act->local_start];
 
 	$ctop = 0;

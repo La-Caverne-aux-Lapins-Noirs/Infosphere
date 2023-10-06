@@ -140,13 +140,18 @@ function AddSupportAsset($id, $data, $method, $output, $module)
     $support = $support["codename"];
     
     $assetlist = [];
+    
     foreach ($data as $k => $v)
     {
 	foreach ($LanguageList as $lk => $lv)
 	{
 	    if (!isset($data[$lk."_content"][0]["name"]) ||
 		!isset($data[$lk."_content"][0]["content"]))
+	    {
+		if (isset($data[$lk."_content"]))
+		    unset($data[$lk."_content"]);
 	        continue ;
+	    }
 	    $asset_name = $data[$lk."_content"][0]["name"];
 	    if (in_array(pathinfo($asset_name, PATHINFO_EXTENSION), [
 		"php", "sh", "pl"
@@ -190,11 +195,11 @@ function AddSupportAsset($id, $data, $method, $output, $module)
 	$data["codename"],
 	$fields,
 	"", "",
-	["name" => false, "content" => true],
+	["name" => false, "content" => false],
 	$data))->is_error()
     )
         return ($ret);
-
+   
     return (DisplayAssetList($subid, $data, "GET", $output, $module));
 }
 

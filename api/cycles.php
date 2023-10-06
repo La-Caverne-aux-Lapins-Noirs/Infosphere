@@ -39,10 +39,11 @@ function AddCycle($id, $data, $method, $output, $module)
 	}
 	if (($ret = add_cycle($cycle["name"], $cycle["year"], $cycle, $fweek))->is_error())
 	    return ($ret);
+	$ret = $ret->value;
 	if (!is_admin())
 	{
 	    // M'ajouter comme directeur.
-	    if (($ret = handle_links($User["id"], $cycle["id"], "user", "cycle"))->is_error())
+	    if (($ret = handle_links($User["id"], $ret["id"], "user", "cycle"))->is_error())
 		return ($ret);
 	}
 	$subs[] = $cycle["name"];
@@ -325,7 +326,7 @@ function SetSchool($id, $data, $method, $output, $module)
 
 function InstantiateCycle($id, $data, $method, $output, $module)
 {
-    global $Dicitonnary;
+    global $Dictionnary;
     global $Database;
     
     if ($id == -1)
@@ -360,13 +361,13 @@ function InstantiateCycle($id, $data, $method, $output, $module)
 	if (($error_msg = instantiate_template($act, $first_week))->is_error())
 	    goto Clear;
 	$matter[] = $activity = $error_msg->value;
-	if (($error_msg = handle_links([
+	if (($error_msg = handle_linksf([
 	    "left_value" => $activity,
 	    "right_value" => $id,
 	    "left_field_name" => "activity",
 	    "right_field_name" => "cycle",
 	    "properties" => [
-		"cursus" => $cycle["cursus"]
+		"cursus" => $acti["cursus"]
 	    ]
 	]))->is_error())
 	    goto Clear;

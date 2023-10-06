@@ -1,0 +1,3 @@
+
+- Le champ "note" d'activité permettant d'indiquer qu'il y a des erreurs a corriger dans le sujet
+n'est pas encore accessible via le panneau d'admin d'activité. Il existe cependant en BDD.

@@ -417,7 +417,8 @@ class FullActivity extends Response
 	foreach ($this->support as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 
 	if (array_search("activity_cycle", $blist) === false)
-	    $this->cycle = fetch_link("activity", "cycle", $data["id"], true, ["name"])->value;	
+	    $this->cycle = fetch_link("activity", "cycle", $data["id"], true, ["name"], "", "")->value;
+
 	if (array_search("activity_details", $blist) === false)
 	{
 	    $this->skill = fetch_link("activity", "skill", $data["id"], true, ["description"])->value;
@@ -784,6 +785,13 @@ class FullActivity extends Response
 	    if ($topsub)
 		$this->can_subscribe = true;
 	}
+
+	// On vire certains trucs qui devraient deja etre supprimé...
+	$tmp = $this->cycle;
+	$this->cycle = [];
+	foreach ($tmp as $cyc)
+	    if ($cyc["deleted"] == NULL)
+		$this->cycle[] = $cyc;
 	
 	// Si on ne veut pas les sous activités...
 	if ($recursive == false)

@@ -21,6 +21,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
 	    $v["instance"] = [];
 	    $tmp = db_select_all("
                id, codename, first_day FROM cycle WHERE id_template = {$v["id"]}
+               AND deleted IS NULL
 	       ");
 	    foreach ($tmp as $inst)
 	    {

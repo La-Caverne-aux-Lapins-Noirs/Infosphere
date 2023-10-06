@@ -131,6 +131,11 @@ $BottomMenu = [
     "TestMenu" => "./pages/test/",
 ];
 
+if (!isset($TopMenu[$Position])
+    && !isset($BottomMenu[$Position])
+    && !isset($Unlisted[$Position]))
+    $Position = "HomeMenu";
+
 //////////////////////////////////////////////
 // On poursuit la construction de la page ///
 ////////////////////////////////////////////

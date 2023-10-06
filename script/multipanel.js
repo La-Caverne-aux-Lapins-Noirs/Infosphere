@@ -20,6 +20,8 @@ function switch_asset(link, screen, type, asset)
 	screen.style.display = "";
 	for (src of screen.getElementsByTagName("source"))
 	    src.src = asset;
+	screen.load();
+	screen.play();
     }
     else if (type == "audio")
     {

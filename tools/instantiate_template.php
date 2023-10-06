@@ -22,7 +22,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
     if ($template == false)
     {
 	if (@$act->emergence_date == NULL)
-	    $act->emergence_date = $sdate;
+	    $act->emergence_date = 60 * 60 * 9; // 9h le matin
 	if (@$act->registration_date == NULL)
 	    $act->registration_date = $act->emergence_date;
 
@@ -106,7 +106,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
     ");
     if ($ret != NULL)
 	return (new ValueResponse($ret["id"]));
-    if ($Database->query("
+    $qr = "
       INSERT INTO activity
         (is_template,
          id_template,
@@ -120,8 +120,9 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 	)
       VALUES
         ($template, $act->type, $parent, '$codename', NULL $vals)
-    ") == NULL)
-    return (new ErrorResponse("CannotAdd"));
+    ";
+    if ($Database->query($qr) == NULL)
+	return (new ErrorResponse("CannotAdd"));
     $actid = $Database->insert_id;
     foreach ($act->session as $sess)
     {

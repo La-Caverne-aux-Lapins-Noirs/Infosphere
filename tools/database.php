@@ -179,6 +179,8 @@ class Database
 
     function real_escape_string($str)
     {
+	if (is_array($str) && is_admin())
+	    debug_response(backtrack_msg());
 	if (!UNIT_TEST)
 	    return ($this->db->real_escape_string($str)); // @codeCoverageIgnore
 	return ($this->db->escapeString($str));
