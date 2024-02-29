@@ -46,7 +46,7 @@ $gradation = [
     imagecolorallocatealpha($img, 255, 128, 0, 0),
     imagecolorallocatealpha($img, 255, 255, 0, 0),
     imagecolorallocatealpha($img, 128, 255, 0, 0),
-    imagecolorallocatealpha($img,   0, 255, 0, 0)
+   imagecolorallocatealpha($img,   0, 255, 0, 0)
 ];
 imagefill($img, 0, 0, $alpha);
 
@@ -86,10 +86,18 @@ for ($i = 0; $i < 20; ++$i)
 $offset = -pi() / 128;
 $angles = [-pi(), -3 * pi() / 4, -pi() / 2, -pi() / 4, 0];
 
-if (isset($angles[$p]))
-    $p = $angles[$p];
-else
-    $p = pi();
+if ($p < 0)
+    $p = 0;
+if ($p <= 30)
+    $p *= 1/4;
+if ($p <= 45)
+    $p *= 2/4;
+if ($p <= 60)
+    $p *= 3/4;
+if ($p > 90)
+    $p = 90;
+$p = - (1.0 - $p / 90.0) * pi();
+
 if (isset($angles[$a]))
     $a = $angles[$a];
 else

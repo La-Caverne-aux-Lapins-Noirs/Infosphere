@@ -66,8 +66,9 @@ unset($stdin);
 // Si il y a de la donnée
 if (@strlen($input))
 {
-    $input = json_decode($input, true);
-    $DATA = array_merge($DATA, $input);
+    if (($tmp = json_decode($input, true)) == false)
+	parse_str($input, $tmp);
+    $DATA = array_merge($DATA, $tmp);
 }
 // Si il y en a pas et qu'on a précisé une méthode (donc... pas GET, a priori)
 else if (isset($_GET["_method"]) && strtoupper($_GET["_method"]) != "GET")

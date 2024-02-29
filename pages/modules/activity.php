@@ -98,21 +98,44 @@
 	    <?=markdown($act->description, true); ?>
 	</td>
 	<?php if (count($act->medal)) { ?>
-	    <td class="medalscroll" style="text-align: center; vertical-align: middle;">
+	    <td style="text-align: center; vertical-align: middle;">
+		<?php if ($act->codename == "TESTB") { ?>
+		    <?php AddDebugLogR($act->medal); ?>
+		<?php } ?>
 		<?php foreach ($act->medal as $medal) { ?>
 		    <div
 			class="medal_box_picture"
 			style="
-			       display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
+			       display: inline-block;
+			       position: relative;
+			       margin-left: 5px;
+			       margin-right: 5px;
+			       margin-top: 2px;
 			       background-image: url('<?=$medal["icon"]; ?>');
-			       width: 46px !important;
-			       height: 46px !important;
-			       <?php if ($medal["band"] != NULL) { ?>
+			       <?php if (strstr($medal["command"], " sband ") !== false) { ?>
+			       width: <?=$medal_size=42; ?>px !important;
+			       height: <?=$medal_size; ?>px !important;
 			       border-radius: 25px;
 			       border: 2px black solid;
+			       <?php } else { ?>
+			       width: <?=$medal_size=46; ?>px !important;
+			       height: <?=$medal_size; ?>px !important;
 			       <?php } ?>
 			       "
-		    ></div>
+		    >
+			<?php if (@$medal["local"]) { ?>
+			    <img
+				src="res/local.png"
+				style="
+				     position: absolute;
+				     bottom: 0px;
+				     right: -10px;
+				     width: <?=$medal_size / 2; ?>px;
+				     height: <?=$medal_size / 2; ?>px;
+				     "
+			    />
+			<?php } ?>
+		    </div>
 		<?php } ?>
 	    </td>
 	<?php } ?>

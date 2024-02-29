@@ -40,6 +40,20 @@
 	
     </td></tr>
 
+    <?php if ($activity->current_icon) { ?>
+	<tr><td colspan="2" style="text-align: center;">
+	    <div style="
+			background-image: url('<?=$activity->current_icon; ?>');
+			width: 100%; height: 200px;
+			background-size: contain;
+			background-repeat: no-repeat;
+			background-position: center center;
+			"
+	    >
+	    </div>
+	</td></tr>
+    <?php } ?>
+
     <?php if ($activity->unique_session) { ?>
 	<tr><td colspan="2">
 	    <br />

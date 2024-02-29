@@ -173,6 +173,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	    add_log(TRACE, "Insertion failed.", 0); // @codeCoverageIgnore
 	return (new ErrorResponse("CannotRegister")); // @codeCoverageIgnore
     }
+    $new_user_id = $Database->insert_id;
 
     if ($fake == false)
     {
@@ -190,6 +191,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	$out = hand_request([
 	    "command" => "newuser",
 	    "user" => $login,
+	    "id" => $new_user_id,
 	    "first_name" => $first,
 	    "last_name" => $last,
 	    "mail" => $mail,
@@ -347,7 +349,7 @@ function set_user_attributes($user, $new)
     {
 	if (($msg = regenerate_password($user, $new["password"]))->is_error())
 	    return ($msg); // @codeCoverageIgnore
-	$nv = $msg->value;
+	$npassword = $nv = $msg->value;
 	$password_regenerated = true;
 	$forgery[] = "password = '$nv'";
     }
@@ -381,6 +383,12 @@ function set_user_attributes($user, $new)
     if ($password_regenerated)
     {
 	add_log(CRITICAL_USER_DATA, "User ".$user["id"]." changed password.");
+	$out = hand_request([
+	    "command" => "newpassword",
+	    "user" => $user["codename"],
+	    "id" => $user["id"],
+	    "password" => $npassword
+	]);
 	send_password_change_mail($new_user, $new["password"]);
     }
     return (new ValueResponse($new_user));

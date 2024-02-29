@@ -550,6 +550,34 @@ $js = "silent_submit(this)";
 			</div>
 		    <?php } ?>
 		    <?php if (is_teacher_for_activity($module->id)) { ?>
+			<?php $js = "silent_submit(this, 'icon_configuration_$k');"; ?>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/icon"
+			>
+			    <label for="file"><?=$Dictionnary["Icon"]; ?></label>
+			    <input type="hidden" name="language" value="<?="NA"; ?>" />
+			    <input
+				type="file"
+				name="file"
+				multiple="true"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+		    <?php } ?>		    
+		    <?php if (is_assistant_for_activity($module->id)) { ?>
+			<div id="icon_configuration_<?=$k; ?>">
+			    <?php if (isset($module->icon["NA"][0])) { ?>
+			    <div
+				class="wallpaper_sample" style="background-image: url('<?=$module->icon["NA"][0]; ?>');"
+				ondblclick="window.open('<?=$module->icon["NA"][0]; ?>', '_blank');"
+			    >
+			    </div>
+			    <?php } ?>
+			</div>
+		    <?php } ?>
+		    <?php if (is_teacher_for_activity($module->id)) { ?>
 			<?php $js = "silent_submit(this, 'intro_configuration_$k');"; ?>
 			<form
 			    method="post"
@@ -600,8 +628,9 @@ $js = "silent_submit(this)";
 			<div id="music_configuration_<?=$k; ?>">
 			    <?php
 			    $file_browser_height =
-				"calc(100% - 3 * 35px ".
+				"calc(100% - 4 * 35px ".
 				(isset($module->wallpaper["NA"][0]) ? "- 50px " : "").
+				(isset($module->icon["NA"][0]) ? "- 50px " : "").
 				(isset($module->intro["NA"][0]) ? "- 50px " : "").
 				")";
 			    $language = $k;

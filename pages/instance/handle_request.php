@@ -85,44 +85,6 @@ if ($User != NULL && isset($_POST["action"]))
 	$request = add_slot_layer($session);
 	$LogMsg = "SlotsGenerated";
     }
-    else if ($_POST["action"] == "add_teacher")
-    {
-	/////////////////////////////////////////////////////////////////////////////// C'EST PETEE CAR NON MIGREE DEPUIS LA REFACTO FULL ACTIVITY
-	// Je suis un prof, je veux ajouter des professeurs responsable sur l'activité
-	if (!$activity->is_teacher)
-	{
-	    $request = new ErrorResponse("PermissionDenied");
-	    @add_log(REPORT, "I have tried to add teachers and I am not a teacher.");
-	}
-	else
-	{
-	    if ($session != NULL)
-		@$request = add_teacher($session["id_session"], $_POST["logins"]);
-	    else
-		@$request = add_teacher($instance["id_instance"], $_POST["logins"], "instance");
-	    $LogMsg = "TeachersAdded";
-	}
-    }
-    else if ($_POST["action"] == "remove_teacher")
-    {
-	/////////////////////////////////////////////////////////////////////////////// C'EST PETEE CAR NON MIGREE DEPUIS LA REFACTO FULL ACTIVITY
-	// Je suis un prof, je veux ajouter des professeurs responsable sur l'activité
-	if (!$activity->is_teacher)
-	{
-	    $request = new ErrorResponse("PermissionDenied");
-	    @add_log(REPORT, "I have tried to remove teachers and I am not a teacher.");
-	}
-	else if (!isset($_POST["type"]) || ($_POST["type"] != "laboratory" && $_POST["type"] != "user"))
-	    $request = new ErrorResponse("InvalidParameter");
-	else
-	{
-	    require_once ("remove_teacher.php");
-
-	    @$request = remove_teacher($session, $_POST["type"], $_POST["id"], $_POST["activity"]);
-	    @$request = remove_teacher($session, $_POST["type"], $_POST["id"], $_POST["activity"]);
-	    $LogMsg = "TeacherRemoved";
-	}
-    }
     else if ($_POST["action"] == "add_medal")
     {
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -249,15 +211,6 @@ if ($User != NULL && isset($_POST["action"]))
 	    }
 	}
     }
-    else if ($_POST["action"] == "edit_date")
-    {
-	if ($activity->is_teacher)
-	{
-	    require ("edit_dates.php");
-
-	    edit_dates($activity, $activity->unique_session, $_POST);
-	}
-    }
     else if ($_POST["action"] == "delete_session")
     {
 	if ($activity->is_teacher && $activity->unique_session != NULL)
@@ -270,36 +223,6 @@ if ($User != NULL && isset($_POST["action"]))
 	if ($activity->is_teacher)
 	{
 	    mark_as_deleted("activity", $activity->id);
-	}
-    }
-    else if ($_POST["action"] == "link_course")
-    {
-	// Ce bout de code ne devrait pas être la mais sur la page des modèles d'activités -- C'EST PETEE CAR NON MIGREE DEPUIS LA REFACTO FULL ACTIVITY
-	if ($activity->is_teacher)
-	{
-	    if (($codename = resolve_codename("class_gallery", $_POST["course"]))->is_error())
-		$request = $codename;
-	    else if (!is_number($_POST["chapter"]))
-		$request = new ErrorResponse("InvalidParameter");
-	    else
-	    {
-		$id = $codename->value;
-		$chapter = $_POST["chapter"];
-		$sel = db_select_one("
-                   id
-                   FROM class_gallery_asset
-                   WHERE id_class_gallery = $id AND chapter = $chapter
-		");
-		$request = add_link($instance["id_activity"], $sel["id"], "activity", "class_gallery_asset");
-	    }
-	}
-    }
-    else if ($_POST["action"] == "remove_course")
-    {
-	// Pareil, ca n'a rien a faire la
-	if ($activity->is_teacher && is_number($_POST["link"]))
-	{
-	    $Database->query("DELETE FROM activity_class_gallery_asset WHERE id = ".$_POST["link"]);
 	}
     }
     else if ($_POST["action"] == "subscribe_all")
@@ -390,21 +313,8 @@ if ($User != NULL && isset($_POST["action"]))
     }
     else if ($_POST["action"] == "declare_present")
     {
-	if ($activity->registered && !$activity->registered_elsewhere && $activity->unique_session != NULL && $activity->user_team["present"] == 0 &&
-	    period(date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute, $activity->unique_session->end_date)
-	)
-	{
-	    if (period(date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute,
-		       date_to_timestamp($activity->unique_session->begin_date) + $five_minute * 3))
-	    $request = @update_table(
-		"team", $activity->user_team["id"], ["present" => 1, "declaration_date" => db_form_date(now())]
-	    );
-	    else
-		$request = @update_table(
-		    "team", $activity->user_team["id"], ["present" => -1, "declaration_date" => db_form_date(now())]
-		);
-	    $LogMsg = "PresenceDeclared";
-	}
+	if (!($request = declare_presence($activity, $activity->unique_session, $User))->is_error())
+	    $LogMsg = $request->value;
     }
     else if ($_POST["action"] == "add_room")
     {
@@ -412,16 +322,6 @@ if ($User != NULL && isset($_POST["action"]))
 	{
 	    $request = add_links($_POST["session"], $_POST["rooms"], "session", "room", true);
 	    $LogMsg = "RoomAdded";
-	}
-	else
-	    $request = new ErrorResponse("PermissionDenied");
-    }
-    else if ($_POST["action"] == "remove_room")
-    {
-	if ($activity->is_teacher)
-	{
-	    $request = remove_links($_POST["session"], $_POST["rooms"], "session", "room", true);
-	    $LogMsg = "RoomRemoved";
 	}
 	else
 	    $request = new ErrorResponse("PermissionDenied");

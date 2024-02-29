@@ -119,4 +119,4 @@ function error_backtrace($errno, $errstr, $errfile, $errline, $errcontext)
         exit(1);
 }
 
-// set_error_handler('error_backtrace');
+set_error_handler('error_backtrace');

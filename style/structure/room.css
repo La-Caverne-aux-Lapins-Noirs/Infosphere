@@ -33,11 +33,11 @@
 .desk
 {
     position: absolute;
-    width: 15px;
-    height: 15px;
-    background-position: center center;
-    background-size: cover;
-    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+    background-position: center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
 }
 
 .roomdiv .info h5
@@ -59,6 +59,7 @@
     position: absolute;
     left: 10px;
     width: calc(100% - 20px);
+    font-size: x-small;
 }
 
 .roomdiv .sublist_of_link div
@@ -75,4 +76,5 @@
 {
     width: 50%;
     text-align: center;
+    font-size: small;
 }

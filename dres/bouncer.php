@@ -80,6 +80,8 @@ if ($type == "activity")
     // On est responsable?
     if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
 	render_file();
+    if ($target[3] == "ressource" && ($target[4] == "admin" || $target[4] == "private"))
+	forbidden();
     // C'est pas la configuration?
     if ($target[2] == "configuration.dab")
 	not_found(); // Trop d'informations pour les étudiants...

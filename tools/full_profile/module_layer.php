@@ -3,11 +3,12 @@
 class ModuleLayer extends Layer
 {
     public $LAYER = "MODULE";
+
     public $mandatory_percent = 0;
     public $current_percent = 0;
     public $grade = -1;
     public $hidden = false;
-    public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
+
     public $maximum_subscription = -1;
     public $manual_grade = NULL;
     public $manual_credit = NULL;
@@ -19,12 +20,13 @@ class ModuleLayer extends Layer
     public $validation = FullActivity::RANK_VALIDATION;
     
     public $configuration = [];
+    
     public $allow_unregistration = true;
     public $emergence_date = NULL;
     public $done_date = NULL;
     public $registration_date = NULL;
     public $close_date = NULL;
-    public $type_type = 0; // Const
+    public $type_type = MODULE_OR_PICKABLE; // Const
 
     // Les scores de la validation principale
     public $valid_grade_a = 0;
@@ -117,7 +119,6 @@ class ModuleLayer extends Layer
 		    "blist" => $blist
 	    ]) == false)
 	        return (false);
-	    // false, false, $sub->id_session, NULL, ["id" => $user_id], false, $only_user, $blist);
 	    
 	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
@@ -157,6 +158,7 @@ class ModuleLayer extends Layer
                    activity_user_medal.result as result,
                    medal.id as id,
                    medal.codename as codename,
+		   medal.command as command,
                    medal.{$Language}_name as name,
                    medal.{$Language}_description as description,
                    medal.type as type,
@@ -178,6 +180,7 @@ class ModuleLayer extends Layer
 		foreach ($acquired as $med)
 		    if ($med["type"] == 2) // Eliminatoire
 			$eliminatory = true;
+		
 		foreach ($acquired as $med)
 		{
 		    $med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
@@ -186,6 +189,7 @@ class ModuleLayer extends Layer
 		    $med["band"] = $Configuration->MedalsDir($med["codename"])."band.png";
 		    if (!file_exists($med["band"]))
 			$med["band"] = NULL;
+		    
 		    if ($med["id_activity"] == $module_id)
 			$target = &$this;
 		    else
@@ -194,7 +198,7 @@ class ModuleLayer extends Layer
 		    // Si c'est une note, elle est forcement locale
 		    if (is_note($med["codename"])) //  && $this->validation == FullActivity::GRADE_VALIDATION)
 			$med["local"] = true;
-		    
+
 		    if (!isset($target->medal[$med["codename"]]))
 		    {
 			$target->medal[$med["codename"]] = array_merge($med, [
@@ -202,7 +206,7 @@ class ModuleLayer extends Layer
 			    "failure_list" => [],
 			    "success" => 0,
 			    "success_list" => [],
-			    "local_sum" => 0
+			    "local_sum" => 0,
 			]);
 			unset($target->medal[$med["codename"]]["result"]);
 			unset($target->medal[$med["codename"]]["activity_name"]);
@@ -217,8 +221,11 @@ class ModuleLayer extends Layer
 		    {
 			$target->medal[$med["codename"]]["success"] += 1;
 			$target->medal[$med["codename"]]["success_list"][] =
-			    ($med["activity_name"] != "" ? $med["activity_name"] : $med["activity_codename"]);
-			if ($med["local"] == 1)
+			    ($med["activity_name"] != ""
+				? $med["activity_name"] : $med["activity_codename"]).
+			    ($med["local"] ? " (L) " : "")
+			;
+			if ($med["local"])
 			    $target->medal[$med["codename"]]["local_sum"] += 1;
 		    }
 		    if (!isset($target->medal[$med["codename"]]["module_medal"]))

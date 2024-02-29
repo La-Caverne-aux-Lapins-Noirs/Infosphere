@@ -62,7 +62,7 @@ class Database
 	$this->debug = $debug;
     }
 
-    function query($req, $display = false)
+    function query($req, $display = false, $multi = false)
     {
 	global $DBPerf;
 	global $DBHistory;
@@ -108,7 +108,11 @@ class Database
 		debug_response($req);
 	}
 	$Before = microtime(true);
-	if (($last_query = @$this->db->query($req)) == NULL)
+	if ($multi)
+	    $last_query = @$this->db->multi_query($req);
+	else
+	    $last_query = @$this->db->query($req);
+	if ($last_query == NULL)
 	{
 	    $msg = "";
 	    // @codeCoverageIgnoreStart

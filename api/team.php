@@ -60,6 +60,8 @@ function SetUserTeam($id, $data, $method, $output, $module)
     unset($data["id_status"]);
     unset($data["id"]);
     unset($data["code"]);
+
+    $edited = false;
     
     if (isset($data["medal"]))
     {
@@ -68,13 +70,14 @@ function SetUserTeam($id, $data, $method, $output, $module)
 	foreach ($data["medal"]->value as $medal)
 	{
 	    if ($method == "DELETE")
-		$data["medal"] = -1 * abs($data["medal"]);
+		$medal = -1 * abs($medal);
 	    else
-		$data["medal"] = +1 * abs($data["medal"]);
+		$medal = +1 * abs($medal);
 	    if (($ret = edit_medal(
-		$data["user"], $data["medal"], $act["id"])
+		$id_user, $medal, $act["id"])
 	    )->is_error())
-		return ($ret);
+	        return ($ret);
+	    $edited = true;
 	}
 	unset($data["medal"]);
 	if (!count($data))
@@ -88,7 +91,9 @@ function SetUserTeam($id, $data, $method, $output, $module)
     ")["id"];
     if (db_update_one("user_team", $id_user_team, $data))
 	return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
-    return (new ErrorResponse("NothingToBeDone"));
+    if (!$edited)
+	return (new ErrorResponse("NothingToBeDone"));
+    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
 }
 
 function SetTeamCommentaries($id, $data, $method, $output, $module)

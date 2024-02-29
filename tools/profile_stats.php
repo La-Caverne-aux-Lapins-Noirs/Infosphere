@@ -55,6 +55,13 @@ if (isset($data["avg_intra_logs"]) && isset($data["avg_work_logs"]))
 	else
 	    $data["avg_logs"][$k] += $v;
     }
+    foreach ($data["avg_distant_logs"] as $k => $v)
+    {
+	if (!isset($data["avg_logs"][$k]))
+	    $data["avg_logs"][$k] = $v;
+	else
+	    $data["avg_logs"][$k] += $v;
+    }
 }
 
 if (isset($data["intra_logs"]) && isset($data["work_logs"]))
@@ -62,6 +69,13 @@ if (isset($data["intra_logs"]) && isset($data["work_logs"]))
     foreach ($data["intra_logs"] as $k => $v)
 	$data["logs"][$k] = $v;
     foreach ($data["work_logs"] as $k => $v)
+    {
+	if (!isset($data["logs"]))
+	    $data["logs"][$k] = $v;
+	else
+	    $data["logs"][$k] += $v;
+    }
+    foreach ($data["distant_logs"] as $k => $v)
     {
 	if (!isset($data["logs"]))
 	    $data["logs"][$k] = $v;
@@ -102,20 +116,35 @@ $realwhite = imagecolorallocatealpha($img, 255, 255, 255, 0);
 
 $white = imagecolorallocatealpha($img, 64, 64, 64, 0);
 $whitea = imagecolorallocatealpha($img, 64, 64, 64, 90);
+
 $pink = imagecolorallocatealpha($img, 250, 128, 128, 0);
 $pinka = imagecolorallocatealpha($img, 250, 128, 128, 90);
+$darkpink = imagecolorallocatealpha($img, 125, 64, 64, 0);
+$darkpinka = imagecolorallocatealpha($img, 125, 64, 64, 90);
+
+$lightgrey = imagecolorallocatealpha($img, 64+128, 64+128, 64+128, 0);
+$lightgreya = imagecolorallocatealpha($img, 64+128, 64+128, 64+128, 60);
+$grey = imagecolorallocatealpha($img, 64, 64, 64, 0);
+$greya = imagecolorallocatealpha($img, 64, 64, 64, 60);
 $darkgrey = imagecolorallocatealpha($img, 16, 16, 16, 0);
 $darkgreya = imagecolorallocatealpha($img, 16, 16, 16, 60);
-$darkgreena = imagecolorallocatealpha($img, 0, 128, 0, 90);
-$darkgreen = imagecolorallocatealpha($img, 0, 128, 0, 0);
-$greena = imagecolorallocatealpha($img, 0, 255, 0, 90);
-$green = imagecolorallocatealpha($img, 0, 255, 0, 0);
-$lightgreena = imagecolorallocatealpha($img, 128, 255, 128, 90);
+
 $lightgreen = imagecolorallocatealpha($img, 128, 255, 128, 0);
+$lightgreena = imagecolorallocatealpha($img, 128, 255, 128, 90);
+$green = imagecolorallocatealpha($img, 0, 255, 0, 0);
+$greena = imagecolorallocatealpha($img, 0, 255, 0, 90);
+$darkgreen = imagecolorallocatealpha($img, 0, 128, 0, 0);
+$darkgreena = imagecolorallocatealpha($img, 0, 128, 0, 90);
+
+$blue = imagecolorallocatealpha($img, 0, 0, 255, 0);
+$bluea = imagecolorallocatealpha($img, 0, 0, 255, 90);
+$darkblue = imagecolorallocatealpha($img, 0, 0, 128, 0);
+$darkbluea = imagecolorallocatealpha($img, 0, 0, 128, 60);
+
+
 $red = imagecolorallocatealpha($img, 255, 0, 0, 0);
 $reda = imagecolorallocatealpha($img, 255, 0, 0, 90);
-$darkblue = imagecolorallocatealpha($img, 0, 128, 255, 0);
-$darkbluea = imagecolorallocatealpha($img, 0, 128, 255, 60);
+
 $yellow = imagecolorallocatealpha($img, 255, 255, 0, 0);
 $teal = imagecolorallocatealpha($img, 0, 255, 255, 0);
 $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
@@ -167,12 +196,15 @@ $hh = ($h - 100) / $laddersize;
 // On affiche les valeurs. On commence par la fin.
 for ($index = $endday - $startday - 1; $index >= 0; --$index)
 {
-    $coords = draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $darkgreya, $darkgrey);
-    draw_area($data, "avg_work_logs", $startday, $index, $laddersize, $whitea, $white, [$coords[8], $coords[9]]);
-    draw_area($data, "avg_lock_logs", $startday, $index, $laddersize, $pinka, $pink, [$coords[8], $coords[9]]);
+    $coords = draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $darkbluea, $darkblue);
+    draw_area($data, "avg_work_logs", $startday, $index, $laddersize, $darkgreena, $darkgreen, [$coords[8], $coords[9]]);
+    draw_area($data, "avg_distant_logs", $startday, $index, $laddersize, $darkpinka, $darkpink, [$coords[8], $coords[9]]);
+    draw_area($data, "avg_lock_logs", $startday, $index, $laddersize, $greya, $grey, [$coords[8], $coords[9]]);
     
-    $coords = draw_area($data, "intra_logs", $startday, $index, $bladder, $darkgreena, $darkgreen);
+    $coords = draw_area($data, "intra_logs", $startday, $index, $bladder, $bluea, $blue);
     $coords = draw_area($data, "work_logs", $startday, $index, $bladder, $greena, $green, [$coords[8], $coords[9]]);
+    $coords = draw_area($data, "distant_logs", $startday, $index, $bladder, $pinka, $pink, [$coords[8], $coords[9]]);
+    $coords = draw_area($data, "lock_logs", $startday, $index, $bladder, $lightgreya, $lightgrey, [$coords[8], $coords[9]]);
 
     $coords = draw_area($data, "presence", $startday, $index, $bladder, $darkbluea, $darkblue);
     draw_area($data, "late", $startday, $index, $bladder, $darkbluea, $darkblue, [$coords[8], $coords[9]]);
@@ -239,12 +271,16 @@ imageline($img, $w - $w / $len / 2, 50, $w - $w / $len / 2, $h - 50, $lines);
 
 $xp = $w / $len / 2;
 $col = [
-    "avg_intra_logs" => $darkgrey,
-    "avg_work_logs" => $white,
-    "avg_lock_logs" => $pink,
-    "intra_logs" => $darkgreen,
+    "avg_intra_logs" => $darkblue,
+    "avg_work_logs" => $darkgreen,
+    "avg_distant_logs" => $darkpink,
+    "avg_lock_logs" => $grey,
+    
+    "intra_logs" => $blue,
     "work_logs" => $green,
-    "lock_logs" => $lightgreen,
+    "distant_logs" => $pink,
+    "lock_logs" => $lightgrey,
+    
     "presence" => $darkblue,
     "late" => $darkbluea,
     "delivery" => $yellow,
@@ -261,7 +297,7 @@ foreach ($data as $k => $v)
     imagefilledrectangle(
 	$img, $xp + $bbox[6] - 5, 0, $xp + $bbox[2] + 5, 30, $col[$k]
     );
-    if ($k != "avg_intra_logs" && $k != "avg_work_logs")
+    if (substr($k, 0, 3) != "avg")
     {
 	imagettftext($img, 10, 0, $xp - 1, 15, $black, $fnt, $k);
 	imagettftext($img, 10, 0, $xp, 15, $black, $fnt, $k);

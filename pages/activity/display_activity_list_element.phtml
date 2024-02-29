@@ -55,7 +55,6 @@
 		    <span style="color: red; <?=$txt; ?>">&#127979;&#xFE0E;</span>
 		<?php } ?>
 	    <?php } ?>	    
-	    <br />
 
 	<?php } ?>
 	
@@ -78,6 +77,13 @@
 	    <span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
 	<?php } else { ?>
 	    <span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php } ?>
+
+	<?php $txt = 'title="'.$Dictionnary["SubjectConfigured"].'"'; ?>
+	<?php if ($act->subject != NULL) { ?>
+	    <span style="color: green;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
+	<?php } else { ?>
+	    <span style="color: red;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
 	<?php } ?>
 
 	<?php $txt = 'title="'.$Dictionnary["CycleConfigured"].'"'; ?>

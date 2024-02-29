@@ -195,6 +195,13 @@ function PickupActivity($id, $data, $method, $output, $module)
     if ($id == -1)
 	bad_request();
     $team = $data["pickup"];
+    // Indique s'il faut récupérer le ramassage ou le dépot live
+    $alive = false;
+    if (isset($data["alive"]))
+	$alive = !!$data["alive"];
+    $official = false;
+    if (isset($data["official"]))
+	$official = !!$data["official"];
     $team_leader = db_select_one("
 	user.codename
 	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
@@ -209,9 +216,11 @@ function PickupActivity($id, $data, $method, $output, $module)
 	return (new ErrorResponse("NoRepositoryConfigured"));
     
     $ret = hand_request([
-	"command" => "pickup",
-	"login" => $team_leader,
-	"work" => $activity
+	"command" => "retrieve",
+	"user" => $team_leader,
+	"repo" => $activity,
+	"alive" => $alive,
+	"official" => $official
     ]);
     if (!isset($ret["result"]) || $ret["result"] != "ok")
 	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
@@ -658,18 +667,32 @@ function AddMedal($id, $data, $method, $output, $module)
 	$medal = $data["codename"];
     else
 	bad_request();
-    if (($err = handle_linksf([
-	"left_value" => $id,
-	"right_value" => $medal,
-	"left_field_name" => "activity",
-	"right_field_name" => "medal",
-	"properties" => [
-	    "mark" => 0,
-	    "local" => 0,
-	    "role" => 1
-	]
-    ]))->is_error()) {
-	return ($err);
+    if (($medal = split_symbols($medal))->is_error())
+	return ($medal);
+    if (($act = db_select_one("parent_activity FROM activity WHERE id = $id")) == NULL)
+	not_found();
+    if (($act = $act["parent_activity"]) === NULL)
+	$act = -1;
+    foreach ($medal->value as $med)
+    {
+	$pfx = get_prefix($med);
+	$neg = $pfx["negative"] ? "-" : "";
+	if (($err = handle_linksf([
+	    "left_value" => $id,
+	    "right_value" => $neg.$pfx["label"],
+	    "left_field_name" => "activity",
+	    "right_field_name" => "medal",
+	    "properties" => [
+		"mark" => isset($pfx["parameters"][0]) && $act != -1 ? (int)($pfx["parameters"][0]) : 0,
+		"local" => $pfx["prefix"] == "#" ? 1 : 0,
+		"role" =>
+		    $act != -1 ?
+			($pfx["prefix"] == "$" ? -1 : 1) :
+			(isset($pfx["parameters"][0]) ? $pfx["parameters"][0] : 1),
+	    ]
+	]))->is_error()) {
+	    return ($err);
+	}
     }
     ob_start();
     ($module = new FullActivity)->build($id);
@@ -935,7 +958,7 @@ function AddMood($id, $data, $method, $output, $module)
 
     if ($id == -1 || !isset($data["file"]) || !isset($data["action"]))
 	bad_request();
-    if (in_array($action = $data["action"], ["wallpaper", "mood", "intro"]) == false)
+    if (in_array($action = $data["action"], ["wallpaper", "icon", "mood", "intro"]) == false)
 	bad_request();
     if (!isset($data["path"]))
 	$data["path"] = "";
@@ -953,8 +976,8 @@ function AddMood($id, $data, $method, $output, $module)
 	$content = base64_decode($files["content"]);
 	new_directory($target);
 	$tar = NULL;
-	if (in_array($ext, ["jpg", "jpeg", "png"]) && $action == "wallpaper")
-	    $tar = $root."wallpaper.".$ext;
+	if (in_array($ext, ["jpg", "jpeg", "png"]) && ($action == "wallpaper" || $action == "icon"))
+	    $tar = $root.$action.".".$ext;
 	else if (in_array($ext, ["mp4", "ogv"]) && $action == "intro")
 	    $tar = $root."intro.".$ext;
 	else if (in_array($ext, ["txt"]) && $action == "mood")
@@ -977,6 +1000,13 @@ function AddMood($id, $data, $method, $output, $module)
 	<div
 	    class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper[$language][0]; ?>?<?=now(); ?>');"
 	    ondblclick="window.open('<?=$module->wallpaper[$language][0]; ?>', '_blank');"
+	>
+	</div>
+    <?php }
+    if ($action == "icon") { ?>
+	<div
+	    class="wallpaper_sample" style="background-image: url('<?=$module->icon[$language][0]; ?>?<?=now(); ?>');"
+	    ondblclick="window.open('<?=$module->icon[$language][0]; ?>', '_blank');"
 	>
 	</div>
     <?php }

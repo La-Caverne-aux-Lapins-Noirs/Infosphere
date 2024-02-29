@@ -38,9 +38,20 @@ function search($codename)
 		    continue ;
 		if ($name == "user")
 		{
-		    $r["icon"] = $Configuration->UsersDir($r["codename"])."/photo.png";
+		    $r["icon"] = $Configuration->UsersDir($r["codename"])."/admin/photo.png";
 		    if (!file_exists($r["icon"]))
-			$r["icon"] = "res/no_avatar.png";
+		    {
+			$r["icon"] = $Configuration->UsersDir($r["codename"])."/public/avatar.png";
+			if (!file_exists($r["icon"]))
+			    $r["icon"] = "res/no_avatar.png";
+		    }
+		}
+		else if ($name == "activity")
+		{
+		    ($a = new FullActivity)->build($r["id"]);
+		    if (!strlen($r["icon"] = $a->current_icon))
+		    	if (!strlen($r["icon"] = $a->current_wallpaper))
+			    $r["icon"] = "";
 		}
 		$new = $r;
 		$new["address"] = "index.php?p=".$fields["position"]."&amp;a=".$r["id"];

@@ -1,3 +1,30 @@
+<?php
+$Status = [
+    $Dictionnary["Free"],
+    $Dictionnary["Used"],
+    $Dictionnary["Locked"],
+    $Dictionnary["Unavailable"],
+];
+$Color = [
+    "rgba(0, 255, 0, 0.3)",
+    "rgba(255, 0, 0, 0.3)",
+    "rgba(0, 0, 255, 0.3)",
+    "rgba(0, 0, 0, 0.3)",
+];
+$BColor = [
+    "rgba(0, 255, 0, 1.0)",
+    "rgba(255, 0, 0, 1.0)",
+    "rgba(0, 0, 255, 1.0)",
+    "rgba(0, 0, 0, 1.0)",
+];
+$Types = [
+    "/res/linux.png",
+    "/res/windows.png",
+    "/res/mac.png",
+    "/res/rpi.png",
+];
+?>
+
 <div>
     <h2 class="alignable_blocks"><?=$Dictionnary["Rooms"]; ?></h2>
     <form
@@ -18,12 +45,29 @@
 <?php }?>
 
 <div class="fullscreen scrollable" id="roomlist">
-    <?php foreach (fetch_rooms(-1, true) as $room) require ("display_room.phtml"); ?>
+    <?php
+    $rooms = $trooms = fetch_rooms(-1, true);
+    if (($my_room = where_am_i()) != NULL)
+    {
+	$rooms = [];
+	foreach ($trooms as $room)
+	    if (isset($my_room["id"]) && $room["id"] == $my_room["id"])
+		$my_room = [$room];
+	    else
+		$rooms[] = $room;
+	$rooms = array_merge($my_room, $rooms);
+    }
+    ?>
+    <?php foreach ($rooms as $room) require ("display_room.phtml"); ?>
 </div>
 
 <?php if (is_director()) { ?>
     </td><td class="formular_slot">
         <?php require ("add_room.phtml"); ?>
+	<?php if (($nd = db_select_all("* FROM room_desk WHERE id_room = -1"))) { ?>
+	    <br /><br />
+	    <?php require ("manage_desks.php"); ?>
+	<?php } ?>
     </td></tr></table>
 <?php } ?>
   

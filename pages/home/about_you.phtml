@@ -4,7 +4,7 @@
     <?php display_avatar($User); ?>
 </td><td>
     <img
-	src="tools/student_status.php"
+	src="tools/student_status.php?p=<?=get_week_average($User); ?>"
 	id="student_status"
 	title="<?=$Dictionnary["StudentStatusGraph"]; ?>"
     />
@@ -45,4 +45,13 @@
     <br />
     <?php $today_time = get_student_log(); ?>
     Aujourd'hui, vous avez travaillé <?=(int)($today_time / 60.0 / 60.0); ?> heures, <?=(int)(($today_time / 60.0) % 60); ?> minutes et <?=(int)($today_time % 60); ?> secondes.
+    <?php if (($wai = where_am_i()) != []) { ?>
+	<?php $rooms = $trooms = fetch_rooms(-1, true); ?>
+	<?php foreach ($trooms as $room) { ?>
+	    <?php if (isset($wai["id"]) && $room["id"] == $wai["id"]) { ?>
+		<br /><br />
+		<?=$Dictionnary["YouAreLocatedInRoom"]; ?> '<?=$room["name"]; ?>'
+	    <?php } ?>
+	<?php } ?>
+    <?php } ?>
 </p>

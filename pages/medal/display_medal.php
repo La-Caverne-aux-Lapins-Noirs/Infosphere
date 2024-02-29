@@ -13,23 +13,38 @@
     <h2><?=$Dictionnary["Activities"]; ?></h2>
     <?php 
     $activities = db_select_all("
-    activity.{$Language}_name as name, activity.* FROM activity_medal
+    activity.{$Language}_name as name,
+    activity.*,
+    activity_medal.local
+    FROM activity_medal
     LEFT JOIN activity ON activity.id = activity_medal.id_activity
     WHERE activity_medal.id_medal = ".$medal["id"]."
     ");
     ?>
     <table>
 	<tr>
+	    <?php if (is_admin()) { ?>
+		<th><?=$Dictionnary["Template"]; ?></th>
+	    <?php } ?>
 	    <th><?=$Dictionnary["Name"]; ?></th>
 	    <th><?=$Dictionnary["CodeName"]; ?></th>
+	    <th><?=$Dictionnary["Local"]; ?></th>
 	    <th><?=$Dictionnary["Date"]; ?></th>
 	</tr>
 	<?php $i = 0; ?>
 	<?php foreach ($activities as $act) { ?>
-	    <tr style="<?=$i++ % 2 ? "background-color: lightgray;": ""; ?>"><td>
+	    <tr style="<?=$i++ % 2 ? "background-color: lightgray;": ""; ?>">
+		<?php if (is_admin()) { ?>
+		    <td>
+			<?=$act["is_template"]; ?>
+		    </td>
+		<?php } ?>
+		<td>
 		<?=$act["name"]; ?>
 	    </td><td>
 		<?=$act["codename"]; ?>
+	    </td><td>
+		<?=$act["local"]; ?>
 	    </td><td>
 		<?php if (!$act["is_template"] && $act["parent_activity"] != NULL && $act["parent_activity"] != -1) { ?>
 		    <?=datex("d/m/Y", $act["subject_appeir_date"]); ?>
@@ -44,7 +59,7 @@
     <h2><?=$Dictionnary["Users"]; ?></h2>
     <?php
     $user = db_select_all("
-    user.codename, user_medal.id as id_user_medal FROM user_medal
+    user.codename, user.id, user_medal.id as id_user_medal FROM user_medal
     LEFT JOIN user ON user.id = user_medal.id_user
     WHERE user_medal.id_medal = {$medal["id"]}
     ");
@@ -57,16 +72,23 @@
 	<?php $i = 0; ?>
 	<?php foreach ($user as $u) { ?>
 	    <tr style="<?=$i++ % 2 ? "background-color: lightgray;": ""; ?>"><td>
-		<?=$u["codename"]; ?>
+		<?=$u["codename"]; ?> <?=is_admin() ? "(#".$u["id"].")" : ""; ?>
 	    </td><td>
+		<?=is_admin() ? "(#".$u["id_user_medal"].")" : ""; ?>
 		<?php
 		$aum = db_select_all("
-                   activity.codename, activity.{$Language}_name as name, activity_user_medal.* FROM activity_user_medal
+                   activity.codename,
+		   activity.{$Language}_name as name,
+		   activity_user_medal.*
+		   FROM activity_user_medal
                    LEFT JOIN activity ON activity.id = activity_user_medal.id_activity
                    WHERE id_user_medal = {$u["id_user_medal"]}
 		   ");
 		foreach ($aum as $a) { ?>
-		    <?=$a["name"]; ?> (<?=$a["codename"]; ?>)<br />
+		    <?=$a["name"]; ?>
+		    (<?=$a["codename"]; ?>
+		    <?=is_admin() ? "#".$a["id"] : ""; ?>)
+		    <br />
 		<?php } ?>
 	    </td></tr>
 	<?php } ?>

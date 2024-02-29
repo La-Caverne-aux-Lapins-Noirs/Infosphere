@@ -21,6 +21,11 @@ require_once (__DIR__."/print_control_buttons.php");
 
 $in_template = $start < $one_day * 7 * 20;
 $projects = collect_projects($start, $end, $wlist, $is_filtered);
+
+$alt_colors = [
+    "",
+    ""
+];
 ?>
 
 <div class="calendar_menu">
@@ -62,18 +67,24 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
     // sachant que la frise fait
     $project_columns = [];
     $nbr_week = round(($end - $start) / $one_week);
+    $week_cnt = -1;
 
     // On avance de semaine en semaine.
     for ($period = $start; $period < $end; $period += $one_week)
     {
+	$week_cnt += 1;
     ?>
 	<tr>
-	    <td rowspan="2">
+	    <td rowspan="2" style="<?=$alt_colors[$week_cnt % count($alt_colors)]; ?>"
 		<p><?=floor(($period - $first_week_date) / $one_week) + 1; ?></p>
 	    </td>
 
 	    <?php if ($period == $start) { // Merge a complete column ?>
-		<td rowspan="<?=$nbr_week * 19; ?>" style="width: 20px;" class="calendar_project_container">
+		<td
+		    rowspan="<?=$nbr_week * 19; ?>"
+		    class="calendar_project_container"
+		    style="width: 20px;"
+		>
 		    <?php for ($c = 0; $c < $nbr_week * 7; ++$c) { ?>
 			<div style="position: absolute; width: 20px; height: <?=(100 / ($nbr_week * 7)); ?>%; top: <?=($c + 0.5) * (100 / ($nbr_week * 7)); ?>%;">
 			    <?=$c % 7 + 1; ?>
@@ -89,9 +100,24 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
 		    <?php print_projects($projects); ?>
 		</td>
 	    <?php } ?>
-	    <td rowspan="2"></td>
+	    <td rowspan="2" style="
+			 <?php if ($week_cnt != 0) { ?>
+			 border-top: 2px solid black !important;
+			 <?php } ?>
+			 <?=$alt_colors[$week_cnt % count($alt_colors)]; ?>
+			 "
+	    ></td>
 	    <?php for ($i = 0; $i < 7; ++$i) { ?>
-		<td class="day_column <?=same_day($period + $one_day * $i, time()) ? "today" : ""; ?>">
+		<td
+		    class="day_column <?=same_day($period + $one_day * $i, time()) ? "today" : ""; ?>"
+		    style="
+			   <?php if ($week_cnt != 0) { ?>
+			   border-top: 2px solid black !important;
+			   <?php } ?>
+			   font-size: x-small;
+			   <?=$alt_colors[$week_cnt % count($alt_colors)]; ?>
+			   "
+		>
 		    <?=$Dictionnary[$Days[$i]]; ?>
 		    <?=date('d', $period + $one_day * $i); ?>
 		    <?=$Dictionnary[date('F', $period + $one_day * $i)]; ?>
@@ -99,7 +125,7 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
 	    <?php } ?>
 	</tr>
 
-	<tr>
+	<tr style="<?=$alt_colors[$week_cnt % count($alt_colors)]; ?>">
 	    <?php $short_projects = collect_short_projects($period, $wlist, $is_filtered);  ?>
 	    <td colspan="7" style="height: <?=20 * (count($short_projects) == 0 ? 1 : count($short_projects)); ?>px;">
 		<div class="short_projects_container" style="height: <?=20 * count($short_projects); ?>px;">
@@ -108,11 +134,13 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
 	    </td>
 	</tr>
 
-	<tr>
-	    <td style="height: 90%;" rowspan="17">
-		<p class="vertical" style="padding-left: 12px;">
-		    <?=date("d/m/Y", $period); ?>
-		    <?=date("d/m/Y", $period + $one_week - $one_day); ?>
+	<tr style="<?=$alt_colors[$week_cnt % count($alt_colors)]; ?>">
+	    <td style="height: 90%; vertical-align: top;" rowspan="17">
+		<p>
+		    <?=vertical_text(
+			date("d/m/Y", $period)." ".
+			date("d/m/Y", $period + $one_week - $one_day)
+		    ); ?>
 		</p>
 	    </td>
 
@@ -124,6 +152,7 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
 		    class="calendar_day_container"
 		    onmouseover="enlarge_work(true, '<?=$Days[$i]; ?>')"
 		    onmouseleave="enlarge_work(false, '<?=$Days[$i]; ?>')"
+		    style="<?=$alt_colors[$week_cnt % count($alt_colors)]; ?>"
 		>
 		    <?php if (is_day_off($period + $one_day * $i)) { ?>
 			<div>
@@ -149,7 +178,11 @@ $projects = collect_projects($start, $end, $wlist, $is_filtered);
 	</tr>
 
 	<?php for ($i = 8; $i < 24; ++$i) { // Affichage des heures ?>
-	    <tr><td class="hour_label"><?php printf("%02d", $i); ?>-<?php printf("%02d", $i + 1); ?></td></tr>
+	    <tr style="<?=$alt_colors[$week_cnt % count($alt_colors)]; ?>">
+		<td class="hour_label">
+		    <?php printf("%02d", $i); ?>-<?php printf("%02d", $i + 1); ?>
+		</td>
+	    </tr>
 	<?php } ?>
 
     <?php } ?>

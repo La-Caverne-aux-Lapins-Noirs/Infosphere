@@ -9,7 +9,9 @@
 <?php } ?>
 
 <div style="text-align: center;">
+    <?php $no_text = false; ?>
     <?php foreach ($activity->medal as $medal) { ?>
+	<?php if ($medal["role"] < 0) continue; ?>
 	<?php
 	// Si c'est un examen ou assimilé et qu'on est pas prof, pas inscrit
 	// ou que l'heure de l'exam est pas arrivé, on cache les médailles
@@ -21,38 +23,7 @@
 	}
 	?>
 	<div class="activity_single_medal_box">
-	    <?php if ($medal["icon"] != "") { ?>
-		<div style="float: left; height: 100%;">
-		    <img
-			src="<?=$medal["icon"]; ?>"
-			alt="<?=$medal["name"]; ?>"
-		    />
-		    <?php if ($medal["result"] > 0) { ?>
-			<div class="medal_acquired">&nbsp;</div>
-		    <?php } ?>
-	    <?php } else { ?>
-		<div style="float: left; width: 150px; height: 100%;">
-		    <img src="genicon.php?function=<?=$medal["codename"]; ?>"
-			 alt="<?=$medal["name"]; ?>"
-			 height="30" width="100"
-			 style="width: 100px; height: 30px;"
-		    />
-	    <?php } ?>
-	         <?php if ($medal["result"] > 0) { ?>
-		     <div class="medal_acquired">&nbsp;</div>
-		 <?php } ?>
-		 <?php if ($medal["result"] < 0) { ?>
-		     <div class="medal_failed">&nbsp;</div>
-		 <?php } ?>
-		 <?php if ($medal["local"] == 1) { ?>
-		     <div class="medal_local">&nbsp;</div>
-		 <?php } ?>
-		</div>
-		<p style="font-size: small; text-align: justify; padding-right: 10px;">
-		    <b style="font-size: small;"><?=$medal["name"]; ?></b><br />
-		    <?php if ($activity->is_teacher) { ?><i><?=$medal["codename"]; ?></i><br /><?php } ?>
-		    <?=$medal["description"]; ?>
-		</p>
+	    <?php require ("single_medal.php"); ?>
 	</div>
     <?php } ?>
 </div>

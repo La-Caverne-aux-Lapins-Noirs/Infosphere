@@ -46,9 +46,9 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
     $tfields["id_template"] = $id_template;
     // $tfields["template_link"] = $is_template ? "1" : "0";
 
-    default_int_val($tfields, $fields, "grade_a", 85);
-    default_int_val($tfields, $fields, "grade_b", 70);
-    default_int_val($tfields, $fields, "grade_c", 60);
+    default_int_val($tfields, $fields, "grade_a", 50);
+    default_int_val($tfields, $fields, "grade_b", 50);
+    default_int_val($tfields, $fields, "grade_c", 50);
     default_int_val($tfields, $fields, "grade_d", 50);
     default_bool_val($tfields, $fields, "validation", 3);
 
@@ -108,6 +108,7 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
     {
 	$url = "./dres/activity/".$fields["codename"]."/ressources/";
 	system("mkdir -p $url ; touch {$url}/index.htm");
+	system("mkdir -p $url/admin");
 	if (($file = $files["ressource_files"]["tmp_name"]) != "")
 	{
 	    $filename = $files["ressource_files"]["name"];

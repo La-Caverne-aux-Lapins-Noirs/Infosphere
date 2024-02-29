@@ -544,6 +544,24 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     padding-left: 10px;
 }
 
+#subject_error_box
+{
+    text-align: center;
+}
+
+#subject_error_box > a, #subject_error_box > a > div
+{
+    display: inline-block;
+}
+
+#subject_error_box img
+{
+    width: 150px;
+    height: 150px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
 .activity_single_medal_box > p
 {
     padding-top: 10px;

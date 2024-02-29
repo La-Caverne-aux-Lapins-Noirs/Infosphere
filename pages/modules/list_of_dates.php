@@ -1,12 +1,12 @@
 <?php if ($date_source->is_teacher) { ?>
     <?php if ($date_source->emergence_date != NULL) { ?>
-	<b><?=$Dictionnary["EmergenceDate"]; ?></b>:
-	<?=litteral_date($date_source->emergence_date); ?>
+	<b><?=$Dictionnary["EmergenceDate"]; ?> :</b>
+	<span><?=litteral_date($date_source->emergence_date); ?></span>
 	<br />
 	<?php $nbline += 1; ?>
     <?php } else if (isset($cycle->first_day)) { ?>
-	<b><?=$Dictionnary["EmergenceDate"]; ?></b>:
-	<?=litteral_date($cycle->first_day); ?>
+	<b><?=$Dictionnary["EmergenceDate"]; ?> :</b>
+	<span><?=litteral_date($cycle->first_day); ?></span>
 	<br />
 	<?php $nbline += 1; ?>
     <?php } ?>
@@ -27,41 +27,41 @@
 <?php } ?>
 
 <?php if ($date_source->registration_date != NULL) { ?>
-    <b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:
-    <?=litteral_date($date_source->registration_date); ?>
+    <b><?=$Dictionnary["RegistrationOpenDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->registration_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>
 <?php if ($date_source->close_date != NULL) { ?>
-    <b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:
-    <?=litteral_date($date_source->close_date); ?>
+    <b><?=$Dictionnary["RegistrationCloseDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->close_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>
 
 
 <?php if ($date_source->subject_appeir_date != NULL) { ?>
-    <b><?=$Dictionnary["SubjectAppeirDate"]; ?></b>:
-    <?=litteral_date($date_source->subject_appeir_date); ?>
+    <b><?=$Dictionnary["SubjectAppeirDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->subject_appeir_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>
 <?php if ($date_source->subject_disappeir_date != NULL) { ?>
-    <b><?=$Dictionnary["SubjectDisappeirDate"]; ?></b>:
-    <?=litteral_date($date_source->subject_disappeir_date); ?>
+    <b><?=$Dictionnary["SubjectDisappeirDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->subject_disappeir_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>
 <?php if ($date_source->pickup_date != NULL) { ?>
-    <b><?=$Dictionnary["PickupDate"]; ?></b>:
-    <?=litteral_date($date_source->pickup_date); ?>
+    <b><?=$Dictionnary["PickupDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->pickup_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>
 
 <?php if ($date_source->done_date != NULL) { ?>
-    <b><?=$Dictionnary["DoneDate"]; ?></b>:
-    <?=litteral_date($date_source->done_date); ?>
+    <b><?=$Dictionnary["DoneDate"]; ?> :</b>
+    <span><?=litteral_date($date_source->done_date); ?></span>
     <?php $nbline += 1; ?>
     <br />
 <?php } ?>

@@ -109,7 +109,7 @@ class Layer extends ArrayObject
 			array_merge($med["failure_list"], $this->medal[$med["codename"]]["failure_list"]);
 		    $this->medal[$med["codename"]]["local_sum"] += $med["local_sum"];
 		}
-		if (is_note($med["codename"]))
+		if (is_note($med["codename"]) && $med["success"] > 0)
 		{
 		    $sub->note = true;
 		    $note += intval(substr($med["codename"], 5));

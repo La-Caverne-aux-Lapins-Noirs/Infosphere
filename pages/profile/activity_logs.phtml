@@ -24,6 +24,16 @@ foreach ($query as $kk => $vv)
     $work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
 $_GET["d"]["work_logs"] = $work_logs;
 
+$distant_logs = [];
+$query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 2 AND id_user = {$user->id}
+  AND log_date >= '$start' AND log_date <= '$end'
+", "log_date");
+foreach ($query as $kk => $vv)
+    $distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["distant_logs"] = $distant_logs;
+
+
 $lock_logs = [];
 $query = db_select_all("
   log_date, duration FROM user_log WHERE type = -1 AND id_user = {$user->id}
@@ -53,9 +63,19 @@ foreach ($query as $kk => $vv)
     $avg_work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
 $_GET["d"]["avg_work_logs"] = $avg_work_logs;
 
+$avg_distant_logs = [];
+$query = db_select_all("
+  log_date, AVG(duration) as duration FROM user_log WHERE type = 2
+  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
+", "log_date");
+foreach ($query as $kk => $vv)
+    $avg_distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+$_GET["d"]["avg_distant_logs"] = $avg_distant_logs;
+
+
 $avg_lock_logs = [];
 $query = db_select_all("
-  log_date, AVG(duration) FROM user_log WHERE type = -1
+  log_date, AVG(duration) as duration FROM user_log WHERE type = -1
   AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
 ", "log_date");
 foreach ($query as $kk => $vv)

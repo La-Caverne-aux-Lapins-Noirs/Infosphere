@@ -92,7 +92,7 @@ class CycleLayer extends Layer
 			"only_user" => true,
 			"blist" => $blist
 		]) == false)
-		    return (false);
+		  return (false);
 		$fields = [
 		    "id", "codename", "name", "description", "credit_a",
 		    "credit_b", "credit_c", "credit_d", "hidden",
@@ -120,6 +120,8 @@ class CycleLayer extends Layer
 		$sub->acquired_credit = 0;
 		$sub->load_configuration($module->codename, $module->template_codename);
 		$sub->registered = $module->registered;
+
+		// On pré remplie sub en médaille, avant de construire
 		foreach ($module->medal as $med)
 		{
 		    $sub->medal[$med["codename"]] = array_merge($med, [

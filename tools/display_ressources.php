@@ -20,7 +20,7 @@ function display_ressources($cod, $rename = "", $subdirs = "", $teacher = false)
 
 	// private, afin de pouvoir aussi mettre des sources en lignes
 	// comme des fichiers odt par exemple...
-	if ($d == "." || $d == ".." || $d == "index.htm" || $d == "index.php" || ($d == "private" && $teacher == false))
+	if ($d == "." || $d == ".." || $d == "index.htm" || $d == "index.php" || (($d == "private" || $d == "admin") && $teacher == false))
 	    continue ;
 	if (is_dir($cod."/".$d))
 	    $cnt += display_ressources($cod.$d."/*", "", $subdirs.$d."/");

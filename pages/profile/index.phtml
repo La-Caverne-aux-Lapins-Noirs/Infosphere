@@ -38,16 +38,16 @@ $user = get_full_profile($user, [
     <tr><td>
 	<table class="full_size_table"><tr><td style="width: 300px; vertical-align: top;">
 	    <p style="text-align: center;">
-		<b style="font-size: large;"><?php display_nickname($user, false); ?></b><br />
 		<?php display_avatar($user); ?><br />
-		<br />
 		<b><?=$user->codename; ?></b><br />
+		<?php if ($user->nickname != "") { ?>
+		    <i>- <?=$user->nickname; ?> -</i><br />
+		<?php } ?>
 		<?=ucfirst($user->first_name)." ".strtoupper($user->family_name); ?><br />
-		<i><?=$user->nickname; ?></i><br />
+
 		<br />
 		<b><?=$Dictionnary["MemberSince"]; ?></b>:
 		<?=human_date($user->registration_date, true); ?><br />
-		<br />
 		<?php
 		$credits = 0;
 		foreach ($user->sublayer as $cyc)
@@ -58,7 +58,34 @@ $user = get_full_profile($user, [
 		    }
 		}
 		?>
-		<b><?=$credits." ".$Dictionnary["Credits"]; ?></b>
+		<b><?=$credits." ".$Dictionnary["Credits"]; ?></b><br />
+		<?php
+		$desks = db_select_all("
+		room_desk.codename as codename,
+		room_desk.ip,
+		room_desk.mac,
+		room_desk_user.distant, room_desk_user.locked,
+		room.codename as room_codename
+                FROM room_desk_user
+		LEFT JOIN room_desk ON room_desk.id = room_desk_user.id_room_desk
+		LEFT JOIN room ON room.id = room_desk.id_room
+		WHERE id_user = $user->id ORDER BY room_desk_user.distant DESC
+		");
+		if (count($desks)) { ?>
+		    <br />
+		    <b><?=$Dictionnary["ConnectedTo"]; ?> :</b>
+		    <ul>
+			<?php foreach ($desks as $desk) { ?>
+			    <li style="text-align: center; font-size: x-small;">
+				<?=$desk["locked"] ? "&#128274;" : ""; ?>
+				<?=$desk["distant"] ? "(SSH)" : "" ?>
+				<b><?=$desk["codename"]; ?></b>
+				<?=$desk["ip"]." - ".$desk["mac"]; ?>
+				
+			<?php } ?>
+			</li>
+		    <br />
+		<?php } ?>
 	    </p>
 	</td><td style="overflow: auto;">
 	    <?php
@@ -73,10 +100,22 @@ $user = get_full_profile($user, [
 	<?php
 	$panel = ["#" => __DIR__."/personnal.phtml"];
 	foreach ($user->merged_sublayers as $fdmy => $msl)
-	    $panel[$fdmy] = __DIR__."/cycle.phtml";
+	    $panel[
+		"<span class='small_tab'>".
+		$fdmy.
+		"</span>"
+	    ] = __DIR__."/cycle.phtml";
 	if ($user->assistant || $user->teacher || $user->director)
-	    $panel[$Dictionnary["ManagedActivities"]] = __DIR__."/managed_activities.phtml";
-	$panel[$Dictionnary["Intercom"]] = __DIR__."/intercom.phtml";
+	    $panel[
+		"<span class='very_small_tab'>".
+		$Dictionnary["ManagedActivities"].
+		"</span>"
+	    ] = __DIR__."/managed_activities.phtml";
+	$panel[
+	    "<span class='very_small_tab'>".
+	    $Dictionnary["Intercom"].
+	    "</span>"
+	] = __DIR__."/intercom.phtml";
 	tabpanel($panel, $Position.$user->id."cursus", "#");
 	?>
     </td></tr><tr>

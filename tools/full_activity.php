@@ -90,6 +90,8 @@ class FullActivity extends Response
     public $music = NULL;
     public $wallpaper = NULL; // Collection de papiers peints, tous langages
     public $current_wallpaper;
+    public $icon = NULL; // Collection d'icones
+    public $current_icon;
     public $intro = NULL;
     public $syllabus;
 
@@ -163,10 +165,11 @@ class FullActivity extends Response
 	    isset($tab["user"]) ? $tab["user"] : NULL,
 	    isset($tab["get_medal"]) ? $tab["get_medal"] : false,
 	    isset($tab["only_user"]) ? $tab["only_user"] : false,
-	    isset($tab["blist"]) ? $tab["blist"] : []
+	    isset($tab["blist"]) ? $tab["blist"] : [],
+	    isset($tab["sub_get_medal"]) ? $tab["sub_get_medal"] : false,
 	));
     }
-    public function build($activity_id, $deleted = false, $recursive = true, $session_id = -1, $module = NULL, $user = NULL, $get_medal = false, $only_user = false, $blist = [])
+    public function build($activity_id, $deleted = false, $recursive = true, $session_id = -1, $module = NULL, $user = NULL, $get_medal = false, $only_user = false, $blist = [], $sub_get_medal = false)
     {
 	global $User;
 	global $Language;
@@ -177,7 +180,8 @@ class FullActivity extends Response
 
 	if (($ret = resolve_codename("activity", $activity_id))->is_error())
 	    return (false);
-	$activity_id = $ret->value;
+	if (($activity_id = $ret->value) == [])
+	    return (false);
 
 	$amedal = array_search("activity_medal", $blist);
 	$ateacher = array_search("activity_teacher", $blist);
@@ -280,6 +284,9 @@ class FullActivity extends Response
 	    "wallpaper.png" => &$this->wallpaper,
 	    "wallpaper.jpeg" => &$this->wallpaper,
 	    "wallpaper.jpg" => &$this->wallpaper,
+	    "icon.png" => &$this->icon,
+	    "icon.jpeg" => &$this->icon,
+	    "icon.jpg" => &$this->icon,
 	    "intro.mp4" => &$this->intro,
 	    "intro.ogv" => &$this->intro,
 	    "configuration.dab" => &$this->configuration
@@ -322,7 +329,7 @@ class FullActivity extends Response
 		$this->close_date = $this->done_date;
 	}
 
-	
+	select_right_elem($this, "icon");
 	select_right_elem($this, "wallpaper");
 	select_right_elem($this, "ressource");
 	select_right_elem($this, "intro");
@@ -660,13 +667,14 @@ class FullActivity extends Response
 			    if ($usr["visibility"] < SUCCESSFUL_ACTIVITIES && $this->is_teacher == false)
 				continue ;
 			    $mod = new ModuleLayer;
-			    $mod->buildsub($usr["id"], $this->id);
+			    $mod->buildsub($usr["id"], $this->id, []);
 			    $mod->sublayer = NULL;
 			    $mod->medal = [];
 			    foreach ($this->medal as $medx)
 			    {
-				$m = db_select_one("
-   			          activity_user_medal.result as result
+				$ms = db_select_all("
+   			          activity_user_medal.result as result,
+				  activity_user_medal.id_activity as id_activity
                                   FROM user_medal
                                   LEFT JOIN medal
                                     ON user_medal.id_medal = medal.id
@@ -677,16 +685,9 @@ class FullActivity extends Response
                                   AND activity_user_medal.result = 1
                                   ORDER BY medal.codename ASC
 				  ");
-				if ($m != NULL)
-				{
-				    $medx["result"] = $m["result"];
-				    $medx["success"] = 1;
-				}
-				else
-				{
-				    $medx["result"] = 0;
-				    $medx["success"] = 0;
-				}
+
+				$medx["success"] = count($ms);
+				$medx["result"] = $medx["success"] > 0;
 				$medx["module_medal"] = true;
 				$usr["medal"][] = $medx;
 				$mod->medal[] = $medx;
@@ -808,7 +809,7 @@ class FullActivity extends Response
 	{
 	    $new = new FullActivity;
 	    if ($new->build
-		($sub["id"], $deleted, $recursive, $session_id, $this, NULL, NULL, $only_user, $blist))
+		($sub["id"], $deleted, $recursive, $session_id, $this, NULL, $sub_get_medal, $only_user, $blist, false))
 	    $this->subactivities[$new->codename] = $new;
 	}
 	return (true);

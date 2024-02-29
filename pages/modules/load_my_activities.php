@@ -11,7 +11,7 @@ $blacklist = [
     "activity_presence",
     "activity_delivery",
     "activity_teacher",
-    // "activity_cycle",
+    "activity_cycle",
     "activity_team_content",
     "activity_support",
     "activity_details",

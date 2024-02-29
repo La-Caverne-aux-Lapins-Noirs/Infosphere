@@ -1,23 +1,34 @@
-<table class="gradetab">
-    <tr><th style="width: 30%; box-shadow: 0px 0px 0px transparent;"></th>
+<table class="gradetab" style="min-height: 140px;">
+    <colgroup>
+	<col />
+	<col style="background-color: rgba(0, 0, 0, 0.2);" />
+	<col />
+	<col style="background-color: rgba(0, 0, 0, 0.2);" />
+	<col />
+    </colgroup>
+    <tr>
+	<th style="width: 30%;"></th>
 	<th>D</th>
 	<th>C</th>
 	<th>B</th>
 	<th>A</th>
-    </tr><tr>
+    </tr>
+    <tr style="background-color: rgba(0, 0, 0, 0.2);">
 	<td style="font-size: small;"><?=$Dictionnary["RequiredMedalAcquistionPercentage"]; ?></td>
 	<td><?=$matter->grade_d; ?>%</td>
 	<td><?=$matter->grade_c; ?>%</td>
 	<td><?=$matter->grade_b; ?>%</td>
 	<td><?=$matter->grade_a; ?>%</td>
-    </tr><tr>
+    </tr>
+    <tr>
 	<td style="font-size: small;"><?=$Dictionnary["AcquiredCredit"]; ?></td>
 	<td><?=$matter->credit_d; ?></td>
 	<td><?=$matter->credit_c; ?></td>
 	<td><?=$matter->credit_b; ?></td>
 	<td><?=$matter->credit_a; ?></td>
-    </tr><tr>
-	<td colspan="5" style="border-bottom-right-radius: 5px; border-bottom-left-radius: 5px;">
+    </tr>
+    <tr>
+	<td colspan="5">
 	    <b><?=$Dictionnary["GradeBonus"]; ?></b>: <?=$matter->grade_bonus; ?>%
 	</td>
     </tr>

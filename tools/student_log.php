@@ -1,6 +1,6 @@
 <?php
 
-function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip = NULL)
+function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip = NULL, $distant = false)
 {
     global $OriginalUser;
     global $Database;
@@ -31,7 +31,7 @@ function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip =
 	return ;
     }
     $last_log = date_to_timestamp($today["last_log"]);
-    if ($today["last_ip"] != $client_ip || $date - $last_log > 30 * 60)
+    if ($today["last_ip"] != $client_ip || $date - $last_log > 5 * 60)
     {
 	$Database->query("
           UPDATE user_log
@@ -43,7 +43,10 @@ function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip =
 	  ");
 	return ;
     }
-    $acc = $today["duration"] + $date - $last_log;
+    if ($date < $last_log)
+	$acc = $today["duration"];
+    else
+	$acc = $today["duration"] + $date - $last_log;
     $Database->query("
        UPDATE user_log
        SET last_log = NOW(), duration = $acc
@@ -77,3 +80,50 @@ function get_student_log($user = NULL, $date = NULL)
     return ($fetch["duration"]);
 }
 
+function get_week_average($user, $since = 60 * 60 * 24 * 14)
+{
+    if (is_array($user))
+	$user = $user["id"];
+    else if (is_object($user))
+	$user = $user->id;
+    else if (!is_number($user))
+	return ;
+
+    $end = now();
+    $start = $end - $since;
+    $end = db_form_date($end);
+    $start = db_form_date($start);
+
+    $intra_logs = [];
+    $query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 0 AND id_user = $user
+  AND log_date >= '$start' AND log_date <= '$end'
+    ", "log_date");
+    foreach ($query as $kk => $vv)
+	$intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+
+    $work_logs = [];
+    $query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 1 AND id_user = $user
+  AND log_date >= '$start' AND log_date <= '$end'
+    ", "log_date");
+    foreach ($query as $kk => $vv)
+	$work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+
+    $distant_logs = [];
+    $query = db_select_all("
+  log_date, duration FROM user_log WHERE type = 2 AND id_user = $user
+  AND log_date >= '$start' AND log_date <= '$end'
+    ", "log_date");
+    foreach ($query as $kk => $vv)
+	$distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+
+    $total = 0;
+    foreach ($intra_logs as $l)
+	$total += $l;
+    foreach ($work_logs as $l)
+	$total += $l;
+    foreach ($distant_logs as $l)
+	$total += $l;
+    return ($total);
+}

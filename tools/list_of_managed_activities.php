@@ -26,7 +26,7 @@ function sort_activities($a, $b)
     return ($ldate - $rdate);
 }
 
-function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess = true, $actid = 0)
+function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess = true, $actid = 0, $maxdate = NULL)
 {
     global $User;
     global $Language;
@@ -39,6 +39,14 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
     $adm = "";
     if (is_admin())
 	$adm = " OR 1 ";
+
+    if ($maxdate != NULL)
+	$maxdate = " AND ".
+		   " ( activity.emergence_date > '".db_form_date($maxdate)."'".
+		   " OR activity.emergence_date IS NULL )"
+		   ;
+    else
+	$maxdate = "";
     
     $id = $usr->id;
     if (!$matter)
@@ -69,6 +77,7 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
           AND activity.deleted IS NULL
           AND activity.is_template = 0
           AND (activity_teacher.id_user = $id OR user_laboratory.id_user = $id $adm)
+          $maxdate
           $actid
         ", "activity_codename");
 

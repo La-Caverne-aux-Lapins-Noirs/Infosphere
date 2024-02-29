@@ -1,3 +1,7 @@
+<?php
+echo " A debugger ";
+return ;
+?>
 <style>
  .manact td
  {
@@ -24,7 +28,7 @@
 		    <?php if (date_to_timestamp($ma["end_date"]) < now() - 60 * 60 * 24 * 50) continue ; ?>
 		    <tr><td>
 			<a href="index.php?p=ModulesMenu&amp;a=<?=$ma["parent_activity"]; ?>">
-			    <?=@strlen($ma["matter_name"]) ? $ma["matter_name"] : $ma["matter_codename"]; ?>
+			    <?=@strlen($ma["matter_name"]) ? $ma["matter_name"] : @$ma["matter_codename"]; ?>
 			</a>
 		    </td><td>
 			<a href="index.php?p=ActivityMenu&amp;a=<?=$ma["id_activity"]; ?>&amp;b=<?=isset($ma["id_session"]) ? $ma["id_session"] : -1; ?>">

@@ -34,6 +34,10 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "AddMood"
 	],
+	"icon" => [
+	    "is_teacher_for_activity",
+	    "AddMood"
+	],
 	"intro" => [
 	    "is_teacher_for_activity",
 	    "AddMood"

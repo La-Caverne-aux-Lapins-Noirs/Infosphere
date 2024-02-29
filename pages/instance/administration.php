@@ -28,23 +28,6 @@
 		onclick="this.select(); document.execCommand('copy');"
 	    />
 	</p>
-
-	<?php if ($activity->unique_session) { ?>
-	    <form method="POST" action="index.php?<?=unrollget(); ?>">
-		<label for="rooms" style="width: 96%; text-align: center;">
-		    <?=$Dictionnary["EditRoom"]; ?>
-		</label>
-		<input type="hidden" name="action" value="add_room" />
-		<input type="hidden" name="session" value="<?=$activity->unique_session->id; ?>" />
-		<input
-		    type="text"
-			  name="rooms"
-			  style="width: 96%;"
-			  placeholder="<?=$Dictionnary["Rooms"]; ?>"
-		/>
-		<input type="submit" style="width: 96%;" value="&#10003;" />
-	    </form>
-	<?php } ?>
     </div>
 
     <div>
@@ -242,21 +225,6 @@
 		<input type="submit" style="width: 96%;" value="<?=$Dictionnary["AddASlotLayer"]; ?>" />
 	    </form>
 	<?php } ?>
-
-	<form method="post" action="index.php?<?=unrollget(); ?>">
-	    <label for="logins">
-		<?=$Dictionnary["AddTeachers"]; ?>
-	    </label>
-	    <input type="hidden" name="action" value="add_teacher" />
-	    <input type="hidden" name="activity" value="<?=$activity->id; ?>" />
-	    <input
-		type="text"
-		name="logins"
-		style="width: 96%; text-align: center;"
-		placeholder="<?=$Dictionnary["AddTeachers"]; ?>"
-	    /><br />
-	    <input type="submit" style="width: 96%;" value="&#10003;" />
-	</form>
 
 	<?php if ($activity->unique_session) { ?>
 	    <form method="post" action="index.php?<?=unrollget(); ?>">

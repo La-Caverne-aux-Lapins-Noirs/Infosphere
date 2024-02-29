@@ -17,6 +17,20 @@ function setcookie(id, value)
     setCookie(id, value, 365 * 10);
 }
 
+function blinkall()
+{
+    var elems = document.getElementsByClassName("blink");
+
+    for (let i = 0; i < elems.length; ++i)
+    {
+	if (elems[i].style.opacity == 1)
+	    elems.item(i).style.opacity = "0.3";
+	else
+	    elems.item(i).style.opacity = "1.0";
+    }
+    setTimeout(blinkall, 50);
+}
+
 function roll_unroll(id)
 {
     var idx = document.getElementById(id);
@@ -101,3 +115,6 @@ window.addEventListener('click', e =>
 	CurrentMousePosition = {x: e.clientX, y: e.clientY};
     }
 );
+
+
+blinkall();

@@ -22,8 +22,15 @@
 </div>
 
 <?php if (am_i_director()) { ?>
-    </td><td class="formular_slot">
-        <?php require ("add_user.phtml"); ?>
-    </td></tr></table>
+  </td><td class="formular_slot">
+      <?php $alerts = retrieve_alerts(); ?>
+      <?php if (isset($alerts["hand"])) { ?>
+	  <br />
+	  <h3><?=$Dictionnary["Warning"]; ?></h3>
+	  <br /><?=$Dictionnary["HandIsRequiredAndCannotBeReached"]; ?><br />
+      <?php } else { ?>
+	  <?php require ("add_user.phtml"); ?>
+      <?php } ?>
+  </td></tr></table>
 <?php } ?>
   

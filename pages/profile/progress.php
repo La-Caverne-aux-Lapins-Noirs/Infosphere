@@ -12,15 +12,15 @@
     if ($module->validation == FullActivity::GRADE_VALIDATION)
     {
 	$module->configuration["IsNote"] = true;
-	for ($i = 0; $i <= 20; ++$i)
-	    $module->configuration["Note"][$i] = 0;
-	foreach ($module->medal as $i => $med)
-	    if (substr($med["codename"], 0, 5) == "token")
+	for ($li = 0; $li <= 20; ++$li)
+	    $module->configuration["Note"][$li] = 0;
+	foreach ($module->medal as $li => $med)
+	    if (substr($med["codename"], 0, 5) == "token" && $med["success"] > 0)
 		$module->configuration["Note"][intval(substr($med["codename"], 5))] += 1;
     }
     
     ?>
-    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-color: white !important; background-image: url('./tools/progress_bar.php?w=900&amp;h=200&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
+    <div class="final_box" style="width: 100%; height: 200px; overflow-y: auto; background-color: white !important; background-image: url('./tools/progress_bar.php?w=900&amp;h=300&amp;data=<?=base64url_encode(json_encode($module->configuration, JSON_UNESCAPED_SLASHES)); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center center; border-radius: 0px;">
     </div>
 
 <?php } else if ($module->validation != FullActivity::NO_VALIDATION) { ?>

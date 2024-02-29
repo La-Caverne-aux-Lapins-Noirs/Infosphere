@@ -25,9 +25,11 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
        activity_medal.role as role,
        activity_medal.local as local,
        activity_medal.mark as mark,
-       activity_medal.id as id_activity_medal
+       activity_medal.id as id_activity_medal,
+       activity.parent_activity as parent_activity
        FROM activity_medal
        LEFT JOIN medal ON activity_medal.id_medal = medal.id
+       LEFT JOIN activity ON activity_medal.id_activity = activity.id
        WHERE activity_medal.id_activity = $id
        AND medal.deleted IS NULL
        ORDER BY medal.codename ASC

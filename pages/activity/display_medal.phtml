@@ -16,6 +16,8 @@ $MedalColor = [
     "rgba(0, 0, 255, 0.2)",
     "rgba(255, 0, 0, 0.2)"
 ];
+// Conditions
+$MedalColor[-1] = "rgba(255, 255, 255, 1.0)";
 ?>
 <br />
 <?php
@@ -47,7 +49,7 @@ else
 		/>
 	    <?php } ?>
 	</a><br />
-	<span style="font-size: x-small;">
+	<span style="font-size: x-small; overflow-wrap: break-word;">
 	    <?=$medal["codename"]; ?>
 	</span><br />
 	<?php if (is_teacher_for_activity($module->id)) { ?>
@@ -78,10 +80,12 @@ else
 		<form
 		    method="put"
 		    onsubmit="return <?=$js; ?>;"
+		    style="font-size: x-small; height: 20px;"
 		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
 		>
 		    <select
 			name="role"
+			style="font-size: x-small; height: 20px;"
 			onchange="<?=$js; ?>;"
 		    >
 			<option value="1" <?=$medal["role"] == 1 ? "selected" : ""; ?>>
@@ -99,6 +103,9 @@ else
 			<option value="0" <?=$medal["role"] == 0 ? "selected" : ""; ?>>
 			    <?=$Dictionnary["Bonus"]; ?>
 			</option>
+			<option value="-1" <?=$medal["role"] == -1 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["Condition"]; ?>
+			</option>
 		    </select>
 		</form>
 	    <?php } else { ?>
@@ -108,11 +115,32 @@ else
 		    onsubmit="return <?=$js; ?>;"
 		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
 		>
-		    <label for="mark"><?=$Dictionnary["Mark"]; ?></label>
+		    <select
+			name="role"
+			onchange="<?=$js; ?>;"
+			style="font-size: x-small; height: 20px;"
+		    >
+			<option value="1" <?=$medal["role"] == 0 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["Reward"]; ?>
+			</option>
+			<option value="-1" <?=$medal["role"] == -1 ? "selected" : ""; ?>>
+			    <?=$Dictionnary["Condition"]; ?>
+			</option>
+		    </select>
+		</form>
+		
+		<form
+		    method="put"
+		    onsubmit="return <?=$js; ?>;"
+		    style="height: 20px;"
+		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
+		>
+		    <label for="mark" style="font-size: x-small;"><?=$Dictionnary["Mark"]; ?></label>
 		    <input type="hidden" id="previous_value_mark" value="<?=$medal["mark"]; ?>" />
 		    <input
 			type="text"
 			name="mark"
+			style="font-size: x-small; height: 15px;"
 			value="<?=$medal["mark"]; ?>"
 			onchange="delay_before_submit(1000, this, 'mark');"
 		    />
@@ -122,13 +150,15 @@ else
 		class="check_formular"
 		method="put"
 		onsubmit="return <?=$js; ?>;"
+		style="height: 20px;"
 		action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
 		<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
 	    >
-		<label for="local"><?=$Dictionnary["Local"]; ?></label>
+		<label for="local" style="font-size: x-small;"><?=$Dictionnary["Local"]; ?></label>
 		<input
 		    type="checkbox"
 		    name="local"
+		    style="font-size: x-small; height: 15px;"
 		    <?=$medal["local"] ? "checked" : ""; ?>
 		    onchange="<?=$js; ?>;"
 		/>
@@ -143,7 +173,27 @@ if (count($sorted_medal))
 {
     $listm = [];
     foreach ($sorted_medal as $medal)
-	$listm[] = $medal["codename"];
+    {
+	$sfix = "";
+	$pfix = "";
+	if ($module->parent_activity != -1)
+	{
+	    if ($medal["local"])
+		$sfix = "#";
+	    else if ($medal["role"] == -1)
+		$sfix = "$";
+	    if ($medal["mark"] != 0)
+		$pfix = "(".$medal["mark"].")";
+	}
+	else
+	{
+	    if ($medal["local"])
+		$sfix = "#";
+	    if ($medal["role"] != 1)
+		$pfix = "(".$medal["role"].")";
+	}
+	$listm[] = $sfix.$medal["codename"].$pfix;
+    }
 ?>
     <br /><br />
     <input type="text" value="<?=implode(";", $listm); ?>" />

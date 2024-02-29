@@ -44,18 +44,27 @@ function fetch_rooms($id = -1, $by_name = false)
 	$lab["map"] = NULL;
 
     $lab["desk"] = db_select_all("
-        room_desk.*,
-        user.id as id_user,
-        user.codename as codename_user
+        *
         FROM room_desk
-        LEFT JOIN user ON room_desk.id_user = user.id
         WHERE room_desk.id_room = {$lab["id"]}
 	", $by_name ? "codename" : "");
     $lab["occupied"] = 0;
-    foreach ($lab["desk"] as $d)
+    foreach ($lab["desk"] as &$d)
     {
-	if ($d["id_user"] != NULL)
+	if ($d["last_update"] == NULL || now() - date_to_timestamp($d["last_update"]) > 60 * 5)
+	    $d["status"] = 3; // Unavailable
+	$d["users"] = db_select_all("
+	  * FROM room_desk_user
+          LEFT JOIN user ON room_desk_user.id_user = user.id
+          WHERE room_desk_user.id_room_desk = {$d["id"]}
+	  AND TIMESTAMPDIFF(SECOND, last_update, NOW()) < 60 * 5
+	  ");
+	foreach ($d["users"] as $usr)
+	{
+	    if ($usr["distant"])
+		continue ;
 	    $lab["occupied"] += 1;
+	}
     }
     $lab["computer_capacity"] = count($lab["desk"]);
     $lab["computer_available"] = $lab["computer_capacity"] - $lab["occupied"];

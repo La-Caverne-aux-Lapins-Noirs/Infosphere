@@ -1,12 +1,30 @@
 <a href="index.php?p=ActivityMenu&amp;a=<?=$act->id; ?>" class="<?=$act->registered != NULL ? "registered_act" : "unregistered_act"; ?>">
     <div
-	class="calendar_activity vertical"
-	style="top: <?=$act->top; ?>%; left: <?=$act->left; ?>%; height: <?=$act->height; ?>%; width: <?=$act->width; ?>%; background-color: <?=color_from_name($act->name, ["white"]); ?>; overflow-y: hidden; white-space: nowrap; font-size: 20px;"
-	class="project_calendar">
+	class="calendar_activity"
+	style="
+	       top: calc(<?=$act->top; ?>% + 3px);
+	       left: calc(<?=$act->left; ?>% + 3px);
+	       height: calc(<?=$act->height; ?>% - 6px);
+	       width: calc(<?=$act->width; ?>% - 6px);
+	       background-color: <?=color_from_name($act->name, ["white"]); ?>;
+	       border-top-left-radius: 50% 20px;
+	       border-top-right-radius: 50% 20px;
+	       border-bottom-left-radius: 50% 20px;
+	       border-bottom-right-radius: 50% 20px;
+	       overflow-y: hidden;
+	       font-size: 20px;
+	       "
+    >
+	<?php $act->name = ucfirst($act->name); ?>
 	<?php for ($i = 0; $i < 50; ++$i) { ?>
-	    <b>
-		<?=ucfirst($act->name); ?>
-		<?php for ($j = 0; $j < 10; ++$j) { echo "&nbsp;"; } ?>
+	    <b style="color: <?=$i % 2 == 0 ? "white" : "black"; ?>;">
+		<br />
+		<?php
+		echo vertical_text($act->name);
+		require ("missing_icon.phtml");
+		for ($j = 0; $j < 10; ++$j)
+		    echo "<br />";
+		?>
 	    </b>
 	<?php } ?>
     </div>

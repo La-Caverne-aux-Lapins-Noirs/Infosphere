@@ -36,18 +36,39 @@ function get_modules($template, $id = -1)
 
     $filterc = "";
     $page = $template ? "template" : "module";
-    if (isset($_COOKIE["filter_activity_$page"]))
+    if (isset($_COOKIE["filter_activity_$page"]) &&
+	$_COOKIE["filter_activity_$page"] != "")
     {
-	if ($_COOKIE["filter_activity_$page"] != "")
+	$cfilter = $_COOKIE["filter_activity_$page"];
+	$cfilter = str_replace("XXXSEPARATORXXX", ";", $cfilter);
+	if (!($syms = split_symbols($cfilter, ";", true, true, "", ["*"]))->is_error())
 	{
-	    $filterc = $_COOKIE["filter_activity_$page"];
-	    $filterc = str_replace("*", "%", $filterc);
-	    $filterc = $Database->real_escape_string($filterc);
-	    $filterc = " AND activity.codename LIKE '$filterc' ";
+	    $ins = ["0"];
+	    $outs = ["1"];
+	    $syms = $syms->value;
+	    foreach ($syms as $sym)
+	    {
+		$sym = str_replace("*", "%", $sym);
+		$forge = " activity.codename ";
+		if ($sym[0] == '-')
+		{
+		    $sym = substr($sym, 1);
+		    $sym = $Database->real_escape_string($sym);
+		    $outs[] = " activity.codename NOT LIKE '$sym'";
+		}
+		else
+		{
+		    $sym = $Database->real_escape_string($sym);
+		    $ins[] = " activity.codename LIKE '$sym'";
+		}
+	    }
+	    $filterc = " AND (( ".implode(" OR ", $ins).
+		       " ) AND ( ".
+		       implode(" AND ", $outs).
+		       " )) ";
 	}
     }
-    
-    return (db_select_all("
+    $request = "
 	activity.id,
 	activity.{$Language}_name as name,
 	activity.codename,
@@ -75,5 +96,6 @@ function get_modules($template, $id = -1)
         $filterc
 	GROUP BY activity.id
 	ORDER BY activity.codename ASC
-    "));
+    ";
+    return (db_select_all($request));
 }

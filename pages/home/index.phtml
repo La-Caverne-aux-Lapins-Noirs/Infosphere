@@ -1,6 +1,7 @@
 <?php if ($silent) return ; ?>
 <?php require_once ("collect_dashboard_activities.php"); ?>
 <?php require_once ("collect_dashboard_projects.php"); ?>
+<?php require_once ("collect_dashboard_matters.php"); ?>
 <?php if ($User == NULL) { ?>
     <?php require ("welcome.phtml"); ?>
 <?php } else { ?>
@@ -28,8 +29,9 @@
 	    $activities["participate"] = $participate["participate"];
 	    $activities["managed"] = $managed["managed"];
 	    ?>
-	    <div>
+	    <div class="tinyscroll">
 		<?php require_once ("assistant.php"); ?>
+		<?php require_once ("matters.phtml"); ?>
 		<?php require_once ("projects.phtml"); ?>
 		<?php require_once ("activities.phtml"); ?>
 		<?php if (count($activities["managed"])) { ?>
@@ -49,16 +51,22 @@
 	    </td>
 	    <?php if ($powerbox) { ?>
 		<td>
-		    <div id="powerbox"><?php require ("power.phtml"); ?></div>
+		    <div
+			<?php $alerts = []; ?>
+			<?php if ($OriginalUser["authority"] >= ADMINISTRATOR) { ?>
+			    <?php $alerts = retrieve_alerts(); ?>
+			<?php } ?>
+			<?php if (isset($alerts) && count($alerts)) { ?>
+			    id="powerbox"
+			<?php } ?>
+			class="tinyscroll"
+		    >
+			<?php require ("power.phtml"); ?>
+		    </div>
 		</td>
 	    <?php } ?>
 	</tr>
     </table>
-    <?php if (count($alerts)) { ?>
-	<script>
-	 document.getElementById("powerbox").style.backgroundColor = "red";
-	</script>
-    <?php } ?>
 <?php } ?>
 
 <?php // full_backup(); ?>

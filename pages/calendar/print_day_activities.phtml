@@ -14,7 +14,15 @@
 
     <div
 	class="calendar_activity tinyscroll"
-	       style="width: <?=$Session->width; ?>%; left: <?=$Session->left; ?>%; top: <?=$Session->top; ?>%; height: <?=$Session->height; ?>%; background-color: <?=color_from_name($Session->parent->parent_codename, ["white"]); ?>; <?=$background; ?>"
+	style="
+	       width: calc(<?=$Session->width; ?>% - 6px);
+	       left: calc(<?=$Session->left; ?>% + 2px);
+	       top: calc(<?=$Session->top; ?>% + 2px);
+	       height: calc(<?=$Session->height; ?>% - 4px);
+	       background-color: <?=color_from_name($Session->parent->parent_codename, ["white"]); ?>;
+	       border-radius: 5px;
+	       <?=$background; ?>
+	       "
     >
 	<p class="calendar_basic_info">
 	    <?php if (@strlen($Session->parent->name) != 0) { ?>
@@ -44,26 +52,7 @@
 		<b><?=$Dictionnary["Registered"]; ?></b>
 	    </p>
 	<?php } ?>
+	<br />
+	<?php require ("missing_icon.phtml"); ?>
     </div>
-
-    <?php
-    $no_room = count($Session->room) == 0;
-    $no_teacher = count($Session->parent->teacher) == 0;
-    $no_slots = count($Session->slot) == 0 && ($Session->parent->type == 7 || ($Session->parent->type >= 10 && $Session->parent->type <= 13));
-    ?>
-
-    <?php if (is_admin() && ($no_room || $no_teacher || $no_slots) && $Session->end_date > time()) { ?>
-	<!-- ICONES D'INFORMATIONS -->
-	<div class="calendar_edit_box" id="<?=$Session->parent->codename; ?>" style="top: <?="calc(".$Session->top."% + ".$Session->height."% + 1px)"; ?>; left: <?=$Session->left; ?>%; width: <?=$Session->width; ?>%;">
-	    <?php if ($no_room) { ?>
-		<img src="res/rromms.png" alt="<?=$Dictionnary["NoRoom"]; ?>" width="20" height="20" />
-	    <?php } ?>
-	    <?php if ($no_teacher) { ?>
-		<img src="res/rprofile.png" alt="<?=$Dictionnary["NoTeacher"]; ?>" width="20" height="20" />
-	    <?php } ?>
-	    <?php if ($no_slots) { ?>
-		<img src="res/rmodules.png" alt="<?=$Dictionnary["NoSlots"]; ?>" width="20" height="20" />
-	    <?php } ?>
-	</div>
-    <?php } ?>
 </a>

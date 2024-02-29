@@ -22,6 +22,10 @@ $TicketStatus = [
     +3 => $Dictionnary["Done"],
 ];
 
+define("MODULE_OR_PICKABLE", 0);
+define("PROJECT_ACTIVITY", 1);
+define("SESSION_ACTIVITY", 2);
+
 $Grade = [];
 
 define("BANISHED", -1);

@@ -1,0 +1,33 @@
+<?php $projects = collect_dashboard_matters(time()); ?>
+<?php if (count($projects)) { ?>
+    <h3><?=$Dictionnary["OpenedModules"]; ?>:</h3>
+    <table style="text-align: center;">
+	<tr>
+	    <th><?=$Dictionnary["Name"]; ?></th>
+	    <th><?=$Dictionnary["EndDate"]; ?></th>
+	</tr>
+	<?php foreach ($projects as $act) { ?>
+	    <tr class="home_activity">
+		<td>
+		    <a
+			href="index.php?p=ModulesMenu&amp;a=<?=$act["id"]; ?>"
+			<?php if ($act["subscribed"] == false) { ?>
+			    style="color: gray;"
+			<?php } ?>
+		    >
+			<?=$act["name"]; ?>
+		    </a>
+		</td>
+		<td>
+		    <?php if ($act["close_date"] != NULL) { ?>
+			<?=datex("d/m", date_to_timestamp($act["close_date"])); ?>
+			<?php if ($act["subsoon"]) { ?>
+			    <?=$Dictionnary["EndThisWeek"]; ?>
+			<?php } ?>
+		    <?php } ?>
+		</td>
+	    </tr>
+	<?php } ?>
+    </table>
+    <br />
+<?php } ?>

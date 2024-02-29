@@ -10,7 +10,7 @@
 		<?=$Dictionnary[$activity->type_name]; ?>
 	    <?php } ?>
 	</h3>
-	<h1 style="width: 100%; font-size: xx-large; text-decoration: underline;"><?=$activity->name; ?></h1><br /><br />
+	<h1 style="width: 100%; font-size: xx-large; text-decoration: underline;"><?=$activity->name; ?></h1><br /><br /><br /><br /><br />
 	<p><?=$activity->codename; ?></p>
 
 	<?php if ($activity->reference_activity != -1) { ?>
@@ -114,6 +114,17 @@
 
     </div>
     <div style="width: 50%; float: left;">
+	<?php if ($activity->current_icon) { ?>
+	    <div style="
+			background-image: url('<?=$activity->current_icon; ?>');
+			width: 100%; height: 200px;
+			background-size: contain;
+			background-repeat: no-repeat;
+			background-position: center center;
+			"
+	    >
+	    </div>
+	<?php } ?>
 	<p style="text-align: justify; padding-right: 20px;">
 	    &nbsp;&nbsp;&nbsp;&nbsp;<?=str_replace("\n", "<br />", $activity->description); ?>
 	</p>

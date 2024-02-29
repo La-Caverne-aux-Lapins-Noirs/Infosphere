@@ -12,6 +12,7 @@ if ($BaseDir == "")
 
 require_once ("require.php");
 require_once ("trace.php");
+require_once ("alerts.php");
 require_once ("medal_tooltip.php");
 require_once ("cursus_match.php");
 require_once ("merge_cycles.php");
@@ -98,6 +99,7 @@ require_once ("am_i_member.php");
 require_once ("full_session.php");
 require_once ("full_activity.php");
 require_once ("fulliframe.php");
+require_once ("vertical_text.php");
 require_once ("fetch_rooms.php");
 require_once ("fetch_cycle.php");
 require_once ("fetch_medal.php");
@@ -137,6 +139,7 @@ require_once ("edit_codename.php");
 require_once ("copy_template.php");
 require_once ("is_admin.php");
 require_once ("is_group_admin.php");
+require_once ("set_desk_data.php");
 require_once ("subscribe_to_instance.php");
 require_once ("unsubscribe_from_instance.php");
 require_once ("intercom.php");
@@ -177,5 +180,7 @@ require_once ("list_of_managed_activities.php");
 require_once ("hand_request.php");
 require_once ("convert_to_codename.php");
 require_once ("full_backup.php");
+require_once ("where_am_i.php");
+require_once ("declare_presence.php");
 // @codeCoverageIgnoreEnd
 

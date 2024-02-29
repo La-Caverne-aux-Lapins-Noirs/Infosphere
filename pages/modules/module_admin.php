@@ -1,6 +1,11 @@
-<?php $medal_size = 92 * 0.75; ?>
-<?php $edit_medal = true; ?>
-
+<?php
+$medal_size = 92 * 0.75;
+$edit_medal = true;
+$all_users = [];
+foreach ($matter->team as $sub)
+    $all_users[] = $sub["user"][array_key_first($sub["user"])]["codename"];
+$all_users = implode(";", $all_users);
+?>
 <input
     type="button"
     class="modulebutton"
@@ -31,12 +36,30 @@
 </form>
 
 <form
+    <?php
+    // Ce formulaire sert à la fois a etre envoyé afin de récupérer
+    // la liste des médailles
+    // et au bouton permettant de garnir le presse
+    // papier de la liste des utilisateurs
+    ?>
     id="form_module_<?=$matter->id; ?>_admin"
     method="get"
     action="/api/activity/<?=$matter->id; ?>/admin"
+    style="position: absolute; right: 0px;"
 >
+    <input
+	type="hidden"
+	id="actbuttonlist<?=$matter->id; ?>"
+	value="<?=$all_users; ?>"
+    />
+    <input
+	type="button"
+	onclick="navigator.clipboard.writeText(document.getElementById('actbuttonlist<?=$matter->id; ?>').value);"
+	value="<?=$Dictionnary["GetUserList"]; ?>"
+	stype="position: absolute; right: 0px; padding: 10px 10px 10px 10px;"
+    />
 </form>
-
+<br /><br />
 <table class="table_content" style="min-height: 400px;">
     <tr>
 	<th style="height: 20px; width: 30px;">
@@ -72,7 +95,7 @@
 			    <?php $subuser = $sub["user"][array_key_first($sub["user"])]; ?>
 			    <tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
 				<?php foreach ($matter->medal as $medal) { ?>
-				    <td style="width: 100px; height: 100px;">
+				    <td style="width: 100px; height: 110px;">
 					<?php require ("single_medal.phtml"); ?>
 				    </td>
 				<?php } ?>

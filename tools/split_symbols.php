@@ -1,10 +1,6 @@
 <?php
 
-/*
-** Il serait interessant d'utiliser get_prefix.
-*/
-
-function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addprefix = "")
+function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addprefix = "", $tolerated_tokens = [])
 {
     if (!isset($x))
 	return (new ErrorResponse("MissingCodeName"));
@@ -20,15 +16,28 @@ function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addpref
 		$out[] = intval($x[$i]);
 	    else
 	    {
-		$res = get_prefix($x[$i]);
-		if (!is_integer($res["label"]) && !is_symbol($res["label"]))
+		// On va tolérer certains symboles normalement non supporté
+		// afin de permettre - entre autres - l'utilisation de wildcard
+		$symbol = $x[$i];
+		foreach ($tolerated_tokens as $tok)
+		    $symbol = str_replace($tok, "", $symbol);
+		// On vérifie que la syntaxe est correcte en considérant
+		// les chaines une fois les tokens tolérés retiré
+		$symres = get_prefix($symbol, $tolerated_tokens);
+		if (!is_integer($symres["label"]) && !is_symbol($symres["label"]))
 		    return (new ErrorResponse("InvalidParameter", $x[$i]));
+
+		// On repart sur la chaine originale contenant les tokens supportés
+		$res = get_prefix($x[$i], $tolerated_tokens);
 		if ($res["label"] == "")
 		    continue ;
 		$out[] = $getmod ? $res["mod"] : (
 		    ($res["negative"] ? "-" : "").
 		    $res["prefix"].$addprefix.
-		    $res["label"]
+		    $res["label"].
+		    (count($res["parameters"]) ?
+		     "(".implode(",", $res["parameters"]).")" :
+		     "")
 		);
 	    }
 	}

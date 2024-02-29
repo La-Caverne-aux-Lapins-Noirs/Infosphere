@@ -65,8 +65,8 @@ if ($is_note)
     for ($i = 0; $i <= 20; ++$i)
     {
 	$x = (($i + 1) / 22.0) * $w;
-	imageline($img, $x, $h * 0.1, $x, $h * 0.7 - 15, $lines);
-	imageline($img, $x + 1, $h * 0.1, $x + 1, $h * 0.7 - 15, $lines);
+	imageline($img, $x, $h * 0.22, $x, $h * 0.7 - 15, $lines);
+	imageline($img, $x + 1, $h * 0.22, $x + 1, $h * 0.7 - 15, $lines);
 	imagettftext($img, 20, 0, $x - 15, $h * 0.7 + 20, $lines, __DIR__."/../res/futura.ttf", sprintf("%02d", $i));
 	if ($i == (int)(100 * $percents[3]))
 	{
@@ -96,18 +96,18 @@ if ($is_note)
 	for ($j = 0; isset($note[$i]) && $j < $note[$i]; ++$j)
 	{
 	    $col = $red;
-	    if ($j < $percents[0])
+	    if ($i < $percents[0] * 100)
 		$col = $red;
-	    else if ($j < $percents[1])
+	    else if ($i < $percents[1] * 100)
 		$col = $orange;
-	    else if ($j < $percents[2])
+	    else if ($i < $percents[2] * 100)
 		$col = $yellow;
-	    else if ($j < $percents[3])
+	    else if ($i < $percents[3] * 100)
 		$col = $blue;
 	    else
 		$col = $green;
-	    $y = ($j + 1) * (($h * 0.6 - $h * 0.1) / ($note[$i] + 1)) + $h * 0.1;
-	    // $y = $j * ($h * 0.9 - 15 - $h * 0.1) / ($note[$i] + 1) + $h * 0.1;
+	    $y = ($j + 1) * (($h * 0.6 - $h * 0.23) / ($note[$i] + 1)) + $h * 0.23;
+	    imagefilledellipse($img, $x, $y, 24, 24, $black);
 	    imagefilledellipse($img, $x, $y, 20, 20, $col);
 	    imageellipse($img, $x, $y, 20, 20, $lines);
 	    $avg += $i;
@@ -119,7 +119,7 @@ if ($is_note)
     else
 	$avg = round($avg / $nbr);
     $x = (($avg + 1) / 22.0) * $w;
-    $y = $h * 0.9;
+    $y = $h * 0.1;
     if ($avg >= $percents[3] * 100)
     {
 	$letter = "A";
@@ -148,6 +148,7 @@ if ($is_note)
 
     if ($nbr != 0)
     {
+	imagefilledellipse($img, $x - 0, $y - 0, 54, 54, $black);
 	imageellipse($img, $x - 0, $y - 0, 50, 50, $color);
 	imageellipse($img, $x - 1, $y - 0, 50, 50, $color);
 	imageellipse($img, $x - 0, $y - 1, 50, 50, $color);

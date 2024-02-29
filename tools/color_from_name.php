@@ -14,8 +14,8 @@ function color_from_name($name, $not = [])
 	"#515A5A",
 	"#283747"
     ];
-    $val = crc32($name);
-    $c = ($color[$val % count($color)]);
+    $val = hexdec(substr(md5($name), 0, 8));
+    $c = ($color[(int)(fmod($val, count($color)))]);
     if (in_array($c, $not))
 	return (color_from_name($name."x", $not));
     return ($c);

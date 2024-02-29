@@ -79,6 +79,7 @@ function collect_projects($start, $end, $wlist, $is_filtered = false)
     $occupation = [];
     foreach ($projects as &$act)
     {
+	// On limite les infos de date a l'espace visible du calendrier
 	if ($act->subject_appeir_date < $start)
 	    $act->subject_appeir_date = $start;
 	if ($act->pickup_date > $end)

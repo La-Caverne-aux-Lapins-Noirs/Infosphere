@@ -1,6 +1,6 @@
 <?php $projects = collect_dashboard_projects(time()); ?>
-<h3><?=$Dictionnary["CurrentProjects"]; ?>:</h3>
 <?php if (count($projects)) { ?>
+    <h3><?=$Dictionnary["CurrentProjects"]; ?>:</h3>
     <table style="text-align: center;">
 	<tr>
 	    <th><?=$Dictionnary["Name"]; ?></th>
@@ -34,7 +34,5 @@
 	    </tr>
 	<?php } ?>
     </table>
-<?php } else { ?>
-    <p><i><?=$Dictionnary["NoProject"]; ?></i></p>
+    <br />
 <?php } ?>
-<br />

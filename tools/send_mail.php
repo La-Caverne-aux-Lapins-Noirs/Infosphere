@@ -120,7 +120,6 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
     file_put_contents("./users.json", $file);
     */
     
-
     if ($domain == NULL)
 	$Domain = @$Configuration->Properties["domain"];
     else

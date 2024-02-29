@@ -1,0 +1,30 @@
+<?php
+$no_room = $no_teacher = $no_slots = $no_subject = false;
+if (isset($Session))
+{
+    $no_room = count($Session->room) == 0;
+    $no_teacher = count($Session->parent->teacher) == 0;
+    $no_slots = count($Session->slot) == 0 && ($Session->parent->type == 7 || ($Session->parent->type >= 10 && $Session->parent->type <= 13));
+}
+$no_subject = $act->current_subject == NULL;
+if (is_admin() && ($no_room || $no_teacher || $no_slots || $no_subject))
+{
+?>
+    <!-- ICONES D'INFORMATIONS -->
+    <span style="color: red; background-color: white;">
+	<?php if ($no_room) { ?>
+	    <img src="res/rromms.png" alt="<?=$Dictionnary["NoRoom"]; ?>" width="20" height="20" />
+	<?php } ?>
+	<?php if ($no_teacher) { ?>
+	    <img src="res/rprofile.png" alt="<?=$Dictionnary["NoTeacher"]; ?>" width="20" height="20" />
+	<?php } ?>
+	<?php if ($no_slots) { ?>
+	    <img src="res/rmodules.png" alt="<?=$Dictionnary["NoSlots"]; ?>" width="20" height="20" />
+	<?php } ?>
+	<?php if ($no_subject) { ?>
+	    &#128240;&#xFE0E;
+	<?php } ?>
+    </span>
+<?php
+}
+

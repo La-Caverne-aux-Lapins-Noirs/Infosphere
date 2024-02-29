@@ -22,7 +22,9 @@
     </b>
     <p style="padding: 10px 10px 10px 10px;">
 	<?php foreach ($user->sublayer as $cycle) { ?>
-	    <?=str_replace("\n", "<br />", $cycle->commentaries); ?>
+	    <?php if (in_array($cycle->id, $cyclesid)) { ?>
+		<?=str_replace("\n", "<br />", $cycle->commentaries); ?>
+	    <?php } ?>
 	<?php } ?>
     </p>
 </div>

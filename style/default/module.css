@@ -43,7 +43,7 @@
 .module_tab, .resume_module
 {
     border-radius: 15px;
-    box-shadow: 0px 1px 3px rgb(55, 55, 55);
+    box-shadow: 0px 1px 30px rgba(55, 55, 55, 0.15);
 }
 
 .module_tab td
@@ -59,14 +59,14 @@
 
 .medalscroll > div
 {
-    width: 100%;
+    width: calc(100% - 20px);
     /* height: 105px; */
     max-height: 500px;
-    text-align: left;
     overflow-x: auto;
     background-color: rgba(45, 48, 59, 0.2);
     box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
-    border-radius: 5px;	
+    border-radius: 5px;
+    padding: 10px;
 }
 
 .medalscroll > div::-webkit-scrollbar
@@ -99,9 +99,16 @@
 
 .gradetab td
 {
+    border-radius: 0px !important;
     text-align: center;
     padding: 0;
     vertical-align: middle;
+}
+
+.gradetab th, .gradetab td
+{
+    padding: 2px 2px 2px 2px;
+    font-size: small;
 }
 
 .resume_module .module_scale tr td:first-of-type

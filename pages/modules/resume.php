@@ -42,7 +42,7 @@ ob_start();
 	<?php $max_cred += $matter->credit_a; ?>
 	<?php $total += 1; ?>
 	
-	<?php if ($matter->subscription == FullActivity::AUTOMATIC_SUBSCRIPTION) continue ; ?>
+	<?php // if ($matter->subscription == FullActivity::AUTOMATIC_SUBSCRIPTION) continue ; ?>
 
 	<div
 	    class="resume_module"
@@ -68,7 +68,7 @@ ob_start();
 	    </div>
 	    <p
 		class="module_description"
-		style="text-indent: 40px;"
+		style="text-indent: 40px; overflow: auto;"
 	    >
 		<?=$matter->description; ?>
 	    </p>

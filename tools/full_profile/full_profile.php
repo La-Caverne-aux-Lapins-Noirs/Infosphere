@@ -114,7 +114,7 @@ class FullProfile extends Layer
 	    $not = 0;
 	    foreach ($mod->medal as $medal)
 	    {
-		if (is_note($medal["codename"]))
+		if (is_note($medal["codename"]) && $medal["success"] > 0)
 		{
 		    $avg += intval(substr($medal["codename"], strlen("token")));
 		    $not += 1;
@@ -122,7 +122,7 @@ class FullProfile extends Layer
 	    }
 	    if ($not == 0)
 		$not = 1;
-	    $this->set_grade($mod, $avg / $not + $mod->bonus_grade_d);
+	    $this->set_grade($mod, ($avg / $not + $mod->bonus_grade_d) / 100.0);
 	    return ;
 	}
 
@@ -138,6 +138,11 @@ class FullProfile extends Layer
 		if ($medal["success"] > 0)
 		    $acquired_medal += 1;
 		$medal_count += 1;
+	    }
+	    if (!$medal_count)
+	    {
+		$mod->grade = 0;
+		return ;
 	    }
 	    $mod->current_percent = $tmp =
 		$acquired_medal / $medal_count +
@@ -220,8 +225,6 @@ class FullProfile extends Layer
 	    }
 	    else // role == 0
 	    { // Médailles optionnelles - seulement les positives
-		if (!isset($medal["type"]))
-		    AddDebugLogR($mod->codename." ".$medalname);
 		if ($medal["type"] != 0)
 		    continue ;
 		if ($medal["success"] > 0)
@@ -330,7 +333,7 @@ class FullProfile extends Layer
     }
 
     // Si on a une medaille de module quelque part, et que
-    // celle ci n'est pas locale, elle sera appliquée partout
+    // celle ci n'est pas locale ni une note, elle sera appliquée partout
     function share_medals()
     {
 	foreach ($this->sublayer as &$cycle)
@@ -342,7 +345,9 @@ class FullProfile extends Layer
 		    $original_role = $medal["role"];
 		    $original_module_medal = $medal["module_medal"];
 		    
-		    if ($medal["module_medal"] && $medal["local"] == false)
+		    if ($medal["module_medal"] &&
+			$medal["local"] == false &&
+			!is_note($medal["codename"]))
 		    {
 			$global_medal = $this->medal[$medal["codename"]];
 

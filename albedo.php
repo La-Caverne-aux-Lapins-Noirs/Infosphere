@@ -29,6 +29,8 @@ if ($out["result"] == "ok" && $out["content"] == "ping")
 
 // Chaque fichier albedo doit commencer par vérifier les credentials
 $files = glob("*/albedo.php");
+if (($key = array_search("api/albedo.php", $files)) !== false)
+    unset($files[$key]);
 $files = array_merge($files, glob("*/*/albedo.php"));
 
 foreach ($files as $f)

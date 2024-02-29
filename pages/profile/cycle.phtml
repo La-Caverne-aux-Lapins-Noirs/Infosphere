@@ -125,60 +125,89 @@ $neutral = "255, 255, 255, 0.0";
 		   border: 2px black solid;
 		   "
 	></div>
-    </td><td rowspan="2">
-	<div class="full_size_table" style="overflow-y: auto; height: 250px; scrollbar-width: 5px;">
-	    <?php foreach (sort_by_medal_grade($module->medal, true) as $medal) { ?>
-		<?php
-		if (!isset($medal["eliminatory"]) &&
-		    ($medal["type"] != 0 || ($medal["role"] == 0 && $medal["success"] == 0))
+    </td>
+    <?php if ($module->validation != FullActivity::GRADE_VALIDATION) { ?>
+	<td rowspan="2">
+	    <div class="full_size_table" style="overflow-y: auto; height: 250px; scrollbar-width: 5px;">
+		<?php foreach (sort_by_medal_grade($module->medal, true) as $medal) { ?>
+		    <?php
+		    if (!isset($medal["eliminatory"]) &&
+			($medal["type"] != 0 || ($medal["role"] == 0 && $medal["success"] == 0))
 		    )
 		    continue ;
-		if (isset($medal["module_level"])) echo "level";
-		?>
-		<div
-		    title="<?=medal_tooltip($medal); ?>"
-		    class="medal_box_picture"
-		    style="
-			   position: relative;
-			   display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
-			   background-image: url('<?=$medal["icon"]; ?>');
-			   width: 50px !important;
-			   height: 50px !important;
-			   <?php if ($medal["success"] == 0 && $medal["type"] == 0) { ?>
-			   <?php if ($medal["failure"] > 0) { ?>
-			   filter: grayscale(1);
-			   opacity: 0.5;
-			   <?php } else { ?>
-			   opacity: 0.5;
-			   <?php } ?>
-			   <?php } ?>
-			   "
-		>
-		    <?php if ($medal["module_medal"] && $module->validation == FullActivity::RANK_VALIDATION && $medal["role"] != 0) { ?>
-			<img
-			    src="res/grade_<?=["d", "c", "b", "a", "a"][$medal["role"] - 1]; ?>.png"
-			    style="position: absolute; top: 0px; right: -10px; width: 20px; height: 20px;"
-			/>
-		    <?php } ?>
-		    <?php if ($medal["local"]) { ?>
-			<img
-			    src="res/local.png"
-			    style="position: absolute; bottom: 0px; right: -10px; width: 20px; height: 20px;"
-			/>
-		    <?php } ?>
-		    <?php if ($medal["success"] == 0 && $medal["failure"] > 0 && $medal["type"] == 0) { ?>
-			<img
-			    src="res/cross.png"
-			    style="position: absolute; bottom: 0px; left: -10px; width: 30px; height: 30px;"
-			/>
-		    <?php } ?>
-		</div>
-	    <?php } ?>
-	</div>
-    </td></tr>
-    <tr><td colspan="4">
-	<?php require ("progress.php"); ?>
-    </td></tr>
+		    if (isset($medal["module_level"])) echo "level";
+		    ?>
+		    <div
+			title="<?=medal_tooltip($medal); ?>"
+			       class="medal_box_picture"
+			style="
+			       position: relative;
+			       display: inline-block; margin-left: 5px; margin-right: 5px; margin-top: 2px;
+			       background-image: url('<?=$medal["icon"]; ?>');
+			       <?php if (strstr($medal["command"], " sband ") !== false) { ?>
+			       width: 46px !important;
+			       height: 46px !important;
+			       border-radius: 23px;
+			       border: 2px black solid;
+			       <?php } else { ?>
+			       width: 50px !important;
+			       height: 50px !important;
+			       <?php } ?>
+			       <?php if ($medal["success"] == 0 && $medal["type"] == 0) { ?>
+			         <?php if ($medal["failure"] > 0) { ?>
+			             filter: grayscale(1);
+			             opacity: 0.5;
+				   <?php } else { ?>
+			             opacity: 0.5;
+				 <?php } ?>
+			       <?php } ?>
+			       "
+		    >
+			<?php if ($medal["module_medal"] && $module->validation == FullActivity::RANK_VALIDATION && $medal["role"] != 0) { ?>
+			    <img
+				src="res/grade_<?=["d", "c", "b", "a", "a"][$medal["role"] - 1]; ?>.png"
+				style="
+				     position: absolute;
+				     <?php if (strstr($medal["command"], " sband ") !== false) { ?>
+				     top: -2px;
+				     <?php } else { ?>
+				     top: 0px;
+				     <?php } ?>
+				     right: -10px;
+				     width: 20px;
+				     height: 20px;
+				     "
+			    />
+			<?php } ?>
+			<?php if ($medal["local"]) { ?>
+			    <img
+				src="res/local.png"
+				style="position: absolute; bottom: 0px; right: -10px; width: 20px; height: 20px;"
+			    />
+			<?php } ?>
+			<?php if ($medal["success"] == 0 && $medal["failure"] > 0 && $medal["type"] == 0) { ?>
+			    <img
+				src="res/cross.png"
+				style="position: absolute; bottom: 0px; left: -10px; width: 30px; height: 30px;"
+			    />
+			<?php } ?>
+		    </div>
+		<?php } ?>
+	    </div>
+	</td>
+    <?php } else { ?>
+	<td></td>
+    <?php } ?>
+    </tr>
+    <tr>
+	<?php if ($module->validation != FullActivity::GRADE_VALIDATION) { ?>
+	    <td colspan="4">
+	<?php } else { ?>
+	    <td colspan="5">
+	<?php } ?>
+	    <?php require ("progress.php"); ?>
+	</td>
+    </tr>
     <?php if (count($module->sublayer)) { ?>
 	<tr style="background-color: rgba(<?=$darker; ?>);"><td colspan="5">
 	    <table style="width: 100%;" class="profile_activity">
@@ -221,7 +250,15 @@ $neutral = "255, 255, 255, 0.0";
 			<?php } ?>
 		    </td><td>
 			<?php foreach ($activity->medal as $med) { ?>
-			    <?=$med["codename"]; ?>
+			    <span
+				<?php if ($med["success"] > 0) { ?>
+				    style="font-weight: bold;"
+				<?php } else { ?>
+				    style="color: gray;"
+				<?php } ?>
+			    >
+				<?=$med["codename"]; ?><?php if ($med["local"]) { ?>(L)<?php } ?>
+			    </span>
 			<?php } ?>
 		    </td><td>
 

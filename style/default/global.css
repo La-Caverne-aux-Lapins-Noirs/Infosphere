@@ -11,6 +11,20 @@
     font-family: futura;
 }
 
+.tinyscroll::-webkit-scrollbar-track
+{
+    border-radius: 15px;
+    width: 15px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.tinyscroll::-webkit-scrollbar-thumb
+{
+    border-radius: 30px;
+    width: 30px;
+    background-color: rgba(255, 255, 255, 1.0);
+}
+
 #loading_screen1, #loading_screen2
 {
     background-color: black;
