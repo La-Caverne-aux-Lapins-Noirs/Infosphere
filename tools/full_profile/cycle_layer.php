@@ -62,10 +62,8 @@ class CycleLayer extends Layer
                activity.{$Language}_description as description,
                activity.codename as codename,
                user_team.id_user as id_user,
-	       user_team.commentaries as user_commentaries,
                team.id as id_team,
                team.closed as closed,
-               team.commentaries as commentaries,
                template.codename as template_codename,
                activity_cycle.cursus as cursus
                FROM activity_cycle
@@ -106,10 +104,11 @@ class CycleLayer extends Layer
 		if ($module->user_team)
 		{
 		    $sub->id_team = $module->user_team["id"];
-		    $sub->commentaries = $module->commentaries;
-		    if ($module->commentaries != "" && $module->user_commentaries != "")
-			$sub->commentaries .= "\n";
-		    $sub->commentaries .= $module->user_commentaries;
+		    $sub->commentaries = "";
+		    if ($module->commentaries)
+			$sub->commentaries .= $module->commentaries["content"]."\n";
+		    if ($module->user_commentaries)
+			$sub->commentaries .= $module->user_commentaries["content"];
 		    $sub->bonus_grade_a = $module->bonus_grade_a;
 		    $sub->bonus_grade_b = $module->bonus_grade_b;
 		    $sub->bonus_grade_c = $module->bonus_grade_c;

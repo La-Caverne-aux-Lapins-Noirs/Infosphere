@@ -80,6 +80,13 @@ if ($type == "activity")
     // On est responsable?
     if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
 	render_file();
+    // C'est juste des broutilles...
+    if (in_array($target[2], [
+	"icon.png", "icon.jpeg", "icon.jpg",
+	"wallpaper.png", "wallpaper.jpeg", "wallpaper.jpg",
+	"intro.mp4", "intro.ogv",
+    ]))
+        render_file();
     if ($target[3] == "ressource" && ($target[4] == "admin" || $target[4] == "private"))
 	forbidden();
     // C'est pas la configuration?

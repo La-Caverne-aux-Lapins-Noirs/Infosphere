@@ -19,7 +19,7 @@ silent_submitf(this, {
 <?php if (is_teacher()) { ?>
     <a
 	class="asset_link"
-	id="asset<?=$asset["id"]; ?>button"
+	id="asset<?=$support["id"]; ?>button"
 	onclick="switch_asset(
 	       this,
 	       'screen_<?=$support["id"]; ?>',
@@ -79,7 +79,7 @@ silent_submitf(this, {
 		<?php if (@strlen($asset["name"])) { ?>
 		    <?=$asset["name"]; ?>
 		    <?php if (is_teacher()) { ?>
-			(<?=$asset["codename"]; ?>) #<?=$asset["id"]; ?>
+			(#<?=$asset["codename"]; ?>) <?=$asset["id"]; ?>
 		    <?php } ?>
 		<?php } else { ?>
 		    <?=$asset["codename"]; ?>

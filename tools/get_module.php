@@ -16,7 +16,10 @@ function get_modules($template, $id = -1)
     if (!is_director())
     {
 	if (!is_cycle_director())
+	{
 	    $filter = " AND activity_teacher.id_user = {$User["id"]}";
+	    //// IL MANQUE SI ON EST PROF VIA UN LABORATOIRE
+	}
 	else
 	{
 	    $filter = " OR (1 ";

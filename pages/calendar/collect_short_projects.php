@@ -25,11 +25,32 @@ function collect_short_projects($week, $wlist, $is_filtered = false)
          AND pickup_date >= '".db_form_date($start)."'
          AND type = 15
          AND deleted IS NULL
- ");
+	 ");
+    $blist = [
+	"activity_acquired_medal",
+	"activity_team_content",
+	"activity_medal",
+	"activity_support",
+	"activity_details",
+	"activity_texts",
+    ];
     foreach ($sesstmp as $sess)
     {
-	($s = new FullActivity)->build($sess["id"], false, false);
-	($module = new FullActivity)->build($s->parent_activity, false, false);
+	($s = new FullActivity)->buildp(
+	    $sess["id"], [
+		"recursive" => false,
+		"only_user" => true,
+		"blist" => $blist,
+	    ]
+	);
+	($module = new FullActivity)->buildp(
+	    $s->parent_activity, [
+		"recursive" => false,
+		"only_user" => true,
+		"blist" => $blist,
+	    ]
+	);
+	
 	if (!$is_filtered)
 	{
 	    if ($s->is_assistant == false && $module->registered == false)

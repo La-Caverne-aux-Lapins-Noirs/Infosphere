@@ -74,12 +74,14 @@ function single_link($params)
 	    method="put"
 	    action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
 	    onsubmit="return <?=$submit; ?>;"
+	    style="position: relative;"
 	>
 	    <?php $count = 0; ?>
 	    <?php foreach ($extra_properties as $epv) { ?>
 		<?php if (@strlen($epv["admin_func"]) == 0 || $epv["admin_func"]($hook_id)) { ?>
 		    <input
 			type="text"
+			style="position: relative;"
 			name="<?=$epv["codename"]; ?>"
 			placeholder="<?=$epv["name"]; ?>"
 			value="<?=isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : ""; ?>"
@@ -93,6 +95,11 @@ function single_link($params)
 		<input
 		    type="button"
 		    value="&#10003;"
+		    style="
+			  position: absolute;
+			  top: 0px;
+			  height: <?=20 * $count; ?>px;
+			  "
 		    onclick="<?=$submit; ?>"
 		/>
 	    <?php } ?>

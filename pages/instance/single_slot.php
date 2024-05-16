@@ -37,7 +37,7 @@
 		<input type="hidden" name="id_slot" value="<?=$s["id"]; ?>" />
 		<select name="id_team" style="width: 50%;">
 		    <?php foreach ($activity->unique_session->team as $t) { ?>
-			<?php if ($t["slot"] == false) { ?>
+			<?php if (!isset($t["slot"]) || $t["slot"] == false) { ?>
 			    <?php
 			    $logins = [];
 			    foreach ($t["user"] as $usr)

@@ -2,6 +2,7 @@
 
 $Operations = [
     "run_albedo.php",
+    "backup.php",
     "ping_hand.php",
     "new_ldap_user.php",
     "test_mail.php",

@@ -1,0 +1,103 @@
+<div style="
+	    height: 30px;
+	    text-align: center;
+	    font-size: x-large;
+	    position: absolute;
+	    top: 20px;
+	    left: 10px;
+	    right: 10px;
+	    vertical-align: top;"
+>
+    <?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
+
+    <?php
+    $pbrowser = $intercom;
+    $action =
+	"/api/intercom/{$intercom["id_misc"]}".
+	"/{$intercom["misc_type"]}"
+    ;
+    require ("intercom_page_browser.phtml");
+    ?>
+</div>
+
+<div style="height: 110px; position: absolute; top: 60px; left: 10px; right: 10px;">
+    <form
+	<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."_subject_list'});"; ?>
+	method="post"
+	action="/api/intercom/<?=$intercom["id_misc"]; ?>/<?=$intercom["misc_type"]; ?>"
+	onsubmit="return <?=$js; ?>"
+	style="width: calc(100% - 20px);
+		height: 110px;
+		margin-left: 10px;
+		position: relative;
+		"
+    >
+	<input
+	    type="text"
+	    name="title"
+	    id="<?=$intercom["div"]; ?>_title"
+	    style="
+		  width: calc(100% - 50px); height: 30px;
+		  position: absolute; top: 0px; left: 0px;
+		  "
+	    placeholder="<?=$Dictionnary["Title"]; ?>"
+	/>
+	<textarea
+	    id="<?=$intercom["div"]; ?>_message"
+	    placeholder="<?=$Dictionnary["Message"]; ?>"
+	    name="message"
+	    style="
+		resize: none;
+		width: calc(100% - 50px);
+		height: 70px;
+		position: absolute;
+		top: 40px;
+		left: 0px;
+		"
+	></textarea>
+	<input
+	    type="button"
+	    onclick="<?=$js; ?>"
+	    style="
+		  width: 40px;
+		  height: 100%;
+		  position: absolute;
+		  top: 0px; right: 0px;"
+	    value="+"
+	/>
+    </form>
+</div>
+
+<div style="height: 50px; left: 10px; right: 10px; position: absolute; top: 180px;">
+    <div style="width: 50px; position: absolute; left: 0px;"></div>
+    <div style="
+		position: absolute;
+		left: 50px;
+		right: 450px;
+		text-align: center;
+		"
+    >
+	<?=$Dictionnary["Title"]; ?>
+    </div>
+    <div style="width: 50px; position: absolute; right: 400px; text-align: center;">#</div>
+    <div style="width: 200px; position: absolute; right: 200px; text-align: center;">
+	<?=$Dictionnary["CreationBy"]; ?>
+    </div>
+    <div style="width: 200px; position: absolute; right: 0px; text-align: center;">
+	<?=$Dictionnary["LastModificationBy"]; ?>
+    </div>
+</div>
+
+<div
+    id="<?=$intercom["div"]; ?>_subject_list"
+    style="
+	position: absolute;
+	top: 210px;
+	bottom: 10px;
+	left: 10px;
+	right: 10px;
+	overflow-y: auto;
+	"
+>
+    <?php require ("intercom_subject_list.phtml"); ?>
+</div>

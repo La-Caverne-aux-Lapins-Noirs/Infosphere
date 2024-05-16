@@ -5,7 +5,7 @@ require ("activities.php");
 $Tab = [
     "GET" => [
 	"" => [
-	    "am_i_director,am_i_cycle_director,is_teacher_for_activity",
+	    "am_i_director,am_i_cycle_director,is_teacher",
 	    "DisplayActivity"
 	],
 	"admin" => [
@@ -129,6 +129,10 @@ $Tab = [
 	"" => [
 	    "am_i_director,am_i_cycle_director",
 	    "DeleteActivity"
+	],
+	"subject" => [
+	    "is_teacher_for_activity",
+	    "SetSubject"
 	],
 	"medal" => [
 	    "is_teacher_for_activity",

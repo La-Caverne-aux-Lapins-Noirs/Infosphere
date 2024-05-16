@@ -9,6 +9,12 @@ $blist = [
 ];
 if (!($_GET["b"] ?? 1))
     $blist[] = "activity_team_content";
+
+///////////// A FAIRE
+///// SI CETTE ACTIVITE FAIT PARTIE DE CELLE QUI SONT GEREE PAR L'UTILISATEUR
+//// IL FAUT QUE LA PAGE MARCHE, ACTUELLEMENT, LA PAGE DE GESTION EST BUGGEE
+/// SI L'ACTIVITE EST TROP ANCIENNE, EN DEHORS DU MAXDATE
+
 ($requested = new FullActivity)->buildp($_GET["a"], ["blist" => $blist]);
 if ($requested->parent_activity != -1)
 {

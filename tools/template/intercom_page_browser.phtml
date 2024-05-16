@@ -1,0 +1,49 @@
+<div style="width: calc(100% - 70% - 60px); height: 40px; position: absolute; top: 0px; right: 0px; vertical-align: top;">
+    <?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."'})"; ?>
+    <?php if ($pbrowser["page"]) { ?>
+	<form
+	    method="get"
+	    action="<?=$action; ?>?page=<?=$pbrowser["page"] - 1; ?>"
+	    onsubmit="return <?=$js; ?>"
+	    style="display: inline-block;"
+	>
+	    <input
+		type="button"
+		      style="width: 50px; height: 30px;"
+		      onclick="<?=$js; ?>"
+		      value="&larr;"
+	    />
+	</form>
+    <?php } else { ?>
+	<div style="display: inline-block; width: 50px;"></div>
+    <?php } ?>
+    <div style="
+		display: inline-block;
+		width: 50px;
+		text-align: center;
+		background-color: lightgray;
+		border-radius: 5px; height: 30px;
+		vertical-align: top;
+		line-height: 30px;
+		"
+    >
+	<?=$pbrowser["page"]; ?>
+    </div>
+    <?php if (!$pbrowser["on_last_page"]) { ?>
+	<form
+	    method="get"
+	    action="<?=$action; ?>?page=<?=$pbrowser["page"] + 1; ?>"
+	    onsubmit="return <?=$js; ?>"
+	    style="display: inline-block;"
+	>
+	    <input
+		type="button"
+		      style="width: 50px; height: 30px;"
+		      onclick="<?=$js; ?>"
+		      value="&rarr;"
+	    />
+	</form>
+    <?php } else { ?>
+	<div style="display: inline-block; width: 50px;"></div>
+    <?php } ?>
+</div>

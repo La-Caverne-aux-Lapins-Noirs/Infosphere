@@ -6,8 +6,17 @@ function display_avatar($usr, $siz = 200, $photo_first = false)
 
     if (is_object($usr))
 	$codename = $usr->codename;
-    else
+    else if (is_array($usr))
 	$codename = $usr["codename"];
+    else
+    {
+	if (($usrx = resolve_codename("user", $usr, "codename", true))->is_error())
+	{
+	    $nw["id"] = $usr;
+	    goto DisplayAvatar;
+	}
+	$codename = $usrx->value["codename"];
+    }
     $nw["avatar"] = $Configuration->UsersDir().$codename."/public/avatar.png";
     $nw["photo"] = $Configuration->UsersDir().$codename."/admin/photo.png";
     $nw["id"] = $codename;
@@ -17,6 +26,7 @@ function display_avatar($usr, $siz = 200, $photo_first = false)
     if (!file_exists($nw["photo"]))
 	unset($nw["photo"]);
 
+ DisplayAvatar:
     echo '<a href="index.php?p=ProfileMenu&amp;a='.$nw["id"].'">';
     if (@strlen($nw["avatar"]) && @strlen($nw["photo"]))
     {

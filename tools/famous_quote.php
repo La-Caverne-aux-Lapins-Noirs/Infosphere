@@ -96,6 +96,7 @@ $FamousQuote["fr"] = [
     "Le courage, c'est de chercher la vérité et de la dire",
     "Il est bien vrai que la beauté de la science et de l'art est consolatrice",
     "Les progrès de l'humanité se mesurent aux concessions que la folie des sages fait à la sagesse des fous",
+    "Enfer chrétien, du feu. Enfer païen, du feu. Enfer mahométan, du feu. Enfer hindou, des flammes. A en croire les religions, Dieu est né rôtisseur."
 ];
 
 $FamousQuote["en"] = [

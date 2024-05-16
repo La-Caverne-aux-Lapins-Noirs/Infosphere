@@ -1,26 +1,30 @@
 <?php
 
-function fetch_teacher($id, $by_name = false, $table = "activity", $gather = false) // id_{$table}
+function fetch_teacher($id, $by_name = false, $table = "activity", $gather = false, $activity = NULL) // id_{$table}
 {
-    if (($ret = resolve_codename($table, $id, "codename", true))->is_error())
-	return ([]);
-    $id = $ret->value["id"];
+    if ($activity == NULL)
+    {
+	if (($ret = resolve_codename($table, $id, "codename", true))->is_error())
+	    return ([]);
+	$activity = $ret->value;
+    }
+    $id = $activity["id"];
     $new = [];
 
     if ($gather)
     {
 	// Faux, faux car le dernier vrai va aller voir les templates.
-	if ($ret->value["reference_activity"] != -1)
+	if ($activity["reference_activity"] != -1)
 	    $new = array_merge(
-		$new, fetch_teacher($ret->value["reference_activity"], $by_name, $table, false)
+		$new, fetch_teacher($activity["reference_activity"], $by_name, $table, false)
 	    );
-	if ($ret->value["parent_activity"] != -1)
+	if ($activity["parent_activity"] != -1)
 	    $new = array_merge(
-		$new, fetch_teacher($ret->value["parent_activity"], $by_name, $table, false)
+		$new, fetch_teacher($activity["parent_activity"], $by_name, $table, false)
 	    );
-	if ($ret->value["id_template"] != -1)
+	if ($activity["id_template"] != -1)
 	    $new = array_merge(
-		$new, fetch_teacher($ret->value["id_template"], $by_name, $table, true)
+		$new, fetch_teacher($activity["id_template"], $by_name, $table, true)
 	    );
 	foreach ($new as &$n)
 	    $n["ref"] = true;

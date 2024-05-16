@@ -1,0 +1,15 @@
+<form
+    <?php $js = "silent_submitf(this, {tofill: 'single_team{$cteam["id"]}'});"; ?>
+    method="delete"
+    onsubmit="return <?=$js; ?>"
+    action="/api/instance/<?=$activity->id; ?>/subscribe/<?=$usr["id"]; ?>"
+    style="position: absolute; right: 0px; top: 0px; width: 30px; height: 35px"
+>
+    <input type="hidden" name="id_user" value="<?=$usr["id"]; ?>" />
+    <input
+	type="button"
+	style="width: 30px; height: 35px; color: red;"
+	value="&#10007;"
+	onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>"
+    />
+</form>

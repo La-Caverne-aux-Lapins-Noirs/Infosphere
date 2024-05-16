@@ -32,7 +32,8 @@ function print_weekday_selector($value, array $fields, $second_value = NULL, $ch
 	$onchange = " onchange=\"$onchange\" ";
     
     $rnd = random_name();
-    print_int_selector(1, 52, $fields[0], $week, "date_composer", $rnd."0", $empty ? "disabled" : "", $onchange);
+    // -2 afin de pouvoir placer des éléments avant le début. (Jusqu'à 3 semaines avant)
+    print_int_selector(-2, 52, $fields[0], $week, "date_composer", $rnd."0", $empty ? "disabled" : "", $onchange);
     print_int_selector(1, 7, $fields[1], $day, "date_composer", $rnd."1", $empty ? "disabled" : "", $onchange);
 
     if (isset($fields[2]))

@@ -1,24 +1,27 @@
 <?php
 
-function fetch_activity_support($id, $gather = false, $by_name = false) // id_activity
+function fetch_activity_support($id, $gather = false, $by_name = false, $activity = NULL) // id_activity
 {
     global $Language;
 
-    if (($ret = resolve_codename("activity", $id, "codename", true))->is_error())
-	return ([]);
-    $id = $ret->value["id"];
+    if ($activity == NULL)
+    {
+	if (($ret = resolve_codename("activity", $id, "codename", true))->is_error())
+	    return ([]);
+	$activity = $ret->value;
+    }
+    $id = $activity["id"];
 
     $new = [];
-
     if ($gather)
     {
 	// Faux, faux car le dernier vrai va aller voir les templates.
-	if ($ret->value["reference_activity"] != -1)
-	    $new = array_merge($new, fetch_activity_support($ret->value["reference_activity"], false));
-	if ($ret->value["parent_activity"] != -1)
-	    $new = array_merge($new, fetch_activity_support($ret->value["parent_activity"], false));
-	if ($ret->value["id_template"] != -1 && $ret->value["support_template"])
-	    $new = array_merge($new, fetch_activity_support($ret->value["id_template"], true));
+	if ($activity["reference_activity"] != -1)
+	    $new = array_merge($new, fetch_activity_support($activity["reference_activity"], false));
+	if ($activity["parent_activity"] != -1)
+	    $new = array_merge($new, fetch_activity_support($activity["parent_activity"], false));
+	if ($activity["id_template"] != -1 && $activity["support_template"])
+	    $new = array_merge($new, fetch_activity_support($activity["id_template"], true));
 	foreach ($new as &$n)
 	    $n["ref"] = true;
 	// On continue car il faut aussi regarder les supportes pour l'activité demandée
@@ -56,8 +59,8 @@ function fetch_activity_support($id, $gather = false, $by_name = false) // id_ac
          ON activity_support.id_support_category = support_category.id
        LEFT JOIN support
          ON activity_support.id_support = support.id
-       LEFT JOIN activity
-         ON activity_support.id_activity = activity.id
+       -- LEFT JOIN activity
+       --   ON activity_support.id_activity = activity.id
        LEFT JOIN activity as subactivity
          ON activity_support.id_subactivity = subactivity.id
 

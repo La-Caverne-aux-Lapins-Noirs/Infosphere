@@ -16,13 +16,13 @@
 	<th><?=$Dictionnary["Message"]; ?></th>
     </tr>
 <?php
-$url = str_replace("&amp;", "&", unrollget());
+$url = "instance".$activity->id;
 $urlhash = crc32($url);
 $logs = db_select_all("
    id_user, log_date, message, user.codename
    FROM log
    LEFT JOIN user ON log.id_user = user.id
-   WHERE id_user != 1
+   WHERE type = 0
    AND urlhash = $urlhash
    AND url = '$url'
    ORDER BY log_date DESC

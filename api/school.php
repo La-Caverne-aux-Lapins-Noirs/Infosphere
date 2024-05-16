@@ -136,7 +136,7 @@ function SetCycle($id, $data, $method, $output, $module)
 $Tab = [
     "GET" => [
 	"" => [
-	    "is_teacher_or_director",
+	    "is_teacher,is_director",
 	    "DisplaySchool"
 	]
     ],

@@ -519,14 +519,14 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 .activity_single_medal_box
 {
     position: relative;
-    background-color: rgba(255, 255, 255, 0.3);
     width: 30%;
-    min-width: 200px;
     height: 125px;
     margin-right: 2%;
     display: inline-block;
     margin-bottom: 10px;
     vertical-align: top;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .activity_single_medal_box > div
@@ -653,6 +653,40 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     height: 25px;
     background-image: url("/res/mandatory.png");
     background-size: 100% 100%;
+}
+
+.very_weak_medal, .weak_medal, .normal_medal, .strong_medal, .very_strong_medal
+{
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+}
+
+.very_weak_medal
+{
+    background-image: url("/res/vweak.png");
+}
+
+.weak_medal
+{
+    background-image: url("/res/weak.png");
+}
+
+.normal_medal
+{}
+
+.strong_medal
+{
+    background-image: url("/res/strong.png");
+}
+
+.very_strong_medal
+{
+    background-image: url("/res/vstrong.png");
 }
 
 .band_box > .medal_mandatory,

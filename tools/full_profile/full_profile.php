@@ -26,6 +26,7 @@ class FullProfile extends Layer
 {
     public $LAYER = "TOP";
     public $codename;
+    public $cache;
     public $mail;
     public $nickname = "";
     public $first_name = "";
@@ -223,7 +224,7 @@ class FullProfile extends Layer
 		    $medald += 1;
 		$medald_cnt += 1;
 	    }
-	    else // role == 0
+	    else if ($medal["module_medal"]) // role == 0
 	    { // Médailles optionnelles - seulement les positives
 		if ($medal["type"] != 0)
 		    continue ;
@@ -386,11 +387,10 @@ class FullProfile extends Layer
                medal.{$Language}_name as name,
                medal.{$Language}_description as description
                FROM user_medal
-               LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
                LEFT JOIN medal ON medal.id = user_medal.id_medal AND medal.deleted IS NULL
                WHERE user_medal.id_user = {$this->id}
-               AND activity_user_medal.id_activity = -1
-               AND activity_user_medal.result = 1
+               AND user_medal.id_activity = -1
+               AND user_medal.result = 1
 	    ");
 	    foreach ($this->medals as &$medx)
 	    {
@@ -412,6 +412,10 @@ class FullProfile extends Layer
 		foreach ($fields as $label)
 		    $l->$label = $cycle[$label];
 		$l->id = $cycle["id_cycle"];
+		if ($l->commentaries != NULL)
+		    $l->commentaries = $l->commentaries["content"];
+		else
+		    $l->commentaries = "";
 		$l->buildsub($user_id, $cycle["id_cycle"], $blist, $only_registered);
 		$this->sublayer[] = $l;
 	    }	    

@@ -7,7 +7,7 @@ $cnt = 0;
 $mdatas = [];
 $user->managed_activities = list_of_managed_activities
 ($user, true, false, false, $api_id_activity,
- now() - $one_year / 2
+ now() - 8 * $one_year / 2
 );
 foreach ($user->managed_activities["activities"] as $man)
 {
@@ -31,6 +31,8 @@ foreach ($user->managed_activities["activities"] as $man)
 	{
 	    $subuserx = &$subx["user"][array_key_first($subx["user"])];
 	    $subuserx["medal"] = [];
+
+	    // On cherche les médailles dans les activités de la matière
 	    foreach ($matter->subactivities as $subactx)
 	    {
 		foreach ($subactx->team as $teamx)
@@ -39,13 +41,16 @@ foreach ($user->managed_activities["activities"] as $man)
 		    {
 			if ($userx["id"] != $subuserx["id"])
 			    continue ;
+			// On ne s'interesse pas au fait de savoir si elles viennent
+			// de l'équipe ou de la personne
 			$meds = db_select_all("
-				medal.codename, medal.id FROM activity_user_medal
-				LEFT JOIN user_medal ON activity_user_medal.id_user_medal = user_medal.id
+				medal.codename, medal.id
+                                FROM user_medal
                                 LEFT JOIN medal ON medal.id = user_medal.id_medal
                                 WHERE id_activity = $subactx->id
-                                AND user_medal.id_user = {$userx["id"]}
-                                AND activity_user_medal.result = 1
+                                AND id_user = {$userx["id"]}
+                                AND result = 1
+				AND deleted IS NULL
 				");
 			foreach ($meds as $medalx)
 			{
@@ -57,6 +62,25 @@ foreach ($user->managed_activities["activities"] as $man)
 			}
 		    }
 		}
+	    }
+
+	    // On cherche les médailles dans la matière elle-même
+	    $meds = db_select_all("
+		medal.codename, medal.id
+                FROM user_medal
+		LEFT JOIN medal ON medal.id = user_medal.id_medal
+                WHERE id_activity = $matter->id
+                AND id_user = {$subuserx["id"]}
+                AND result = 1
+		AND deleted IS NULL
+		");
+	    foreach ($meds as $medalx)
+	    {
+		$subuserx["medal"][$medalx["codename"]] = [
+		    "success" => 1,
+		    "codename" => $medalx["codename"],
+		    "id" => $medalx["id"],
+		];
 	    }
 	}
     }

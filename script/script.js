@@ -1,5 +1,12 @@
 var clock_content = "";
 
+function scroll_to_bottom(elm)
+{
+    var box = document.getElementById(elm);
+
+    box.scrollTop = box.scrollHeight;
+}
+
 function SetContentClock(str)
 {
     clock_content = str;

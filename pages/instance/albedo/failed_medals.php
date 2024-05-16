@@ -21,7 +21,7 @@ foreach ($sessions as $sess)
 	{
 	    foreach ($activity->medal as $med)
 	    {
-		if (!($request = add_medal($usr["id"], "#".$med["codename"], $activity->id))->is_error())
+		if (!($request = edit_medal($usr["id"], "#".$med["codename"], $activity->id))->is_error())
 		    $medz = true;
 	    }
 	}

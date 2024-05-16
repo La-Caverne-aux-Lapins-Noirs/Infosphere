@@ -37,10 +37,12 @@ function try_get($array, $key, $default = "", $id = NULL)
     return ($default);
 }
 
-function is_symbol($str)
+function is_symbol($str, $pattern = false)
 {
     if (!isset($str) || is_array($str) || !is_string($str))
 	return (false);
+    if ($pattern)
+	return (preg_match('/^[A-Za-z_%][A-Za-z0-9_\-.%]*$/', $str) == 1);
     return (preg_match('/^[A-Za-z_][A-Za-z0-9_\-.]*$/', $str) == 1);
 }
 

@@ -183,7 +183,7 @@ $all_users = implode(";", $all_users);
 	    <td>
 		<form
 		    method="put"
-		    action="/api/team/<?=$sub["id"]; ?>/commentaries"
+		    action="/api/instance/<?=$sub["id"]; ?>/comment/<?=$subuser["id"]; ?>"
 		    style="width: 200px; height: 100px;"
 		>
 		    <textarea
@@ -191,7 +191,11 @@ $all_users = implode(";", $all_users);
 			id="commentaries<?=$sub["id"]; ?>"
 			oninput="delay_before_submit(1000, this, 'objectives<?=$sub["id"]; ?>');"
 			style="width: 200px; height: 100px; resize: none;"
-		    ><?=$sub["commentaries"]; ?></textarea>
+		    ><?php
+		     if (@strlen($subuser["commentaries"]["content"])) {
+			 echo $subuser["commentaries"]["content"];
+		     }
+		     ?></textarea>
 		</form>
 	    </td>
 	</tr>

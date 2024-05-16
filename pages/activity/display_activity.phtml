@@ -472,12 +472,31 @@ $js = "silent_submit(this)";
 		    <?php if (is_assistant_for_activity($module->id)) { ?>
 			<br />
 			<div id="subject_configuration_<?=$k; ?>">
-			    <a href="<?=@$module->subject[$k][0]; ?>">
-				<?=@$module->subject[$k][0] ? $Dictionnary["SeeSubject"] : ""; ?>
-			    </a>
-			    <a href="<?=@$module->configuration[$k][0]; ?>">
-				<?=@$module->configuration[$k][0] ? $Dictionnary["SeeConfiguration"] : ""; ?>
-			    </a>
+			    <?php if (@$module->subject[$k][0] || @$module->configuration[$k][0]) { ?>
+				<?php if (@$module->subject[$k][0]) { ?>
+				    <a href="<?=@$module->subject[$k][0]; ?>">
+					<?=$Dictionnary["SeeSubject"]; ?>
+				    </a>
+				<?php } ?>
+				<?php if (@$module->configuration[$k][0]) { ?>
+				    <a href="<?=@$module->configuration[$k][0]; ?>">
+					<?=$Dictionnary["SeeConfiguration"]; ?>
+				    </a>
+				<?php } ?>
+				<br /><br /><br /><br />
+				<form
+				    method="delete"
+				    onsubmit="return window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
+				    action="/api/<?=$page; ?>/<?=$module->id; ?>/subject"
+				>
+				    <input
+					type="button"
+					onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>"
+					value="<?=$Dictionnary["Delete"]; ?>"
+					style="width: 100px;"
+				    />
+				</form>
+			    <?php } ?>
 			</div>
 		    <?php } ?>
 		</div>

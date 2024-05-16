@@ -22,7 +22,7 @@
 		<?php if (@strlen($category["name"])) { ?>
 		    <?=$category["name"]; ?>
 		    <?php if (is_teacher()) { ?>
-			(@<?=$category["codename"]; ?>) #<?=$category["id"]; ?>
+			(@<?=$category["codename"]; ?>) <?=$category["id"]; ?>
 		    <?php } ?>
 		<?php } else { ?>
 		    <?=@$category["codename"]; ?>
@@ -76,10 +76,10 @@
 				<?php if (@strlen($support["name"])) { ?>
 				    <?=$support["name"]; ?>
 				    <?php if (is_teacher()) { ?>
-					(#<?=$support["codename"]; ?>) #<?=$support["id"]; ?>
+					(<?=$support["codename"]; ?>) #<?=$support["id"]; ?>
 				    <?php } ?>
 				<?php } else { ?>
-				    #<?=$support["codename"]; ?>
+				    <?=$support["codename"]; ?>
 				<?php } ?>
 			    </h4>
 			</div>

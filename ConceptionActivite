@@ -1,4 +1,6 @@
 
+Le prix en franc d'une activité est celui néccessaire pour s'inscrire de force.
+
 HyperEspace:
 - Inscription automatique
 - Appel avec vérification de localité
@@ -22,7 +24,8 @@ TP:
 - Fermeture des inscriptions: au début du TP
 - Livraison du sujet: 10h, lundi, deuxieme semaine d'hyper-espace
 - Disparition du sujet: /
-- Ramassage: le soir du TP, 23h42
+- Ramassage: pas de limitation, tant que la matière est ouverte (CONCEPT A PROGRAMMER),
+  afin de permettre aux étudiants de les faire apres et de refaire passer la moulinette
 
 Colle:
 - Inscription obligatoire

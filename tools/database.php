@@ -6,7 +6,10 @@ $DBPerf = 0;
 $DBHistory = [];
 $DBMerge = [];
 $DBCount = 0;
-$DBCache = false;
+
+$QueryCacheOne = [];
+$QueryCacheAll = [];
+$DBCache = true;
 
 function formatstr($str)
 {
@@ -96,6 +99,15 @@ class Database
 	    }
 	}
 
+	global $DBCache;
+	global $QueryCacheAll;
+	global $QueryCacheOne;
+	if ($DBCache && strstr($req, "SELECT") === false)
+	{
+	    $QueryCacheAll = [];
+	    $QueryCacheOne = [];
+	}
+
 	if ($display)
 	{
 	    global $albedo;
@@ -162,12 +174,14 @@ class Database
 	    $DBMerge[$hash]["count"] += 1;
 	}
 	else
+	{
 	    $DBMerge[$hash] = [
 		"delay" => $After - $Before,
 		"count" => 1,
-		"back" => $xcall,
+		"back" => [$xcall],
 		"query" => $tmp
 	    ];
+	}
 
 	$DBPerf += $After - $Before;
 
@@ -208,8 +222,6 @@ class DBSelect
     }
 }
 
-$QueryCacheAll = [];
-
 function db_select_all($query, $key_field = "", $display = false)
 {
     global $DBSelect;
@@ -246,8 +258,6 @@ function db_select_all($query, $key_field = "", $display = false)
 	$QueryCacheAll[$query] = $data;
     return ($data);
 }
-
-$QueryCacheOne = [];
 
 function db_select_one($query, $display = false)
 {

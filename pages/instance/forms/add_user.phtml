@@ -1,0 +1,19 @@
+<form
+    method="put"
+	    <?php $js = "silent_submitf(this, {tofill: 'single_team{$cteam["id"]}'});"; ?>
+    onsubmit="return <?=$js; ?>"
+	    action="/api/instance/<?=$activity->id; ?>/subscribe/<?=$cteam["id"]; ?>"
+	    style="display: inline-block;"
+>
+    <input
+	type="text"
+	name="id_user"
+	style="width: 175px; height: 30px;"
+	placeholder="<?=$Dictionnary["UserToSubscribeToTeam"]; ?>"
+    />
+    <input type="button"
+	   onclick="<?=$js; ?>"
+	   style="width: 30px; height: 30px; color: green;"
+	   value="&#10003;"
+    />
+</form>

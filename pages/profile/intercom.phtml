@@ -1,1 +1,16 @@
-Intercom
+<h4>Intercom</h4>
+<?php $intercom = get_intercom("user", $user->id); ?>
+<?php $intercom["div"] = "user_intercom"; ?>
+<form
+    id="update_request"
+    method="get"
+    action="/api/intercom/<?=$intercom["id_misc"]; ?>/<?=$intercom["misc_type"]; ?>?_method=subget"
+    onsubmit="return false;"
+>
+</form>
+<script>
+ setTimeout(check_update, 5000, "<?=$intercom["div"]; ?>");
+</script>
+<div id="<?=$intercom["div"]; ?>">
+    <?php require_once ("./tools/template/intercom_subject_page.phtml"); ?>
+</div>

@@ -112,37 +112,26 @@ function AddModule($id, $data, $method, $output, $module)
 function SetActivityRegistration($id, $data, $method, $output, $module)
 {
     global $User;
+    global $Dictionnary;
+    global $Configuration;
+    global $five_minute;
+    global $SUBID;
 
-    if ($id == -1 && $method != "delete")
+    if ($id == -1 && $method != "DELETE")
 	bad_request();
-    if ($method == "delete")
-	$id = abs($id);
+    $id = abs($id);
+    if ($SUBID != -1)
+	$SUBID = abs($SUBID);
     ($activity = new FullActivity)->build($id);
-    $auth = false;
-    if (isset($data["id_user"]))
+    $target_team = (int)$SUBID;
+
+    if (is_assistant_for_activity($id) == false)
     {
-	if (($auth = is_teacher_for_activity($id)) == false)
-	    forbidden();
-	$id_user = $data["id_user"];
-    }
-    else
-    {
-	if (($auth = is_teacher_for_activity($id)) != false)
+	if (($module != "instance" && $module != "module" && $module  != "activity") ||
+	    ($data["action"] != "subscribe" && $data["action"] != "registration") ||
+	    $SUBID != -1)
 	    forbidden();
 	$id_user = $User["id"];
-    }
-    if (isset($data["id_team"]))
-	$target_team = $data["id_team"];
-    else
-	$target_team = -1;
-
-    if (($id_user = resolve_codename("user", $id_user))->is_error())
-	return ($id_user);
-    $id_users = $id_user->value;
-    if (!is_array($id_users))
-	$id_users = [$id_users];
-    foreach ($id_users as $id_user)
-    {
 	$team = db_select_one("
 	  team.id
 	  FROM team
@@ -151,41 +140,143 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	  WHERE team.id_activity = $id AND user_team.id_user = $id_user
 	");
 
-	// Si on est prof, on inscrit directement. Sinon on doit verifier les règles
-	if ($auth)
+	if ($team == NULL)
 	{
-	    if ($team == NULL)
-	    {
-		$ret = subscribe_to_instance($activity, $id_user, $target_team, true);
-		$msg = "Subscribed";
-	    }
+	    // Pas de relation user_team, alors c'est une création ou une jonction
+	    if ($method != "PUT")
+		bad_request();
+	    $ret = subscribe_to_instance(
+		$activity, NULL, $target_team
+	    );
+	    if ($target_team != -1)
+		$msg = "AJoinRequestHaveBeenSent";
+	    else if ($activity->teamable)
+		$msg = "YouHaveCreatedATeam";
 	    else
-	    {
-		$ret = unsubscribe_from_instance($activity, $id_user, true);
-		$msg = "Unsubscribed";
-	    }
+		$msg = "YouHaveSubscribed";
 	}
 	else
 	{
-	    // On est pas prof, on doit verifier les règles
-	    if ($team == NULL)
-	    {
-		$ret = subscribe_to_instance($activity);
-		$msg = "YouHaveSubscribed";
-	    }
-	    else
-	    {
-		$ret = unsubscribe_from_instance($activity);
+	    // Il y a une équipe, alors c'est une désinscription.
+	    if ($method != "DELETE")
+		bad_request();
+	    $ret = unsubscribe_from_instance(
+		$activity, NULL
+	    );
+	    if (!$activity->user_team)
 		$msg = "YouHaveUnsubscribed";
-	    }
+	    else if ($activity->user_team["leader"]["id"] == $User["id"])
+		$msg = "YouHaveDestroyedYourTeam";
+	    else
+		$msg = "YouHaveLeftYourTeam";
 	}
-
 	if ($ret->is_error())
 	    return ($ret);
+
+	ob_start();
+	($activity = new FullActivity)->build($id);
+	require_once ("./pages/instance/about_buttons.php");
+	return (new ValueResponse([
+	    "msg" => $Dictionnary[$msg],
+	    "content" => ob_get_clean()
+	]));
     }
-    return (new ValueResponse([
-	"msg" => $msg
-    ]));
+
+    // Si on est là, c'est qu'on est prof ou assistant.
+    if ($method == "PUT")
+    {
+	$target_team = (int)$SUBID;
+
+	if (isset($data["subaction"]))
+	{
+	    if ($data["subaction"] == "complete")
+	    {
+		// On pioche dans les inscrits de la matière
+		// $module = db_select_all("");
+		debug_response("Non implémenté");
+	    }
+	    else if ($data["subaction"] == "merge")
+	    {
+		// On pioche dans les équipes incomplètes
+		// $oteams = db_select_all("");
+		debug_response("Non implémenté");
+	    }
+	    else
+		bad_request();
+	    $users = NULL;
+	}
+	else
+	    $users = @$data["id_user"];
+
+	$ret = subscribe_to_instance($activity, $users, $SUBID, true, true);
+	if ($ret->is_error() || $module != "instance")
+	    return ($ret);
+	
+	($activity = new FullActivity)->build($id);
+	ob_start();
+	if ($target_team == -1)
+	    // Nouvelle équipe, nouvelle liste d'inscrits
+	    require_once ("./pages/instance/team_list.php");
+	else
+	{
+	    // Nouveau membre, nouvelle liste de membres
+	    foreach ($activity->team as $cteam)
+	    {
+		if ($target_team != $cteam["id"])
+		    continue ;
+		require_once ("./pages/instance/new_single_team.phtml");
+		break ;
+	    }
+	}
+	return (new ValueResponse([
+	    "msg" => (string)$ret,
+	    "content" => ob_get_clean()
+	]));
+    }
+
+    if ($method == "DELETE")
+    {
+	if ($data["action"] == "team")
+	{
+	    if ($SUBID != -1)
+		$id_team = " AND team.id = ".(int)$SUBID;
+	    else
+		$id_team = "";
+	    $user_teams = db_select_all("
+		user_team.id_user FROM user_team LEFT JOIN team ON user_team.id_team = team.id
+		WHERE team.id_activity = {$activity->id} $id_team
+	    ");
+	    if (!count($user_teams))
+		not_found();
+	}
+	else
+	{
+	    if ($SUBID == -1)
+		bad_request();
+	    else
+		$user_teams = [["id_user" => (int)$SUBID]];
+	}
+	foreach ($user_teams as $ut)
+	{
+	    $ret = unsubscribe_from_instance($activity, $ut["id_user"], true);
+	    if ($ret->is_error())
+		return ($ret);
+	}
+	    
+	if ($module != "instance")
+	    return ($ret);
+	// Renouvellement de la liste - faute d'avoir l'information equipe/membre
+	($activity = new FullActivity)->build($id);
+	ob_start();
+	require_once ("./pages/instance/team_list.php");
+	return (new ValueResponse([
+	    "msg" => (string)$ret,
+	    "content" => ob_get_clean()
+	]));
+    }
+
+    // Impossible
+    bad_request();
 }
 
 function PickupActivity($id, $data, $method, $output, $module)
@@ -299,23 +390,23 @@ function Instantiate($id, $data, $method, $output, $module)
        AND done_date > NOW()
     ");
     ob_start();
-    ?>
-    <?php if (count($instances)) { ?>
-	<?php foreach ($instances as $instance) { ?>
-	    <div><a href="<?=inside_link("instances", $instance["id"]); ?>">
-		<?=$instance["codename"]; ?>
-	    </a></div>
-	<?php } ?>
-    <?php } else { ?>
-	<div>/</div>
-    <?php } ?>
-    <?php
+    if (!count($instances))
+	echo "<div>/</div>";
+    else
+    {
+	foreach ($instances as $instance)
+	{
+	    echo "<div><a href=\"".inside_link("instances", $instance["id"])."\">";
+	    echo $instance["codename"];
+	    echo "</a></div>";
+	}
+    }
     return (new ValueResponse([
 	"msg" => "ActivityInstantiated",
 	"content" => ob_get_clean()
     ]));
 }
-    
+
 function DisplayActivity($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -598,6 +689,14 @@ function EditActivity($id, $data, $method, $output, $module)
     foreach (["type", "subscription"] as $ints)
 	if (isset($data[$ints]))
 	    $data[$ints] = (int)$data[$ints];
+    if (isset($data["enabled"]))
+    {
+	if ($data["enabled"])
+	    $data["disabled"] = "";
+	else
+	    $data["disabled"] = db_form_date(now());
+	unset($data["enabled"]);
+    }
     if (isset($data["repository_name"])
 	&& strchr($data["repository_name"], " ") !== false)
         return (new ErrorResponse("InvalidRepositoryName"));
@@ -628,10 +727,10 @@ function EditActivity($id, $data, $method, $output, $module)
 	    return ($ret);
 	$data["reference_activity"] = $ret->value;
     }
-
+    
     // General treatment
     $fields = array_merge([
-	"type", "subscription", "allow_unregistration", "hidden", "grade_a", "grade_b", "grade_c", "grade_d",
+	"type", "subscription", "disabled", "allow_unregistration", "hidden", "grade_a", "grade_b", "grade_c", "grade_d",
 	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration", "repository_name",
 	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation",
 	"declaration_type"
@@ -643,6 +742,8 @@ function EditActivity($id, $data, $method, $output, $module)
 	    continue ;
 	if ($data[$field] == "")
 	    $data[$field] = NULL;
+	if (substr($field, 0, 6) == "grade_")
+	    $data[$field] = (int)fraction($data[$field], 100);
 	$edit[$field] = $data[$field];
     }
     if (count($edit))
@@ -683,7 +784,7 @@ function AddMedal($id, $data, $method, $output, $module)
 	    "left_field_name" => "activity",
 	    "right_field_name" => "medal",
 	    "properties" => [
-		"mark" => isset($pfx["parameters"][0]) && $act != -1 ? (int)($pfx["parameters"][0]) : 0,
+		"mark" => isset($pfx["parameters"][0]) && $act != -1 ? (int)($pfx["parameters"][0]) : 1,
 		"local" => $pfx["prefix"] == "#" ? 1 : 0,
 		"role" =>
 		    $act != -1 ?
@@ -750,13 +851,14 @@ function SetSoftware($id, $data, $method, $output, $module)
        VALUES ($id, '{$data["software"]}', {$data["type"]})
        ");
     ($module = new FullActivity)->build($id);
-    ob_start(); ?>
-    <select name="type" style="width: 100%;">
-	<option value="0"><?=$Dictionnary["EvaluatorRepository"]; ?></option>
-	<option value="1"><?=$Dictionnary["ReferenceRepository"]; ?></option>
-	<option value="2"><?=$Dictionnary["ToolsRepository"]; ?></option>
-    </select>
-    <?php $html = ob_get_clean();
+    $html = '<select name="type" style="width: 100%;">';
+    foreach ([
+	$Dictionnary["EvaluatorRepository"],
+	$Dictionnary["ReferenceRepository"],
+	$Dictionnary["ToolsRepository"],
+    ] as $k => $label)
+        $html .= "<option value=\"$k\">$label</option>";
+    $html .= '</select>';
     return (new ValueResponse([
 	"msg" => $Dictionnary["Added"],
 	"content" => list_of_linksb([
@@ -767,8 +869,9 @@ function SetSoftware($id, $data, $method, $output, $module)
 	    "admin_func" => "is_teacher_for_activity",
 	    "display_link" => false,
 	    "additional_html" => $html,
-	    "extra_form_id" => @$data["extra_form_id"]
-    ])]));
+	    "extra_form_id" => @$data["extra_form_id"],
+	])
+    ]));
 }
 
 function RemoveSoftware($id, $data, $method, $output, $module)
@@ -787,15 +890,15 @@ function RemoveSoftware($id, $data, $method, $output, $module)
 	AND id_activity = $id
     ");
     ($module = new FullActivity)->build($id);
-    ob_start();
-    ?>
-	<select name="type" style="width: 100%;">
-	    <option value="0"><?=$Dictionnary["EvaluatorRepository"]; ?></option>
-	    <option value="1"><?=$Dictionnary["ReferenceRepository"]; ?></option>
-	    <option value="2"><?=$Dictionnary["ToolsRepository"]; ?></option>
-	</select>
-    <?php
-    $html = ob_get_clean();
+    $tabs = [
+	$Dictionnary["EvaluatorRepository"],
+	$Dictionnary["ReferenceRepository"],
+	$Dictionnary["ToolsRepository"],
+    ];
+    $html = "<select name=\"type\" style=\"width: 100%;\">\n";
+    foreach ($tabs as $k => $v)
+	$html .= "<option value=\"$k\">$v</option>\n";
+    $html = "</select>";
     return (new ValueResponse([
 	"msg" => $Dictionnary["Deleted"],
 	"content" => list_of_linksb([
@@ -816,12 +919,19 @@ function SetSubject($id, $data, $method, $output, $module)
     global $Language;
     global $LanguageList;
 
-    if ($id == -1 || !isset($data["file"]))
+    if ($id == -1)
 	bad_request();
     if (!isset($data["language"]) || ($data["language"] != "NA" && !isset($LanguageList[$data["language"]])))
 	$data["language"] = $Language;
     ($module = new FullActivity)->build($id);
     $target = $Configuration->ActivitiesDir($module->codename, $data["language"] == "NA" ? "" : $data["language"]);
+    if (!isset($data["file"]) || count($data["file"]) == 0)
+    {
+	@unlink($target."subject.pdf");
+	@unlink($target."subject.htm");
+	@unlink($target."configuration.dab");
+	$html = ""; goto GetOut; // web-mode a du mal avec l'indentation avec un else...
+    }
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))
@@ -849,6 +959,7 @@ function SetSubject($id, $data, $method, $output, $module)
 	</a>
     <?php
     $html = ob_get_clean();
+    GetOut:
     return (new ValueResponse([
 	"msg" => $Dictionnary["Added"],
 	"content" => $html
@@ -1046,6 +1157,3 @@ function RemoveMood($id, $data, $method, $output, $module)
 	bad_request();
     return (GetMoodDir($id, $data, "GET", $output, $module, "MoodDeleted"));
 }
-    
-/*
-*/

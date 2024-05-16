@@ -83,7 +83,8 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
             user.id as id_user,
             user.codename as codename,
             user_cycle.hidden as hidden,
-	    user_cycle.cursus as cursus
+	    user_cycle.cursus as cursus,
+	    user_cycle.commentaries as commentaries
             FROM user_cycle
             LEFT JOIN user ON user_cycle.id_user = user.id
             WHERE user_cycle.id_cycle = ".$v["id"]."
@@ -102,6 +103,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               activity.id as id_activity,
               activity.is_template as is_template,
               activity_cycle.id as id_activity_cycle,
+              activity_cycle.week_shift as week_shift,
               activity_cycle.cursus as cursus,
               activity.codename as codename,
               activity.emergence_date as emergence_date,

@@ -1,4 +1,4 @@
-<?php $medal = fetch_medal($_GET["a"], true); ?>
+<?php $medal = fetch_medal($_GET["a"], true, true); ?>
 <div style="position: absolute; top: 10px; left: 10px; width: 420px;">
     <img src="<?=$medal["icon"]; ?>" alt="" />
     <br />
@@ -8,6 +8,9 @@
     <p style="width: 400px;">
 	<?=$medal["description"]; ?>
     </p>
+    <?php if ($medal["hidden"] != NULL) { ?>
+	<b><?=$Dictionnary["DeprecatedMedal"]; ?></b>
+    <?php } ?>
 </div>
 <div style="position: absolute; top: 10px; left: 420px; height: calc(100% - 20px); width: calc((100% - 430px) / 2 - 10px); overflow: auto;" class="content_table">
     <h2><?=$Dictionnary["Activities"]; ?></h2>
@@ -71,26 +74,36 @@
 	</tr>
 	<?php $i = 0; ?>
 	<?php foreach ($user as $u) { ?>
-	    <tr style="<?=$i++ % 2 ? "background-color: lightgray;": ""; ?>"><td>
-		<?=$u["codename"]; ?> <?=is_admin() ? "(#".$u["id"].")" : ""; ?>
-	    </td><td>
-		<?=is_admin() ? "(#".$u["id_user_medal"].")" : ""; ?>
-		<?php
-		$aum = db_select_all("
+	    <?php
+	    $aum = db_select_all("
                    activity.codename,
 		   activity.{$Language}_name as name,
-		   activity_user_medal.*
-		   FROM activity_user_medal
-                   LEFT JOIN activity ON activity.id = activity_user_medal.id_activity
-                   WHERE id_user_medal = {$u["id_user_medal"]}
+		   user_medal.*
+		   FROM user_medal
+                   LEFT JOIN activity ON activity.id = user_medal.id_activity
+                   WHERE user_medal.id = {$u["id_user_medal"]}
 		   ");
-		foreach ($aum as $a) { ?>
-		    <?=$a["name"]; ?>
-		    (<?=$a["codename"]; ?>
-		    <?=is_admin() ? "#".$a["id"] : ""; ?>)
-		    <br />
-		<?php } ?>
-	    </td></tr>
-	<?php } ?>
+	    if (count($aum))
+	    {
+	    ?>
+		<tr style="<?=$i++ % 2 ? "background-color: lightgray;": ""; ?>"><td>
+		    <?=$u["codename"]; ?> <?=is_admin() ? "(#".$u["id"].")" : ""; ?>
+		</td><td>
+		    <?php
+		    echo is_admin() ? "(#".$u["id_user_medal"].") " : "";
+		    foreach ($aum as $a)
+		    {
+			echo "{$a["name"]} {$a["codename"]}";
+			echo ["[<<]", "[<]", "", "[>]", "[>>]"][$a["strength"]];
+			echo is_admin() ? "(#".$a["id"].")" : "";
+		    }
+		    ?>
+		</td></tr>
+	    <?php
+	    }
+	    ?>
+	<?php
+	}
+	?>
     </table>
 </div>

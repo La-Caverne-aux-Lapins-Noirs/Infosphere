@@ -17,6 +17,7 @@ function fetch_user($id, $add_fields = [])
               user.nickname as nickname,
               user.first_name as first_name,
               user.family_name as family_name,
+	      user.cache as cache,
               user.mail as mail,
               user.money as money,
               user.registration_date as registration_date,

@@ -1,0 +1,30 @@
+<div
+    style="
+	   width: 110px;
+	   min-height: 100px;
+	   <?php if ($message["id_user"] != $User["id"]) { ?>
+	   float: left;
+	   text-align: left;
+	   <?php } else { ?>
+	   float: right;
+	   text-align: right;
+	   <?php } ?>
+	   "
+>
+    <?php display_avatar($message["id_user"], 100); ?>
+</div>
+<div style="
+	    width: calc(100% - 120px);
+	    margin-left: 10px;
+	    margin-right: 10px;
+	    height: 20px;
+	    <?php if ($message["id_user"] != $User["id"]) { ?>
+	    text-align: left;
+	    <?php } else { ?>
+	    text-align: right;
+	    <?php } ?>
+	    "
+>
+    <?php display_nickname($message["id_user"]); ?>
+    <?=human_date($message["post_date"]); ?>
+</div>

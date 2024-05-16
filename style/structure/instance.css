@@ -1,0 +1,11 @@
+
+.instance_button
+{
+    margin-bottom: 1px;
+    width: 100%;
+    height: 50px;
+    font-size: large;
+    font-weight: bold;
+    cursor: pointer;
+}
+

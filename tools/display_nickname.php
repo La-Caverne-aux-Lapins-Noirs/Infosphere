@@ -10,6 +10,17 @@ function display_nickname($usr, $link = true, $name_first = false)
 	$nusr["codename"] = $usr->codename;
 	$usr = $nusr;
     }
+    else if (is_array($usr))
+    {}
+    else
+    {
+	if (($usrx = resolve_codename("user", $usr, "codename", true))->is_error())
+	{
+	    echo "User #$usr.";
+	    return ;
+	}
+	$usr = $usrx->value;
+    }
     
     if ($link)
 	echo '<a href="index.php?p=ProfileMenu&amp;a='.$usr["id"].'">';
@@ -20,6 +31,7 @@ function display_nickname($usr, $link = true, $name_first = false)
 	$names = "";
     $codename = @$usr["codename"];
 
+    ob_start();
     if (@strlen($usr["nickname"])) { ?>
         <span
 	    onmouseover="this.innerText='<?=$name_first ? $nick : $codename; ?>';"
@@ -38,6 +50,7 @@ function display_nickname($usr, $link = true, $name_first = false)
         <?=$codename; ?>
     <?php } ?>
     <?php
+    echo trim(ob_get_clean());
     if ($link)
         echo '</a>';
 }

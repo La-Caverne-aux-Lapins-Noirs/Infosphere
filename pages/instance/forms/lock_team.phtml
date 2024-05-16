@@ -1,0 +1,24 @@
+<form
+    <?php $js = "silent_submitf(this, {tofill: 'single_team{$cteam["id"]}'});"; ?>
+    method="<?=$cteam["canjoin"] ? "put" : "delete"; ?>"
+    <?php if ($activity->is_assistant) { ?>
+	    action="/api/instance/<?=$activity->id; ?>/lock/<?=$cteam["id"]; ?>"
+    <?php } else { ?>
+	    action="/api/instance/<?=$activity->id; ?>/lock"
+    <?php } ?>
+    style="display: inline-block;"
+    onsubmit="return <?=$js ; ?>"
+>
+    <input
+	type="button"
+	onclick="<?=$js; ?>"
+	style="width: 30px; height: 30px; color: red;"
+	<?php if ($cteam["canjoin"]) { ?>
+	    title="<?=$Dictionnary["LockTeam"]; ?>"
+	    value="&#128274;"
+	<?php } else { ?>
+	    title="<?=$Dictionnary["UnlockTeam"]; ?>"
+	    value="&#128275;"
+	<?php } ?>
+    />
+</form>

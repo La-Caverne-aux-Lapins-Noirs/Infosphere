@@ -1,0 +1,25 @@
+<?php foreach ($subject["message"] as $message) { ?>
+    <div class="intercom_message" style="
+		width: calc(100% - 20px);
+		margin-left: 10px;
+		position: relative;
+		box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+		border-radius: 10px;
+		min-height: 100px;
+		margin-top: 5px; margin-bottom: 5px;
+		">
+	<?php require ("intercom_message_info.phtml"); ?>
+	<div style="
+		    width: calc(100% - 120px);
+		    <?php if ($message["id_user"] != $User["id"]) { ?>
+		    margin-left: 110px;
+		    <?php } else { ?>
+		    margin-left: 10px;
+		    <?php } ?>
+		    margin-right: 10px;
+		    padding-bottom: 10px;
+		    ">
+	    <?=markdown($message["message"], true); ?>
+	</div>
+    </div>
+<?php } ?>

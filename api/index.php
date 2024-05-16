@@ -25,6 +25,8 @@ $url = substr($_GET["_mod"], 1);
 unset($_GET["_mod"]);
 $url = explode("/", $url);
 $MODULE = array_shift($url);
+if (!is_symbol($MODULE))
+    bad_request();
 $ID = $SUBID = $SUBSUBID = -1;
 if (count($url) >= 1)
     $ID = $url[0];
@@ -45,6 +47,8 @@ if (count($url) >= 5)
     $SUBSUBID = $DATA[$DATA["subaction"]] = $url[4];
 }
 
+$ARGV = [$METHOD, $MODULE, $ID, @$DATA["action"], $SUBID, @$DATA["subaction"]];
+
 if (!isset($_GET["_output"]))
     $OUTPUT = "web";
 else if (!in_array($_GET["_output"], ["web", "fweb", "json"], true))
@@ -63,6 +67,7 @@ while (($data = fread($stdin, 4096)))
 $input = implode($input);
 fclose($stdin);
 unset($stdin);
+
 // Si il y a de la donnée
 if (@strlen($input))
 {
@@ -87,9 +92,15 @@ if (!isset($DATA["action"]))
     else
 	$DATA = ["action" => ""];
 }
+if (isset($_GET["page"]))
+    $DATA["page"] = (int)$_GET["page"];
+if (isset($_GET["page_size"]))
+    $DATA["page_size"] = (int)$_GET["page_size"];
 
 // On s'authentifie
 require_once ("login/index.php");
+
+$LOG_COMPOSITION = $MODULE.$ID;
 
 // On charge le fichier adapté
 if (!file_exists("./api/$MODULE.php"))

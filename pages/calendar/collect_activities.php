@@ -26,11 +26,29 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
           AND session.deleted IS NULL
           AND activity.deleted IS NULL
 	  ");
+    $blist = [
+	"activity_acquired_medal",
+	"activity_team_content",
+	"activity_medal",
+	"activity_support",
+	"activity_details",
+	"activity_texts",
+    ];
     foreach ($sesstmp as $sess)
     {
-	($s = new FullActivity)->build($sess["id_activity"], false, false, $sess["id"]);
-	($module = new FullActivity)->build($s->parent_activity, false, false);
-
+	($s = new FullActivity)->buildp(
+	    $sess["id_activity"], [
+		"recursive" => false,
+		"session_id" => $sess["id"],
+		"only_user" => true,
+		"blist" => $blist,
+	]);
+	($module = new FullActivity)->buildp(
+	    $s->parent_activity, [
+		"recursive" => false,
+		"only_user" => true,
+		"blist" => $blist,
+	]);
 
 	/*
 	   if (!have_rights($sess["id_activity"], false) && filter_out_sessions($s, $wlist))

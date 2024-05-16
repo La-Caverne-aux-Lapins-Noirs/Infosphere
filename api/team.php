@@ -38,14 +38,14 @@ function SetUserTeam($id, $data, $method, $output, $module)
 	bad_request();
     if (!isset($data["user"]) || $data["user"] == -1)
 	bad_request();
-    $id_team = $id;
-    $id_user = (int)$data["user"];
+    $id_team = abs($id);
+    $id_user = abs((int)$data["user"]);
     
     $act = db_select_one("
             activity.id
-            FROM team
+            FROM team LEFT JOIN user_team ON team.id = user_team.id_team
             LEFT JOIN activity ON activity.id = team.id_activity
-            WHERE team.id = $id_team
+            WHERE team.id = $id_team AND user_team.id_user = $id_user
     ");
     $id_activity = $act["id"];
     if (!is_teacher_for_activity($id_activity))
@@ -57,7 +57,7 @@ function SetUserTeam($id, $data, $method, $output, $module)
     unset($data["id_user"]);
     unset($data["user"]);
     unset($data["action"]);
-    unset($data["id_status"]);
+    unset($data["status"]);
     unset($data["id"]);
     unset($data["code"]);
 
@@ -67,6 +67,7 @@ function SetUserTeam($id, $data, $method, $output, $module)
     {
 	if (($data["medal"] = split_symbols($data["medal"]))->is_error())
 	    return ($data["medal"]);
+	
 	foreach ($data["medal"]->value as $medal)
 	{
 	    if ($method == "DELETE")
@@ -74,7 +75,7 @@ function SetUserTeam($id, $data, $method, $output, $module)
 	    else
 		$medal = +1 * abs($medal);
 	    if (($ret = edit_medal(
-		$id_user, $medal, $act["id"])
+		$id_user, $medal, $id_activity)
 	    )->is_error())
 	        return ($ret);
 	    $edited = true;
@@ -95,7 +96,7 @@ function SetUserTeam($id, $data, $method, $output, $module)
 	return (new ErrorResponse("NothingToBeDone"));
     return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
 }
-
+/*
 function SetTeamCommentaries($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -118,7 +119,7 @@ function SetTeamCommentaries($id, $data, $method, $output, $module)
 	return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
     return (new ErrorResponse("NothingToBeDone"));
 }
-
+*/
 function SetTicket($id, $data, $method, $output, $module)
 {
     global $Database;
@@ -275,10 +276,12 @@ $Tab = [
 	    "is_teacher",
 	    "SetUserTeam",
 	],
+	/*
 	"commentaries" => [
 	    "is_teacher",
 	    "SetTeamCommentaries",
 	],
+	*/
     ],
     "DELETE" => [
 	"sprint" => [

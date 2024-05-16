@@ -61,7 +61,7 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 	    set_debug_div(msg);
 	    // console.log(json);
 	    if (bcall)
-		bcall();
+		bcall(json["result"] == "ok");
 	    return ("");
 	}
 
@@ -79,7 +79,7 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 	if (result == "ok")
 	{
 	    if (gcall)
-		gcall();
+		gcall(true, result, msg, content);
 	    if (toclear)
 	    {
 		toclear = to_object_array(toclear);
@@ -124,7 +124,7 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 	    ;
 	}
 	else if (gcall)
-	    gcall();
+	    gcall(false, null, null, null);
 
 	if (msg != "")
 	    set_error_div(msg, result == "ok");

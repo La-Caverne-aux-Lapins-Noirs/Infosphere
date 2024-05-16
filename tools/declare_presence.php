@@ -62,7 +62,13 @@ function declare_presence($activity, $session, $user = NULL)
     }
 
     if (($request = @update_table(
-	"team", $activity->user_team["id"], ["present" => -1, "declaration_date" => db_form_date(now())]
+	"team", $activity->user_team["id"],
+	[
+	    "present" => -1,
+	    "declaration_date" => db_form_date(now()),
+	    "late_time" => db_form_date(date_to_timestamp(now())
+				      - date_to_timestamp($activity->unique_session->begin_date)),
+	]
     ))->is_error())
         return ($request);
     return (new ValueResponse("YouAreLate"));    

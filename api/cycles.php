@@ -328,6 +328,7 @@ function InstantiateCycle($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
     global $Database;
+    global $one_week;
     
     if ($id == -1)
 	bad_request();
@@ -336,6 +337,7 @@ function InstantiateCycle($id, $data, $method, $output, $module)
     $first_week = date_to_timestamp(@$data["first_week"]);
     if ($first_week < now() - 60 * 60 * 24 * 7 * 15)
 	bad_request();
+    $first_week_tstamp = $first_week;
     $first_week = db_form_date($first_week);
     // Instancier le cycle, puis toutes les matieres contenues
     $cycle = fetch_cycle($module, $id, true, false, true);
@@ -358,7 +360,9 @@ function InstantiateCycle($id, $data, $method, $output, $module)
     foreach ($cycle["activity"] as $acti)
     {
 	($act = new FullActivity)->build($acti["id"]);
-	if (($error_msg = instantiate_template($act, $first_week))->is_error())
+	if (($error_msg = instantiate_template(
+	    $act, db_form_date($first_week_tstamp + (int)$acti["week_shift"] * $one_week)
+	))->is_error())
 	    goto Clear;
 	$matter[] = $activity = $error_msg->value;
 	if (($error_msg = handle_linksf([

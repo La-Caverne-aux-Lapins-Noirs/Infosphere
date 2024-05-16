@@ -1,0 +1,98 @@
+<?php
+/*
+    <?php if (count($cteam["work"])) { ?>
+	<form action="<?=$cteam["work"][array_key_first($cteam["work"])]["repository"]; ?>"
+	      method="get"
+	      target="_blank">
+	    <input
+		type="submit"
+		style="position: absolute; bottom: 10px; right: 10px; width: 100px;"
+		value="<?=$Dictionnary["DeliveredWork"]; ?>"
+	    />
+	</a>
+	</form>
+    <?php } ?>
+*/
+?>
+<div style="position: absolute; left: 0px; top: 0px; width: 170px; height: 170px;">
+    <?php display_avatar($usr, 170); ?>
+</div>
+
+<?php if ($activity->teamable) { ?>
+    <div style="
+		position: absolute;
+		left: 180px; top: 0px;
+		width: calc(((100% - 170px) / 2 - 30px - 10px));
+		font-weight: bold; z-index: 1;
+		text-align: left;
+		"
+    >
+	<?php display_nickname($usr); ?>
+	<?php require ("forms/member_status.phtml"); ?>
+    </div>
+<?php } ?>
+
+<?php
+if ($usr["visibility"] == COMPLETE_PROFILE || $activity->is_assistant || $usr["id"] == $User["id"])
+{
+    $medals = [];
+    get_activity_medal_for_user(
+	$usr,
+	$activity->reference_activity == -1 ?
+	$activity->id :
+	$activity->reference_activity
+    );
+?>
+    <div id="team_<?=$cteam["id"]; ?>_user_<?=$usr["id"]; ?>_medal_list"
+	 style="position: absolute;
+	     width: calc((100% - 170px) / 2 - 30px - 5px);
+	     left: 175px; bottom: 0px;
+	     height: calc(100% - 20px);
+	     overflow: auto;
+	     "
+    >
+	<?php $medalteam = false; ?>
+	<?php $medlist = $usr["medal"]; ?>
+	<?php require ("medal_list.php"); ?>
+    </div>
+<?php } ?>
+
+<?php
+if ($activity->is_assistant)
+{
+    if ($activity->teamable)
+	require ("forms/remove_member.phtml");
+    require ("forms/comment_medal_alert.phtml");
+}
+else
+{
+?>
+    <div style="
+		position: absolute;
+		width: calc((100% - 170px) / 2 - 10px);
+		height: 100%;
+		right: 0px;
+		border: 1px solid gray; border-radius: 5px;
+		"
+    >
+	<?php if ($usr["visibility"] == COMPLETE_PROFILE
+		  || $activity->is_assistant
+		  || $usr["id"] == $User["id"]) { ?>
+	    <?php if (@strlen($usr["commentaries"]["content"])) { ?>
+		<?=markdown($usr["commentaries"]["content"], true); ?>
+		<br /><i style="font-size: x-small;">
+		    <?=$Dictionnary["LastEditFrom"]; ?>:
+		    <?php $auth = resolve_codename("user", $usr["commentaries"]["id_user"], "codename", true); ?>
+		    <?php display_nickname($auth->value); ?>,
+		    <?=human_date($usr["commentaries"]["comment_date"]); ?>
+		</i>
+	    <?php } else { ?>
+		<i><?=$Dictionnary["NoCommentToDisplay"]; ?></i>
+	    <?php } ?>
+	<?php } else { ?>
+	    <i><?=$Dictionnary["CommentaryHidden"]; ?></i>
+	<?php } ?>
+    </div>
+<?php
+}
+?>

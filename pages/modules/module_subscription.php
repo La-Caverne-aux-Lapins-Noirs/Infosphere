@@ -1,8 +1,8 @@
-<?php $js = "silent_submit(this); setTimeout(function() { location.reload(); }, 250);"; ?>
+<?php $js = "silent_submitf(this, {after_success: refresh});"; ?>
 
 <?php if ($matter->registered) { ?>
 
-    <?php if ($matter->subscription == FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
+    <?php if ($matter->full_activity->subscription == FullActivity::AUTOMATIC_SUBSCRIPTION) { ?>
 	<b><?=$Dictionnary["SubscriptionIsAutomatic"]; ?></b>
 	
     <?php } else { ?>

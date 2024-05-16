@@ -71,12 +71,20 @@ CREATE TABLE `user_medal` (
   `id` int(11) NOT NULL,
   `id_user` int(11) NOT NULL,
   `id_medal` int(11) NOT NULL,
+  `id_activity` int(11) NOT NULL DEFAULT -1,
+  `id_team` int(11) NOT NULL DEFAULT -1,
+  `id_user_team` int(11) NOT NULL DEFAULT -1,
+  `result` int(11) NOT NULL DEFAULT 0,
+  `strength` int(11) NOT NULL DEFAULT 2,
   `insert_date` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 ALTER TABLE `user_medal`
   ADD PRIMARY KEY (`id`),
   ADD KEY `id_user` (`id_user`),
+  ADD KEY `id_activity` (`id_activity`),
+  ADD KEY `id_team` (`id_team`),
+  ADD KEY `id_user_team` (`id_user_team`),
   ADD KEY `id_medal` (`id_medal`);
 
 CREATE TABLE `user_school` (

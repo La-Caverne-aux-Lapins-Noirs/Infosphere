@@ -44,7 +44,12 @@
 		[
 		    "name" => $Dictionnary["Curriculum"],
 		    "codename" => "cursus",
-		    "admin_func" => "is_director_for_cycle"
+		    "admin_func" => "is_director_for_cycle",
+		],
+		[
+		    "name" => $Dictionnary["GeneralComment"],
+		    "codename" => "commentaries",
+		    "admin_func" => "is_director_for_cycle",
 		]
 	    ]
 	]); ?>
@@ -86,6 +91,21 @@
 <?php } ?>
 
 <td>
+    <?php
+    $ext_props = [
+	[
+	    "name" => $Dictionnary["Curriculum"],
+	    "codename" => "cursus",
+	    "admin_func" => "is_director_for_cycle"
+	]
+    ];
+    if ($page == "cursus")
+	$ext_props[] = [
+	    "name" => $Dictionnary["WeekShift"],
+	    "codename" => "week_shift",
+	    "admin_func" => "is_director_for_cycle",
+	];
+    ?>
     <?php list_of_links([
 	"hook_name" => $page,
 	"method" => "post",
@@ -93,12 +113,6 @@
 	"linked_name" => "activity",
 	"linked_elems" => $cycle["activity"],
 	"admin_func" => "is_director_for_cycle",
-	"extra_properties" => [
-	    [
-		"name" => $Dictionnary["Curriculum"],
-		"codename" => "cursus",
-		"admin_func" => "is_director_for_cycle"
-	    ]
-	]
+	"extra_properties" => $ext_props
     ]); ?>
 </td>

@@ -43,7 +43,7 @@ else if ($_POST["action"] == "pass_update")
 }
 else if ($_POST["action"] == "add_medal")
 {
-    $request = add_medal($_POST["user"], $_POST["medal"], $_POST["activity"]);
+    $request = edit_medal($_POST["user"], $_POST["medal"], $_POST["activity"]);
     $LogMsg = "MedalAdded";
 }
 else if ($_POST["action"] == "refresh_profile")

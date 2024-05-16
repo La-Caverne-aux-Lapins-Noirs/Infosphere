@@ -324,8 +324,8 @@ function AddFile($id, $data, $method, $output, $module)
     $target = $root.$path."/";
 
     // On vérifie la taille disponible
-    $admin_size = shell_exec("du -c $root/admin | tail -n 1");
-    $total_size = shell_exec("du -c $root | tail -n 1");
+    $admin_size = intval(shell_exec("du -c $root/admin | tail -n 1"));
+    $total_size = intval(shell_exec("du -c $root | tail -n 1"));
     $user_size = $total_size - $admin_size;
     $add_size = 0;
     foreach ($data["file"] as $files)

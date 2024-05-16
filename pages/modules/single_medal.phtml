@@ -17,7 +17,7 @@ if ($edit_medal) {
 ?>
     <form
 	id="team<?=$sub["id"]; ?>_medal<?=$medal["id"]; ?>form"
-	method="put"
+	method="<?=$got ? "delete" : "put"; ?>"
 	action="/api/team/<?=$sub["id"]; ?>/user/<?=$subuser["id"]; ?>"
     >
 	<input

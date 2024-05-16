@@ -70,14 +70,14 @@ if (isset($data["intra_logs"]) && isset($data["work_logs"]))
 	$data["logs"][$k] = $v;
     foreach ($data["work_logs"] as $k => $v)
     {
-	if (!isset($data["logs"]))
+	if (!isset($data["logs"][$k]))
 	    $data["logs"][$k] = $v;
 	else
 	    $data["logs"][$k] += $v;
     }
     foreach ($data["distant_logs"] as $k => $v)
     {
-	if (!isset($data["logs"]))
+	if (!isset($data["logs"][$k]))
 	    $data["logs"][$k] = $v;
 	else
 	    $data["logs"][$k] += $v;

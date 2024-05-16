@@ -1,5 +1,5 @@
 <?php if ($medal["icon"] != "") { ?>
-    <div style="float: left; height: 100%;">
+    <div style="float: left;">
 	<img
 	    src="<?=$medal["icon"]; ?>"
 	    alt="<?=$medal["name"]; ?>"
@@ -22,9 +22,10 @@
     <div class="medal_local">&nbsp;</div>
 <?php } ?>
     </div>
+
     <?php if (!isset($no_text) || !$no_text) { ?>
-	<p style="font-size: small; text-align: justify; padding-right: 10px;">
-	    <b style="font-size: small;"><?=$medal["name"]; ?></b><br />
+	<p style="font-size: xx-small; text-align: justify; padding-right: 10px;">
+	    <u><?=$medal["name"]; ?></u><br />
 	    <?php if ($activity->is_teacher) { ?><i><?=$medal["codename"]; ?></i><br /><?php } ?>
 	    <?=$medal["description"]; ?>
 	</p>

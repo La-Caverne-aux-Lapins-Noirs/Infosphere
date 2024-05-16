@@ -58,7 +58,7 @@ if ($alerts != "")
     }
     
     $tickets = db_select_all("
-      ticket.title as title,
+      ticket.title as title, ticket.id_sprint as id_sprint, ticket.id as id_ticket,
       activity.{$Language}_name as activity_name,
       activity.id as activity_id,
       ticket.id_user as id_user
@@ -79,22 +79,25 @@ if ($alerts != "")
     <?php if (count($tickets)) { ?>
 	<?php foreach ($tickets as $ticket) { ?>
 	    <?php if ($prev_name != $ticket["activity_name"]) { ?>
-		<a href="<?=unrollurl([
-			 "p" => "InstanceMenu",
+		&nbsp;&nbsp;<a
+				style="font-size: small; text-decoration: none;"
+				href="<?=unrollurl([
+			 "p" => "ActivityMenu",
 			 "a" => $ticket["activity_id"],
-			 // "c" => $ticket["id"]
-			 ]); ?>">
-		    <?=$Dictionnary["from"]; ?> <?=$ticket["activity_name"]; ?>
+			 "c" => $ticket["id_sprint"],
+			 "d" => $ticket["id_ticket"],
+			 ]); ?>"
+			    ><b><?=$ticket["activity_name"]; ?></b>
 		</a>
 		<?php $prev_name = $ticket["activity_name"]; ?>
 	    <?php } ?>
-	    <li>
-		<?php if ($ticket["id_user"] == $User["id"]) { ?>
-		    <b>
+	    <li style="font-size: x-small;">
+		<?php if ($ticket["id_user"] != $User["id"]) { ?>
+		    <i>
 		<?php } ?>
-		- <?=$ticket["title"]; ?>
-		<?php if ($ticket["id_user"] == $User["id"]) { ?>
-		    </b>
+		&nbsp;&nbsp;&nbsp;&nbsp;- <?=$ticket["title"]; ?>
+		<?php if ($ticket["id_user"] != $User["id"]) { ?>
+		    </i>
 		<?php } ?>
 	    </li>
 	<?php } ?>

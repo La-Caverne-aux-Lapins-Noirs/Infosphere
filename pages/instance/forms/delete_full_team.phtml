@@ -1,0 +1,14 @@
+<form
+    <?php $js = "silent_submitf(this, {toremove: 'single_team{$cteam["id"]}'});"; ?>
+    method="delete"
+    onsubmit="return <?=$js; ?>"
+    action="/api/instance/<?=$activity->id; ?>/team/<?=$cteam["id"]; ?>"
+    style="display: inline-block;"
+>
+    <input
+	type="button"
+	      style="width: 30px; height: 30px; color: red;"
+	      value="&#10007;"
+	      onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>"
+    />
+</form>

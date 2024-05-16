@@ -23,7 +23,6 @@ function get_user_promotions(array &$usr, $by_name = false)
         cycle.id as id_cycle,
         cycle.{$Language}_name as name,
         cycle.*,
-        user_cycle.commentaries as commentaries,
         user_cycle.hidden as hidden,
         user_cycle.cursus as cursus,
         user_cycle.id as id,
@@ -40,6 +39,11 @@ function get_user_promotions(array &$usr, $by_name = false)
     $usr["cycle_authority"] = 0;
     foreach ($usr["cycle"] as $i => $v)
     {
+	$usr["cycle"][$i]["commentaries"] = db_select_one("
+            * FROM comment WHERE id_misc = {$v["id_user_cycle"]} AND misc_type = 2
+            AND deleted IS NULL
+            ORDER BY comment_date DESC
+	    ");
 	$usr["cycle"][$i]["cursus"] = explode(";", $v["cursus"]);
 	
 	$usr["cycle"][$i]["last_day"] = date_to_timestamp($v["first_day"]) + 15 * $one_week;

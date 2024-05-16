@@ -1,6 +1,6 @@
 <?php
 
-function fetch_medal($id = -1, $one = false)
+function fetch_medal($id = -1, $one = false, $hidden = false)
 {
     global $Database;
     global $Language;
@@ -32,11 +32,15 @@ function fetch_medal($id = -1, $one = false)
     }
     else
 	$id = "";
+    if ($hidden)
+	$hidden = "";
+    else
+	$hidden = " AND hidden IS NULL ";
     $out = db_select_all("
 	*, {$Language}_name as name, {$Language}_description as description
 	FROM medal
-	WHERE deleted IS NULL $id
-	ORDER BY tags, codename
+	WHERE deleted IS NULL $hidden $id
+	ORDER BY hidden, tags, codename
     ");
     foreach ($out as &$v)
     {

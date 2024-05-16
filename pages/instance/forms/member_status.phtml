@@ -1,0 +1,41 @@
+<?php if ($activity->max_team_size > 1) { ?>
+    <?php if (($activity->is_assistant || $cteam["leader"]["id"] == $User["id"]) && $usr["status"] == 0) { ?>
+	<form method="put"
+	      <?php $js = "silent_submitf(this, {tofill: 'single_team{$cteam["id"]}'})"; ?>
+	      action="/api/instance/<?=$activity->id; ?>/member/<?=$usr["id"]; ?>"
+	      onsubmit="return <?=$js; ?>"
+	>
+	    <input type="button"
+		   onclick="<?=$js; ?>"
+		   value="<?=$Dictionnary["Accept"]; ?>"
+		   style="width: 80px; color: green;"
+	    />
+	</form>
+	<form method="delete"
+	      action="/api/instance/<?=$activity->id; ?>/member/<?=$usr["id"]; ?>"
+	      onsubmit="return <?=$js; ?>"
+	>
+	    <input type="button"
+		   onclick="<?=$js; ?>"
+		   value="<?=$Dictionnary["Refuse"]; ?>"
+		   style="width: 80px; color: red;"
+	    />
+	</form>
+	
+    <?php } else { ?>
+	<div style="
+		    display: inline-block;
+		    width: calc(((100% - 170px) / 2 - 30px - 10px) / 2);
+		    font-weight: bold;
+		    font-style: italic;
+		    text-align: right;
+		    "
+	>
+	    <?php if ($usr["status"] == 2) { ?>
+		<?=$Dictionnary["Administrator"]; ?>
+	    <?php } else if ($usr["status"] == 0) { ?>
+		<?=$Dictionnary["SubscriptionNotValidatedYet"]; ?>
+	    <?php } ?>
+	</div>
+    <?php } ?>
+<?php } ?>

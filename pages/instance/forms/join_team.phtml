@@ -1,0 +1,10 @@
+<div style="position: absolute; top: 0px; right: 0px;">
+    <form method="post" action="index.php?<?=unrollget(); ?>">
+	<input type="hidden" name="action" value="join_team" />
+	<input type="hidden" name="team" value="<?=$cteam["id"]; ?>" />
+	<input type="submit"
+	       style="width: 200px; height: 35px; color: green;"
+	       value="<?=$Dictionnary["Join"]; ?>"
+	/>
+    </form>
+</div>

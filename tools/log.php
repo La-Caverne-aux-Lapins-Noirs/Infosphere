@@ -19,6 +19,7 @@ function add_log($type, $msg, $id_author = -1, $edit = false)
     global $Database;
     global $User;
     global $OriginalUser;
+    global $LOG_COMPOSITION;
 
     if ($id_author == -1)
     {
@@ -33,7 +34,10 @@ function add_log($type, $msg, $id_author = -1, $edit = false)
     $msg = $Database->real_escape_string($omsg = $msg);
     if ($User && $User["codename"] != $OriginalUser["codename"])
 	$msg .= " - Logged as ".$User["codename"];
-    $url = str_replace("&amp;", "&", unrollget());
+    if (@strlen($LOG_COMPOSITION))
+	$url = $LOG_COMPOSITION;
+    else
+	$url = str_replace("&amp;", "&", unrollget());
     $urlhash = crc32($url) & 0x7FFFFFFF;
     $ip = crc32(get_client_ip()) & 0x7FFFFFFF;
     if ($edit == false)

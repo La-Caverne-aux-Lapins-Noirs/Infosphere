@@ -1993,7 +1993,7 @@ class Parsedown
     );
 }
 
-function markdown($str, $safe)
+function markdown($str, $safe = false)
 {
     $pd = new Parsedown();
     $pd->setSafeMode($safe);

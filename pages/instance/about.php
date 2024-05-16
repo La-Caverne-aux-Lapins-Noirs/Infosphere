@@ -1,228 +1,353 @@
-<div style="text-align: center; position: absolute; top: 15%; height: 50%; width: 100%;">
-    <div style="width: 50%; float: left;">
-	<h3>
-	    <?php if (isset($activity->parent_name)) { ?>
-		<a href="index.php?p=ModulesMenu&amp;a=<?=$activity->parent_activity; ?>">
-		    <?=$activity->parent_name; ?>
-		</a><br />
-	    <?php } ?>
-	    <?php if ($activity->type != 19) { // Misc ?>
+<table class="home_table blackened">
+    <?php if ($activity->type != 19) { // Misc ?>
+	<tr style="border-bottom: 0;"><td colspan="2" style="height: 16px; padding: 0px;">
+	    <span style="font-size: 16px; font-weight: bold;">
 		<?=$Dictionnary[$activity->type_name]; ?>
-	    <?php } ?>
-	</h3>
-	<h1 style="width: 100%; font-size: xx-large; text-decoration: underline;"><?=$activity->name; ?></h1><br /><br /><br /><br /><br />
-	<p><?=$activity->codename; ?></p>
-
+	    </span>
+	</td></tr>
+    <?php } ?>
+    <tr><td style="line-break: loose;">
+	<?php if (isset($activity->parent_name)) { ?>
+	    <a href="index.php?p=ModulesMenu&amp;a=<?=$activity->parent_activity; ?>" style="font-size: x-large;">
+		<?=$activity->parent_name; ?>
+	    </a><br />
+	<?php } ?>
+	<?php if ($activity->is_assistant && strlen($activity->name)) { ?>
+	    <span style="font-size: x-small;">
+		<?=$activity->codename; ?>
+	    </span><br />
+	<?php } ?>
+	
 	<?php if ($activity->reference_activity != -1) { ?>
-	    <a href="index.php?p=ActivityMenu&amp;a=<?=$activity->reference_activity; ?>">
-		<h5><?=$Dictionnary["LinkedTo"]; ?>: <?=@strlen($activity->reference_name) ? $activity->reference_name : $activity->reference_codename; ?></h5>
+	    <a href="<?=unrollurl([
+		     "a" => $activity->reference_activity,
+		     "b" => NULL
+		     ]); ?>"
+	       style="font-size: x-small;"
+	    >
+		<h5>
+		    <?=$Dictionnary["LinkedTo"]; ?>:
+		    <?php if (@strlen($activity->reference_name)) { ?>
+			<?=$activity->reference_name; ?>
+		    <?php } else { ?>
+			<?=$activity->reference_codename; ?>
+		    <?php } ?>
+		    <?php if ($activity->is_assistant && !strlen($activity->name)) { ?>
+			(<?=$activity->codename; ?>)
+		    <?php } ?>
+		    
+		</h5>
 	    </a>
 	<?php } ?>
+    </td><td>
+	<div style="width: 100%; font-size: xx-large; text-decoration: underline; line-break: loose;">
+	    <?=strlen($activity->name) ? $activity->name : $activity->codename; ?>
+	</div>
+    </td></tr>
 
-	<br />
+    <?php $fields = 0; ?>
+    <?php $fields += $activity->current_icon != NULL; ?>
+    <?php $fields += !!strlen(trim($activity->description)); ?>
+    <?php if ($fields != 0) { ?>
+	<tr>
+	    <?php if ($activity->current_icon) { ?>
+		<td colspan="<?=3 - $fields; ?>" style="min-height: 200px;">
+		    <div style="position: relative; height: 100%; width: 100%; min-height: 200px; background-color: transparent;">
+			<div
+			    style="
+				   position: absolute; top: -2.5%; left: -2.5%;
+				   background-color: transparent;
+				   background-image: url('<?=$activity->current_icon; ?>');
+				   background-size: cover;
+				   background-repeat: no-repeat;
+				   background-position: center center;
+				   min-height: 200px;
+				   height: 105%;
+				   filter: blur(10px);
+				   width: 105%;
+				   z-index: 1;
+				   "
+			>
+			</div>
+			<div
+			    style="
+				   position: absolute; top: 0px; left: 0px;
+				   background-color: transparent;
+				   background-image: url('<?=$activity->current_icon; ?>');
+				   background-size: contain;
+				   background-repeat: no-repeat;
+				   background-position: center center;
+				   min-height: 200px;
+				   height: 100%;
+				   width: 100%;
+				   z-index: 1;
+				   "
+			>
+			</div>
+		    </div>
+		</td>
+	    <?php } ?>
+	    <?php if (strlen($activity->description)) { ?>
+		<td
+		    class="text"
+		    colspan="<?=3 - $fields; ?>"
+		    style="
+			   background-color: transparent;
+			   text-align: justify;
+			   text-indent: 4em;
+			   width: calc(100% - 10px);
+			   padding-left: 10px;
+			   font-size: small;
+			   "
+		>
+		    <?=markdown($activity->description); ?>
+		</td>
+	    <?php } ?>
+	</tr>
+    <?php } ?>
 
-	<?php if ($activity->min_team_size > 1) { ?>
-	    <p style="font-size: x-large;">
-		<b><?=$Dictionnary["SizeOfTeam"]; ?>:</b>
-		<?=$activity->min_team_size; ?>
-	    </p>
-	<?php } ?>
-
-	<?php if ($activity->mark > 1) { ?>
-	    <p>
-		<b><?=$Dictionnary["MoneyToWin"]; ?>:</b>
-		<?=$activity->mark; ?>
-	    </p>
-	<?php } ?>
-
-	<?php if ($activity->unique_session) { ?>
-	    <p>
+    <?php if ($activity->unique_session) { ?>
+	<tr>
+	    <td colspan="2">
+		<br />
 		<b><?=$Dictionnary["SessionDate"]; ?></b>:<br />
-		<?=litteral_date($activity->unique_session->begin_date, true); ?>
-		<?=datex("H:i", $activity->unique_session->begin_date); ?>
-		-
-		<?=datex("H:i", $activity->unique_session->end_date); ?>
+		<span style="font-size: xx-large;">
+		    <?=litteral_date($activity->unique_session->begin_date, true); ?>
+		    <?=datex("H:i", $activity->unique_session->begin_date); ?>
+		    -
+		    <?=datex("H:i", $activity->unique_session->end_date); ?>
+		</span>
 		<br /><br />
-	    </p>
-
+	    </td>
+	</tr>
+    <?php } ?>
+    <?php if ($activity->maximum_subscription != -1
+	      || ($activity->unique_session && count($activity->unique_session->room))) { ?>
+	<tr><td>
+	    <h4><b><?=$Dictionnary["RoomCapacity"]; ?></b></h4>
+	    <?php $max_established = false; ?>
 	    <?php if ($activity->maximum_subscription != -1) { ?>
-		<p><b><?=$Dictionnary["RoomCapacity"]; ?></b>:
-		    <?=$activity->maximum_subscription; ?>
-		</p>
-		<p><b><?=$Dictionnary["AvailableSeats"]; ?></b>:
-		    <?=$activity->unique_session->current_occupation; ?>
-		    /
-		    <?=$activity->unique_session->maximum_subscription; ?>
-		    <br /><br />
-		</p>
+		<?=$activity->maximum_subscription; ?>
+		<?php $max_established = true; ?>
+		<br /><br />
 	    <?php } ?>
-
+	    <?php if ($activity->unique_session
+		      && $activity->unique_session->maximum_subscription != -1) { ?>
+		<b><?=$Dictionnary["AvailableSeats"]; ?></b>:
+		<?=$activity->unique_session->current_occupation; ?>
+		/
+		<?=$activity->unique_session->maximum_subscription; ?>
+		<?php $max_established = true; ?>
+	    <?php } ?>
+	    <?php if ($max_established == false) { ?>
+		<?=$Dictionnary["NoSeatLimitation"]; ?>
+	    <?php } ?>
+	</td><td>
 	    <?php if (count($activity->unique_session->room)) { ?>
-		<h4><?=$Dictionnary["Room"]; ?></h4>
-		<p>
-		    <?php foreach ($activity->unique_session->room as $room) { ?>
-			<?=$room["name"]; ?>
-		    <?php } ?>
-		</p>
+		<h4><b><?=$Dictionnary["Room"]; ?></b></h4>
+		<?php foreach ($activity->unique_session->room as $room) { ?>
+		    <?=$room["name"]; ?><br />
+		<?php } ?>
 	    <?php } ?>
-	<?php } ?>
+	</td></tr>
+    <?php } ?>
 
+    <tr><td colspan="2">
 	<style>
 	 .left_align_right td:first-of-type
 	 {
 	     text-align: right;
 	     padding-right: 5px;
 	 }
+	 .left_align_right tr
+	 {
+	     border: 0;
+	 }
+	 .left_align_right td
+	 {
+	     padding-top: 0px;
+	     padding-bottom: 0px;
+	 }
 	</style>
+	<table>
+	    <tr style="border: 0;">
+		<th style="width: 50%;"><h4><b><?=$Dictionnary["Date"]; ?></b></h4></th>
+		<th><h4><b><?=$Dictionnary["Supervision"]; ?></b></h4></th>
+		<th><h4><b><?=$Dictionnary["Cycle"]; ?></b></h4></th>
+	    </tr>
+	    <tr style="border: 0;"><td>
+		<table class="left_align_right">
+		    <?php if ($activity->emergence_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["EmergenceDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->emergence_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->registration_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->registration_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->close_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->close_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->subject_appeir_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["SubjectAppeirDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->subject_appeir_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->pickup_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["PickupDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->pickup_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->subject_disappeir_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["SubjectDisappeirDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->subject_disappeir_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		    <?php if ($activity->done_date != NULL) { ?>
+			<tr><td><b><?=$Dictionnary["DoneDate"]; ?></b>:</td>
+			    <td><span><?=litteral_date($activity->done_date); ?></span></td>
+			</tr>
+		    <?php } ?>
+		</table>
+	    </td><td>
+		<?php if (count($activity->teacher)) { ?>
+		    <?php foreach ($activity->teacher as $t) { ?>
+			<?php if (substr($t["codename"], 0, 1) == "#") { ?>
+			    <a href="index.php?p=GroupsMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>
+			<?php } else { ?>
+			    <a href="index.php?p=ProfileMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>&nbsp;
+			<?php } ?>
+		    <?php } ?>
+		<?php } else { ?>
+		    /
+		<?php } ?>
+	    </td><td>
+		<?php if (count($activity->cycle)) { ?>
+		    <?php foreach ($activity->cycle as $prom) { ?>
+			<a href="index.php?p=CycleMenu&amp;a=<?=$prom["id"]; ?>"><?=$prom["codename"]; ?></a><br />
+		    <?php } ?>
+		<?php } else { ?>
+		    /<br />
+		<?php } ?>
+	    </td></tr>
+	</table>
+    </td></tr>
+
+    <?php if (@strlen($activity->repository_name) && ($activity->user_team != NULL || $activity->is_assistant)) { ?>
+	<tr><td colspan="2">
+	    <h4><b><?=$Dictionnary["PickupDirectory"]; ?></b></h4>
+	    <?php if (substr($activity->repository_name, 0, 4) == "git:") { ?>
+		<?php /*
+			 <input type="submit" onclick="window.open('http://<?=$Configuration->Properties["forge"]; ?>/
+			 <?=$activity->user_team["leader"]["codename"]; ?>/<?=$activity->repository_name; ?>');"
+			 value="<?=$Dictionnary["JoinRepository"].": ".$activity->repository_name; ?>" />
+		       */ ?>
+	    <?php } else if (substr($activity->repository_name, 0, 4) == "svn:") { ?>
+
+	    <?php } else if (substr($activity->repository_name, 0, 4) == "cvs:") { ?>
+		
+	    <?php } else {
+		if (substr($activity->repository_name, 0, 4) == "nfs:")
+		    $activity->repository_name = substr($activity->repository_name, 4);
+		if ($activity->user_team != NULL)
+		    $dir = $activity->user_team["leader"]["codename"];
+		else
+		    $dir = "login";
+		$target = "/home/users/$dir/work/{$activity->repository_name}";
+	    ?>
+	    <?php } ?>
+	    <input
+		type="button"
+		class="instance_button"
+		value="<?=$target; ?>"
+		onclick="navigator.clipboard.writeText('<?=$target; ?>');"
+	    />
+	</td></tr>
+    <?php } ?>
+    <tr><td>
 	<table class="left_align_right">
-	    <?php if ($activity->emergence_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["EmergenceDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->emergence_date); ?></td>
+	    <tr>
+		<td>
+		    <b><?=$Dictionnary["SizeOfTeam"]; ?></b>:
+		</td>
+		<td><span>
+		    <?php
+		    if ($activity->min_team_size == $activity->max_team_size)
+		    {
+			if ($activity->min_team_size == -1)
+			    echo "1";
+			else
+			    echo $activity->min_team_size;
+		    }
+		    else
+		    {
+			echo "[";
+			if ($activity->min_team_size > 1)
+			    echo $activity->min_team_size;
+			else
+			    echo "1";
+			echo ";";
+			if ($activity->max_team_size > 1)
+			{
+			    echo $activity->max_team_size;
+			    echo "]";
+			}
+			else
+			{
+			    echo "&infin;";
+			    echo "[";
+			}
+		    }
+		    ?>
+		</span></td>
+	    </tr>
+	    <tr>
+		<td>
+		    <b><?=$Dictionnary["Participation"]; ?></b>:
+		</td>
+		<td><span>
+		    <?=$Dictionnary[[
+			"Optional", "Mandatory", "Automatic"
+		    ][$activity->subscription]]; ?>
+		</span></td>
+	    </tr>
+	    <?php if ($activity->mark) { ?>
+		<tr>
+		    <td>
+			<b><?=$Dictionnary["MoneyToWin"]; ?></b>:
+		    </td>
+		    <td><span>
+			<?=$activity->mark; ?>
+		    </span></td>
 		</tr>
 	    <?php } ?>
-	    <?php if ($activity->registration_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["RegistrationOpenDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->registration_date); ?></td>
-		</tr>
+	    <?php if (count($activity->session)) { ?>
+		
 	    <?php } ?>
-	    <?php if ($activity->close_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["RegistrationCloseDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->close_date); ?></td>
-		</tr>
-	    <?php } ?>
-	    <?php if ($activity->subject_appeir_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["SubjectAppeirDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->subject_appeir_date); ?></td>
-		</tr>
-	    <?php } ?>
-	    <?php if ($activity->pickup_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["PickupDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->pickup_date); ?></td>
-		</tr>
-	    <?php } ?>
-	    <?php if ($activity->subject_disappeir_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["SubjectDisappeirDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->subject_disappeir_date); ?></td>
-		</tr>
-	    <?php } ?>
-	    <?php if ($activity->done_date != NULL) { ?>
-		<tr><td><b><?=$Dictionnary["DoneDate"]; ?></b>:</td>
-		    <td><?=litteral_date($activity->done_date); ?></td>
+	    <tr>
+		<td>
+		    <b><?=$Dictionnary["RegisteredUsers"]; ?></b>:
+		</td>
+		<td><span>
+		    <?=count($activity->session) > 1 ? $local_students : $total_students; ?>
+		</span></td>
+	    </tr>
+	    <?php if ($activity->teamable) { ?>
+		<tr>
+		    <td>
+			<b><?=$Dictionnary["RegisteredTeams"]; ?></b>:
+		    </td>
+		    <td><span>
+			<?=count($activity->session) > 1 ? $local_teams : $total_teams; ?>
+		    </span></td>
 		</tr>
 	    <?php } ?>
 	</table>
-
-    </div>
-    <div style="width: 50%; float: left;">
-	<?php if ($activity->current_icon) { ?>
-	    <div style="
-			background-image: url('<?=$activity->current_icon; ?>');
-			width: 100%; height: 200px;
-			background-size: contain;
-			background-repeat: no-repeat;
-			background-position: center center;
-			"
-	    >
-	    </div>
-	<?php } ?>
-	<p style="text-align: justify; padding-right: 20px;">
-	    &nbsp;&nbsp;&nbsp;&nbsp;<?=str_replace("\n", "<br />", $activity->description); ?>
-	</p>
-	<br /><br />
-	<div class="bigbuttons" style="padding-right: 20px;">
-	    <?php if ($activity->registered) { ?>
-
-		<?php if (!period($activity->registration_date, $activity->close_date)) { ?>
-		    <input type="button" value="<?=$Dictionnary["SubscriptionPeriodIsClose"]; ?>" />
-		<?php } else if ($activity->allow_unregistration == false) { ?>
-		    <input type="button" value="<?=$Dictionnary["UnsubscribeIsForbidden"]; ?>" />
-		<?php } else if ($activity->registered_elsewhere) { ?>
-		    <input type="button" value="<?=$Dictionnary["RegisteredElsewhere"]; ?>" />
-		<?php } else { ?>
-		    <form method="post" action"=index.php?<?=unrollget(); ?>">
-			<input type="hidden" name="action" value="unsubscribe" />
-			<input type="submit" value="<?=$Dictionnary["Unsubscribe"]; ?>" />
-		    </form>
-		<?php } ?>
-
-		<?php if ($Configuration->Properties["self_signing"] && $activity->unique_session) { ?>
-		    <?php if ($activity->registered_elsewhere == false) { ?>
-
-			<?php if ($activity->unique_session->user_team["present"] == 0) { ?>
-
-			    <?php if (period($activity->unique_session->begin_date - 2 * $five_minute,
-					     $activity->unique_session->end_date)) { ?>
-				<form method="post" action"=index.php?<?=unrollget(); ?>">
-				    <input type="hidden" name="action" value="declare_present" />
-				    <input type="submit" value="<?=$Dictionnary["DeclareMyPresence"]; ?>" />
-				</form>
-			    <?php } else { ?>
-				<input type="button" value="<?=$Dictionnary["DeclarationPeriodIsClose"]; ?>" />
-			    <?php } ?>
-
-			<?php } else if ($activity->unique_session->user_team["present"] == 1) { ?>
-			    <input type="button" value="<?=$Dictionnary["DeclaredPresent"]; ?>" />
-			<?php } else if ($activity->unique_session->user_team["present"] == -1) { ?>
-			    <input type="button" value="<?=$Dictionnary["DeclaredLate"]; ?>" />
-			<?php } else { ?>
-			    <input type="button" value="<?=$Dictionnary["DeclaredMissing"]; ?>" />
-			<?php } ?>
-		    <?php } ?>
-		<?php } ?>
-
-		<?php if (@strlen($activity->repository_name) && $activity->user_team != NULL) { ?>
-		    <?php if (substr($activity->repository_name, 0, 4) != "git") { ?>
-			<input type="button" value="<?=$Dictionnary["PickupDirectory"]." /home/users/login/work/".$activity->repository_name; ?>" />
-		    <?php } else { ?>
-			<input type="submit" onclick="window.open('http://<?=$Configuration->Properties["forge"]; ?>/<?=$activity->user_team["leader"]["codename"]; ?>/<?=$activity->repository_name; ?>');" value="<?=$Dictionnary["JoinRepository"].": ".$activity->repository_name; ?>" />
-		    <?php } ?>
-		<?php } ?>
-		<?php if ($activity->pickup_date && period($activity->subject_appeir_date, $activity->pickup_date)) { ?>
-		    <form method="post" action="index.php?p=FetchingMenu&amp;a=<?=urlencode($activity->codename); ?>">
-			<input
-			    type="submit"
-				  value="<?=$Dictionnary["DeliverWork"]; ?>"
-			/>
-		    </form>
-		<?php } ?>
-
-	    <?php } else if ($activity->can_subscribe) {?>
-
-		<?php if ($activity->full) { ?>
-		    <input type="button" value="<?=$Dictionnary["SessionIsFull"]; ?>" />
-		<?php } else {?>
-		    <form method="post" action"=index.php?<?=unrollget(); ?>">
-			<input type="hidden" name="action" value="subscribe" />
-			<input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
-		    </form>
-		<?php } ?>
-
-	    <?php } else /* if ($activity->is_teacher) */ { ?>
-		<input type="button" value="<?=$Dictionnary["YouAreNotConcerned"]; ?>" />
-	    <?php } ?>
-	</div>
-    </div>
-</div>
-
-<div style="text-align: center; position: absolute; top: 65%; height: 30%; width: 100%;">
-    <div style="width: 50%; float: left;">
-	<?php if (count($activity->cycle)) { ?>
-	    <h4><?=$Dictionnary["Cycle"]; ?>:</h4>
-	    <?php foreach ($activity->cycle as $prom) { ?>
-		<a href="index.php?p=CycleMenu&amp;a=<?=$prom["id"]; ?>"><?=$prom["codename"]; ?></a><br />
-	    <?php } ?>
-	<?php } ?>
-    </div>
-    <div style="width: 50%; float: left;">
-	<?php if (count($activity->teacher)) { ?>
-	    <h4><?=$Dictionnary["Supervision"]; ?></h4>
-	    <?php foreach ($activity->teacher as $t) { ?>
-		<?php if (substr($t["codename"], 0, 1) == "#") { ?>
-		    <a href="index.php?p=GroupsMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>
-		<?php } else { ?>
-		    <a href="index.php?p=ProfileMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>&nbsp;
-		<?php } ?>
-	    <?php } ?>
-	<?php } ?>
-    </div>
-</div>
+    </td><td id="about_buttons">
+	<?php require ("about_buttons.php"); ?>
+    </td></tr>
+</table>

@@ -10,23 +10,9 @@ if ($User != NULL && isset($_POST["action"]))
 {
     $request = new ValueResponse("");
 
-    //////////////////////////
-    // Je veux m'inscrire moi
-    if ($_POST["action"] == "subscribe")
-    {
-	$request = @subscribe_to_instance($activity);
-	$LogMsg = "YouHaveSubscribed";
-    }
-    //////////////////////////////
-    // Je veux me desinscrire moi
-    else if ($_POST["action"] == "unsubscribe")
-    {
-	$request = @unsubscribe_from_instance($activity);
-	$LogMsg = "YouHaveUnsubscribed";
-    }
     ///////////////////////////////////////////////////////////////////////////////
     // Je veux inscrire un élève dans une equipe seul ou dans une equipe existante
-    else if ($_POST["action"] == "force_subscribe" || $_POST["action"] == "force_subscribe_team")
+    if ($_POST["action"] == "force_subscribe" || $_POST["action"] == "force_subscribe_team")
     {
 	if (!isset($_POST["logins"]))
 	    $request = new ErrorResponse("MissingLogins");
@@ -90,40 +76,10 @@ if ($User != NULL && isset($_POST["action"]))
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Je suis prof, je veux forcer une médaille pour un(e) élève - et debugger l'intranet.
 	if ($activity->reference_activity != -1)
-	    @$request = add_medal($_POST["id"], $_POST["medal"], $activity->reference_activity);
+	    @$request = edit_medal($_POST["id"], $_POST["medal"], $activity->reference_activity);
 	else
-	    @$request = add_medal($_POST["id"], $_POST["medal"], $activity->id);
+	    @$request = edit_medal($_POST["id"], $_POST["medal"], $activity->id);
 	$LogMsg = "MedalAdded";
-    }
-    else if ($_POST["action"] == "remove_medal")
-    {
-	//////////////////////////////////////////////////////////////////////////////////
-	// Je suis prof, je veux VIRER une medaille donnée a un eleve lors de mon activité
-	if (!$activity->is_teacher || !is_number($_POST["id"]))
-	{
-	    $_POST["id"] = $Database->real_escape_string($_POST["id"]);
-	    $request = new ErrorResponse("PermissionDenied");
-	    @add_log(REPORT, "I have tried to remove a medal to '".$_POST["id"]."' and I am not a teacher.");
-	}
-	else
-	{
-	    $Database->query("DELETE FROM activity_user_medal WHERE id = ".$_POST["id"]);
-	    $LogMsg = "MedalRemoved";
-	}
-    }
-    else if ($_POST["action"] == "user_team_comment")
-    {
-	////////////////////////////////////////////////////////////
-	// Je suis prof, je veux ecrire un commentaire sur un eleve
-	$_POST["commentaries"] = $Database->real_escape_string($_POST["commentaries"]);
-	$_POST["user"] = (int)$_POST["user"];
-	$_POST["team"] = (int)$_POST["team"];
-	$Database->query("
-           UPDATE user_team
-           SET commentaries = '".$_POST["commentaries"]."'
-           WHERE id_team = ".$_POST["team"]." AND id_user = ".$_POST["user"]."
-	   ");
-	$LogMsg = "CommentAdded";
     }
     else if ($_POST["action"] == "set_appointment")
     {
@@ -211,20 +167,6 @@ if ($User != NULL && isset($_POST["action"]))
 	    }
 	}
     }
-    else if ($_POST["action"] == "delete_session")
-    {
-	if ($activity->is_teacher && $activity->unique_session != NULL)
-	{
-	    mark_as_deleted("activity", $activity->unique_session->id);
-	}
-    }
-    else if ($_POST["action"] == "delete_instance")
-    {
-	if ($activity->is_teacher)
-	{
-	    mark_as_deleted("activity", $activity->id);
-	}
-    }
     else if ($_POST["action"] == "subscribe_all")
     {
 	if ($activity->is_teacher)
@@ -310,42 +252,6 @@ if ($User != NULL && isset($_POST["action"]))
 	}
 	else
 	    $request = new ErrorResponse("YouCannotEditThisTeam");
-    }
-    else if ($_POST["action"] == "declare_present")
-    {
-	if (!($request = declare_presence($activity, $activity->unique_session, $User))->is_error())
-	    $LogMsg = $request->value;
-    }
-    else if ($_POST["action"] == "add_room")
-    {
-	if ($activity->is_teacher)
-	{
-	    $request = add_links($_POST["session"], $_POST["rooms"], "session", "room", true);
-	    $LogMsg = "RoomAdded";
-	}
-	else
-	    $request = new ErrorResponse("PermissionDenied");
-    }
-    else if ($_POST["action"] == "adm_declare_present")
-    {
-	if (!$activity->is_teacher)
-	    return ;
-	$request = @update_table("team", $_POST["team"], ["present" => 1]);
-	$LogMsg = "PresenceDeclared";
-    }
-    else if ($_POST["action"] == "adm_declare_late")
-    {
-	if (!$activity->is_teacher)
-	    return ;
-	$request = @update_table("team", $_POST["team"], ["present" => -1]);
-	$LogMsg = "PresenceDeclared";
-    }
-    else if ($_POST["action"] == "adm_declare_missing")
-    {
-	if (!$activity->is_teacher)
-	    return ;
-	$request = @update_table("team", $_POST["team"], ["present" => -2]);
-	$LogMsg = "PresenceDeclared";
     }
     else if ($_POST["action"] == "raise_alert")
     {

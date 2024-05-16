@@ -1,6 +1,12 @@
 <?php
 
-function resolve_codename($table, $codename, $codename_column = "codename", $fetch_all = false)
+function resolve_codenamef($table, $codename, $codename_column = "codename", $fetch_all = false)
+{
+    $codename = str_replace("*", "%", $codename);
+    return (resolve_codename($table, $codename, $codename_column, $fetch_all, true));
+}
+
+function resolve_codename($table, $codename, $codename_column = "codename", $fetch_all = false, $pattern = false)
 {
     global $Database;
 
@@ -8,7 +14,7 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
 	return (new ErrorResponse("MissingCodeName", $table));
     if (!isset($table))
 	return (new ErrorResponse("MissingTableName"));
-    if (!is_symbol($table))
+    if (!is_symbol($table, $pattern))
 	return (new ErrorResponse("InvalidTableName", $table));
     if ($codename === NULL)
 	return (new ValueResponse(NULL));
@@ -22,7 +28,7 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
     if (count($codename) == 1)
 	$codename = $codename[0];
     else
-	return (resolve_multiple_codenames($table, $codename, $codename_column, $fetch_all));
+	return (resolve_multiple_codenames($table, $codename, $codename_column, $fetch_all, $pattern));
 
     $codename = trim($codename);
     $desc = get_prefix($codename);
@@ -41,8 +47,14 @@ function resolve_codename($table, $codename, $codename_column = "codename", $fet
 	$fetch_all = "id";
     else
 	$fetch_all = "*";
+
+    if ($pattern)
+	$pattern = " LIKE ";
+    else
+	$pattern = " = ";
+
     $q = $Database->query("
-       SELECT $fetch_all FROM `$table` WHERE `$codename_column` = '$codename'
+       SELECT $fetch_all FROM `$table` WHERE `$codename_column` $pattern '$codename'
     ");
     if (($q = $q->fetch_assoc()) == false)
 	return (new ErrorResponse($NotFoundError, $codename, $table));

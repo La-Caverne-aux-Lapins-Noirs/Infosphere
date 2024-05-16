@@ -1,0 +1,32 @@
+<form
+    <?php $js = ""; ?>
+    method="put"
+    action="/api/instance/<?=$activity->id; ?>/subscribe/<?=$cteam["id"]; ?>/complete"
+    onsubmit="return <?=$js; ?>"
+    style="display: inline-block;"
+>
+    <input type="hidden" name="action" value="complete_team" />
+    <input
+	type="button"
+	style="width: 30px; height: 30px; color: hotpink; font-weight: bold;"
+	value="O"
+	title="<?=$Dictionnary["RandomlyCompleteTeam"]; ?>"
+	onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
+    />
+</form>
+<form
+    <?php $js = ""; ?>
+    method="put"
+    action="/api/instance/<?=$activity->id; ?>/subscribe/<?=$cteam["id"]; ?>/merge"
+    onsubmit="return <?=$js; ?>"
+    style="display: inline-block;"
+>
+    <input type="hidden" name="action" value="complete_team" />
+    <input
+	type="button"
+	style="width: 30px; height: 30px; color: teal; font-weight: bold;"
+	value="O"
+	title="<?=$Dictionnary["RandomlyCompleteTeamWithIncompleteTeams"]; ?>"
+	onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
+    />
+</form>

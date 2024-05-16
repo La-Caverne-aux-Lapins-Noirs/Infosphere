@@ -80,15 +80,21 @@ function silent_submitf(form, cnf)
 	cnf["wrapper"],
 	cnf["ismap"],
 	cnf["clear_form"],
-	cnf["after_success"]
+	cnf["after_success"],
+	cnf["after_success_parameter"]
     ));
 }
 
-function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, method, data)
+function refresh()
+{
+    location.reload();
+}
+
+function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data)
 {
     if (file_load_counter != 0)
     {
-	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, method, data);
+	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
 	return (false);
     }
     // Ca y est, le paquet est pret !
@@ -104,13 +110,13 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
 	toadd,
 	toclear,
 	toremove,
-	function ()
+	function (success, result, msg, content)
 	{
 	    setTimeout(reset_form, 1000, form);
 	    form.style.backgroundColor = "green";
 
-	    if (after_success)
-		after_success();
+	    if (after_success && success)
+		after_success(result, msg, content, after_success_parameter);
 	    
 	    if (!clear_form)
 		return ;
@@ -138,7 +144,7 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
     ); 
 }
 
-function silent_submit(form, tofill = null, toadd = null, toclear = null, toremove = null, body = null, wrapper = "", ismap = false, clear_form = false, after_success = null)
+function silent_submit(form, tofill = null, toadd = null, toclear = null, toremove = null, body = null, wrapper = "", ismap = false, clear_form = false, after_success = null, after_success_parameter = null)
 {
     // On récupère le formulaire
     while (form != null && form.tagName.toLowerCase() != "form")
@@ -159,9 +165,9 @@ function silent_submit(form, tofill = null, toadd = null, toclear = null, toremo
 	data = body;
 
     if (file_load_counter == 0)
-	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, method, data);
+	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
     else
-	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, method, data);
+	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
     
     return (false); // Pour éviter le submit
 }

@@ -151,20 +151,6 @@ INSERT INTO `activity_type` (`id`, `codename`, `type`) VALUES
 ALTER TABLE `activity_type`
   ADD PRIMARY KEY (`id`);
 
-CREATE TABLE `activity_user_medal` (
-  `id` int(11) NOT NULL,
-  `id_activity` int(11) NOT NULL,
-  `id_user_medal` int(11) NOT NULL,
-  `insert_date` datetime DEFAULT current_timestamp(),
-  `result` int(11) DEFAULT NULL,
-  `specifier` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-ALTER TABLE `activity_user_medal`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_activity` (`id_activity`),
-  ADD KEY `id_user_medal` (`id_user_medal`);
-
 CREATE TABLE `appointment_slot` (
   `id` int(11) NOT NULL,
   `id_session` int(11) NOT NULL,

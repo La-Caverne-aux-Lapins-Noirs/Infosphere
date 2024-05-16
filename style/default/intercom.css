@@ -1,0 +1,25 @@
+
+.intercom_subjects th
+{
+    font-size: small;
+}
+
+.intercom_subjects td
+{
+    text-align: center;
+}
+
+.intercom_subject_list
+{
+    position: absolute;
+    height: 50px;
+    width: 100%;
+}
+
+.intercom_subject_list > div
+{
+    position: absolute;
+    vertical-align: top;
+    height: 50px;
+    top: 0px;
+}

@@ -1,0 +1,72 @@
+<?php if (count($intercom["subjects"]) == 0) { ?>
+    <div style="text-align: center; font-style: italic; width: 100%;">
+	<?=$Dictionnary["NoTopicsFound"]; ?>
+    </div>
+<?php } ?>
+
+<?php $y = -1; ?>
+<?php foreach ($intercom["subjects"] as $subject) { ?>
+    <?php $y += 1; ?>
+    <div style="top: <?=$y * 55; ?>px;" class="intercom_subject_list">
+	
+	<div style="width: 50px; left: 0px;">
+	    <?php if ($subject["view_date"] == NULL) { ?>
+		<img src="res/new_message.png" alt="<?=$Dictionnary["NewSubject"]; ?>" />
+	    <?php } else if (date_to_timestamp($subject["view_date"])
+		< date_to_timestamp($subject["last_post"]["post_date"])) { ?>
+		<img src="res/unread_message.png" alt="<?=$Dictionnary["NewMessage"]; ?>" />
+	    <?php } else { ?>
+		<img src="res/message.png" alt="<?=$Dictionnary["NothingNew"]; ?>" />
+	    <?php } ?>
+	</div>
+	
+	<div style="width: calc(100% - 2 * 50px - 4 * 100px); left: 50px; right: 450px;">
+	    <form
+		<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."'});"; ?>
+		method="get"
+		onsubmit="return <?=$js; ?>"
+		action="/api/intercom/<?=$intercom["id_misc"]; ?>/<?=$intercom["misc_type"]; ?>/<?=$subject["id"]; ?>"
+		style="width: 100%; height: 100%;"
+	    >
+		<input
+		    style="width: 100%;
+			   height: 50px;
+			   font-size: x-large;
+			   text-align: left;
+			   padding-left: 10px;
+			   "
+			   type="button"
+		           onclick="<?=$js; ?>"
+		           value="<?=htmlentities($subject["title"]); ?>"
+		/>
+	    </form>
+	</div>
+
+	<div style="width: 50px; border-radius: 10px; background-color: lightgray; right: 400px; line-height: 50px; text-align: center;">
+	    <?=$subject["nbr_message"] + 1; ?>
+	</div>
+	
+	<div style="width: 100px; right: 300px;">
+	    <?php display_avatar($subject["id_user"], 50); ?>
+	</div>
+	
+	<div style="width: 100px; right: 200px;">
+	    <?php display_nickname($subject["id_user"]); ?>
+	    <span style="font-size: x-small;">
+		<?=human_date($subject["post_date"]); ?>
+	    </span>
+	</div>
+	
+	<div style="width: 100px; right: 100px;">
+	    <?php display_avatar($subject["last_post"]["id_user"], 50); ?>
+	</div>
+	
+	<div style="width: 100px; right: 0px;">
+	    <?php display_nickname($subject["last_post"]["id_user"]); ?><br />
+	    <span style="font-size: x-small;">
+		<?=human_date($subject["last_post"]["post_date"]); ?>
+	    </span>
+	</div>
+	
+    </div>
+<?php } ?>

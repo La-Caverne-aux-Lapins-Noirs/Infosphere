@@ -5,3 +5,8 @@
   ColorMask = 0, 0, 200
 ]
 
+[MediumIcon
+  [Icon
+    Color = 0, 0, 200
+  ]
+]

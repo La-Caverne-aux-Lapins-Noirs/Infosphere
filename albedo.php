@@ -1,4 +1,20 @@
 <?php
+/*
+** Fonctionnalitées actuelles:
+** - Les élèves non auto déclarés sont marqué absents
+** - Calcul des logs de connexions depuis les infos prélevées sur infosphere hand
+**
+** Fonctionnalités sabotées (peut-être defectueuses):
+** - Inscription automatique aux activités marqués inscription auto
+** - Inscription automatique aux matières marquées inscription auto
+** - Lancement du ramassage automatique
+**
+** Fonctionnalités retirées (peut etre pour de mauvaises raisons):
+** - Ajout de médailles en mode "non acquis" en fin d'activité
+**
+**
+*/
+
 // Appelé par une crontab.
 if (!isset($argv[1]) || !isset($argv[2]))
     exit ;

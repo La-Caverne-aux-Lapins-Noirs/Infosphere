@@ -1,6 +1,6 @@
 
 <?php foreach ($medals as $medal) { ?>
-    <table class="medal_box">
+    <table class="medal_box" <?php if ($medal["hidden"] != NULL) { ?> style="background-color: gray;" <?php } ?>>
 	<tr><td style="width: 100px;">
 	    <div
 		class="medal_box_picture"

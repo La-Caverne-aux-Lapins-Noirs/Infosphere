@@ -1,6 +1,7 @@
 <?php
 $id = try_get($_GET, "a", -1);
 $unique = $id != -1;
+$page = "school";
 ?>
 
 <div>

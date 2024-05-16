@@ -5,7 +5,7 @@
     <?php foreach ($activity->medal as $medal) { ?>
 	<?php $listed[] = $medal["codename"]; ?>
     <?php } ?>
-    <input type="text" value="<?=implode(";", $listed); ?>" />
+    <input style="position: absolute; top: 0px; right: 0px;" type="text" value="<?=implode(";", $listed); ?>" />
 <?php } ?>
 
 <div style="text-align: center;">
@@ -22,7 +22,13 @@
 		break ;
 	}
 	?>
-	<div class="activity_single_medal_box">
+	<div
+	    class="activity_single_medal_box medbuttons bout"
+	    id="med<?=$medal["codename"]; ?>"
+	    <?php if ($activity->is_assistant) { ?>
+		onclick="AddMedal('<?=$medal["codename"]; ?>', 'med<?=$medal["codename"]; ?>');"
+	    <?php } ?>
+	>
 	    <?php require ("single_medal.php"); ?>
 	</div>
     <?php } ?>

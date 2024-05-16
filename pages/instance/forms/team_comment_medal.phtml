@@ -1,0 +1,62 @@
+<form
+    <?php $js = "silent_submit(this);" ?>
+    method="PUT"
+    action="/api/instance/<?=$cteam["id"]; ?>/comment"
+    onsubmit="return <?=$js; ?>"
+>
+    <textarea
+	name="commentaries"
+	placeholder="<?=$Dictionnary["Commentaries"]; ?>"
+	style="
+	      width: calc((100% - 170px) / 2 - 10px);
+	      height: calc(170px - 35px);
+	      position: absolute;
+	      top: 0px; right: 35px;
+	      resize: none;
+	      "
+    ><?=@$cteam["commentaries"]["content"]; ?></textarea>
+    <input
+	type="button"
+	value="&#10003;"
+	onclick="<?=$js; ?>"
+	style="
+	      position: absolute; right: 0px; top: 0px;
+	      width: 30px;
+	      height: calc(170px - 35px);
+	      "
+    />
+</form>
+
+<form
+    <?php $js = "silent_submitf(this, {tofill: 'team_{$cteam["id"]}_medal_list'});" ?>
+    method="PUT"
+    action="/api/instance/<?=$cteam["id"]; ?>/medal"
+    onsubmit="return <?=$js; ?>"
+>
+    <input
+	type="text"
+	onclick="SelectThis(this);"
+	name="id_medal"
+	style="
+	      width: calc((100% - 170px) / 2 - 10px);
+	      height: 30px;
+	      position: absolute;
+	      bottom: 0px; right: 35px;
+	      background-color: white;
+	      "
+	placeholder="<?=$Dictionnary["AddMedals"]; ?>"
+	value=""
+    />
+    <input
+	type="button"
+	onclick="<?=$js; ?>"
+	value="+"
+	style="
+	      font-weight: bold; color: white;
+	      width: 30px;
+	      height: 30px;
+	      position: absolute; right: 0px; bottom: 0px;
+	      background-color: darkgreen;
+	      "
+    />
+</form>

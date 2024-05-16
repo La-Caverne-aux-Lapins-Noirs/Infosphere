@@ -43,16 +43,30 @@ function is_teacher($id = NULL, $usr = NULL, $lvl = 2)
 	WHERE activity_teacher.id_user = {$usr["id"]}
 	OR user_laboratory.id_user = {$usr["id"]}
 	");
-    return ($ret);
+    return (!!$ret);
 }
 
-function is_assistant_for_activity($id)
+function is_assistant_for_activity($id, $activity = NULL)
 {
     global $User;
     
     if (is_admin())
 	return (true);
-    ($activity = new FullActivity)->build($id, false, false);
+    if ($activity == NULL)
+	($activity = new FullActivity)->build($id, false, false);
+    return ($activity->is_assistant);
+}
+
+function is_assistant_for_team($id, $activity = NULL)
+{
+    global $User;
+
+    $id = (int)$id;
+    if (!($act = db_select_one("id_activity FROM team WHERE id = $id")))
+	return (false);
+    if (is_admin())
+	return (true);
+    ($activity = new FullActivity)->build($act["id_activity"], false, false);
     return ($activity->is_assistant);
 }
 
@@ -118,6 +132,35 @@ function is_teacher_for_activity($id)
     return ($activity->is_teacher);
 }
 
+function is_teacher_for_student($id_student)
+{
+    global $User;
+
+    if (($id_student = resolve_codename("user", $id_student))->is_error())
+	return (false);
+    $id_student = $id_student->value;
+    foreach (db_select_all("
+	activity.id FROM user_team
+        LEFT JOIN team ON user_team.id_team = team.id
+        LEFT JOIN activity ON team.id_activity = activity.id
+	WHERE id_user = $id_student AND status > 0
+        AND activity.parent_activity IS NULL 
+    ") as $module)
+    {
+	if (is_teacher_for_activity($module["id"]))
+	    return (true);
+    }
+    return (false);
+}
+
+function is_leader_or_assistant_for_activity($id)
+{
+    global $User;
+
+    ($activity = new FullActivity)->build($id, false, false);
+    return ($activity->is_leader || $activity->is_assistant);
+}
+
 function is_student($id = -1) // cycle id?
 {
     global $User;
@@ -133,8 +176,16 @@ function is_student($id = -1) // cycle id?
       "));
 }
 
-function is_subscribed()
+function is_subscribed($id = -1)
 {
+    global $User;
+
+    if (!$User)
+	return (false);
+    if ($id == -1)
+	return (false);
+    ($activity = new FullActivity)->build($id, false, false);
+    return ($activity->registered);
 }
 
 function is_my_team($id = -1)
@@ -165,8 +216,33 @@ function is_my_team_or_assistant($id = -1)
     ], 1));
 }
 
-function is_subscribed_or_teacher()
+function is_subscribed_or_teacher($id = -1)
 {
+    global $Database;
+    
+    if ($id == -1)
+	return (false);
+    if (is_admin())
+	return (true);
+    ($activity = new FullActivity)->build($id, false, false);
+    return ($activity->registered || $activity->is_teacher);
+}
+
+function is_subscribed_or_assistant($id = -1)
+{
+    global $Database;
+    
+    if ($id == -1)
+	return (false);
+    if (is_admin())
+	return (true);
+    ($activity = new FullActivity)->build($id, false, false);
+    return ($activity->registered || $activity->is_assistant);
+}
+
+function is_cycle_director($id_user = -1)
+{
+    return (is_cycle_director_of($id_user));
 }
 
 function is_cycle_director_of($id_user = -1, $id_cycle = -1)
@@ -194,6 +270,24 @@ function is_cycle_director_of($id_user = -1, $id_cycle = -1)
         )
 	$id_cycle
     ") != NULL);
+}
+
+function is_cycle_director_for_student($id_student)
+{
+    global $User;
+
+    if (($id_student = resolve_codename("user", $id_student))->is_error())
+	return (false);
+    $id_student = $id_student->value;
+    foreach (db_select_all("
+        id_cycle FROM user_cycle
+        WHERE user_cycle.id_user = $id_student
+    ") as $cyc)
+    {
+	if (is_director_for_cycle($cyc["id_cycle"]))
+	    return (true);
+    }
+    return (false);
 }
 
 function is_director_for_cycle($id)
@@ -403,5 +497,21 @@ function is_me_or_admin($id)
 function only_admin($id)
 {
     return (is_admin());
+}
+
+function is_member_of_laboratory($id_lab)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    if (($id_lab = resolve_codename("laboratory", $id_lab))->is_error())
+	return (false);
+    $id_lab = $id_lab->value;
+    return (db_select_one("
+        id FROM user_laboratory
+        WHERE id_user = {$User["id"]} 
+        AND id_laboratory = $id_lab
+	") != NULL);
 }
 

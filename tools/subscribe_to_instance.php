@@ -48,6 +48,11 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    return (new ErrorResponse("NotMyActivity"));
 	if (!period($activity->registration_date, $activity->close_date))
 	    return (new ErrorResponse("SubscriptionAreClosed"));
+	if ($activity->unique_session)
+	{
+	    if (date_to_timestamp($activity->unique_session->begin_date) < now())
+		return (new ErrorResponse("SubscriptionAreClosed"));
+	}
 	if ($activity->registered)
 	    return (new ErrorResponse("AlreadySubscribed"));
     }
@@ -91,11 +96,12 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 		return (new ErrorResponse("CannotCreateNewTeam"));
 	    $target_team = $Database->insert_id;
 	    $team_id = $Database->insert_id;
-	    add_log(TRACE, "New team $target_team");
+	    add_log(TRACE, "New team $team_name #$target_team");
 	    $code = hash("md5", $target_team.$id);
 	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status, code) VALUES ($target_team, $id, 2, '$code')"))
 		return (new ErrorResponse("CannotAddUserToTeam"));
-	    add_log(TRACE, "User $id join team $target_team");
+	    $idcn = get_codename("user", $id);
+	    add_log(TRACE, "User $idcn #$id join team #$target_team as administrator");
 
 	    // Si il y a des sous activité, on s'inscrit à tous ce qui est d'inscription automatique
 	    $sub = db_select_all("
@@ -127,17 +133,18 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    $total = $Database->query("
               SELECT COUNT(user_team.id) as cnt
               FROM user_team
-              WHERE user_team.id_team = $target_team
+              WHERE user_team.id_team = $target_team AND status != 0
               GROUP BY user_team.id_team
 	    ");
 	    $total = $total->fetch_assoc();
 	    // Si l'équipe est pleine et qu'on est pas en train de forcer l'inscription.
-	    if ($total["cnt"] >= $activity->min_team_size && $activity->is_teacher == false)
+	    if ($total["cnt"] >= $activity->max_team_size && $activity->is_teacher == false)
 		return (new ErrorResponse("TeamIsFull"));
 	    $code = hash("md5", $target_team.$id);
 	    if (!$Database->query("INSERT INTO user_team (id_team, id_user, status, code) VALUES ($target_team, $id, ".($accept ? 1 : 0).", '$code')"))
 		return (new ErrorResponse("CannotAddUserToTeam"));
-	    add_log(TRACE, "User $id join team $target_team");
+	    $idcn = get_codename("user", $id);
+	    add_log(TRACE, "User $idcn #$id join team #$target_team");
 	    $team_id = $target_team;
 	}
     }
@@ -149,6 +156,6 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
     else if (($team_id = $team["id"]) != $target_team)
     	return (new ErrorResponse("AlreadySubscribed"));
 
-    add_log(TRACE, "Team $team_id join activity $activity->id");
+    add_log(TRACE, "Team #$team_id join activity $activity->codename #$activity->id");
     return (new ValueResponse(["id_team" => $team_id]));
 }

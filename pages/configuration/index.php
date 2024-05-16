@@ -26,6 +26,12 @@ if ($result != "")
     $result = str_replace("\n", "<br/>", $result);
     $result = str_replace(" ", "&nbsp;", $result);
     echo $result;
+    if ($outfile != NULL)
+    {
+	echo '<a download="backup.tar.gz" ';
+	echo 'href="application/gzip;base64,'.base64_encode($outfile).'"';
+	echo '>'.$Dictionnary["Download"].'</a>';
+    }
     echo '</div>';
 }
 ?>

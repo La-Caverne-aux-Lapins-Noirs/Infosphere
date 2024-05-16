@@ -167,6 +167,8 @@ function instantiate_template($activity, $sdate, $prefix = "", $suffix = "", $pa
     $generated[] = $id = $id->value;
     foreach ($activity->subactivities as $sub)
     {
+	if ($sub->enabled == false)
+	    continue ;
 	$codename = $sub->codename."_".$suffix;
 	if (($new_id = insert_activity($sub, $id, $codename, $sdate))->is_error())
 	    return ($new_id);

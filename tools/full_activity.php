@@ -14,6 +14,25 @@ function select_right_elem(&$vis, $field)
     return ($vis->$cfield);
 }
 
+function pick_legitimate_date($a)
+{
+    foreach ([
+	"subject_appeir_date", "close_date", "pickup_date", "registration_date"
+    ] as $dt)
+        if ($a[$dt] != NULL)
+	    return (date_to_timestamp($a[$dt]));
+    return (0);
+}
+
+function sort_per_date($a, $b)
+{
+    $aa = pick_legitimate_date($a);
+    $bb = pick_legitimate_date($b);
+    if ($aa == 0 && $bb == 0)
+	return (strcmp($a["codename"], $b["codename"]));
+    return ($aa - $bb);
+}
+ 
 $LoadedActivity = [];
 
 class FullActivity extends Response
@@ -46,6 +65,7 @@ class FullActivity extends Response
     public $description = "";
     public $min_team_size = -1;
     public $max_team_size = -1;
+    public $teamable = false;
     public $allow_unregistration = 0;
     public $maximum_subscription = -1;
     public $full = false;
@@ -133,6 +153,7 @@ class FullActivity extends Response
     public $user_team = NULL;
     public $code = NULL;
     public $leader = false;
+    public $is_leader = false;
     public $session_registered = NULL;
     public $registered_elsewhere = false;
     public $is_teacher = false;
@@ -169,7 +190,18 @@ class FullActivity extends Response
 	    isset($tab["sub_get_medal"]) ? $tab["sub_get_medal"] : false,
 	));
     }
-    public function build($activity_id, $deleted = false, $recursive = true, $session_id = -1, $module = NULL, $user = NULL, $get_medal = false, $only_user = false, $blist = [], $sub_get_medal = false)
+    public function build(
+	$activity_id,
+	$deleted = false,
+	$recursive = true,
+	$session_id = -1,
+	$module = NULL,
+	$user = NULL,
+	$get_medal = false,
+	$only_user = false,
+	$blist = [],
+	$sub_get_medal = false
+    )
     {
 	global $User;
 	global $Language;
@@ -199,13 +231,21 @@ class FullActivity extends Response
 
 	// On commence par les propriétés principales de l'activité
 	// Les elements supprimés peuvent etre collecté
+
+	if (array_search("activity_texts", $blist) === false)
+	    $texts = "
+              activity.{$Language}_description as description,
+              activity.{$Language}_method as method,
+              activity.{$Language}_objective as objective,
+              activity.{$Language}_reference as reference,
+	    ";
+	else
+	    $texts = "";
+	
 	$data = db_select_one("
            activity.*,
            activity.{$Language}_name as name,
-           activity.{$Language}_description as description,
-           activity.{$Language}_method as method,
-           activity.{$Language}_objective as objective,
-           activity.{$Language}_reference as reference,
+           $texts
            activity.template_link as template_link,
            parent.id_template as parent_id_template,
            parent.codename as parent_codename,
@@ -248,6 +288,7 @@ class FullActivity extends Response
 	     "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "declaration_type",
 	    "credit_a", "credit_b", "credit_c", "credit_d",
 	];
+		
 	foreach ($LanguageList as $k => $v)
 	{
 	    $fields[] = $k."_name";
@@ -374,6 +415,8 @@ class FullActivity extends Response
 		    $this->name = $Dictionnary["DefenseOf"]." ".$this->reference_name;
 		else if ($this->type == RETROSPECTIVE)
 		    $this->name = $Dictionnary["RetrospectiveOf"]." ".$this->reference_name;
+		else if ($this->type == INCLASS)
+		    $this->name = $Dictionnary["IntroductionTo"]." ".$this->reference_name;
 	    }
 	    // $this->type = $this->reference_codename["type"]; Pas une bonne idée ca...
 	    $this->reference_codename = $this->reference_codename["codename"];
@@ -415,9 +458,13 @@ class FullActivity extends Response
 	if (!$amedal)
 	    $this->medal = array_merge($this->medal, fetch_activity_medal($data["id"], true, $this->type));
 	if (!$ateacher)
-	    $this->teacher = array_merge($this->teacher, fetch_teacher($data["id"], true));
+	    $this->teacher = array_merge($this->teacher, fetch_teacher(
+		$data["id"], true, "activity", false, $data
+	    ));
 	if (!$asupport)
-	    $this->support = array_merge($this->support, fetch_activity_support($data["id"]));
+	    $this->support = array_merge($this->support, fetch_activity_support(
+		$data["id"], false, false, $data
+	    ));
 
 	foreach ($this->medal as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 	foreach ($this->teacher as &$md) if (!isset($md["ref"])) $md["ref"] = false;
@@ -452,20 +499,22 @@ class FullActivity extends Response
 	    foreach ($this->medal as $k => $med)
 	    {
 		$got = db_select_one("
-   	            activity_user_medal.result as result,
+   	            user_medal.result,
+		    user_medal.strength,
                     activity_medal.role as role,
                     activity_medal.local as local
-		    FROM activity_user_medal
-                    LEFT JOIN user_medal
-			   ON activity_user_medal.id_user_medal = user_medal.id
+		    FROM user_medal
                     LEFT JOIN activity_medal
-		           ON activity_user_medal.id_activity = activity_medal.id_activity
-                    WHERE user_medal.id_user = {$user["id"]}
+		    ON user_medal.id_activity = activity_medal.id_activity
+                    AND user_medal.id_medal = activity_medal.id_medal
+                    WHERE id_user = {$user["id"]}
+                      AND activity_medal.id_activity = $this->id
                       AND user_medal.id_medal = {$med["id"]}
-                      AND activity_user_medal.id_activity = $this->id
 		      ");
 		foreach (["result"] as $f)
 		    $this->medal[$k][$f] = $got != NULL ? $got[$f] : 0;
+		foreach (["strength"] as $f)
+		    $this->medal[$k][$f] = $got != NULL ? $got[$f] : -1;
 	    }
 	}
 
@@ -530,7 +579,7 @@ class FullActivity extends Response
                user_team.bonus_grade_c,
                user_team.bonus_grade_d,
                user_team.bonus_grade_bonus,
-               user_team.commentaries as user_com,
+               user_team.id as id_user_team,
                user_team.status as status
 	    ";
 	}
@@ -560,22 +609,42 @@ class FullActivity extends Response
 		    $this->bonus_grade_c = $this->user_team["bonus_grade_c"];
 		    $this->bonus_grade_d = $this->user_team["bonus_grade_d"];
 		    $this->bonus_grade_bonus = $this->user_team["bonus_grade_bonus"];
-		    $this->user_commentaries = $this->user_team["user_com"];
-		    $this->commentaries = $this->user_team["commentaries"];
 		    $this->leader = $this->user_team["status"] == 2;
+
+		    $this->commentaries = db_select_one("
+                      * FROM comment
+                      WHERE id_misc = {$this->user_team["id"]}
+                      AND misc_type = 0
+                      AND deleted IS NULL
+                      ORDER BY comment_date DESC
+		      ");
+		    $this->user_commentaries = db_select_one("
+                      * FROM comment
+                      WHERE id_misc = {$this->user_team["id_user_team"]}
+                      AND misc_type = 1
+                      AND deleted IS NULL
+                      ORDER BY comment_date DESC
+		      ");
 		}
 	    }
 	    if (array_search("activity_team_content", $blist) === false)
 	    {
 		foreach ($this->team as &$team)
 		{
+		    $team["commentaries"] = db_select_one("
+			* FROM comment
+			WHERE id_misc = {$team["id"]}
+                        AND misc_type = 0
+			AND deleted IS NULL
+			ORDER BY comment_date DESC
+			");
+		    $team["medal"] = [];
 		    $team["user"] = db_select_all("
                       user.codename as codename,
                       user.nickname as nickname,
                       user.id as id,
                       user.visibility as visibility,
                       user_team.status as status,
-                      user_team.commentaries as commentaries,
                       user_team.code as code,
                       user_team.bonus_grade_a,
                       user_team.bonus_grade_b,
@@ -593,12 +662,30 @@ class FullActivity extends Response
                       WHERE id_team = {$team["id"]}
                       ORDER BY pickedup_date DESC
 		      ");
+		    $team["real_members"] = 0;
 		    foreach ($team["user"] as &$u)
 		    {
+			if (($ut = db_select_one("
+			    id FROM user_team
+			    WHERE id_team = {$team["id"]}
+                            AND id_user = {$u["id"]}
+			    ")) != NULL)
+			{
+			    $u["commentaries"] = db_select_one("
+			        * FROM comment 
+		 	        WHERE id_misc = {$ut["id"]}
+                               AND misc_type = 1
+			       AND deleted IS NULL
+			       ORDER BY comment_date DESC
+				");
+			}
+			else
+			    $u["commentaries"] = "";
 			if ($u["status"] == 2)
 			    $team["leader"] = &$u;
+			if ($u["status"] != 0)
+			    $team["real_members"] += 1;
 		    }
-		    
 		    $team["sprints"] = db_select_all("
 		      * FROM sprint
 		      WHERE id_team = {$team["id"]} AND deleted IS NULL
@@ -618,8 +705,9 @@ class FullActivity extends Response
 			$sprint["hour_real"] = 0;
 			foreach ($sprint["tickets"] as &$ticket)
 			{
-			    if ($ticket["id_user"] != NULL)
-				$ticket["user"] = &$team["user"][$ticket["id_user"]];
+			    if ($ticket["id_user"] != NULL
+				&& $ticket["id_user"] != 0)
+			        $ticket["user"] = &$team["user"][$ticket["id_user"]];
 			    else
 			    {} // $ticket["user"] = NULL;
 			    
@@ -632,7 +720,7 @@ class FullActivity extends Response
 			    $sprint["hour_total"] += $ticket["estimated_time"];
 			}
 		    }
-		    
+
 		    if ($this->registered == false)
 		    {
 			$leader = NULL;
@@ -644,6 +732,7 @@ class FullActivity extends Response
 			    {
 				$this->user_team = $team;
 				$this->leader = $uu["status"];
+				$this->is_leader = $uu["status"] == 2;
 				$this->registered = true;
 				$this->commentaries = $team["commentaries"];
 				$this->user_commentaries = $uu["commentaries"];
@@ -661,6 +750,13 @@ class FullActivity extends Response
 
 		    if ($get_medal)
 		    {
+			$team["medal"] = db_select_all("
+				user_medal.* FROM user_medal
+				LEFT JOIN medal ON user_medal.id_medal = medal.id
+				WHERE id_team = {$team["id"]}
+				AND id_user_team = -1
+				AND id_activity = $activity_id
+				");
 			foreach ($team["user"] as &$usr)
 			{
 			    $usr["medal"] = [];
@@ -673,21 +769,24 @@ class FullActivity extends Response
 			    foreach ($this->medal as $medx)
 			    {
 				$ms = db_select_all("
-   			          activity_user_medal.result as result,
-				  activity_user_medal.id_activity as id_activity
+   			          user_medal.*
                                   FROM user_medal
-                                  LEFT JOIN medal
-                                    ON user_medal.id_medal = medal.id
-                                  LEFT JOIN activity_user_medal
-                                    ON user_medal.id = activity_user_medal.id_user_medal
-                                  WHERE user_medal.id_user = {$usr["id"]}
-                                  AND user_medal.id_medal = {$medx["id"]}
-                                  AND activity_user_medal.result = 1
-                                  ORDER BY medal.codename ASC
+                                  WHERE id_user = {$usr["id"]}
+				  AND id_activity = $activity_id
+                                  AND id_medal = {$medx["id"]}
+				  AND id_team = {$team["id"]}
+                                  AND id_user_team != -1
+                                  AND result = 1
+				  ORDER BY strength DESC
 				  ");
-
-				$medx["success"] = count($ms);
-				$medx["result"] = $medx["success"] > 0;
+				
+				if (($medx["success"] = count($ms)))
+				{
+				    if (!isset($medx["strength"]) ||
+					$medx["strength"] < $ms[0]["strength"])
+					$medx["strength"] = $ms[0]["strength"];
+				    $mdex["result"] = 1;
+				}
 				$medx["module_medal"] = true;
 				$usr["medal"][] = $medx;
 				$mod->medal[] = $medx;
@@ -733,7 +832,10 @@ class FullActivity extends Response
 		$ses = new FullSession;
 		$ses->build($a, $this, NULL, $only_user);
 		if ($ses->registered)
+		{
 		    $this->session_registered = $ses;
+		    $this->registered = true;
+		}
 		$this->session[] = $ses;
 	    }
 	    if (count($this->session))
@@ -793,6 +895,12 @@ class FullActivity extends Response
 	foreach ($tmp as $cyc)
 	    if ($cyc["deleted"] == NULL)
 		$this->cycle[] = $cyc;
+
+	$this->teamable = true;
+	if ($this->min_team_size == -1 && $this->max_team_size == -1)
+	    $this->teamable = false;
+	if ($this->max_team_size == 1)
+	    $this->teamable = false;
 	
 	// Si on ne veut pas les sous activités...
 	if ($recursive == false)
@@ -800,11 +908,11 @@ class FullActivity extends Response
 
 	// On termine en chargeant toutes les sous activités
 	$subs = db_select_all("
-	    id
+	    id, codename, subject_appeir_date, close_date, pickup_date, registration_date
 	    FROM activity
 	    WHERE parent_activity = $activity_id ".(!$deleted ? " AND activity.deleted IS NULL " : "")."
-            ORDER BY close_date ASC, pickup_date ASC, codename ASC
 	    ");
+	usort($subs, "sort_per_date");
 	foreach ($subs as $sub)
 	{
 	    $new = new FullActivity;
@@ -812,6 +920,7 @@ class FullActivity extends Response
 		($sub["id"], $deleted, $recursive, $session_id, $this, NULL, $sub_get_medal, $only_user, $blist, false))
 	    $this->subactivities[$new->codename] = $new;
 	}
+	
 	return (true);
     }
 }

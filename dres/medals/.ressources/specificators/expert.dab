@@ -5,3 +5,8 @@
   ColorMask = 200, 0, 0
 ]
 
+[ExpertIcon
+  [Icon
+    Color = 200, 0, 0
+  ]
+]

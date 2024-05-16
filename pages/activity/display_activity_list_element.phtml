@@ -1,7 +1,7 @@
 <div
     id="activity_<?=$act->id; ?>"
     onclick="list_sessions(<?=$act->id; ?>);"
-    style="width: 99%; float: left;"
+    style="width: 99%; float: left; <?=$act->enabled ? "" : "font-style: italic; color: darkred;"; ?>"
     class="entry select_activity"
 >
     <div class="activity_name_list_item">
@@ -47,15 +47,15 @@
 		<span style="color: red; <?=$txt; ?>">&#128203;&#xFE0E;</span>
 	    <?php } ?>
 
-	    <?php if ($act->type_type == 2) { ?>
-		<?php $txt = 'title="'.$Dictionnary["AreSessionConfigured"].'"'; ?>
-		<?php if (count($act->session)) { ?>
-		    <span style="color: green;" <?=$txt; ?>>&#127979;&#xFE0E;</span>
-		<?php } else { ?>
-		    <span style="color: red; <?=$txt; ?>">&#127979;&#xFE0E;</span>
-		<?php } ?>
-	    <?php } ?>	    
+	<?php } ?>
 
+	<?php if ($act->type_type == 2) { ?>
+	    <?php $txt = 'title="'.$Dictionnary["AreSessionConfigured"].'"'; ?>
+	    <?php if (count($act->session)) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#127979;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red; <?=$txt; ?>">&#127979;&#xFE0E;</span>
+	    <?php } ?>
 	<?php } ?>
 	
 	<?php $txt = 'title="'.$Dictionnary["MedalConfigured"].'"'; ?>
@@ -72,18 +72,22 @@
 	    <span style="color: red;" <?=$txt; ?>>&#9786;&#xFE0E;</span>
 	<?php } ?>
 
-	<?php $txt = 'title="'.$Dictionnary["ClassConfigured"].'"'; ?>
-	<?php if (count($act->support)) { ?>
-	    <span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
-	<?php } else { ?>
-	    <span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	<?php if (in_array($act->type, [1, 2, 3, 16])) { ?>
+	    <?php $txt = 'title="'.$Dictionnary["ClassConfigured"].'"'; ?>
+	    <?php if (count($act->support)) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#128203;&#xFE0E;</span>
+	    <?php } ?>
 	<?php } ?>
 
-	<?php $txt = 'title="'.$Dictionnary["SubjectConfigured"].'"'; ?>
-	<?php if ($act->subject != NULL) { ?>
-	    <span style="color: green;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
-	<?php } else { ?>
-	    <span style="color: red;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
+	<?php if (!in_array($act->type, [3, 4, 10, 11, 12, 13, 19, 20])) { ?>
+	    <?php $txt = 'title="'.$Dictionnary["SubjectConfigured"].'"'; ?>
+	    <?php if ($act->current_subject != NULL) { ?>
+		<span style="color: green;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
+	    <?php } else { ?>
+		<span style="color: red;" <?=$txt; ?>>&#128240;&#xFE0E;</span>
+	    <?php } ?>
 	<?php } ?>
 
 	<?php $txt = 'title="'.$Dictionnary["CycleConfigured"].'"'; ?>

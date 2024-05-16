@@ -20,16 +20,3 @@ ALTER TABLE `message`
   ADD KEY `id_misc` (`id_misc`),
   ADD KEY `id_message` (`id_message`);
 
-CREATE TABLE `message_alert` (
-  `id` int(11) NOT NULL,
-  `id_message` int(11) NOT NULL,
-  `id_user` int(11) NOT NULL,
-  `status` int(11) DEFAULT NULL,
-  `postdate` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-ALTER TABLE `message_alert`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_message` (`id_message`),
-  ADD KEY `id_user` (`id_user`);
-

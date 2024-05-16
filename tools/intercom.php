@@ -1,5 +1,175 @@
 <?php
 
+function sort_by_last_message($a, $b)
+{
+    return (
+	date_to_timestamp($b["last_post"]["post_date"])
+	-
+	date_to_timestamp($a["last_post"]["post_date"])
+    );
+}
+
+function get_intercomf($misc_type, $id_misc, $conf = [])
+{
+    $cnf = [
+	"id_subject" => -1,
+	"recursive" => false,
+	"page" => 0,
+	"page_size" => 10
+    ];
+    $cnf = array_merge($cnf, $conf);
+    return (get_intercom(
+	$misc_type, $id_misc,
+	$cnf["id_subject"],
+	$cnf["recursive"],
+	$cnf["page"],
+	$cnf["page_size"],
+    ));
+}
+
+function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false, $page = NULL, $page_size = NULL)
+{
+    global $User;
+    global $Database;
+
+    $misc_type = $Database->real_escape_string($misc_type);
+    $id_misc = (int)$id_misc;
+    $id_subject = (int)$id_subject;
+
+    if ($id_subject != -1)
+	$id_subject = " AND message.id = $id_subject ";
+    else
+	$id_subject = "";
+
+    if ($page !== NULL && $page_size !== NULL)
+    {
+	$page = (int)$page;
+	$page_size = (int)$page_size;
+	if ($page < 0)
+	{ // On récupère la dernière page
+	    $cnt = db_select_one("
+		  COUNT(*) as cnt FROM message LEFT JOIN message_user
+                  ON message_user.id_user = {$User["id"]}
+                  AND message_user.id_message = message.id
+                  WHERE message.misc_type = '$misc_type'
+                  AND message.id_misc = $id_misc
+                  AND message.id_message IS NULL
+                 $id_subject
+		  ");
+	    $page = (int)($cnt["cnt"] / $page_size);
+	    if ($cnt["cnt"] % $page_size == 0 && $page > 0)
+		$page -= 1;
+	}
+	$page *= $page_size;
+    }
+    else
+    {
+	$page = 0;
+	$page_size = 10;
+    }
+    $pagesql = " LIMIT $page, $page_size ";
+
+    $subjectsx = db_select_all("
+	message.*, message_user.view_date FROM message
+        LEFT JOIN message_user
+          ON message_user.id_user = {$User["id"]}
+          AND message_user.id_message = message.id
+        WHERE message.misc_type = '$misc_type'
+        AND message.id_misc = $id_misc
+        AND message.id_message IS NULL
+        $id_subject
+        $pagesql
+	  ");
+
+    $nbr_post = db_select_one("
+        COUNT(*) as cnt FROM message WHERE id_message IS NULL
+    ")["cnt"];
+    
+    $labs = [];
+    foreach (get_user_laboratories($User)["laboratories"] as $lab)
+	$labs[$lab["id"]] = true;
+
+    $content_hash = "";
+    $subjects = [];
+    foreach ($subjectsx as $subject)
+    {
+	if ($misc_type == "user")
+	{
+	    if ($subject["visibility"] == INTERCOM_PRIVATE)
+	    {
+		if ($subject["id_user"] != $User["id"]
+		    && $subject["id_misc"] != $User["id"])
+		    continue ;
+	    }
+	    else if ($subject["visibility"] == INTERCOM_ADMIN)
+	    {
+		if (!is_director_for_student($subject["id_misc"])
+		    && !is_cycle_director_for_student($subject["id_misc"])
+		    && !is_teacher_for_student($subject["id_misc"]))
+		continue ;
+	    }
+	}
+
+	if (!is_admin() && $subject["id_laboratory"] != NULL && !isset($labs[$subject["id_laboratory"]]))
+	    continue ;
+	$id_parent = $subject["id"];
+	if ($page == 0)
+	    $subject["message"] = [$subject];
+	else
+	    $subject["message"] = [];
+	if ($recursive)
+	{
+	    $subject["message"] = array_merge($subject["message"], db_select_all("
+                  * FROM message WHERE id_message = $id_parent
+                  ORDER BY post_date ASC
+              $pagesql
+	    "));
+	    if ($subject["view_date"] == NULL)
+		$Database->query("
+		    INSERT INTO message_user (id_user, id_message) VALUES
+		    ({$User["id"]}, {$subject["id"]})
+		    ");
+	    else
+		$Database->query("
+		    UPDATE message_user SET view_date = NOW()
+		    WHERE id_user = {$User["id"]} AND id_message = {$subject["id"]}
+		    ");
+	}
+	if (($subject["nbr_message"] = db_select_one("
+            COUNT(*) as cnt FROM message WHERE id_message = $id_parent
+	")["cnt"]))
+	    $subject["last_post"] = db_select_one("
+                post_date, id_user FROM message WHERE id_message = $id_parent
+                ORDER BY post_date DESC
+	    ");
+	else
+	    $subject["last_post"] = [
+		"id_user" => $subject["id_user"],
+		"post_date" => $subject["post_date"]
+	    ];
+
+	$content_hash .= $subject["id"].$subject["nbr_message"];
+
+	$subject["page"] = $page / $page_size;
+	$subject["page_size"] = $page_size;
+	$subject["on_last_page"] = ($subject["page"] + 1) * $subject["page_size"] >= $subject["nbr_message"];
+	$subjects[] = $subject;
+    }
+
+    uasort($subjects, "sort_by_last_message");
+    
+    return ([
+	"id_misc" => $id_misc,
+	"misc_type" => $misc_type,
+	"name" => $misc_type."#".get_codename($misc_type, $id_misc),
+	"subjects" => $subjects,
+	"content_hash" => hash("md5", $content_hash),
+	"page" => $page / $page_size,
+	"page_size" => $page_size,
+	"on_last_page" => ($page / $page_size) * $page_size >= $nbr_post
+    ]);
+}
+
 function intercom_get($table, $id_misc, $ref = -1, $id = -1)
 {
     global $Database;
@@ -38,18 +208,14 @@ function intercom_get($table, $id_misc, $ref = -1, $id = -1)
       message.*,
       author.id as aid, author.salt as asalt,
       author.nickname as nickname, author.codename as codename,
-      target.id as tid, target.salt as tsalt,
-      message_alert.status as status,
-      message_alert.id as id_status
+      target.id as tid, target.salt as tsalt
       FROM message
       LEFT OUTER JOIN user as author ON author.id = message.id_user
       LEFT OUTER JOIN user as target ON target.id = message.id_misc
-      LEFT OUTER JOIN message_alert ON message_alert.id_message = message.id
-                  AND message_alert.id_user = {$User["id"]}
-      WHERE position = '$table'
+      WHERE misc_type = '$table'
         AND id_misc = '$id_misc'
         $id
-      ORDER BY visibility DESC, lastdate $order
+      ORDER BY visibility $order
     ");
 
     foreach ($tmp as $t)

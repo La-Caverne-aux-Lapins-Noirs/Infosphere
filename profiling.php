@@ -26,6 +26,7 @@ function sort_by_delay($a, $b)
 	<h1>Profilage</h1>
 	<h2>Résumé</h2>
 	<ul>
+	    <li><b>Page:</b> <?=unrollurl(); ?></li>
 	    <li><b>Durée totale du chargement:</b> <?=($now = microtime(true)) - $PHPPerf; ?></li>
 	    <li><b>Nombre de requêtes SQL:</b> <?=$DBCount; ?></li>
 	    <li><b>Cumul des requêtes SQL:</b> <?=$DBPerf; ?></li>
@@ -47,7 +48,11 @@ function sort_by_delay($a, $b)
 		<?php foreach ($DBMerge as $v) { ?>
 		    <td><?=sprintf("%.6f", $v["delay"]); ?></td>
 		    <td><?=$v["count"]; ?></td>
-		    <td><?=$v["back"]; ?></td>
+		    <td>
+			<?php foreach ($v["back"] as $back) { ?>
+			    <?=$back; ?><br />
+			<?php } ?>
+		    </td>
 	    </tr>
 	    <tr>
 		<td colspan="3">

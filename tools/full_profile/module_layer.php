@@ -77,7 +77,7 @@ class ModuleLayer extends Layer
 	$activities = db_select_all("
            activity.id, activity.codename,
            session.id as id_session,
-           team.commentaries as commentaries,
+           team.id as id_team,
            team.manual_credit as manual_credit,
            team.manual_grade as manual_grade,
            activity_type.type as type_type
@@ -123,7 +123,11 @@ class ModuleLayer extends Layer
 	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
 	    $sub->acquired_credit = 0;
-	    $sub->commentaries = $act["commentaries"];
+	    $sub->commentaries = "";
+	    if ($activity->commentaries)
+		$sub->commentaries .= $activity->commentaries["content"]."\n";
+	    if ($activity->user_commentaries)
+		$sub->commentaries .= $activity->user_commentaries["content"];
 	    $sub->manual_grade = $act["manual_grade"];
 	    $sub->manual_credit = $act["manual_credit"];
 	    transfert(["begin_date", "end_date"], $sub, $activity->unique_session);
@@ -145,7 +149,10 @@ class ModuleLayer extends Layer
 		    "local_sum" => 0
 		]);
 		if (!isset($sub->medal[$med["codename"]]["module_medal"]))
-		    $sub->medal[$med["codename"]]["module_medal"] = false;
+		{
+		    $sub->medal[$med["codename"]]["module_medal"] = true; // false
+		    $sub->medal[$med["codename"]]["role"] = 0;
+		}
 	    }
 
 	    if (array_search("activity_acquired_medal", $blist) === false)
@@ -154,8 +161,11 @@ class ModuleLayer extends Layer
 		$acquired = db_select_all("
                    activity.{$Language}_name as activity_name,
                    activity.codename as activity_codename,
-                   activity_user_medal.id_activity as id_activity,
-                   activity_user_medal.result as result,
+                   user_medal.id_activity as id_activity,
+                   user_medal.result as result,
+                   user_medal.strength as strength,
+                   user_medal.id_team as id_team,
+                   user_medal.id_user_team as id_user_team,
                    medal.id as id,
                    medal.codename as codename,
 		   medal.command as command,
@@ -166,21 +176,21 @@ class ModuleLayer extends Layer
                    activity_medal.mark as mark,
                    activity_medal.role as role
                    FROM user_medal
-                   LEFT JOIN activity_user_medal ON user_medal.id = activity_user_medal.id_user_medal
-                   LEFT JOIN activity ON activity.id = activity_user_medal.id_activity
+                   LEFT JOIN activity ON activity.id = user_medal.id_activity
                    LEFT JOIN medal ON medal.id = user_medal.id_medal
-                   LEFT JOIN activity_medal ON activity_medal.id_activity = activity.id
-                                           AND activity_medal.id_medal = medal.id
+                   LEFT JOIN activity_medal
+			ON activity_medal.id_activity = activity.id
+                        AND activity_medal.id_medal = medal.id
                    WHERE user_medal.id_user = $user_id
-                     AND (activity_user_medal.id_activity = $activity_id
-                     OR activity_user_medal.id_activity = $module_id
+                     AND (user_medal.id_activity = $activity_id
+                     OR user_medal.id_activity = $module_id
                    ) AND medal.deleted IS NULL
 		");
 		$eliminatory = false;
 		foreach ($acquired as $med)
 		    if ($med["type"] == 2) // Eliminatoire
 			$eliminatory = true;
-		
+
 		foreach ($acquired as $med)
 		{
 		    $med["icon"] = $Configuration->MedalsDir($med["codename"])."icon.png";
@@ -219,15 +229,26 @@ class ModuleLayer extends Layer
 		    }
 		    else if ($med["result"] == 1)
 		    {
+			if (!isset($target->medal[$med["codename"]]["strength"]) ||
+			    $target->medal[$med["codename"]]["strength"] < $med["strength"])
+			    $target->medal[$med["codename"]]["strength"] = $med["strength"];
 			$target->medal[$med["codename"]]["success"] += 1;
-			$target->medal[$med["codename"]]["success_list"][] =
-			    ($med["activity_name"] != ""
-				? $med["activity_name"] : $med["activity_codename"]).
-			    ($med["local"] ? " (L) " : "")
-			;
+			$msg =
+			    ($med["activity_name"] != "" ?
+			     $med["activity_name"] : $med["activity_codename"]
+			    ).
+			    ($med["local"] ?
+			     " (L) " : ""
+			    ).
+			    ($med["strength"] != 2 ?
+			     ("[".["<<", "<", "-", ">", ">>"][$med["strength"]]."]") : ""
+			    );
+			$target->medal[$med["codename"]]["success_list"][] = $msg;
 			if ($med["local"])
 			    $target->medal[$med["codename"]]["local_sum"] += 1;
 		    }
+		    // Si on a gagné une médaille mais qu'elle était pas spécialement
+		    // prévue, c'est pas une "module medal"
 		    if (!isset($target->medal[$med["codename"]]["module_medal"]))
 			$target->medal[$med["codename"]]["module_medal"] = false;
 		    // Médaille éliminatoire directement sur la matiere

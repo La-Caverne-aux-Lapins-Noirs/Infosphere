@@ -102,12 +102,14 @@ class Layer extends ArrayObject
 		else
 		{
 		    $this->medal[$med["codename"]]["success"] += $med["success"];
-		    $this->medal[$med["codename"]]["success_list"] =
-			array_merge($med["success_list"], $this->medal[$med["codename"]]["success_list"]);
+		    $this->medal[$med["codename"]]["success_list"] = array_merge($med["success_list"], $this->medal[$med["codename"]]["success_list"]);
 		    $this->medal[$med["codename"]]["failure"] += $med["failure"];
-		    $this->medal[$med["codename"]]["failure_list"] =
-			array_merge($med["failure_list"], $this->medal[$med["codename"]]["failure_list"]);
+		    $this->medal[$med["codename"]]["failure_list"] = array_merge($med["failure_list"], $this->medal[$med["codename"]]["failure_list"]);
 		    $this->medal[$med["codename"]]["local_sum"] += $med["local_sum"];
+		    if (isset($med["strength"]))
+			if (!isset($this->medal[$med["codename"]]["strength"]) || $this->medal[$med["codename"]]["strength"] < $med["strength"])
+			    $this->medal[$med["codename"]]["strength"] = $med["strength"];
+			
 		}
 		if (is_note($med["codename"]) && $med["success"] > 0)
 		{

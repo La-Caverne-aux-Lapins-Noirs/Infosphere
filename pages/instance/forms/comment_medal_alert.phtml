@@ -1,0 +1,102 @@
+<form
+    <?php $js = "silent_submit(this);" ?>
+    method="PUT"
+    action="/api/instance/<?=$cteam["id"]; ?>/comment/<?=$usr["id"]; ?>"
+    onsubmit="return <?=$js; ?>"
+>
+    <textarea
+	name="commentaries"
+	placeholder="<?=$Dictionnary["Commentaries"]; ?>"
+	style="
+	      width: calc((100% - 170px) / 2 - 10px);
+	      height: calc(170px - 35px - 35px);
+	      position: absolute;
+	      top: 0px; right: 35px;
+	      resize: none;
+	      "
+    ><?=@$usr["commentaries"]["content"]; ?></textarea>
+    <input
+	type="button"
+	onclick="<?=$js; ?>"
+	value="&#10003;"
+	style="
+	      width: 30px;
+	      <?php if ($activity->teamable) { ?>
+	      height: calc(170px - 40px - 32px - 35px);
+	      top: 37px;
+	      <?php } else { ?>
+	      height: calc(170px - 40px - 32px);
+	      top: 0px;
+	      <?php } ?>
+	      position: absolute; right: 0px;
+	      "
+    />
+</form>
+
+<form
+    <?php $js = "silent_submitf(this, {tofill: 'team_{$cteam["id"]}_user_{$usr["id"]}_medal_list'});" ?>
+    method="PUT"
+    action="/api/instance/<?=$cteam["id"]; ?>/medal/<?=$usr["id"]; ?>"
+    onsubmit="return <?=$js; ?>"
+>
+    <input
+	type="text"
+	onclick="SelectThis(this);"
+	name="id_medal"
+	style="
+	      width: calc((100% - 170px) / 2 - 10px);
+	      height: 30px;
+	      position: absolute;
+	      bottom: 35px; right: 35px;
+	      background-color: white;
+	      "
+	placeholder="<?=$Dictionnary["AddMedals"]; ?>"
+	value=""
+    />
+    <input
+	type="button"
+	value="+"
+	onclick="<?=$js; ?>"
+	style="
+	      font-weight: bold; color: white;
+	      width: 30px;
+	      height: 30px;
+	      position: absolute; right: 0px; bottom: 35px;
+	      background-color: darkgreen;
+	      "
+    />
+</form>
+
+<form
+    method="POST"
+	    action="index.php?<?=unrollget(); ?>"
+>
+    <input type="hidden" name="action" value="raise_alert" />
+    <input type="hidden" name="id_activity" value="<?=$activity->id; ?>" />
+    <input type="hidden" name="id_user" value="<?=$usr["id"]; ?>" />
+    <input
+	type="text"
+	name="message"
+	style="
+	      width: calc((100% - 170px) / 2 - 10px);
+	      height: 30px;
+	      position: absolute;
+	      bottom: 0px; right: 35px;
+	      background-color: red;
+	      "
+	placeholder="<?=$Dictionnary["ALERT"]; ?>"
+	value=""
+    />
+    <input
+	type="submit"
+	value="!"
+	style="
+	      width: 30px;
+	      height: 30px;
+	      color: white;
+	      font-weight: bold;
+	      background-color: darkred;
+	      position: absolute; right: 0px; bottom: 0px;
+	      "
+    />
+</form>

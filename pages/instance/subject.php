@@ -11,6 +11,7 @@ else
 >
 
     <?php
+    $activity->min_team_size = 1;
     $not_too_soon = $activity->subject_appeir_date == NULL || $activity->subject_appeir_date < now();
     $not_too_late = $activity->subject_disappeir_date == NULL || $activity->subject_disappeir_date > now();
     $display_subject = true;
@@ -20,6 +21,8 @@ else
     if (!$activity->is_teacher)
     {
 	if (!$activity->registered || $activity->leader <= 0)
+	    $display_subject = false;
+	if ($activity->teamable && $activity->user_team && (count($activity->user_team["user"]) < $activity->min_team_size && $activity->user_team["canjoin"]))
 	    $display_subject = false;
 	if (!$not_too_soon)
 	    $display_subject = false;
@@ -58,8 +61,10 @@ else
 	<div style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large;" id="subject_error_box">
 	    <?php if ($activity->current_subject == "") { ?>
 		<i><?=$Dictionnary["SubjectNotAvailable"]; ?></i>
-	    <?php } else if (!$activity->registered && !$activity->is_teacher) { ?>
+	    <?php } else if (!$activity->registered && !$activity->is_assistant) { ?>
 		<i><?=$Dictionnary["YouMustBeRegisteredToSee"]; ?></i>
+	    <?php } else if ($activity->teamable && $activity->user_team["canjoin"]) { ?>
+		<i><?=$Dictionnary["YouMustCompleteYourTeamToGetTheSubject"]; ?></i>
 	    <?php } else if (!$not_too_soon) { ?>
 		<i><?=$Dictionnary["SubjectNotAvailableYet"]; ?></i>
 	    <?php } else if (!$not_too_late) { ?>

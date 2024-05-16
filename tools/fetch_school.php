@@ -4,17 +4,22 @@ function fetch_school($id = -1)
 {
     global $Language;
     global $Configuration;
-    
-    $id = (int)$id;
-    if ($id !== -1)
+
+    if ($id !== -1 && $id != "")
+    {
+	if (($id = resolve_codenamef("school", $id))->is_error())
+	    return ($id);
+	$id = $id->value;
 	$id = " AND id = $id ";
+    }
     else
 	$id = "";
     $out = db_select_all("
        *, {$Language}_name as name
        FROM school
        WHERE deleted IS NULL $id
-       ORDER BY codename");
+       ORDER BY codename
+    ");
     foreach ($out as &$v)
     {
 	$v["icon"] = $Configuration->SchoolsDir($v["codename"]);

@@ -20,7 +20,8 @@
                 WHERE id_template = {$module->id}
                 AND deleted IS NULL
                 AND template_link = 1
-                AND (done_date > NOW() OR done_date IS NULL)
+                -- J'étais vraiment très con d'ajouter la ligne en dessous
+                -- AND (done_date > NOW() OR done_date IS NULL)
     ");
     ?>
 
@@ -46,6 +47,7 @@
 	    <input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["Instantiate"]; ?>" style="width: 100%;" />
 	</form>
 	<br />
+	
 	<h4 style="text-align: center;"><?=$Dictionnary["LivingInstances"]; ?></h4>
 	<div class="sublist_of_link" id="list_of_instances<?=$module->id; ?>">
 	    <?php if (count($instances)) { ?>

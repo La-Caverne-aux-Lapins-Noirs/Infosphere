@@ -5,3 +5,8 @@
   ColorMask = 0, 200, 0, 255
 ]
 
+[EasyIcon
+  [Icon
+    Color = 255, 255, 0
+  ]
+]

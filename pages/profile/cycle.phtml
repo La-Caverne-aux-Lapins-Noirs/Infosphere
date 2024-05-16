@@ -132,10 +132,10 @@ $neutral = "255, 255, 255, 0.0";
 		<?php foreach (sort_by_medal_grade($module->medal, true) as $medal) { ?>
 		    <?php
 		    if (!isset($medal["eliminatory"]) &&
-			($medal["type"] != 0 || ($medal["role"] == 0 && $medal["success"] == 0))
+			($medal["type"] != 0 || ($medal["role"] == 0 && $medal["success"] == 0)) || $medal["module_medal"] == false
 		    )
-		    continue ;
-		    if (isset($medal["module_level"])) echo "level";
+		          continue ;
+		    if (isset($medal["module_level"])) echo "level"; // WHAT ?
 		    ?>
 		    <div
 			title="<?=medal_tooltip($medal); ?>"
@@ -191,6 +191,16 @@ $neutral = "255, 255, 255, 0.0";
 				style="position: absolute; bottom: 0px; left: -10px; width: 30px; height: 30px;"
 			    />
 			<?php } ?>
+			<?php if (isset($medal["strength"])
+				  && $medal["strength"] >= 0
+				  && $medal["success"] > 0) { ?>
+			    <div class="<?=[
+					"very_weak_medal", "weak_medal",
+					"normal_medal",
+					"strong_medal", "very_strong_medal"
+					][$medal["strength"]]; ?>"
+			    >&nbsp;</div>
+			<?php } ?>		    
 		    </div>
 		<?php } ?>
 	    </div>
@@ -256,9 +266,15 @@ $neutral = "255, 255, 255, 0.0";
 				<?php } else { ?>
 				    style="color: gray;"
 				<?php } ?>
-			    >
-				<?=$med["codename"]; ?><?php if ($med["local"]) { ?>(L)<?php } ?>
-			    </span>
+			    ><?php
+			     echo $med["codename"];
+			     if ($med["local"])
+				 echo "(L)";
+			     if ($med["success"] > 0)
+				 echo ["[<<]", "[<]", "", "[>]", "[>>]"][
+				     $med["strength"]
+				 ];
+			     ?></span>
 			<?php } ?>
 		    </td><td>
 
