@@ -160,7 +160,7 @@ function SetUser($id, $data, $method, $output, $module)
 		[
 		    "name" => $Dictionnary["Curriculum"],
 		    "codename" => "cursus",
-		]
+		],
 	    ]
     ])]));
 }
@@ -242,7 +242,11 @@ function SetMatter($id, $data, $method, $output, $module)
 		[
 		    "name" => $Dictionnary["Curriculum"],
 		    "codename" => "cursus",
-		]
+		],
+		[
+		    "name" => $Dictionnary["ReplacementSubscription"],
+		    "codename" => "replacement_subscription",
+		],
 	    ]
     ])]));    
     }
@@ -365,14 +369,17 @@ function InstantiateCycle($id, $data, $method, $output, $module)
 	))->is_error())
 	    goto Clear;
 	$matter[] = $activity = $error_msg->value;
+	$props = [
+	    "cursus" => $acti["cursus"]
+	];
+	if ($acti["replacement_subscription"])
+	    $props["replacement_subscription"] = $acti["replacement_subscription"];
 	if (($error_msg = handle_linksf([
 	    "left_value" => $activity,
 	    "right_value" => $id,
 	    "left_field_name" => "activity",
 	    "right_field_name" => "cycle",
-	    "properties" => [
-		"cursus" => $acti["cursus"]
-	    ]
+	    "properties" => $props
 	]))->is_error())
 	    goto Clear;
     }

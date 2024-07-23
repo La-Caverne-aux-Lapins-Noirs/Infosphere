@@ -21,11 +21,11 @@ function AddMedal($id, $data, $method, $output, $module)
     $codename = $data["codename"];
     $shape = isset($data["shape"]) ? (int)@$data["shape"] : 1;
     $shape = ["pins", "sband"][$shape];
-    if (($tags = split_symbols($data["tags"], ",", false, false, ""))->is_error())
+    if (($tags = split_symbols($data["tags"], ",", false, false, "", [], true))->is_error())
 	$tags = "";
     else
 	$tags = implode(",", $tags->value);
-    if (($specificator = split_symbols($data["specificator"], ",", false, false, ""))->is_error())
+    if (($specificator = split_symbols($data["specificator"], ",", false, false, "", [], true))->is_error())
 	$specificator = "";
     else
 	$specificator = implode(",", $specificator->value);
@@ -74,7 +74,19 @@ function AddMedal($id, $data, $method, $output, $module)
 
 	// Y a t il des spécificateurs envoyés?
 	if ($specificator != "")
+	{
+	    $specs = explode(",", $specificator);
+	    $specificator = [];
+	    foreach ($specs as $spec)
+	    {
+		if ($spec[0] == '@')
+		    $command .= " -l '".substr($spec, 1)."'";
+		else
+		    $specificator[] = $spec;
+	    }
+	    $specificator = implode(",", $specificator);
 	    $command .= " -s $specificator";
+	}
     }
 
     new_directory($target."/icon.png");

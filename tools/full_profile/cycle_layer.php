@@ -65,7 +65,8 @@ class CycleLayer extends Layer
                team.id as id_team,
                team.closed as closed,
                template.codename as template_codename,
-               activity_cycle.cursus as cursus
+               activity_cycle.cursus as cursus,
+	       activity_cycle.replacement_subscription as replacement_subscription
                FROM activity_cycle
                LEFT JOIN team ON team.id_activity = activity_cycle.id_activity
                LEFT JOIN user_team ON user_team.id_team = team.id
@@ -101,6 +102,10 @@ class CycleLayer extends Layer
 		    "close_date", "validation"
 		];
 		transfert($fields, $sub, $module);
+		if ($mod["replacement_subscription"] !== NULL)
+		    // Si un mode d'inscription a été précisé dans le modèle
+		    // de cycle, utiliser ce mode là au lieu de celui de base
+		    $sub->subscription = $mod["replacement_subscription"];
 		if ($module->user_team)
 		{
 		    $sub->id_team = $module->user_team["id"];

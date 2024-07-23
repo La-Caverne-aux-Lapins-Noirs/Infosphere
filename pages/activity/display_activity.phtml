@@ -67,6 +67,7 @@ $js = "silent_submit(this)";
 	    <?php if ($module->parent_activity == -1) { ?>
 		<?php check_form($page, $module, "hidden", "Hidden"); ?>
 	    <?php } ?>
+	    <?php check_form($page, $module, "validated", "Validated"); ?>
 
 	    <?php $dates = ["emergence", "done", "registration", "close"]; ?>
 	    <?php if ($module->parent_activity != -1) { ?>

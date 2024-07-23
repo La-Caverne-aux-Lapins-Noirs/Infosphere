@@ -100,11 +100,18 @@
 	]
     ];
     if ($page == "cursus")
+    {
 	$ext_props[] = [
 	    "name" => $Dictionnary["WeekShift"],
 	    "codename" => "week_shift",
 	    "admin_func" => "is_director_for_cycle",
 	];
+	$ext_props[] = [
+	    "name" => $Dictionnary["ReplacementSubscription"],
+	    "codename" => "replacement_subscription",
+	    "admin_func" => "is_director_for_cycle",
+	];
+    }
     ?>
     <?php list_of_links([
 	"hook_name" => $page,

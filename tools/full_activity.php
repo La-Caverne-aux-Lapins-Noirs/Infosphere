@@ -44,7 +44,8 @@ class FullActivity extends Response
     public $support_template = false;
     public $template_codename = NULL;
     public $template_type = NULL;
-    public $enabled;
+    public $enabled = true;
+    public $validated = false;
 
     public $id;
     public $codename;
@@ -304,6 +305,7 @@ class FullActivity extends Response
 	$this->id = $activity_id;
 	$this->name = $data[$Language."_name"];
 	$this->enabled = $data["disabled"] === NULL;
+	$this->validated = (bool)$data["validated"];
 	$this->description = $data[$Language."_description"];
 	$this->credit = [
 	    0 => 0,
@@ -874,6 +876,12 @@ class FullActivity extends Response
 		if (isset($this->cycle[$cycle["codename"]]))
 		{
 		    $this->can_subscribe = true;
+		    // Si une inscription a été surchargée lors d'une adjonction à un cycle,
+		    // faire la transformation ici.
+		    // C'est utile, par exemple pour faire d'une matière d'un cursus une option
+		    // d'un autre cursus
+		    if (@$this->cycle[$cycle["codename"]]["replacement_subscription"] !== NULL)
+			$this->subscription = $this->cycle[$cycle["codename"]]["replacement_subscription"];
 		    break ;
 		}
 	    }

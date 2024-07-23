@@ -221,6 +221,8 @@ b
 
 .activity_name_list_item
 {
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .activity_icon_list_item

@@ -32,7 +32,7 @@ else
     $color = $MedalColor[$medal["role"]];
     ?>
     <div class="medal_configuration" style="background-color: <?=$color; ?>">
-	<a href="<?=inside_link("medal", $medal["id"]); ?>">
+	<a href="<?=inside_link("medals", $medal["id"]); ?>">
 	    <?php if (file_exists($Configuration->MedalsDir($medal["codename"])."/icon.png")) { ?>
 		<img
 		    src="<?=$Configuration->MedalsDir($medal["codename"])."icon.png"; ?>"

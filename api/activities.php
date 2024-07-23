@@ -667,6 +667,27 @@ function EditActivity($id, $data, $method, $output, $module)
 	    "msg" => $Dictionnary["Renamed"],
 	]));
     }
+
+    // On cherche à valider ou dévalider des éléments. Des verifications sont à faire.
+    if (isset($data["validated"]) && $activity->is_template)
+    {
+	if ($data["validated"] && $activity->parent_activity == -1)
+	{ // On veut valider une matière, on verifie que tout en dessous est validé
+	    $unvalid = [];
+	    foreach ($activity->subactivities as $suba)
+		if ($suba->validated == false)
+		    $unvalid[] = $suba->codename;
+	    if (count($unvalid))
+		return (new ErrorResponse("AllActivitiesAreNotValidated", implode(", ", $unvalid)));
+	}
+	else if (!$data["validated"] && $activity->parent_activity != -1)
+	{ // On veut dévalider une une activité, on dévalide la matière au dessus
+	    if (($top = EditActivity($activity->parent_activity, $data, $method, $output, $module))->is_error())
+		return ($top);
+	    // Ok.
+	}
+    }
+    
     foreach (["emergence", "registration", "close", "subject_appeir", "subject_disappeir", "pickup", "done"] as $d)
     {
 	if (!isset($data["{$d}_check"]))
@@ -730,7 +751,7 @@ function EditActivity($id, $data, $method, $output, $module)
     
     // General treatment
     $fields = array_merge([
-	"type", "subscription", "disabled", "allow_unregistration", "hidden", "grade_a", "grade_b", "grade_c", "grade_d",
+	"type", "subscription", "disabled", "allow_unregistration", "hidden", "validated", "grade_a", "grade_b", "grade_c", "grade_d",
 	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration", "repository_name",
 	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation",
 	"declaration_type"

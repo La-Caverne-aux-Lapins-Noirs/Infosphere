@@ -104,6 +104,7 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               activity.is_template as is_template,
               activity_cycle.id as id_activity_cycle,
               activity_cycle.week_shift as week_shift,
+              activity_cycle.replacement_subscription as replacement_subscription,
               activity_cycle.cursus as cursus,
               activity.codename as codename,
               activity.emergence_date as emergence_date,

@@ -41,16 +41,9 @@ require_once (__DIR__."/../error_net.php");
 	    <td><?=$func["codename"]; ?></th>
 	    </td>
 	    <td>
-		<?php
-		foreach(db_select_all("
-		    medal.*, medal.{$Language}_name as name
-                    FROM function_medal
-                    LEFT JOIN medal ON function_medal.id_medal = medal.id
-                    WHERE function_medal.id_function = {$func["id"]}
-		    ") as $medal) {
-		?>
+		<?php foreach(fetch_medal(-1, false, false, $func["id"]) as $medal) { ?>
 		    <div style="display: inline-block; text-align: center; background-color: rgba(255, 255, 255, 0.5);">
-			<a href="index.php?p=MedalMenu&amp;a=<?=$medal["id"]; ?>">
+			<a href="index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>">
 			    <?php if ($medal["icon"] != "") { ?>
 				<img
 				    src="<?=$medal["icon"]; ?>"

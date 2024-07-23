@@ -7,13 +7,36 @@
 	<?php if ($mod["done_date"] != NULL && date_to_timestamp($mod["done_date"]) < now() && $mod["is_template"] == false) { ?>
 	color: rgba(0, 0, 0, 0.4);
 	<?php } ?>
+	position: relative;
 	"
     class="entry select_module"
-    >
+>
+    <?php if ($mod["validated"]) { ?>
+	<div style="width: 5px;
+		    background-color: green;
+		    position: absolute;
+		    top: 0px;
+		    height: 100%;"
+	></div>
+    <?php } ?>
     <div class="activity_name_list_item">
-	<br />
 	<?=$mod["codename"]; ?><br /><i><?=$mod["name"]; ?></i>
 	<br />
+	<span style="font-size: xx-small;">
+	    <?php $ci = 0; ?>
+	    <?php $mod["cycle"] = db_select_all("
+	      cycle.codename FROM activity
+              LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity.id
+              LEFT JOIN cycle ON cycle.id = activity_cycle.id_cycle
+              WHERE activity.id = ".$mod["id"]."
+              LIMIT ".($lim = 3)."
+	      ");
+	    ?>
+	    <?php foreach ($mod["cycle"] as $cyc) { ?>
+		<?=$cyc["codename"]; ?>
+		<?php if (($ci += 1) >= $lim) { echo "..."; break ; } ?>
+	    <?php } ?>
+	</span>
 	<br />
     </div>
     <div class="activity_icon_list_item">

@@ -15,22 +15,27 @@ function get_modules($template, $id = -1)
     $filter = "";
     if (!is_director())
     {
+	$filter = " AND (1 ";
 	if (!is_cycle_director())
 	{
-	    $filter = " AND activity_teacher.id_user = {$User["id"]}";
-	    //// IL MANQUE SI ON EST PROF VIA UN LABORATOIRE
+	    $filter .= " AND activity_teacher.id_user = {$User["id"]}";
+	    foreach ($User["laboratories"] as $lab)
+	    {
+		if ($lab["authority"] <= 1)
+		    continue ;
+		$filter .= " OR activity_teacher.id_laboratory = {$lab["id"]} ";
+	    }
 	}
 	else
 	{
-	    $filter = " OR (1 ";
 	    foreach ($User["cycle"] as $cyc)
 	    {
 		if ($cyc["authority"] <= 1)
 		    continue ;
-		$filter .= " AND activity_cycle.id_cycle = {$cyc["id_cycle"]} ";
+		$filter .= " OR activity_cycle.id_cycle = {$cyc["id_cycle"]} ";
 	    }
-	    $filter .= " ) ";
 	}
+	$filter .= " ) ";
     }
 
     $oldies = " AND (activity.done_date > NOW() OR activity.done_date IS NULL) ";
@@ -44,7 +49,7 @@ function get_modules($template, $id = -1)
     {
 	$cfilter = $_COOKIE["filter_activity_$page"];
 	$cfilter = str_replace("XXXSEPARATORXXX", ";", $cfilter);
-	if (!($syms = split_symbols($cfilter, ";", true, true, "", ["*"]))->is_error())
+	if (!($syms = split_symbols($cfilter, ";", true, true, "", ["*"], true))->is_error())
 	{
 	    $ins = ["0"];
 	    $outs = ["1"];
@@ -74,6 +79,8 @@ function get_modules($template, $id = -1)
     $request = "
 	activity.id,
 	activity.{$Language}_name as name,
+	activity.disabled,
+	activity.validated,
 	activity.codename,
 	activity.template_link,
 	activity.id_template,

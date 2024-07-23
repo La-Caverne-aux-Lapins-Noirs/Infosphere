@@ -102,7 +102,7 @@ function send_password_change_mail($user, $new_password, $domain = NULL)
     return ($request);
 }
 
-function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
+function send_subscribe_mail($id, $login, $mail, $password, $bddpassword, $domain = NULL)
 {
     global $Dictionnary;
     global $Configuration;
@@ -127,7 +127,8 @@ function send_subscribe_mail($id, $login, $mail, $password, $domain = NULL)
     $Content = sprintf($Dictionnary["SubscribeContent"],
 		       $Domain,
 		       $login,
-		       $password
+		       $password,
+		       $bddpassword
     );
 
     if (($request = send_mail($mail, $Dictionnary["SubscribeTitle"], $Content))->is_error())

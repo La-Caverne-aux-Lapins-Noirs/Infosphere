@@ -1,6 +1,6 @@
 <?php
 
-function fetch_medal($id = -1, $one = false, $hidden = false)
+function fetch_medal($id = -1, $one = false, $hidden = false, $id_func = NULL)
 {
     global $Database;
     global $Language;
@@ -36,10 +36,20 @@ function fetch_medal($id = -1, $one = false, $hidden = false)
 	$hidden = "";
     else
 	$hidden = " AND hidden IS NULL ";
+    if ($id_func != NULL)
+    {
+	if (($ret = resolve_codename("function", $id_func))->is_error())
+	    return ($ret);
+	$id_func = $ret->value;
+	$join = " LEFT JOIN function_medal ON medal.id = function_medal.id_medal ";
+	$where = " AND function_medal.id_function = $id_func ";
+    }
+    else
+	$join = $where = "";
     $out = db_select_all("
 	*, {$Language}_name as name, {$Language}_description as description
-	FROM medal
-	WHERE deleted IS NULL $hidden $id
+	FROM medal $join
+	WHERE deleted IS NULL $hidden $id $where
 	ORDER BY hidden, tags, codename
     ");
     foreach ($out as &$v)

@@ -1,6 +1,6 @@
 <?php
 
-function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addprefix = "", $tolerated_tokens = [])
+function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addprefix = "", $tolerated_tokens = [], $dont_care_about_number = false)
 {
     if (!isset($x))
 	return (new ErrorResponse("MissingCodeName"));
@@ -12,7 +12,7 @@ function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addpref
     {
 	if (($x[$i] = trim($j)) != "")
 	{
-	    if (is_number($x[$i]))
+	    if ($dont_care_about_number == false && is_number($x[$i]))
 		$out[] = intval($x[$i]);
 	    else
 	    {
@@ -24,7 +24,9 @@ function split_symbols($x, $c = ";", $negation = true, $getmod = false, $addpref
 		// On vérifie que la syntaxe est correcte en considérant
 		// les chaines une fois les tokens tolérés retiré
 		$symres = get_prefix($symbol, $tolerated_tokens);
-		if (!is_integer($symres["label"]) && !is_symbol($symres["label"]))
+		if ($dont_care_about_number == false &&
+		    !is_integer($symres["label"]) &&
+		    !is_symbol($symres["label"]))
 		    return (new ErrorResponse("InvalidParameter", $x[$i]));
 
 		// On repart sur la chaine originale contenant les tokens supportés

@@ -766,6 +766,8 @@ $Dictionnary = [
     "DeliverWork" => "Rendre son travail",
     "ThisProfileIsHidden" => "Ce profil est masqué.",
     "Hidden" => "Caché",
+    "Validated" => "Validé",
+    "AllActivitiesAreNotValidated" => "Toutes les activités ne sont pas validées",
     "DeprecatedMedal" => "Médaille dépréciée",
     "ActivitiesAreHidden" => "Les informations sur les activités ont été masqué.",
     "AcquiredMedals" => "Médailles acquises",
@@ -1157,6 +1159,8 @@ $Dictionnary = [
      "Votre compte sur l'Infosph&egrave;re %s vient d'&ecirc;tre cr&eacute;&eacute;e.\n".
      "Votre identifiant est %s et votre mot de passe, ".
      "ici entre guillemets, est \"%s\".\n".
+     "Vous disposez &eacute;galement d'un acc&agrave;s &agrave; notre service de base de donn&eacute;es ".
+     "avec le m&ecirc;me identifiant et le mot de passe, toujours entre guillemets \"%s\".\n\n".
      "N'h&eacute;sitez pas &agrave; nous contacter en cas de probl&egrave;me.\n\n".
      "Cordialement\nAlbedo",
     ######
@@ -1211,6 +1215,7 @@ $Dictionnary = [
     "UnregistrationForbidden" => "Désinscription interdite",
     "Automatic" => "Automatique",
     "Subscription" => "Inscription",
+    "ReplacementSubscription" => "Type d'inscription alternatif (0: manual, 1: obligatoire, 2: automatique)",
     "CannotAdd" => "Erreur interne: Impossible d'ajouter l'élément demandé.",
     "CannotRetrieveContent" => "Erreur interne: Impossible de récupérer les données.",
     "CodeNameAlreadyUsed" => "Nom de code déjà utilisé.",

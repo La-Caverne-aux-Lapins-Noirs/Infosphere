@@ -118,6 +118,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 
     if ($password == NULL && $fake == false)
 	$password = generate_password();
+    $bddpassword = generate_password();
     if (@strlen($login) < 2)
 	return (new ErrorResponse("BadLogin", $login));
     if ($fake == false)
@@ -199,6 +200,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	    "last_name" => $last,
 	    "mail" => $mail,
 	    "password" => $password,
+	    "bddpassword" => $bddpassword,
 	    "school" => "efrits"
 	]);
 	if ($out != NULL)
@@ -218,7 +220,7 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
     unset($usr["password"]);
     if (!INSTALLATION && $fake == false)
     {
-	send_subscribe_mail($usr["id"], $login, $mail, $password);
+	send_subscribe_mail($usr["id"], $login, $mail, $password, $bddpassword);
 	add_log(CRITICAL_USER_DATA, "User ".$usr["codename"]." added", $usr["id"]);
     }
     return (new ValueResponse($usr));
