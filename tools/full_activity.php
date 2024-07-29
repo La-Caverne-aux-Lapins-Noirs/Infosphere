@@ -242,8 +242,8 @@ class FullActivity extends Response
 	    ";
 	else
 	    $texts = "";
-	
-	$data = db_select_one("
+
+	$req = "
            activity.*,
            activity.{$Language}_name as name,
            $texts
@@ -261,9 +261,11 @@ class FullActivity extends Response
            LEFT JOIN activity as template ON activity.id_template = template.id
            LEFT JOIN activity_type ON activity_type.id = activity.type
            WHERE activity.id = $activity_id ".(!$deleted ? "AND activity.deleted IS NULL" : "")."
-	   ");
+	   ";
+	$data = db_select_one($req);
 	if ($data == NULL || !isset($data["id"]))
 	    return (false);
+
 	if ($data["parent_name"] == NULL && $data["parent_id_template"] != NULL && $data["parent_id_template"] != -1)
 	{
 	    $data["parent_name"] = db_select_one("

@@ -55,31 +55,48 @@ if ($type == "activity")
 {
     if (count($target) < 3)
 	bad_request();
+    $granted = false;
 
     // Au cas ou l'activité soit basé sur un template
     $codename = $target[1];
     $codename = $Database->real_escape_string($codename);
+
+    // Récupération de l'id de l'activité. template ou non.
+    if (!($direct = db_select_one("
+        activity.id, activity.is_template
+        FROM activity WHERE codename = '$codename'
+    ")))
+	not_found();
+    if (($activity = new FullActivity)->build($direct["id"]) == false)
+	not_found(); // Le dossier peut exister mais l'activité peut avoir été supprimée
+    // Est on en responsabilité?
+    if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
+	render_file();
+
+    if ($direct["is_template"])
+	$filter = " AND template.id = {$direct["id"]} ";
+    else
+	$filter = " AND activity.id = {$direct["id"]} ";
+
+    // On est élève.
+    // Récupération des instances de l'activité, soit via id_template
+    // soit directement
     $instances = db_select_one("
-	activity.id as id FROM activity as template
-	LEFT JOIN activity
-	ON activity.id_template = template.id AND activity.template_link = 1
-        LEFT JOIN team
-        ON team.id_activity = activity.id
-        LEFT JOIN user_team
-        ON user_team.id_team = team.id
-	WHERE template.codename = '$codename'
-        AND user_team.id_user = {$User["id"]}
-	");
+      activity.id FROM activity
+      LEFT JOIN team ON team.id_activity = activity.id
+      LEFT JOIN user_team ON team.id = user_team.id_team
+      LEFT JOIN activity as template ON activity.id_template = template.id
+      WHERE user_team.id_user = {$User["id"]}
+      $filter
+      ORDER BY activity.subject_appeir_date DESC
+      ");
     if ($instances != NULL)
 	$id = $instances["id"];
     else
 	$id = $codename;
-    
-    if (($activity = new FullActivity)->build($id) == false)
+    if (($activity = new FullActivity)->build($instances["id"]) == false)
 	not_found(); // Le dossier peut exister mais l'activité peut avoir été supprimée
-    // On est responsable?
-    if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
-	render_file();
+
     // C'est juste des broutilles...
     if (in_array($target[2], [
 	"icon.png", "icon.jpeg", "icon.jpg",

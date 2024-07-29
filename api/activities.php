@@ -675,7 +675,7 @@ function EditActivity($id, $data, $method, $output, $module)
 	{ // On veut valider une matière, on verifie que tout en dessous est validé
 	    $unvalid = [];
 	    foreach ($activity->subactivities as $suba)
-		if ($suba->validated == false)
+		if ($suba->validated == false && $suba->enabled == true)
 		    $unvalid[] = $suba->codename;
 	    if (count($unvalid))
 		return (new ErrorResponse("AllActivitiesAreNotValidated", implode(", ", $unvalid)));
