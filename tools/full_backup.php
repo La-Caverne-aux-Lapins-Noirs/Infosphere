@@ -41,7 +41,7 @@ function full_backup()
     */
 
     // scp -o 'StrictHostKeyChecking no' -p 4422 -i /home/damdoshi/Infosphere/tools/../.sshkey tools/utils.php  infosphere_hand@nfs.efrits.fr:.
-    shell_exec("scp -o 'StrictHosKeyChecking no' -p 4422 -i $fifo /tmp/backup$id.tar.gz $acc@$url:./");
+    shell_exec("scp -o 'StrictHosKeyChecking no' -p 22 -i $fifo /tmp/backup$id.tar.gz $acc@$url:./");
     @unlink($fifo);
     @unlink("/tmp/backup$id.tar.gz");
     return (true);

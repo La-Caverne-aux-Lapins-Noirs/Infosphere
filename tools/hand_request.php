@@ -19,11 +19,14 @@ function hand_packet($data)
 function hand_request($data, $code = true)
 {
     global $Configuration;
-    
-    $acc = $Configuration->Properties["handaccount"];
+
+    if (($acc = @$Configuration->Properties["handaccount"]) == NULL)
+	return (NULL);
     $url = $Configuration->Properties["handurl"];
     $key = base64_decode($Configuration->Properties["handkey"]);
     $key = unsecure_data($key, $acc.$url."hand_request");
+
+//    AddDebugLogR(openssl_encrypt("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFH7deW0nEXUguEAmeeX7WCfRzv5nM5LQHeGPC+cy7qz kgalaxie84@gmail.com", "blowfish", $acc.$url."hand_request", 0, "azertyui"));
 
     $fifo = __DIR__."/../.sshkey";
     if (!file_exists($fifo))
@@ -52,7 +55,8 @@ function hand_request($data, $code = true)
     // $compress = "-C";
 
     $ship = hand_packet($data);
-    $cmd = "cat $ship | ssh $compress -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' $acc@$url -i $fifo -p 4422 -tt infosphere_hand ; rm -f $ship ; rm -f $fifo "; // $alb ";
+
+    $cmd = "cat $ship | ssh $compress -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' $acc@$url -i $fifo -p 22 -tt infosphere_hand ; rm -f $ship ; rm -f $fifo "; // $alb ";
     $out = shell_exec($cmd);
     /*
        fprintf(STDERR, "$cmd\n");

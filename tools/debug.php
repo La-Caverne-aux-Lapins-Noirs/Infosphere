@@ -74,7 +74,7 @@ function AddDebugLogR($v, $admin = true)
     return (true);
 }
 
-function error_backtrace($errno, $errstr, $errfile, $errline, $errcontext)
+function error_backtrace($errno, $errstr, $errfile, $errline)
 {
     if(!(error_reporting() & $errno))
         return;

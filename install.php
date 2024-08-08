@@ -9,6 +9,7 @@
 
 require_once ("language.php");
 require_once ("tools/response.php");
+require_once ("tools/hand_request.php");
 require_once ("tools/authentication.php");
 require_once ("tools/set_cookie.php");
 require_once ("tools/log.php");

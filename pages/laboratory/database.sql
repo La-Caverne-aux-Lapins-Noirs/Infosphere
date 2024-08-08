@@ -1,6 +1,7 @@
 
 CREATE TABLE `laboratory` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
   `codename` varchar(255) NOT NULL,
   `deleted` datetime DEFAULT NULL,
   `fr_name` varchar(255) DEFAULT NULL,
@@ -10,17 +11,12 @@ CREATE TABLE `laboratory` (
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-ALTER TABLE `laboratory`
-  ADD PRIMARY KEY (`id`);
-
 CREATE TABLE `user_laboratory` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
   `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
   `id_laboratory` int(11) NOT NULL,
-  `authority` int(11) NOT NULL DEFAULT 0
+  KEY `id_laboratory` (`id_laboratory`),
+  `authority` int(11) NOT NULL DEFAULT 0 COMMENT '0: membre, 1: assistant, 2: prof, 3: chef'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-ALTER TABLE `user_laboratory`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_user` (`id_user`),
-  ADD KEY `id_laboratory` (`id_laboratory`);

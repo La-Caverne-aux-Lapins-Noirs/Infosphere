@@ -59,7 +59,7 @@ else if (isset($logs["content"]))
 		$cod = $cod->value;
 		compute_student_log(
 		    ["id" => $cod],
-		    $log["distant"] ? 2 : $log["lock"] ? -1 : 1,
+		    $log["distant"] ? 2 : ($log["lock"] ? -1 : 1),
 		    now(), //$log["date"],
 		    $log["ip"],
 		    $log["distant"]

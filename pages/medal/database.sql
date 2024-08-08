@@ -1,8 +1,10 @@
 
 CREATE TABLE `medal` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
   `codename` varchar(255) NOT NULL,
   `deleted` datetime DEFAULT NULL,
+  `hidden` datetime DEFAULT NULL COMMENT 'Cache la médaille du menu médaille. Utile pour dépréciser une médaille sans la supprimer.',
 
   `type` int(11) DEFAULT NULL,
   `tags` varchar(32) DEFAULT NULL,
@@ -15,17 +17,12 @@ CREATE TABLE `medal` (
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-ALTER TABLE `medal`
-  ADD PRIMARY KEY (`id`);
-
 CREATE TABLE `medal_medal` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
   `id_medal` int(11) NOT NULL,
-  `id_implied_medal` int(11) NOT NULL
+  KEY `id_medal` (`id_medal`),
+  `id_implied_medal` int(11) NOT NULL,
+  KEY `id_implied_medal` (`id_implied_medal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-ALTER TABLE `medal_medal`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_medal` (`id_medal`),
-  ADD KEY `id_implied_medal` (`id_implied_medal`);
 
