@@ -19,6 +19,30 @@ function get_timezone_offset($remote_tz)
 // L'UTC local dépend de l'endroit mais également de la date (heure d'été, heure d'hiver)
 function utc0_to_local($direction, $dt)
 {
+    function utc0_to_local($direction, $dt)
+    {
+        global $Localisation;
+    
+        if ($direction != TO_DB && $direction != FROM_DB)
+        return (NULL);
+    
+        // On convertit en int si on a un format date texte
+        if (($text = !is_number($dt)))
+        $dt = date_to_timestamp($dt);
+    
+        $off = get_timezone_offset($Localisation);
+        // Si on prend depuis la BDD, alors on ajoute le décalage horaire
+        // Si on met dans la BDD, alors on enlève le décalage horaire
+        $dt = $dt + ($direction == FROM_DB ? +$off : -$off);
+    
+        // On remet dans le format donné en paramètre
+        if ($text)
+        $dt = db_form_date($dt);
+    
+        // On renvoi le resultat
+        return $dt;
+        #return $res;
+    }
     global $Localisation;
 
     if ($direction != TO_DB && $direction != FROM_DB)
@@ -28,15 +52,16 @@ function utc0_to_local($direction, $dt)
     if (($text = !is_number($dt)))
 	$dt = date_to_timestamp($dt);
 
-    $off = get_timezone_offset($Localisation, $dt);
+    $off = get_timezone_offset($Localisation);
     // Si on prend depuis la BDD, alors on ajoute le décalage horaire
     // Si on met dans la BDD, alors on enlève le décalage horaire
     $dt = $dt + ($direction == FROM_DB ? +$off : -$off);
 
     // On remet dans le format donné en paramètre
     if ($text)
-	$dt = db_form_date($dt)
+	$dt = db_form_date($dt);
 
     // On renvoi le resultat
-    return ($res);
+    return $dt;
+    #return $res;
 }

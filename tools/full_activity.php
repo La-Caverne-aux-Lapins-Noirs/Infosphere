@@ -56,6 +56,8 @@ class FullActivity extends Response
     public $hidden = 0;
     public $parent_activity = -1;
     public $reference_activity = -1;
+	// Contient le chemin vers le _exercise.dab exemple : /functions/string/anagram_exercise.dab
+    public $correction_ref = "";
     public $reference_codename = NULL;
     public $reference_name = "";
     public $reference_type = 0;
@@ -85,7 +87,11 @@ class FullActivity extends Response
     public $grade_c = 60;
     public $grade_d = 50;
     public $grade_bonus = 75;
-
+	public $bonus_grade_a = 0;
+    public $bonus_grade_b = 0;
+    public $bonus_grade_c = 0;
+    public $bonus_grade_d = 0;
+    public $bonus_grade_bonus = 0;
     public $declaration_type = 1;
 
     const COUNT_VALIDATION = 4;
@@ -144,6 +150,7 @@ class FullActivity extends Response
     public $note = false;
     public $support = [];
     public $cycle = [];
+	public $skill = [];
     public $scale = [];
     public $mcq = [];
     public $satisfaction = [];
@@ -929,6 +936,6 @@ class FullActivity extends Response
 	    $this->subactivities[$new->codename] = $new;
 	}
 	
-	return (true);
+	return true;
     }
 }

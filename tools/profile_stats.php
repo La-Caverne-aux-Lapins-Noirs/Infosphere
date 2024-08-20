@@ -1,14 +1,16 @@
 <?php
 require_once ("profile_stats_func.php");
+
 $fnt = __DIR__."/../res/futura.ttf";
+$dbg = true;
 
 while (error_get_last())
     error_clear_last();
 
 $dbg = false;
 $nopic = false;
-$w = @$_GET["w"];
-$h = @$_GET["h"];
+$w = $_GET["w"];
+$h = $_GET["h"];
 if (!isset($_GET["s"]) || !isset($_GET["e"]))
     $startday = ($endday = (int)time()) - 7 * 60 * 60 * 24;
 else
@@ -21,7 +23,6 @@ if (isset($_GET["lm"]))
     $landmark = $_GET["lm"]; // "b" pour bottom, "m" pour middle
 else
     $landmark = "b";
-
 if ($w < 600 || $h < 300)
     die();
 if ($startday > $endday)
@@ -38,7 +39,6 @@ if ($len % 2 ? 0 : 1)
     $len += 1;
     $startday -= 1;
 }
-
 $data = [];
 if (isset($_GET["d"]))
     $data = json_decode(base64_decode($_GET["d"]), true);
@@ -313,9 +313,11 @@ foreach ($data as $k => $v)
     $xp += $bbox[2] + 20;
 }
 
+error_clear_last();
 if (error_get_last() == NULL && $dbg == false)
 {
     if (!isset($User))
 	header("Content-type: image/png");
     imagepng($img, NULL, 0, PNG_NO_FILTER);
 }
+
