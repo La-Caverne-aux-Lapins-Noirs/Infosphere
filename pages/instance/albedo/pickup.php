@@ -1,7 +1,6 @@
 <?php
 // Pour l'instant...
 // pas sur que ce qu'il y a en dessous fonctionne
-return ;
 
 //////////////////////////////////////////////
 /// On effectue le ramassage des étudiants ///
@@ -13,6 +12,7 @@ return ;
 $begin = db_form_date(now() - 60 * 3);
 $end = db_form_date(now());
 $activities = db_select_all("
+  activity.id as main_id,
   activity.codename as actname,
   user.codename as username
   FROM activity
@@ -29,9 +29,43 @@ $activities = db_select_all("
 
 foreach ($activities as $act)
 {
-    // Si le rendu est a faire a la main... Albedo ne peut rien faire.
-    if (($err = pick_up_work(
-	$act["actname"], $act["username"], NULL, AUTOMATIC_PICKUP
-    )) != "")
-        add_log(TRACE, "Albedo failed to retrieve work for ".$act["username"]." ".$act["actname"].": ".strval($err), 1);
+    $team_id = $act["team_id"];
+    $team_leader = db_select_one("
+    user.codename 
+    FROM user_team LEFT JOIN user ON user_team.id_user = user.id
+    WHERE id_team = $team_id and status = 2
+    ");
+    if (($activity = new FullActivity)->build($act["main_id"]) == false)
+        not_found();
+    global $Configuration;
+        $path = $Configuration->ActivitiesDir($activity->codename, NULL)."activity.dab";
+        $activity_dabContent = "";
+        if (!file_exists($path))
+            add_log(TRACE, "Failed to retrieve activity.dab in deliveries.php");
+        else 
+            $activity_dabContent = file_get_contents($path);
+    if (strlen($activity = $activity->repository_name) == 0)
+        return (new ErrorResponse("NoRepositoryConfigured"));
+    $ret = hand_request([
+        "command" => "retrieve",
+        "user" => $team_leader,
+        "repo" => $activity,
+        "alive" => true,
+        "official" => true,
+        "correction" => true,
+        "activity.dab" => $activity_dabContent
+    ]);
+    $filename = $Configuration->tmpFileDIR($team_leader);
+    if (!$filename)
+    {
+        add_log(TRACE, "Failed to save temporary file for sending mail evaluation report. The directory may does not exist !");
+        return (new ErrorResponse("NotFound"));
+    }
+    $filename = $filename."reportOf".$act["actname"]."tar.gz";
+    file_put_contents($filename, $ret);
+    $corrected_students = db_select_all("
+    user.mail
+    FROM user_team LEFT JOIN user ON user_team.id_user = user.id
+    WHERE id_team = $team_id");
+    send_mail($corrected_students, $Dictionnary["EvaluationReport"]." ".$act["actname"], "", NULL, [basename($filename) => $filename], false);
 }

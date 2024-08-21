@@ -305,16 +305,27 @@ function PickupActivity($id, $data, $method, $output, $module)
 	not_found();
     if (strlen($activity = $activity->repository_name) == 0)
 	return (new ErrorResponse("NoRepositoryConfigured"));
-    
-    $ret = hand_request([
-	"command" => "retrieve",
-	"user" => $team_leader,
-	"repo" => $activity,
-	"alive" => $alive,
-	"official" => $official
-    ]);
+
+	if (isset($data["correction"]) && isset($data["activity.dab"]))
+		$ret = hand_request([
+							"command" => "retrieve",
+							"user" => $team_leader,
+							"repo" => $activity,
+							"alive" => $alive,
+							"official" => $official,
+							"correction" => $data["correction"],
+							"activity.dab" => $data["activity.dab"]
+						]);
+    else
+		$ret = hand_request([
+		"command" => "retrieve",
+		"user" => $team_leader,
+		"repo" => $activity,
+		"alive" => $alive,
+		"official" => $official
+		]);
     if (!isset($ret["result"]) || $ret["result"] != "ok")
-	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
+		return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
 
     return (new ValueResponse([
 	"filename" => str_replace("-", "_", basename($activity))."_".str_replace(".", "_", $team_leader).".tar.gz",

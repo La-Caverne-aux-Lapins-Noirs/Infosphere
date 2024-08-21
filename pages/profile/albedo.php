@@ -49,6 +49,7 @@ else if (isset($logs["content"]))
 	// Log étudiants
 	if (isset($log["user"]))
 	{
+		file_put_contents("debug.txt", "Connexion de ".$log["user"], FILE_APPEND);
 	    foreach ($log["user"] as $user)
 	    {
 		if (($cod = resolve_codename("user", $user))->is_error())
@@ -59,7 +60,7 @@ else if (isset($logs["content"]))
 		$cod = $cod->value;
 		compute_student_log(
 		    ["id" => $cod],
-		    $log["distant"] ? 2 : $log["lock"] ? -1 : 1,
+		    $log["distant"] ? 2 : ($log["lock"] ? -1 : 1),
 		    now(), //$log["date"],
 		    $log["ip"],
 		    $log["distant"]

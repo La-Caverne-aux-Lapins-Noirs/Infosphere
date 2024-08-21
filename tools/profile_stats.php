@@ -1,5 +1,6 @@
 <?php
 require_once ("profile_stats_func.php");
+
 $fnt = __DIR__."/../res/futura.ttf";
 
 while (error_get_last())
@@ -7,8 +8,8 @@ while (error_get_last())
 
 $dbg = false;
 $nopic = false;
-$w = @$_GET["w"];
-$h = @$_GET["h"];
+$w = $_GET["w"];
+$h = $_GET["h"];
 if (!isset($_GET["s"]) || !isset($_GET["e"]))
     $startday = ($endday = (int)time()) - 7 * 60 * 60 * 24;
 else
@@ -21,7 +22,6 @@ if (isset($_GET["lm"]))
     $landmark = $_GET["lm"]; // "b" pour bottom, "m" pour middle
 else
     $landmark = "b";
-
 if ($w < 600 || $h < 300)
     die();
 if ($startday > $endday)
@@ -38,7 +38,6 @@ if ($len % 2 ? 0 : 1)
     $len += 1;
     $startday -= 1;
 }
-
 $data = [];
 if (isset($_GET["d"]))
     $data = json_decode(base64_decode($_GET["d"]), true);
@@ -106,7 +105,7 @@ else
     $sladder = 0;
 $laddersize = $bladder - $sladder;
 
-$img = imagecreatetruecolor($w, $h);
+$img = imagecreatetruecolor(intval($w), intval($h));
 imagesavealpha($img, true);
 $lines = imagecolorallocatealpha($img, 0, 0, 0, 0);
 $linesa = imagecolorallocatealpha($img, 0, 0, 0, 90);
@@ -153,7 +152,7 @@ imagefill($img, 0, 0, $transparent);
 // Lignes verticales marquant les journées
 for ($i = 1; $i < $len; ++$i)
 {
-    imageline($img, $i * $w / $len, 50, $i * $w / $len, $h - 50, $lines);
+    imageline($img, intval($i * $w / $len), 50, intval($i * $w / $len), $h - 50, $lines);
 
     if ($i % 2)
     {
@@ -167,14 +166,14 @@ for ($i = 1; $i < $len; ++$i)
 	    ($i + 1) * $w / $len,
 	    50,
 	];
-	imagefilledpolygon($img, $coords, 4, $linesa);
+	imagefilledpolygon($img, $coords, $linesa);
     }
     
     $date = date("d/m", ($i + $startday) * 60 * 60 * 24);
     $siz = imagettfbbox(10, 0, $fnt, $date);
     imagettftext(
 	$img, 10, 0,
-	$i * ($w / $len) - $siz[2] / 2,
+	intval($i * ($w / $len) - $siz[2] / 2),
 	50 + ($len > 20 && $i % 2 ? -20 : -5),
 	$lines,
 	$fnt,
@@ -182,7 +181,7 @@ for ($i = 1; $i < $len; ++$i)
     );
     imagettftext(
 	$img, 10, 0,
-	$i * ($w / $len) - $siz[2] / 2,
+	intval($i * ($w / $len) - $siz[2] / 2),
 	$h + ($len > 20 && $i % 2 ? -15 : -30),
 	$lines,
 	$fnt,
@@ -209,9 +208,9 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
     $coords = draw_area($data, "presence", $startday, $index, $bladder, $darkbluea, $darkblue);
     draw_area($data, "late", $startday, $index, $bladder, $darkbluea, $darkblue, [$coords[8], $coords[9]]);
     if ($landmark == "b")
-	draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
+	    draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
     else
-	draw_line($data, "mispresence", $startday, $index, $sladder, $darkblue, $black, true);	
+	    draw_line($data, "mispresence", $startday, $index, $sladder, $darkblue, $black, true);	
 
     draw_line($data, "delivery", $startday, $index, $bladder, $yellow);
     draw_line($data, "misdelivery", $startday, $index, $bladder, $yellow, $black, true);
@@ -228,16 +227,16 @@ for ($i = $sladder; $i <= $bladder; ++$i)
     if ($y < 50)
 	continue ;
     // Gauche
-    imageline($img, $w / $len / 2 - 5, $y, $w / $len / 2 + 5, $y, $lines);
+    imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w / $len / 2 + 5), intval($y), $lines);
     // Droite
-    imageline($img, $w - $w / $len / 2 - 5, $y, $w - $w / $len / 2 + 5, $y, $lines);
+    imageline($img, intval($w - $w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
     if ($i % 5 == 0)
-	imageline($img, $w / $len / 2 - 5, $y, $w - $w / $len / 2 + 5, $y, $linesa);
+	    imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $linesa);
     if ($i == 0)
     {
 	$shift = 15;
 	imagesetthickness($img, 2);
-	imageline($img, $w / $len / 2 - 5, $y, $w - $w / $len / 2 + 5, $y, $lines);
+	imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
 	imagesetthickness($img, 0);
     }
     else
@@ -247,16 +246,16 @@ for ($i = $sladder; $i <= $bladder; ++$i)
     $siz = imagettfbbox($shift, 0, $fnt, $i);
     imagettftext(
 	$img, $shift, 0,
-	($w / $len) / 2 - $siz[2] - $shift,
-	$y - $siz[5] / 2,
+	intval(($w / $len) / 2 - $siz[2] - $shift),
+	intval($y - $siz[5] / 2),
 	$lines,
 	$fnt,
 	$i
     );
     imagettftext(
 	$img, $shift, 0,
-	$w - ($w / $len) / 2 + $shift,
-	$y - $siz[5] / 2,
+	intval($w - ($w / $len) / 2 + $shift),
+	intval($y - $siz[5] / 2),
 	$lines,
 	$fnt,
 	$i
@@ -264,10 +263,10 @@ for ($i = $sladder; $i <= $bladder; ++$i)
 }
 
 // Lignes du bas et de gauche
-imageline($img, $w / $len / 2, 50, $w - $w / $len / 2, 50, $lines);
-imageline($img, $w / $len / 2, $h - 50, $w - $w / $len / 2, $h - 50, $lines);
-imageline($img, $w / $len / 2, 50, $w / $len / 2, $h - 50, $lines);
-imageline($img, $w - $w / $len / 2, 50, $w - $w / $len / 2, $h - 50, $lines);
+imageline($img, intval($w / $len / 2), 50, intval($w - $w / $len / 2), 50, $lines);
+imageline($img, intval($w / $len / 2), intval($h - 50), intval($w - $w / $len / 2), intval($h - 50), $lines);
+imageline($img, intval($w / $len / 2), 50, intval($w / $len / 2), $h - 50, $lines);
+imageline($img, intval($w - $w / $len / 2), 50, intval($w - $w / $len / 2), intval($h - 50), $lines);
 
 $xp = $w / $len / 2;
 $col = [
@@ -295,27 +294,27 @@ foreach ($data as $k => $v)
     $bbox = imagettfbbox(10, 0, $fnt, $k);
 
     imagefilledrectangle(
-	$img, $xp + $bbox[6] - 5, 0, $xp + $bbox[2] + 5, 30, $col[$k]
+	$img, intval($xp + $bbox[6] - 5), 0, intval($xp + $bbox[2] + 5), 30, $col[$k]
     );
     if (substr($k, 0, 3) != "avg")
     {
-	imagettftext($img, 10, 0, $xp - 1, 15, $black, $fnt, $k);
-	imagettftext($img, 10, 0, $xp, 15, $black, $fnt, $k);
+	imagettftext($img, 10, 0, intval($xp - 1), 15, $black, $fnt, $k);
+	imagettftext($img, 10, 0, intval($xp), 15, $black, $fnt, $k);
     }
     else
     {
-	imagettftext($img, 10, 0, $xp - 1, 15, $realwhite, $fnt, $k);
-	imagettftext($img, 10, 0, $xp, 15, $realwhite, $fnt, $k);
+	imagettftext($img, 10, 0, intval($xp - 1), 15, $realwhite, $fnt, $k);
+	imagettftext($img, 10, 0, intval($xp), 15, $realwhite, $fnt, $k);
     }
-
-
 
     $xp += $bbox[2] + 20;
 }
 
+error_clear_last();
 if (error_get_last() == NULL && $dbg == false)
 {
     if (!isset($User))
 	header("Content-type: image/png");
     imagepng($img, NULL, 0, PNG_NO_FILTER);
 }
+

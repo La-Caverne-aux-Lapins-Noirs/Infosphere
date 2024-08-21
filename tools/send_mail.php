@@ -1,44 +1,55 @@
 <?php
+require 'vendor/autoload.php';
+use Mailgun\Mailgun;
 
-function send_mail($target, $title, $content, $domain = NULL)
+// Attachement is a array key = name; value = path
+function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true)
 {
     global $Configuration;
 
-    if (!is_array($target))
-	$target = [$target];
-    $Key = @$Configuration->Properties["mailgun_key"];
-    $Sender = @$Configuration->Properties["mailgun_sender"];
-    if ($domain == NULL)
-	$Domain = @$Configuration->Properties["domain"];
-    else
-	$Domain = $domain;
-    if (!$Key || !$Sender || !$Domain)
-    {
-	add_log(TRACE, "A mail sending was requested without the Infosphere to be able to process it. Set a mailgun key, a sending mail adress and the currently used domain.", 1);
-	return (new ErrorResponse("CannotSendMail"));
-    }
-    $Cmd = [
-	"curl -s --user 'api:$Key'",
-	"https://api.eu.mailgun.net/v3/$Domain/messages",
-	"-F from='Infosphere $Domain <mailgun@$Domain>'"
-    ];
-    foreach ($target as $tar)
-	$Cmd[] = "-F to=$tar";
+    $mail_content = [];
 
-    $title = html_entity_decode($title);
-    $title = str_replace("\"", "\\\"", $title);
-    $title = str_replace(";", "", $title);
-    $content = html_entity_decode($content);
-    $content = str_replace("\"", "\\\"", $content);
-    $content = str_replace(";", "", $content);
-    $Cmd = array_merge($Cmd, [
-	"-F subject=\"$title\"",
-	"-F text=\"$content\"",
-    ]);
-    $Cmd[] = "2>&1";
-    $Cmd = implode(" ", $Cmd);
-    if (($Output = shell_exec($Cmd))[0] != "{")
-	return (new ErrorResponse("CannotSendMail", $Output, 1));
+    $mail_content["from"] = @$Configuration->Properties["mailgun_sender"];
+    if (!is_array($target))
+        $mail_content['to'] = $target;
+    else
+    {
+        if ($hidden_copy)
+        {
+            $mail_content['to'] = $target[0];
+            unset($target[0]);
+            $mail_content['bcc'] = implode(', ', array_values($target));
+        }
+        else
+            $mail_content['to'] = implode(', ', $target);
+    }
+    $mail_content['subject'] = $title;
+    $mail_content['text'] = $content;
+
+    if ($attachements != NULL && count($attachements) > 0)
+    {
+        $index = 0;
+        $mail_attachements = [];
+        foreach ($attachements as $attachement)
+        {
+            $mail_attachements[$index] = ['filePath' => (array_values($attachement))[0],'filename'=> array_key_first($attachement)];
+            $index++;
+        }
+        $mail_attachements = array_values($mail_attachements);
+        $mail_content['attachment'] = $mail_attachements;
+    }
+    $Key = @$Configuration->Properties["mailgun_key"];
+    if ($domain == NULL)
+	    $Domain = @$Configuration->Properties["domain"];
+    else
+	    $Domain = $domain;
+    if (!$Key || !$Domain)
+    {
+	    add_log(TRACE, "A mail sending was requested without the Infosphere to be able to process it. Set a mailgun key, a sending mail adress and the currently used domain.", 1);
+	    return (new ErrorResponse("CannotSendMail"));
+    }
+    $mg = Mailgun::create($Key, 'https://api.eu.mailgun.net');
+    $mg->messages()->send($Domain, $mail_content);
     return (new Response);
 }
 
@@ -48,7 +59,7 @@ function send_mail_change_mail($user, $new_user, $domain = NULL)
     global $Configuration;
 
     if ($domain == NULL)
-	$Domain = @$Configuration->Properties["domain"];
+	    $Domain = @$Configuration->Properties["domain"];
     else
 	$Domain = $domain;
     $Content = sprintf($Dictionnary["MailChangedContent"],

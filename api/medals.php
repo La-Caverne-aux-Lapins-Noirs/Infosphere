@@ -15,7 +15,7 @@ function DisplayMedals($id, $data, $method, $output, $module)
 function AddMedal($id, $data, $method, $output, $module)
 {
     global $Configuration;
-    
+
     if ($id != -1 || !is_symbol(@$data["codename"]))
 	bad_request();
     $codename = $data["codename"];
@@ -31,7 +31,7 @@ function AddMedal($id, $data, $method, $output, $module)
 	$specificator = implode(",", $specificator->value);
     $type = is_between($data["type"], 0, 2) ? $data["type"] : 0;
     $target = $Configuration->MedalsDir($codename);
-    
+
     // Est ce qu'on prend directement l'image envoyé?
     if (isset($data["icon"][0]["content"]))
     {

@@ -39,9 +39,7 @@ else
 }
 
 // Deux panneaux, a gauche et a droite
-$left_panel = [
-    $Dictionnary["About"] => __DIR__."/about.php",
-];
+$left_panel = [$Dictionnary["About"] => __DIR__."/about.php",];
 if (count($activity->team) > 0)
     $left_panel[$Dictionnary["RegisteredStudents"]] = __DIR__."/users.php";
 if (count($activity->support) > 0)
