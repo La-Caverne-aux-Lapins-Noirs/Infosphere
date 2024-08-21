@@ -26,8 +26,6 @@ function hand_request($data, $code = true)
     $key = base64_decode($Configuration->Properties["handkey"]);
     $key = unsecure_data($key, $acc.$url."hand_request");
 
-//    AddDebugLogR(openssl_encrypt("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFH7deW0nEXUguEAmeeX7WCfRzv5nM5LQHeGPC+cy7qz kgalaxie84@gmail.com", "blowfish", $acc.$url."hand_request", 0, "azertyui"));
-
     $fifo = __DIR__."/../.sshkey";
     if (!file_exists($fifo))
     {
