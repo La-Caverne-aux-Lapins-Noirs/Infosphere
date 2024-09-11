@@ -10,4 +10,3 @@
     </video>
     <audio class="screen_media" controls src="" type="video/mp3"></audio>
 </div>
-

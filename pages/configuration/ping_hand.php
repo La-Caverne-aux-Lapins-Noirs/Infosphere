@@ -1,10 +1,12 @@
 <?php
 
 $val = generate_password(128);
-$out = hand_request([
+$out = hand_request($packet = [
     "command" => "ping",
     "content" => "b64:".base64_encode($val)
 ]);
+AddDebugLogR($packet);
+AddDebugLogR($out);
 if ($out === false || $out === NULL)
     echo "Cannot reach the Hand";
 else if (!isset($out["content"]) || $out["content"] != $val)

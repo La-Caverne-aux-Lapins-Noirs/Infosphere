@@ -105,7 +105,7 @@ function AddModule($id, $data, $method, $output, $module)
 	"type" => 18,
 	"parent_activity" => NULL
     ], [], $template))->is_error())
-	return ($request);
+    return ($request);
     return (DisplayModule($id, [], "GET", $output, $module));
 }
 
@@ -130,7 +130,7 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	if (($module != "instance" && $module != "module" && $module  != "activity") ||
 	    ($data["action"] != "subscribe" && $data["action"] != "registration") ||
 	    $SUBID != -1)
-	    forbidden();
+	forbidden();
 	$id_user = $User["id"];
 	$team = db_select_one("
 	  team.id
@@ -262,7 +262,7 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	    if ($ret->is_error())
 		return ($ret);
 	}
-	    
+	
 	if ($module != "instance")
 	    return ($ret);
 	// Renouvellement de la liste - faute d'avoir l'information equipe/membre
@@ -281,6 +281,7 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 
 function PickupActivity($id, $data, $method, $output, $module)
 {
+    global $Dictionnary;
     global $Configuration;
     
     if ($id == -1)
@@ -293,42 +294,71 @@ function PickupActivity($id, $data, $method, $output, $module)
     $official = false;
     if (isset($data["official"]))
 	$official = !!$data["official"];
+    $correction = false;
+    if (isset($data["correction"]))
+	$correction = !!$data["correction"];
     $team_leader = db_select_one("
-	user.codename
+	user.codename, user.id
 	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
 	WHERE id_team = $team AND status = 2
     ");
     if ($team_leader == NULL)
 	not_found();
+    $user_id = $team_leader["id"];
     $team_leader = $team_leader["codename"];
     if (($activity = new FullActivity)->build($id) == false)
 	not_found();
-    if (strlen($activity = $activity->repository_name) == 0)
+    if (strlen($activity_name = $activity->repository_name) == 0)
 	return (new ErrorResponse("NoRepositoryConfigured"));
 
-	if (isset($data["correction"]) && isset($data["activity.dab"]))
-		$ret = hand_request([
-							"command" => "retrieve",
-							"user" => $team_leader,
-							"repo" => $activity,
-							"alive" => $alive,
-							"official" => $official,
-							"correction" => $data["correction"],
-							"activity.dab" => $data["activity.dab"]
-						]);
+    if ($correction === true)
+    {
+	// Faire en sorte de retourner deux variables et les base64 différement pour les mettre dans le json
+	[$actConf, $allowFunc] = buildEvaluatorConfiguration($activity, $user_id);
+	$ret = hand_request([
+	    "command" => "retrieve",
+	    "user" => $team_leader,
+	    "repo" => $activity_name,
+	    "alive" => $alive,
+	    "official" => $official,
+	    "correction" => $correction,
+	    "configuration" => base64_encode($actConf),
+	    "allowFunc" => base64_encode($allowFunc)
+	]);
+    }
     else
-		$ret = hand_request([
-		"command" => "retrieve",
-		"user" => $team_leader,
-		"repo" => $activity,
-		"alive" => $alive,
-		"official" => $official
-		]);
+	$ret = hand_request([
+	    "command" => "retrieve",
+	    "user" => $team_leader,
+	    "repo" => $activity_name,
+	    "alive" => $alive,
+	    "official" => $official
+	]);
+
+    // On élimine les erreurs
     if (!isset($ret["result"]) || $ret["result"] != "ok")
-		return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
+	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
+
+    if ($correction === true)
+    {
+
+	// On envoie les mails
+	$students_mail = array_keys(db_select_all("
+	user.mail
+	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
+	WHERE id_team = $team", "mail"));
+
+	$temp = tmpfile();
+	fwrite($temp, base64_decode($ret["content"]));
+	fseek($temp, 0);
+	
+	send_mail($students_mail, $Dictionnary["EvaluationReport"]." ".basename($activity_name),
+		  "This evaluation is not official and has been launched by a teacher !", NULL, [["report.dab" => base64_decode($ret["content"])]], false);
+	fclose($temp);
+    }
 
     return (new ValueResponse([
-	"filename" => str_replace("-", "_", basename($activity))."_".str_replace(".", "_", $team_leader).".tar.gz",
+	"filename" => str_replace("-", "_", basename($activity_name))."_".str_replace(".", "_", $team_leader).".tar.gz",
 	"content" => base64_decode($ret["content"])
     ]));
 }
@@ -461,7 +491,7 @@ function AddActivity($id, $data, $method, $output, $module)
     if (($request = add_activity(
 	["codename" => $data["codename"], "parent_activity" => $module->id], [], $module->is_template))->is_error()
     )
-        return ($request);
+    return ($request);
     $_GET["sub"] = 1;
     return (DisplayModule($module->id, [], "GET", $output, $module));
 }
@@ -474,7 +504,7 @@ function DuplicateActivity($id, $data, $method, $output, $module)
 	return ($ret);
     return (DisplayModule(-1, $data, "GET", $output, $module));
 }
-    
+
 function SetActivityLink($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -515,52 +545,52 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	///////////////////////////////////////////////////////////////////////
 	"teacher" => [ // gere prof et labo en ajout et user en suppression
 	    "table" => "teacher",
-	    "" => "user",
-	    "#" => "laboratory",
-            "properties" => [],
-	    "display" => "teacher"
+		       "" => "user",
+		       "#" => "laboratory",
+		       "properties" => [],
+		       "display" => "teacher"
 	],
 	"laboratory" => [ // seulement pour supprimer les labos
 	    "table" => "teacher",
-	    "" => "laboratory",
-	    "properties" => [],
-	    "display" => "teacher"
+			  "" => "laboratory",
+			  "properties" => [],
+			  "display" => "teacher"
 	],
 	///////////////////////////////////////////////////////////////////////
 	"support" => [ // gere tout support en ajout, et support seul en suppresion
 	    "table" => "support",
-            "" => "support",
-	    "#" => "support_asset",
-            "@" => "support_category",
-	    "$" => ["activity", "subactivity"], // RTable
-	    "properties" => [
-		"chapter" => 0
-	    ],
-            "display" => "support"
+		       "" => "support",
+		       "#" => "support_asset",
+		       "@" => "support_category",
+		       "$" => ["activity", "subactivity"], // RTable
+		       "properties" => [
+			   "chapter" => 0
+		       ],
+		       "display" => "support"
 	],
 	"support_asset" => [ // seulement pour supprimer les supports "support_asset"
 	    "table" => "support",
-            "" => "support_asset",
-     	    "properties" => [
-		"chapter" => 0
-	    ],
-	     "display" => "support"
+			     "" => "support_asset",
+     			     "properties" => [
+				 "chapter" => 0
+			     ],
+			     "display" => "support"
 	],
 	"support_category" => [ // seulement pour supprimer les supports "category"
 	    "table" => "support",
-	     "" => "support_category",
-     	    "properties" => [
-		"chapter" => 0
-	    ],
-	     "display" => "support"
+				"" => "support_category",
+     				"properties" => [
+				    "chapter" => 0
+				],
+				"display" => "support"
 	],
 	"activity" => [ // seulement pour supprimer les supports "subactivity"
 	    "table" => "support",
-  	    "" => ["activity", "subactivity"],
-	    "properties" => [
-		"chapter" => 0
-	    ],
-	   "display" => "support"
+  			"" => ["activity", "subactivity"],
+			"properties" => [
+			    "chapter" => 0
+			],
+			"display" => "support"
 	],
 	///////////////////////////////////////////////////////////////////////
 	"scale" => [
@@ -627,7 +657,7 @@ function SetActivityLink($id, $data, $method, $output, $module)
 	    "right_table_name" => $link_rtable,
 	    "properties" => $properties
 	]))->is_error())
-	    return ($request);
+	return ($request);
 
 	($activity = new FullActivity())->build($id);
 
@@ -731,18 +761,18 @@ function EditActivity($id, $data, $method, $output, $module)
     }
     if (isset($data["repository_name"])
 	&& strchr($data["repository_name"], " ") !== false)
-        return (new ErrorResponse("InvalidRepositoryName"));
+    return (new ErrorResponse("InvalidRepositoryName"));
     $lng_fields = [];
     foreach (array_keys($LanguageList) as $lng)
 	foreach ($data as $k => $v)
 	    if (substr($k, 0, strlen($lng) + 1) == $lng."_")
-	    {
-		$text = substr($k, strlen($lng) + 1);
-		if (!in_array($text, ["name", "description", "objective", "method", "reference"]))
-		    continue ;
-		$data[$k] = htmlspecialchars($v);
-		$lng_fields[] = $k;
-	    }
+    {
+	$text = substr($k, strlen($lng) + 1);
+	if (!in_array($text, ["name", "description", "objective", "method", "reference"]))
+	    continue ;
+	$data[$k] = htmlspecialchars($v);
+	$lng_fields[] = $k;
+    }
     if (isset($data["type"]))
     {
 	if (($ret = db_select_one("* FROM activity_type WHERE id = {$data["type"]}")) == NULL)
@@ -781,10 +811,10 @@ function EditActivity($id, $data, $method, $output, $module)
     if (count($edit))
 	db_update_one("activity", $id, $edit);
 
-  End:
-    return (new ValueResponse([
-	"msg" => $Dictionnary["Edited"],
-    ]));
+    End:
+	    return (new ValueResponse([
+		"msg" => $Dictionnary["Edited"],
+	    ]));
 }
 
 function AddMedal($id, $data, $method, $output, $module)
@@ -889,7 +919,7 @@ function SetSoftware($id, $data, $method, $output, $module)
 	$Dictionnary["ReferenceRepository"],
 	$Dictionnary["ToolsRepository"],
     ] as $k => $label)
-        $html .= "<option value=\"$k\">$label</option>";
+    $html .= "<option value=\"$k\">$label</option>";
     $html .= '</select>';
     return (new ValueResponse([
 	"msg" => $Dictionnary["Added"],
@@ -943,7 +973,7 @@ function RemoveSoftware($id, $data, $method, $output, $module)
 	    "additional_html" => $html
     ])]));
 }
-    
+
 function SetSubject($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -982,20 +1012,20 @@ function SetSubject($id, $data, $method, $output, $module)
     }
     ($module = new FullActivity)->build($id);
     ob_start();
-    ?>
-	<a href="<?=@$module->subject[$data["language"]][0]; ?>">
-	    <?=@$module->subject[$data["language"]][0] ? $Dictionnary["SeeSubject"] : ""; ?>
-	</a>
-	<a href="<?=@$module->configuration[$data["language"]][0]; ?>">
-	    <?=@$module->configuration[$data["language"]][0] ? $Dictionnary["SeeConfiguration"] : ""; ?>
-	</a>
-    <?php
-    $html = ob_get_clean();
-    GetOut:
-    return (new ValueResponse([
-	"msg" => $Dictionnary["Added"],
-	"content" => $html
-    ]));
+?>
+<a href="<?=@$module->subject[$data["language"]][0]; ?>">
+    <?=@$module->subject[$data["language"]][0] ? $Dictionnary["SeeSubject"] : ""; ?>
+</a>
+<a href="<?=@$module->configuration[$data["language"]][0]; ?>">
+    <?=@$module->configuration[$data["language"]][0] ? $Dictionnary["SeeConfiguration"] : ""; ?>
+</a>
+<?php
+$html = ob_get_clean();
+GetOut:
+	return (new ValueResponse([
+	    "msg" => $Dictionnary["Added"],
+	    "content" => $html
+	]));
 }
 
 function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
@@ -1069,7 +1099,7 @@ function RemoveRessource($id, $data, $method, $output, $module)
 	bad_request();
     return (GetRessourceDir($id, $data, "GET", $output, $module, "RessourceDeleted"));
 }
-    
+
 function GetMoodDir($id, $data, $method, $output, $module, $msg = "")
 {
     global $Dictionnary;
@@ -1082,7 +1112,7 @@ function GetMoodDir($id, $data, $method, $output, $module, $msg = "")
     // Requis seulement pour éviter les collisions de formulaire, sinon inutile pour la mécanique interne
     if (!isset($data["language"]))
 	$data["language"] = "NA";
-	
+    
     $page = $module;
     ($activity = new FullActivity)->build($id);
     $root = $Configuration->ActivitiesDir($activity->codename, "")."mood/";
@@ -1140,31 +1170,31 @@ function AddMood($id, $data, $method, $output, $module)
     ($module = new FullActivity)->build($id);
     ob_start();
     if ($action == "wallpaper") { ?>
-	<div
-	    class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper[$language][0]; ?>?<?=now(); ?>');"
-	    ondblclick="window.open('<?=$module->wallpaper[$language][0]; ?>', '_blank');"
-	>
-	</div>
-    <?php }
-    if ($action == "icon") { ?>
-	<div
-	    class="wallpaper_sample" style="background-image: url('<?=$module->icon[$language][0]; ?>?<?=now(); ?>');"
-	    ondblclick="window.open('<?=$module->icon[$language][0]; ?>', '_blank');"
-	>
-	</div>
-    <?php }
-    if ($action == "intro") { ?>
-	<video
-	    controls
-	    class="wallpaper_sample" src="<?=$module->intro[$language][0]; ?>?<?=now(); ?>"
-	    ondblclick="window.open('<?=$module->intro[$language][0]; ?>', '_blank');"
-	>
-	</video>
-    <?php }
-    return (new ValueResponse([
-	"msg" => $Dictionnary["MoodAdded"],
-	"content" => ob_get_clean()
-    ]));
+    <div
+	class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper[$language][0]; ?>?<?=now(); ?>');"
+	ondblclick="window.open('<?=$module->wallpaper[$language][0]; ?>', '_blank');"
+    >
+    </div>
+<?php }
+if ($action == "icon") { ?>
+    <div
+	class="wallpaper_sample" style="background-image: url('<?=$module->icon[$language][0]; ?>?<?=now(); ?>');"
+	ondblclick="window.open('<?=$module->icon[$language][0]; ?>', '_blank');"
+    >
+    </div>
+<?php }
+if ($action == "intro") { ?>
+    <video
+	controls
+	class="wallpaper_sample" src="<?=$module->intro[$language][0]; ?>?<?=now(); ?>"
+	ondblclick="window.open('<?=$module->intro[$language][0]; ?>', '_blank');"
+    >
+    </video>
+<?php }
+return (new ValueResponse([
+    "msg" => $Dictionnary["MoodAdded"],
+    "content" => ob_get_clean()
+]));
 }
 
 function RemoveMood($id, $data, $method, $output, $module)

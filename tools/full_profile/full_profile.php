@@ -381,7 +381,7 @@ class FullProfile extends Layer
 		"authority", "visibility"
 	    ];
 	    foreach ($fields as $label)
-		$this->$label = $data[$label];
+		$this->$label = @$data[$label];
 	    $this->medals = db_select_all("
                medal.*,
                medal.{$Language}_name as name,

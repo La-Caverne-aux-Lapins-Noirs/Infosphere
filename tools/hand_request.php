@@ -54,7 +54,8 @@ function hand_request($data, $code = true)
 
     $ship = hand_packet($data);
 
-    $cmd = "cat $ship | ssh $compress -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' $acc@$url -i $fifo -p 22 -tt infosphere_hand ; rm -f $ship ; rm -f $fifo "; // $alb ";
+    $cmd = "cat $ship | ssh $compress -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' $acc@$url -i $fifo -p 4422 -tt infosphere_hand ; rm -f $ship ; rm -f $fifo "; // $alb ";
+
     $out = shell_exec($cmd);
     /*
        fprintf(STDERR, "$cmd\n");
@@ -69,4 +70,3 @@ function hand_request($data, $code = true)
 	@unlink($albx);
     return (json_decode(end($out), true));
 }
-

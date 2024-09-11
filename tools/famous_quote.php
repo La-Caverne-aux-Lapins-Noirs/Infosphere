@@ -11,7 +11,7 @@ $FamousQuote["fr"] = [
     "La richesse donne de la beauté aux laids, des pieds aux boiteux, des yeux aux aveugles, de l'intérêt aux larmes",
     "Nous ne connaissons la valeur de l'eau que lorsque le puit est à sec",
     "Ce n'est pas le jour où tu es bien habillé que tu rencontres ta belle-mère",
-    "Quand on est dans l'imitation, on ne peut être qu'en retard",
+    "Quand on est dans l'imitation, on ne peut être qu'en retard", // Jason Brillante :p
     "Du pain en temps de paix est meilleur que du gâteau en temps de guerre",
     "Assis sur les genoux d'une mère pauvre aimante, tout enfant est riche",
     "Le pessimisme face au futur ne doit pas être un argument supplémentaire pour l'inaction dans le présent",
@@ -96,7 +96,8 @@ $FamousQuote["fr"] = [
     "Le courage, c'est de chercher la vérité et de la dire",
     "Il est bien vrai que la beauté de la science et de l'art est consolatrice",
     "Les progrès de l'humanité se mesurent aux concessions que la folie des sages fait à la sagesse des fous",
-    "Enfer chrétien, du feu. Enfer païen, du feu. Enfer mahométan, du feu. Enfer hindou, des flammes. A en croire les religions, Dieu est né rôtisseur."
+    "Enfer chrétien, du feu. Enfer païen, du feu. Enfer mahométan, du feu. Enfer hindou, des flammes. A en croire les religions, Dieu est né rôtisseur.",
+    "Telle est la vie des hommes. Quelques joies, très vite effacées par d’inoubliables chagrins. Il n’est pas nécessaire de le dire aux enfants." // Marcel Pagnol
 ];
 
 $FamousQuote["en"] = [

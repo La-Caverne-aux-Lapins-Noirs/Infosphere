@@ -4,11 +4,23 @@ $js = "
 silent_submitf(this, {
   tofill: 'support".$support["id"]."'
 });
-";
+  ";
+if (isset($asset) && $asset != NULL)
+{
+    $asset_id = "/asset/".$asset["id"];
+    $asset_codename = $asset["codename"];
+    $prefil = $asset;
+}
+else
+{
+    $asset_id = "";
+    $asset_codename = "";
+    $prefil = [];
+}
 ?>
 <form
     method="post"
-    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>"
+    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?><?=$asset_id; ?>"
     style="
     	    text-align: center;
 	    background-color: lightgray;
@@ -20,11 +32,15 @@ silent_submitf(this, {
 	    "
     onsubmit="return <?=$js; ?>,"
 >
-    <h3><?=$Dictionnary["AddAsset"]; ?></h3>
+    <?php if ($asset_id != "") { ?>
+	<h3><?=$Dictionnary["EditAsset"]; ?></h3>
+    <?php } else { ?>
+	<h3><?=$Dictionnary["AddAsset"]; ?></h3>
+    <?php } ?>
     <?php
     forge_language_formular(
 	["name" => "text", "content" => "file"],
-	[],
+	$prefil,
 	"_300pxw language_entry"
     );
     ?>
@@ -34,6 +50,9 @@ silent_submitf(this, {
 	    type="text"
 	    name="codename"
 	    class="_300pxw"
+	    <?php if ($asset_id != "" && isset($asset_codename)) { ?>
+		value="<?=$asset_codename; ?>"
+	    <?php } ?>
 	    placeholder="<?=$Dictionnary["CodeName"]; ?>"
 	/><br />
 	<input
@@ -43,5 +62,6 @@ silent_submitf(this, {
 	    class="_300pxw"
 	    value="+"
 	/>
+    </div>
 </form>
 

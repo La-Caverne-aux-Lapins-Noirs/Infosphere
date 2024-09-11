@@ -197,8 +197,19 @@ function AddSupportAsset($id, $data, $method, $output, $module)
 	"", "",
 	["name" => false, "content" => false],
 	$data))->is_error()
-    )
-        return ($ret);
+    ) {
+	if ($ret->label != "CodeNameAlreadyUsed")
+            return ($ret);
+	unset($fields["chapter"]);
+	if (($ret = try_update(
+	    "support_asset",
+	    $data["codename"],
+	    $fields,
+	    "", "",
+	    ["name" => false, "content" => false],
+	    $data))->is_error())
+	    return ($ret);
+    }
    
     return (DisplayAssetList($subid, $data, "GET", $output, $module));
 }

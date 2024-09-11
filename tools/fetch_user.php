@@ -10,7 +10,21 @@ function fetch_user($id, $add_fields = [])
     if (strlen($add_fields = implode(",", $add_fields)))
 	$add_fields = ", ".$add_fields;
     if (!is_array($id))
-	$id = [$id]; 
+	$id = [$id];
+
+    if (is_director_for_student($id, /* false */ true) || is_me($id))
+    {
+	$add_fields =
+	    ",".
+	    "user.ine as ine,\n".
+	    "user.address_name as address_name,\n".
+	    "user.street_name as street_name,\n".
+	    "user.postal_code as postal_code,\n".
+	    "user.city as city,\n".
+            "user.country as country\n"
+	    ;
+    }
+    
     $u = db_select_one("
               user.id as id,
               user.codename as codename,
@@ -22,13 +36,8 @@ function fetch_user($id, $add_fields = [])
               user.money as money,
               user.registration_date as registration_date,
               user.birth_date as birth_date,
-	      user.phone as phone,
-              user.address_name as address_name,
-              user.street_name as street_name,
-              user.postal_code as postal_code,
-              user.city as city,
-              user.country as country,
               user.authority as authority,
+	      user.phone as phone,
               user.visibility as visibility
               $add_fields
         FROM  user

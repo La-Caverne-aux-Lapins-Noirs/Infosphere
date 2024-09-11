@@ -24,6 +24,7 @@ $Dictionnary = [
     "from" => "de",
     "LastEditFrom" => "Dernière édition par",
     "AddAsset" => "Ajouter une ressource",
+    "EditAsset" => "Modifier une ressource",
     "MedalsNotLoadedYet" => "Les médailles ne sont pas encore chargées.",
     "GoToSessionOf" => "Aller voir la session du",
     "DoNotAttributeYet" => "Ne pas attribuer",

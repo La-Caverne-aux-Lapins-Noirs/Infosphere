@@ -35,7 +35,7 @@ function utc0_to_local($direction, $dt)
 
     // On remet dans le format donné en paramètre
     if ($text)
-    $dt = db_form_date($dt);
+	$dt = db_form_date($dt);
 
     // On renvoi le resultat
     return $dt;

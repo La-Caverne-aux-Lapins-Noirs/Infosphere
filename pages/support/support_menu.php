@@ -24,7 +24,7 @@ silent_submitf(this, {
 	       this,
 	       'screen_<?=$support["id"]; ?>',
 	       'data',
-	       '<?=base64_encode(requirex(__DIR__."/config_asset.php", ["support" => $support])); ?>'
+	       '<?=base64_encode(requirex(__DIR__."/config_asset.php", ["support" => $support, "asset" => NULL])); ?>'
 	       );"
 	style="cursor: pointer;"
     >
@@ -51,6 +51,20 @@ silent_submitf(this, {
 		>
 		    <input type="button" name="down" value="&darr;" onclick="<?=$js; ?>" style="width: 30px;" />
 		</form>&nbsp;
+		<input
+		    type="button"
+		    value="E"
+		    style="width: 30px;"
+		    onclick="switch_asset(
+		       this,
+		       'screen_<?=$support["id"]; ?>',
+		       'data',
+		       '<?=base64_encode(requirex(__DIR__."/config_asset.php", [
+			   "support" => $support,
+			   "asset" => $asset
+			])); ?>'
+		       );"
+		/>
 		<form
 		    method="delete"
 		    action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>/asset/<?=$asset["id"]; ?>"

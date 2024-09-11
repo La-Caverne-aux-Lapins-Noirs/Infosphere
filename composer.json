@@ -2,7 +2,7 @@
     "require": {
         "guzzlehttp/guzzle": "^7.9",
         "mailgun/mailgun-php": "^4.3",
-        "symfony/http-client": "^6.4",
+        "symfony/http-client": "^5.4",
         "nyholm/psr7": "^1.8"
     },
     "config": {

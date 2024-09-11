@@ -6,6 +6,7 @@ $Operations = [
     "ping_hand.php",
     "new_ldap_user.php",
     "test_mail.php",
+    "antispam.php",
     "regen_medals.php",
     "cipher.php",
 ];
