@@ -5,3 +5,15 @@ database.json
 profiling.htm
 version.php
 api/albedo.php
+dres/activity/*
+dres/configuration/*
+dres/groups/*
+dres/medals/*
+dres/robot/*
+dres/room/*
+dres/school/*
+dres/support/*
+dres/trash/*
+dres/users/*
+dres/.git
+dres/.gitignore
