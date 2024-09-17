@@ -49,12 +49,11 @@ else if (isset($logs["content"]))
 	// Log étudiants
 	if (isset($log["user"]))
 	{
-		file_put_contents("debug.txt", "Connexion de ".$log["user"], FILE_APPEND);
 	    foreach ($log["user"] as $user)
 	    {
 		if (($cod = resolve_codename("user", $user))->is_error())
 		{
-		    add_log(TRACE, "Trace Activity log get invalid login '".$log["user"]."'", 1);
+		    add_log(TRACE, "Trace work log get invalid login '".$log["user"]."'", 1);
 		    continue ;
 		}
 		$cod = $cod->value;
@@ -71,7 +70,7 @@ else if (isset($logs["content"]))
     }
     if ($logcnt)
     {
-	add_log(EDITING_OPERATION, "Setting $logcnt activity logs from TechnoCore", 1);
+	add_log(EDITING_OPERATION, "Setting $logcnt students work logs from TechnoCore", 1);
 	hand_request(["command" => "clearlog"]);
     }
 }

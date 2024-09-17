@@ -1,7 +1,4 @@
 <?php
-// Pour l'instant...
-// pas sur que ce qu'il y a en dessous fonctionne
-
 //////////////////////////////////////////////
 /// On effectue le ramassage des étudiants ///
 //////////////////////////////////////////////
@@ -14,7 +11,8 @@ $end = db_form_date(now());
 $activities = db_select_all("
   activity.id as main_id,
   activity.codename as actname,
-  user.codename as username
+  user.codename as username,
+  team.id as team_id
   FROM activity
   LEFT JOIN activity as template ON activity.id_template = template.id
   LEFT JOIN team ON team.id_activity = activity.id
@@ -29,43 +27,44 @@ $activities = db_select_all("
 
 foreach ($activities as $act)
 {
+    
     $team_id = $act["team_id"];
     $team_leader = db_select_one("
-    user.codename 
+    user.codename,
+    user.id
     FROM user_team LEFT JOIN user ON user_team.id_user = user.id
     WHERE id_team = $team_id and status = 2
     ");
     if (($activity = new FullActivity)->build($act["main_id"]) == false)
         not_found();
     global $Configuration;
-        $path = $Configuration->ActivitiesDir($activity->codename, NULL)."activity.dab";
-        $activity_dabContent = "";
-        if (!file_exists($path))
-            add_log(TRACE, "Failed to retrieve activity.dab in deliveries.php");
-        else 
-            $activity_dabContent = file_get_contents($path);
+    [$actConf, $allowFunc] = buildEvaluatorConfiguration($activity, $team_leader["id"]);
     if (strlen($activity = $activity->repository_name) == 0)
         return (new ErrorResponse("NoRepositoryConfigured"));
     $ret = hand_request([
         "command" => "retrieve",
-        "user" => $team_leader,
+        "user" => $team_leader["codename"],
         "repo" => $activity,
         "alive" => true,
         "official" => true,
         "correction" => true,
-        "activity.dab" => $activity_dabContent
+        "configuration" => base64_encode($actConf),
+	"allowFunc" => base64_encode($allowFunc)
     ]);
-    $filename = $Configuration->tmpFileDIR($team_leader);
-    if (!$filename)
+
+   // On élimine les erreurs
+    if (!isset($ret["result"]) || $ret["result"] != "ok")
     {
-        add_log(TRACE, "Failed to save temporary file for sending mail evaluation report. The directory may does not exist !");
-        return (new ErrorResponse("NotFound"));
+	add_log(REPORT, "Error while evaluate an activty !".
+			(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"), 1);
+	continue;
     }
-    $filename = $filename."reportOf".$act["actname"]."tar.gz";
-    file_put_contents($filename, $ret);
-    $corrected_students = db_select_all("
+    
+    $corrected_students = array_keys(db_select_all("
     user.mail
     FROM user_team LEFT JOIN user ON user_team.id_user = user.id
-    WHERE id_team = $team_id");
-    send_mail($corrected_students, $Dictionnary["EvaluationReport"]." ".$act["actname"], "", NULL, [basename($filename) => $filename], false);
+    WHERE id_team = $team_id", "mail"));
+    add_log(TRACE, print_r(send_mail($corrected_students, $Dictionnary["EvaluationReport"]." ".$act["actname"],
+	      "This Evaluation has been run automatically and is official", NULL,
+	      [["report.tar.gz" => base64_decode($ret["content"])]], false), true));
 }

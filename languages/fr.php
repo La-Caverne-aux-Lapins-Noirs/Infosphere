@@ -4,6 +4,7 @@ $AdjectiveOrder = "After";
 $Dictionnary = [
     "" => "",
     "no_room" => "Pas de salle",
+    "BadTarball" => "Le format renvoyé par la main est invalide.",
     "Forum" => "Forum",
     "Reward" => "Récompense",
     "UnknownDesks" => "Postes inconnus",

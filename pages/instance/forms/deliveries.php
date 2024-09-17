@@ -73,6 +73,7 @@
 	>
 	    <input type="hidden" name="correction" value="1"/>
 	    <input type="hidden" name="official" value="1" />
+	    <input type="hidden" name="alive" value="1" />
 	    <input
 		type="submit"
 		value="&nearr;"

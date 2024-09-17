@@ -50,7 +50,10 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    return (new ErrorResponse("SubscriptionAreClosed"));
 	if ($activity->unique_session)
 	{
-	    if (date_to_timestamp($activity->unique_session->begin_date) < now())
+	    if (
+		$activity->type != 1 &&
+		date_to_timestamp($activity->unique_session->begin_date) < now()
+	    )
 		return (new ErrorResponse("SubscriptionAreClosed"));
 	}
 	if ($activity->registered)

@@ -21,7 +21,8 @@ function hand_request($data, $code = true)
     global $Configuration;
 
     if (($acc = @$Configuration->Properties["handaccount"]) == NULL)
-	return (NULL);
+	return (["result" => "ko", "message" => "HandAccountMissing"]);
+
     $url = $Configuration->Properties["handurl"];
     $key = base64_decode($Configuration->Properties["handkey"]);
     $key = unsecure_data($key, $acc.$url."hand_request");
@@ -64,6 +65,7 @@ function hand_request($data, $code = true)
        fprintf(STDERR, "AFTER\n");
      */
     $out = explode("\n", $out);
+
     @unlink($fifo); // Juste parceque...
     @unlink($ship); // Pareil...
     if ($albx != "")

@@ -81,9 +81,9 @@ function generate_password($len = 12)
     // Pas de O majuscule (pour ne pas confondre avec zéro)
     // Pas de \, ni `, ni ", ni ', ni ~ ou ^.
     // Pas de $ ou * pour limiter les risques avec les passages dans le shell.
-    $alf = "azertyuiopqsdfghjklmwxcvbnAZERYTUIPQSDFGHJKLMWXCVBN";
+    $alf = "azertyuiopqsdfghjkmwxcvbnAZERYTUIPQSDFGHJKMWXCVBN";
     $num = "0123456789";
-    $sym = "&#{([-|_@)]=}+%,?.:/!";
+    $sym = "&#{([-_@)]=}+%,?.:/!";
     $randpool = $alf.$num.$sym;
     $letter = false;
     $number = false;

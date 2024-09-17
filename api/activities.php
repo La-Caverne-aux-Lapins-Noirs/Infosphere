@@ -224,7 +224,7 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	    {
 		if ($target_team != $cteam["id"])
 		    continue ;
-		require_once ("./pages/instance/new_single_team.phtml");
+		require_once ("./pages/instance/single_team.phtml");
 		break ;
 	    }
 	}
@@ -336,9 +336,12 @@ function PickupActivity($id, $data, $method, $output, $module)
 	]);
 
     // On élimine les erreurs
-    if (!isset($ret["result"]) || $ret["result"] != "ok")
+    if (!isset($ret["result"]) || $ret["result"] != "ok" || !isset($ret["content"]))
 	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
 
+    if (($content = base64_decode($ret["content"])) == NULL)
+	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "BadTarball"));
+    
     if ($correction === true)
     {
 
@@ -348,18 +351,24 @@ function PickupActivity($id, $data, $method, $output, $module)
 	FROM user_team LEFT JOIN user ON user_team.id_user = user.id
 	WHERE id_team = $team", "mail"));
 
-	$temp = tmpfile();
-	fwrite($temp, base64_decode($ret["content"]));
-	fseek($temp, 0);
-	
+	if ($official)
+	    $mail_content = "This evaluation is official and has been launched by a teacher !";
+	else
+	    $mail_content = "This evaluation is not official and has been launched by a teacher !";
+
+	// En commentaire le temps de régler le fichier corrompu en téléchargement
+	//
 	send_mail($students_mail, $Dictionnary["EvaluationReport"]." ".basename($activity_name),
-		  "This evaluation is not official and has been launched by a teacher !", NULL, [["report.dab" => base64_decode($ret["content"])]], false);
-	fclose($temp);
+		  $mail_content, NULL, [["report.tar.gz" => $content]], false);
     }
 
+    if ($official)
+	$official = "_official";
+    else
+	$official = "";
     return (new ValueResponse([
-	"filename" => str_replace("-", "_", basename($activity_name))."_".str_replace(".", "_", $team_leader).".tar.gz",
-	"content" => base64_decode($ret["content"])
+	"filename" => str_replace("-", "_", basename($activity_name))."_".str_replace(".", "_", $team_leader).$official.".tar.gz",
+	"content" => $content
     ]));
 }
 

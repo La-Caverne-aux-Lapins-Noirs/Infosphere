@@ -9,6 +9,7 @@ $Operations = [
     "antispam.php",
     "regen_medals.php",
     "cipher.php",
+    "new_home.php"
 ];
 
 $out = "

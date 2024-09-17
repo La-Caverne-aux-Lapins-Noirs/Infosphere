@@ -21,6 +21,7 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
 
     $mail_content = [];
 
+    $mail_content["Content-Type"] = 'text/plain; charset="utf-8"';
     $mail_content["from"] = @$Configuration->Properties["mailgun_sender"];
     if (!is_array($target))
         $mail_content['to'] = $target;
@@ -65,7 +66,6 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
 	return (new ErrorResponse("CannotSendMail"));
     }
     $mg = Mailgun::create($Key, 'https://api.eu.mailgun.net');
-    print_r($mail_content);
     $mg->messages()->send($Domain, $mail_content);
     return (new Response);
 }
