@@ -223,21 +223,24 @@ $neutral = "255, 255, 255, 0.0";
 	    <table style="width: 100%;" class="profile_activity">
 		<tr><th>
 		    <?=$Dictionnary["Activity"]; ?>
-		</th><th>
+		</th><th style="width: <?=0.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["Type"]; ?>
-		</th><th>
+		</th><th style="width: <?=0.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["DoneDate"]; ?>
-		</th><th>
+		</th><th style="width: <?=1.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["Medals"]; ?>
-		</th><th>
+		</th><th style="width: <?=2.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["Commentaries"]; ?>
-		</th><th>
+		</th><th style="width: <?=0.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["Status"]; ?>
-		</th><th>
+		</th><th style="width: <?=0.5 * 100 / 7; ?>%;">
 		    <?=$Dictionnary["DeliveredWork"]; ?>
 		</th></tr>
 		<?php $beta = 0; ?>
 		<?php foreach ($module->sublayer as $activity) { ?>
+		    <?php // Les rendez vous sont associés a des activités notés, donc pas d'entrée dans le profil. ?>
+		    <?php // Pareil pour le cours (qui est souvent une intro), vu qu'il n'y a rien a rendre ?>
+		    <?php if (($activity->type >= 10 && $activity->type <= 13) || $activity->type == 3) continue ; ?>
 		    <?php $beta += 1; ?>
 		    <tr style="background-color: rgba(<?=$beta % 2 ? $lighter : $neutral; ?>);"><td>
 			<a href="index.php?p=ActivityMenu&amp;a=<?=$activity->id; ?>&amp;<?=$activity->id_session; ?>">
@@ -253,44 +256,51 @@ $neutral = "255, 255, 255, 0.0";
 			<?php ($sess = new FullActivity)->build($activity->id, false, true, $activity->id_session); ?>
 			<?php if ($activity->id_session != -1 && $sess->type_type == 2) { ?>
 			    <?php if (isset($sess->unique_session->end_date)) { ?>
-				<?=human_date($sess->unique_session->end_date); ?>
+				<?=str_replace(" ", "<br />", human_date($sess->unique_session->end_date)); ?>
 			    <?php } ?>
 			<?php } else { ?>
-			    <?=human_date($activity->pickup_date); ?>
+			    <?=str_replace(" ", "<br />", human_date($activity->pickup_date)); ?>
 			<?php } ?>
 		    </td><td>
-			<?php foreach ($activity->medal as $med) { ?>
-			    <span
-				<?php if ($med["success"] > 0) { ?>
-				    style="font-weight: bold;"
-				<?php } else { ?>
-				    style="color: gray;"
-				<?php } ?>
-			    ><?php
-			     echo $med["codename"];
-			     if ($med["local"])
-				 echo "(L)";
-			     if ($med["success"] > 0)
-				 echo ["[<<]", "[<]", "", "[>]", "[>>]"][
-				     $med["strength"]
-				 ];
-			     ?></span>
+			<div style="height: 50px; overflow: auto; width: 100%;">
+			    <?php foreach ($activity->medal as $med) { ?>
+				<span
+				    style="
+					   font-size: xx-small;
+				    <?php if ($med["success"] > 0) { ?>
+					   font-weight: bold;
+				    <?php } else { ?>
+					   color: gray;
+				    <?php } ?>
+					   "
+				><?php
+				 echo $med["codename"];
+				 if ($med["local"])
+				     echo "(L)";
+				 if ($med["success"] > 0)
+				     echo ["[<<]", "[<]", "", "[>]", "[>>]"][
+					 $med["strength"]
+				     ];
+				 ?></span>
+			    <?php } ?>
+			</div>
+		    </td><td>
+			<?php if (strlen(trim($activity->commentaries))) { ?>
+			    <textarea style="resize: none; width: 100%; height: 50px; font-size: xx-small;"><?=trim($activity->commentaries); ?></textarea>
 			<?php } ?>
-		    </td><td>
-
-		    </td><td>
-			<?php if ($activity->registered == false) { ?>
-			    <?=$Dictionnary["NotSubscribed"]; ?>
-			<?php } else if ($activity->present->cumulated) { ?>
-			    <?=$Dictionnary["Present"]; ?>
-			<?php } else if ($activity->late->cumulated) { ?>
-			    <?=$Dictionnary["Late"]; ?>
-			<?php } else if ($activity->missing->cumulated) { ?>
-			    <?=$Dictionnary["Missing"]; ?>
-			<?php } else { ?>
-			    <?=$Dictionnary["SingleSubscribed"]; ?>
-			<?php } ?>
-		    </td><td>
+		    </td>
+		    <?php if ($activity->registered == false) { ?>
+			<td><?=$Dictionnary["NotSubscribed"]; ?></td>
+		    <?php } else if ($activity->present->cumulated) { ?>
+			<td style="background-color: green;"><?=$Dictionnary["Present"]; ?></td>
+		    <?php } else if ($activity->late->cumulated) { ?>
+			<td style="background-color: orange;"><?=$Dictionnary["Late"]; ?></td>
+		    <?php } else if ($activity->missing->cumulated) { ?>
+			<td style="background-color: red;"><?=$Dictionnary["Missing"]; ?></td>
+		    <?php } else { ?>
+			<td style="background-color: white;"><?=$Dictionnary["SingleSubscribed"]; ?></td>
+		    <?php } ?>
+		    <td>
 			/
 		    </td></tr>
 		<?php } ?>

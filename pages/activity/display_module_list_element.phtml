@@ -97,5 +97,13 @@
 	<?php } else { ?>
 	    <span style="color: red;" <?=$txt; ?>>&#10560;&#xFE0E;</span>
 	<?php } ?>
+
+	<?php if ($mod["subscription"] == 0) { ?>
+
+	<?php } else if ($mod["subscription"] == 1) { ?>
+	    <b>(M)</b>
+	<?php } else if ($mod["subscription"] == 2) { ?>
+	    <b>(A)</b>
+	<?php } ?>
     </div>
 </div>

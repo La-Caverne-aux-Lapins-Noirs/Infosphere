@@ -5,14 +5,18 @@
 <?php
 $medals = db_select_all("
     medal.*,
+    activity.{$Language}_name as activity_name,
+    template.{$Language}_name as template_name,
     medal.{$Language}_name as name,
     medal.{$Language}_description as description
     FROM user_medal
     LEFT JOIN medal ON user_medal.id_medal = medal.id
+    LEFT JOIN activity ON user_medal.id_activity = activity.id
+    LEFT JOIN activity as template ON activity.id_template = template.id
     WHERE user_medal.id_user = {$User["id"]}
       AND user_medal.insert_date >= '".db_form_date(time() - 60 * 60 * 24 * 2)."'
+      AND user_medal.result > 0
       ");
-$medals = [];
 
 foreach ($medals as $med)
 {

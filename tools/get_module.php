@@ -88,6 +88,7 @@ function get_modules($template, $id = -1)
 	activity.medal_template,
 	activity.support_template,
 	activity.done_date,
+	activity.subscription as subscription,
 	COUNT(activity_teacher.id) as nbr_teacher,
 	COUNT(activity_support.id) as nbr_class,
 	COUNT(activity_cycle.id) as nbr_cycle,

@@ -66,15 +66,15 @@ $cache = json_decode($user->cache);
 		<b><?=$credits." ".$Dictionnary["Credits"]; ?></b><br />
 		<?php
 		$desks = db_select_all("
-		room_desk.codename as codename,
-		room_desk.ip,
-		room_desk.mac,
-		room_desk_user.distant, room_desk_user.locked,
-		room.codename as room_codename
-                FROM room_desk_user
-		LEFT JOIN room_desk ON room_desk.id = room_desk_user.id_room_desk
-		LEFT JOIN room ON room.id = room_desk.id_room
-		WHERE id_user = $user->id ORDER BY room_desk_user.distant DESC
+		    room_desk.codename as codename,
+		    room_desk.ip,
+		    room_desk.mac,
+		    room_desk_user.distant, room_desk_user.locked,
+		    room.codename as room_codename
+                    FROM room_desk_user
+		    LEFT JOIN room_desk ON room_desk.id = room_desk_user.id_room_desk
+		    LEFT JOIN room ON room.id = room_desk.id_room
+		    WHERE id_user = $user->id ORDER BY room_desk_user.distant DESC
 		");
 		if (count($desks)) { ?>
 		    <br />

@@ -7,7 +7,8 @@ function fetch_users($attr = [], $id = -1)
     if ($attr == [])
 	$attr = [
 	    "id", "codename", "nickname", "first_name", "family_name",
-	    "authority", "registration_date", "cycle", "school", "user", "deleted"
+	    "authority", "registration_date", "cycle", "school", "user", "deleted",
+	    "source", "step", "last_contact", "password", "last_try"
 	];
     if (!array_search("codename", $attr))
 	$attr[] = "codename";
@@ -37,6 +38,13 @@ function fetch_users($attr = [], $id = -1)
     {
 	foreach ($students as $i => $v)
 	{
+	    if (@$students[$i]["password"])
+	    {
+		unset($students[$i]["password"]);
+		$students[$i]["have_password"] = true;
+	    }
+	    else
+		$students[$i]["have_password"] = false;
 	    if (isset($fnd["cycle"]))
 		$students[$i]["cycle"] = get_user_promotions($students[$i]);
 	    if (isset($fnd["user"]))

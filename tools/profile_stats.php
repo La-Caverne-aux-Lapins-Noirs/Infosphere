@@ -166,7 +166,7 @@ for ($i = 1; $i < $len; ++$i)
 	    ($i + 1) * $w / $len,
 	    50,
 	];
-	imagefilledpolygon($img, $coords, $linesa);
+	imagefilledpolygon($img, $coords, count($coords) / 2, $linesa);
     }
     
     $date = date("d/m", ($i + $startday) * 60 * 60 * 24);
@@ -310,7 +310,6 @@ foreach ($data as $k => $v)
     $xp += $bbox[2] + 20;
 }
 
-error_clear_last();
 if (error_get_last() == NULL && $dbg == false)
 {
     if (!isset($User))

@@ -32,10 +32,23 @@ else
 	{
 	    if ($medal["role"] >= 0)
 		continue ;
+	    // Condition
 	    else if ($medal["result"] <= 0)
 	    {
-		$display_subject = false;
-		$missing_medals[] = $medal;
+		// On vérifie un peu sauvagement...
+		// La médaille peut venir de n'importe ou du coup...
+		// la localité n'est pas prise en compte
+		$check = db_select_one("
+                    result FROM user_medal
+                    WHERE id_user = {$User["id"]}
+                    AND id_medal = {$medal["id"]}
+                    AND result = 1
+		    ");
+		if ($check == NULL)
+		{
+		    $display_subject = false;
+		    $missing_medals[] = $medal;
+		}
 	    }
 	}
     }

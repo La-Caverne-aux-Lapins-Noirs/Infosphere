@@ -16,7 +16,7 @@ function unroll(array $tab, $type = SELECT, $filter_out = [])
 	{
 	    if (in_array($v, $filter_out))
 		continue ;
-	}
+ 	}
 	else
 	{
 	    if (in_array($i, $filter_out))

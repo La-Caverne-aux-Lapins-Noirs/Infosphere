@@ -15,7 +15,11 @@ function render_file()
     ]) !== false)
 	not_found();
     header("Content-Type: ".mime_content_type($_GET["target"]));
-    echo file_get_contents($_GET["target"]);
+    $fd = fopen($_GET["target"], "rb");
+    while (!feof($fd))
+	echo fread($fd, 1024 * 1024);
+    // echo file_get_contents($_GET["target"]);
+    fclose($fd);
     die();
 }
 
@@ -94,7 +98,7 @@ if ($type == "activity")
 	$id = $instances["id"];
     else
 	$id = $codename;
-    if (($activity = new FullActivity)->build($instances["id"]) == false)
+    if (($activity = new FullActivity)->build($id) == false)
 	not_found(); // Le dossier peut exister mais l'activité peut avoir été supprimée
 
     // C'est juste des broutilles...

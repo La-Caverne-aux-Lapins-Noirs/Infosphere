@@ -1,5 +1,8 @@
 <?php
 
+// Inscription automatique - normalement réalisée par l'inscriveur
+// de modules!
+
 // On récupère tout ce qui est activité a inscription automatique
 // Et on procède a l'inscription
 $acts = db_select_all("

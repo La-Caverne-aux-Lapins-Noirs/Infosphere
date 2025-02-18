@@ -99,7 +99,7 @@ class CycleLayer extends Layer
 		    "subscription", "grade_a", "grade_b", "grade_c", "grade_d",
 		    "grade_bonus", "allow_unregistration",
 		    "emergence_date", "done_date", "registration_date",
-		    "close_date", "validation"
+		    "close_date", "validation", "subscription"
 		];
 		transfert($fields, $sub, $module);
 		if ($mod["replacement_subscription"] !== NULL)

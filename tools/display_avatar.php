@@ -1,6 +1,6 @@
 <?php
 
-function display_avatar($usr, $siz = 200, $photo_first = false)
+function display_avatar($usr, $siz = 200, $photo_first = false, $addcss = "")
 {
     global $Configuration;
 
@@ -32,7 +32,7 @@ function display_avatar($usr, $siz = 200, $photo_first = false)
     {
 ?>
     <img
-	style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;"
+	style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px; <?=$addcss; ?>"
 	src="<?=$nw[$photo_first ? "photo" : "avatar"]; ?>"
 	onmouseover="this.src='<?=$nw[$photo_first ? "avatar" : "photo"]; ?>';"
 	onmouseout="this.src='<?=$nw[$photo_first ? "photo" : "avatar"]; ?>';"
@@ -41,15 +41,15 @@ function display_avatar($usr, $siz = 200, $photo_first = false)
     }
     else if (@strlen($nw["avatar"])) // Désactivé temporairement
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="<?=$nw["avatar"]; ?>" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px; <?=$addcss; ?>" src="<?=$nw["avatar"]; ?>" /><?php
     }
     else if (@strlen($nw["photo"]))
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="<?=$nw["photo"]; ?>" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px; <?=$addcss; ?>" src="<?=$nw["photo"]; ?>" /><?php
     }
     else
     {
-	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px;" src="res/no_avatar.png" /><?php
+	?><img style="width: <?=$siz; ?>px; height: <?=$siz; ?>px; border-radius: 10px; <?=$addcss; ?>" src="res/no_avatar.png" /><?php
     }
     echo '</a>';
 }

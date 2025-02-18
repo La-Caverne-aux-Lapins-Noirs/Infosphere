@@ -116,6 +116,7 @@ if ($alerts != "")
 	<form
 	    action="/api/user/<?=$User["id"]; ?>/todolist"
 	    method="post"
+	    onsubmit="return <?=$js = "silent_submit(this, 'todolist', null, 'addtodo');"; ?>"
 	    style="position: relative;"
 	>
 	    <input
@@ -128,7 +129,7 @@ if ($alerts != "")
 	    />
 	    <input
 		type="button"
-		onclick="silent_submit(this, 'todolist', null, 'addtodo');"
+		onclick="<?=$js; ?>"
 		value="+"
 		style="position: absolute; right: 0px; width: 20px; height: 20px;"
 	    />

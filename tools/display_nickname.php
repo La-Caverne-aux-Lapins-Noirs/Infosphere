@@ -41,8 +41,8 @@ function display_nickname($usr, $link = true, $name_first = false)
         </span>
     <?php } else if (strlen($names)) { ?>
         <span
-	    onmouseover="this.innerText='<?=$name_first ? $nick : $codename; ?>';"
-	    onmouseout="this.innerText='<?=$name_first ? $codename : $nick; ?>';"
+	    onmouseover="this.innerText='<?=$name_first ? $names : $codename; ?>';"
+	    onmouseout="this.innerText='<?=$name_first ? $codename : $names; ?>';"
         >
 	    <?=$names; ?>
         </span>

@@ -1,4 +1,5 @@
 <h2><?=$Dictionnary["AnnouncementAndMessages"]; ?></h2>
+<?php return ; ?>
 <?php foreach (db_select_all("
                message.*, user.id as uid, user.nickname, user.codename as ucodename,
                user.salt as usalt

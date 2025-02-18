@@ -30,7 +30,11 @@ function SubscribeUser($id, $data, $method, $output, $module)
     $subs = [];
     foreach ($data["users"] as $usr)
     {
-	if (($request = @subscribe($usr["login"], @$usr["mail"], NULL, false))->is_error())
+	$fake = false;
+	if (isset($usr["prospect"]) && !!$usr["prospect"])
+	    $fake = true;
+	
+	if (($request = @subscribe($usr["login"], @$usr["mail"], NULL, false, $fake))->is_error())
 	{
 	    ob_end_clean();
 	    return ($request);
@@ -41,7 +45,9 @@ function SubscribeUser($id, $data, $method, $output, $module)
 	    "family_name" => strtolower(@$usr["family_name"]),
 	    "birth_date" => db_form_date(@$usr["birth_date"]),
 	    "phone" => @$usr["phone"],
-	    "objectives" => $Dictionnary["DefaultUserObjectives"]
+	    "objectives" => $Dictionnary["DefaultUserObjectives"],
+	    "source" => @$usr["source"],
+	    "step" => @$usr["step"],
 	]);
 	if ($request->is_error())
 	{

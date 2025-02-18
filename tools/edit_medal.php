@@ -94,10 +94,12 @@ function edit_medal($medal, $user = -1, $team = -1, $user_team = -1)
     foreach ($medal as $med)
     {
 	$med = get_prefix($med);
+	/*
 	if (is_number($med["label"])
 	    && (int)$med["label"] >= 0 && (int)$med["label"] <= 20)
-	$med = "note".sprintf("%02d", (int)$med["label"]);
-	
+	$med["label"] = "token".sprintf("%02d", (int)$med["label"]);
+	*/
+
 	if (($id_medal = resolve_codename("medal", $med["label"]))->is_error())
 	    return ($id_medal);
 	$id_medal = $id_medal->value;

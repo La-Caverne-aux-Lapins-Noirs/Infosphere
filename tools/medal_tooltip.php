@@ -7,6 +7,10 @@ function medal_tooltip($medal, $only_description = false)
     $ret = $medal["name"]." (".$medal["codename"].")\n".
 	   ($medal["description"] != "" ? "\n".$medal["description"]."\n" : "")
     ;
+    if (isset($medal["activity_name"]) && @strlen($medal["activity_name"]))
+	$ret .= "\n".$Dictionnary["AcquiredThanksTo"]." '".$medal["activity_name"]."'";
+    else if (isset($medal["template_name"]) && @strlen($medal["template_name"]))
+	$ret .= "\n".$Dictionnary["AcquiredThanksTo"]." '".$medal["template_name"]."'";
     if ($only_description == false)
     {
 	$failures = "";

@@ -12,7 +12,8 @@ $activities = db_select_all("
   activity.id as main_id,
   activity.codename as actname,
   user.codename as username,
-  team.id as team_id
+  team.id as team_id,
+activity.type
   FROM activity
   LEFT JOIN activity as template ON activity.id_template = template.id
   LEFT JOIN team ON team.id_activity = activity.id
@@ -41,6 +42,7 @@ foreach ($activities as $act)
     [$actConf, $allowFunc] = buildEvaluatorConfiguration($activity, $team_leader["id"]);
     if (strlen($activity = $activity->repository_name) == 0)
         return (new ErrorResponse("NoRepositoryConfigured"));
+    $activity_type = $act["type"];
     $ret = hand_request([
         "command" => "retrieve",
         "user" => $team_leader["codename"],
@@ -49,10 +51,11 @@ foreach ($activities as $act)
         "official" => true,
         "correction" => true,
         "configuration" => base64_encode($actConf),
-	"allowFunc" => base64_encode($allowFunc)
+	"allowFunc" => base64_encode($allowFunc),
+	"is_exam" => ($activity_type >= 5 && $activity_type <= 9)
     ]);
 
-   // On élimine les erreurs
+    // On élimine les erreurs
     if (!isset($ret["result"]) || $ret["result"] != "ok")
     {
 	add_log(REPORT, "Error while evaluate an activty !".

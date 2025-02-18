@@ -314,7 +314,9 @@ function PickupActivity($id, $data, $method, $output, $module)
     if ($correction === true)
     {
 	// Faire en sorte de retourner deux variables et les base64 différement pour les mettre dans le json
-	[$actConf, $allowFunc] = buildEvaluatorConfiguration($activity, $user_id);
+	[$actConf, $allowFunc] = build_evaluator_configuration($activity, $user_id);
+	if ($actConf === NULL || $allowFunc === NULL)
+	    return (new ErrorResponse("NoCorrectionAvailable"));
 	$ret = hand_request([
 	    "command" => "retrieve",
 	    "user" => $team_leader,

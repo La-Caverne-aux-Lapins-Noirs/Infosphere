@@ -27,6 +27,7 @@ class ModuleLayer extends Layer
     public $registration_date = NULL;
     public $close_date = NULL;
     public $type_type = MODULE_OR_PICKABLE; // Const
+    public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
 
     // Les scores de la validation principale
     public $valid_grade_a = 0;

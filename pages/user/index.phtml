@@ -18,7 +18,15 @@
 <?php }?>
 
 <div class="fullscreen scrollable" id="userlist">
-    <?php foreach (fetch_users() as $user) require ("display_user.phtml"); ?>
+    <?php
+    foreach (fetch_users() as $user)
+    {
+	if (@$user["have_password"])
+	    require ("display_user.phtml");
+	else if (am_i_director())
+	    require ("display_user.phtml");
+    }
+    ?>
 </div>
 
 <?php if (am_i_director()) { ?>

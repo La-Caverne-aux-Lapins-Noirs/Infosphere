@@ -53,7 +53,10 @@ else if (isset($logs["content"]))
 	    {
 		if (($cod = resolve_codename("user", $user))->is_error())
 		{
-		    add_log(TRACE, "Trace work log get invalid login '".$log["user"]."'", 1);
+		    $report_user = $log["user"];
+		    if (is_array($log["user"]))
+			$report_user = implode(" ", $log["user"]);
+		    add_log(TRACE, "Trace work log get invalid login '".$report_user."'", 1);
 		    continue ;
 		}
 		$cod = $cod->value;
@@ -70,7 +73,7 @@ else if (isset($logs["content"]))
     }
     if ($logcnt)
     {
-	add_log(EDITING_OPERATION, "Setting $logcnt students work logs from TechnoCore", 1);
+//	add_log(EDITING_OPERATION, "Setting $logcnt students work logs from TechnoCore", 1);
 	hand_request(["command" => "clearlog"]);
     }
 }

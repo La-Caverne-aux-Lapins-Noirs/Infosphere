@@ -12,8 +12,8 @@
 	    <div style="text-align: center;">
 		<?php require_once ("last_medals.php"); ?>
 	    </div>
-	</td><td rowspan="2">
-	    <div><?php // require_once ("intercom.php"); ?></div>
+	</td><td>
+	    <div><?php require_once ("last_commentaries.php"); ?></div>
 	</td><td rowspan="2">
 	    <?php
 	    $participate = collect_dashboard_activities(
@@ -65,6 +65,9 @@
 		    </div>
 		</td>
 	    <?php } ?>
+	</td><td>
+	    <div><?php require_once ("intercom.php"); ?></div>
+	</td>
 	</tr>
     </table>
 <?php } ?>

@@ -38,7 +38,11 @@ function fetch_user($id, $add_fields = [])
               user.birth_date as birth_date,
               user.authority as authority,
 	      user.phone as phone,
-              user.visibility as visibility
+              user.visibility as visibility,
+	      user.source as source,
+	      user.step as step,
+	      user.last_contact as last_contact,
+	      user.last_try as last_try
               $add_fields
         FROM  user
         WHERE user.id IN (".implode(",", $id).") && user.authority != -1

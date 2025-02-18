@@ -98,13 +98,31 @@
 	<div class="band _130top" style="height: <?=300-100-30; ?>px;">
 	    <div class="left column scrollable">
 		<?php if (is_my_director($user["id"]) || count($user["cycle"])) { ?>
-		    <?php list_of_links([
-			"hook_name" => "user",
-			"hook_id" => $user["id"],
-			"linked_name" => "cycle",
-			"linked_elems" => $user["cycle"],
-			"admin_func" => "is_my_director"
-		    ]); ?>
+		    <?php if (@$user["have_password"]) { ?>
+			<?php list_of_links([
+			    "hook_name" => "user",
+			    "hook_id" => $user["id"],
+			    "linked_name" => "cycle",
+			    "linked_elems" => $user["cycle"],
+			    "admin_func" => "is_my_director"
+			]); ?>
+		    <?php } else { ?>
+			<form
+			    onsubmit="return false;"
+			    method="put"
+			    action="/api/user/<?=$user["id"]; ?>"
+			>
+			    <b><?=$Dictionnary["Prospect"]; ?></b><br />
+			    <?=$Dictionnary["ProspectSource"]; ?>:<br />
+			    <input type="text" name="source" value="<?=$user["source"]; ?>" /><br />
+			    <?=$Dictionnary["Step"]; ?>:<br />
+			    <input type="text" name="step" value="<?=$user["step"]; ?>" /><br />
+			    <?=$Dictionnary["LastContact"]; ?>:<br />
+			    <input type="datetime" name="last_contact" value="<?=$user["last_contact"]; ?>" /><br />
+			    <?=$Dictionnary["LastTry"]; ?>:<br />
+			    <input type="datetime" name="last_try" value="<?=$user["last_try"]; ?>" />
+			</form>
+		    <?php } ?>
 		<?php } ?>
 	    </div>
 	    <div class="right column scrollable">

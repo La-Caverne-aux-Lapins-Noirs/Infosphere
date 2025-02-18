@@ -39,6 +39,11 @@ add_log(TRACE, "Albedo starts.", 1, true);
 // Ici, on est admin, si les paramètres étaient bons
 // C'est ici que commence le travail d'Albedo.
 
+// On check si les rooms n'ont pas changé depuis le dernier appel
+if (check_room_status() === true)
+    add_log(TRACE, "The rooms status has been edited", 1, true);
+
+// On check l'état de la main
 $out = hand_request(["command" => "ping", "content" => "b64:".base64_encode("ping")], true);
 if ($out && $out["result"] == "ok" && $out["content"] == "ping")
     add_log(TRACE, "Infosphere hand runs.", 1, true);

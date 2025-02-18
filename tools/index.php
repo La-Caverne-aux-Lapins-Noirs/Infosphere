@@ -49,6 +49,7 @@ require_once ("unmark_as_deleted.php");
 require_once ("update_table.php");
 require_once ("is_base64.php");
 require_once ("check_id.php");
+require_once ("check_room_status.php");
 require_once ("get_user_promotions.php");
 require_once ("get_user_laboratories.php");
 require_once ("fetch_users.php");

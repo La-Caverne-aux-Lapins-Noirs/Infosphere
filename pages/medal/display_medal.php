@@ -22,6 +22,7 @@
     FROM activity_medal
     LEFT JOIN activity ON activity.id = activity_medal.id_activity
     WHERE activity_medal.id_medal = ".$medal["id"]."
+    AND activity.deleted IS NULL
     ");
     ?>
     <table>

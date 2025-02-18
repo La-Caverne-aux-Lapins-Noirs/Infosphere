@@ -277,6 +277,9 @@ function SetMatterProps($id, $data, $method, $output, $module)
 	return ($cyc);
     $cyc = $cyc->value;
 
+    if (!strlen(trim(@$data["replacement_subscription"])))
+	$data["replacement_subscription"] = NULL;
+
     $actcyc = db_select_one("id FROM activity_cycle WHERE id_activity = $actid AND id_cycle = $cyc");
     
     if (($ret = update_table(

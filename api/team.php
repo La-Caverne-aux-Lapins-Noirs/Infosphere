@@ -53,7 +53,6 @@ function SetUserTeam($id, $data, $method, $output, $module)
 
     // On vire tout ce qui ne doit pas pouvoir etre modifié par ici
     // ou ce qui regarde l'API seulement
-    unset($data["id_team"]);
     unset($data["id_user"]);
     unset($data["user"]);
     unset($data["action"]);
@@ -75,8 +74,8 @@ function SetUserTeam($id, $data, $method, $output, $module)
 	    else
 		$medal = +1 * abs($medal);
 	    if (($ret = edit_medal(
-		$id_user, $medal, $id_activity)
-	    )->is_error())
+		$medal, $id_user, $id_team
+	    ))->is_error())
 	        return ($ret);
 	    $edited = true;
 	}
