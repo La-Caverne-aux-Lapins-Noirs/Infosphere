@@ -1,0 +1,33 @@
+
+.calendar_project_container
+{
+    backdrop-filter: blur(12px);
+}
+
+
+.calendar, .calendar th, .calendar tr, .calendar td
+{
+    border: 1px solid rgba(0, 255, 0, 0.6);
+}
+
+.content_table th
+{
+    border: 1px solid rgba(0, 255, 0, 1.0);
+    border-radius: 5px;
+}
+
+.content_table tr
+{
+    border-radius: 5px;
+}
+
+.weektop
+{
+    border-top: 5px solid rgba(0, 255, 0, 1.0) !important;
+}
+
+.today
+{
+    background-color: rgb(0, 255, 0);
+    color: black;
+}

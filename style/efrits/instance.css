@@ -1,0 +1,52 @@
+
+.final_box
+{
+}
+
+
+.subject_box
+{
+}
+
+.full_box_with_title
+{
+}
+
+.activity_material li
+{
+    background-color: rgba(0, 255, 0, 0.2);
+    border: 1px solid rgba(0, 255, 0, 0.1);
+    border-radius: 10px;
+}
+
+.activity_material a
+{
+    text-decoration: none;
+}
+
+
+.bout
+{
+    border-radius: 10px;
+    box-shadow:
+	0px 0px 10px green,
+	inset 0px 0px 0px green
+    ;
+    border: 1px solid rgba(0, 255, 0, 0.1);
+    background-color: rgba(0, 255, 0, 0.2);
+    transition: all 0.15s;
+}
+.bin
+{
+    box-shadow:
+	0px 0px 0px green,
+	inset 0px 0px 10px green
+    ;
+    border: 1px solid rgba(0, 255, 0, 0.4);
+    background-color: rgba(0, 255, 0, 0.4);
+}
+
+.home_table tr
+{
+    border-bottom: 1px solid rgb(0, 255, 0);
+}

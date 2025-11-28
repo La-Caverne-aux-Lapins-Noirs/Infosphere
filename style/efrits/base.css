@@ -1,0 +1,82 @@
+
+a, a:active, a:hover, a:visited
+{
+    color: rgb(0, 255, 0);
+}
+
+*
+{
+    color: white;
+}
+
+select, textarea, input[type="text"], input[type="week"], input[type="datetime_local"],
+option, input[type="date"], input[type="time"], input[type="phone"], input[type="mail"], input[type="password"]
+{
+    color: black;
+}
+
+body
+{
+    background-image: url("/dres/school/efrits/background.png");
+    background-size: cover;
+}
+
+input[type="submit"], input[type="button"]
+{
+    cursor: pointer;
+    border-radius: 5px;
+    border: 2px solid black;
+    background-color: darkgreen;
+    transition: background-color 0.4s;
+}
+
+input[type="button"].admin
+{
+    background-color: greengreen;
+}
+
+
+.rollbutton
+{
+    border: 0px solid black !important;
+    border-radius: 0px !important;
+    border-bottom-right-radius: 10px !important;
+    cursor: pointer;
+    border-right: solid 1px gray !important;
+    background: linear-gradient(to right, transparent, darkgreen) !important;
+    color: rgb(0, 255, 0) !important;
+}
+
+.scrollable
+{
+    scrollbar-color: green darkgreen;
+}
+
+.content_even
+{
+    /* backdrop-filter: blur(6px); */
+    background: rgba(0, 255, 0, 0.1);
+    transition: background-color 0.2s;
+}
+
+.content_even:hover
+{
+
+}
+
+.content_odd
+{
+    /* backdrop-filter: blur(6px); */
+    background: rgba(0, 255, 0, 0.2);
+    transition: background-color 0.2s;
+}
+
+.content_odd:hover
+{
+
+}
+
+.cog
+{
+    filter: invert(1);
+}

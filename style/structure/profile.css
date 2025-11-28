@@ -9,3 +9,33 @@
 {
     font-size: x-small;
 }
+
+.school_profile_icon
+{
+    position: relative;
+    margin: 20px 20px 20px 20px;
+    border-radius: 20px;
+    display: inline-block;
+    width: 200px;
+    height: 200px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.school_profile_icon p
+{
+    position: absolute;
+    vertical-align: middle;
+    bottom: 40%;
+    width: calc(100% - 80px);
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+.main_data_profile
+{
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+}

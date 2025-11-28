@@ -1,0 +1,25 @@
+
+#quote
+{
+    color: rgb(0, 255, 0);
+}
+
+.tinyscrollbar
+{
+    scrollbar-color: darkgreen;
+}
+
+#home_table tr td > div, #activity_table tr td > div
+{
+    border-radius: 10px;
+    background-color: rgba(0, 255, 0, 0.05);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.1) solid;
+}
+
+#powerbox
+{
+    background: radial-gradient(rgba(255, 0, 0, 0.1) 50%, rgba(255, 0, 0, 0.5));
+    border: 2px solid rgb(255, 0, 0) !important;
+}

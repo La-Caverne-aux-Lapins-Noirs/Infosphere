@@ -1,0 +1,71 @@
+
+#quote
+{
+    border-radius: 50px;
+    box-shadow: inset 0px 1px 3px rgb(55, 55, 55);
+}
+
+.tinyscrollbar
+{
+    scrollbar-color: gray;
+}
+
+#home_table tr td > div, #activity_table tr td > div
+{
+    border-radius: 10px;
+    /* box-shadow: 0px 1px 3px rgb(55, 55, 55); */
+    box-shadow:
+	0px 0px 10px rgba(0, 0, 0, 0.2),
+	inset 0px 0px 20px rgba(255, 255, 255, 1.0)
+    ;
+}
+
+#welcome
+{
+    text-align: justify;
+}
+
+#about_you
+{
+    text-align: justify;
+}
+
+#about_you > table tr td
+{
+    text-align: center;
+}
+
+#powerbox
+{
+    box-shadow:
+	inset 0px 0px 30px rgba(0, 0, 0, 1.0),
+	0px 0px 50px rgb(255, 0, 0, 1.0),
+	0px 0px 50px rgb(255, 0, 0, 1.0)
+	    !important
+    ;
+    background-color: red;
+}
+#powerbox > div, #powerbox h2, #powerbox form
+{
+    margin: 1%;
+}
+
+.home_activity td a
+{
+    text-decoration: none;
+    font-weight: bold;
+    text-shadow: 0px 0px 1px black;
+    color: black;
+    transition: color 0.2s, text-shadow 0.5s;
+}
+
+.home_activity td a:hover
+{
+    color: rgb(200, 143, 26);
+    text-shadow: 0px 0px 3px rgb(200, 143, 26);
+}
+
+.home_activity td, .home_activity td *
+{
+    font-size: small;
+}

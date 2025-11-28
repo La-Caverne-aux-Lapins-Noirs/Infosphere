@@ -1,0 +1,53 @@
+
+.support_add_formular
+{
+    text-align: center;
+    background-color: rgba(0, 128, 0, 0.2);
+    background: linear-gradient(135deg, rgba(0, 128, 0, 0.1), rgba(0, 255, 0, 0.2));
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.2) solid;
+    border-radius: 10px;
+}
+
+.resume_module
+{
+    background-color: rgba(0, 255, 0, 0.05);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.1) solid;
+    border-radius: 10px;
+}
+
+.support_screen
+{
+    background-color: rgba(0, 255, 0, 0.05);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.1) solid;
+    border-radius: 10px;
+}
+
+.asset_link,
+.asset_link *,
+.module_link,
+.module_link *
+{
+    color: white;
+}
+
+.module_link.notsubscribed,
+.module_link.notsubscribed *
+{
+    color: lightgray;
+    font-weight: lighter;
+}
+
+.asset_link.selected,
+.asset_link.selected *,
+.module_link.selected,
+.module_link.selected *
+{
+    color: rgb(0, 255, 0);
+    cursor: pointer;
+}

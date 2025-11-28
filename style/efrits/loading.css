@@ -1,0 +1,12 @@
+
+#loading_screen1
+{
+    background: linear-gradient(darkgreen, black);
+    border-bottom: 2px solid rgb(0, 32, 0);
+}
+
+#loading_screen2
+{
+    background: linear-gradient(black, darkgreen);
+    border-top: 2px solid rgb(0, 32, 0);
+}

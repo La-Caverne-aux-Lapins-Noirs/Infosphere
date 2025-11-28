@@ -1,0 +1,33 @@
+
+.profile_data
+{
+    background-color: white;
+    overflow: auto;
+}
+
+.profile_data *
+{
+    color: black;
+}
+
+.school_profile_icon
+{
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 1.0);
+}
+
+.school_profile_icon p
+{
+    text-align: center;
+}
+
+.main_data_profile
+{
+    backdrop-filter: blur(12px);
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.2);
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+}

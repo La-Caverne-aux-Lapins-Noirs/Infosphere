@@ -1,4 +1,12 @@
 
+#quote
+{
+    text-align: center;
+    width: 60%;
+    margin-left: 20%;
+    padding: 10px;
+}
+
 #home_table, #activity_table
 {
     width: 100%;
@@ -41,4 +49,126 @@
 {
     width: 200px;
     height: 200px;
+}
+
+.logcursor
+{
+    position: relative;
+    width: calc(100% - 20px) !important;
+    height: 40px !important;
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+    overflow: hidden !important;
+}
+
+.logcursor > *
+{
+    font-size: small;
+    fon-weight: bold;
+}
+
+.logcursor > .label
+{
+    font-size: small;
+    position: absolute;
+    width: 90%;
+    top: 0px;
+    left: 5%;
+    text-align: center;
+    z-index: 1000;
+}
+
+.logcursor > .minvalue
+{
+    position: absolute;
+    top: calc((100% - 20px) / 2);
+    left: 10px;
+    line-height: 20px;
+    z-index: 1000;
+}
+
+.logcursor > .maxvalue
+{
+    position: absolute;
+    top: calc((100% - 20px) / 2);
+    right: 10px;
+    line-height: 20px;
+    z-index: 1000;
+}
+
+.logcursor .line
+{
+    position: absolute;
+    top: 0px;
+    height: 100%;
+    width: 6px;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5), transparent);
+    z-index: 750;
+}
+
+.logcursor > .refvalue, .logcursor > .curvalue
+{
+    position: absolute;
+    height: 20px;
+    bottom: 0px;
+    width: 30px;
+    text-align: center;
+    z-index: 1000;
+    line-height: 20px;
+}
+
+.logcursor > .logbarl, .logcursor > .logbarr
+{
+    position: absolute;
+    z-index: 500;
+    top: 0%;
+    height: 100%;
+}
+
+.logcursor > .logbarl
+{
+    background: linear-gradient(to right, red, red, red, yellow);
+}
+
+.logcursor > .logbarr
+{
+    background: linear-gradient(to right, green, lightgreen);
+}
+
+.logcursor > *
+{
+    color: white;
+    font-weight: bold;
+    text-shadow:
+	0px 0px 3px black,
+	0px 0px 3px black,
+	0px 0px 3px black,
+	0px 0px 3px black,
+	0px 0px 3px black,
+	0px 0px 3px black,
+	0px 0px 3px black
+    ;
+}
+
+.logcursor > .curline
+{
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
+    animation: pulseShadow 3s infinite;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes pulseShadow
+{
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
+  }
+  40% {
+    box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0px 0 10px 10px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
+  }
 }

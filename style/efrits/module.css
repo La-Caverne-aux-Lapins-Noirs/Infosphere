@@ -1,0 +1,211 @@
+
+.module_menubar
+{
+    background-color: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 64, 0, 0.2));
+    backdrop-filter: blur(12px);
+    border: 1px rgba(0, 255, 0, 0.2) solid;
+    border-radius: 10px;
+}
+
+.support_screen
+{
+    border-radius: 10px;
+    background-color: rgb(67, 70, 88);
+}
+
+.submenutr > td:first-of-type, .submenutd a
+{
+    text-decoration: none;
+}
+
+.submenutd a:hover
+{
+    text-decoration: underline;
+}
+
+.submenutd ul, .submenutd li
+{
+    list-style-type: none;
+}
+
+.module_tab, .resume_module
+{
+    border-radius: 15px;
+}
+
+.module_tab td
+{
+    border-radius: 5px;
+}
+
+
+.modulebutton
+{
+    background-color: rgb(0, 200, 0) !important;
+    border-radius: 5px;
+    border: 2px solid rgb(0, 63, 0);
+}
+
+.modulebutton, .modulebutton a
+{
+    color: rgb(250, 249, 249) !important;
+    font-weight: bold;
+}
+
+.gradetab td
+{
+    border-radius: 0px !important;
+    text-align: center;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.gradetab th, .gradetab td
+{
+    padding: 2px 2px 2px 2px;
+    font-size: small;
+}
+
+.resume_module .module_scale tr td:first-of-type
+{
+    font-weight: bold;
+}
+
+.resume_module .module_scale .grade_a > td:last-of-type
+{
+    border-top-right-radius: 10px;
+}
+
+.resume_module .module_scale .grade_d > td:last-of-type
+{
+    border-bottom-right-radius: 10px;
+}
+
+.resume_module .grade_a
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), gold);
+}
+
+.resume_module .grade_b
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), silver);
+}
+
+
+.resume_module .grade_c
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), #614e1a);
+}
+
+.resume_module .grade_d
+{
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), purple);
+}
+
+.module_button
+{
+    background-color: rgb(200, 143, 26);
+    color: white;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.medalscroll > div
+{
+    background-color: rgba(0, 255, 0, 0.1);
+    border-radius: 5px;
+    border: 2px solid rgba(0, 255, 0, 0.1);
+    backdrop-filter: blur(6px);
+}
+
+.medalscroll > div::-webkit-scrollbar
+{
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.medalscroll > div::-webkit-scrollbar-thumb
+{
+    border-radius: 5px;
+    background-color: rgb(55, 55, 55);
+}
+
+.activity_tab
+{
+    background: linear-gradient(to right, rgba(0, 255, 0, 0.20), rgba(0, 255, 0, 0.05), rgba(0, 255, 0, 0.20));
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.1) solid;
+    border-radius: 10px;
+
+}
+
+.activity_description
+{
+
+}
+
+.outline .outlinee p, .outline h2, .outline a
+{
+    /*
+	-webkit-text-stroke: 1px black;
+	text-stroke: 1px black;
+   */
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+    margin: 10px 10px 10px 10px;
+}
+.outline hr
+{
+    margin-top: 5px;
+}
+.outline .gradetab, .outline .outlinee .subbuttons
+{
+    margin-top: 20px;
+}
+.module_bonus_grade input
+{
+    width: 30px;
+    height: calc(100% / 5);
+    display: inline-block;
+    text-align: center;
+}
+.module_bonus_grade span
+{
+    text-align: center;
+    width: 15px;
+    display: inline-block;
+}
+.module_nickname
+{
+    text-align: center;
+}
+.module_nickname *
+{
+    color: white;
+}
+.medal_scrollbar
+{
+    height: 20px;
+    width: calc(100%);
+    background-color: black;
+    position: relative;
+}
+.medal_scrollbar_cursor
+{
+    user-select: none;
+    height: 20px;
+    width: 20%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: green;
+    border-radius: 10px;
+}
+.medal_scroll
+{
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}

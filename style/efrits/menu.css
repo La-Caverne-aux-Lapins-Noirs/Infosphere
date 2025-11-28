@@ -1,0 +1,70 @@
+
+@font-face
+{
+    src: url("/res/futura.ttf");
+    font-family: futura;
+}
+
+*
+{
+    font-family: futura;
+}
+
+
+#head, #foot
+{
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.menu a div
+{
+    color: white;
+}
+
+.menu a div:hover
+{
+    background-color: rgb(0, 255, 0);
+    color: black;
+}
+
+.menu .current_page > div
+{
+    background-color: rgb(0, 255, 0) !important;
+    color: black;
+}
+
+.menu b
+{
+    text-shadow:
+	0px 0px 0px rgb(250, 249, 249)
+    ;
+}
+
+
+#clock
+{
+    background-color: rgb(0, 128, 0);
+    color: rgb(250, 249, 249);
+    font-weight: bold;
+    transition: all 0.5s ease-in-out;
+}
+
+#clock:hover
+{
+    background-color: rgb(0, 255, 0);
+    font-weight: bold;
+    color: black;
+}
+
+.menubartext span
+{
+    color: white;
+    font-weight: bold;
+    text-shadow:
+	0px 0px 5px black,
+	0px 0px 5px black,
+	0px 0px 5px black,
+	0px 0px 5px black,
+	0px 0px 5px black
+    ;
+}

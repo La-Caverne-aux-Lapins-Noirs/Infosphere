@@ -1,0 +1,15 @@
+
+.doclist
+{
+    height: 90%;
+    overflow: auto;
+}
+
+.doclist div
+{
+    float: left;
+    cursor: pointer;
+    width: 50%;
+    margin-top: 2px;
+}
+

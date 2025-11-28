@@ -9,3 +9,147 @@
     cursor: pointer;
 }
 
+.home_table
+{
+    margin: 20px 20px 20px 20px;
+    width: calc(100% - 40px);
+}
+
+.home_table td
+{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+
+.activity_single_medal_box
+{
+    position: relative;
+    width: 30%;
+    height: 125px;
+    margin-right: 2%;
+    display: inline-block;
+    margin-bottom: 10px;
+    vertical-align: top;
+}
+
+.activity_single_medal_box p
+{
+    font-size: x-small;
+    padding-right: 10px;
+    text-align: justify;
+    height: 100%;
+}
+
+.activity_single_medal_box > div
+{
+    position: relative;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.activity_single_medal_box > div > img
+{
+    width: 75px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.activity_material div
+{
+    overflow: auto;
+}
+
+.activity_material li
+{
+    width: 95%;
+    height: 50px;
+    font-size: 30px;
+    line-height: 50px;
+    text-align: left;
+    margin-bottom: 10px;
+    margin-left: 2.5%;
+    list-style-type: none;
+    text-indent: 1em;
+}
+
+.bout
+{
+    margin: 10px;
+}
+
+.medal_acquired
+{
+    color: green;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+    background-image: url("/res/check.png");
+    background-size: 100% 100%;
+}
+
+.medal_failed
+{
+    color: red;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+    background-image: url("/res/cross.png");
+    background-size: 100% 100%;
+}
+
+.medal_mandatory, .medal_local, .medal_grade_a, .medal_grade_b, .medal_grade_c, .medal_grade_d
+{
+    color: blue;
+    position: absolute;
+    right: -5px;
+    top: 0px;
+    z-index: 1;
+    width: 25px;
+    height: 25px;
+    background-image: url("/res/mandatory.png");
+    background-size: 100% 100%;
+}
+
+
+.very_weak_medal, .weak_medal, .normal_medal, .strong_medal, .very_strong_medal
+{
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+}
+
+.very_weak_medal
+{
+    background-image: url("/res/vweak.png");
+}
+
+.weak_medal
+{
+    background-image: url("/res/weak.png");
+}
+
+.normal_medal
+{}
+
+.strong_medal
+{
+    background-image: url("/res/strong.png");
+}
+
+.very_strong_medal
+{
+    background-image: url("/res/vstrong.png");
+}

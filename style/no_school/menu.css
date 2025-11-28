@@ -1,0 +1,55 @@
+
+/*
+** Charte EFRITS Lisa:
+** Doré: 200, 143, 26
+** Blanche: 250, 249, 249
+** Gris foncé: 55, 55, 55
+** Marron clair: 180, 165, 165
+** Bleu: 45, 48, 59
+*/
+
+@font-face
+{
+    src: url("/res/futura.ttf");
+    font-family: futura;
+}
+
+#head
+{
+    background-image: url("/res/menu.png");
+}
+
+.menu a div
+{
+    color: rgb(250, 249, 249);
+}
+
+.menu b
+{
+    text-shadow:
+	0px 0px 0px rgb(250, 249, 249)
+    ;
+}
+
+#clock
+{
+    background-color: rgb(200, 143, 26);
+    color: rgb(250, 249, 249);
+    font-weight: bold;
+}
+
+#logo
+{
+    opacity: 0.8;
+}
+
+#logo:hover
+{
+    opacity: 1;
+}
+
+#foot
+{
+    background-image: url("/res/menu.png");
+    color: lightgray;
+}

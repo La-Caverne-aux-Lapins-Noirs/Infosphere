@@ -1,4 +1,27 @@
 
+.module_menubar
+{
+    padding: 10px;
+}
+
+.asset_menubar
+{
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 100%;
+    pading-bottom: 0px;
+}
+
+.support_screen
+{
+    width: 100%;
+}
+
+.module_tab td
+{
+    padding: 10px;
+}
+
 .submenu
 {
     height: 95%;
@@ -100,4 +123,88 @@
     height: 40px;
     line-height: 40px !important;
     vertical-align: middle;
+}
+
+
+.modulebutton
+{
+    width: 100%;
+    height: 100%;
+}
+
+.modulebutton, .modulebutton a
+{
+    font-weight: bold;
+}
+
+.gradetab td
+{
+    padding: 0;
+    vertical-align: middle;
+}
+
+.gradetab th, .gradetab td
+{
+    padding: 2px 2px 2px 2px;
+    font-size: small;
+}
+
+.resume_module .module_scale tr td:first-of-type
+{
+    font-weight: bold;
+}
+
+
+.module_button
+{
+    font-size: x-large;
+}
+
+
+.medalscroll > div
+{
+    width: calc(100% - 20px);
+    max-height: 500px;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.medalscroll > div::-webkit-scrollbar
+{
+    width: 5px;
+}
+
+.list_of_dates *
+{
+    font-size: small;
+}
+.list_of_dates b
+{
+    display: inline-block;
+    width: 49%;
+    text-align: right;
+}
+.list_of_dates span
+{
+    width: 49%;
+    display: inline-block;
+    text-align: left;
+}
+
+.activity_description
+{
+    text-indent: 2em;
+    text-align: justify;
+    margin-left: 10px;
+}
+
+.module_medal_admin
+{
+    display: inline-block;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    width: 46px !important;
+    height: 46px !important;
 }

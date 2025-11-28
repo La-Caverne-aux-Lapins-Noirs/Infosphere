@@ -1,0 +1,20 @@
+.calendar, .calendar th, .calendar tr, .calendar td
+{
+    border: 1px solid rgba(180, 165, 165, 0.6) !important;
+}
+
+.content_table th
+{
+    border: 1px solid rgba(180, 165, 165, 0.2);
+    border-radius: 5px;
+}
+
+.content_table tr
+{
+    border-radius: 5px;
+}
+
+.today
+{
+    background-color: red;
+}

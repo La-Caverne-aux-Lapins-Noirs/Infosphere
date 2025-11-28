@@ -4,12 +4,6 @@
 **
 */
 
-.calendar_basic_info
-{
-    width: 100%;
-    float: left;
-}
-
 .doneactivity
 {
     font-style: italic;
@@ -84,13 +78,6 @@
     width: 85%;
 }
 
-.menu img
-{
-    float: left;
-    height: 50px;
-    width: 50px;
-}
-
 .loginout
 {
     position: absolute;
@@ -111,7 +98,6 @@
 
 .menubartext span
 {
-    color: lightgray;
     font-size: medium;
 }
 
@@ -145,8 +131,6 @@
     width: 100%;
     height: 50px;
     left: 0px;
-    background-image: url("/res/menu.png");
-    color: lightgray;
 }
 
 #foot > form
@@ -193,15 +177,11 @@
 #body
 {
     position: absolute;
-    overflow-y: scroll;
+    overflow-y: auto;
     top: 50px;
-    left: 0px;
-    width: calc(100% - 20px);
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-    height: calc(100% - 50px - 50px - 10px - 10px);
+    left: 10px;
+    right: 0px;
+    bottom: 50px;
 }
 
 .body_height
@@ -373,11 +353,6 @@
     height: 35px;
 }
 
-.today
-{
-    background-color: red;
-}
-
 #room_list > div, #school_year_list > div
 {
     height: 20px;
@@ -394,57 +369,6 @@
     border-radius: 5px;
     border: 1px solid black;
     background-color: gray;
-}
-
-.calendar_activity
-{
-    position: absolute;
-    border: 1px solid black;
-    font-size: small;
-    display: table-cell;
-    vertical-align: middle;
-    text-align: center;
-    overflow-x: hidden;
-    overflow-y: auto;
-    text-shadow:
-	0px 0px 1px white,
-	0px 0px 1px white,
-	0px 0px 1px white,
-	-1px -1px 2px black,
-	-1px -1px 2px black,
-	-1px -1px 2px black,
-	1px -1px 2px black,
-	1px -1px 2px black,
-	1px -1px 2px black,
-	-1px 1px 2px black,
-	-1px 1px 2px black,
-	-1px 1px 2px black,
-	1px 1px 2px black,
-	1px 1px 2px black,
-	1px 1px 2px black
-    ;
-}
-
-a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
-{
-    color: white;
-}
-
-.calendar_edit_box
-{
-    position: absolute;
-    text-align: center;
-    z-index: 10;
-}
-
-.calendar_project_container
-{
-    position: relative;
-}
-
-.calendar_day_container
-{
-    position: relative;
 }
 
 .instance_panel_container > div
@@ -487,22 +411,9 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     float: left;
 }
 
-.final_box
-{
-    /* border: 0px solid rgba(255, 255, 255, 0.5); */
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.3) !important;
-}
-
 .full_box_with_title
 {
-    background-color: lightgray;
     overflow: hidden;
-}
-
-.subject_box
-{
-    background-color: lightgray;
 }
 
 .full_box_with_title > h4
@@ -512,36 +423,8 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 
 .full_box_with_title > div
 {
-    overflow-y: scroll;
+    overflow-y: auto;
     height: calc(100% - 30px);
-}
-
-.activity_single_medal_box
-{
-    position: relative;
-    width: 30%;
-    height: 125px;
-    margin-right: 2%;
-    display: inline-block;
-    margin-bottom: 10px;
-    vertical-align: top;
-    overflow-y: scroll;
-    overflow-x: hidden;
-}
-
-.activity_single_medal_box > div
-{
-    position: relative;
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-
-.activity_single_medal_box > div > img
-{
-    width: 75px;
-    height: 75px;
-    padding-right: 10px;
-    padding-left: 10px;
 }
 
 #subject_error_box
@@ -614,79 +497,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 .planning_filters > form input
 {
     width: 200px;
-}
-
-.medal_acquired
-{
-    color: green;
-    position: absolute;
-    right: 0px;
-    bottom: 50px;
-    z-index: 1;
-    width: 50px;
-    height: 50px;
-    background-image: url("/res/check.png");
-    background-size: 100% 100%;
-}
-
-.medal_failed
-{
-    color: red;
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
-    z-index: 1;
-    width: 50px;
-    height: 50px;
-    background-image: url("/res/cross.png");
-    background-size: 100% 100%;
-}
-
-.medal_mandatory, .medal_local, .medal_grade_a, .medal_grade_b, .medal_grade_c, .medal_grade_d
-{
-    color: blue;
-    position: absolute;
-    right: -5px;
-    top: 0px;
-    z-index: 1;
-    width: 25px;
-    height: 25px;
-    background-image: url("/res/mandatory.png");
-    background-size: 100% 100%;
-}
-
-.very_weak_medal, .weak_medal, .normal_medal, .strong_medal, .very_strong_medal
-{
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    z-index: 1;
-    width: 30px;
-    height: 30px;
-    background-size: contain;
-}
-
-.very_weak_medal
-{
-    background-image: url("/res/vweak.png");
-}
-
-.weak_medal
-{
-    background-image: url("/res/weak.png");
-}
-
-.normal_medal
-{}
-
-.strong_medal
-{
-    background-image: url("/res/strong.png");
-}
-
-.very_strong_medal
-{
-    background-image: url("/res/vstrong.png");
 }
 
 .band_box > .medal_mandatory,
@@ -841,21 +651,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
     display: inline-block;
 }
 
-.registered_act
-{
-    opacity: 1.0;
-}
-
-.unregistered_act
-{
-    opacity: 0.33;
-}
-
-.unregistered_act:hover
-{
-    opacity: 1.0;
-}
-
 .short_projects_container
 {
     position: relative;
@@ -909,71 +704,6 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 {
     background: #181818;
     border-radius: 15px;
-}
-
-.calendar_menu
-{
-    position: absolute;
-    width: calc(100% - 20px);
-    padding: 10px 10px 10px 10px;
-    top: 0px;
-    left: 0px;
-}
-
-.calendar
-{
-    position: absolute;
-    top: 80px;
-    left: 0px;
-    height: calc(100% - 120px);
-    width: 100%;
-}
-
-.tabpanel
-{
-    position: relative;
-    height: 100%;
-    width: 100%;
-}
-
-.tablist
-{
-    width: 100%;
-    height: 30px;
-    position: absolute;
-    padding-bottom: 10px;
-    top: 0px;
-    left: 0px;
-}
-
-.tablist div
-{
-    height: 30px;
-    line-height: 30px;
-    display: inline-block;
-    float: left;
-    text-align: center;
-}
-
-.tabcontent
-{
-    overflow: auto;	
-    position: absolute;
-    top: 40px;
-    left: 0px;
-    width: 100%;
-    height: calc(100% - 50px);
-}
-
-.tabcontent > div
-{
-    border-radius: 5px;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: calc(100%);
-    vertical-align: top;
 }
 
 .bigbuttons input

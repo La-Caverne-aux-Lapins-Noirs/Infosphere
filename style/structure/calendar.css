@@ -1,0 +1,100 @@
+
+.registered_act
+{
+    opacity: 1.0;
+}
+.unregistered_act
+{
+    opacity: 0.5;
+}
+.unregistered_act .calendar_activity
+{
+    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.66);
+}
+
+.unregistered_act:hover
+{
+    opacity: 1.0;
+}
+
+.calendar_menu
+{
+    position: absolute;
+    width: calc(100% - 20px);
+    padding: 10px 10px 10px 10px;
+    top: 0px;
+    left: 0px;
+}
+
+.calendar
+{
+    position: absolute;
+    top: 80px;
+    left: 0px;
+    height: calc(100% - 120px);
+    width: 100%;
+}
+
+.calendar_basic_info
+{
+    width: 100%;
+    float: left;
+}
+
+.calendar_basic_info span
+{
+    font-size: larger;
+}
+
+.calendar_activity
+{
+    position: absolute;
+    border: 1px solid black;
+    font-size: small;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    text-shadow:
+	0px 0px 1px white,
+	0px 0px 1px white,
+	0px 0px 1px white,
+	0px 0px 1px white,
+	0px 0px 1px white,
+	-2px -2px 4px black,
+	-2px -2px 4px black,
+	-2px -2px 4px black,
+	+2px -2px 4px black,
+	+2px -2px 4px black,
+	+2px -2px 4px black,
+	-2px +2px 4px black,
+	-2px +2px 4px black,
+	-2px +2px 4px black,
+	+2px +2px 4px black,
+	+2px +2px 4px black,
+	+2px +2px 4px black
+    ;
+}
+
+a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
+{
+    color: white;
+}
+
+.calendar_edit_box
+{
+    position: absolute;
+    text-align: center;
+    z-index: 10;
+}
+
+.calendar_project_container
+{
+    position: relative;
+}
+
+.calendar_day_container
+{
+    position: relative;
+}
