@@ -23,7 +23,7 @@
 		     "a" => $activity->reference_activity,
 		     "b" => NULL
 		     ]); ?>"
-	       style="font-size: x-small;"
+	       style="font-size: small;"
 	    >
 		<h5>
 		    <?=$Dictionnary["LinkedTo"]; ?>:

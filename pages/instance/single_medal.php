@@ -24,7 +24,7 @@
     </div>
 
     <?php if (!isset($no_text) || !$no_text) { ?>
-	<p style="font-size: xx-small; text-align: justify; padding-right: 10px;">
+	<p class="scrollable">
 	    <u><?=$medal["name"]; ?></u><br />
 	    <?php if ($activity->is_teacher) { ?><i><?=$medal["codename"]; ?></i><br /><?php } ?>
 	    <?=$medal["description"]; ?>

@@ -1,0 +1,37 @@
+
+.booktable > .content
+{
+    width: 100%;
+    position: absolute;
+    left: 0px;
+}
+
+.booktable.is_admin > .content
+{
+    width: calc(100% - 320px - 300px);
+}
+
+.booktable > .history
+{
+    width: 300px;
+    position: absolute;
+    right: 0px;
+}
+
+.booktable.is_admin > .history
+{
+    right: 300px;
+}
+
+
+.booktable.is_admin > .admin
+{
+    width: 300px;
+    position: absolute;
+    right: 0px;
+}
+
+.booktable.is_admin > .admin > input
+{
+    width: 280px;
+}

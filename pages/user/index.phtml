@@ -21,6 +21,8 @@
     <?php
     foreach (fetch_users() as $user)
     {
+	if ($user["deleted"] != NULL)
+	    continue ;
 	if (@$user["have_password"])
 	    require ("display_user.phtml");
 	else if (am_i_director())

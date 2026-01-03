@@ -18,7 +18,7 @@
 	if (in_array($activity->type, [5, 6, 7, 8, 9])) {
 	    if ($activity->is_teacher == false && $activity->is_registered == false)
 		break ;
-	    if ($activity->subject_appeir_date != NULL && $activity->subject_appeir_date < now())
+	    if ($activity->subject_appeir_date != NULL && $activity->subject_appeir_date > now())
 		break ;
 	}
 	?>

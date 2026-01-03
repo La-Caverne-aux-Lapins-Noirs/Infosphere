@@ -6,21 +6,6 @@
     box-shadow: 0px 1px 3px rgb(55, 55, 55);
 }
 
-.calendar, .calendar th, .calendar tr, .calendar td
-{
-    border: 1px solid rgba(180, 165, 165, 0.6) !important;
-}
-
-.content_table th
-{
-    border: 1px solid rgba(180, 165, 165, 0.2);
-    border-radius: 5px;
-}
-
-.content_table tr
-{
-    border-radius: 5px;
-}
 
 .content_table, .content_table tr, .content_table td
 {
@@ -33,24 +18,3 @@
     font-size: small;
 }
 
-.content_even
-{
-    background-color: rgba(255, 143, 26, 0.2);
-    transition: background-color 0.2s;
-}
-
-.content_even:hover
-{
-    background-color: rgba(255, 143, 26, 0.4);
-}
-
-.content_odd
-{
-    background-color: rgba(180, 165, 165, 0.2);
-    transition: background-color 0.2s;
-}
-
-.content_odd:hover
-{
-    background-color: rgba(180, 165, 165, 0.4);
-}

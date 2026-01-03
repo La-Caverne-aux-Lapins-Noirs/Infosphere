@@ -6,12 +6,14 @@ class CConfiguration
     public $_GroupsDir;
     public $_SupportDir;
     public $_UsersDir;
-	public $_tmpFileDir;
+    public $_tmpFileDir;
     public $_ActivitiesDir;
     public $_SchoolsDir;
     public $_RoomsDir;
     public $_ConfigurationDir;
     public $_RobotDir;
+    public $_DocDir;
+    public $_BookDir;
     public $Properties = [];
 
     function _ConfigurationDir($cnf = NULL)
@@ -21,13 +23,27 @@ class CConfiguration
 	return ($this->_ConfigurationDir.$cnf."/");
     }
 
-    function _RobotDir($cnf = NULL)
+    function RobotDir($cnf = NULL)
     {
 	if ($cnf == NULL)
 	    return ($this->_RobotDir);
 	return ($this->_RobotDir.$cnf."/");
     }
-    
+
+    function DocDir($cnf = NULL)
+    {
+	if ($cnf == NULL)
+	    return ($this->_DocDir);
+	return ($this->_DocDir.$cnf."/");
+    }
+
+    function BookDir($cnf = NULL)
+    {
+	if ($cnf == NULL)
+	    return ($this->_BookDir);
+	return ($this->_BookDir.$cnf.".pdf");
+    }
+
     function GroupsDir($grp = NULL)
     {
 	if ($grp == NULL)
@@ -146,6 +162,8 @@ class CConfiguration
 	// Ces programmes doivent être encodé afin de rendre
 	// impossible leur execution en l'état, par sécurité.
 	$this->_RobotDir = "$DIR/robot/";
+	$this->_DocDir = "$DIR/doc/";
+	$this->_BookDir = "$DIR/book/";
 
 	foreach ($this as $k => $v)
 	{

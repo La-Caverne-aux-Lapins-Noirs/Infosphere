@@ -1,10 +1,23 @@
 <?php if ($silent) return ; ?>
-<?php require_once ("collect_dashboard_activities.php"); ?>
-<?php require_once ("collect_dashboard_projects.php"); ?>
-<?php require_once ("collect_dashboard_matters.php"); ?>
 <?php if ($User == NULL) { ?>
     <?php require ("welcome.phtml"); ?>
 <?php } else { ?>
+    <?php
+    $wavg = get_week_average($User);
+    [$aavg, $amin, $amax] = get_last_activities_report($User);
+    [$mavg, $mmin, $mmax] = get_last_medals_report($User);
+
+    $wavgc = $wavg / 100.0;
+    $wpronostic = $wavgc > 0.8 ? 1.0 : $wavgc / 0.8;
+    $apronostic = $aavg / $amax < 0.40 ? 0.25 : ($aavg < 0.6 ? 0.5 : ($aavg < 0.8 ? 0.75 : 1.0));
+    $mpronostic = $mavg > 0.5 ? 1.0 : $mavg / 0.5;
+
+    // Si l'étudiante ou l'étudiant réussi bien, on limite l'impact du manque
+    // de presence.
+    if ($apronostic * $mpronostic > 0.8)
+	$wpronostic = 1.0 - pow(1.0 - $wpronostic, 2);
+    $pronostic = $wpronostic * $apronostic * $mpronostic;
+    ?>
     <table id="home_table">
 	<tr><td>
 	    <div id="welcome"><?php require ("welcome.phtml"); ?></div>
@@ -31,9 +44,9 @@
 	    ?>
 	    <div class="tinyscroll">
 		<?php require_once ("assistant.php"); ?>
-		<?php require_once ("matters.phtml"); ?>
 		<?php require_once ("projects.phtml"); ?>
 		<?php require_once ("activities.phtml"); ?>
+		<?php require_once ("matters.phtml"); ?>
 		<?php if (count($activities["managed"])) { ?>
 		    <?php require_once ("managed.phtml"); ?>
 		<?php } ?>

@@ -17,8 +17,8 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	    <?php foreach ($files as $k => $val) { ?>
 		<a onclick="dis<?=$idd; ?>('<?=md5($k); ?>');">
 		    <div
-			class="<?=$listclass; ?> disbut<?=$idd; ?>"
-			style="width: <?=100 / count($files) - 0.1; ?>%; background-color: <?=$default == $k ? "lightgrey" : "initial"; ?>;"
+			class="<?=$listclass; ?> disbut<?=$idd; ?> <?=$default == $k ? "selected" : ""; ?>"
+			style="width: <?=100 / count($files) - 0.1; ?>%;"
 			id="dis<?=$idd."_".md5($k); ?>"
 		    >
 			<?=$k; ?>
@@ -68,11 +68,11 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	 var all_buttons = document.getElementsByClassName("disbut<?=$idd; ?>");
 
 	 Array.prototype.forEach.call(all_buttons, function(el) {
-	     el.style.backgroundColor = "";
+	     el.classList.remove("selected");
 	 });
 	 var but = document.getElementById("dis<?=$idd; ?>" + "_" + lst);
 
-	 but.style.backgroundColor = "lightgray";
+	 but.classList.add("selected");
      }
      var ls;
 

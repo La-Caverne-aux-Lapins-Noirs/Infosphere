@@ -20,10 +20,14 @@
 		");
 	    if (count($users)) { ?>
 		<?php foreach ($users as $usr) { ?>
-		    <div onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$cycle["id"]; ?>_name');">
-			<div <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-			<?=display_avatar($usr, 50); ?>
+		    <div onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$cycle["id"]; ?>_name');" style="position: relative;">
+			<?=display_avatar($usr, 50, true); ?>
 			<p><?=$usr["codename"]; ?></p>
+			<div
+			    <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}", "position: absolute; bottom: auto; top: 0px; left: auto; right: 0px;"); ?>
+			>
+			    &#x1F50D;&#xFE0E
+			</div>
 		    </div>
 		<?php } ?>
 	    <?php } else { ?>
@@ -63,7 +67,7 @@
 	$not_too_old = "";
 	if ($page == "cycle")
 	    $not_too_old = "
-               AND (done_date IS NULL OR done_date > '".$cycle["first_day"]."')
+	        AND (done_date IS NULL OR done_date > NOW())
 	       ";
 	$acts = db_select_all("
            activity.id, codename, {$Language}_name as name
@@ -118,6 +122,7 @@
 	"method" => "post",
 	"hook_id" => $cycle["id"],
 	"linked_name" => "activity",
+	"link" => "instances",
 	"linked_elems" => $cycle["activity"],
 	"admin_func" => "is_director_for_cycle",
 	"extra_properties" => $ext_props

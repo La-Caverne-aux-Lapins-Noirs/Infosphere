@@ -515,3 +515,10 @@ function is_member_of_laboratory($id_lab)
 	") != NULL);
 }
 
+function is_librarian($id = -1)
+{
+    if (is_admin())
+	return (true);
+    //
+    return (false);
+}

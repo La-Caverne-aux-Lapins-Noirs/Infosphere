@@ -1,4 +1,5 @@
 <?php
+return ;
 // Ajouter et retirer des inscrits
 // Mettre des médailles et les enlever
 
@@ -45,15 +46,13 @@ $subids = "(".implode(",", $subids).")";
 		    <?php foreach ($matter->medal as $medal) { ?>
 			<td style="width: 50px;">
 			    <div
-				class="medal_box_picture"
+				class="medal_box_picture module_medal_admin"
 				style="
-				       display: inline-block; margin-left: 1px; margin-right: 1px; margin-top: 2px; margin-bottom: 2px;
 				       background-image: url('<?=$medal["icon"]; ?>');
 				       <?php if ($medal["band"] != NULL) { ?>
 				       border-radius: 25px;
 				       border: 2px black solid;
 				       <?php } ?>
-				       width: 46px !important; height: 46px !important;
 				       "
 			    ></div> 
 			</td>

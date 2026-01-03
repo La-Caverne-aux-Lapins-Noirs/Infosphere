@@ -30,6 +30,18 @@ function get_user_school(array &$usr, $by_name = false)
     foreach ($usr["school"] as $school)
 	if ($school["authority"] == 1)
 	    $usr["school_authority"] = 1;
+
+    // TEMPORAIRE
+    if (!count($usr["school"]))
+    {
+	$usr["school"]["efrits"]["id"] = -1;
+	$usr["school"]["efrits"]["id_school"] = -1;
+	$usr["school"]["efrits"]["codename"] = "efrits";
+	$usr["school"]["efrits"]["fr_name"] = "efrits";
+	$usr["school"]["efrits"]["authority"] = 1;
+	$usr["last_school"] = "efrits";
+    }
+
     return ($usr["school"]);
 }
 

@@ -117,7 +117,7 @@ $white = imagecolorallocatealpha($img, 64, 64, 64, 0);
 $whitea = imagecolorallocatealpha($img, 64, 64, 64, 90);
 
 $pink = imagecolorallocatealpha($img, 250, 128, 128, 0);
-$pinka = imagecolorallocatealpha($img, 250, 128, 128, 90);
+$pinka = imagecolorallocatealpha($img, 250, 128, 128, 64);
 $darkpink = imagecolorallocatealpha($img, 125, 64, 64, 0);
 $darkpinka = imagecolorallocatealpha($img, 125, 64, 64, 90);
 
@@ -131,12 +131,12 @@ $darkgreya = imagecolorallocatealpha($img, 16, 16, 16, 60);
 $lightgreen = imagecolorallocatealpha($img, 128, 255, 128, 0);
 $lightgreena = imagecolorallocatealpha($img, 128, 255, 128, 90);
 $green = imagecolorallocatealpha($img, 0, 255, 0, 0);
-$greena = imagecolorallocatealpha($img, 0, 255, 0, 90);
+$greena = imagecolorallocatealpha($img, 0, 255, 0, 64);
 $darkgreen = imagecolorallocatealpha($img, 0, 128, 0, 0);
 $darkgreena = imagecolorallocatealpha($img, 0, 128, 0, 90);
 
 $blue = imagecolorallocatealpha($img, 0, 0, 255, 0);
-$bluea = imagecolorallocatealpha($img, 0, 0, 255, 90);
+$bluea = imagecolorallocatealpha($img, 0, 0, 255, 64);
 $darkblue = imagecolorallocatealpha($img, 0, 0, 128, 0);
 $darkbluea = imagecolorallocatealpha($img, 0, 0, 128, 60);
 
@@ -195,28 +195,70 @@ $hh = ($h - 100) / $laddersize;
 // On affiche les valeurs. On commence par la fin.
 for ($index = $endday - $startday - 1; $index >= 0; --$index)
 {
-    $coords = draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $darkbluea, $darkblue);
-    draw_area($data, "avg_work_logs", $startday, $index, $laddersize, $darkgreena, $darkgreen, [$coords[8], $coords[9]]);
-    draw_area($data, "avg_distant_logs", $startday, $index, $laddersize, $darkpinka, $darkpink, [$coords[8], $coords[9]]);
-    draw_area($data, "avg_lock_logs", $startday, $index, $laddersize, $greya, $grey, [$coords[8], $coords[9]]);
+    $coords = draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $transparent, $darkblue);
+    draw_area($data, "avg_work_logs", $startday, $index, $laddersize, $transparent, $darkgreen, [$coords[8], $coords[9]]);
+    draw_area($data, "avg_distant_logs", $startday, $index, $laddersize, $transparent, $darkpink, [$coords[8], $coords[9]]);
+    draw_area($data, "avg_lock_logs", $startday, $index, $laddersize, $transparent, $grey, [$coords[8], $coords[9]]);
     
+    $x = 0;
+    $y = $h - 50;
+    $hours = 0;
+    foreach ([
+	"work_logs" => [$green, $greena],
+	"distant_logs" => [$pink, $pinka],
+	"intra_logs" => [$blue, $bluea],
+	"lock_logs" => [$lightgrey, $lightgreya]
+    ] as $label => $color)
+    {
+	if (isset($data[$label][$index + $startday]) && $index > 0)
+	{
+	    $coords = [
+		$w / $len / 2 + ($index + 0.2 - 1) * $w / $len, $y,
+		$w / $len / 2 + ($index + 0.2 - 1) * $w / $len, $y - $data[$label][$index + $startday] * $hh,
+		$w / $len / 2 + ($index + 0.8 - 1) * $w / $len, $y - $data[$label][$index + $startday] * $hh,
+		$w / $len / 2 + ($index + 0.8 - 1) * $w / $len, $y,
+	    ];
+	    imagefilledpolygon($img, $coords, 4, $color[1]);
+	    imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $color[0]);
+	    imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $color[0]);
+	    imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $color[0]);
+	    imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $color[0]);
+	    $y -= $data[$label][$index + $startday] * $hh;
+	    $hours += $data[$label][$index + $startday];
+	}
+    }
+    if ($index > 0)
+    {
+	$hours = sprintf("%d:%d", (int)$hours, ($hours - (int)$hours) * 60);
+	$siz = imagettfbbox(10, 0, $fnt, $hours);
+	imagettftext(
+	    $img, 10, 0,
+	    intval($w / $len / 2 + ($index + 0.5 - 1) * $w / $len - $siz[2] / 2),
+	    $y - 5,
+	    $lines, $fnt, $hours
+	);
+    }
+
+    /*
     $coords = draw_area($data, "intra_logs", $startday, $index, $bladder, $bluea, $blue);
     $coords = draw_area($data, "work_logs", $startday, $index, $bladder, $greena, $green, [$coords[8], $coords[9]]);
     $coords = draw_area($data, "distant_logs", $startday, $index, $bladder, $pinka, $pink, [$coords[8], $coords[9]]);
     $coords = draw_area($data, "lock_logs", $startday, $index, $bladder, $lightgreya, $lightgrey, [$coords[8], $coords[9]]);
+     */
 
     $coords = draw_area($data, "presence", $startday, $index, $bladder, $darkbluea, $darkblue);
     draw_area($data, "late", $startday, $index, $bladder, $darkbluea, $darkblue, [$coords[8], $coords[9]]);
     if ($landmark == "b")
-	    draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
+	draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
     else
-	    draw_line($data, "mispresence", $startday, $index, $sladder, $darkblue, $black, true);	
+	draw_line($data, "mispresence", $startday, $index, $sladder, $darkblue, $black, true);	
 
     draw_line($data, "delivery", $startday, $index, $bladder, $yellow);
     draw_line($data, "misdelivery", $startday, $index, $bladder, $yellow, $black, true);
 
     draw_line($data, "medals", $startday, $index, $bladder, $teal);
     draw_line($data, "mismedals", $startday, $index,$bladder, $teal, $black, true);
+    
 }
 
 // Bloc de gauche indiquant l'échelle, en mode bottom
@@ -226,6 +268,7 @@ for ($i = $sladder; $i <= $bladder; ++$i)
 
     if ($y < 50)
 	continue ;
+    
     // Gauche
     imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w / $len / 2 + 5), intval($y), $lines);
     // Droite

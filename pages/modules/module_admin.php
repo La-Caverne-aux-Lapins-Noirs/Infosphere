@@ -6,6 +6,7 @@ foreach ($matter->team as $sub)
     $all_users[] = $sub["user"][array_key_first($sub["user"])]["codename"];
 $all_users = implode(";", $all_users);
 ?>
+<br /><br />
 <input
     type="button"
     class="modulebutton"

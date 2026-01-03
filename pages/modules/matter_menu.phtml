@@ -17,7 +17,13 @@
     <?php $cycle = $data["cycle"]; ?>
     <?php $matter_to_sort = $data["matter_to_sort"]; ?>
     
-    <h3 style="border-top: 1px solid gray; padding-top: 5px; position: relative;">
+    <h3 style="
+	       border-top: 1px solid gray;
+	       padding-top: 5px;
+	       position: relative;
+	       cursor: pointer;
+	       "
+    >
 	<?=$Dictionnary["Cycle"]; ?>
 	<?=strlen(@$cycle->name) ? $cycle->name : $cycle->codename; ?>
 	<br />
@@ -55,8 +61,8 @@
 		<?php } ?>
 		
 		<a onclick="display_panel('module', <?=$matter->id; ?>);" style="cursor: pointer;">
-		    <div style="z-index: 0; padding-left: 20px; position: relative;" id="module_link<?=$matter->id; ?>" class="module_link">
-			<h4 style="width: 70%; <?=$matter->registered ? "font-weight: bold; color: white;" : "font-weight: lighter; color: lightgrey;"; ?>">
+		    <div id="module_link<?=$matter->id; ?>" class="module_link <?=$matter->registered ? "" : "notsubscribed"; ?>">
+			<h4 style="width: 70%;">
 			    <?=$matter->name ?:
 			       $matter->template_codename ?:
 			       $matter->codename

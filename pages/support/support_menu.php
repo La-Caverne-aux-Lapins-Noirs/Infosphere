@@ -78,7 +78,7 @@ silent_submitf(this, {
 			style="width: 30px; color: red;"
 		    />
 		</form>
-	    <?php } ?>
+	    <?php } else { echo " - "; } ?>
 	    <a
 		class="asset_link"
 		id="asset<?=$asset["id"]; ?>button"

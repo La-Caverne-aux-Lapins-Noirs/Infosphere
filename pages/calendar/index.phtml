@@ -100,20 +100,21 @@ $alt_colors = [
 		    <?php print_projects($projects); ?>
 		</td>
 	    <?php } ?>
-	    <td rowspan="2" style="
+	    <td rowspan="2" class="
 			 <?php if ($week_cnt != 0) { ?>
-			 border-top: 2px solid black !important;
+			 weektop
 			 <?php } ?>
 			 <?=$alt_colors[$week_cnt % count($alt_colors)]; ?>
 			 "
 	    ></td>
 	    <?php for ($i = 0; $i < 7; ++$i) { ?>
 		<td
-		    class="day_column <?=same_day($period + $one_day * $i, time()) ? "today" : ""; ?>"
-		    style="
+		    class="day_column <?=same_day($period + $one_day * $i, time()) ? "today" : ""; ?>
 			   <?php if ($week_cnt != 0) { ?>
-			   border-top: 2px solid black !important;
+			   weektop
 			   <?php } ?>
+			   "
+		    style="
 			   font-size: x-small;
 			   <?=$alt_colors[$week_cnt % count($alt_colors)]; ?>
 			   "

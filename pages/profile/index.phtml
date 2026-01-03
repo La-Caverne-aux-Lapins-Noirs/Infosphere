@@ -37,8 +37,10 @@ $cache = json_decode($user->cache);
 <table class="full_size_table">
     <tr><td>
 	<table class="full_size_table"><tr><td style="width: 300px; vertical-align: top;">
-	    <p style="text-align: center;">
-		<?php display_avatar($user); ?><br />
+	    <p class="main_data_profile">
+		<?php display_avatar($user); ?>
+	    </p>
+	    <div class="main_data_profile scrollable" style="height: 40%">
 		<b><?=$user->codename; ?></b><br />
 		<?php if ($user->nickname != "") { ?>
 		    <i>- <?=$user->nickname; ?> -</i><br />
@@ -46,8 +48,6 @@ $cache = json_decode($user->cache);
 		<?=ucfirst($user->first_name)." ".strtoupper($user->family_name); ?><br />
 
 		<br />
-		<b><?=$Dictionnary["MemberSince"]; ?></b>:
-		<?=human_date($user->registration_date, true); ?><br />
 		<?php
 		$credits = 0;
 		foreach ($user->sublayer as $cyc)
@@ -61,9 +61,12 @@ $cache = json_decode($user->cache);
 		update_table("user", $user->id, [
 		    "cache" => json_encode($cache, JSON_UNESCAPED_SLASHES)
 		]);
-
 		?>
-		<b><?=$credits." ".$Dictionnary["Credits"]; ?></b><br />
+		<span style="font-size: x-small;">
+		    <?=human_date($user->registration_date, true); ?>
+		    -
+		    <?=$credits." ".$Dictionnary["Credits"]; ?>
+		</span><br />
 		<?php
 		$desks = db_select_all("
 		    room_desk.codename as codename,
@@ -91,7 +94,7 @@ $cache = json_decode($user->cache);
 			</li>
 		    <br />
 		<?php } ?>
-	    </p>
+	    </div>
 	</td><td style="overflow: auto;">
 	    <?php
 	    $panel = [
@@ -121,7 +124,7 @@ $cache = json_decode($user->cache);
 	    $Dictionnary["Intercom"].
 	    "</span>"
 	] = __DIR__."/intercom.phtml";
-	tabpanel($panel, $Position.$user->id."cursus", "#");
+	tabpanel($panel, $Position.$user->id."cursus", "#", "", "profile_data");
 	?>
     </td></tr><tr>
 	<?php
@@ -140,7 +143,7 @@ $cache = json_decode($user->cache);
 		$Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
 		$Dictionnary["Laboratory"] => __DIR__."/laboratories.phtml",
 	    ];
-	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext");
+	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext", "profile_data");
 	    ?>
 	</td>
     </tr>

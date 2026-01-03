@@ -11,9 +11,7 @@
 		<td>
 		    <a
 			href="index.php?p=ModulesMenu&amp;a=<?=$act["id"]; ?>"
-			<?php if ($act["subscribed"] == false) { ?>
-			    style="color: gray;"
-			<?php } ?>
+			style="color: gray;"
 		    >
 			<?=$act["name"]; ?>
 		    </a>
@@ -21,7 +19,7 @@
 		<td>
 		    <?php if ($act["close_date"] != NULL) { ?>
 			<?=datex("d/m", date_to_timestamp($act["close_date"])); ?>
-			<?php if ($act["subsoon"]) { ?>
+			<?php if ($act["soon"]) { ?>
 			    <?=$Dictionnary["EndThisWeek"]; ?>
 			<?php } ?>
 		    <?php } ?>

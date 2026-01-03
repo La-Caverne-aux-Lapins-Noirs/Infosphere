@@ -7,12 +7,14 @@ function switch_asset(link, screen, type, asset)
     if ((screen = document.getElementById(screen)) == null)
 	return ;
     Array.prototype.forEach.call(links, function(el) {
-	el.style.backgroundColor = "";
+	el.classList.remove("selected");
     });
     Array.prototype.forEach.call(screens, function(el) {
 	el.style.display = "none";
     });
-    link.style.backgroundColor = "rgb(200, 146, 26)";
+    
+    link.classList.add("selected");
+    
     console.log(type);
     if (type == "video")
     {
@@ -81,8 +83,8 @@ function display_panel(page, panel, to_admin = false, to_user = false)
     Array.prototype.forEach.call(panels, function(el) {
 	el.style.display = "none";
     });
-    Array.prototype.forEach.call(links, function(el) {
-	el.style.backgroundColor = "";
+    Array.prototype.forEach.call(links, function(el) {	
+	el.classList.remove("selected");
     });
     if (panel == -1)
 	document.getElementById("resume").style.display = "block";
@@ -102,7 +104,7 @@ function display_panel(page, panel, to_admin = false, to_user = false)
 	var mod = document.getElementById(page + "_" + tpanel);
 
 	if (lnk)
-	    lnk.style.backgroundColor = "rgb(200, 146, 26)";
+	    lnk.classList.add("selected");
 	if (mod)
 	    mod.style.display = "block";
     }

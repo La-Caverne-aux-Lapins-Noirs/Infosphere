@@ -4,6 +4,11 @@ function inside_link($cat, $id)
 {
     global $BaseDir;
 
-    return ("{$BaseDir}index.php?p=".ucfirst($cat)."Menu&amp;a=$id");
+    $finalcat = "";
+    $cat = explode("_", $cat);
+    foreach ($cat as $c)
+	$finalcat .= ucfirst($c);
+
+    return ("{$BaseDir}index.php?p={$finalcat}Menu&amp;a=$id");
 }
 

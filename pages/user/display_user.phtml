@@ -86,15 +86,13 @@
 			  value="<?=$Dictionnary["RegeneratePassword"]; ?>"
 		/>
 	    </form>
-
 	<?php } ?>
 	    
     </div>
 
     <?php } ?>
 
-    <?php if ($user["id"] != 1) { ?>
-    
+    <?php if ($user["id"] != 1) { ?>    
 	<div class="band _130top" style="height: <?=300-100-30; ?>px;">
 	    <div class="left column scrollable">
 		<?php if (is_my_director($user["id"]) || count($user["cycle"])) { ?>
@@ -126,6 +124,17 @@
 		<?php } ?>
 	    </div>
 	    <div class="right column scrollable">
+		<?php if (is_admin()) { ?>
+		    <form onsubmit="return false;" method="put" action="api/user/<?=$user["id"]; ?>">
+			<input type="hidden" name="action" value="new_contract" />
+			<input
+			    type="button"
+				  onclick="silent_submit(this.parentNode);"
+				  style="width: 100%;"
+				  value="<?=$Dictionnary["GenerateContract"]; ?>"
+			/>
+		    </form>
+		<?php } ?>
 		<?php if (is_director() || count($user["school"])) { ?>
 		    <?php list_of_links([
 			"hook_name" => "user",

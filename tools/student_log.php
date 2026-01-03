@@ -82,6 +82,9 @@ function get_student_log($user = NULL, $date = NULL)
 
 function get_week_average($user, $since = 60 * 60 * 24 * 14)
 {
+    // Cette fonction ne devrait pas accumuler intra et travail mais établir
+    // un ensemble basé sur le temps seulement passé.
+
     if (is_array($user))
 	$user = $user["id"];
     else if (is_object($user))
@@ -127,3 +130,42 @@ function get_week_average($user, $since = 60 * 60 * 24 * 14)
 	$total += $l;
     return ($total);
 }
+
+function get_last_activities_report($user, $since = 60 * 60 * 24 * 14)
+{
+    $act = collect_dashboard_activities(time() - $since, time(), false);
+    $pres = 0;
+    $total = 0;
+    foreach ($act["participate"] as $a)
+    {
+	if ($a["present"] > 0 || $a["present"] == -1)
+	    $pres += 1;
+	$total += 1;
+    }
+    if ($total == 0)
+	return ([0.5, 0, 1]);
+    return ([$pres, 0, $total]);
+}
+
+function get_last_medals_report($user, $since = 60 * 60 * 24 * 14)
+{
+    $act = collect_dashboard_activities(time() - $since, time(), false);
+    $prj = collect_dashboard_projects(time(), $since, true);
+
+    $medal = 0;
+    $total = 0;
+    foreach ($act["participate"] as $a)
+    {
+	$medal += $a["medal_got"];
+	$total += $a["medal"];
+    }
+    foreach ($prj as $a)
+    {
+	$medal += $a["medal_got"];
+	$total += $a["medal"];
+    }
+    if ($total == 0)
+	return ([0.5, 0, 1]);
+    return ([$medal, 0, $total]);
+}
+

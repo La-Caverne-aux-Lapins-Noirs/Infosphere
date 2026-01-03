@@ -17,9 +17,9 @@
 		<?=$Dictionnary["NewSession"]; ?>
 	    <?php } ?>
 	<?php } else { ?>
-	    <?=weekday_date($session->begin_date, NULL, false); ?>
+	    #<?=weekday_date($session->begin_date, NULL, false); ?>
 	    -
-	    <?=weekday_date($session->end_date, NULL, false); ?>
+	    <?=human_date($session->end_date, false, true, true); ?>
 	<?php } ?>
 	<br />
 	<br />

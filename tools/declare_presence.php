@@ -27,8 +27,18 @@ function declare_presence($activity, $session, $user = NULL)
 	return (new ErrorResponse("PresenceAlreadyDeclared"));
     if (date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute > now())
 	return (new ErrorResponse("DeclarationPeriodIsNotOpenedYet"));
-    if (date_to_timestamp($activity->unique_session->end_date) < now())
+    // Si la moitié de l'activité est passé, c'est mort.
+    if (date_to_timestamp($activity->unique_session->begin_date) +
+	(date_to_timestamp($activity->unique_session->end_date) -
+	 date_to_timestamp($activity->unique_session->begin_date)) / 2
+	< now())
+    {
+	if (($request = @update_table(
+	    "team", $activity->user_team["id"], ["present" => -2, "declaration_date" => db_form_date(now())]
+	))->is_error())
+	    return ($request);
 	return (new ErrorResponse("DeclarationPeriodIsClosed"));
+    }
     
     $position_valid = false;
     if (count($activity->unique_session->room) == 0)

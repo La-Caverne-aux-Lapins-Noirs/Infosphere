@@ -15,7 +15,7 @@
 		    class="modulebutton"
 		    onclick="<?=$js; ?>"
 		    value="<?=$Dictionnary["Unsubscribe"]; ?>"
-		    style="width: 100%; height: 70px; font-size: large; border: 0;"
+		    style="width: 100%; height: 70px; font-size: large;"
 		/>
 	    </form>
 	<?php } else { ?>
@@ -39,7 +39,7 @@
 		class="modulebutton"
 		onclick="<?=$js; ?>"
 		value="<?=$Dictionnary["Subscribe"]; ?>"
-		style="width: 100%; height: 70px; font-size: large; border: 0; cursor: pointer;"
+		style="width: 100%; height: 70px; font-size: large; cursor: pointer;"
 	    />
 	</form>
 	<b style="color: red;"><?=$Dictionnary["UnsubscribeIsForbidden"]; ?>.</b>

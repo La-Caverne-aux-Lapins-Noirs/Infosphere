@@ -3,6 +3,14 @@
 $date0 = "1970-01-01 00:00:00"; // date("Y-m-d H:i:s", 0);
 $NoLocalisation = new DateTimeZone("Etc/UTC");
 
+function get_school_name_from_url()
+{
+    $url = explode(".", $_SERVER["SERVER_NAME"]);
+    if ($url[0] != "intra") // pour gérer nom_ecole.efrits.fr par exemple.
+	return ($url[0]); // au cas ou nom_ecole soit deja pris.
+    return ($url[count($url) - 2]);
+}
+
 function random_name()
 {
     return (md5(microtime()));
@@ -119,6 +127,11 @@ function now()
 
     $dt = new DateTime("now"); // Avec localisation
     return ($dt->getTimestamp() + $dt->getOffset());
+}
+
+function dbnow()
+{
+    return (db_form_date(now()));
 }
 
 function remove_hour($s)

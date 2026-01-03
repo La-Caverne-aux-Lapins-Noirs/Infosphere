@@ -123,5 +123,13 @@ window.addEventListener('click', e =>
     }
 );
 
+var ShiftPressed = false;
+
+window.addEventListener('keydown', e =>
+    {
+	ShiftPressed = e.shiftKey;
+    }
+);
+
 
 blinkall();

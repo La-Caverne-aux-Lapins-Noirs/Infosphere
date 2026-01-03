@@ -1,6 +1,4 @@
 
-- Le champ "note" d'activité permettant d'indiquer qu'il y a des erreurs a corriger dans le sujet
-n'est pas encore accessible via le panneau d'admin d'activité. Il existe cependant en BDD.
-
-
+- Un systeme d'upload permettant d'envoyer plein de petit bouts de fichier et de la reconstituer apres, afin de ne pas avoir
+besoin d'augmenter trop upload/post/max ram size.
 

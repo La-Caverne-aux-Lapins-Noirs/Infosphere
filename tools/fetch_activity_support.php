@@ -29,6 +29,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false, $activit
 
     $all = db_select_all("
        activity_support.id as id,
+       activity_support.chapter as chapter,
 
        -- activity.id as id_activity,
        -- activity.codename as activity_codename,
@@ -122,6 +123,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false, $activit
 	else
 	    continue ;
 
+	$s["chapter"] = $a["chapter"];
 	if ($by_name)
 	    $new[$name] = $s;
 	else

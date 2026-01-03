@@ -21,15 +21,7 @@ else
 <form
     method="post"
     action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?><?=$asset_id; ?>"
-    style="
-    	    text-align: center;
-	    background-color: lightgray;
-	    margin-left: 10px;
-	    margin-right: 10px;
-	    border-radius: 10px;
-	    padding-top: 5px;
-	    padding-bottom: 5px;
-	    "
+    class="support_add_formular"
     onsubmit="return <?=$js; ?>,"
 >
     <?php if ($asset_id != "") { ?>

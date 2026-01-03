@@ -88,6 +88,9 @@ $Unlisted = [
     "ActivityMenu" => "./pages/instance/",
     "Subscribe" => "./pages/subscribe/",
     "TeacherMenu" => "./pages/profile/", // Redirection vers profil pour des raisons de simplicité
+    "SupportMenu" => "./pages/support/",
+    "SupportAssetMenu" => "./pages/support/",
+    "SupportCategoryMenu" => "./pages/support/",
 ];
 
 $TopMenu = [
@@ -95,11 +98,14 @@ $TopMenu = [
     "ProfileMenu" => "./pages/profile/",
     "CalendarMenu" => "./pages/calendar/",
     "ModulesMenu" => "./pages/modules/",
+    
     "ClassMenu" => "./pages/support/",
-    "FetchingMenu" => "./pages/fetching/",
-    "TokenMenu" => "./pages/token/",
+    
+    // "FetchingMenu" => "./pages/fetching/", // Inutile. Le concept a changé.
+    // "TokenMenu" => "./pages/token/", // Inutile. Le concept a changé.
+
     "IntercomMenu" => "./pages/intercom/",
-    "BookMenu" => "./pages/book/",
+    "LibraryMenu" => "./pages/book/",
     "StudGalleryMenu" => "./pages/gallery/",
 ];
 if (isset($Configuration->Properties["video_service"]))

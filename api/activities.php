@@ -1230,3 +1230,20 @@ function RemoveMood($id, $data, $method, $output, $module)
 	bad_request();
     return (GetMoodDir($id, $data, "GET", $output, $module, "MoodDeleted"));
 }
+
+function EditTodoList($id, $data, $method, $output, $module)
+{
+    global $Database;
+    global $Dictionnary;
+
+    if ($id == -1)
+	bad_request();
+    $data["todolist"] = strip_tags($data["todolist"]);
+    $tlist = $Database->real_escape_string($data["todolist"]);
+    $Database->query("
+	UPDATE activity SET todolist = '$tlist' WHERE id = $id
+    ");
+    return (new ValueResponse([
+	"msg" => $Dictionnary["Edited"]
+    ]));
+}

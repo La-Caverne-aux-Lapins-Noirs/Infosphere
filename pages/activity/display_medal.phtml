@@ -10,11 +10,11 @@ if (is_teacher_for_activity($module->id))
     single_field_with_ok_form($page, ["id" => $module->id], "codename", "Medal", "medal", NULL, "", "post", $js);
 }
 $MedalColor = [
-    "rgba(255, 255, 0, 0.2)",
-    "rgba(0, 0, 0, 0.2)",
-    "rgba(0, 255, 0, 0.2)",
-    "rgba(0, 0, 255, 0.2)",
-    "rgba(255, 0, 0, 0.2)"
+    "rgba(255, 255, 0, 0.5)",
+    "rgba(128, 128, 128, 0.5)",
+    "rgba(0, 255, 0, 0.5)",
+    "rgba(0, 0, 255, 0.5)",
+    "rgba(255, 0, 0, 0.5)"
 ];
 // Conditions
 $MedalColor[-1] = "rgba(255, 255, 255, 1.0)";

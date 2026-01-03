@@ -14,7 +14,9 @@ require_once (__DIR__."/../error_net.php");
 <form method="get" action="/api/support_category/1/get_menu" id="fetch_menu_form">
 </form>
 <table class="submenu"><tr class="submenutr"><td class="submenutd" id="main_menu">
-    <?php require_once ("menu.phtml"); ?>
+    <div class="module_menubar">
+	<?php require_once ("menu.phtml"); ?>
+    </div>
 </td><td class="submenutd">
     <div
 	class="module_panel"

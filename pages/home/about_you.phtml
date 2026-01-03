@@ -3,11 +3,28 @@
 <table><tr><td>
     <?php display_avatar($User); ?>
 </td><td>
-    <img
-	src="tools/student_status.php?p=<?=get_week_average($User); ?>"
-	id="student_status"
-	title="<?=$Dictionnary["StudentStatusGraph"]; ?>"
-    />
+    <h5 style="text-align: center;"><?=$Dictionnary["StudentStatusGraph"]; ?></h5>
+    <?php
+
+    $label = $Dictionnary["HourTotal"];
+    // 8 heures par jour + 4h par week end (l'exam) + 4h le soir par sem)
+    // Ca fait 50h par semaine en moyenne. Cela inclu les devoirs.
+    // Sachant qu'en math sup, c'est 55-60h, et spé 60-70h d'après les stats.
+    $logcursor = [$wavg, 0, 200, 100];
+    require (__DIR__."/../../tools/student_status.php");
+
+    $label = $Dictionnary["Presence"];
+    $logcursor = [$aavg, $amin, $amax, 0.8 * $amax];
+    require (__DIR__."/../../tools/student_status.php");
+
+    $label = $Dictionnary["MedalGain"];
+    $logcursor = [$mavg, $mmin, $mmax, 0.25 * $mmax];
+    require (__DIR__."/../../tools/student_status.php");
+
+    $label = $Dictionnary["GlobalIndicator"];
+    $logcursor = [$pronostic * 100, 0, 100, 50];
+    require (__DIR__."/../../tools/student_status.php");
+    ?>
 </td></tr></table>
 
 <p style="font-size: small; width: 90%; margin-left: 5%; text-align: center;">

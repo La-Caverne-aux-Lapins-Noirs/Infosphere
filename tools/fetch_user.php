@@ -4,7 +4,7 @@ function fetch_user($id, $add_fields = [])
 {
     global $Database;
 
-    if (($id = resolve_codename("user", $id))->is_error())
+    if (($id = resolve_codenamef("user", $id))->is_error())
 	return ($id);
     $id = $id->value;
     if (strlen($add_fields = implode(",", $add_fields)))

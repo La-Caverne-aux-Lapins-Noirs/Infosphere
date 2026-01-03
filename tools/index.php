@@ -71,6 +71,7 @@ require_once ("forge_language.php");
 require_once ("try_insert.php");
 require_once ("try_update.php");
 require_once ("fetch_data.php");
+require_once ("fetch_books.php");
 require_once ("constants.php");
 require_once ("is_page_authorized.php");
 require_once ("print_int_selector.php");
@@ -186,5 +187,8 @@ require_once ("convert_to_codename.php");
 require_once ("full_backup.php");
 require_once ("where_am_i.php");
 require_once ("declare_presence.php");
+require_once ("collect_dashboard_activities.php");
+require_once ("collect_dashboard_matters.php");
+require_once ("collect_dashboard_projects.php");
 // @codeCoverageIgnoreEnd
 

@@ -18,7 +18,7 @@
 	       width: calc(<?=$Session->width; ?>% - 6px);
 	       left: calc(<?=$Session->left; ?>% + 2px);
 	       top: calc(<?=$Session->top; ?>% + 2px);
-	       height: calc(<?=$Session->height; ?>% - 4px);
+	       height: calc(<?=$Session->height > 5 ? $Session->height : 5; ?>% - 4px);
 	       background-color: <?=color_from_name($Session->parent->parent_codename, ["white"]); ?>;
 	       border-radius: 5px;
 	       <?=$background; ?>
@@ -26,7 +26,7 @@
     >
 	<p class="calendar_basic_info">
 	    <?php if (@strlen($Session->parent->name) != 0) { ?>
-		<b><?=ucfirst($Session->parent->name); ?></b><br />
+		<span><?=ucfirst($Session->parent->name); ?></span><br />
 		<?=ucfirst($Dictionnary[$Session->parent->type_name]); ?><br />
 		<i><?=ucfirst($Session->parent->parent_name); ?></i>
 	    <?php } else { ?>
@@ -47,7 +47,7 @@
 	<p class="calendar_basic_info">
 
 	</p>
-	<?php if ($Session->registered != NULL) { ?>
+	<?php if ($Session->registered != NULL && 0) { // Non affiché, car la transparence devrait suffire ?>
 	    <p class="calendar_basic_info">
 		<b><?=$Dictionnary["Registered"]; ?></b>
 	    </p>

@@ -61,8 +61,7 @@
 	    </form>
 	<?php } else { ?>
 	    <img
-		width="30"
-		height="30"
+		width="50"
 		src="<?=$im["icon"]; ?>"
 		title="<?=$im["name"].":\n".$im["description"]; ?>"
 		style="opacity: <?=$im["result"] > 0 ? "1.0" : "0.5"; ?>"

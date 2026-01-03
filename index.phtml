@@ -15,6 +15,14 @@
 		<link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
 	    <?php } ?>
 	<?php } ?>
+	<?php $current_school_style = isset($User["last_school"]) ? $User["last_school"] : get_school_name_from_url(); ?>
+	<?php foreach (glob("./style/$current_school_style/*.css") as $css) { ?>
+	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+	<?php } ?>
+	<?php if (file_exists($icon = "./dres/school/$current_school_style/favicon.png")) { ?>
+	    <link rel="icon" type="image/x-icon" href="<?=$icon; ?>" />
+	<?php } ?>
+
 	<title>
 	    <?=strip_tags($Dictionnary[str_replace("Menu", "", $Position)]); ?> - <?=$Dictionnary["Infosphere"]; ?>
 	</title>
@@ -23,7 +31,7 @@
         ---- Jason Brillante "Damdoshi"
         ----
         ---- Involved companies:
-        ---- Hanged Bunny Studio SAS 2014-2021.
+        ---- Hanged Bunny Studio SAS 2014-<?=date("Y", time()); ?>.
         ---- Pentacle Technologie 2009-<?=date("Y", time()); ?>.
         ---- EFRITS SAS 2022-<?=date("Y", time()); ?>.
         ----
@@ -43,7 +51,7 @@
     <?php $logo = ""; ?>
     <body onload="remove_loading_screen();">
 	<div id="loading_logo"
-	     <?php if (isset($User["last_school"]) && file_exists($logo = $Configuration->SchoolsDir($User["last_school"])."icon.png")) { ?>
+	     <?php if (file_exists($logo = $Configuration->SchoolsDir($current_school_style)."icon.png")) { ?>
 	     style="background-image: url('<?=$logo; ?>');"
 	     <?php } else if (!file_exists("dres/logo.png")) { ?>
 	     style="background-image: url('/res/logo.png');"
@@ -97,7 +105,7 @@
 	    </script>
 	</div>
 
-	<div id="body">
+	<div id="body" class="scrollable">
 	    <?php require_once ("dispatch.php"); ?>
 	</div>
 

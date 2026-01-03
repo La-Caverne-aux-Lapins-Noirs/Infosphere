@@ -15,9 +15,16 @@ function render_file()
     ]) !== false)
 	not_found();
     header("Content-Type: ".mime_content_type($_GET["target"]));
-    $fd = fopen($_GET["target"], "rb");
+
+    /// Ici, il y a un probleme.
+    if (($fd = fopen($_GET["target"], "rb")) === false)
+	not_found();
     while (!feof($fd))
-	echo fread($fd, 1024 * 1024);
+    {
+	if (($data = fread($fd, 1024 * 1024)) === false)
+	    not_found();
+	echo $data;
+    }
     // echo file_get_contents($_GET["target"]);
     fclose($fd);
     die();
@@ -41,15 +48,20 @@ $target = explode("/", $target);
 array_shift($target);
 if (count($target) < 1)
     bad_request();
-$type = $target[0];
+$type = $target[count($target) - 1];
 
 // On s'authentifie
 require_once ("login/index.php");
 
 if ($User == NULL)
 {
-    if (pathinfo($type, PATHINFO_EXTENSION) != "png" || count($target) != 1)
-	authentication_required();
+    if (pathinfo($type, PATHINFO_EXTENSION) != "png")
+    {
+	if (count($target) != 1)
+	{
+	     authentication_required();
+	}
+    }
 }
 
 if (is_admin())
@@ -147,6 +159,13 @@ if (($type == "user" || $type == "users"))
 	}
     }
     if ($user != $User["id"])
+	forbidden();
+    render_file();
+}
+
+if ($type == "doc")
+{
+    if (!is_teacher() && !is_director())
 	forbidden();
     render_file();
 }

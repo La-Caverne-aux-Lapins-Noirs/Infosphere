@@ -1,7 +1,19 @@
 <?php
 $gparams = false;
-if (!isset($_GET["a"]) || !isset($_GET["b"]))
+if (!isset($_GET["a"]))
     return ;
+if (!isset($_GET["b"]))
+{
+    if ($_GET["p"] == "ClassMenu")
+	return ;
+    $_GET["b"] = $_GET["a"];
+    $_GET["a"] = [
+	"SupportAssetMenu" => 0,
+	"SupportMenu" => 1,
+	"SupportCategoryMenu" => 2,
+    ][$_GET["p"]];
+}
+
 $gparams = true;
 if (($gtype = (int)$_GET["a"]) < 0 || $gtype > 3)
 {

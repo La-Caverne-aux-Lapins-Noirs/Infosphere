@@ -2,13 +2,14 @@
 
 $out = hand_request([
     "command" => "newuser",
-    "user" => "jason.brillante",
-    "first_name" => "Jason",
-    "last_name" => "Brillante",
-    "mail" => "jason.brillante@gmail.com",
-    "password" => "the_test_password",
+    "user" => "mathieu.lamarque",
+    "first_name" => "Mathieu",
+    "last_name" => "Lamarque",
+    "mail" => "mathieu.lamarque4@gmail.com",
+    "password" => "4Bew[kCs#_z)",
+    "bddpassword" => ".wk7ebMa+,;2",
     "school" => "efrits",
-    //"dry" => "1"
+    "dry" => "1"
 ]);
 
 if ($out === false || $out === NULL)

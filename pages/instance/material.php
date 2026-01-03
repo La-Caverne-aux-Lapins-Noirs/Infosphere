@@ -1,9 +1,9 @@
-<div class="full_box_with_title final_box">
+<div class="full_box_with_title final_box activity_material">
     <h4><?=$Dictionnary["AssociatedCourseMaterial"]; ?></h4>
     <div style="width: 100%;">
 	<ul>
 	    <?php foreach ($activity->support as $ass) { ?>
-		<li style="width: 95%; height: 50px; font-size: 30px; line-height: 50px; text-align: center; background-color: rgba(255, 255, 255, 0.25); border-radius: 10px; margin-bottom: 10px; margin-left: 2.5%; list-style-type: none;">
+		<li>
 		    <a
 			<?php if ($ass["type"] == 0) { ?>
 			    href="index.php?p=<?=$ass["position"]; ?>&amp;a=<?=$ass["type"]; ?>&amp;b=<?=$ass["id_support_asset"]; ?>"
@@ -14,17 +14,11 @@
 			<?php } else { ?>
 			    href="index.php?p=<?=$ass["position"]; ?>&amp;a=<?=$ass["id_activity"]; ?>"
 			<?php } ?>
-			style="color: black; text-decoration: none;" target="_blank"
+			target="_blank"
 		    >
-			<?php if (@strlen($ass["name"])) { ?>
-			    -
-			    <?php if ($ass["type"] == 3) echo $Dictionnary["Activity"]; ?>
-			    <?php if ($ass["type"] == 4) echo $Dictionnary["Module"]; ?>
-			    <?=$ass["name"]; ?>
-			    -
-			<?php } else { ?>
-			    - <?=$ass["codename"]; ?> -
-			<?php } ?>
+			<b><?=$Dictionnary[["SupportAsset", "SupportSection", "SupportCategory", "Activity", "Module"][$ass["type"]]]; ?></b>
+			:
+			<?=$ass[@strlen($ass["name"]) ? "name" : "codename"]; ?>
 		    </a>
 		</li>
 	    <?php } ?>

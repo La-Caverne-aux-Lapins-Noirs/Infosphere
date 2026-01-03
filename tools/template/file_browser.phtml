@@ -61,9 +61,13 @@ $entries = [];
 		    <?php $this_field = "path".$fbid.$language.pathinfo($content, PATHINFO_BASENAME); ?>
 		    <input type="hidden" name="path" id="<?=$this_field; ?>" value="" />
 		    <input type="button" onclick="
-                        document.getElementById('<?=$this_field; ?>').value = document.getElementById('path<?=$fbid.$language; ?>').value;
-			silent_submit(this, '<?=$fbid.$language; ?>');" value="&#10007;
-				 " />
+			if (ShiftPressed || window.confirm()) {
+                            document.getElementById('<?=$this_field; ?>').value = document.getElementById('path<?=$fbid.$language; ?>').value;
+			    silent_submit(this, '<?=$fbid.$language; ?>');
+			}
+			"
+			value="&#10007;"
+		    />
 		</form>
 	    <?php } ?>
 	    <div class="filename" style="z-index: 2;"><?=pathinfo($content, PATHINFO_BASENAME); ?><?=is_dir($content) ? "/" : ""; ?></div>

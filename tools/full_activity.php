@@ -32,7 +32,12 @@ function sort_per_date($a, $b)
 	return (strcmp($a["codename"], $b["codename"]));
     return ($aa - $bb);
 }
- 
+
+function sort_per_chapter($a, $b)
+{
+    return ($a["chapter"] - $b["chapter"]);
+}
+
 $LoadedActivity = [];
 
 class FullActivity extends Response
@@ -87,7 +92,7 @@ class FullActivity extends Response
     public $grade_c = 60;
     public $grade_d = 50;
     public $grade_bonus = 75;
-	public $bonus_grade_a = 0;
+    public $bonus_grade_a = 0;
     public $bonus_grade_b = 0;
     public $bonus_grade_c = 0;
     public $bonus_grade_d = 0;
@@ -105,6 +110,9 @@ class FullActivity extends Response
     const MANDATORY_SUBSCRIPTION = 1;
     const AUTOMATIC_SUBSCRIPTION = 2;
     public $subscription = FullActivity::MANUAL_SUBSCRIPTION;
+
+    // Choses à changer sur l'activité
+    public $todolist = "";
 
     public $slot_duration = -1;
     public $estimated_work_duration = 0;
@@ -296,7 +304,7 @@ class FullActivity extends Response
 	    "maximum_subscription", "validation", "repository_name",
 
 	     "grade_a", "grade_b", "grade_c", "grade_d", "grade_bonus", "declaration_type",
-	    "credit_a", "credit_b", "credit_c", "credit_d",
+	    "credit_a", "credit_b", "credit_c", "credit_d", "todolist",
 	];
 		
 	foreach ($LanguageList as $k => $v)
@@ -408,14 +416,25 @@ class FullActivity extends Response
 	    if ($data["support_template"] && !$asupport)
 		$this->support = array_merge($this->support, fetch_activity_support($this->id_template));
 	}
+	
 
 	// ON A UNE ACTIVITE DE REFERENCE
 	if ($this->reference_activity != -1)
 	{
 	    // L'activité de référence pourra etre enrichie ensuite sur les médailles,
 	    // les professeurs et les supports de cours... mais pas sur les équipes.
-	    $this->reference_codename = db_select_one("codename, type, {$Language}_name as name FROM activity WHERE id = $this->reference_activity");
+	    $this->reference_codename = db_select_one("codename, type, id_template, {$Language}_name as name FROM activity WHERE id = $this->reference_activity");
 	    $this->reference_name = $this->reference_codename["name"];
+	    // Si on a toujours pas de nom, c'est probablement qu'il doit être a tiré du modele
+	    if ($this->reference_name == "")
+	    {
+		$rcodename = db_select_one("
+		  codename, type, {$Language}_name as name
+		  FROM activity
+		  WHERE id = ".$this->reference_codename["id_template"]."
+		  ");
+		$this->reference_name = $rcodename["name"];
+	    }
 	    if ($this->name == "" || $this->name == NULL)
 	    {
 		if ($this->type == DAILY)
@@ -480,6 +499,8 @@ class FullActivity extends Response
 	foreach ($this->medal as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 	foreach ($this->teacher as &$md) if (!isset($md["ref"])) $md["ref"] = false;
 	foreach ($this->support as &$md) if (!isset($md["ref"])) $md["ref"] = false;
+
+	usort($this->support, "sort_per_chapter");
 
 	if (array_search("activity_cycle", $blist) === false)
 	    $this->cycle = fetch_link("activity", "cycle", $data["id"], true, ["name"], "", "")->value;

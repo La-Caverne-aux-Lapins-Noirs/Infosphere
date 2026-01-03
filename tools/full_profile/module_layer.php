@@ -263,7 +263,7 @@ class ModuleLayer extends Layer
 	    if (array_search("activity_presence", $blist) === false)
 	    {
 		// Presence et absences
-		if ($sub->registered && $activity->unique_session != NULL)
+		if ($sub->registered && $activity->user_team && $activity->unique_session != NULL)
 		{
 		    if ($activity->unique_session->end_date != NULL &&
 			date_to_timestamp($activity->unique_session->end_date) < time())

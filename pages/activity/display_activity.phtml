@@ -11,7 +11,7 @@ $js = "silent_submit(this)";
 ?>
 <table id="down_edit_formular">
     <tr>
-	<td colspan="2"><div>
+	<td colspan="2"><div class="final_box">
 	    <input type="text" readonly style="width: 100%; text-align: center;"
 		   <?php if ($module->id_template == -1) { ?>
 		   value="<?=$Dictionnary["NoTemplate"]; ?>"
@@ -208,7 +208,7 @@ $js = "silent_submit(this)";
 	    <br />
 
 	</div></td>
-	<td colspan="2"><div class="box_of_centered_div" id="medal_box">
+	<td colspan="2"><div class="box_of_centered_div final_box" id="medal_box">
 	    <?php require_once ("display_medal.phtml"); ?>
 	</div></td>
 	<td colspan="2">
@@ -230,7 +230,20 @@ $js = "silent_submit(this)";
 		    value="&#10007;"
 		/>
 	    </form>
-	    <div>
+	    <div class="final_box">
+
+		<form
+		    action="/api/activity/<?=$module->id; ?>/todolist"
+		    method="put"
+		    style="height; 120px;"
+		>
+		    <textarea
+			name="todolist"
+			id="todolist"
+			oninput="delay_before_submit(1000, this, 'todolist');"
+			style="width: calc(100% - 0px); margin: 0; height: 100px; resize: none;"
+		    ><?=strlen(@$module->todolist) ? $module->todolist : ""; ?></textarea>
+		</form>
 
 		<?php list_of_links([
 		    "hook_name" => "activity",
@@ -339,7 +352,7 @@ $js = "silent_submit(this)";
 		</div>
 	    </td></tr></table>
 	</div></td>
-	<td colspan="2"><div>
+	<td colspan="2"><div class="final_box">
 	    <?php foreach ($LngList as $k => $v) { ?>
 		<?php // Pour l'intra ?>
 		<div class="activity_configuration_block basic_<?=$k; ?> basic">
@@ -445,7 +458,7 @@ $js = "silent_submit(this)";
 		<?php } ?>
 	    </div>
 	</div></td>
-	<td colspan="2"><div>
+	<td colspan="2"><div class="final_box">
 	    <?php foreach ($LngList as $k => $v) { ?>
 		<?php // Actions ?>
 		<div class="activity_configuration_block actions_<?=$k; ?>">

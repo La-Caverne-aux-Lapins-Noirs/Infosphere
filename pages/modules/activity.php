@@ -1,6 +1,6 @@
 <br />
 <table
-    class="module_tab"
+    class="module_tab activity_tab"
     <?php if ($act->current_wallpaper) { ?>
 	style="background-image: url('<?=$act->current_wallpaper; ?>');"
     <?php } ?>
@@ -76,21 +76,17 @@
 		/><br />
 	    <?php } ?>
 
-	    <?php
-	    $date_source = $act;
-	    require ("list_of_dates.php");
-	    ?>
+	    <p class="list_of_dates">
+		<?php
+		$date_source = $act;
+		require ("list_of_dates.php");
+		?>
+	    </p>
 	</td>
     </tr>
 
     <tr>
-	<td
-	    style="
-		   text-indent: 2em;
-		   text-align: justify;
-		   border-radius: 10px;
-		   background-color: rgba(255, 255, 255, 0.5);
-		   "
+	<td class="activity_description"
 	    <?php if (!count($act->medal)) { ?>
 		colspan="2"
 	    <?php } ?>

@@ -6,6 +6,35 @@ $alerts = "";
 
 ob_start();
 // Ici c'est les alertes.
+if ($wpronostic < 1.0)
+{
+    echo '<b style="color: red;">'.
+	 $Dictionnary["YourTimeInvestmentIsTooLow"].
+	 ".</b><br />"
+	 ;
+}
+
+if ($apronostic <= 0.5)
+{
+    echo '<b style="color: red;">'.
+	 $Dictionnary["YouAreAbsentTooOften"].
+	 ".</b><br />"
+	 ;
+}
+if ($mpronostic <= 0.5)
+{
+    echo '<b style="color: red;">'.
+	 $Dictionnary["YouSeemToHaveDifficulties"].
+	 ".</b><br />"
+	 ;
+}
+if (rand(0, 1000) == 500)
+{
+    echo '<b style="color: red;">'.
+	 $Dictionnary["AlertJoke"][rand(0, count($Dictionnary["AlertJoke"]) - 1)].
+	 ".</b><br />"
+	 ;
+}
 if ($User["greatest_cycle"] != -1)
 {
     $cyc = $User["greatest_cycle_data"]["id_cycle"];
@@ -35,7 +64,7 @@ if ($User["greatest_cycle"] != -1)
 	echo '<b style="color: red;">'.
 	     $Dictionnary["NotEnoughCredits"]." ".
 	     "($creds/{$cycle["objective"]})".
-	     "</b><br />"
+	     ".</b><br />"
 	     ;
 }
 

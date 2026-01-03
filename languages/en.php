@@ -5,5 +5,6 @@ $Dictionnary = [
     "" => "",
     "no_room" => "No room",
     "Empty" => "Empty",
+    "GenerateContract" => "Generate contract",
 ];
 

@@ -124,6 +124,10 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "PickupActivity",
 	],
+	"todolist" => [
+	    "is_teacher_for_activity",
+	    "EditTodoList",
+	],
     ],
     "DELETE" => [
 	"" => [

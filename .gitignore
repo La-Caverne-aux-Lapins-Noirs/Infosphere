@@ -15,5 +15,7 @@ dres/school/*
 dres/support/*
 dres/trash/*
 dres/users/*
+dres/doc/*
+dres/book/*
 dres/.git
 dres/.gitignore

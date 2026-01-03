@@ -1,9 +1,14 @@
 <?php foreach ($mdatas as $year => $matters) { ?>
     
-    <h3 style="border-top: 1px solid gray; padding-top: 5px; position: relative;">
+    <h3 style="
+	       border-top: 1px solid gray;
+	       padding-top: 5px;
+	       position: relative;"
+    >
 	<?php $dd = explode("/", $year); ?>
 	<?=$Dictionnary["ManagedActivities"]; ?> <?=$dd[1]."/".$dd[0]; ?>
-	<br /><br />
+	<br />
+	<span style="font-size: small"></span>
 	<input
 	    id="menu_managed<?=$year; ?>_button"
 	    type="button"
@@ -11,7 +16,6 @@
 	    class="rollbutton"
 	    value="+"
 	/>
-	<span style="font-size: small"></span>
 	<script>
 	 var tmp = localStorage.getItem('menu_managed<?=$year; ?>');
 	 document.getElementById('menu_managed<?=$year; ?>_button').value
@@ -21,6 +25,7 @@
     </h3>
     
     <ul id="menu_managed<?=$year; ?>">
+	<br />
 	<?php
 	$sorted_matters = $matters;
 	usort($sorted_matters, "sort_by_codename");
@@ -29,9 +34,11 @@
 	    <li>
 		<a onclick="display_panel('module', <?=$matter->id; ?>);" style="cursor: pointer;">
 		    <div class="module_link" id="module_link<?=$matter->id; ?>">
-			<h4>
-			    <?=$matter->codename; ?>:
-			    <?=$matter->fr_name; ?>
+			<h4 style="width: 70%;">
+			    <?=$matter->fr_name ?: "<span style=\"color: lightgray;\">".$Dictionnary["ActivityWithNoName"]."</span>"; ?>
+			</h4>
+			<h4 class="flammes" style="font-weight: bold; color: white; font-size: xx-small; color: lightgray;">
+			    (<?=$matter->codename; ?>)
 			</h4>
 		    </div>
 		</a>

@@ -95,6 +95,15 @@ function RegeneratePassword($id, $data, $method, $output, $module)
     ]));
 }
 
+function GenerateScolarityContract($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if ($id == -1)
+	bad_request();
+    $user = fetch_user($id);
+}
+
 function SetUserProperties($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -450,6 +459,10 @@ $Tab = [
 	"new_password" => [
 	    "is_me_or_admin",
 	    "RegeneratePassword"
+	],
+	"new_contract" => [
+	    "only_admin",
+	    "GenerateScolarityContract",
 	],
 	"properties" => [
 	    "is_me_or_my_director",

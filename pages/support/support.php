@@ -12,7 +12,7 @@
 <table class="submenu" style="height: 100%;">
     <tr class="submenutr">
 	<td class="submenutd" style="
-		   <?php if (is_teacher()) { ?>
+		   <?php if (1 || is_teacher()) { // Toujours grand ?>
 		   width: 420px;
 		   <?php } else { ?>
 		   width: 220px;
