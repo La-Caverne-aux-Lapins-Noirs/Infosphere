@@ -15,7 +15,7 @@ function DisplayBooks($id, $data, $method, $output, $module)
     if (count($books) == 0)
 	echo $Dictionnary["NoBook"];
     else
-	require ("./pages/$module/table_content.php");
+	require ("./pages/$module/booktable.php");
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
