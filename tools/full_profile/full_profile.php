@@ -172,13 +172,13 @@ class FullProfile extends Layer
 		$mod->bonus_grade_bonus
 	    ;
 	    $mod->grade = 0;
-	    if ($acquired_medal + $full_bonus > $mod->grade_d)
+	    if ($acquired_medal + $full_bonus >= $mod->grade_d)
 		$mod->grade = 1;
-	    if ($acquired_medal + $full_bonus > $mod->grade_c)
+	    if ($acquired_medal + $full_bonus >= $mod->grade_c)
 		$mod->grade = 2;
-	    if ($acquired_medal + $full_bonus > $mod->grade_b)
+	    if ($acquired_medal + $full_bonus >= $mod->grade_b)
 		$mod->grade = 3;
-	    if ($acquired_medal + $full_bonus > $mod->grade_a)
+	    if ($acquired_medal + $full_bonus >= $mod->grade_a)
 		$mod->grade = 4;
 	}
 
@@ -412,7 +412,7 @@ class FullProfile extends Layer
 		foreach ($fields as $label)
 		    $l->$label = $cycle[$label];
 		$l->id = $cycle["id_cycle"];
-		if ($l->commentaries != NULL)
+		if ($l->commentaries !== NULL)
 		    $l->commentaries = $l->commentaries["content"];
 		else
 		    $l->commentaries = "";

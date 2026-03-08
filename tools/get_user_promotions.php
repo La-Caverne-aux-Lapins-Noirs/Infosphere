@@ -22,6 +22,7 @@ function get_user_promotions(array &$usr, $by_name = false)
     $forge = "
         cycle.id as id_cycle,
         cycle.{$Language}_name as name,
+	user_cycle.commentaries,
         cycle.*,
         user_cycle.hidden as hidden,
         user_cycle.cursus as cursus,

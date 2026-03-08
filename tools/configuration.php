@@ -176,9 +176,16 @@ class CConfiguration
 	}
 	if (!is_dir($this->MedalsDir(".ressources")))
 	    new_directory($this->MedalsDir(".ressources"));
-	$tmp = db_select_all("* FROM configuration");
-	foreach ($tmp as $v)
-	    $this->Properties[$v["codename"]] = $v["value"];
+	$prop = [];
+	$this->Properties = db_select_all("* FROM configuration", "codename");
+	foreach ($this->Properties as $i => $v)
+	{
+	    if ($v["secured"])
+		$prop[$v["codename"]] = unsecure_data($v["value"]);
+	    else
+		$prop[$v["codename"]] = $v["value"];
+	}
+	$this->Properties = $prop;
     }
 }
 

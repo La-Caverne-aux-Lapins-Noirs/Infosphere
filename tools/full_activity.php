@@ -428,12 +428,14 @@ class FullActivity extends Response
 	    // Si on a toujours pas de nom, c'est probablement qu'il doit être a tiré du modele
 	    if ($this->reference_name == "")
 	    {
-		$rcodename = db_select_one("
+		if (($rcodename = db_select_one("
 		  codename, type, {$Language}_name as name
 		  FROM activity
 		  WHERE id = ".$this->reference_codename["id_template"]."
-		  ");
-		$this->reference_name = $rcodename["name"];
+		  ")) == NULL)
+		    $this->reference_name = $this->reference_codename["name"];
+		else
+		    $this->reference_name = $rcodename["name"];
 	    }
 	    if ($this->name == "" || $this->name == NULL)
 	    {

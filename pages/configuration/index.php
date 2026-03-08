@@ -82,23 +82,24 @@ if ($result != "")
 	    <?php } ?>
 	</table>
     </div>
-    <div style="width: 49%; float: left; margin-left: 2%; height: 49%;">
+    <div style="width: 49%; float: left; margin-left: 2%;">
 	<table class="content_table">
 	    <tr>
 		<th style="width: 50%;">#</th>
 		<th>Value</th>
 	    </tr>
-	    <?php foreach (db_select_all("* FROM configuration") as $v) { ?>
+	    <?php foreach ($Configuration->Properties as $k => $v) { ?>
 		<tr>
-		    <td><?=$v["codename"]; ?></td>
+		    <td><?=$k; ?></td>
 		    <td>
-			<?php if (strstr($v["codename"], "password") != null) { ?>
-			    <span class="hidden_mouse">
-			<?php } ?>
-			<?=$v["value"]; ?>
-			<?php if (strstr($v["codename"], "password") != null) { ?>
-			    </span>
-			<?php } ?>
+			<form action="api/configuration" method="put">
+			    <textarea
+				style="width: 100%; height: 100%;"
+				id="property_<?=$k; ?>"
+				name="<?=$k; ?>"
+				oninput="delay_before_submit(1000, this, 'property_<?=$k; ?>');"
+			    ><?=$v; ?></textarea>
+			</form>
 		    </td>
 		</tr>
 	    <?php } ?>

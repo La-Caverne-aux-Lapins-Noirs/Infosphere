@@ -48,7 +48,7 @@
     <?php } ?>
 </div>
 <?php if (is_admin()) { ?>
-    <form method="post" action="/api/book" class="admin">
+    <form method="post" action="/api/book" class="admin" onsubmit="<?=$js; ?>">
 	<input type="text" name="codename" placeholder="<?=$Dictionnary["CodeName"]; ?>" /><br />
 	<input type="text" name="name" placeholder="<?=$Dictionnary["Name"]; ?>" /><br />
 	<input type="text" name="author" placeholder="<?=$Dictionnary["Author"]; ?>" /><br />

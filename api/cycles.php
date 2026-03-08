@@ -137,7 +137,7 @@ function SetCycleTeacher($id, $data, $method, $output, $module)
 function SetUser($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
-    
+
     if ($id == -1 || $module != "cycle")
 	bad_request();
     if (($users = resolve_codename("user", $data["user"]))->is_error())
@@ -168,7 +168,9 @@ function SetUser($id, $data, $method, $output, $module)
 function SetUserProps($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
-    
+    global $Database;
+    global $User;
+
     if ($id == -1 || $module != "cycle")
 	bad_request();
     if (($users = resolve_codename("user", $data["user"]))->is_error())
@@ -186,6 +188,18 @@ function SetUserProps($id, $data, $method, $output, $module)
 	["id", "id_user", "id_cycle", "user", "action"]
     ))->is_error())
         return ($ret);
+
+    if (isset($data["commentaries"]))
+    {
+	$commentaries = strip_tags($data["commentaries"]);
+	$commentaries = $Database->real_escape_string($commentaries);
+	$author = $User["id"];
+	$now = db_form_date(now());
+	$Database->query("
+		INSERT INTO comment (id_user, id_misc, misc_type, content)
+		VALUES ($author, {$usrcyc["id"]}, 2, '$commentaries')
+	");
+    }
     
     $cycle = fetch_cycle($module, $id, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];

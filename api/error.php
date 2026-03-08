@@ -2,8 +2,8 @@
 
 function bad_request($msg = "")
 {
-    global $Database;
     global $Dictionnary;
+    global $Database;
 
     http_response_code(400);
     if ($msg != "")

@@ -373,18 +373,27 @@ function longhash($seed)
     return ($len);
 }
 
-function secure_data($data, $pass)
+function secure_data($data, $pass = NULL)
 {
+    global $Secured;
+    
+    if ($pass == NULL)
+	$pass = $Secured;
     $lhash = longhash($pass);
     $msg = openssl_encrypt(
 	$data, "blowfish", $pass, 0, "azertyui"
     );
-    return ($msg);
+    return (base64_encode($msg));
 }
 
-function unsecure_data($data, $pass)
+function unsecure_data($data, $pass = NULL)
 {
+    global $Secured;
+    
+    if ($pass == NULL)
+	$pass = $Secured;
     $lhash = longhash($pass);
+    $data = base64_decode($data);
     $msg = openssl_decrypt(
 	$data, "blowfish", $pass, 0, "azertyui"
     );
@@ -394,26 +403,35 @@ function unsecure_data($data, $pass)
 function secure_text($msg, $pass = "")
 {
     global $Database;
-
+    global $Secured;
+    
     $msg = strip_tags($msg);
     $msg = str_replace("\n", "<br />", trim($msg));
-    if ($pass != "")
-	$msg = openssl_encrypt(
-	    $msg, "blowfish", $pass, 0, "azertyui01234567"
-	);
+    if ($pass === "")
+	return ($Database->real_escape_string($msg));
+    if ($pass === NULL)
+	$pass = $Secured;
+    $msg = openssl_encrypt(
+	$msg, "blowfish", $pass, 0, "azertyui01234567"
+    );
     $msg = $Database->real_escape_string($msg);
     return ($msg);
 }
 
-function get_secured_text($msg, $cipher = "")
+function get_secured_text($msg, $pass = "")
 {
-    if ($cipher != "")
-	$msg = openssl_decrypt(
-	    $msg,
-	    openssl_get_cipher_methods()[0],
-	    $cipher,
-	    0, "azertyui01234567"
-	);
+    global $Secured;
+
+    if ($pass === "")
+	return ($msg);
+    if ($pass === NULL)
+	$pass = $Secured;
+    $msg = openssl_decrypt(
+	$msg,
+	openssl_get_cipher_methods()[0],
+	$pass,
+	0, "azertyui01234567"
+    );
     return ($msg);
 }
 

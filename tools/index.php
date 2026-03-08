@@ -190,5 +190,7 @@ require_once ("declare_presence.php");
 require_once ("collect_dashboard_activities.php");
 require_once ("collect_dashboard_matters.php");
 require_once ("collect_dashboard_projects.php");
+require_once ("run_command.php");
+require_once ("ping_hand.php");
 // @codeCoverageIgnoreEnd
 

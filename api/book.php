@@ -19,6 +19,28 @@ function DisplayBooks($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+function AddBook($id, $data, $method, $output, $module)
+{
+    global $Database;
+    global $Dictionnary;
+
+    unset($data["action"]);
+    if (count($data) != 4)
+	forbidden();
+    foreach (["name", "author", "edition"] as $f)
+	$data[$f] = strip_tags($data[$f]);
+    if (($ret = try_insert("book", $data["codename"], [
+	"name" => $data["name"],
+	"author" => $data["author"],
+	"edition" => $data["edition"],
+    ]))->is_error())
+        return ($ret);
+    //
+    $ret = DisplayBooks(-1, [], "GET", $output, $module);
+    $ret->value["msg"] = $Dictionnary["Added"];
+    return ($ret);
+}
+
 function EditBook($id, $data, $method, $output, $module)
 {
     global $Database;

@@ -20,12 +20,12 @@
 	<?php foreach ($schools as $sc) { ?>
 	    <img
 		src="<?=$sc["picture"]; ?>"
-		style="width: 100px; height: 100px; position: relative; top: -30px; left: calc(-40% + <?=$x; ?>px - 20px);"
+		style="height: 100px; position: absolute; top: 8px; left: 25px;"
 	    />
 	    <?php $x += 110; ?>
 	<?php } ?>
 	<?php $x += 10; ?>
-	<p style="width: calc(100% - 200px); position: absolute; left: <?=$x; ?>px; top: 15px; height: calc(100% - 20px); text-align: left;">
+	<p style="width: 500px; position: absolute; right: 50px; top: 10px; height: calc(100% - 20px); text-align: right;">
 	    <?php foreach ($schools as $sc) { ?>
 		<b><?=$Dictionnary["School"]; ?> <?=$sc["name"]; ?></b><br />
 		<?=str_replace("\n", "<br />", $sc["address"]); ?>
@@ -44,15 +44,23 @@
 		    <?=ucfirst($user->first_name); ?> <?=strtoupper($user->family_name); ?>
 		</div>
 	    </div>
-
 	    <div>
+		<div style="width: 50%; font-weight: bold; float: left;">
+		    Numéro étudiant
+		</div>
+		<div style="width: 50%; float: left;">
+		    <?="94000".sprintf("%05s", $user->id); ?>
+		</div>
+	    </div>
+
+	    <!--div>
 		<div style="width: 50%; font-weight: bold; float: left;">
 		    <?=$Dictionnary["WithdrawnDate"]; ?>:
 		</div>
 		<div style="width: 50%; float: left;">
 		    <?=date("d/m/Y", time()); ?>
 		</div>
-	    </div>
+	    </div-->
 	</div>
 
 	<div style="width: 50%; float: left;">

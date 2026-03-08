@@ -53,11 +53,17 @@ foreach ($curcycle as $module) {
 	    <?php } ?>
 	    <br /><br />
     </p>
-</td><td>
-    
-</td><td>
     <?php if (is_admin()) { ?>
-	<?php
+</td><td>
+    <?php } else { ?>
+</td><td colspan="2">
+    <?php } ?>
+    <div style="width: 100%; height: 100px; overflow: auto;">
+	<?=$cyc->commentaries; ?>
+    </div>
+    <?php if (is_admin()) { ?>
+</td><td>
+    <?php
 	$modules = [];
 	foreach ($curcycle as $module)
 	    $modules[] = $module->id;
@@ -128,6 +134,8 @@ $neutral = "255, 255, 255, 0.0";
     </td>
     <?php if ($module->validation != FullActivity::GRADE_VALIDATION) { ?>
 	<td rowspan="2">
+	    <?=@$module->full_activity->commentaries; ?>
+	    <?=@$module->full_activity->user_commentaries["content"]; ?>
 	    <div class="full_size_table" style="overflow-y: auto; height: 250px; scrollbar-width: 5px;">
 		<?php foreach (sort_by_medal_grade($module->medal, true) as $medal) { ?>
 		    <?php

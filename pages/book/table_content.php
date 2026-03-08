@@ -18,6 +18,7 @@ silent_submitf(this.parentNode, {
 	<th><?=$Dictionnary["Availability"]; ?></th>
 	<th><?=$Dictionnary["Status"]; ?></th>
     </tr>
+    <?php $i = 0; ?>
     <?php foreach ($books as $book) { ?>
 	<?php
 	$status = db_select_all("
@@ -30,7 +31,7 @@ silent_submitf(this.parentNode, {
 	    if ($s["status"] == 2 || $s["status"] == 1)
 		$available -= 1;
 	?>
-	<tr>
+	<tr style="background-color: rgba(255, 255, 255, <?=$i++ % 2 ? 0.3 : 0; ?>);">
 	    <td>
 		<?=$book["codename"]; ?>
 	    </td>
@@ -39,13 +40,13 @@ silent_submitf(this.parentNode, {
 		$pdf = $Configuration->BookDir($book["codename"]);
 		if (file_exists($pdf)) { ?>
 		    <a href="<?=$pdf; ?>">
-			<?=$book["name"]; ?>
+			<b><?=$book["name"]; ?></b>
 		    </a>
 		<?php } else { ?>
-		    <?=$book["name"]; ?>
+		    <b><?=$book["name"]; ?></b>
 		<?php } ?>
 	    </td>
-	    <td><?=$book["authors"]; ?></td>
+	    <td><?=$book["author"]; ?></td>
 	    <td><?=$book["edition"]; ?></td>
 	    <td><?=$available; ?> / <?=$book["nbr"]; ?></td>
 	    <td>
