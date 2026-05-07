@@ -1,0 +1,73 @@
+<input
+    type="text"
+	  pattern="[0-9]{5}"
+	  name="postal_code"
+	  placeholder="<?=$Dictionnary["PostalCode"]; ?>"
+	  <?=pf("postal_code"); ?>
+    required
+/>
+<br />
+
+<select name="current_class">
+    <?php if ($Language == "fr") { ?>
+	<option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
+	<option value="0" default>Terminale</option>
+	<option value="-1">Premi&egrave;re</option>
+	<option value="-2">Seconde</option>
+	<option value="9">En reconversion</option>
+	<option value="1">Bac+1</option>
+	<option value="2">Bac+2</option>
+	<option value="3">Bac+3</option>
+	<option value="4">Bac+4</option>
+	<option value="5">Bac+5</option>
+	<option value="6">Bac+6</option>
+	<option value="7">Bac+7</option>
+	<option value="8">Bac+8</option>
+	<option value="-3">3ème</option>
+	<option value="-4">4ème</option>
+	<option value="-5">5ème</option>
+	<option value="-6">6ème</option>
+	<option value="-7">CM2</option>
+	<option value="-8">CM1</option>
+	<option value="-9">Autre</option>
+    <?php } ?>
+</select>
+<br />
+<select name="target_class">
+    <option value=""><?=$Dictionnary["TargetedClass"]; ?></option>
+    <option value="1"><?=$Dictionnary["Year"]; ?> 1</option>
+    <option value="2"><?=$Dictionnary["Year"]; ?> 2</option>
+    <option value="3"><?=$Dictionnary["Year"]; ?> 3</option>
+    <option value="4"><?=$Dictionnary["Year"]; ?> 4</option>
+    <option value="5"><?=$Dictionnary["Year"]; ?> 5</option>
+    <option value="6"><?=$Dictionnary["ShortTraining"]; ?></option>
+    <option value="7"><?=$Dictionnary["LongTraining"]; ?></option>
+</select>
+<br />
+<select name="target_entry">
+    <option value=""><?=$Dictionnary["TargetedEntry"]; ?></option>
+    <option value="0"><?=$Dictionnary["EndOfSeptember"]; ?></option>
+    <option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
+    <option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
+</select>
+
+<textarea readonly
+	  style="resize: none;
+		 height: 100px;
+		 font-size: small;
+		 line-height: 1em;
+		 text-align: justify;
+		 "
+><?php require ("privacy.txt"); ?>
+<?php require ("rules.txt"); ?></textarea>
+<br />
+<input
+    name="accept_privacy"
+	  type="checkbox"
+	  <?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
+    required
+/>
+<label for="accept_privacy"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
+<br />
+
+<input type="submit" value="<?=$Dictionnary["Send"]; ?>" />

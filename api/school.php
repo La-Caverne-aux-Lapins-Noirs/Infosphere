@@ -44,20 +44,19 @@ function DeleteSchool($id, $data, $method, $output, $module)
     return ($ret);
 }
 
-function SetDirector($id, $data, $method, $output, $module)
+function SetRole($id, $data, $role)
 {
     global $Dictionnary;
 
-    if ($id == -1)
-	bad_request();
     $params = [
-	"left_value" => $data["director"],
+	"left_value" => $data[$role],
 	"right_value" => $id,
 	"left_field_name" => "user",
 	"right_field_name" => "school",
 	"properties" => [
-	    "authority" => 1
-	]
+	    "authority" => strtoupper($role)
+	],
+	"allow_duplicate" => true
     ];
     if (($ret = handle_linksf($params))->is_error())
 	return ($ret);
@@ -69,13 +68,48 @@ function SetDirector($id, $data, $method, $output, $module)
 	    "hook_id" => $id,
 	    "linked_name" => [
 		"table" => "user",
-		"name" => "director",
-		"placeholder" => "Director",
-		"" => "director",
+		"name" => $role,
+		"placeholder" => ucfirst($role),
+		"" => $role,
 	    ],
-	    "linked_elems" => $school["director"],
+	    "linked_elems" => $school[$role],
 	    "admin_func" => "only_admin",
     ])]));
+}
+
+function SetDirector($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (SetRole($id, $data, "director"));
+}
+
+function SetCommercial($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (SetRole($id, $data, "commercial"));
+}
+
+function SetLibrarian($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (SetRole($id, $data, "librarian"));
+}
+
+function SetTeacher($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (SetRole($id, $data, "teacher"));
+}
+
+function SetSecretariat($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (SetRole($id, $data, "secretariat"));
 }
 
 function SetStudent($id, $data, $method, $output, $module)
@@ -145,12 +179,28 @@ $Tab = [
 	    "only_admin",
 	    "SetDirector"
 	],
-	"user" => [
+	"commercial" => [
 	    "is_director_for_school",
+	    "SetCommercial",
+	],
+	"librarian" => [
+	    "is_director_for_school",
+	    "SetLibrarian",
+	],
+	"teacher" => [
+	    "is_director_for_school",
+	    "SetTeacher",
+	],
+	"secretariat" => [
+	    "is_director_for_school",
+	    "SetSecretariat",
+	],
+	"user" => [
+	    ["is_director_for_school", "is_commercial_for_school", "is_secretariat_for_school"],
 	    "SetStudent",
 	],
 	"cycle" => [
-	    "is_director_for_school",
+	    ["is_director_for_school", "is_teacher_for_school"],
 	    "SetCycle",
 	]
     ],
@@ -165,8 +215,24 @@ $Tab = [
 	    "only_admin",
 	    "DeleteSchool"
 	],
-	"user" => [
+	"commercial" => [
 	    "is_director_for_school",
+	    "SetCommercial",
+	],
+	"librarian" => [
+	    "is_director_for_school",
+	    "SetLibrarian",
+	],
+	"teacher" => [
+	    "is_director_for_school",
+	    "SetTeacher",
+	],
+	"secretariat" => [
+	    "is_director_for_school",
+	    "SetSecretariat",
+	],
+	"user" => [
+	    ["is_director_for_school", "is_commercial_for_school", "is_secretariat_for_school"],
 	    "SetStudent"
 	],
 	"director" => [
@@ -174,7 +240,7 @@ $Tab = [
 	    "SetDirector"
 	],
 	"cycle" => [
-	    "is_director_for_school",
+	    ["is_director_for_school", "is_teacher_for_school"],
 	    "SetCycle",
 	]
     ]

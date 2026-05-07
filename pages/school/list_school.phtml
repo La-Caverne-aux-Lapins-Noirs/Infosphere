@@ -1,7 +1,7 @@
 <table class="content_table">
     <?php require ("head_school.phtml"); ?>
     <?php if (count($school = fetch_school()) == 0) { ?>
-	<tr><td colspan="4"><?=$Dictionnary["NoSchool"]; ?></td></tr>
+	<tr><td colspan="10"><?=$Dictionnary["NoSchool"]; ?></td></tr>
     <?php } else { ?>
 	<?php $cnt = 0; ?>
 	<?php foreach ($school as $content) { ?>

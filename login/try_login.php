@@ -19,7 +19,7 @@ if (isset($_POST["logaction"]))
 	set_cookie("log_as", "", time() - 1);
 	unset($_COOKIE["log_as"]);
     }
-    // On veut s'inscrire
+    // On veut s'inscrire - ou inscrire un prospect
     else if ($_POST["logaction"] == "subscribe" || $_POST["logaction"] == "conv_subscribe")
     {
 	if (!isset($_POST["login"]))
@@ -37,29 +37,24 @@ if (isset($_POST["logaction"]))
 		$_POST["login"] = "$first_name.$family_name";
 	    }
 	}
-	if (!isset($_POST["mail"]) || !isset($_POST["repeat_mail"]))
+	if (!isset($_POST["mail"]))
 	{
 	    $Msg = new ErrorResponse("MissingField", "mail");
 	    $Position = "Subscribe";
 	    goto TLEnd;
 	}
-	else if ($_POST["mail"] != $_POST["repeat_mail"])
-	{
-	    $Msg = new ErrorResponse("InvalidMailRepeat");
-	    $Position = "Subscribe";
-	    goto TLEnd;
-	}
-	unset($_POST["repeat_mail"]);
-
 	if (!isset($_POST["password"]))
 	    $_POST["password"] = $_POST["repeat_password"] = NULL;
 
 	/// On accepte de s'inscrire sur l'Infosphere
-	if (isset($_POST["accept_rules"]))
+	if (isset($_POST["accept_rules"]) || isset($_POST["accept_privacy"]))
 	{
 	    unset($_POST["accept_rules"]);
+	    unset($_POST["accept_privacy"]);
+
+	    $fake = $_POST["logaction"] == "conv_subscribe";
 	    if (($Msg = try_subscribe(
-		$_POST["login"], $_POST["mail"], $_POST["password"], $_POST["repeat_password"])
+		$_POST["login"], $_POST["mail"], $_POST["password"], $_POST["repeat_password"], $fake)
 	    )->is_error())
 	    // Si l'inscription a échoué, on retourne a la page d'inscription.
 	    {
@@ -71,36 +66,29 @@ if (isset($_POST["logaction"]))
 		$_POST["id"] = $Msg->value["id"];
 	    set_cookie("log_as", "", time() - 1);
 	    unset($_COOKIE["log_as"]);
-	}
-	else if ($_POST["logaction"] == "subscribe")
-	    $Msg = new ErrorResponse("MissingField", "accept_rules");
-
-	if (isset($_POST["accept_privacy"]) && $_POST["logaction"] == "conv_subscribe")
-	{
-	    $_POST["codename"] = $_POST["login"];
-	    unset($_POST["login"]);
-	    unset($_POST["accept_privacy"]);
-	    unset($_POST["logaction"]);
-	    unset($_POST["repeat_password"]);
-	    if (($Msg = set_user_data(-1, $_POST, [], true, true))->is_error())
+	    $LogMsg = "ProspectAdded";
+	    if ($_POST["logaction"] == "conv_subscribe")
 	    {
-		$PreviousPosition = $Position;
-		$Position = "Subscribe";
-		goto TLEnd;
-	    }
-	    else
-	    {
-		$Convention = true;
-		$LogMsg = "DataStored";
-		$_POST = [];
+		$edits = [];
+		foreach ([
+		    "postal_code", "current_class",
+		    "target_class", "target_entry",
+		    "first_name", "family_name",
+		    "phone",
+		] as $f)
+		    $edits[$f] = $_POST[$f];
+		set_user_data($_POST["id"], $edits);
+		$Msg = new ValueResponse($User);
 	    }
 	}
 	else
-	    $Msg = new ErrorResponse("MissingField", "accept_privacy");
+	    $Msg = new ErrorResponse("MissingField", "accept_rules or accept_privacy");
+
 	set_cookie("login", "", time() - 1);
 	set_cookie("password", "", time() - 1);
 	set_cookie("log_as", "", time() - 1);
 	unset($_COOKIE["log_as"]);
+	unset($_POST);
     }
 }
 // Peut-être qu'on est déjà connecté?

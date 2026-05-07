@@ -28,7 +28,7 @@ function get_user_school(array &$usr, $by_name = false)
 
     $usr["school_authority"] = 0;
     foreach ($usr["school"] as $school)
-	if ($school["authority"] == 1)
+	if ($school["authority"] != "STUDENT")
 	    $usr["school_authority"] = 1;
 
     // TEMPORAIRE

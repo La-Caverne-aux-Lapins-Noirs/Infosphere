@@ -99,7 +99,7 @@ function handle_links(
 	    }
 
 	    if ($neg)
-		$msg = remove_link($l, $r, $tleft, $tright, $strict, $table_name, $fleft, $fright);
+		$msg = remove_link($l, $r, $tleft, $tright, $strict, $table_name, $fleft, $fright, $props, $allow_duplicate);
 	    else
 		$msg = add_link($l, $r, $tleft, $tright, $strict, $props, $table_name, $allow_duplicate, $fleft, $fright, $no_deleted);
 	    if ($msg->is_error())

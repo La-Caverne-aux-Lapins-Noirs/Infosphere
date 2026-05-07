@@ -1,0 +1,207 @@
+
+table input
+{
+    width: calc(100% - 20px);
+}
+
+.action_div
+{
+    border: 1px solid black;
+    border-radius: 10px;
+
+    min-height: 40px;
+    max-height: 40px;
+    /* overflow: hidden; */
+
+    /* transition: max-height 0.3s ease-in-out; */
+
+    padding: 0;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.actions
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: calc(100% - 210px);
+    min-height: 40px;
+    box-sizing: border-box;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.action_edit
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    width: 200px;
+    margin-left: auto;
+
+    box-sizing: border-box;
+}
+
+.copyable
+{
+    cursor: pointer;
+}
+
+.action
+{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: 30px;
+    width: 30px;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    background-color: transparent !important;
+    border: 0 !important;
+    background-size: contain;
+}
+
+.action::after
+{
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  font-size: 14px;
+}
+
+.action:hover::after
+{
+    opacity: 1;
+}
+
+.action_edit > button
+{
+    width: 200px;
+    height: 40px;
+
+    border: 1px solid black;
+    background: black;
+    cursor: pointer;
+
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.action_menu
+{
+    width: 200px;
+
+    border: 1px solid black;
+    background: white;
+
+    margin-top: 2px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.action_menu.hidden
+{
+    display: none;
+}
+
+.action_menu form
+{
+    display: block;
+    margin: 0;
+}
+
+.action_menu input[type="text"],
+.action_menu textarea,
+.action_menu select
+{
+    width: calc(100% - 20px);
+    box-sizing: border-box;
+    margin-bottom: 6px;
+}
+
+.action_menu input[type="submit"],
+.action_menu input[type="button"],
+.action_menu button
+{
+    box-sizing: border-box;
+}
+
+.decision_buttons
+{
+    display: inline-block;
+}
+
+.decision_buttons input[type="button"],
+.decision_buttons input[type="submit"]
+{
+    width: 30px;
+    height: 20px;
+    cursor: pointer;
+    background-color: black;
+}
+
+.hidden_row
+{
+    display: none;
+}
+
+.sort_asc::after
+{
+    content: " ▲";
+}
+
+.sort_desc::after
+{
+    content: " ▼";
+}
+
+tr:nth-child(even)
+{
+    background-color: rgba(192, 192, 192, 0.5);
+}
+
+tr:nth-child(odd)
+{
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+th
+{
+    width: 120px;
+    font-size: small;
+}
+
+td
+{
+    text-align: center;
+    font-size: small;
+}
+
+.deleted
+{
+    opacity: 0.5;
+    display: none;
+}
+
+.deleted.visible
+{
+    display: table-row;
+}
+
+.dynamic_table_button
+{
+    width: 200px;
+}

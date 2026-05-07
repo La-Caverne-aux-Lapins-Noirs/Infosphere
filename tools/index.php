@@ -1,6 +1,7 @@
 <?php
 // @codeCoverageIgnoreStart
 @define("UNIT_TEST", 0);
+@define("INSTALLATION", 0);
 $LocalTest = false;
 $BaseDir = substr($_SERVER["PHP_SELF"], 0, 5);
 $BaseDir = ($BaseDir == "/api/" || $BaseDir == "/dres") ? "../" : "";
@@ -35,9 +36,25 @@ require_once ("debug.php");
 require_once ("same_day.php");
 require_once ("response.php");
 require_once ("database.php");
+require_once ("secure_data.php");
+require_once ("unsecure_data.php");
+require_once ("secure_text.php");
+require_once ("get_secured_text.php");
+require_once ("edit_secured_text.php");
+require_once ("longhash.php");
 require_once ("db_connect.php");
 require_once ("configuration.php");
-require_once ("authentication.php");
+
+require_once ("authentication/hash_method.php");
+require_once ("authentication/get_login_info.php");
+require_once ("authentication/get_user_public_data.php");
+require_once ("authentication/generate_password.php");
+require_once ("authentication/subscribe.php");
+require_once ("authentication/try_subscribe.php");
+require_once ("authentication/regenerate_password.php");
+require_once ("authentication/set_user_data.php");
+require_once ("authentication/set_user_attributes.php");
+
 require_once ("log.php");
 require_once ("send_mail.php");
 require_once ("utils.php");
@@ -53,6 +70,8 @@ require_once ("check_room_status.php");
 require_once ("get_user_promotions.php");
 require_once ("get_user_laboratories.php");
 require_once ("fetch_users.php");
+require_once ("fetch_prospects.php");
+require_once ("fetch_prospect.php");
 require_once ("split_symbols.php");
 require_once ("clickable.php");
 require_once ("resolve_codename.php");
@@ -192,5 +211,10 @@ require_once ("collect_dashboard_matters.php");
 require_once ("collect_dashboard_projects.php");
 require_once ("run_command.php");
 require_once ("ping_hand.php");
+require_once ("render_dynamic_table.php");
+require_once ("fetch_prospecting_actions.php");
+require_once ("score_color_table.php");
+require_once ("real_class_level.php");
+require_once ("format_phone_number.php");
 // @codeCoverageIgnoreEnd
 

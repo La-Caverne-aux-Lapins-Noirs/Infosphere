@@ -152,6 +152,10 @@ if (($type == "user" || $type == "users"))
 	{
 	    if (count($target) == 4 && $target[3] == "photo.png")
 		render_file();
+	    if (count($target) == 4 && $target[3] == "contract.pdf" && is_commercial())
+		render_file();
+	    if (count($target) == 4 && $target[3] == "contract.dab" && is_commercial())
+		render_file();
 	    get_user_school($User, true);
 	    if (!is_director_for_student($user))
 		forbidden();

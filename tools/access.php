@@ -361,7 +361,40 @@ function is_director_for_school($id)
     if (is_admin())
 	return (true);
     $id = $id == -1 ? "" : " AND id_school = $id ";
-    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 1 $id");
+    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'DIRECTOR' $id");
+    return ($match != NULL);
+}
+
+function is_secretariat_for_school($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    $id = $id == -1 ? "" : " AND id_school = $id ";
+    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'SECRETARIAT' $id");
+    return ($match != NULL);
+}
+
+function is_commercial_for_school($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    $id = $id == -1 ? "" : " AND id_school = $id ";
+    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'COMMERCIAL' $id");
+    return ($match != NULL);
+}
+
+function is_teacher_for_school($id)
+{
+    global $User;
+
+    if (is_admin())
+	return (true);
+    $id = $id == -1 ? "" : " AND id_school = $id ";
+    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'TEACHER' $id");
     return ($match != NULL);
 }
 
@@ -398,7 +431,11 @@ function is_director($id = -1)
     if ($id == -1)
 	$id = $User["id"];
     if ($User["id"] == $id)
+    {
+	if (!isset($User["school_authority"]))
+	    return (false);
 	return ($User["school_authority"] > 0);
+    }
     return (false);
     // Normalement devenu inutile
     return (db_select_one("
@@ -518,6 +555,29 @@ function is_member_of_laboratory($id_lab)
 function is_librarian($id = -1)
 {
     if (is_admin())
+	return (true);
+    if (is_director($id))
+	return (true);
+    //
+    return (false);
+}
+
+// L'adm au sens des étudiants
+function is_secretariat($id = -1)
+{
+    if (is_admin())
+	return (true);
+    if (is_director($id))
+	return (true);
+    //
+    return (false);
+}
+
+function is_commercial($id = -1)
+{
+    if (is_admin())
+	return (true);
+    if (is_director($id))
 	return (true);
     //
     return (false);

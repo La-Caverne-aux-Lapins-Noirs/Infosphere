@@ -133,6 +133,7 @@ $BottomMenu = [
     "RoomsMenu" => "./pages/room/",
     "RobotMenu" => "./pages/robot/",
     "DocMenu" => "./pages/docs/",
+    "ProspectingMenu" => "./pages/prospecting/",
     "ConfigMenu" => "./pages/configuration/",
     "TestMenu" => "./pages/test/",
 ];

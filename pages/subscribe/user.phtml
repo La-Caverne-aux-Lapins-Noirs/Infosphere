@@ -1,0 +1,28 @@
+<input
+    type="mail"
+    name="repeat_mail"
+    onchange="check_repeat(this, document.getElementById('mail'));"
+    placeholder="<?=$Dictionnary["RepeatMail"]; ?>"
+    value="<?=isset($_POST["repeat_mail"]) ? $_POST["repeat_mail"] : ""; ?>"
+/>
+<br />
+
+<textarea readonly
+	  style="resize: none;
+		 height: 100px;
+		 font-size: 1em;
+		 line-height: 1em;
+		 text-align: justify;
+		 "
+><?php require ("privacy.txt"); ?>
+<?php require ("rules.txt"); ?></textarea>
+<br />
+<input
+    name="accept_rules"
+	  type="checkbox"
+	  <?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
+/>
+<label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
+<br />
+
+<input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />

@@ -8,7 +8,9 @@ function remove_link(
     $strict = false,
     $table_name = "",
     $fleft = "",
-    $fright = ""
+    $fright = "",
+    $props = [],
+    $allow_duplicate = false
 )
 {
     global $Database;
@@ -37,9 +39,14 @@ function remove_link(
     if ($fright == "")
 	$fright = $table_right;
 
+    if ($props == [] || $allow_duplicate == false)
+	$props = "";
+    else
+	$props = " AND ( ".unroll($props, WHERE)." )";
+
     $check = $Database->query("
       SELECT id FROM $table_name
-      WHERE id_$fleft = $idleft AND id_$fright = $idright
+      WHERE id_$fleft = $idleft AND id_$fright = $idright $props
     ");
     if (!($check = $check->fetch_assoc()) || !isset($check["id"]))
     {
@@ -50,7 +57,7 @@ function remove_link(
 
     if ($Database->query("
         DELETE FROM $table_name
-        WHERE id_$fleft = $idleft AND id_$fright = $idright
+        WHERE id = ".$check["id"]."
     ") == false)
         return (new ErrorResponse("CannotEdit")); // @codeCoverageIgnore
     global $User;

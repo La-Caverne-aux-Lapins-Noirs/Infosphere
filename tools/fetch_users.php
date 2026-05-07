@@ -8,7 +8,7 @@ function fetch_users($attr = [], $id = -1)
 	$attr = [
 	    "id", "codename", "nickname", "first_name", "family_name",
 	    "authority", "registration_date", "cycle", "school", "user", "deleted",
-	    "source", "step", "last_contact", "password", "last_try"
+	    "password"
 	];
     if (!array_search("codename", $attr))
 	$attr[] = "codename";
@@ -26,7 +26,7 @@ function fetch_users($attr = [], $id = -1)
 	    $id = [$id];
     }
 
-    $select = " WHERE 1";
+    $select = " WHERE password != '' ";
     $select .= is_admin() ? "" : " AND authority != ".BANISHED." ";
     $select .= $id == -1  ? "" : " AND id IN (".implode(", ", $id).") ";
 

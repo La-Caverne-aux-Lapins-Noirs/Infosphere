@@ -1,16 +1,13 @@
 <tr>
     <th class="tiny_column">#</th>
     <th style="width: 150px;"><?=$Dictionnary["Icon"]; ?></th>
-    <th class="wide_column"><?=$Dictionnary["CodeName"]; ?></th>
-    <th class="wide_column"><?=$Dictionnary["Name"]; ?></th>
-    <?php if (!is_admin()) { ?>
-	<th class="small_column">
-	    <?=$Dictionnary["Director"]; ?>
-	</th>
-    <?php } else { ?>
-	<th class="edit_column">
-	    <img src="./res/cog.png" />
-	</th>
-    <?php } ?>
+    <th class="small_column"><?=$Dictionnary["CodeName"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Name"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Direction"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Teaching"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Commercial"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Secretariat"]; ?></th>
+    <th class="small_column"><?=$Dictionnary["Library"]; ?></th>
+    <th style="width: 50px; min-width: 50px;"></th>
 </tr>
 

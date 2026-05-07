@@ -1,0 +1,63 @@
+<?php $nbrcols = 4; ?>
+<?php $js = "silent_submit(this, 'doclist');"; ?>
+<table class="content_table">
+    <tr>
+	<?php for ($i = 0; $i < $nbrcols; ++$i) { ?>
+	    <th style="width: <?=0.75 * 100 / $nbrcols; ?>%">
+		<?=$Dictionnary["Name"]; ?>
+	    </th>
+	    <th style="width: <?=0.25 * 100 / $nbrcols; ?>%">
+		<img class="cog" src="res/cog.png" style="width: 30px; height; 30px;" />
+	    </th>
+	<?php } ?>
+    </tr>   
+    <?php if (!count($docs)) { ?>
+	<tr><td colspan="<?=$nbrcols * 2; ?>"><?=$Dictionnary["Empty"]; ?></td></tr>
+    <?php } else { ?>
+	<?php $col = 0; ?>
+	<?php foreach ($docs as $docfile => $doc) { ?>
+	    <?php $files = array_merge([$docfile], $doc); ?>
+	    <?php if ($col % $nbrcols == 0) { ?>
+		<tr>
+	    <?php } ?>
+	    <td>
+		<?php foreach ($files as $file) { ?>
+		    <form
+			method="get"
+			action="/api/doc/<?=$file; ?>"
+			target="_blank"
+			onsubmit="return silent_submit(this);"
+		    >
+			<input
+			    type="button"
+				  onclick="return silent_submit(this);"
+			    value="<?=$file; ?>"
+			/>
+		    </form>
+		<?php } ?>
+	    </td>
+	    <td>
+		<?php foreach ($files as $file) { ?>
+		    <form
+			method="delete"
+			action="/api/doc/<?=$file; ?>"
+			onsubmit="return <?=$js; ?>"
+		    >
+			<input
+			    type="button"
+			    onclick="return <?=$js; ?>"
+			    value="<?=$Dictionnary["Delete"]; ?>"
+			/>
+		    </form>
+		<?php } ?>
+	    </a></td>
+	    <?php if ($col % $nbrcols == $nbrcols - 1) { ?>
+		</tr>
+	    <?php } ?>
+	    <?php $col += 1; ?>
+	<?php } ?>
+	<?php if ($col % $nbrcols != 0) { ?>
+	    <?php echo "</tr>"; ?>
+	<?php } ?>
+    <?php } ?>
+</table>

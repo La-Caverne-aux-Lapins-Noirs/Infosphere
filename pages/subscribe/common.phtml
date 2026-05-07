@@ -1,0 +1,35 @@
+<input
+    type="text"
+    name="first_name"
+    placeholder="<?=$Dictionnary["FirstName"]; ?>*"
+    <?=pf("first_name"); ?>
+    required
+/>
+<br />
+<input
+    type="text"
+    name="family_name"
+    placeholder="<?=$Dictionnary["FamilyName"]; ?>*"
+    <?=pf("family_name"); ?>
+    required
+/>
+<br />
+
+<input
+    type="text"
+	  pattern="0[0-9]{9}"
+	  name="phone"
+	  placeholder="<?=$Dictionnary["Phone"]; ?>"
+	  value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
+/>
+<br />
+
+<input
+    type="mail"
+    name="mail"
+    id="mail"
+    placeholder="<?=$Dictionnary["Mail"]; ?>*"
+    value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
+    required
+/>
+<br />

@@ -27,9 +27,9 @@ function run_ssh_packet_with_inline_key(
     string $private_key
 ): array {
     $runtime_dirs = [
-        "/run/infosphere_hand",
-        "/dev/shm/infosphere_hand",
-        sys_get_temp_dir() . "/infosphere_hand",
+        "/run/distrans",
+        "/dev/shm/distrans",
+        sys_get_temp_dir() . "/distrans",
     ];
 
     $tmp_dir = null;
@@ -169,10 +169,6 @@ function hand_request(array $data, bool $code = true)
         return (false);
     }
 
-    add_log(REPORT, "handkey first line: " . strtok($key, "\n"));
-    add_log(REPORT, "handkey len: " . strlen($key));
-    add_log(REPORT, "handkey has literal \\n: " . (strpos($key, "\\n") !== false ? "yes" : "no"));
-    add_log(REPORT, "handkey has CR: " . (strpos($key, "\r") !== false ? "yes" : "no"));    
     $out = run_ssh_packet_with_inline_key($packet, $acc, $url, $port, $key);
 
     if ($albx != "")
@@ -197,6 +193,7 @@ function hand_request(array $data, bool $code = true)
         return (false);
     }
 
+    // add_log(REPORT, "Distrans success: ".$out["stdout"]);
     return ($decoded);
 }
 

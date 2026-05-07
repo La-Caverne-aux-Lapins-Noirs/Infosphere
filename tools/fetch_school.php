@@ -30,16 +30,38 @@ function fetch_school($id = -1)
            WHERE id_school = ".$v["id"]."
            AND first_day > '".db_form_date(now() - 60 * 60 * 24 * 7 * 16)."'
            AND done IS NULL
-	");
+	   ");
+	// Un peu naze comme systeme - mais requis par list_of_links qui utilise
+	// id_type_du_mec
 	$v["user"] = db_select_all("
            user.id as id, user.id as id_user, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 0
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'STUDENT'
 	   ");
 	$v["director"] = db_select_all("
            user.id as id, user.id as id_director, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 1
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'DIRECTOR'
+	   ");
+	$v["secretariat"] = db_select_all("
+           user.id as id, user.id as id_secretariat, user.codename as codename
+           FROM user_school LEFT JOIN user ON user_school.id_user = user.id
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'SECRETARIAT'
+	   ");
+	$v["commercial"] = db_select_all("
+           user.id as id, user.id as id_commercial, user.codename as codename
+           FROM user_school LEFT JOIN user ON user_school.id_user = user.id
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'COMMERCIAL'
+	   ");
+	$v["librarian"] = db_select_all("
+           user.id as id, user.id as id_librarian, user.codename as codename
+           FROM user_school LEFT JOIN user ON user_school.id_user = user.id
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'LIBRARIAN'
+	   ");
+	$v["teacher"] = db_select_all("
+           user.id as id, user.id as id_teacher, user.codename as codename
+           FROM user_school LEFT JOIN user ON user_school.id_user = user.id
+           WHERE id_school = ".$v["id"]." AND user_school.authority = 'TEACHER'
 	   ");
 	if ($id != "")
 	    break ;

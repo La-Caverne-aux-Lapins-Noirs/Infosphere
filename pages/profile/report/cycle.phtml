@@ -1,4 +1,5 @@
 <?php foreach ($mods as $module) { ?>
+    <?php if ($module->registered == false) continue ; ?>
     <?php if ($module->credit_a == 0) continue ; ?>
     <tr>
 	<td><?=explode("_", $module->codename)[0]; ?></td>

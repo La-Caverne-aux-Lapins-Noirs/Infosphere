@@ -19,6 +19,7 @@ function DisplayUser($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+// Formulaire le plus souple pour l'ajout d'users: login custom, possibilité d'omettre des champs, etc.
 function SubscribeUser($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -46,8 +47,6 @@ function SubscribeUser($id, $data, $method, $output, $module)
 	    "birth_date" => db_form_date(@$usr["birth_date"]),
 	    "phone" => @$usr["phone"],
 	    "objectives" => $Dictionnary["DefaultUserObjectives"],
-	    "source" => @$usr["source"],
-	    "step" => @$usr["step"],
 	]);
 	if ($request->is_error())
 	{

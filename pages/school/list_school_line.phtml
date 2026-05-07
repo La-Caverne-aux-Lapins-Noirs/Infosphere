@@ -17,9 +17,28 @@
     <?php if (!is_admin()) { ?>
 	<td>
 	    <?php foreach ($content["director"] as $dir) { ?>
-		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>">
-		    <?=$dir["codename"]; ?>
-		</a>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
+	    <?php } ?>
+	</td><td>
+	    <?php foreach ($content["teacher"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
+	    <?php } ?>
+	</td><td>
+	    <?php foreach ($content["commercial"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
+	    <?php } ?>
+	</td><td>
+	    <?php foreach ($content["secretariat"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
+	    <?php } ?>
+	</td><td>
+	    <?php foreach ($content["librarian"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
 	    <?php } ?>
 	</td>
     <?php } else { ?>

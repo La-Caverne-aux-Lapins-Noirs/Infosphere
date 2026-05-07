@@ -6,12 +6,15 @@ function pf($str)
     return ('value=""');
 }
 $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
+
+if (!$Configuration->Properties["subscription_possible"] && $prospect == false)
+    $prospect = true;
 ?>
 <style>
  
  input[type="checkbox"]
  {
-     width: 50px !important;
+     width: 35px !important;
  }
  label
  {
@@ -62,216 +65,29 @@ $prospect = isset($_GET["prospect"]) && $_GET["prospect"];
     <?php } else { ?>
 	action="<?=unrollurl(); ?>"
     <?php } ?>
-    >
+>
+    
     <?php if ($prospect) { ?>
 	<h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
-	<p>
-	    <input type="hidden" name="logaction" value="conv_subscribe" />
-	    <br />
-	    <input
-		type="text"
-		name="first_name"
-		placeholder="<?=$Dictionnary["FirstName"]; ?>*"
-		<?=pf("first_name"); ?>
-		required
-	    />
-	    <br />
-	    <input
-		type="text"
-		name="family_name"
-		placeholder="<?=$Dictionnary["FamilyName"]; ?>*"
-		<?=pf("family_name"); ?>
-		required
-	    />
-	    <br />
-	    
-	    <input
-		type="mail"
-		name="mail"
-		id="mail"
-		placeholder="<?=$Dictionnary["Mail"]; ?>*"
-		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
-		required
-	    />
-	    <br />
-
-	    <input
-		type="mail"
-		name="repeat_mail"
-		onchange="check_repeat(this, document.getElementById('mail'));"
-		placeholder="<?=$Dictionnary["RepeatMail"]; ?>*"
-		      value="<?=isset($_POST["repeat_mail"]) ? $_POST["repeat_mail"] : ""; ?>"
-		required
-	    />
-	    <br />
-
-	    <input
-		type="text"
-		pattern="0[0-9]{9}"
-		name="phone"
-		placeholder="<?=$Dictionnary["Phone"]; ?>*"
-		value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
-		required
-	    />
-	    <br />
-
-	    <?=$Dictionnary["PreferedHourToBeCalledBack"] ?><br />
-	    <input
-		type="time"
-		name="prefered_hour"
-		placeholder="<?=$Dictionnary["CallbackHour"]; ?>*"
-		value="<?=isset($_POST["prefered_hour"]) ? $_POST["prefered_hour"] : ""; ?>"
-		required
-	    />
-	    <br />
-
-	    <input
-		type="text"
-		pattern="[0-9]{5}"
-		name="postal_code"
-		placeholder="<?=$Dictionnary["PostalCode"]; ?>"
-		<?=pf("postal_code"); ?>
-		required
-	    />
-	    <br />
-	    
-	    <select name="current_class">
-		<?php if ($Language == "fr") { ?>
-		    <option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
-		    <option value="-4">Primaire</option>
-		    <option value="-3">Coll&egrave;ge</option>
-		    <option value="-2">Seconde</option>
-		    <option value="-1">Premi&egrave;</option>
-		    <option value="0" default>Terminale</option>
-		    <option value="1">Bac+1</option>
-		    <option value="2">Bac+2</option>
-		    <option value="3">Bac+3</option>
-		    <option value="4">Bac+4</option>
-		    <option value="5">Bac+5</option>
-		    <option value="6">Bac+6</option>
-		    <option value="7">Bac+7</option>
-		    <option value="8">Bac+8</option>
-		    <option value="9">En reconversion</option>
-		<?php } ?>
-	    </select>
-	    <br />
-	    <select name="target_class">
-		<option value=""><?=$Dictionnary["TargetedClass"]; ?></option>
-		<option value="1"><?=$Dictionnary["Year"]; ?> 1</option>
-		<option value="2"><?=$Dictionnary["Year"]; ?> 2</option>
-		<option value="3"><?=$Dictionnary["Year"]; ?> 3</option>
-		<option value="4"><?=$Dictionnary["Year"]; ?> 4</option>
-		<option value="5"><?=$Dictionnary["Year"]; ?> 5</option>
-		<option value="6"><?=$Dictionnary["ShortTraining"]; ?></option>
-		<option value="7"><?=$Dictionnary["LongTraining"]; ?></option>
-	    </select>
-	    <br />
-	    <select name="target_entry">
-		<option value=""><?=$Dictionnary["TargetedEntry"]; ?></option>
-		<option value="0"><?=$Dictionnary["EndOfSeptember"]; ?></option>
-		<option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
-		<option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
-	    </select>
-
-	    <textarea readonly
-		style="resize: none;
-		       height: 100px;
-		       font-size: small;
-		       line-height: 1em;
-		       text-align: justify;
-		       "
-	    ><?php require ("privacy.txt"); ?></textarea>
-	    <br />
-	    <input
-		name="accept_privacy"
-		type="checkbox"
-		<?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
-		required
-	    />
-	    <label for="accept_privacy"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
-	    <br />
-
-	    <?php if ($Configuration->Properties["subscription_possible"]) { ?>
-		<textarea readonly
-			  style="resize: none;
-				 height: 100px;
-				 font-size: small;
-				 line-height: 1em;
-				 text-align: justify;
-				 "
-		><?php require ("rules.txt"); ?></textarea>
-		<br />
-		<input
-		    name="accept_rules"
-			  type="checkbox"
-			  <?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
-		/>
-		<label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
-		<br />
-	    <?php } ?>
-
-	    <input type="submit" value="<?=$Dictionnary["Send"]; ?>" />
-	</p>
+	<input type="hidden" name="logaction" value="conv_subscribe" />
     <?php } else { ?>
 	<input
 	    id="prospect"
 	    type="button"
 	    onclick="document.location='index.php?p=Subscribe&amp;prospect=1';"
 	    value="P"
+	    style="display: absolute; right: 50px; top: 50px;"
 	/>
-
 	<h2><?=$Dictionnary["Subscribe"]; ?></h2>
-	<p>
-	    <input type="hidden" name="logaction" value="subscribe" />
-	    <input
-		type="text"
-		name="first_name"
-		placeholder="<?=$Dictionnary["FirstName"]; ?>"
-		<?=pf("first_name"); ?>
-	    />
-	    <br />
-	    <input
-		type="text"
-		name="family_name"
-		placeholder="<?=$Dictionnary["FamilyName"]; ?>"
-		<?=pf("family_name"); ?>
-	    />
-	    <br />
-	    <input
-		type="mail"
-		name="mail"
-		id="mail"
-		placeholder="<?=$Dictionnary["Mail"]; ?>"
-		value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
-	    />
-	    <br />
-	    <input
-		type="mail"
-		name="repeat_mail"
-		onchange="check_repeat(this, document.getElementById('mail'));"
-		placeholder="<?=$Dictionnary["RepeatMail"]; ?>"
-		value="<?=isset($_POST["repeat_mail"]) ? $_POST["repeat_mail"] : ""; ?>"
-	    />
-	    <br />
-
-	    <textarea readonly
-		style="resize: none;
-		       height: 100px;
-		       font-size: 1em;
-		       line-height: 1em;
-		       text-align: justify;
-		       "
-	    ><?php require ("rules.txt"); ?></textarea>
-	    <br />
-	    <input
-		name="accept_rules"
-		type="checkbox"
-		<?=isset($_POST["accept_rules"]) ? "checked" : ""; ?>
-	    />
-	    <label for="accept_rules"><?=$Dictionnary["AcceptRules"]; ?></label>
-	    <br />
-	    	    
-	    <input type="submit" value="<?=$Dictionnary["Subscribe"]; ?>" />
-	</p>
+	<input type="hidden" name="logaction" value="subscribe" />
     <?php } ?>
+
+    <p>
+	<?php require_once (__DIR__."/common.phtml"); ?>
+	<?php if ($prospect) { ?>
+	    <?php require_once (__DIR__."/prospect.phtml"); ?>
+	<?php } else { ?>
+	    <?php require_once (__DIR__."/user.phtml"); ?>
+	<?php } ?>
+    </p>
 </form>
