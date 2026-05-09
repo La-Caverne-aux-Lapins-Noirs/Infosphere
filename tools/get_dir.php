@@ -2,7 +2,7 @@
 
 // Les variables page, id, type et fbid non utilisés dans la fonction
 // sont utilisés dans le template. => Ne pas les retirer!
-function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $poweruser = false, $language = NULL)
+function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $poweruser = false, $language = NULL, $nocd = false)
 {
     global $Dictionnary;
     global $Configuration;

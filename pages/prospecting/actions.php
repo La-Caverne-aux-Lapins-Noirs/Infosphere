@@ -4,6 +4,8 @@
 	$score = 0;
 	$actions = fetch_prospecting_actions($id = $p["id"]);
 	$actions = $actions->value;
+	$done = false;
+	$last_action = 0;
 	require ("action.php");
 	?>
     </div>
@@ -17,11 +19,11 @@
 	    <?php $js = "return silent_submitf(this.parentNode, {tofill: 'actions{$p["id"]}', toclear: 'actions{$p["id"]}', clear_form: true});"; ?>
             <form method="post" action="/api/prospect/<?=$p["id"]; ?>/paction" onsubmit="<?=$js; ?>">
 		<input type="hidden" name="id_user" value="<?=$p["id"]; ?>" />
-		<select name="id_action">
+		<select name="id_action" class="bigselect" data-column="3" data-popup-width="900">
 		    <?php foreach (db_select_all("* FROM action") as $type) { ?>
 			<option
 			    value="<?=$type["id"]; ?>"
-			    style="background-color: <?=$type["color"]; ?>;"
+			    style="background-color: <?=$type["color"]; ?>; color: black;"
 			>
 			    <?=$Dictionnary[$type["name"]]; ?>
 			</option>
@@ -33,5 +35,4 @@
         </div>
     </div>
 </div>
-
 

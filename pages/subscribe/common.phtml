@@ -16,11 +16,11 @@
 <br />
 
 <input
-    type="text"
-	  pattern="0[0-9]{9}"
-	  name="phone"
-	  placeholder="<?=$Dictionnary["Phone"]; ?>"
-	  value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
+    type="tel"
+    name="phone"
+    style="color: black;"
+    placeholder="<?=$Dictionnary["Phone"]; ?>"
+    value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
 />
 <br />
 

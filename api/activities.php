@@ -1052,7 +1052,15 @@ function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
     $page = $module;
     ($activity = new FullActivity)->build($id);
     $root = $Configuration->ActivitiesDir($activity->codename, $data["language"] == "NA" ? "" : $data["language"])."ressource/";
-    $html = get_dir($root, $data["path"], $page, $id, "ressource", "file_browser", is_teacher_for_activity($id), $data["language"]);
+
+    $nocd = false;
+    if (isset($data["nocd"]))
+	$nocd = !!$data["nocd"];
+    $fbid = "file_browser";
+    if (isset($data["fbid"]))
+	$fbid = $data["fbid"];
+    
+    $html = get_dir($root, $data["path"], $page, $id, "ressource", $fbid, is_teacher_for_activity($id), $data["language"], $nocd);
 
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
@@ -1090,7 +1098,10 @@ function AddRessource($id, $data, $method, $output, $module)
 
 function RemoveRessource($id, $data, $method, $output, $module)
 {
-    if ($id == -1 || !isset($data["file"]))
+    global $Configuration;
+
+    // C'est ressource parceque c'est /api/activity/id/ressource
+    if ($id == -1 || !isset($data["ressource"]))
 	bad_request();
     if (!isset($data["language"]))
 	$data["language"] = "";
@@ -1098,7 +1109,7 @@ function RemoveRessource($id, $data, $method, $output, $module)
     // On vérifie que le dossier est bien celui de l'activité demandé...
     ($module = new FullActivity)->build($id);
     $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"]);
-    $file = $data["file"];
+    $file = $data["ressource"];
     if ($file[0] == "-")
 	$file = substr($file, 1);
     $file = str_replace("@", "/", $file);

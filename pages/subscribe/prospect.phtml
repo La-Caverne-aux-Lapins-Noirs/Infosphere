@@ -50,6 +50,18 @@
     <option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
     <option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
 </select>
+<select name="school">
+    <?php foreach (fetch_school() as $school) { ?>
+	<option
+	    value="<?=$school["id"]; ?>"
+	    <?php if ($User && $school["codename"] == $User["last_school"]) { ?>
+		selected
+	    <?php } ?>
+	>
+	    <?=$school["name"]; ?>
+	</option>
+    <?php } ?>
+</select>
 
 <textarea readonly
 	  style="resize: none;

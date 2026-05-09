@@ -34,5 +34,7 @@ function fetch_prospects($attr = [], $id = -1)
     $students = db_select_all("
         $forge FROM user $select ORDER BY codename ASC", "codename"
     );
+    foreach ($students as &$s)
+	get_user_school($s);
     return ($students);
 }

@@ -11,6 +11,7 @@ function fetch_prospect($id = -1)
 	$add_fields = ", ".$add_fields;
     if (!is_array($id))
 	$id = [$id];
+
     
     $u = db_select_one("
               user.id as id,

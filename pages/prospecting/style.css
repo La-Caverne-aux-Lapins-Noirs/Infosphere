@@ -50,7 +50,7 @@ table input
     cursor: pointer;
 }
 
-.action
+.action, .alert
 {
     margin-top: 5px;
     margin-bottom: 5px;
@@ -62,6 +62,15 @@ table input
     background-color: transparent !important;
     border: 0 !important;
     background-size: contain;
+}
+
+.alert
+{
+    background-color: black !important;
+    font-weight: bold;
+    font-size: 20px;
+    border-radius: 15px;
+    float: right;
 }
 
 .action::after
@@ -80,6 +89,13 @@ table input
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
   font-size: 14px;
+}
+
+button[data-tooltip]::after
+{
+    content: attr(data-tooltip);
+    white-space: pre-line;
+    width: 200px;
 }
 
 .action:hover::after
@@ -171,6 +187,13 @@ table input
 tr:nth-child(even)
 {
     background-color: rgba(192, 192, 192, 0.5);
+}
+
+#prospects_table td a
+{
+    font-weight: bold;
+    padding: 5px;
+    background-color: black;
 }
 
 tr:nth-child(odd)

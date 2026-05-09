@@ -310,13 +310,21 @@ function GetFileDir($id, $data, $method, $output, $module, $msg = "")
 	bad_request();
     if (!isset($data["path"]))
 	$data["path"] = "";
+
     $id = (int)$id;
     if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
 	not_found();
 
+    $nocd = false;
+    if (isset($data["nocd"]))
+	$nocd = !!$data["nocd"];
+    $fbid = "file_browser";
+    if (isset($data["fbid"]))
+	$fbid = $data["fbid"];
+
     $file = file_access($id, $data["path"], false, true);
     $root = $Configuration->UsersDir($user["codename"]);
-    $html = get_dir($root, $file, "user", $id, "file", "file_browser", true, "");
+    $html = get_dir($root, $file, "user", $id, "file", $fbid, true, "", $nocd);
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
 	"content" => $html
@@ -394,7 +402,8 @@ function AddFile($id, $data, $method, $output, $module)
 function RemoveFile($id, $data, $method, $output, $module)
 {
     global $Configuration;
- 
+
+    // C'est file parceque c'est /api/user/id/file/etc.
     if ($id == -1 || !isset($data["file"]))
 	bad_request();
     $id = (int)$id;

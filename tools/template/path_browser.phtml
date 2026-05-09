@@ -13,6 +13,11 @@ if ($type !== NULL && $id !== NULL)
 else
     $api = "/api/$page";
 
+if (!isset($nocd))
+    $nocd = false;
+else
+    $nocd = !!$nocd;
+
 if (!@strlen($fbid))
     $fbid = "file_browser";
 $js = "silent_submit(this, '$fbid$language');";
@@ -27,18 +32,22 @@ $js = "silent_submit(this, '$fbid$language');";
     <input
 	id="path<?=$fbid.$language; ?>"
 	class="path_browser"
-	type="text"
 	name="path"
 	value="<?=$path == "" ? "/" : $path; ?>"
-	onchange="return <?=$js; ?>"
+	<?php if (!$nocd) { ?>
+	    type="text"
+	    onchange="return <?=$js; ?>"
+	<?php } else { ?>
+	    type="hidden"
+	<?php } ?>
     />
 </form>
 <div
     class="file_browser"
     id="<?=$fbid.$language; ?>"
     <?php if (isset($file_browser_height)) { ?>
-	style="height: <?=$file_browser_height; ?>; overflow: auto;"
-        <?php unset($file_browser_height); ?>
+	   style="height: <?=$file_browser_height; ?>; overflow: auto;"
+           <?php unset($file_browser_height); ?>
     <?php } ?>
 >
     <?php require ("file_browser.phtml"); ?>

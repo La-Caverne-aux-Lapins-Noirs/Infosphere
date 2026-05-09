@@ -83,18 +83,16 @@ class CConfiguration
 	{
 	    new_directory($dir."public/index.php");
 	    new_directory($dir."admin/index.php");
-	    // new_directory($dir."www/index.php");
-	    // new_directory($dir."personnal/index.php");
+	    new_directory($dir."admin/subscription/index.php");
 	}
 	return ($dir);
     }
-	function tmpFileDIR($usr)
-	{
-		$dir = str_replace("login", "usr", $this->_tmpFileDir);
-		if (!is_dir($dir))
-			return NULL;
-		return ($dir);
-	}
+    
+    function TmpDir($usr = NULL)
+    {
+	return (UsersDir($usr)."trace/");
+    }
+    
     function MedalsDir($medal = NULL)
     {
 	if ($medal == NULL)
@@ -142,10 +140,6 @@ class CConfiguration
 	// fichiers persos et administratifs
 	// Ces fichiers devraient être chiffré et déchiffré à la volée
 	$this->_UsersDir = "$DIR/users/";
-	// Dossiers pour fichier temporaires pour des transferts, comme
-	// par exemple pour un transfert de InfosphereHand à une piece
-	// jointe de mail
-	$this->_tmpFileDir = $this->_UsersDir."/login/trace/";
 	// Les fichiers associés aux écoles, c'est à dire principalement
 	// leurs logos et documents administratifs
 	$this->_SchoolsDir = "$DIR/school/";

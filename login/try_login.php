@@ -78,15 +78,29 @@ if (isset($_POST["logaction"]))
 		] as $f)
 		    $edits[$f] = $_POST[$f];
 		set_user_data($_POST["id"], $edits);
+		if (isset($_POST["school"]))
+		    handle_linksf([
+			"left_value" => "",
+			"right_value" => "",
+			"left_field_name" => "user",
+			"right_field_name" => "school",
+			"properties" => [
+			    "authority" => "STUDENT",
+			],
+			"allow_duplicate" => true
+		    ]);
 		$Msg = new ValueResponse($User);
 	    }
 	}
 	else
 	    $Msg = new ErrorResponse("MissingField", "accept_rules or accept_privacy");
 
-	set_cookie("login", "", time() - 1);
-	set_cookie("password", "", time() - 1);
-	set_cookie("log_as", "", time() - 1);
+	if (!isset($_POST["logaction"]) || $_POST["logaction"] != "conv_subscribe")
+	{
+	    set_cookie("login", "", time() - 1);
+	    set_cookie("password", "", time() - 1);
+	    set_cookie("log_as", "", time() - 1);
+	}
 	unset($_COOKIE["log_as"]);
 	unset($_POST);
     }

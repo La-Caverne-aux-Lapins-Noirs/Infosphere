@@ -559,6 +559,7 @@ function is_librarian($id = -1)
     if (is_director($id))
 	return (true);
     //
+    AddDebugLogR("non programmé");
     return (false);
 }
 
@@ -570,6 +571,7 @@ function is_secretariat($id = -1)
     if (is_director($id))
 	return (true);
     //
+    AddDebugLogR("non programmé");
     return (false);
 }
 
@@ -580,5 +582,6 @@ function is_commercial($id = -1)
     if (is_director($id))
 	return (true);
     //
+    AddDebugLogR("non programmé");
     return (false);
 }

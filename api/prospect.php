@@ -3,6 +3,7 @@
 function DisplayActions($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $one_day;
 
     $score = 0;
     if (($datas = fetch_prospecting_actions($id))->is_error())
@@ -11,6 +12,8 @@ function DisplayActions($id, $data, $method, $output, $module)
     if ($output == "json")
 	return (new ValueResponse(["content" => json_encode($actions, JSON_UNESCAPED_SLASHES)]));
     ob_start();
+    $last_action = 0;
+    $done = false;
     if (count($actions))
 	require ("./pages/prospecting/action.php");
     return (new ValueResponse(["content" => ob_get_clean()]));
