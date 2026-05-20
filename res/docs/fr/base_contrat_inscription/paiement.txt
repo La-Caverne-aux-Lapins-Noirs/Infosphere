@@ -1,0 +1,149 @@
+
+[#IfC;NoPaiement;!=;1;
+
+# Règlement
+
+[@Size;1]
+Des compléments d'informations sont présents dans les articles S5 et S6
+du présent document.
+
+[@Size;2]
+[@Columns;2;
+Les tarifs sont fixés chaque année et sont par conséquent susceptibles de changer.
+
+L’EFRITS étant exonérée de TVA au titre
+[#IfC;Ecole;==;1;de l’article 261-4-4 du CGI;de l'article L.6351-1 du Code du Travail],
+ils sont exprimés en euros en HT (Hors Taxes). 
+
+[#IfC;Ecole;==;1;
+Le premier versement de 990,00 € correspondant aux frais d'inscription et vous sera demandé
+à l’inscription ainsi qu'à chaque réinscription. Ce versement peut être effectué en deux
+fois à condition que le paiement complet soit réalisé au moins deux mois avant le début de la scolarité.
+;
+Le premier versement de 990,00 €, correspondant aux frais d’ouverture de dossier, est exigible
+à l’issue du délai de rétractation prévu par le présent document, lors de l’inscription ainsi que
+lors de chaque réinscription.
+Ce versement peut être effectué en deux (2) fois, à condition que le paiement complet soit
+réalisé au plus tard deux (2) mois avant le début de la formation.
+Aucun encaissement ne sera effectué avant l’expiration du délai de rétractation.
+]
+
+[#IfC;PriceReduction;==;0;
+
+Les versements sont mensuels et interviennent au cours des premiers mois de la formation,
+un (1) mois à l’avance, jusqu’au complet paiement du prix.
+
+Des frais administratifs de gestion de 2\% sont appliqués, ces frais sont inclus dans
+les montants des colonnes marquées d'une étoile (*).
+
+Pour les Apprenants ne disposant pas encore de visa ou de titre de séjour les autorisant
+à poursuivre une formation en France, le versement de deux douzièmes de la scolarité
+à minima est demandée en même temps que le premier versement intégral de 990,00 €. Cela s'explique par les
+coûts liés à la gestion particulière de leur dossier.
+
+En cas d'impossibilité de suivre le cursus pour des raisons administratives ([#IfC;Ecole;==;1;échec au BAC, ]refus du visa) ces sommes sont intégralement remboursées.
+]
+]
+
+[@Size;4]
+
+[#IfC;PriceReduction;==;0;
+[#IfC;Ecole;==;1;
+[@Table;4;
+| Année                 | En 1 fois | En 2 fois* | En 4 fois* | En 12 fois* |
+|:---------------------:|:---------:|:----------:|:----------:|:-----------:|
+| Année 1 [EF1]         | 7437,00€  | 3737,09€   | 1873,19€   | 625,43€     |
+| Année 2 [EF2], [EF2X] | 7585,40€  | 3811,66€   | 1910,57€   | 636,91      |
+| Année 3 [EF3], [EF3X] | 7977,60€  | 4008,74€   | 2009,36€   | 670,89€     |
+| Année 4 [EF4]         | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
+| Année 5 [EF5]         | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
+]
+;
+[@Table;4;
+| Année                 | Total     |              En 4 fois* | En 12 fois* |
+|:---------------------:|:---------:|:-----------------------:|:-----------:|
+| Année 1 [EF1]         | 7492,76€  |              1873,19€   | 625,43€     |
+| Année 2 [EF2], [EF2X] | 7642,28€  |              1910,57€   | 636,91      |
+| Année 3 [EF3], [EF3X] | 8037,44€  |              2009,36€   | 670,89€     |
+| Année 4 [EF4]         | 8806,36€  |              2201,59€   | 735,08€     |
+| Année 5 [EF5]         | 8806,36€  |              2201,59€   | 735,08€     |
+]
+]
+]
+
+[#IfC;PriceReduction;!=;0;
+## Remise exceptionnelle - Remise d'accessibilité et de transition
+
+[@Size;1]
+[@Columns;2;
+À titre exceptionnel, l’Établissement consent à l’Apprenant une remise commerciale dérogatoire
+sur le tarif usuel de la formation. Par dérogation au prix normalement applicable, les frais
+de scolarité dus par l’Apprenant sont fixés forfaitairement à [#Variable;PriceReduction] € par mois, selon l’échéancier
+prévu au présent contrat. Cette remise se substitue au tarif usuel pour la seule période
+contractuellement prévue et ne constitue ni un droit acquis pour l’avenir, ni une modification
+générale de la grille tarifaire de l’Établissement. Elle est accordée sous réserve du respect
+par l’Apprenant des échéances de paiement convenues.
+
+[#IfC;Ecole;==;0;
+En cas de conclusion ultérieure d’un contrat d’apprentissage ou de professionnalisation,
+la poursuite de la formation dans ce cadre donnera lieu à la régularisation de la situation
+contractuelle des parties, au moyen d’un avenant, d’une convention de formation ou de tout
+document contractuel approprié aux conditions administratives, pédagogiques et financières
+applicables à l’alternance.
+
+La Remise d’accessibilité et de transition accordée à l’Apprenant dans le cadre du présent
+contrat ne s’applique pas au tarif de la formation en alternance et ne saurait être opposée
+à l’Établissement, à l’employeur, à l’OPCO ou à tout autre financeur pour déterminer le
+montant de prise en charge applicable.
+
+Les sommes versées par l’Apprenant au titre de périodes de formation ou de frais non pris
+en charge par un tiers financeur restent acquises à l’Établissement, dès lors qu’elles
+correspondent à une formation effectivement réalisée ou à des frais effectivement dus.
+
+En revanche, dans l’hypothèse où un employeur, un OPCO ou tout autre tiers financeur
+prendrait effectivement en charge tout ou partie de la formation, des frais ou des périodes
+déjà réglés par l’Apprenant, les sommes correspondantes seront remboursées à l’Apprenant
+ou imputées sur les sommes restant dues.
+
+Ce remboursement ou cette imputation interviendra dans la limite des sommes effectivement
+versées par l’Apprenant et des montants effectivement encaissés par l’Établissement auprès
+du tiers financeur au titre des mêmes frais, périodes ou éléments de formation.
+]
+]
+]
+
+## Premier versement
+
+[@Columns;2;
+  [#CheckBox;[#IfC;FirstPaiement;==;1;1]] Comptant
+
+  [#CheckBox;[#IfC;FirstPaiement;==;2;1]] En deux fois
+
+]
+
+## Frais de formation
+
+[#IfC;PriceReduction;==;0;
+[@Columns;[#IfC;Ecole;==;1;4;2];
+[#IfC;Ecole;==;1;
+    [#CheckBox;[#IfC;Paiement;==;1;1]] Comptant
+
+    [#CheckBox;[#IfC;Paiement;==;2;1]] En deux fois
+]
+
+    [#CheckBox;[#IfC;Paiement;==;4;1]] En quatre fois
+
+    [#CheckBox;[#IfC;Paiement;==;12;1]] En douze fois
+]
+
+;
+
+[@Columns;[#IfC;Ecole;==;1;4;2];
+Mensualisé selon la Remise d’accessibilité et de transition, [#Variable;PriceReduction]€ par mois, pendant la
+durée contractuellement prévue.
+]
+
+]
+
+]
+

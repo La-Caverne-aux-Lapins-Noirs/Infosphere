@@ -1,0 +1,26 @@
+@include "base_contrat_inscription/main.dab"
+
+Title = "Contrat de formation professionnelle hors alternance"
+OF=1
+
+[Signatories
+  [Director
+    Role = "Directeur(trice)"
+  ]
+  [Student
+    Role = "Stagiaire"
+  ]
+  [Finance
+    Role = "Responsable financier"
+  ]
+]
+  
+Identification = [Text($,Identification)
+  $(Company.MainInfo)
+  $(Company.FormationInfo)
+  
+  Tél: $(Company.Phone). E-Mail: $(Company.Mail)
+  
+  Ci-dessous dénommé individuellement « L’ÉTABLISSEMENT » ou « l’EFRITS »
+  et le stagiaire souhaitant intégrer la formation :  
+Identification]

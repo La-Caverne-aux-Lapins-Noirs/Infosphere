@@ -16,7 +16,8 @@ if (isset($Tab[$METHOD][$DATA["action"]]))
 {
     // Plusieurs filtres sont possibles - C'est un OU entre chaque.
     $Filter = $Tab[$METHOD][$DATA["action"]][0];
-    $Filter = explode(",", $Filter);
+    if (!is_array($Filter))
+	$Filter = explode(",", $Filter);
     $Auth = false;
     foreach ($Filter as $ft)
 	if ($ft($ID))

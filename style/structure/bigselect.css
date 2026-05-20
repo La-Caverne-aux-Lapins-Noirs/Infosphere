@@ -42,7 +42,7 @@
   position: fixed;
   z-index: 100000;
   display: grid;
-  grid-template-columns: repeat(var(--bigselect-columns, 3), minmax(180px, 1fr));
+  grid-template-columns: repeat(var(--bigselect-columns, 4), minmax(180px, 1fr));
   gap: 4px;
   box-sizing: border-box;
   padding: 6px;

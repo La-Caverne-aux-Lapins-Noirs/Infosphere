@@ -109,9 +109,9 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
               activity.codename as codename,
               activity.emergence_date as emergence_date,
               activity.subscription as subscription,
-	      activity.credit_d,
-              activity.credit_a,
-              template.{$Language}_name as name
+	      COALESCE(activity.credit_d, template.credit_d) as credit_d,
+	      COALESCE(activity.credit_a, template.credit_a) as credit_a,
+              COALESCE(activity.{$Language}_name, template.{$Language}_name) as name
               FROM activity_cycle
               LEFT JOIN activity ON activity_cycle.id_activity = activity.id
               LEFT JOIN activity as template ON activity.id_template = template.id

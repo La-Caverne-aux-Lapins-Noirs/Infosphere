@@ -1,0 +1,15 @@
+
+## Article P14 - La validation de la formation
+
+[@Size;2]
+[@Columns;2;
+
+La formation nécessite un nombre de points de formation nommé
+« Flamme » afin d’être réussie. Le montant à atteindre pour
+un trimestre de formation est en moyenne de cent onze (111)
+flammes. D’un trimestre à l’autre, entre quatre-vingts (80)
+et cent trente (130) flammes sont accessibles en moyenne,
+en comptant les options.
+
+]
+

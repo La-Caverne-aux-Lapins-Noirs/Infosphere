@@ -1,0 +1,270 @@
+[@NewPage]
+
+[#IfC;NoPaiement;==;0;
+
+## Article S[#C;S] - Conditions d'annulation et de résiliation
+
+[@Size;1]
+[@Columns;3;
+
+En cas d’annulation par l’Apprenant.
+
+A moins de quinze jours ouvrés avant le début des cours, l’indemnité
+de dédit est égale à 50\% du montant total net de taxes du prix fixé
+dans le dossier d’inscription.
+
+Moins d’une semaine avant le début des cours, l’indemnité de dédit
+est égale à 75\% du montant total du prix net de taxes visé.
+
+Moins de 48 heures avant le début des cours, l’indemnité de dédit
+est égale à 100\% du montant total du prix net de taxes fixé.
+
+Pour être prises en compte, les demandes d’annulation doivent être adressées
+au service admission de l’EFRITS par mail à admission@efrits.fr et
+accompagnées des motifs de renoncement à l’inscription. Les
+remboursements s’effectueront sous 30 jours à date de réception du mail.
+
+Toute demande d’annulation prise en compte sera considérée comme définitive.
+
+À défaut de motifs/justificatifs, la demande est traitée comme une
+annulation hors motif et relève des indemnités de dédit ci-dessus
+
+Le présent document peut être résilié en cas de manquement
+commis par l’une ou l’autre des parties, et ce, dans les conditions
+prévues par ce document. Il peut également l’être dans les cas suivants :
+
+]
+
+### Résiliation par l’Apprenant
+
+[@Size;1]
+[@Columns;3;
+
+- En cas de non-obtention du diplôme prérequis nécessaire pour
+l'inscription définitive ou du VISA et sur présentation du justificatif de
+non-obtention avant le 31 août de l'année d'inscription.
+
+- En cas d’annulation pour un motif autre que ceux mentionnés au point précédent
+(échec au BAC, refus de visa), dûment justifié et notifié dans les délais, l’intégralité
+des frais versés à l’inscription seront conservés par l’EFRITS en
+dédommagement des coûts administratifs engagés et du manque à
+gagner résultant de la réservation d’une place dans ses effectifs non honorée par l’Apprenant.
+Les motifs recevables au présent alinéa sont appréciés par l’EFRITS sur la base
+des justificatifs transmis ;
+
+- En cas de non-admission pédagogique en année supérieure.
+A défaut d’une dénonciation dans un délai maximum de
+3 semaines après la notification de la décision pédagogique,
+l’Apprenant sera considéré comme automatiquement candidat
+dans l’année redoublée. En cas de dénonciation dans le
+délai requis, l’intégralité des frais ne seront pas
+dû par l’Apprenant. Passé le délai requis, l’intégralité
+de ces frais seront dû à l’EFRITS en dédommagement des coûts
+administratifs engagés et du manque à gagner résultant de la
+réservation d’une place dans ses effectifs non honorée par l’Apprenant ;
+
+- En cas de cessation anticipée du cursus par suite de force majeure
+ou pour un motif légitime et impérieux dûment justifié. Dans ce cas,
+seules les cours effectivement dispensés seront dus au prorata temporis
+de la valeur prévue par le présent document.
+
+Lorsque la formation est interrompue par l’Apprenant signataire
+pour un autre motif que ceux visés précédemment, la totalité des
+frais sera due à l’EFRITS, y compris si l’Apprenant
+trouvait un emploi avant la fin de la prestation.
+
+]
+
+### Résiliation par l’EFRITS
+
+[@Size;1]
+[@Columns;3;
+
+- En cas de violation des dispositions relatives au règlement intérieur
+de l’EFRITS. Les frais resteront dus en totalité en cas d’exclusion.
+
+- En cas de défaut de paiement des frais aux échéances
+non motivé par un des motifs de résiliation visés par le présent article. Les
+frais resteront dus en totalité et leur recouvrement
+pourra faire l’objet d’actions en justice.
+
+]
+
+;
+
+[#IfC;CFA;==;1;
+
+## Article S[#C;S] - Annulation, cessation et résiliation de la convention
+
+La présente convention peut cesser ou être résiliée dans les conditions
+prévues au présent article.
+
+### Avant l’entrée effective en formation
+
+Avant l’entrée effective de l’Apprenant en formation, l’une ou l’autre des parties
+peut renoncer à la conclusion ou à l’exécution de la présente convention par
+notification écrite adressée à l’autre partie.
+
+Lorsque l’entrée en formation est subordonnée à la conclusion d’un contrat
+d’apprentissage avec un employeur et que ce contrat n’est finalement pas conclu,
+la présente convention devient sans objet à l’expiration du délai légalement
+autorisé pour l’entrée en formation sans contrat d’apprentissage, sauf
+régularisation de la situation de l’Apprenant dans un autre cadre de formation.
+
+### Pendant la période précédant la conclusion du contrat d’apprentissage
+
+Lorsque l’Apprenant est admis au CFA avant la conclusion d’un contrat
+d’apprentissage, il bénéficie, jusqu’à la signature dudit contrat ou jusqu’au
+terme du délai légalement autorisé, du statut applicable aux personnes entrant
+en cycle de formation en apprentissage sans contrat conclu avec un employeur.
+
+Pendant cette période, la présente convention peut prendre fin :
+
+- Soit par la conclusion d’un contrat d’apprentissage, auquel cas elle demeure
+applicable pour l’exécution de la formation au sein du CFA
+- Soit à l’initiative de l’Apprenant
+- Soit à l’initiative de l’EFRITS en cas de manquement grave de l’Apprenant à
+ses obligations, notamment disciplinaires
+- Soit de plein droit en l’absence de conclusion d’un contrat d’apprentissage
+dans le délai légalement autorisé.
+
+### Pendant l’exécution du contrat d’apprentissage
+
+Pendant l’exécution du contrat d’apprentissage, la présente convention demeure
+applicable pour l’organisation de la formation au sein du CFA.
+
+La rupture, la suspension ou la modification du contrat d’apprentissage obéissent
+aux dispositions légales et réglementaires applicables à l’apprentissage.
+La cessation ou la modification du contrat d’apprentissage peut emporter, selon
+les cas, adaptation, suspension ou fin de la présente convention pour l’avenir,
+dans la mesure nécessaire à la régularisation de la situation de l’Apprenant.
+
+En cas de rupture du contrat d’apprentissage, l’EFRITS met en oeuvre, dans la
+limite des textes applicables et de la situation de l’Apprenant, les mesures
+relevant de ses obligations de CFA, notamment pour permettre la poursuite
+temporaire de la formation théorique et l’accompagnement à la recherche d’un
+nouvel employeur lorsque cela est possible.
+
+### Résiliation par l’Apprenant
+
+L’Apprenant peut demander la résiliation de la présente convention par écrit.
+
+Lorsque l’Apprenant est lié à un employeur par un contrat d’apprentissage, cette
+demande ne produit toutefois pleinement ses effets qu’en cohérence avec la
+situation du contrat d’apprentissage, lequel demeure régi par les dispositions
+légales et réglementaires qui lui sont propres.
+
+### Résiliation par l’EFRITS
+
+L’EFRITS peut résilier la présente convention :
+
+- En cas de manquement grave ou répété de l’Apprenant au règlement intérieur ou
+au règlement pédagogique
+- En cas d’exclusion disciplinaire prononcée dans les conditions prévues par les
+documents applicables
+- En cas d’impossibilité légale ou matérielle de poursuivre la formation
+- En cas de disparition du cadre juridique permettant à l’Apprenant de suivre
+la formation en apprentissage.
+
+Lorsque l’Apprenant est lié par un contrat d’apprentissage en cours, l’EFRITS
+informe sans délai l’employeur de toute décision affectant la poursuite de la
+formation au CFA.
+
+### Absence de frais à la charge de l’Apprenant
+
+La cessation, l’annulation ou la résiliation de la présente convention ne peut
+donner lieu à aucune indemnité de dédit, pénalité ou facturation à la charge de
+l’Apprenant ou, le cas échéant, de son représentant légal.
+
+Les conséquences financières éventuelles de la cessation de la formation relèvent
+exclusivement des règles applicables à la prise en charge de l’action de
+formation par apprentissage et des relations entre l’EFRITS, l’employeur et
+l’opérateur de compétences compétent.
+
+;
+
+## Article S[#C;S] - Annulation, cessation et résiliation de la convention
+
+La présente convention peut cesser ou être résiliée dans les conditions prévues
+au présent article.
+
+### Avant l’entrée effective en formation
+
+Avant l’entrée effective en formation, l’une ou l’autre des parties peut renoncer
+à la conclusion ou à l’exécution de la présente convention par notification
+écrite adressée à l’autre partie.
+
+Lorsque l’entrée en formation est subordonnée à la conclusion d’un contrat de
+professionnalisation avec un employeur et que ce contrat n’est finalement pas
+conclu, la présente convention devient sans objet, sauf régularisation de la
+situation de l’Apprenant dans un autre cadre de formation par la conclusion d’un
+document contractuel approprié.
+
+### Pendant la période précédant la conclusion du contrat de professionnalisation
+
+Lorsque l’entrée en formation intervient avant la conclusion du contrat de
+professionnalisation, la poursuite de la formation dans ce cadre demeure
+subordonnée à la régularisation dudit contrat dans les conditions et délais
+compatibles avec la réglementation applicable.
+
+Pendant cette période, la présente convention peut prendre fin :
+
+- Soit par la conclusion d’un contrat de professionnalisation, auquel cas elle
+demeure applicable pour l’exécution de la formation dans le cadre de l’alternance
+- Soit à l’initiative de l’Apprenant
+- Soit à l’initiative de l’EFRITS en cas de manquement grave de l’Apprenant à
+ses obligations, notamment disciplinaires
+- Soit de plein droit en l’absence de conclusion d’un contrat de
+professionnalisation dans les conditions permettant la poursuite de la formation
+dans ce cadre.
+
+### Pendant l’exécution du contrat de professionnalisation
+
+Pendant l’exécution du contrat de professionnalisation, la présente convention
+demeure applicable pour l’organisation de la formation dispensée par l’EFRITS.
+
+La rupture, la suspension ou la modification du contrat de professionnalisation
+obéissent aux dispositions légales et conventionnelles qui lui sont applicables.
+La cessation ou la modification du contrat de professionnalisation peut emporter,
+selon les cas, adaptation, suspension ou fin de la présente convention pour
+l’avenir, dans la mesure nécessaire à la régularisation de la situation de
+l’Apprenant.
+
+### Résiliation par l’Apprenant
+
+L’Apprenant peut demander la résiliation de la présente convention par écrit.
+
+Lorsque l’Apprenant est lié à un employeur par un contrat de
+professionnalisation, cette demande ne produit toutefois pleinement ses effets
+qu’en cohérence avec la situation dudit contrat, lequel demeure régi par les
+dispositions légales, réglementaires et conventionnelles qui lui sont propres.
+
+### Résiliation par l’EFRITS
+
+L’EFRITS peut résilier la présente convention :
+
+- En cas de manquement grave ou répété de l’Apprenant au règlement intérieur ou
+au règlement pédagogique
+- En cas d’exclusion disciplinaire prononcée dans les conditions prévues par les
+documents applicables
+- En cas d’impossibilité légale ou matérielle de poursuivre la formation
+- En cas de disparition du cadre juridique permettant à l’Apprenant de suivre
+la formation dans le cadre du contrat de professionnalisation.
+
+Lorsque l’Apprenant est lié par un contrat de professionnalisation en cours,
+l’EFRITS informe sans délai l’employeur de toute décision affectant la poursuite
+de la formation.
+
+### Absence de frais à la charge de l’Apprenant
+
+La cessation, l’annulation ou la résiliation de la présente convention ne peut
+donner lieu à aucune indemnité de dédit, pénalité ou facturation à la charge de
+l’Apprenant ou, le cas échéant, de son représentant légal.
+
+Les conséquences financières éventuelles de la cessation de la formation relèvent
+exclusivement des règles applicables à la prise en charge de l’action de
+formation et des relations entre l’EFRITS, l’employeur et les organismes
+compétents.
+
+]
+]

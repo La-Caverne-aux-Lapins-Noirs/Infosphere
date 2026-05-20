@@ -1,0 +1,117 @@
+
+## Article P8 - Réunions d'équipe
+
+[@Size;2]
+[@Columns;2;
+Les réunions sont en général obligatoires et toute les
+équipes devront s’organiser autour d’elles qu’elle soit
+constituée d’un ou plusieurs membres. Parmi elles il y
+a : la planification, la journalière, la démonstration,
+la rétrospective et la présentation. Elles sont là pour
+permettre de cadrer le rythme de travail des équipes. 
+
+Les réunions d’équipes ont pour objectif l’organisation
+des membres au sein de l’équipe ainsi que l’évaluation
+de ce processus d’organisation. Les réunions peuvent
+également servir à fournir une assistance technique aux
+membres de l’équipe, cette assistance étant néanmoins
+limitée en longueur. Tous les membres de l’équipe doivent être présents lors
+des événements de suivi. L’absence d’un membre de l’équipe
+entraîne l’acquisition par l’équipe d’une pénalité sous
+forme de médaille négative. Les membres absents écopent
+en supplément d’une pénalité signifiant leur responsabilité. 
+
+Les réunions n’ont lieu que lors des activités de type
+« Projet » et « Produit » qui disposent d’une envergure
+justifiant leur existence.
+
+]
+
+### La planification
+
+[@Size;2]
+[@Columns;2;
+Un membre du corps pédagogique est toujours présent lors
+de la planification. Durant ce suivi, l’équipe planifie
+le travail à accomplir jusqu’à la démonstration. Ce travail
+ne doit pas excéder la capacité de l’équipe, ni placer
+celle-ci en état de sous-charge. Une planification devrait
+durer entre vingt (20) minutes à soixante (60) minutes. 
+Les planifications sont organisées par les membres du
+corps pédagogique. L’administrateur de l’équipe est seul
+en capacité de réserver un créneau. 
+
+]
+
+### La journalière
+
+[@Size;2]
+[@Columns;2;
+Un membre du corps pédagogique est susceptible de rendre
+visite à l’équipe. L’équipe, via son administrateur, est
+chargée de prendre une réservation par elle-même dans une
+salle dédiée aux réunions afin de permettre le contrôle
+de la tenue de celle-ci. Durant ce suivi, les membres de
+l’équipe doivent échanger sur les problèmes de la veille
+et sur les problèmes qu’ils anticipent aujourd’hui. 
+
+Une journalière devrait durer entre cinq (5) et dix (10)
+minutes au maximum.
+
+]
+
+[@NewPage]
+
+### La démonstration
+
+[@Size;2]
+[@Columns;2;
+Un membre du corps pédagogique est toujours présent lors
+de la démonstration. Durant ce suivi, chaque membre de
+l’équipe fait la démonstration du travail qu’il a
+personnellement accompli.
+Une démonstration devrait durer de vingt (20) minutes à
+soixante (60) minutes. 
+Les démonstrations sont organisées par les membres du corps
+pédagogique. L’administrateur de l’équipe est le seul en
+capacité de réserver un créneau. 
+
+]
+
+### La rétrospéctive
+
+[@Size;2]
+[@Columns;2;
+Un membre du corps pédagogique est toujours présent lors
+de la rétrospective. Durant ce suivi, chaque membre de
+l’équipe peut aborder les aspects qui lui ont posé problème
+dans l’organisation même de l’équipe. L’objectif est
+d’améliorer la façon dont l’équipe fonctionne. 
+
+Une rétrospective devrait durer entre vingt minutes et une heure.  
+
+La rétrospective est optionnelle. Celle-ci peut être décidée
+par n’importe quel membre de l’équipe, contrairement aux
+autres types de suivi. Une fois l’engagement pris, l’ensemble
+de l’équipe est tenu d’y participer. Néanmoins, le corps
+pédagogique peut décider de la rendre obligatoire. 
+
+]
+
+### La présentation
+
+[@Size;2]
+[@Columns;2;
+
+Une présentation des travaux réalisés peut avoir lieu
+dans le cadre de l’activité. 
+Durant la présentation, le maintien général de l’équipe
+est vérifié : tous les membres de l’équipe doivent contribuer
+d’une façon ou d’une autre à cette présentation. La qualité
+du discours, qu’il soit de nature scientifique ou commerciale,
+est évaluée. Les Apprenants doivent mettre en valeur leurs travaux,
+leurs réussites et indiquer de quelle manière ils ont déjoué
+les difficultés qui doivent également être présentées. 
+
+]
+

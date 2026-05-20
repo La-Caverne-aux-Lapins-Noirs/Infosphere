@@ -1,0 +1,41 @@
+
+## Article P13 - La validation des matières
+
+[@Size;2]
+[@Columns;2;
+
+La validation ou non validation d’une matière se modélise par
+un grade. Ce grade peut prendre cinq (5) valeurs : A, B, C,
+D et E. E signifie que la matière n’a pas été réussie. Les
+autres grades indiquent une réussite, D étant le grade le plus
+faible et A le plus fort. 
+
+Chaque matière apporte un nombre de points de formation nommé
+« Flamme », variable en fonction du grade et de la matière.
+Le montant du grade E étant toujours zéro (0). 
+
+Le processus de validation fonctionne ainsi : pour chaque grade,
+à l’exception du grade D, le grade inférieur doit être acquis,
+ainsi qu’un pourcentage donné des médailles attachés au grade
+courant. Pour le grade D, un pourcentage des médailles associés
+au grade D doit être acquis. Les pourcentages varient en fonction
+des matières. 
+
+De nombreuses médailles ne sont associés à aucun grade mais
+demeure accessible à l’aide des activités de la matière. Ces
+médailles entrent dans une catégorie « Bonus ». Si un certain
+pourcentage, variant d’une matière à l’autre, de médailles
+bonus est atteint et qu’au moins le grade D est atteint, alors
+le grade de l’Apprenant est augmenté d’un (1). Le grade A ne
+peut pas être dépassé. 
+
+Une matière non validée peut-être rétro validée par l’acquisition
+de médailles dans la suite de la formation si le corps pédagogique
+estime que cet échec n’est pas bloquant. En cas d’échec bloquant,
+la matière devra être reprise lors du trimestre suivant.
+
+Une accumulation de médaille ou éliminatoire négative dans les
+travaux d'une matière peut entrainer l'échec à la matière.
+
+]
+

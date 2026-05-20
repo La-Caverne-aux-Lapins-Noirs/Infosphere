@@ -1,0 +1,34 @@
+
+[@NewPage]
+
+## Article P15 - Réamorce
+
+[@Size;2]
+[@Columns;2;
+
+Un Apprenant en difficulté pour se voir proposer une réamorce.
+Le principe de la réamorce est le suivant :
+
+- L'Apprenant cesse de suivre le trimestre en cours.
+- L'Apprenant entame un parcours spécifique de renforcement.
+- L'Apprenant recommencera de zéro au prochain trimestre, le trimestre où
+il était en difficulté.
+- Les activités qui seront proposés par la suite à l'Apprenant seront filtrées
+de sorte à se concentrer sur l'essentiel et permettre à l'Apprenant de
+rattraper son retard.
+
+[#IfC;Ecole;==;1;
+L'objectif de la réamorce est d'éviter d'attendre la fin de l'année scolaire
+pour faire tomber l'Apprenant en redoublement. En réglant les difficultés
+en amont, l'objectif est de ne pas faire perdre un an à l'Apprenant.
+;
+L'objectif de la réamorce est de ne pas attendre un échec global en fin
+de formation pour proposer une reprise et de permettre à l'Apprenant de continuer
+sa formation.
+]
+
+La réamorce est proposée par l’EFRITS après échange avec l’Apprenant,
+[#IfC;NoPaiement;==;0;son responsable financier et; le tuteur ou maitre d'apprentissage] optionnellement ses responsables légaux.
+
+]
+

@@ -1,0 +1,38 @@
+
+## Article P16 - Triches
+
+Le présent article complète l'article P11.
+
+[@Size;2]
+[@Columns;2;
+
+La triche est une pratique contraire à l'éthique et aux valeurs
+fondamentales de l'apprentissage et de l'éducation. Elle compromet
+l'intégrité du processus éducatif, en faussant les résultats et
+en créant une inégalité entre les Apprenants. En trichant, un individu
+obtient un avantage indu qui n'est pas mérité, ce qui fausse la
+reconnaissance du travail, des compétences et des connaissances
+réelles. La triche peut également avoir des conséquences néfastes
+sur la formation des Apprenants, en faussant leur niveau de compétence
+et en créant une inégalité entre les Apprenants.
+
+]
+
+La triche peut prendre différentes formes, telles que : 
+
+- La copie non autorisée ou autorisée du code source d'un autre
+Apprenant, d’un proche ou venant d’internet, ou généré par une
+Intelligence Artificielle,  
+
+- L'utilisation de ressources ou de solutions préexistantes,  
+
+- La communication non autorisée avec d'autres Apprenants pendant les évaluations,  
+ou encore l'utilisation de logiciels ou d'outils automatisés pour contourner
+les exigences, l’utilisation de bibliothèque, code, fonction explicitement
+interdite, 
+
+- L'accès sans autorisation aux comptes, rendu ou dossier sur la NFS d’un
+autre Apprenant ou tout autre personne tiers. 
+
+Les sanctions pour la triche pourront varier en fonction de la gravité de
+l'infraction. Une médaille éliminatoire étant systématiquement adjointe.

@@ -14,21 +14,36 @@ function DisplaySchool($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+function GenerateDabsic($school)
+{
+
+}
+
 function AddSchool($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
-    global $Database;
 
     if ($id != -1)
 	bad_request();
+
     foreach ($data["schools"] as $school)
     {
 	if (($ret = add_school($school["codename"], $school["icon"], $school))->is_error())
 	    return ($ret);
     }
+
     $ret = DisplaySchool(-1, [], "GET", $output, $module);
     $ret->value = array_merge(["msg" => $Dictionnary["Added"]], $ret->value);
     return ($ret);
+}
+
+function EditSchool($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if (($ret = edit_school($id, $data))->is_error())
+	return ($ret);
+    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
 }
 
 function DeleteSchool($id, $data, $method, $output, $module)
@@ -175,6 +190,10 @@ $Tab = [
 	]
     ],
     "PUT" => [
+	"" => [
+	    "is_director_for_school",
+	    "EditSchool",
+	],
 	"director" => [
 	    "only_admin",
 	    "SetDirector"

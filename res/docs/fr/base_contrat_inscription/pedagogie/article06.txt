@@ -1,0 +1,72 @@
+
+## Article P6 - La déclaration de présence
+
+[@Size;2]
+[@Columns;2;
+
+Les Apprenants peuvent déclarer leurs présences aux activités
+de type travaux pratiques, cours magistraux et autres
+activités non-examen n’impliquant pas de rendez-vous avec
+un membre du corps pédagogique via l’intranet https://intra.efrits.fr. 
+
+Cette déclaration est possible de quinze (15) minutes avant
+le début de l’activité jusqu’à cinq (5) minutes après le
+début de celle-ci. Un retard est notifié si la présence est déclarée
+plus tard dans l'activité. Dans le cadre des activités impliquant
+un rendez-vous avec un membre du corps pédagogique (tel
+qu’un suivi ou une soutenance), c’est le dit-membre qui
+procèdera à la déclaration de présence. Dans le cadre des
+activités d'évaluation (examen, colle), le délai de déclaration de présence
+après le début de l’activité est ramené à zéro (0) minutes
+et zéro (0) secondes.
+
+La déclaration de présence par l'Apprenant n'est fonctionnelle
+que si elle est réalisé sur un ordinateur de l'EFRITS se situant
+dans la salle où l'activité est réalisée.
+Dans le cas d'une panne ou d'un handicap l'empechant, l'EFRITS
+réalisera l'émargement sur papier et s'occupera de la saisie
+à postérieurie.
+
+]
+
+### Absence
+
+[@Columns;1;
+Certaine matière requière la présence obligatoire de l’Apprenant.
+Les absences répétées ou non et/ou non justifiées – au
+préalable lorsque c’est possible – aux activités obligatoires
+pourraient être sanctionnées entre autres de la ou les
+manière(s) suivante(s) :
+]
+
+- Échec à la matière porteuse de l’activité. 
+
+- Échec à l’activité en question. 
+
+- Obligation de réaliser le travail qui était exigé durant l’activité. 
+
+- Tout autre mesure prévue par la matière porteuse de l’activité. 
+
+Dans le cadre d’une activité en équipe, l’absence d’un membre
+de l’équipe pénalisera toute l’équipe - même si l'absence est justifiée -
+si cette absence n'est pas déclarée au moins 8h avant l'activité
+ou la soutenance.
+
+### Retard 
+
+[@Size;2]
+[@Columns;2;
+
+En cas de retard, l’Apprenant devra de lui-même se présenter au
+formateur, à la formatrice ou l’administration de l’EFRITS pour
+en expliquer les motifs. Les retards répétés et/ou non justifiés
+pourraient avoir comme conséquence d’être considéré comme une
+absence non justifiée. 
+
+Les retards en soutenances et en examens sont interdits. Les
+Apprenants sont invité(e)s à se présenter cinq (5) mins avant
+l’heure du début de celui-ci. Tout retard sera considéré comme
+une absence. 
+
+]
+

@@ -6,7 +6,14 @@ CREATE TABLE `school` (
   `deleted` datetime DEFAULT NULL,
   `fr_name` varchar(255) NOT NULL,
   `en_name` varchar(255) NOT NULL,
-  `address` text DEFAULT NULL
+  `legal_name` varchar(128) NOT NULL DEFAULT '',
+  `address` text DEFAULT NULL,
+  `main_info` text NOT NULL DEFAULT '',
+  `school_info` text NOT NULL DEFAULT '',
+  `formation_info` text NOT NULL DEFAULT '',
+  `alternation_info` text NOT NULL DEFAULT '',
+  `phone` varchar(16) NOT NULL DEFAULT '',
+  `mail` text NOT NULL DEFAULT ''
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

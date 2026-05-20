@@ -1,0 +1,26 @@
+@include "base_contrat_inscription/main.dab"
+
+Title = "Convention de formation en apprentissage"
+CFA=1
+NoPaiement=1
+  
+[Signatories
+  [Director
+    Role = "Directeur(trice)"
+  ]
+  [Student
+    Role = "Apprenti(e)"
+  ]
+]
+  
+Identification = [Text($,Identification)
+  $(Company.MainInfo)
+  $(Company.FormationInfo)
+  $(Company.AlternationInfo)
+  
+  Tél: $(Company.Phone). E-Mail: $(Company.Mail)
+  
+  Ci-dessous dénommé individuellement « L’ÉTABLISSEMENT » ou « l’EFRITS »
+  et l'apprenant(e) souhaitant intégrer le cursus :  
+Identification]
+

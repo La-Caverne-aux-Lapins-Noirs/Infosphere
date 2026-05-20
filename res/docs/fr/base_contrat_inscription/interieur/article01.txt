@@ -1,0 +1,13 @@
+
+[@NewPage]
+
+# Règlement intérieur
+
+## Article I1 - Champ d'application
+
+[@Size;1]
+[@Columns;3;
+Les dispositions du présent règlement sont applicables à tous les établissements
+gêrés par l'EFRITS mais aussi dans tout local ou espace accessoire qui y soit lié.
+
+]

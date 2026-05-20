@@ -13,7 +13,9 @@ CREATE TABLE `cycle` (
   `done` int(11) DEFAULT NULL,
 
   `fr_name` text DEFAULT NULL,
-  `en_name` text DEFAULT NULL
+  `en_name` text DEFAULT NULL,
+  `fr_description` text DEFAULT NULL,
+  `en_description` text DEFAULT NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

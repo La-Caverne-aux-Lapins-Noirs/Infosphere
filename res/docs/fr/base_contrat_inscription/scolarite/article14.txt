@@ -1,0 +1,70 @@
+
+[@NewPage]
+
+## Article S[#C;S] - Protection des données personnelles
+
+[@Size;1]
+[@Columns;3;
+Conformément à la Loi Informatique et Libertés, mise à jour au
+1er juin 2019 et le Règlement Général pour la Protection des
+Données personnelles dit RGPD (Règlement Général sur la Protection
+des Données), l’Apprenant dispose des droits d’accès, de
+rectification, d’opposition, d’effacement, à la limitation du
+traitement et à la portabilité dans les conditions et limites
+prévues par la loi. Le cas échéant, la personne concernée
+dispose également du droit de retirer son consentement à tout
+moment. Toute demande d’exercice peut être adressée par e-mail
+à l’adresse serviceclient@efrits.fr. 
+
+Les informations qui sont demandées aux Apprenants sont nécessaires
+au traitement de son inscription l’EFRITS est responsable des
+traitements des données des utilisateurs et des Apprenants,
+recueillies dans le cadre du présent document lorsque ces traitements
+ont pour finalité la gestion de la relation avec les interlocuteurs
+de l’établissement, la facturation, l’assistance ou toute autre
+finalité légitime pour laquelle l’EFRITS agit pour son propre compte. 
+
+L’accès aux données personnelles sera strictement limité au personnel
+du responsable de traitement habilité à les traiter. Les informations
+recueillies pourront éventuellement être communiquées à des tiers liés
+au responsable de traitement par contrat dans le cadre de prospection
+commerciale et pour l’exécution de tâches sous-traitées, notamment la
+plateforme de mise à disposition de modules de cours en ligne. L’EFRITS
+respecte la vie privée de ses utilisateurs et Apprenants. Il s’engage
+à ce que la collecte et le traitement automatisé de leurs données soient
+conformes au Règlement Général sur la Protection des Données (RGPD)
+et à la loi Informatique et Libertés dans sa dernière version. 
+
+Les données à caractère personnel des Apprenants ne seront pas
+conservées au-delà de la durée strictement nécessaire à la poursuite
+des finalités indiquées. Dans le cadre de l’exécution de leurs prestations,
+les tiers n’ont qu’un accès limité aux données et ont l’obligation de
+les utiliser en conformité avec les dispositions de la législation
+applicable en matière de protection des données personnelles. Ainsi,
+dans le cadre de mise à disposition de modules de cours en ligne et
+de mise à disposition de fichiers intégrant des données personnelles,
+les Apprenants ne pourront ni diffuser lesdits fichiers, ni les utiliser
+à des fins commerciales, conformément aux dispositions de la législation
+applicable en matière de protection des données personnelles. 
+
+En dehors des cas énoncés ci-dessus, l’EFRITS s’interdit de vendre, louer,
+céder ou donner accès à des tiers aux données sans consentement
+préalable des Apprenants, à moins d’y être contraint en raison
+d’un motif légitime. Si les données sont amenées à être transférées
+en dehors de l’Union Européenne, l’Apprenant en sera informé et
+les garanties prises afin de sécuriser les données lui seront précisées. 
+
+L’Apprenant est informé et accepte que les services de l'EFRITS puisse comporter
+des dispositifs techniques qui permettent d’en suivre l’utilisation
+(compte de l’utilisateur connecté, adresse IP, type d’application
+utilisées, logs divers de connexion et d’utilisation au compte utilisateur…)
+et qui sont susceptibles d’être utilisées dans le cadre de la lutte
+anti-contrefaçon, et/ou pour identifier et/ou prévenir une éventuelle
+utilisation illicite ou non-conforme. 
+
+Toute personne concernée par un traitement dispose d’un droit de
+réclamation auprès de la Commission Nationale Informatique et Libertés
+(CNIL) via le lien suivant : https://www.cnil.fr/fr/plaintes. 
+
+]
+

@@ -434,7 +434,7 @@ function is_director($id = -1)
     {
 	if (!isset($User["school_authority"]))
 	    return (false);
-	return ($User["school_authority"] > 0);
+	return ($User["school_authority"] == "DIRECTOR");
     }
     return (false);
     // Normalement devenu inutile
@@ -483,7 +483,7 @@ function am_i_director_of($id_school)
     {
 	if ($sc["id_school"] != $id_school)
 	    continue ;
-	if ($sc["authority"] > 0)
+	if ($sc["authority"] == "DIRECTOR")
 	    return (true);
     }
     return (false);
@@ -512,7 +512,7 @@ function is_my_director($id)
 	{
 	    if (abs($ms["id_school"]) != abs($school["id_school"]))
 		continue ;
-	    if ($ms["authority"] > $school["authority"])
+	    if ($ms["authority"] == "DIRECTOR" && $school["authority"] != "DIRECTOR")
 		return (true);
 	}
     }
@@ -554,34 +554,53 @@ function is_member_of_laboratory($id_lab)
 
 function is_librarian($id = -1)
 {
+    global $User;
+
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
-    if (is_director($id))
-	return (true);
-    //
-    AddDebugLogR("non programmé");
-    return (false);
+    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
+    return (db_select_one("
+        id FROM user_school
+        WHERE id_user = {$User["id"]}
+        AND authority = 'LIBRARIAN'
+        $id
+	") != NULL);
 }
 
 // L'adm au sens des étudiants
 function is_secretariat($id = -1)
 {
+    global $User;
+
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
-    if (is_director($id))
-	return (true);
-    //
-    AddDebugLogR("non programmé");
-    return (false);
+    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
+    return (db_select_one("
+        id FROM user_school
+        WHERE id_user = {$User["id"]}
+        AND authority = 'SECRETARIAT'
+        $id
+	") != NULL);
 }
 
 function is_commercial($id = -1)
 {
+    global $User;
+
+    if (!$User)
+	return (false);
     if (is_admin())
 	return (true);
-    if (is_director($id))
-	return (true);
-    //
-    AddDebugLogR("non programmé");
-    return (false);
+    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
+    return (db_select_one("
+        id FROM user_school
+        WHERE id_user = {$User["id"]}
+        AND authority = 'COMMERCIAL'
+        $id
+	") != NULL);
 }
+

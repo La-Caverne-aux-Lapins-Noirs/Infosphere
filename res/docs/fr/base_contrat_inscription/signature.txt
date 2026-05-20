@@ -1,0 +1,19 @@
+
+# Signatures
+
+[@Size;4]
+
+[#ELine]
+
+Fait à: [#FLine]
+
+[#ELine]
+
+Le: [#FLine]
+
+[#ELine]
+
+En deux exemplaires.
+
+[#ELine]
+

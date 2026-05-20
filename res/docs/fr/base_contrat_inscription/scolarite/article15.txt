@@ -1,0 +1,67 @@
+
+## Article S[#C;S] - Litiges, médiation et clauses diverses
+
+[@Size;1]
+[@Columns;3;
+
+[#IfC;NoPaiement;==;0;
+Ce contrat est soumis au droit français.
+;
+Cette convention est soumise au droit français.
+]
+
+[#ELine]
+
+En cas de litige, l’Apprenant ou ses responsables légaux, accepte de
+se réunir, par visioconférence ou physiquement, dans les quinze (15)
+jours à compter de la réception d’une lettre recommandée avec demande
+d’avis de réception, afin de parvenir à une solution amiable. 
+
+Conformément à l'article L. 612-1 du Code de la consommation, dans
+un délai d’un an à compter de sa réclamation écrite, le Consommateur,
+sous réserve de l’article L.152-2 du code de la consommation, a la
+faculté d’introduire une demande de résolution amiable par voie de
+médiation, auprès de : ANM CONSO.
+
+Le Client peut saisir le médiateur soit en ligne sur www.anm-conso.com,
+soit par voie postale à l’adresse :
+
+]
+
+[@ELine]
+[@Size;3]
+| Médiation de la Consommation ANM CONSO |
+| :-: |
+| 62 rue Tiquetonne |
+| 75002 Paris |
+
+[@ELine]
+
+L’Apprenant ou son responsable financier devra indiquer dans sa
+demande les informations suivantes :
+
+- Ses coordonnées complètes (nom et prénom),
+- Ses informations de contact : téléphone et/ou adresse e-mail, adresse postale,
+- La nature de la demande.
+- L’exposé et la description de son litige,
+- Toutes les pièces et documents factuels utiles à la compréhension et à l’analyse du dossier médiateur,
+- Les échanges intervenus avec l’entreprise attestant d’une tentative de résolution du litige directement auprès du professionnel concerné,
+- Ses attentes concernant l’action du médiateur et la solution qu’il envisage,
+- En cas de représentation par un tiers telle une association de consommateurs ou un avocat, la procuration délivrée à celui-ci.
+
+Le médiateur tentera, en toute indépendance et impartialité, de
+rapprocher les parties en vue d’aboutir à une solution amiable.
+Les parties restent libres d’accepter ou de refuser le recours à
+la médiation ainsi que, en cas de recours à la médiation, d’accepter
+ou de refuser la solution proposée par le médiateur.
+
+[@Eline]
+
+La nullité d’une clause n’entraîne pas la nullité de l’ensemble du document.
+
+[@Eline]
+
+Le fait pour l’EFRITS de ne pas se prévaloir d’une des clauses
+ne peut être interprété comme une renonciation à s’en prévaloir pour l’avenir. 
+
+

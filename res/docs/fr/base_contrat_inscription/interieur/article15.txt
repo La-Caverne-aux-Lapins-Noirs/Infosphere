@@ -1,0 +1,56 @@
+
+## Article I15 - Absences, retards, maladies et accidents
+
+[@Size;1]
+[@Columns;3;
+Sauf autorisation expresse, les Apprenants ne peuvent pas s’absenter
+pendant les heures de formation. L’émargement pourra être
+fait le matin et l’après-midi de chaque jour de formation.
+
+Toute absence prévisible devra être notifiée par écrit et
+transmise par l'Apprenant à la direction de l'EFRITS. 
+
+En cas de retard, l'Apprenant devra prévenir le formateur ou la
+formatrice au plus tôt et s’en justifier.
+
+En cas de maladie, l'Apprenant devra prévenir la direction de l'EFRITS.
+Il ou elle devra également lui faire parvenir sous quarante-huit
+(48) heures un certificat médical justifiant son arrêt maladie
+afin que les activités pédagogiques prévues puissent être reportée
+sur une session identique à une période ultérieure si possible. 
+
+En cas d’accident, l’Apprenant effectuera la déclaration. Pour
+cela, l'Apprenant devra faire connaître sans délai et par écrit,
+à la direction de l’EFRITS, tout accident dont il a été victime
+ainsi que ses circonstances. L’EFRITS ne pourra être tenue responsable
+des conséquences liées à une déclaration rendue impossible du fait
+de l’Apprenant, aucune information ne lui est parvenue ou a été
+communiquée dans les vingt-quatre (48) heures suivant l’accident. 
+
+Les Apprenants peuvent déclarer leur présence à chaque activité
+de la formation via la plateforme https://intra.efrits.fr
+à partir de quinze (15) minutes avant le début de celle-ci. Cette
+déclaration sera indiquée comme réalisée en retard si elle
+est effectuée au-delà de cinq (5) minutes après le début de l’activité.
+Cette déclaration n'est possible que sur les ordinateurs de l'EFRITS
+et exclusivement sur les postes situés dans la salle où l'activité est
+prévue.
+
+En cas de pannes du service de déclaration, un émargement papier
+sera réalisé et saisi par l'EFRITS sur l'intranet une fois celui-ci
+rétabli.
+
+En cas de handicap empêchant la déclaration de présence dans
+les conditions précisées ci-dessus, la déclaration de présence
+de l'Apprenant sera réalisée par l'EFRITS.
+
+Un émargement papier supplémentaire, avec signature de l’Apprenant,
+peut être demandé par l’encadrant de la formation. 
+
+Dans le cas où l’Apprenant est sous contrat d’alternance,
+l’employeur de l’Apprenant est informé par e-mail des
+absences dans les meilleurs délais qui suivent la connaissance
+par l’organisme de formation.
+
+]
+

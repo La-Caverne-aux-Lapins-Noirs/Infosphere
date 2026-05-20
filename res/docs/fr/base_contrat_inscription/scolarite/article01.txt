@@ -1,0 +1,49 @@
+
+[@NewPage]
+
+[#IfC;Ecole;==;1;
+# Scolarisation
+;
+# Formation
+]
+
+## Article S[#C;S] - Domaine d'application
+
+[@Size;1]
+[@Columns;3;
+
+Cette section du présent document a pour objet de définir les conditions dans lesquelles l’Apprenant
+sera formé par l’EFRITS ainsi que les droits et les obligations réciproques de chacune des parties.
+
+[#Eline]
+
+[#IfC;Ecole;==;1;
+L’EFRITS est un établissement d’enseignement supérieur privé en informatique dont
+le siège social est établi au 33 Rue Delaporte 94700 Maisons-Alfort immatriculé
+auprès du Rectorat de Créteil.
+]
+
+[#IfC;OF;==;1;
+L’EFRITS est un organisme de formation professionnelle dispensant des actions de
+formation, dont le siège social est établi au 33 Rue Delaporte 94700 Maisons-Alfort.
+L’activité de formation professionnelle est déclarée auprès de l’autorité administrative
+compétente et fait l’objet d’un enregistrement au titre de la déclaration d’activité.
+]
+
+[#IfC;CFA;==;1;
+L’EFRITS est un centre de formation d’apprentis (CFA) assurant des formations par
+apprentissage, dont le siège social est établi au 33 Rue Delaporte 94700 Maisons-Alfort.
+Le CFA organise et dispense des actions de formation par apprentissage conformément
+aux dispositions applicables, en lien avec les employeurs et les obligations propres au
+régime de l’apprentissage
+]
+
+[#Eline]
+
+L’EFRITS offre une grande flexibilité dans l’apprentissage grâce à la pédagogie
+de projets, une méthode de validation basée sur la preuve, le remplacement des notes
+agglomérantes par des médailles de compétence précises et la possibilité de travailler
+à distance comme en présentiel sous certaines conditions.
+
+]
+

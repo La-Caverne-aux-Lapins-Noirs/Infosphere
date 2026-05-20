@@ -1,0 +1,12 @@
+
+.cycle_admin_card,
+.cycle_admin_grid
+{
+    background: rgba(128, 128, 128, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.cycle_admin_card input
+{
+    color: black;
+}

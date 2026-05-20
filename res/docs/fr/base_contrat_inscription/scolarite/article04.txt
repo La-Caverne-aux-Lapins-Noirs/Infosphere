@@ -1,0 +1,69 @@
+
+## Article S[#C;S] - Modalités d'inscription
+
+[@Size;1]
+[@Columns;3;
+
+L’inscription à l’EFRITS n’est pas automatique et ne se fait pas directement sur le Site. 
+
+Il appartient à l’Apprenant d’entrer en contact avec l’établissement
+sur le site internet via le formulaire de contact ou par e-mail à
+admission@efrits.fr, indiquant le Cursus qui l’intéresse pour obtenir
+les informations sur la procédure d’inscription correspondante. 
+
+L’Apprenant reçoit un Dossier d’inscription incluant ce document.
+
+[#IfC;NoPaiement;==;0;
+L’inscription est ferme et définitive par la remise du dossier incluant
+ce document signé [#IfC;Ecole;==;1;, la preuve d’acquittement à la CVEC]
+[#IfC;Ecole;==;1;
+et le versement de l’acompte des droits d’inscription.
+;
+et après l'expiration du délai de rétractation prévu à l'article S8, ou
+renonciation expresse.
+]
+]
+
+[#IfC;NoPaiement;==;0;
+Le responsable financier reconnait avoir dûment pris connaissance du document.
+]
+
+À la signature du document, l’EFRITS s’engage à garantir l’accès aux cours
+demandées sous réserve du respect des obligations de l’Apprenant. 
+
+Pour les fins de ce document, les facsimiles et les signatures électroniques
+seront reconnues comme équivalentes aux signatures originales sans
+qu’il soit nécessaire de recourir à une signature manuscrite.
+
+L’Apprenant reçoit un e-mail de confirmation de son inscription. L’Apprenant
+reçoit les coordonnées d’accès aux vidéos et autres supports pédagogiques,
+[#IfC;NoPaiement;==;0;
+dès que le paiement est effectivement validé par la banque ou par
+l’administration de l’EFRITS.
+;
+dès que l'inscription est validée.
+]
+
+L’Apprenant est seul responsable de l’exactitude des informations fournies,
+notamment d’une adresse électronique fonctionnelle lui permettant de
+recevoir la confirmation écrite de la Demande d’inscription. L’Apprenant
+ne pourra pas tenir l’EFRITS responsable d’un manquement lié à
+l’inexactitude ou la fausseté des informations fournies au moment de la
+Demande d’inscription, qui seront utilisées pour permettre à l’Apprenant
+d’accéder aux cours. 
+
+Les registres informatisés, conservés sur le Site et dans les systèmes
+informatiques de l’EFRITS dans des conditions raisonnables de sécurité,
+seront considérés comme les preuves des communications, des Demandes
+d’inscription[#IfC;NoPaiement;==;0;
+et des paiements intervenus entre les parties. L’archivage
+des devis et des factures ainsi que des avenants justifiant d’une passerelle
+est effectué sur un support fiable et durable pouvant être produit à
+titre de preuve pour les réinscriptions.
+;
+et autres formalités.
+]
+
+]
+
+[@NewPage]

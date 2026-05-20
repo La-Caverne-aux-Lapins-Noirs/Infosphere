@@ -1,0 +1,23 @@
+
+## Article I2 - Conditions générales
+
+[@Size;1]
+[@Columns;1;
+Tous les Apprenants suivant une formation proposée par l’EFRITS
+doivent respecter le présent règlement durant l’intégralité
+de la formation pour toutes les questions relatives à :
+]
+
+- La santé
+
+- La sécurité
+
+- La discipline
+
+- La représentation des Apprenants
+
+
+Toutefois, lorsque la formation se déroule dans une entreprise
+déjà dotée d'un règlement intérieur, les mesures de santé et
+de sécurité applicables aux Apprenants sont celles de ce règlement.
+

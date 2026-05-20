@@ -1,130 +1,321 @@
-<?php if ($page == "cycle") { ?>
-    <?php if (is_director_for_cycle($cycle["id"])) { ?>
-	<td class="click_list">
-	    <?php
-	    $users = db_select_all("
-	      user.id, user.codename
-              FROM user
-              LEFT JOIN user_school
-                ON user.id = user_school.id_user
-              LEFT JOIN school_cycle
-                ON school_cycle.id_school = user_school.id_school
-              LEFT JOIN user_cycle
-                ON user_cycle.id_user = user.id
-                AND user_cycle.id_cycle = {$cycle["id"]}
-              WHERE deleted IS NULL
-              AND school_cycle.id_cycle = {$cycle["id"]}
-              AND user_school.authority = 0
-              AND user_cycle.id IS NULL
-              ORDER BY codename ASC
-		");
-	    if (count($users)) { ?>
-		<?php foreach ($users as $usr) { ?>
-		    <div onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$cycle["id"]; ?>_name');" style="position: relative;">
-			<?=display_avatar($usr, 50, true); ?>
-			<p><?=$usr["codename"]; ?></p>
-			<div
-			    <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}", "position: absolute; bottom: auto; top: 0px; left: auto; right: 0px;"); ?>
-			>
-			    &#x1F50D;&#xFE0E
-			</div>
+<?php
+$can_edit_cycle = is_director_for_cycle($cycle["id"]);
+
+$cycle_language_fields = [
+    "name" => "text",
+];
+
+$cycle_activity_extra_properties = [
+    [
+	"name" => $Dictionnary["Curriculum"],
+	"codename" => "cursus",
+	"admin_func" => "is_director_for_cycle",
+    ]
+];
+
+if ($page == "cursus")
+{
+    $cycle_activity_extra_properties[] = [
+	"name" => $Dictionnary["WeekShift"],
+	"codename" => "week_shift",
+	"admin_func" => "is_director_for_cycle",
+    ];
+    $cycle_activity_extra_properties[] = [
+	"name" => $Dictionnary["ReplacementSubscription"],
+	"codename" => "replacement_subscription",
+	"admin_func" => "is_director_for_cycle",
+    ];
+}
+
+$cycle_user_extra_properties = [
+    [
+	"name" => $Dictionnary["Curriculum"],
+	"codename" => "cursus",
+	"admin_func" => "is_director_for_cycle",
+    ],
+    [
+	"name" => $Dictionnary["GeneralComment"],
+	"codename" => "commentaries",
+	"admin_func" => "is_director_for_cycle",
+    ]
+];
+?>
+
+<div class="cycle_admin_page" id="cycle<?=$cycle["id"]; ?>_configuration">
+    <div class="cycle_admin_header cycle_admin_card">
+	<div>
+	    <h3><?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?></h3>
+	    <p>
+		<?php if ($page == "cycle") { ?>
+		    <?=$Dictionnary["Cycle"]; ?>
+		<?php } else { ?>
+		    <?=$Dictionnary["CycleTemplate"]; ?>
+		<?php } ?>
+		- <?=$Dictionnary["CycleNumber"]; ?> <?=$cycle["cycle"]; ?>
+	    </p>
+	</div>
+
+	<div class="cycle_admin_header_stats">
+	    <?php if ($page == "cycle") { ?>
+		<span><?=$Dictionnary["Students"]; ?>: <?=count($cycle["user"]); ?></span>
+	    <?php } ?>
+	    <span><?=$Dictionnary["Activity"]; ?>: <?=count($cycle["activity"]); ?></span>
+	    <span><?=$Dictionnary["Credits"]; ?>: <?=$cycle["min_credit"]; ?> - <?=$cycle["max_credit"]; ?> / <?=$cycle["objective"]; ?></span>
+	</div>
+    </div>
+
+    <div class="cycle_admin_grid">
+	<section class="cycle_admin_card cycle_admin_edit">
+	    <form
+		method="put"
+		action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>"
+		class="cycle_admin_form"
+		onsubmit="return silent_submitf(this, {after_success: refresh});"
+	    >
+		<h2><?=$Dictionnary["Edit"]; ?></h2>
+
+		<div class="cycle_admin_identity_grid">
+		    <label>
+			<?=$Dictionnary["CodeName"]; ?>
+			<input
+			    type="text"
+			    name="codename"
+			    value="<?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?>"
+			    <?=$can_edit_cycle ? "" : "readonly"; ?>
+			/>
+		    </label>
+
+		    <label>
+			<?=$Dictionnary["CycleNumber"]; ?>
+			<select name="year">
+			    <?php for ($i = 0; $i < 4 * 5 + 1; ++$i) { ?>
+				<option value="<?=$i; ?>" <?=$i == $cycle["cycle"] ? "selected" : ""; ?>>
+				    <?php if ($i < 4 * 5) { ?>
+					<?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+					(<?=$Dictionnary["Year"]; ?> <?=floor($i / 4 + 1); ?>)
+				    <?php } else { ?>
+					<?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+					(<?=$Dictionnary["OutOfYear"]; ?>)
+				    <?php } ?>
+				</option>
+			    <?php } ?>
+			</select>
+		    </label>
+
+		    <label>
+			<?=$Dictionnary["Objective"]; ?>
+			<input
+			    type="number"
+			    name="objective"
+			    min="0"
+			    value="<?=htmlspecialchars($cycle["objective"], ENT_QUOTES); ?>"
+			/>
+		    </label>
+
+		    <?php if ($page == "cycle") { ?>
+			<label>
+			    <?=$Dictionnary["FirstWeekDate"]; ?>
+			    <input
+				type="date"
+				name="first_day"
+				value="<?=htmlspecialchars(substr(try_get($cycle, "first_day", ""), 0, 10), ENT_QUOTES); ?>"
+			    />
+			</label>
+		    <?php } ?>
+		</div>
+
+		<div class="cycle_admin_languages">
+		    <?php forge_language_formular($cycle_language_fields, $cycle, "cycle_language_entry"); ?>
+		</div>
+
+		<?php if ($page == "cycle") { ?>
+		    <label class="cycle_admin_checkbox">
+			<input type="hidden" name="check_done" value="1" />
+			<input type="checkbox" name="done" <?=$cycle["done"] ? "checked" : ""; ?> />
+			<?=$Dictionnary["CycleDone"]; ?>
+		    </label>
+		<?php } ?>
+
+		<div class="cycle_admin_actions">
+		    <input
+			type="button"
+			onclick="silent_submitf(this.parentNode.parentNode, {after_success: refresh});"
+			value="<?=$Dictionnary["Edit"]; ?>"
+		    />
+		</div>
+	    </form>
+	</section>
+
+	<section class="cycle_admin_card cycle_admin_mail">
+	    <?php if ($page == "cycle") { ?>
+		<h2>Courriel groupé (Envoyé en tant que <?=$OriginalUser["codename"]; ?>)</h2>
+
+		<form
+		    method="post"
+		    action="/api/cycle/<?=$cycle["id"]; ?>/mail"
+		    onsubmit="return silent_submit(this);"
+		>
+		    <label>
+			<?=$Dictionnary["Subject"]; ?>
+			<input type="text" name="subject" />
+		    </label>
+
+		    <label>
+			<?=$Dictionnary["Message"]; ?>
+			<textarea name="content"></textarea>
+		    </label>
+
+		    <input type="file" name="file" multiple="true" />
+
+		    <div class="cycle_admin_actions">
+			<input
+			    type="button"
+			    onclick="if (window.confirm('Envoyer ce message à tous les étudiants du cycle ?')) silent_submit(this.parentNode.parentNode);"
+			    value="<?=$Dictionnary["Send"]; ?>"
+			/>
+		    </div>
+		</form>
+	    <?php } else { ?>
+		<h2><?=$Dictionnary["Instantiate"]; ?></h2>
+
+		<form method="post" action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>/instantiate">
+		    <label>
+			<?=$Dictionnary["FirstWeekDate"]; ?>
+			<input type="date" name="first_week" />
+		    </label>
+
+		    <label>
+			<?=$Dictionnary["CodeName"]; ?>
+			<input type="text" name="instance_name" />
+		    </label>
+
+		    <div class="cycle_admin_actions">
+			<input
+			    type="button"
+			    onclick="silent_submitf(this.parentNode.parentNode, {after_success: refresh});"
+			    value="<?=$Dictionnary["Instantiate"]; ?>"
+			/>
+		    </div>
+		</form>
+
+		<?php if (count($cycle["instance"])) { ?>
+		    <h4><?=$Dictionnary["CycleInstances"]; ?></h4>
+		    <div class="cycle_admin_instances">
+			<?php foreach ($cycle["instance"] as $instance) { ?>
+			    <a href="index.php?p=CycleMenu&amp;a=<?=$instance["id"]; ?>">
+				<?=$instance["codename"]; ?>
+			    </a>
+			<?php } ?>
 		    </div>
 		<?php } ?>
-	    <?php } else { ?>
-		<?=$Dictionnary["Empty"]; ?>
 	    <?php } ?>
-	</td>
-    <?php } ?>
+	</section>
 
-    <td>
-	<?php list_of_links([
-	    "method" => "post",
-	    "hook_name" => "cycle",
-	    "hook_id" => $cycle["id"],
-	    "linked_name" => "user",
-	    "linked_elems" => $cycle["user"],
-	    "admin_func" => "is_director_for_cycle",
-	    "extra_properties" => [
-		[
-		    "name" => $Dictionnary["Curriculum"],
-		    "codename" => "cursus",
-		    "admin_func" => "is_director_for_cycle",
-		],
-		[
-		    "name" => $Dictionnary["GeneralComment"],
-		    "codename" => "commentaries",
-		    "admin_func" => "is_director_for_cycle",
-		]
-	    ]
-	]); ?>
-    </td>
-<?php } ?>
+	<section class="cycle_admin_card cycle_admin_activities">
+	    <h2><?=$Dictionnary["Activity"]; ?></h2>
 
-<?php if (is_director_for_cycle($cycle["id"])) { ?>
-    <td class="click_list">
-	<?php
-	$link = $page == "cursus" ? "ActivityTemplatesMenu" : "InstancesMenu";
-	$not_too_old = "";
-	if ($page == "cycle")
-	    $not_too_old = "
-	        AND (done_date IS NULL OR done_date > NOW())
-	       ";
-	$acts = db_select_all("
-           activity.id, codename, {$Language}_name as name
-           FROM activity
-           LEFT JOIN activity_cycle
-             ON activity.id = activity_cycle.id_activity
-             AND activity_cycle.id_cycle = ".$cycle["id"]."
-           WHERE is_template = ".($page == "cursus" ? 1 : 0)."
-           AND parent_activity IS NULL
-           AND activity_cycle.id IS NULL
-           AND deleted IS NULL $not_too_old
-           ORDER BY codename
-	   ");
-	if (count($acts)) { ?>
-	    <?php foreach ($acts as $act) { ?>
-		<div onclick="add_to_listfield(this, '<?=$act["codename"]; ?>', 'activity<?=$cycle["id"]; ?>_name');">
-		    <div <?=clickable("index.php?p=$link&amp;a={$act["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-		    <p><?=$act["codename"]; ?> <?=$act["name"]; ?></p>
+	    <div class="cycle_admin_scrollbox">
+		<?php list_of_links([
+		    "hook_name" => $page,
+		    "method" => "post",
+		    "hook_id" => $cycle["id"],
+		    "linked_name" => "activity",
+		    "link" => "instances",
+		    "linked_elems" => $cycle["activity"],
+		    "admin_func" => "is_director_for_cycle",
+		    "extra_properties" => $cycle_activity_extra_properties,
+		]); ?>
+	    </div>
+	</section>
+
+	<section class="cycle_admin_card cycle_admin_management">
+	    <div class="cycle_admin_side_block">
+		<h2>Responsables</h2>
+		<?php list_of_links([
+		    "hook_name" => $page,
+		    "hook_id" => $cycle["id"],
+		    "linked_name" => [
+			"placeholder" => "Teacher or laboratory",
+			"table" => "teacher",
+			"" => "teacher",
+			"#" => "laboratory",
+		    ],
+		    "linked_elems" => $cycle["teacher"],
+		    "admin_func" => "is_director_for_cycle",
+		]); ?>
+	    </div>
+
+	    <?php if ($page == "cycle") { ?>
+		<div class="cycle_admin_side_block">
+		    <h2><?=$Dictionnary["School"]; ?></h2>
+		    <?php list_of_links([
+			"hook_name" => "cycle",
+			"hook_id" => $cycle["id"],
+			"linked_name" => "school",
+			"linked_elems" => $cycle["school"],
+			"admin_func" => "is_director_for_cycle",
+		    ]); ?>
 		</div>
 	    <?php } ?>
-	<?php } else { ?>
-	    <?=$Dictionnary["Empty"]; ?>
-	<?php } ?>
-    </td>
-<?php } ?>
 
-<td>
-    <?php
-    $ext_props = [
-	[
-	    "name" => $Dictionnary["Curriculum"],
-	    "codename" => "cursus",
-	    "admin_func" => "is_director_for_cycle"
-	]
-    ];
-    if ($page == "cursus")
-    {
-	$ext_props[] = [
-	    "name" => $Dictionnary["WeekShift"],
-	    "codename" => "week_shift",
-	    "admin_func" => "is_director_for_cycle",
-	];
-	$ext_props[] = [
-	    "name" => $Dictionnary["ReplacementSubscription"],
-	    "codename" => "replacement_subscription",
-	    "admin_func" => "is_director_for_cycle",
-	];
-    }
-    ?>
-    <?php list_of_links([
-	"hook_name" => $page,
-	"method" => "post",
-	"hook_id" => $cycle["id"],
-	"linked_name" => "activity",
-	"link" => "instances",
-	"linked_elems" => $cycle["activity"],
-	"admin_func" => "is_director_for_cycle",
-	"extra_properties" => $ext_props
-    ]); ?>
-</td>
+	    <div class="cycle_admin_side_block cycle_admin_exports">
+		<h2><?=$Dictionnary["Export"]; ?></h2>
+
+		<form method="post" action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?>">
+		    <input type="hidden" name="action" value="export_activity" />
+		    <input type="hidden" name="cycle" value="<?=$cycle["id"]; ?>" />
+
+		    <select name="format">
+			<option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+			<option value="detailed_sketch"><?=$Dictionnary["DetailedSketch"]; ?></option>
+			<option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+		    </select>
+
+		    <input type="submit" value="<?=$Dictionnary["Export"]; ?>" />
+		</form>
+
+		<?php if ($page == "cycle" && $cycle["id_template"] != -1 && $cycle["id_template"] != NULL) { ?>
+		    <div class="cycle_admin_side_block">
+			<h2><?=$Dictionnary["Template"]; ?></h2>
+			<p style="text-align: center">
+			    <a href="index.php?p=CycleTemplateMenu&amp;a=<?=$cycle["id_template"]; ?>">
+				<?=$cycle["codename_template"]; ?>
+			    </a>
+			</p>
+		    </div>
+		<?php } ?>
+	    </div>
+
+	    <?php if ($can_edit_cycle) { ?>
+		<div class="cycle_admin_side_block cycle_admin_danger">
+		    <h2><?=$Dictionnary["Delete"]; ?></h2>
+		    <?php $confirm = addslashes($Dictionnary["ConfirmDeletion"]); ?>
+		    <form method="delete" action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>" onsubmit="return false;">
+			<input
+			    type="button"
+			    onclick="if (window.confirm('<?=$confirm; ?>')) silent_submitf(this.parentNode, {after_success: function(){document.location='index.php?p=<?=($page == "cycle" ? "CycleMenu" : "CycleTemplateMenu"); ?>';}});"
+			    value="<?=$Dictionnary["Delete"]; ?>"
+			/>
+		    </form>
+		</div>
+	    <?php } ?>
+	</section>
+
+	<?php if ($page == "cycle") { ?>
+	    <section class="cycle_admin_card cycle_admin_students">
+		<h2><?=$Dictionnary["Students"]; ?></h2>
+
+		<?php list_of_links([
+		    "method" => "post",
+		    "hook_name" => "cycle",
+		    "hook_id" => $cycle["id"],
+		    "linked_name" => "user",
+		    "linked_elems" => $cycle["user"],
+		    "admin_func" => "is_director_for_cycle",
+		    "extra_properties" => $cycle_user_extra_properties,
+		]); ?>
+	    </section>
+	<?php } ?>
+    </div>
+</div>
+

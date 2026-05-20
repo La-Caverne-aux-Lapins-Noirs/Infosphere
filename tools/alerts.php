@@ -14,7 +14,7 @@ function retrieve_alerts()
     }
 
     $last = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Albedo stops.' ORDER BY log_date DESC");
-    $lastcheck = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Infosphere hand runs.' ORDER BY log_date DESC");
+    $lastcheck = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Distrans runs.' ORDER BY log_date DESC");
     $trace_ddos = db_select_all("* FROM log WHERE type = 6 AND DATEDIFF(log_date, NOW()) < 2 GROUP BY ip ORDER BY log_date DESC");
     if (count($trace_ddos))
     {

@@ -1,0 +1,45 @@
+
+[#IfC;NoPaiement;==;0;
+
+## Article S[#C;S] - Frais
+
+[@Size;1]
+[@Columns;3;
+Les frais sont fixés annuellement par l’Administration de l’EFRITS.
+
+**Toute période commencée par l’Apprenant est due dans son intégralité.**
+
+Le défaut de paiement de la totalité des frais pour l’année en cours entraine
+[#IfC;Ecole;==;1;
+l’interdiction de passage des examens,
+la rétention des résultats de l’Apprenant et la non-présentation
+de ce dernier en jury de passage en année supérieure ou
+de jury de conclusion de la formation, jusqu’au complet paiement du prix.
+;
+la suspension de l’accès aux cours et services, et impossibilité de délivrer
+les documents de fin de formation tant que le règlement
+n’est pas complet.
+]
+
+L'EFRITS s'engage à ne pas facturer à l'Apprenant
+les [#IfC;Ecole;==;1;années;périodes] supplémentaires qu'entraineraient
+[#IfC;Ecole;==;1;un redoublement;une prolongation ou reprise de modules] de
+sa part. Le mode de fonctionnement servant de base est construit
+en cinq ans.
+Le premier versement reste cependant dû et cette exonération
+ne concerne que l'Apprenant et non pas l'éventuel employeur de
+l'Apprenant en cas de contrat d'alternance.
+
+Les années non facturées sont les dernières et non les années
+redoublées elle-mêmes et celle-ci sont au tarif de l'année
+dans laquelle l'Apprenant aurait du se trouver
+sans redoublement.
+
+Exemple: L'Apprenant redouble sa troisième année. Il refait donc
+une troisième année au prix de la quatrième. Sa quatrième année
+est réalisée au prix de la cinquième année. Sa cinquième année
+ne lui coute que le premier versement.
+
+]
+
+]

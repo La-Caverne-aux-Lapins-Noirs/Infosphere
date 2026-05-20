@@ -1,0 +1,208 @@
+
+# Parties prenantes
+
+[#IfC;NoPaiement;==;0;
+Le présent contrat d'inscription est conclu entre les parties:
+;
+La présente convention est conclue entre les parties:
+]
+
+## L'EFRITS
+
+[#Size;1]
+[@Columns;1;
+  [#Variable;Identification]
+]
+
+## [#Variable;Signatories.Student.Role]
+
+Désigné(e) « l’Apprenant », dans l'ensemble du présent document.
+
+[#Size;3]
+[@Columns;2;
+  Prénom(s): [#FLine;[#Variable;Signatories.Student.FirstName]]
+
+  Nom d'usage: [#FLine;[#Variable;Signatories.Student.UseName]]
+  
+  Nom de famille: [#FLine;[#Variable;Signatories.Student.FamilyName]]
+
+  Genre: [#FLine;[#Variable;Signatories.Student.Gender]]
+
+  Courriel: [#FLine;[#Variable;Signatories.Student.Mail]]
+  
+  Téléphone: [#FLine;[#Variable;Signatories.Student.Phone]]
+  
+  Adresse postale: [#FLine;[#Variable;Signatories.Student.Address]]
+  
+  Ville: [#FLine;[#Variable;Signatories.Student.City]]
+  
+  Code postal: [#FLine;[#Variable;Signatories.Student.PostalCode]]
+  
+  Date de naissance: [#FLine;[#Variable;Signatories.Student.BirthDate]]
+  
+  Commune de naissance: [#FLine;[#Variable;Signatories.Student.BirthCity]]
+
+  Pays de naissance: [#FLine;[#Variable;Signatories.Student.BirthCountry]]
+  
+  Nationalité: [#FLine;[#Variable;Signatories.Student.Nationality]]
+
+  Numéro INE: [#FLine;[#Variable;Signatories.Student.INE]]
+
+  [@IfC;NoPaiement;==;1;
+    Numéro de sécurité sociale : [#FLine;[#Variable;Signatories.Student.NIR]]
+  ]
+
+]
+
+[@Columns;2;
+
+  Déclarer une situation de handicap? [#YesNo;[#Variable;Signatories.Student.Handicap]]
+
+  Si oui, laquelle ou lesquelles: [#FLine;[#Variable;Signatories.Student.HandicapKind]]
+
+  Réinscription depuis une formation de l'EFRITS: [#YesNo;[#Variable;Signatories.Student.Resubscribe]]
+
+  Nom de la précédente formation fréquentée: [#FLine;[#Variable;Signatories.Student.LastClass]]
+
+  Formation achevée avec succès: [#YesNo;[#Variable;Signatories.Student.LastClassSuccess]]
+
+  Période de la formation demandée: [#FLine;[#Variable;Signatories.Student.SchoolPeriod]]
+
+]
+
+Formation demandée:
+
+[@Columns;4;
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF1;1]] [EF1]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF2;1]] [EF2]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF2X;1]] [EF2X]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF3;1]] [EF3]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF3X;1]] [EF3X]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF4;1]] [EF4]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenClass;==;EF5;1]] [EF5]
+
+  [#CheckBox;[#IfC;Signatories.Student.ChosenSpecialty;!=;;1]] Spé: [#FLine;[#Variable;Signatories.Student.ChosenSpecialty]]
+
+]
+
+Rentrée demandée:
+
+[@Columns;4;
+  [#CheckBox;[#IfC;Signatories.Student.Month;==;September;1]] Septembre [#FLine;[#IfC;Signatories.Student.Month;==;September;[#Variable;Signatories.Student.Day]]]
+  
+  [#CheckBox;[#IfC;Signatories.Student.Month;==;January;1]] Janvier [#FLine;[#IfC;Signatories.Student.Month;==;January;[#Variable;Signatories.Student.Day]]]
+  
+  [#CheckBox;[#IfC;Signatories.Student.Month;==;April;1]] Avril [#FLine;[#IfC;Signatories.Student.Month;==;April;[#Variable;Signatories.Student.Day]]]
+  
+  [#CheckBox;[#IfC;Signatories.Student.Month;==;Other;1]] Autre: [#FLine;[#IfC;Signatories.Student.Month;==;Other;[#Variable;Signatories.Student.OtherMonthDay]]]
+]
+
+[#Variable;Delay]
+
+## Responsable légal 1
+
+Premier représentant légal de l'Apprenant mineur au moment de l'inscription.
+
+[@Columns;2;
+  Prénom: [#FLine;[#Variable;Legal1.FirstName]]
+  Nom de famille: [#FLine;[#Variable;Legal1.FamilyName]]
+  Courriel: [#FLine;[#Variable;Legal1.Mail]]
+  Téléphone: [#FLine;[#Variable;Legal1.Phone]]
+  Adresse postale: [#FLine;[#Variable;Legal1.Address]]
+  Ville: [#FLine;[#Variable;Legal1.City]]
+  Code postal: [#FLine;[#Variable;Legal1.PostalCode]]
+  Date de naissance: [#FLine;[#Variable;Legal1.BirthDate]]
+  Commune de naissance: [#FLine;[#Variable;Legal1.BirthCity]]
+  Pays de naissance: [#FLine;[#Variable;Legal1.BirthCountry]]
+  Nationalité: [#FLine;[#Variable;Legal1.Nationality]]
+]
+
+Envoi d'une copie des bulletins trimestriels: [@YesNo;[#Variable;Legal1.SendSchoolReport]]
+
+Accès à l'intranet au compte de l'Apprenant en lecture-seule: [@YesNo;[#Variable;Legal1.IntranetAccess]]
+
+[@NewPage]
+
+## Responsable légal 2
+
+Deuxième représentant légal de l'Apprenant mineur au moment de l'inscription.
+
+[@Columns;2;
+  Prénom: [#FLine;[#Variable;Legal2.FirstName]]
+  Nom de famille: [#FLine;[#Variable;Legal2.FamilyName]]
+  Courriel: [#FLine;[#Variable;Legal2.Mail]]
+  Téléphone: [#FLine;[#Variable;Legal2.Phone]]
+  Adresse postale: [#FLine;[#Variable;Legal2.Address]]
+  Ville: [#FLine;[#Variable;Legal2.City]]
+  Code postal: [#FLine;[#Variable;Legal2.PostalCode]]
+  Date de naissance: [#FLine;[#Variable;Legal2.BirthDate]]
+  Commune de naissance: [#FLine;[#Variable;Legal2.BirthCity]]
+  Pays de naissance: [#FLine;[#Variable;Legal2.BirthCountry]]
+  Nationalité: [#FLine;[#Variable;Legal2.Nationality]]
+]
+
+Envoi d'une copie des bulletins trimestriels: [@YesNo;[#Variable;Legal2.SendSchoolReport]]
+
+Accès à l'intranet au compte de l'Apprenant en lecture-seule: [@YesNo;[#Variable;Legal2.IntranetAccess]]
+
+[#IfC;NoPaiement;!=;1;
+
+## Responsable financier
+
+Identique à l'Apprenant: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Student;1]] (Ne pas remplir ci-dessous si identique)
+
+Identique à responsable légal 1: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal1;1]] (Ne pas remplir ci-dessous si identique)
+
+Identique à responsable légal 2: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal2;1]] (Ne pas remplir ci-dessous si identique)
+
+Autre: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Other;1]]
+
+[@Columns;2;
+  Prénom: [#FLine;[#Variable;Signatories.Finance.FirstName]]
+  Nom de famille: [#FLine;[#Variable;Signatories.Finance.FamilyName]]
+  Courriel: [#FLine;[#Variable;Signatories.Finance.Mail]]
+  Téléphone: [#FLine;[#Variable;Signatories.Finance.Phone]]
+  Adresse postale: [#FLine;[#Variable;Signatories.Finance.Address]]
+  Ville: [#FLine;[#Variable;Signatories.Finance.City]]
+  Code postal: [#FLine;[#Variable;Signatories.Finance.PostalCode]]
+  Date de naissance: [#FLine;[#Variable;Signatories.Finance.BirthDate]]
+  Commune de naissance: [#FLine;[#Variable;Signatories.Finance.BirthCity]]
+  Pays de naissance: [#FLine;[#Variable;Signatories.Finance.BirthCountry]]
+  Nationalité: [#FLine;[#Variable;Signatories.Finance.Nationality]]
+]
+
+  Envoi d'une copie des bulletins trimestriels: [@YesNo;[#Variable;Signatories.Finance.SendSchoolReport]]
+
+  Accès à l'intranet au compte de l'Apprenant en lecture-seule: [@YesNo;[#Variable;Signatories.Finance.IntranetAccess]]
+
+]
+
+## Personne à contacter en cas d'urgence
+
+Responsable légal 1: [@CheckBox;[#IfC;Emergency.Is;==;Legal1;1]]
+
+Responsable légal 2: [@CheckBox;[#IfC;Emergency.Is;==;Legal2;1]]
+
+[#IfC;NoPaiement;!=;1;
+Responsable financier: [@CheckBox;[#IfC;Emergency.Is;==;Finance;1]]
+]
+
+Autre: [@CheckBox;[#IfC;Emergency.Is;==;Other;1]]
+
+[@Columns;2;
+
+Prénom: [@FLine;[#Variable;Emergency.FirstName]]
+Nom de famille: [@FLine;[#Variable;Emergency.FamilyName]]
+Courriel: [@FLine;[#Variable;Emergency.Mail]]
+Téléphone: [@FLine;[#Variable;Emergency.Phone]]
+
+]
+
+[@NewPage]
+

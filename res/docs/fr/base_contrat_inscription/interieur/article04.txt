@@ -1,0 +1,14 @@
+
+## Article I4 - Vidéo surveillance
+
+[@Columns;1;
+[#IfC;Ecole;==;-1;
+Nous informons l'Apprenant que le lieu de formation est placé sous
+vidéosurveillance pour des mesures de sécurité. Pour tous renseignements
+s’adresser au responsable du lieu de formation à contact@efrits.fr
+auprès de qui vous pourrez exercer votre droit d’accès.
+;
+Les locaux de l'EFRITS ne sont pas vidéosurveillés.
+]
+
+]

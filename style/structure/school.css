@@ -1,4 +1,3 @@
-
 .school_table
 {
     height: 90% !important;
@@ -13,3 +12,344 @@
 {
     overflow: auto;
 }
+
+.school_admin_page
+{
+    box-sizing: border-box;
+    display: grid;
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+}
+
+.school_admin_header,
+.school_admin_card
+{
+    border-radius: 8px;
+    box-sizing: border-box;
+    padding: 12px;
+}
+
+.school_admin_header
+{
+    align-items: center;
+    display: flex;
+    gap: 15px;
+}
+
+.school_admin_icon > div
+{
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 80px;
+    width: 80px;
+}
+
+.school_admin_title h3,
+.school_admin_title p,
+.school_admin_card h4
+{
+    margin: 0;
+}
+
+.school_admin_title p
+{
+    margin-top: 6px;
+}
+
+.school_admin_card h4
+{
+    margin-bottom: 10px;
+}
+
+.school_admin_form label,
+.school_admin_linkbox label
+{
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.school_admin_form input[type="text"],
+.school_admin_form textarea
+{
+    box-sizing: border-box;
+    display: block;
+    margin-top: 3px;
+    width: 100%;
+}
+
+.school_admin_form textarea
+{
+    min-height: 76px;
+    resize: vertical;
+}
+
+.school_admin_identity_grid,
+.school_admin_languages,
+.school_admin_grid_two,
+.school_admin_legal_grid
+{
+    display: grid;
+    gap: 10px;
+}
+
+.school_admin_identity_grid
+{
+    grid-template-columns: minmax(220px, 0.8fr) minmax(420px, 2fr);
+}
+
+.school_admin_languages
+{
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.school_admin_grid_two
+{
+    grid-template-columns: repeat(2, minmax(250px, 1fr));
+}
+
+.school_admin_legal_grid
+{
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+}
+
+.school_language_entry
+{
+    margin: 0;
+}
+
+.school_language_entry span
+{
+    font-weight: bold;
+}
+
+.school_language_entry input
+{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.school_admin_actions
+{
+    margin-top: 10px;
+    text-align: right;
+}
+
+.school_admin_management_grid
+{
+    align-items: start;
+    display: grid;
+    gap: 12px;
+    grid-template-columns:
+	minmax(240px, 0.85fr)
+	minmax(280px, 1fr)
+	minmax(280px, 1fr)
+	minmax(220px, 0.75fr);
+    width: 100%;
+}
+
+.school_admin_staff
+{
+    grid-column: 1;
+}
+
+.school_admin_students
+{
+    grid-column: 2 / span 2;
+}
+
+.school_admin_cycles
+{
+    grid-column: 4;
+}
+
+.school_admin_staff_grid
+{
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr;
+}
+
+.school_admin_linkbox
+{
+    min-width: 0;
+}
+
+.school_admin_page .list_of_link
+{
+    box-sizing: border-box;
+    min-width: 0;
+    overflow: visible;
+    width: 100%;
+}
+
+.school_admin_page .list_of_link h5,
+.school_admin_page .list_of_link form
+{
+    box-sizing: border-box;
+    display: block;
+    margin: 0;
+    width: 100%;
+}
+
+.school_admin_page .list_of_link h5
+{
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.school_admin_page .list_of_link > form[id$="_form"]
+{
+    display: grid;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    margin-bottom: 5px;
+}
+
+.school_admin_page .list_of_link > form[id$="_form"] input[type="hidden"]
+{
+    display: none;
+}
+
+.school_admin_page .list_of_link > form[id$="_form"] input[type="text"]
+{
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100% !important;
+}
+
+.school_admin_page .list_of_link > form[id$="_form"] input[type="button"]
+{
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100% !important;
+}
+
+.school_admin_page .sublist_of_link
+{
+    box-sizing: border-box;
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.school_admin_page .sublist_of_link div
+{
+    align-items: center;
+    box-sizing: border-box;
+    display: grid;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-width: 0;
+    padding: 1px 4px;
+    width: 100% !important;
+}
+
+.school_admin_page .sublist_of_link div a
+{
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.school_admin_page .sublist_of_link input[type="button"]
+{
+    box-sizing: border-box;
+    padding: 0;
+    width: 100% !important;
+}
+
+.school_admin_students .list_of_link
+{
+    align-content: start;
+    display: grid;
+    gap: 3px 10px;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
+.school_admin_students .list_of_link > h5,
+.school_admin_students .list_of_link > form[id$="_form"]
+{
+    grid-column: 1 / -1;
+}
+
+.school_admin_staff .list_of_link,
+.school_admin_cycles .list_of_link
+{
+    display: block;
+}
+
+.school_admin_danger
+{
+    border-color: rgba(255, 0, 0, 0.45);
+}
+
+.school_admin_danger input[type="button"]
+{
+    color: red;
+}
+
+@media (max-width: 1500px)
+{
+    .school_admin_management_grid
+    {
+	grid-template-columns:
+	    minmax(240px, 0.9fr)
+	    minmax(360px, 1.4fr)
+	    minmax(220px, 0.8fr);
+    }
+
+    .school_admin_staff
+    {
+	grid-column: 1;
+    }
+
+    .school_admin_students
+    {
+	grid-column: 2;
+    }
+
+    .school_admin_cycles
+    {
+	grid-column: 3;
+    }
+
+    .school_admin_students .list_of_link
+    {
+	grid-template-columns: 1fr;
+    }
+
+    .school_admin_legal_grid
+    {
+	grid-template-columns: repeat(2, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 1000px)
+{
+    .school_admin_identity_grid,
+    .school_admin_grid_two,
+    .school_admin_legal_grid,
+    .school_admin_management_grid
+    {
+	grid-template-columns: 1fr;
+    }
+
+    .school_admin_staff,
+    .school_admin_students,
+    .school_admin_cycles
+    {
+	grid-column: auto;
+    }
+
+    .school_admin_students .list_of_link
+    {
+	grid-template-columns: 1fr;
+    }
+}
+
+

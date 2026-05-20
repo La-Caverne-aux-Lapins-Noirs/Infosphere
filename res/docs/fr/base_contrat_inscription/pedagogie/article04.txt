@@ -1,0 +1,44 @@
+
+[@NewPage]
+
+## Article P4 - Les indicateurs
+
+[@Size;2]
+[@Columns;2;
+
+Trois indicateurs sont générés en fonction du déroulement
+de la formation par l’Apprenant : l’indicateur d’implication,
+l’indicateur de réussite et l’indicateur de difficulté.
+L’indicateur d’implication consiste en la mesure de participation
+aux activités de formation. Cette participation est mesurée
+par la présence et par les travaux rendus, quel que soit
+le résultat des corrections. L’indicateur de réussite consiste
+en la mesure du nombre de nouvelles médailles acquises.
+L’indicateur de difficulté est la différence entre l’indicateur
+de réussite et l’indicateur d’implication. 
+
+Ces indicateurs sont utilisés afin de générer des alertes
+et améliorer notre capacité à suivre les Apprenants. Cet indicateur
+est également utile aux Apprenants car ces indicateurs seront
+rapportés à la moyenne des indicateurs du groupe de l’Apprenant. 
+
+Ces indicateurs peuvent être utilisés afin de permettre à
+l’Apprenant ou non de travailler à distance, de favoriser la
+construction de certains groupes au lieu d’autres dans le
+cas des activités en équipe aléatoire, etc. 
+
+Ces indicateurs fournissent pour chacun d’entre eux un
+indicateur de variation : y-a-il eu une progression positive
+ou négative forte et remarquable sur l’un des indicateurs
+récemment ? Cette information peut être utilisée pour effectuer
+un suivi plus fin de l’Apprenant. 
+
+Si l’indicateur d’implication est trop bas ou celui de difficulté
+trop haute, ou si une variation négative trop forte est constatée
+par le corps pédagogique, l’Apprenant pourra être convoqué afin de
+discuter de sa situation. Des médailles spécifiques de progression
+peuvent également être données en cas de progression rapide
+à la suite d’un passage à vide. 
+
+]
+

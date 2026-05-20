@@ -53,11 +53,11 @@ function SubscribeUser($id, $data, $method, $output, $module)
 	    ob_end_clean();
 	    return ($request);
 	}
-	$Database->query("
-          INSERT INTO user_todolist (id_user, content) VALUES
-	  ($id_user, '".$Database->real_escape_string($Dictionnary["ThisIsATodoList"])."'),
-	  ($id_user, '".$Database->real_escape_string($Dictionnary["YouCanWriteAnything"])."')
-	  ");
+	if (($request = add_default_user_todolist($id_user))->is_error())
+	{
+	    ob_end_clean();
+	    return ($request);
+	}
 	$subs[] = $usr["login"];
 	$cnt += 1;
     }
@@ -146,6 +146,7 @@ function SetUserProperties($id, $data, $method, $output, $module)
 	if (($request = set_user_data($id, $data))->is_error())
 	    return ($request);
     }
+    refresh_user($id);
     return (new ValueResponse([
 	"msg" => $Dictionnary["Edited"]
     ]));

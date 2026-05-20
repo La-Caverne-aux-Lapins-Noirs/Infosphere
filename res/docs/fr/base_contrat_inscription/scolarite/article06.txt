@@ -1,0 +1,142 @@
+
+[#IfC;NoPaiement;==;0;
+
+## Article S[#C;S] - Modalités de règlement
+
+[@Size;1]
+[@Columns;3;
+
+L’Apprenant ou son responsable financier a la possibilité de régler les frais
+de différentes manières, sans excéder la longueur de formation – selon le cursus choisi.
+
+L’Apprenant ou son responsable financier garantit à l’EFRITS qu’il dispose des
+autorisations nécessaires pour utiliser le mode de paiement indiqué lors de la
+Demande d’inscription. 
+
+[#IfC;Ecole;==;1;
+L’acceptation de ce document d’inscription et des modalités de règlement doit s’accompagner
+du paiement du premier versement tel qu’indiqué dans les modalités de règlement.
+Le paiement du premier versement pourra être effectué sous forme de chèque ou
+de virement à l’ordre de EFRITS SAS.
+;
+L’acceptation de ce document d’inscription et des modalités de règlement vaut engagement
+de paiement selon les dispositions du présent article. Le premier versement exigible
+ne peut intervenir qu’à l’issue du délai de rétractation prévu à l’article S8, sauf
+renonciation expresse de l’Apprenant à ce délai dans les conditions prévues audit article.
+
+À l’issue de ce délai, il ne peut être exigé une somme supérieure à trente pour cent (30 \%) du prix convenu.
+Le solde donne lieu à échelonnement au fur et à mesure du déroulement de l’action de formation.
+]
+
+]
+
+[#IfC;PriceReduction;==;0;
+
+### Paiement comptant
+
+[@Size;1]
+[@Columns;1;
+Le paiement demandé à l’Apprenant correspond au montant total des frais
+qui pourra être réglé par chèque ou par virement bancaire sur le compte bancaire de
+l’EFRITS SAS (dont les coordonnées sont communiquées au responsable financier lors de
+l’envoi du Dossier d’inscription).
+]
+
+### Paiement en plusieurs fois
+
+[@Size;1]
+[@Columns;3;
+Le paiement en plusieurs fois du montant de la formation est une facilité de paiement consentie par l’EFRITS à
+l’Apprenant ou son responsable financier, permettant l'étalement du règlement de
+l’inscription en [#IfC;Ecole;==;1;deux (2),] quatre (4) ou douze (12) fois, sans en excéder la durée
+maximale du cursus et sous acceptation ou à la demande de l’Établissement. Ces facilités
+de paiement ne rentrent pas dans le champ d'application de la réglementation sur le
+crédit à la consommation (cf. art. L312-4 du code de la consommation). 
+
+Le paiement en [#IfC;Ecole;==;1;deux (2),] quatre (4) ou douze (12) fois - en parts égales, hors premier versement - vous permet
+de régler d’une des façons suivantes : 
+
+Un premier versement obligatoire, correspondant aux frais d’ouverture de dossier d’un
+montant de 990,00 €, est exigible à l’issue du délai de rétractation prévu au présent
+document (ou, le cas échéant, dès la renonciation expresse à ce délai par l’Apprenant).
+
+Le solde du prix de la formation est ensuite facturé et payable mensuellement.
+[#IfC;Ecole;==;1;
+Chaque versement devient exigible le cinq (5) du mois de formation concerné
+(ou à la date indiquée sur la facture correspondante) et doit être réglé avant l’accès
+effectif aux cours du mois concerné, jusqu’au complet paiement du prix de la formation.
+;
+Chaque versement devient exigible le cinq (5) du mois suivant le mois de formation écoulé
+(ou à la date indiquée sur la facture correspondante) et doit être réglé avant l’accès
+aux ressources / cours du mois suivant, jusqu’au complet paiement du prix de la formation.
+]
+
+Sous la forme de paiement par chèque remis en main propre, paiement sécurisé par
+virement bancaire sur le compte bancaire de la société (dont les coordonnées sont
+communiquées lors de l’envoi du Dossier d’inscription), paiement sécurisé par
+prélèvement automatique à l’ordre de la société quatre (4) ou douze
+(12) versements égaux, le cinq (5) de chaque mois, jusqu'au paiement complet.
+
+Aucun escompte n’est prévu en cas de paiement anticipé. 
+
+Le versement des frais d’ouverture de dossier de 990 euros intègre également le
+matériel spécifiquement prévu pour chaque Apprenant. A ce titre,
+hors exercice du droit de rétractation dans le délai légal prévu à l’article S8, et
+hors cas où la loi impose le remboursement, les frais d’ouverture de dossier de 990
+euros restent acquis à l’EFRITS.
+]
+
+;
+## Remise d'accessibilité et de transition
+
+[@Columns;2;
+Dans le cadre de la Remise d’accessibilité et de transition, le solde des frais de formation,
+hors premier versement, est réglé sous forme de mensualités fixes. Ces mensualités sont exigibles mensuellement,
+à la date indiquée sur la facture correspondante, jusqu’au terme de la période
+contractuellement prévue.
+
+Si la première mensualité fixe devait être exigible moins d'un mois après le règlement
+des frais d'inscription ou du
+premier versement prévu au contrat, son exigibilité est reportée afin qu'un délai minimal
+d'un mois sépare ces deux échéances.
+
+Ce report constitue uniquement un aménagement d'échéancier. Il ne constitue pas une
+remise supplémentaire et n’a pas pour effet de réduire le montant total dû au titre de
+la période contractuellement prévue.
+]
+
+[#IfC;Ecole;==;1;
+S'ajoutent des frais correspondants à 2\% du reste à payer pour les paiements
+en quatre (4) et douze (12) fois.
+]
+]
+
+### Pénalités de retard 
+
+[@Size;1]
+[@Columns;3;
+En cas de non-paiement à l’échéance, toute somme due fera courir des pénalités de retard.
+Celles-ci courent à compter du jour suivant la date d’échéance figurant sur la facture
+et jusqu’au jour du paiement effectif et intégral de la somme. Le taux des pénalités
+de retard est fixé au taux d’intérêt légal en vigueur. 
+
+Ces pénalités de retard sont exigibles de plein droit et sans qu’un rappel par l’EFRITS ne soit nécessaire,
+ni formalité ni mise en demeure.
+
+Le retard de paiement entraînera l'exigibilité immédiate, après mise en demeure restée sans effet
+de l'intégralité des sommes dues par l’Apprenant, sans préjudice de toute autre action
+que l’EFRITS serait en droit d’intenter, à ce titre, à l’encontre du responsable financier. 
+
+En outre, l’EFRITS se réserve le droit, en cas de non-respect des conditions du paiement
+figurant ci-dessus, de suspendre ou résilier l’inscription dont le paiement fait l’objet du retard. 
+
+L’EFRITS se réserve également le droit de suspendre ou de résilier toute Demande d’inscription,
+y compris si l’Apprenant a déjà commencé les cours, en cas de défaut de paiement ou de
+paiement partiel de toute somme qui lui serait due par l’Apprenant, en cas d’incident
+de paiement, ou en cas de fraude ou tentative de fraude relative à l’utilisation du
+Site et au paiement d’une demande d’inscription; cela après une mise en demeure restée sans effet.
+
+]
+
+]
+

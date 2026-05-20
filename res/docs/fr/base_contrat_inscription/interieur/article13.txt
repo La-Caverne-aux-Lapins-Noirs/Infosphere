@@ -1,0 +1,28 @@
+
+## Article I13 - Consignes de sécurité, prévention des incendies
+
+[@Size;1]
+[@Columns;3;
+Tout Apprenant est tenu de respecter scrupuleusement
+les consignes relatives à la prévention des incendies. 
+
+Les consignes d’incendie et notamment un plan de localisation
+des extincteurs et des issues de secours sont affichés dans
+les locaux de formation de manière à être connus des Apprenants. 
+
+Il est interdit de fumer ou d’utiliser une cigarette électronique
+dans les salles où se déroulent les formations ainsi que
+dans les annexes, zones de pause, toilettes, etc. 
+
+Les Apprenants sont toutefois autorisés pendant leur temps
+de pause à aller fumer à l’extérieur de l’établissement. 
+
+Il est interdit de déposer et de laisser séjourner des matières
+inflammables dans les escaliers, passages, couloirs, sous les
+escaliers ainsi qu’à proximité des issues des lieux de formation. 
+
+Les Apprenants sont tenus d’exécuter sans délai l’ordre
+d’évacuation donné par les représentants de l’EFRITS ou par
+un ou une salarié(e) de l’entreprise où se déroule la formation.
+
+]

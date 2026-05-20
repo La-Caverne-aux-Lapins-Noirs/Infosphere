@@ -1,0 +1,74 @@
+
+[@NewPage]
+
+## Article P7 - L'équipe
+
+### Administrateur de l'équipe
+
+[@Size;2]
+[@Columns;2;
+
+L’administrateur de l’équipe est le membre créateur de l’équipe.
+Le rôle d’administrateur peut être transmis à un autre membre
+d’équipe par l’administrateur. L’administrateur est le seul membre
+en capacité d’accepter d’autres membres parmi les postulants à
+l’équipe. Un membre non accepté est considéré comme ne faisant
+pas partie de l’équipe. 
+
+]
+
+### Taille de l'équipe
+
+[@Size;2]
+[@Columns;2;
+
+Une équipe dispose d’une taille minimale et d’une taille maximale.
+Si la taille minimale n’est pas atteinte, l’équipe n’est pas validée
+et ne peut participer au projet en l’état. Les membres de toutes
+les équipes incomplètes seront mélangés afin de former des équipes
+complètes. S'il demeure une équipe incomplète après ce mélange,
+ceux composant cette équipe seront déplacés dans d’autres équipes
+parmi celles formées pour l’occasion, quitte à former des équipes
+dépassant la taille maximale. 
+
+]
+
+### Forum de l'équipe
+
+[@Size;2]
+[@Columns;2;
+
+Une équipe dispose d’un forum de discussion sur l’intranet
+https://intra.efrits.fr. Ce forum est tenu aux mêmes règles que
+le forum général de l’intranet. Le forum de l’équipe est accessible
+à l’ensemble de l’équipe ainsi qu’aux formateurs et formatrices
+de l’activité à laquelle est rattachée l’équipe. 
+
+] 
+
+### Gestionnaire de tâches
+
+[@Size;2]
+[@Columns;2;
+
+Une équipé dispose d'un gestionnaire de tâches conçu pour
+pour gérer une équipe de travail agile utilisant SCRUM. Chaque équipier
+peut y créer des tâches, les associer à des membres de l'équipe,
+annoncer le temps estimé, passé et placer des commentaire.
+
+]
+
+### Réservation de l'équipe
+
+[@Size;2]
+[@Columns;2;
+
+Une équipe peut réserver des emplacements sur le calendrier. Ces
+réservations sont publiques sur le planning des salles. Elles sont
+également visibles par les formateurs et formatrices de l’activité
+à laquelle est rattachée l’équipe. Des réservations sont susceptibles
+d’être obligatoire dans le cas où les suivis de type journalier
+sont obligatoires, afin de permettre aux membres du corps pédagogique
+d’inspecter que celle-ci ont lieu.
+
+]

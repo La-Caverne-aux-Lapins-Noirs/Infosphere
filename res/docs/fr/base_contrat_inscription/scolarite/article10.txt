@@ -1,0 +1,18 @@
+
+## Article S[#C;S] - Assurance [#IfC;Ecole;==;1;et CVEC]
+
+[@Size;1]
+[@Columns;3;
+
+L’Apprenant a l’obligation de souscrire une assurance [#IfC;Ecole;==;1;scolaire et]
+responsabilité civile valable sur la période de formation devant
+produire une attestation d’assurance dans le dossier d’inscription
+qui sera renouvelée au besoin.
+
+[#IfC;Ecole;==;1;
+Tout Apprenant assujetti à la Contribution de Vie Etudiante
+et de Campus (CVEC) doit s’en acquitter et fournir l’attestation
+lors de l’inscription administrative.
+]
+
+]

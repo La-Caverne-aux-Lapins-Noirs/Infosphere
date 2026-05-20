@@ -1,0 +1,28 @@
+
+[@NewPage]
+
+## Article I11 - Nettoyage du poste de travail
+
+[@Size;1]
+[@Columns;3;
+Afin de garantir un environnement de travail propre et
+hygiénique, il est impératif que chaque Apprenant nettoie
+son poste de travail quotidiennement, y compris la souris et le clavier.  
+
+Le nettoyage du poste de travail doit être effectué à
+chaque fois que l’Apprenant quitte son poste de manière
+prolongée ou avant de quitter les locaux. Il est de
+la responsabilité de chaque Apprenant de prendre soin de
+nettoyer toute surface de travail ayant été en contact avec ses mains. 
+
+L'EFRITS met à disposition les ressources nécessaires et
+les informations sur les bonnes pratiques de nettoyage.
+Il est attendu de chaque Apprenant se conforme à ces directives
+et contribue activement à maintenir un environnement de
+travail sain et agréable. Il est essentiel que chaque
+Apprenant comprenne l'importance de maintenir son poste de
+travail propre, non seulement pour sa propre hygiène, mais
+aussi pour celle de ses camarades.
+
+]
+

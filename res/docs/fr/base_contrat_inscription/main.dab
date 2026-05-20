@@ -1,0 +1,91 @@
+Document = "Contract"
+
+NoPaiement=0
+CFA=0
+OF=0
+Ecole=0
+MinimumSlice=1
+MaximumSlice=12
+PriceReduction=0
+ 
+[Header
+  Left = [Text($,Left)
+    [@Size;5] $([].Title)
+  Left]
+  Right = [Text($,Right)
+    [@Image;res/efrits.png;width=3cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  EFRITS SAS. Siège social : 33 rue Delaporte, 94700 Maisons-Alfort. Immatriculée au RCS de Créteil sous le numéro 909 292 773.
+  Établissement d’enseignement supérieur privé, immatriculé sous le numéro 0942530P auprès du rectorat de l’académie de Créteil.
+  Organisme de formation et centre de formation d’apprentis (CFA). Déclaration d’activité enregistrée sous le numéro 11 94 11281 94
+  auprès du préfet de région d’Île-de-France. CFA déclaré sous le n° 0942540A auprès du rectorat de l’académie de Créteil
+Footer]
+
+{Content
+  @insert txt ($) "ouverture.txt",
+  @insert txt ($) "identification.txt",
+  @insert txt ($) "paiement.txt",
+  @insert txt ($) "bibliotheque.txt",
+  @insert txt ($) "image.txt",
+  @insert txt ($) "alternance.txt",
+  @insert txt ($) "programme.txt",
+  @insert txt ($) "scolarite/article01.txt",
+  @insert txt ($) "scolarite/article02.txt",
+  @insert txt ($) "scolarite/article03.txt",
+  @insert txt ($) "scolarite/article04.txt",
+  @insert txt ($) "scolarite/article05.txt",
+  @insert txt ($) "scolarite/article06.txt",
+  @insert txt ($) "scolarite/article07.txt",
+  @insert txt ($) "scolarite/article08.txt",
+  @insert txt ($) "scolarite/article09.txt",
+  @insert txt ($) "scolarite/article10.txt",
+  @insert txt ($) "scolarite/article11.txt",
+  @insert txt ($) "scolarite/article12.txt",
+  @insert txt ($) "scolarite/article13.txt",
+  @insert txt ($) "scolarite/article14.txt",
+  @insert txt ($) "scolarite/article15.txt",
+
+  @insert txt ($) "interieur/article01.txt",
+  @insert txt ($) "interieur/article02.txt",
+  @insert txt ($) "interieur/article03.txt",
+  @insert txt ($) "interieur/article04.txt",
+  @insert txt ($) "interieur/article05.txt",
+  @insert txt ($) "interieur/article06.txt",
+  @insert txt ($) "interieur/article07.txt",
+  @insert txt ($) "interieur/article08.txt",
+  @insert txt ($) "interieur/article09.txt",
+  @insert txt ($) "interieur/article10.txt",
+  @insert txt ($) "interieur/article11.txt",
+  @insert txt ($) "interieur/article12.txt",
+  @insert txt ($) "interieur/article13.txt",
+  @insert txt ($) "interieur/article14.txt",
+  @insert txt ($) "interieur/article15.txt",
+  @insert txt ($) "interieur/article16.txt",
+  @insert txt ($) "interieur/article17.txt",
+  @insert txt ($) "interieur/article18.txt",
+  @insert txt ($) "interieur/article19.txt",
+  @insert txt ($) "interieur/article20.txt",
+
+  @insert txt ($) "pedagogie/article01.txt",
+  @insert txt ($) "pedagogie/article02.txt",
+  @insert txt ($) "pedagogie/article03.txt",
+  @insert txt ($) "pedagogie/article04.txt",
+  @insert txt ($) "pedagogie/article05.txt",
+  @insert txt ($) "pedagogie/article06.txt",
+  @insert txt ($) "pedagogie/article07.txt",
+  @insert txt ($) "pedagogie/article08.txt",
+  @insert txt ($) "pedagogie/article09.txt",
+  @insert txt ($) "pedagogie/article10.txt",
+  @insert txt ($) "pedagogie/article11.txt",
+  @insert txt ($) "pedagogie/article12.txt",
+  @insert txt ($) "pedagogie/article13.txt",
+  @insert txt ($) "pedagogie/article14.txt",
+  @insert txt ($) "pedagogie/article15.txt",
+  @insert txt ($) "pedagogie/article16.txt",
+
+  @insert txt ($) "signature.txt"
+}

@@ -37,31 +37,37 @@ function fetch_school($id = -1)
            user.id as id, user.id as id_user, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'STUDENT'
+	   AND user.deleted IS NULL
 	   ");
 	$v["director"] = db_select_all("
            user.id as id, user.id as id_director, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'DIRECTOR'
+	   AND user.deleted IS NULL
 	   ");
 	$v["secretariat"] = db_select_all("
            user.id as id, user.id as id_secretariat, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'SECRETARIAT'
+	   AND user.deleted IS NULL
 	   ");
 	$v["commercial"] = db_select_all("
            user.id as id, user.id as id_commercial, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'COMMERCIAL'
+	   AND user.deleted IS NULL
 	   ");
 	$v["librarian"] = db_select_all("
            user.id as id, user.id as id_librarian, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'LIBRARIAN'
+	   AND user.deleted IS NULL
 	   ");
 	$v["teacher"] = db_select_all("
            user.id as id, user.id as id_teacher, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
            WHERE id_school = ".$v["id"]." AND user_school.authority = 'TEACHER'
+	   AND user.deleted IS NULL
 	   ");
 	if ($id != "")
 	    break ;

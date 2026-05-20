@@ -1,0 +1,55 @@
+
+[@NewPage]
+
+# Règlement pédagogique
+
+## Préambule
+
+[@Size;2]
+[@Columns;1;
+L'Apprenant prend connaissance du fait que:
+]
+
+[@ELine]
+
+Le programme de l'EFRITS comporte des activités à réaliser pour le
+jour-même et des projets à réaliser avant des horizons plus ou moins distant
+et souvent 2 à 6 de manière simultannée.
+
+L'immense majorité des activités ont lieu en journée en semaine, cependant:
+
+- Des examens peuvent avoir lieu le samedi matin.
+- Des "rués" peuvent avoir lieu sur le week-end, jusqu'à un maximum de 6 par trimestre, généralement 4.
+- Des activités peuvent avoir lieu en début de soirée: des débats, des projections
+de films, mais aussi des examens ou des rattrapages.
+
+L'Apprenant comprend et accepte que le suivi de ce programme implique un investissement
+conséquent de sa part, principalement des façons suivantes:
+
+- Il implique un travail régulier lors des jours de formation et certains samedis.
+- Il peut impliquer un travail le soir, à son domicile, sur les projets à rendre.
+- Il peut impliquer un travail le soir de manière ponctuelle dans les locaux de l'EFRITS.
+- Il peut impliquer un travail le week-end de manière ponctuelle dans les locaux de l'EFRITS.
+
+L'EFRITS garantit cinq (5) semaines de vacances par an au minimum. En fonction
+des années, des périodes supplémentaires peuvent être ajoutés. Ces vacances
+sont situés en fin de trimestre.
+
+[#IfC;NoPaiement;==;1;
+Ces activités, lorsqu’elles sont programmées, le sont dans le respect du calendrier
+d’alternance, des dispositions légales applicables au contrat
+[#IfC;CFA;==;1;d’apprentissage; de professionnalisation] et, le
+cas échéant, des contraintes liées à l’âge ou à la situation particulière de l’apprenant.
+]
+
+## Article P1 - Corps pédagogique
+
+[@Size;2]
+[@Columns;1;
+Le corps pédagogique est composé des formateurs et formatrices,
+intervenants et intervenantes pédagogiques, enseignants et
+enseignantes, assistants et assistantes pédagogiques, des
+ingénieurs et ingénieures pédagogique, des responsables pédagogiques
+ainsi que du responsable pédagogique. 
+
+]

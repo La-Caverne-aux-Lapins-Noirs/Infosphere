@@ -1,0 +1,75 @@
+
+[@NewPage]
+
+## Article I17 - Nature et échelle des sanctions
+
+[@Size;1]
+[@Columns;3;
+Tout manquement de l’Apprenant à l’une des prescriptions du présent
+règlement intérieur pourra faire l’objet d’une sanction prononcée
+par la direction de l’EFRITS ou son représentant. 
+
+Lorsque la direction de l'EFRITS envisage de prendre une sanction
+ayant une incidence, immédiate ou non, sur la présence d'un
+Apprenant dans une formation, le processus est le suivant : 
+
+- La direction de l'EFRITS ou son représentant convoque l'Apprenant
+en lui indiquant l'objet de cette convocation. Celle-ci précise
+la date, l'heure et le lieu de l'entretien. La convocation est
+écrite et adressée par lettre recommandée avec accusé de réception
+ou remise à l'intéressé contre récépissé et décharge. 
+
+- Au cours de l'entretien, l'Apprenant peut se faire assister par la
+personne de son choix – Apprenant, collaborateur, collaboratrice,
+formateur, formatrice de l’EFRITS, etc. La convocation mentionnée
+précédemment fait état de cette possibilité. 
+
+- La direction de l’EFRITS ou son représentant indique le motif
+de la sanction envisagée et recueille les explications de l’Apprenant. 
+
+- Lorsqu’une mesure conservatoire d’exclusion temporaire à effet
+immédiat est considérée comme indispensable par l’EFRITS, aucune
+sanction définitive relative à l’agissement fautif à l’origine
+de cette exclusion ne peut être prise sans que l'Apprenant n’ai été
+au préalable informé des griefs retenus contre lui ou elle et,
+éventuellement, qu’il ou elle ait été convoqué(e) à un entretien
+et ait eu la possibilité de s’expliquer devant une commission de discipline. 
+
+- La sanction ne peut intervenir moins d'un jour franc ni plus
+de quinze (15) jours après l'entretien. Elle fait l'objet d'une
+décision écrite et motivée, notifiée au ou à l’Apprenant par lettre
+recommandée ou remise à l'intéressé contre récépissé et décharge. 
+
+Tout agissement considéré comme fautif pourra, en fonction de
+sa nature et de sa gravité, faire l’objet de l’une ou l’autre
+des sanctions suivantes : 
+
+- Avertissement verbal
+
+- Note réduite ou perte de points ou de médaille, si la faute concerne les travaux
+à réaliser lors de la formation.
+
+- Réparation du travail triché en effectuant un nouveau rendu
+
+- Rappel à l’ordre
+
+- Avertissement écrit
+
+- Blâme
+
+- Exclusion temporaire de la formation ou d’une activité organisée par l'EFRITS
+
+- Exclusion définitive de la formation ou d’une activité organisée par l'EFRITS
+
+Lorsqu’une sanction est appliquée à l’Apprenant, la direction de
+l’EFRITS ou son représentant en informe l’employeur de
+l’Apprenant, le financeur ou la financeuse de la formation ou
+l’organisme de formation paritaire prenant à sa charge
+les frais de la formation et son contact administratif. 
+
+[#IfC;NoPaiement;==;0;
+L’exclusion de l’Apprenant ne pourra en aucun cas donner lieu
+au remboursement des sommes engagées pour la formation.
+]
+
+]

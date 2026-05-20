@@ -1,0 +1,36 @@
+
+## Article P11 - Fraudes
+
+[@Size;2]
+[@Columns;2;
+
+Toute fraude ou tentative de fraude entrainera un échec
+à une portion de l’activité concernée ou à sa totalité.
+En fonction de la gravité de la fraude ou d’une récidive,
+la matière porteuse de l’activité pourra être placée en
+échec. L’appréciation de la gravité de la fraude est à
+la charge du responsable de l’activité et du responsable
+de matière. 
+
+Est considéré comme une fraude – sans que cette liste
+ne soit considérée comme limitative : 
+
+L’utilisation de tous matériels, supports ou documents
+non autorisés au cours de l’examen ou l’activité quand
+celui-ci ne les autorise pas expressément. 
+
+L’échange d’information avec un autre Apprenant quel que soit
+la forme ou support lors d’un examen. 
+
+Le non-respect des règles d’interdiction d’utilisation de
+fonctions ou d’outils logiciels précisé par le support
+d’activité. 
+
+L’utilisation de code, de texte ou d’un quelconque travail
+dont l’Apprenant n’est pas auteur ou dont l’utilisation n’est
+pas autorisée dans le contexte de l’activité – tel qu’en
+examen ou seul le travail produit durant l’examen est
+utilisable au-delà d’éventuelles autorisations spécifiques.
+
+]
+

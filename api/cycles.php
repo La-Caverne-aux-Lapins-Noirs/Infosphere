@@ -68,22 +68,127 @@ function DeleteCycle($id, $data, $method, $output, $module)
 function EditCycle($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $LanguageList;
 
     if ($id == -1)
 	bad_request();
+
     $fields = [];
-    if (isset($data["check_done"]))
+
+    if (isset($data["codename"]))
     {
-	$is_done = isset($data["check_done"]) ? (bool)@$data["done"] : false;
-	$fields["done"] = $is_done;
+	if (!is_symbol($data["codename"]))
+	    return (new ErrorResponse("InvalidParameter", "codename"));
+	$fields["codename"] = $data["codename"];
+    }
+
+    if (isset($data["cycle"]))
+    {
+	if (!is_number($data["cycle"]) || $data["cycle"] < 0 || $data["cycle"] > 20)
+	    return (new ErrorResponse("InvalidCycleNumber", $data["cycle"]));
+	$fields["cycle"] = (int)$data["cycle"];
+    }
+
+    if (isset($data["objective"]))
+    {
+	if (!is_number($data["objective"]) || $data["objective"] < 0)
+	    return (new ErrorResponse("InvalidParameter", "objective"));
+	$fields["objective"] = (int)$data["objective"];
+    }
+
+    if ($module == "cycle" && isset($data["first_day"]))
+    {
+	if (trim($data["first_day"]) == "")
+	    $fields["first_day"] = NULL;
+	else if (!check_date($data["first_day"]))
+	    return (new ErrorResponse("InvalidDate", $data["first_day"]));
+	else
+	    $fields["first_day"] = $data["first_day"];
+    }
+
+    if (isset($data["check_done"]))
+	$fields["done"] = isset($data["done"]);
+
+    foreach ($LanguageList as $lang => $label)
+    {
+	foreach (["name", "description"] as $field)
+	{
+	    $lname = $lang."_".$field;
+	    if (isset($data[$lname]))
+		$fields[$lname] = $data[$lname];
+	}
     }
 
     if ($fields == [])
 	return (new ValueResponse([]));
-    if (($err = update_table("cycle", $id, ["done" => $is_done]))->is_error())
+
+    if (($err = update_table("cycle", $id, $fields))->is_error())
 	return ($err);
+
     return (new ValueResponse([
 	"msg" => $Dictionnary["Edited"],
+    ]));
+}
+
+function SendCycleMail($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $OriginalUser;
+    global $User;
+
+    if ($id == -1 || $module != "cycle")
+	bad_request();
+    if (!isset($data["subject"]) || !isset($data["content"]))
+	bad_request();
+
+    $subject = trim($data["subject"]);
+    $content = trim($data["content"]);
+    $files = [];
+    if (isset($data["file"]))
+	foreach ($data["file"] as $fil)
+	    if (isset($fil["name"], $fil["content"]))
+		$files[$fil["name"]] = base64_decode($fil["content"]);
+    if ($subject == "" || $content == "")
+	bad_request();
+    
+    if (($cycle_id = resolve_codename("cycle", $id, "codename", true))->is_error())
+	return ($cycle_id);
+    $cycle_codename = $cycle_id->value["codename"];
+    $cycle_id = $cycle_id->value["id"];
+
+    $mails = [];
+    foreach (db_select_all("
+        DISTINCT user.mail as mail
+        FROM user_cycle
+        LEFT JOIN user ON user.id = user_cycle.id_user
+        WHERE user_cycle.id_cycle = $cycle_id
+        AND user.deleted IS NULL
+        AND user.mail IS NOT NULL
+        AND user.mail != ''
+    ") as $usr)
+    {
+	if (filter_var($usr["mail"], FILTER_VALIDATE_EMAIL) !== false)
+	    $mails[] = $usr["mail"];
+    }
+
+    $mails = array_values(array_unique($mails));
+    if (count($mails) == 0)
+	return (new ErrorResponse("NoUser"));
+
+    $content = implode("\n", [
+	// Note: on ne peut pas envoyer de mail en tant que quelqu'un d'autre
+	"Vous recevez ce mail en tant qu'étudiant du cycle $cycle_codename.",
+	"Celui-ci vous est envoyé par ".$OriginalUser["codename"].".",
+	"",
+	$content
+    ]);
+
+    if (($ret = send_mail($mails, $subject, $content, NULL, $files))->is_error())
+	return ($ret);
+    add_log(TRACE, "Sending mail to ".implode(", ", $mails)." : $subject : $content");
+
+    return (new ValueResponse([
+	"msg" => $Dictionnary["Mail"].": ".count($mails),
     ]));
 }
 

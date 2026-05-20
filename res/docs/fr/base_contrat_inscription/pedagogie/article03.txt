@@ -1,0 +1,158 @@
+
+[@NewPage]
+
+## Article P3 - Les activités
+
+### Types d'activités
+
+[@Size;2]
+[@Columns;2;
+
+Les activités peuvent être de plusieurs types différents. Chaque
+type apporte une spécificité dans son fonctionnement :  
+
+Les examens sont des activités à réaliser seul, d’une longueur allant
+de deux (2) heures à huit (8) heures et consistant en une série
+d’exercices généralement indépendant fournissant des médailles
+d’un haut niveau de fiabilité. 
+
+Les recodes sont des activités à réaliser seul, d’une longueur
+d’environ quinze (15) minutes, sur rendez-vous, servant à prouver
+avant une soutenance de projet en équipe sa maîtrise d’un aspect
+critique du projet. Les médailles apportées par un recode
+sont d’un haut niveau de fiabilité. 
+
+Les colles sont des examens à réaliser en équipe de deux, mêlant
+technique connue et champ d’application souvent exotique. Les
+équipes de colles sont souvent aléatoires. Les médailles de colles
+sont de fiabilité moyenne. Une colle dure généralement quatre (4) heures. 
+
+Les marathons sont des examens à réaliser en équipe de deux et
+traitant généralement de techniques connues à reproduire rapidement,
+dans un environnement contrôlé. Les marathons durent entre quatre (4)
+heures et huit (8) heures. Ils présentent en général un enchainement
+d’exercices le plus souvent en tiroir. 
+
+Les travaux pratiques et journées d’hyper-espace sont des activités
+en salle impliquant un savoir nouveau et un devoir dont le rendu
+et la participation sont généralement optionnelles. Les médailles
+apportées par les travaux pratiques sont de fiabilité moyenne. 
+
+Les mini-projets sont des travaux à réaliser sur un espace de deux
+(2) à trois (3) semaines en autonomie. Les mini-projets apportent
+de nouvelles connaissances et disposent souvent de travaux pratiques
+en appui pour aider à leur réalisation. La fiabilité des médailles
+dépend exclusivement de la taille de l’équipe de mini-projet, pouvant
+varier d'un (1) à quatre (4) personnes. 
+
+Les projets sont des travaux à réaliser sur un espace de cinq (5)
+semaines à trois (3) mois, en autonomie. Les projets apportent moins
+de nouvelles connaissances mais font un usage intensif des connaissances
+déjà acquises afin de les renforcer. La fiabilité des médailles dépend
+exclusivement de la taille de l’équipe de projet, pouvant varier de
+deux (2) (fiabilité moyenne) à six (6) personnes (fiabilité faible). 
+
+Les produits sont des travaux à réaliser sur un espace de cinq (5)
+semaines à six (6) mois, en autonomie. Les produits sont des projets
+dont l’évaluation dépasse le fonctionnement des travaux demandés en
+incluant des aspects de qualité commerciale ainsi que de maintien
+de production en service. La fiabilité des médailles de produit est faible. 
+
+Les ruées sont des travaux à réaliser sur un espace de cinquante-trois
+(53) heures en équipe de deux (2) généralement constituée aléatoirement.
+La ruée apporte en général un défi d’envergure à des connaissances
+déjà existantes. Les médailles de ruée ont une fiabilité moyenne. 
+
+Les cours, conférences et débats sont des activités en salle. Les
+cours apportent un savoir par oral, à l’aide de supports écrits, d’images
+et de démonstration. Ils sont rares à l’EFRITS. Les conférences consistent
+en des présentations par professionnels du domaine de l’informatique
+venant aborder des aspects intéressants de leurs travaux. Les débats
+consistent en la tenue de conversations et de présentation sur un sujet
+donné correspondant à un travail à rendre en cours. Les débats peuvent
+amener à l’acquisition de médailles. 
+
+Les réunions peuvent être de différentes natures : planification,
+rétrospective, démonstration, journalière et présentation et consistent
+en le rassemblement des membres d’une équipe, accompagné ou non par
+un membre du corps pédagogique afin de discuter du travail en commun
+actuel. Ces réunions sont calquées sur la méthode SCRUM et correspondent
+aux rituels que cette méthode décrit. 
+ 
+]
+
+### Les dates composants les activités et matières
+
+[@Size;2]
+[@Columns;2;
+
+Les activités disposent de dates clefs, dont de nombreuses sont optionnelles. 
+
+Une activité ou matière peut disposer d’une date d’apparition, –  date
+avant laquelle elle devient visible aux Apprenants –, ainsi qu’une date de
+disparition – date après laquelle elle devient invisible aux Apprenants. 
+
+Une activité ou matière peut disposer d’une date d’ouverture des inscriptions
+ainsi que d’une date de fermeture. La période d’inscription permettant de
+s’inscrire seul ou en équipe. Cette période d’inscription est celle également
+dans laquelle les membres des équipes doivent être confirmé. 
+
+Une activité peut disposer d’une date de rendu, parfois appelé ramassage, date
+jusqu’à laquelle il est possible de rendre un travail. 
+
+Une activité peut comporter du temps en salle. En ce cas, ces sessions disposent
+elles-mêmes d’une date de début et d’une date de fin. 
+
+]
+
+### Les médailles de compétences associées
+
+[@Size;2]
+[@Columns;2;
+
+Les activités peuvent disposer de médailles de compétences associés. Ces
+médailles ne sont en générales pas exhaustives : il s’agit des médailles
+principales pouvant être apportée par l’activité. Il demeure possible aux
+Apprenants de chercher à étendre le travail demandé afin de profiter de
+médailles supplémentaires. 
+
+La liste des médailles associées n’a pas pour vocation d’être exhaustive
+afin de permettre aux Apprenants de chercher par eux-mêmes comment étendre
+leurs travaux.
+
+Les médailles sont administrées par l'EFRITS au travers de ses assistants
+pédagogiques, formateurs, encadrants ainsi que par ses systèmes
+de correction automatique.
+
+]
+
+### Le sujet et ressources
+
+[@Size;2]
+[@Columns;2;
+
+Les activités portent en général un sujet décrivant les travaux à fournir
+ainsi que les conditions de leurs réalisations. Les activités peuvent
+également comporter des ressources, éléments supplémentaires permettant
+d’aider l’Apprenant dans la réalisation du travail demandé. 
+
+Ces ressources peuvent être des logiciels, des médias utilisables comme
+des bancs de tests. 
+
+]
+
+### Les supports associés
+
+[@Size;2]
+[@Columns;2;
+
+Les activités sont associées à des supports permettant de comprendre
+les prérequis aux travaux demandés.  
+
+Les supports peuvent être des textes, des vidéos mais également d’autres
+activités. Ce renseignement est utile aux Apprenants qui souhaite réaliser un
+travail spécifique mais ne sait comment procéder : à l’aide de ces
+supports, il lui sera possible de retracer un chemin jusqu’au travail souhaité. 
+
+]
+

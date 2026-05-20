@@ -1,0 +1,57 @@
+
+[@NewPage]
+
+## Article S[#C;S] - Horaires, accueil et accès aux cours
+
+[@Size;1]
+[@Columns;3;
+Les horaires de cours sont ceux de l’établissement d’accueil
+fixés dans les emplois du temps de chaque Apprenant.
+Les cours sont accessibles en présentiel, en visioconférence
+ou en ligne (e-learning). 
+Sauf indication contraire, un calendrier sera accessible
+via le lien indiqué au début des cours.
+]
+
+Les Cours en présentiel se dérouleront à l’adresse suivante –
+ou tout autre lieu mis à la disposition de l’Apprenant :
+
+[@ELine]
+[@Size;3]
+| EFRITS |
+| :-: |
+| 32a Avenue Pierre Sémard |
+| 94200 Ivry-sur-Seine |
+
+[@Size;1]
+[@Columns;3;
+Les Cours en visioconférence se dérouleront via la plateforme
+Discord de l’EFRITS où l’Apprenant pourra se connecter
+à l’heure du cours. 
+
+L’Apprenant a accès aux cours pendant toute la durée
+spécifiée au moment de la Validation de l’inscription
+en fonction du Cursus choisi. 
+
+Les supports sont fournis avec des documents sur le lieu
+de cursus qu’il appartient à l’Apprenant de conserver
+ou de télécharger dans leur dernière version avant
+l’expiration de ses droits d’accès. 
+
+L’Apprenant est informé dans le cas où il choisit de
+recevoir ses cours en ligne (en e-learning ou en visioconférence)
+qu’il devra disposer de l’accès à un poste informatique
+équipé d’une connexion à Internet, d’un accès audio,
+d’un micro, d’un écran, d’un clavier, des logiciels et
+leurs licences et tous autres matériels lui permettant
+de suivre les cours. Même si les modules sont accessibles
+sur les téléphones mobiles type smartphone, le mode d’accès
+le plus adapté reste l’ordinateur sous GNU/Linux, préférentiellement
+celui mit à disposition par l'EFRITS.
+
+L’EFRITS ne pourrait pas être tenu pour responsable d’éventuels
+dommages (attaque de virus, pertes de données etc.)
+survenant pendant l’apprentissage au terminal de l’Apprenant. 
+
+]
+

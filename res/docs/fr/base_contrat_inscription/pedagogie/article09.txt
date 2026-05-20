@@ -1,0 +1,98 @@
+
+## Article P9 - L'évaluation
+
+[@Size;2]
+[@Columns;2;
+
+Tous les membres de l’équipe doivent être présents lors des événements
+d’évaluation. L’absence d’un membre de l’équipe équivaut à l’absence du
+groupe entier. Un retard, même d’une minute, est assimilé à une absence,
+sauf cas de force majeure apprécié par le responsable pédagogique.
+
+Tous les types d’évaluation peuvent donner suite à l’acquisition de médailles. 
+
+Les résultats de l’évaluation sont publics : commentaires et médailles
+sont visibles par l’ensemble des participants de l’activité et du corps
+pédagogique. Les commentaires doivent rester factuels et pédagogiques. Tout apprenant
+peut demander la modération d’un propos qu’il estime inapproprié auprès
+du responsable pédagogique. Tout contenu manifestement inapproprié pourra
+être modéré par l’EFRITS.
+
+]
+
+### Le rendu 
+
+[@Size;2]
+[@Columns;2;
+
+L’administrateur d’équipe est responsable du rendu. Il est le seul en
+capacité de signaler à l’intranet que le travail peut être enregistré en l’état.  
+
+Un rendu – programme, travaux pratique, devoir, dossier, projets,
+etc. – effectué en retard ne sera pas considéré lors de l’acquisition
+des médailles de compétence, mais sera tout de même étudié en soutenance. 
+
+En cas d’absence de rendu, la présentation n’aura pas lieu. Soutenance,
+recodes et rétrospective finale auront tout de même lieu s'ils étaient prévus. 
+
+]
+
+### Le recode
+
+[@Size;2]
+[@Columns;2;
+
+Un recode consiste en la séparation de chaque membre de l’équipe dans
+des unités d’évaluation afin de leur faire passer un bref examen sur les
+fondations techniques du travail qui était demandé par l’activité. Il
+peut avoir lieu dans le cadre d’une activité dont les médailles
+constituent des enjeux majeurs pour la formation. 
+
+]
+
+### La correction automatique
+
+[@Size;2]
+[@Columns;2;
+
+Une correction peut être déroulée automatiquement à la suite de la
+fermeture de la période de ramassage. Le résultat de la correction
+automatique est appliqué à l’ensemble des membres de l’équipe. Cette
+correction peut donner suite à l’acquisition de médailles. Les traces
+de la correction automatique seront accessibles à tous les membres
+de l’équipe. 
+
+]
+
+### La réservation de la soutenance
+
+[@Size;2]
+[@Columns;2;
+
+L’administrateur d’équipe est responsable de la prise du rendez-vous
+de soutenance. Il est en général impossible de se désinscrire d’une
+soutenance, ainsi, l'Apprenant devra prendre garde à organiser correctement
+son calendrier avant de s’inscrire. 
+
+]
+
+[@NewPage]
+
+### La soutenance
+
+[@Size;2]
+[@Columns;2;
+
+Durant la soutenance, la cohérence de l’équipe et du travail fourni
+est vérifiée : tous les membres de l’équipe doivent être en capacité
+de discuter du projet et du travail rendu. Les notions abordées par
+ce travail doivent être maîtrisées par l’ensemble des membres de l’équipe. 
+
+Le travail rendu par l’équipe est étudié par un membre du corps
+pédagogique chargée de la correction. Le déroulement d’un barème
+ouvert est effectué. L’ensemble des remarques, critiques et commentaires
+du ou des correcteurs est consigné dans l’intranet et associé à
+l’équipe et/ou à ses membres.
+
+]
+

@@ -1,0 +1,150 @@
+[#IfC;OF;==;1;
+
+[#IfC;NoPaiement;==;0;
+
+[@NewPage]
+# Clause relative à une éventuelle prise en charge ultérieure par un tiers financeur
+
+[@Columns;2;
+Si, postérieurement à la signature du présent contrat ou de la présente convention,
+tout ou partie de la formation de l’Apprenant fait l’objet d’une prise en charge par
+un employeur, un OPCO ou tout autre tiers financeur, notamment dans le cadre d’un
+contrat d’apprentissage, d’un contrat de professionnalisation ou de tout autre dispositif
+de financement de la formation professionnelle, la situation contractuelle, administrative
+et financière des parties fera l’objet d’une régularisation.
+
+Cette régularisation pourra prendre la forme d’un avenant, d’une convention de formation,
+d’une convention de formation par apprentissage, d’un accord de prise en charge, d’une
+nouvelle facture ou de tout autre document nécessaire au traitement administratif et
+financier du dossier.
+
+La prise en charge par un tiers financeur ne produit d’effet, à l’égard de l’Apprenant
+et de son responsable financier, qu’à compter de son entrée en vigueur effective et dans
+la limite des frais, périodes, heures, modules ou éléments de formation effectivement
+couverts par cette prise en charge.
+
+Les sommes versées par l’Apprenant ou son responsable financier au titre de frais,
+périodes, heures, modules ou éléments de formation qui ne sont pas pris en charge par
+un tiers financeur restent acquises à l’Établissement, dès lors qu’elles correspondent
+à une formation effectivement réalisée, à une période commencée, à des frais effectivement
+dus ou à des prestations effectivement engagées.
+
+En revanche, lorsque la prise en charge accordée par un employeur, un OPCO ou tout
+autre tiers financeur couvre effectivement des frais, périodes, heures, modules ou
+éléments de formation déjà réglés par l’Apprenant ou son responsable financier, les
+sommes correspondantes sont remboursées à l’Apprenant ou à son responsable financier,
+ou imputées sur les sommes restant dues.
+
+Ce remboursement ou cette imputation intervient dans la limite cumulative :
+
+- des sommes effectivement versées par l’Apprenant ou son responsable financier
+
+- des montants effectivement pris en charge et encaissés par l’Établissement auprès
+  du tiers financeur
+  
+- et des frais, périodes, heures, modules ou éléments de formation identiques à ceux
+  déjà réglés par l’Apprenant ou son responsable financier.
+
+
+
+Aucun remboursement n’est dû au seul motif de la signature d’un contrat d’apprentissage,
+d’un contrat de professionnalisation, d’un accord de prise en charge ou de tout autre
+document de financement. Le remboursement est subordonné à la prise en charge effective
+des sommes concernées et à leur encaissement effectif par l’Établissement.
+
+Lorsque la prise en charge du tiers financeur est partielle, le remboursement ou
+l’imputation est effectué au prorata des montants effectivement couverts et encaissés
+par l’Établissement. Les sommes non couvertes par le tiers financeur demeurent dues
+par l’Apprenant ou son responsable financier, sauf stipulation contraire écrite de
+l’Établissement.
+
+Le remboursement éventuel intervient dans un délai de trente (30) jours à compter
+de l’encaissement effectif par l’Établissement des sommes versées par le tiers financeur
+au titre des frais, périodes, heures, modules ou éléments de formation déjà réglés par
+l’Apprenant ou son responsable financier.
+
+À défaut de prise en charge effective par un tiers financeur, ou en cas de refus,
+d’annulation, de réduction ou de non-paiement de cette prise en charge, le présent
+contrat ou la présente convention demeure applicable dans son régime initial, pour les
+sommes non couvertes par le tiers financeur.
+]
+
+;
+
+# Clause concernant l'alternance
+
+La présente convention est conclue dans le cadre d’une action de formation
+réalisée en alternance.
+
+## Contrat de professionnalisation
+
+[@Columns;2;
+Lorsque la formation est suivie dans le cadre d’un contrat de professionnalisation,
+elle s’exécute conformément aux dispositions légales et conventionnelles
+applicables à ce contrat, ainsi qu’aux stipulations particulières figurant dans
+la présente convention.
+
+La présente convention a vocation à s’appliquer pendant toute la durée de la
+formation suivie par l’Apprenant dans le cadre de l’alternance.
+
+Si, à la date de signature de la présente convention, le contrat de
+professionnalisation n’est pas encore conclu, l’entrée en formation demeure
+subordonnée à la régularisation dudit contrat dans les conditions et délais
+compatibles avec la réglementation applicable.
+
+Dès la conclusion du contrat de professionnalisation, la formation est réputée
+réalisée dans ce cadre, sans novation de la présente convention, sauf stipulation
+contraire expresse ou signature d’un avenant destiné à préciser les modalités
+administratives, pédagogiques ou financières propres à l’alternance.
+
+En l’absence de conclusion d’un contrat de professionnalisation dans les
+conditions permettant la poursuite de la formation dans ce cadre, la présente
+convention ne pourra produire effet au titre de l’alternance. La situation de
+l’Apprenant devra alors, le cas échéant, être régularisée par la conclusion d’un
+nouveau cadre contractuel approprié à son régime de formation.
+]
+]
+]
+
+[#IfC;CFA;==;1;
+
+## Apprentissage
+
+[@Columns;2;
+La présente convention de formation en apprentissage encadre les conditions de
+réalisation de la formation dispensée par le CFA EFRITS. Elle est distincte du
+contrat d’apprentissage conclu entre l’employeur et l’Apprenant.
+
+La présente convention a vocation à s’appliquer pendant toute la durée du parcours
+de formation de l’Apprenant au sein du CFA, y compris lorsque le contrat
+d’apprentissage est signé postérieurement à l’entrée en formation.
+
+Lorsque l’Apprenant entre en formation avant la conclusion d’un contrat
+d’apprentissage, cette entrée s’effectue dans les conditions prévues par les
+dispositions légales applicables au démarrage d’un cycle de formation en
+apprentissage sans contrat conclu avec un employeur.
+
+Dans cette situation, l’Apprenant bénéficie du statut de stagiaire de la formation
+professionnelle jusqu’à la signature du contrat d’apprentissage ou, à défaut,
+jusqu’au terme de la période légalement autorisée.
+
+A tout moment pendant cette période, l’Apprenant peut conclure un contrat
+d’apprentissage avec un employeur. Dans ce cas, la présente convention demeure
+applicable pour l’exécution de la formation au sein du CFA, sans interruption,
+sous réserve des adaptations éventuellement rendues nécessaires par le contrat
+d’apprentissage, sa durée ou son calendrier.
+
+En cas de conclusion d’un contrat d’apprentissage après le début du cycle de
+formation, la durée du contrat ou de la période d’apprentissage est, le cas
+échéant, ajustée conformément aux dispositions légales applicables.
+
+A défaut de conclusion d’un contrat d’apprentissage dans le délai légalement
+autorisé, la poursuite de la formation au sein du CFA au titre de l’apprentissage
+ne pourra avoir lieu. La situation de l’Apprenant devra alors être régularisée,
+selon le cas, par la conclusion d’un nouveau cadre contractuel relevant d’un autre
+régime de formation ou par la cessation de la formation.
+]
+
+]
+
+

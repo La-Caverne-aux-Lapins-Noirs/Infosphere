@@ -15,14 +15,18 @@ use Mailgun\Mailgun;
 //
 // send_mail(["example1@mail.fr", "example2@mail.fr"], "Example Title", "A content", NULL, [["filename1" => "file1 content"], ["filename2" => "file2 content"]], false);
 
-function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true)
+function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true, $sender = NULL)
 {
     global $Configuration;
 
     $mail_content = [];
 
     $mail_content["Content-Type"] = 'text/plain; charset="utf-8"';
-    $mail_content["from"] = @$Configuration->Properties["mailgun_sender"];
+    $mail_content["h:Reply-To"] = @$Configuration->Properties["mailgun_replyto"];
+    if ($sender == NULL)
+	$mail_content["from"] = @$Configuration->Properties["mailgun_sender"];
+    else
+	$mail_content["from"] = $sender;
     if (!is_array($target))
         $mail_content['to'] = $target;
     else
@@ -45,15 +49,16 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
 
     if ($attachements != NULL && count($attachements) > 0)
     {
-        $index = 0;
         $mail_attachements = [];
-        foreach ($attachements as $attachement)
+        foreach ($attachements as $filename => $filecontent)
         {
-            $mail_attachements[$index] = ['fileContent' => (array_values($attachement))[0],'filename'=> array_key_first($attachement)];
-            $index++;
+            $mail_attachements[] = [
+		'fileContent' => $filecontent,
+		'filename' => $filename
+	    ];
         }
-        $mail_attachements = array_values($mail_attachements);
         $mail_content['attachment'] = $mail_attachements;
+	debug_response($mail_content);
     }
     $Key = @$Configuration->Properties["mailgun_key"];
     if ($domain == NULL)

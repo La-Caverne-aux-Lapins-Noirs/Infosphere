@@ -1,5 +1,10 @@
 <?php
 
+function TransformProspect($id, $data, $method, $output, $module)
+{
+    return (transform_prospect($id));
+}
+
 function DisplayActions($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -69,9 +74,10 @@ function ConcludeProspect($id, $data, $method, $output, $module)
 	bad_request();
 
     // On écrase le fichier actuellement présent par un placeholder
-    shell_exec("cp ".__DIR__."/../res/please_wait.pdf ".__DIR__."/../dres/user/".$codename."/admin/contract.pdf");
+    $target = __DIR__."/../dres/user/".$codename."/admin/contract.pdf";
+    shell_exec("cp ".__DIR__."/../res/please_wait.pdf $target");
     // On crée la configuration Dabsic qui sera utilisée
-    //
+    refresh_user($id);
 
     // On génère le vrai contrat - qui écrasera le placeholder une fois terminé    
     if ($data["decision"] == "of")
@@ -129,7 +135,11 @@ $Tab = [
 	"" => [
 	    "is_commercial",
 	    "ConcludeProspect",
-	]
+	],
+	"transform" => [
+	    "is_commercial",
+	    "TransformProspect",
+	],
     ],
     "DELETE" => [
 	"paction" => [

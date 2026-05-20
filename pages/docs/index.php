@@ -8,8 +8,8 @@ require_once ("get_docs.php");
 	<?php $js = "silent_submit(this, 'file_browser');"; ?>
 	<form
 	    method="post"
-		    onsubmit="return <?=$js; ?>;"
-		    action="/api/doc"
+	    onsubmit="return <?=$js; ?>;"
+	    action="/api/doc"
 	>
 	    <label for="file"><?=$Dictionnary["File"]; ?></label><br />
 	    <input id="path2" type="hidden" name="path" value="" />

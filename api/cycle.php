@@ -22,6 +22,10 @@ $Tab = [
 	    "is_director_for_cycle",
 	    "SetUser",
 	],
+	"mail" => [
+	    "is_director_for_cycle",
+	    "SendCycleMail",
+	],
     ],
     "PUT" => [
 	"" => [
@@ -57,7 +61,7 @@ $Tab = [
 	"user" => [
 	    "is_director_for_cycle",
 	    "SetUser",
-	],	
+	],
 	"activity" => [
 	    "is_director_for_cycle",
 	    "SetMatter",

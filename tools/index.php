@@ -44,6 +44,7 @@ require_once ("edit_secured_text.php");
 require_once ("longhash.php");
 require_once ("db_connect.php");
 require_once ("configuration.php");
+require_once ("generate_dabsic.php");
 
 require_once ("authentication/hash_method.php");
 require_once ("authentication/get_login_info.php");
@@ -54,6 +55,7 @@ require_once ("authentication/try_subscribe.php");
 require_once ("authentication/regenerate_password.php");
 require_once ("authentication/set_user_data.php");
 require_once ("authentication/set_user_attributes.php");
+require_once ("authentication/refresh_user.php");
 
 require_once ("log.php");
 require_once ("send_mail.php");
@@ -195,7 +197,9 @@ require_once ("print_icon.php");
 require_once ("print_medal_icon.php");
 require_once ("add_cycle.php");
 require_once ("add_room.php");
+require_once ("refresh_school.php");
 require_once ("add_school.php");
+require_once ("edit_school.php");
 require_once ("all_files.php");
 require_once ("famous_quote.php");
 require_once ("remove_ressource_file.php");

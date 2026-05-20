@@ -1,0 +1,27 @@
+
+## Article I14 - Obligation d'alerte et de droit de retrait
+
+[@Size;1]
+[@Columns;3;
+Tout Apprenant ayant un motif raisonnable de penser qu’une
+situation présente un danger grave et imminent pour sa vie ou
+sa santé a le droit de quitter le lieu de la formation. 
+
+Cette faculté doit être exercée de telle manière qu’elle ne
+puisse créer pour autrui une nouvelle situation de risque
+grave et imminent. L'Apprenant doit signaler immédiatement au
+formateur ou à la formatrice l’existence de la situation
+qu’il ou elle estime dangereuse. 
+
+Tout Apprenant ayant constaté une défaillance ou une
+anomalie dans les installations ou le fonctionnement des matériels
+est tenu d’en informer le formateur, la formatrice ou la
+direction de l'EFRITS. 
+
+Tout accident ou incident survenu à l’occasion ou en cours
+de la formation, même bénin, doit être immédiatement signalé
+à la direction de l’EFRITS par la victime, les victimes ou
+le témoin, les témoins.
+
+]
+

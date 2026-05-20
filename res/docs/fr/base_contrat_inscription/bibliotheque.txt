@@ -1,0 +1,86 @@
+
+# Bibliothèque
+
+[@Size;1]
+[@Columns;3;
+Le programme de partage de livre a pour but d’être un outil pédagogique au
+service de l’éveil de la curiosité et de l’esprit des Apprenants. Celui-ci
+a pour vocation à être au service de l’apprentissage et un soutien à
+l’enseignement réalisé qui participe au projet global de formation de l’Apprenant.
+
+C'est un service facultatif, qui étend par son contenu, les supports
+fournis dans le cadre de la formation.
+
+Les livres mis à la disposition de l’Apprenant sont majoritairement des
+livres dédiés à la programmation et à l’informatique mais la bibliothèque
+contient également des livres de science-fiction, de space opéra, de capes
+et d'épées ou d’anglais. 
+
+L’adhésion à la bibliothèque de livres est gratuite, pour une durée maximale
+de douze (12) mois ou jusqu'à la fin de la formation de l’Apprenant.
+\textbf{Un chèque de caution non encaissé à l’ordre d’EFRITS SAS d’une
+valeur de cent euros (100 €) doit être accompagné de cette adhésion.} Cette
+caution n'est encaissée qu'en cas de non-restitution ou de dégradation
+importante constatée.
+
+]
+
+[@Size;4]
+Adhésion au programme de partage de livres
+
+[@Columns;2;
+  [#CheckBox;[#IfC;Library;==;1;1]] Oui
+
+  [#CheckBox;[#IfC;Library;==;0;1]] Non
+
+]
+
+[@Size;1]
+
+[@Columns;2;
+
+L'Apprenant pourra vérifier la disponibiltié du livre à emprunter sur https://intra.efrits.fr.
+
+Pour emprunter un livre l'Apprenant devra : 
+
+- Formaliser une demande d’emprunt du livre auprès de l’administration de l’EFRITS. 
+
+- Garder le livre emprunté au maximum trente (30) jours consécutifs. 
+
+- N'emprunter le même livre que trois (3) fois consécutive au maximum. 
+
+- N'emprunter qu’un livre à la fois. 
+
+- Garantir et préserver dans un bon état le livre emprunté. 
+
+Pour rendre un livre emprunté l'Apprenant devra :  
+
+- Formaliser une demande de retour auprès de l’administration de l’EFRITS. 
+
+- Faire l’état des lieux du livre retourné avec l’administration de l’EFRITS. 
+
+Le chèque de caution sera rendu à l’Apprenant à la résiliation de son inscription
+au programme de partage de livres ou encaissé par l’administration de l’EFRITS. 
+
+La caution sera encaissée – à des fins de remboursement – après constatation par l’administration de l’EFRITS : 
+
+- D'un dommage ou d’une dégradation du livre emprunté par l'Apprenant,
+
+- D'une perte ou vol du livre emprunté par l'Apprenant,
+
+- Du non-retour du livre emprunté par l'Apprenant après que le délai
+d’emprunt ait été constaté et suite au cinquième rappel de l’administration
+de l’EFRITS. 
+
+Dans le cas où le chèque de caution est encaissé, la différence entre le prix
+de rachat du livre détérioré et le montant encaissé du chèque de caution sera
+alors remboursé à l'Apprenant. L'Apprenant peut également proposer de
+remplacer le livre avant l'encaissement.
+
+Sera jugé détérioré tout livre : déchiré, stabiloté, détrempé, brulé, marqué,
+corné, plié, annoté, etc.
+
+]
+
+[@NewPage]
+

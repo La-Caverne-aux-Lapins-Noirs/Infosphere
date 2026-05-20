@@ -1,0 +1,47 @@
+
+# Droit à l'image
+
+[@Size;4]
+
+L'Apprenant:
+
+[@ELine]
+[@CheckBox;[#IfC;Photo;==;1;1]] Autorise l'EFRITS et toute personne agissant pour son compte à
+[@ELine]
+[@CheckBox;[#IfC;Photo;==;0;1]] N'autorise pas l'EFRITS et toute personne agissant pour son compte à
+
+
+- Reproduire et de représenter tout ou une partie des images, vidéos sonorisées
+ou non, prises de vue et l’intégralité de la captation des images et du son,
+sur lesquelles j’apparais ou me représentant ainsi que mes propos durant la
+formation et lors d’évènements organisés par l’EFRITS ou ses partenaires. 
+
+- Utiliser, publier, distribuer, éditer, copier, reproduire, adapter, modifier,
+intégrer, diffuser, exploiter et/ou programmer les images, vidéos et sons
+prises pendant mon activité. 
+
+Les images, vidéos et sons pourront être exploitées et utilisées directement
+sous toutes formes, tous moyens matériels et tous supports connus et inconnus
+à ce jour – et sans présager de la généralité de cette autorisation : la presse,
+les publications sur les réseaux sociaux, les supports de communication,
+la publicité, l’affichage, les publications sur les sites web, etc. – pour
+la durée de la formation et l'année calendaire suivante – à visé marketing ou
+non de l’EFRITS. 
+
+[@ELine]
+
+Les images, vidéos et sons seront recueillies lors des Formations et lors des
+évènements organisés par l’EFRITS ou ses partenaires. Vous reconnaissez être
+entièrement en possession de vos droits et ne pourrez exiger aucune rémunération
+pour l’exploitation de ses droits d’image, de son et de vidéo. 
+
+[@ELine]
+
+Je certifie ne pas être sous un contrat d’exclusivité de l’utilisation de mon image.
+
+[@ELine]
+
+En cas de refus, je comprends et accepte que la possibilité de participer à
+la communication de l'EFRITS dans le cadre du module "Communication Scolaire"
+me soit refusée.
+

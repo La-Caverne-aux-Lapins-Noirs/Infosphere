@@ -1,0 +1,51 @@
+
+## Article S[#C;S] - Programmes
+
+[@Size;1]
+[@Columns;3;
+
+L’EFRITS garantit que les programmes correspondent substantiellement aux cursus. 
+
+Les programmes porteront notamment, sans que cette liste ne soit exhaustive, sur
+les méthodes et techniques de programmation, d'architecture et d'organisation ;
+les langages de programmation ; les outils de maquettage ; les outils de développement ;
+les systèmes d’exploitation ; les méthodes de spécification et de conception ; les logiciels de conception électronique ; etc. 
+
+L’Apprenant est inscrit aux évaluations préparées sous réserve d’avoir
+fourni à l’EFRITS les pièces nécessaires à son inscription.  
+
+L'Apprenant reçoit son attestation de formation, de réalisation ou son titre
+par l’EFRITS. Dans le cas d’un arrêt des cours, une attestation précisant les matières
+validées est remise par l’Etablissement. 
+
+Les contenus des programmes d’étude, tels qu’ils figurent sur les documents de présentation
+ou sur le Site sont fournis à titre indicatif. L’administration de l’EFRITS,
+les formateur(trice)s et enseignant(e)s ou le responsable pédagogique se réservent le droit
+de les modifier en fonction des évolutions, de l’actualité, du niveau des participants ou de
+la dynamique du groupe. En outre, l’EFRITS se réserve le droit de modifier le calendrier avec
+information préalable des Apprenants, sauf cas de force majeure non prévisible l’en empêchant. 
+
+Dans le cadre d’un cursus à distance, l’ensemble des activités, des supports pédagogiques et
+énoncés des exercices est diffusé exclusivement en ligne. L’Apprenant accède, par Internet,
+à des outils numériques de l’EFRITS mis à sa disposition par l’EFRITS en indiquant son
+identifiant et le mot de passe qui lui sont transmis par l’EFRITS. 
+
+L’accès est possible depuis un ordinateur équipé d’un navigateur de type Internet Mozilla Firefox
+et connecté à Internet. L’Apprenant s’engage à ne pas perturber, ralentir, bloquer
+ou altérer le flux normal des données échangées sur la plateforme ou les outils mis
+à sa disposition, ni en modifier, en perturber ou en altérer le fonctionnement. 
+
+L’EFRITS concède à chaque Apprenant un droit d’utilisation personnel, non cessible et non
+exclusif d’utiliser les outils mis à disposition et/ou le dispositif de cursus en ligne.
+Les identifiants et les mots de passe confiés sont exclusivement limités à l’usage unique
+et personnel de l’Apprenant. Il ne doit en aucun cas en faire bénéficier un tiers.
+L’EFRITS se réserve le droit, le cas échéant, de prendre toutes les mesures nécessaires
+pour faire cesser ces agissements et obtenir réparation de son préjudice. 
+
+En aucun cas l’EFRITS ne saurait être tenu responsable d’un défaut total ou partiel
+de connexion Internet qui ne lui serait pas imputable ou des pannes du matériel informatique
+de l’Apprenant. L’Apprenant sera seul responsable de l’utilisation des outils et/ou
+du dispositif de cursus en ligne mis à sa disposition. 
+
+]
+

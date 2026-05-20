@@ -1,0 +1,22 @@
+
+## Article P12 - Travail à distance
+
+[@Size;2]
+[@Columns;2;
+
+Cet article aborde le travail à distance effectué sur les heures de présentiel.
+Celui-ci est admis sous certaines conditions.
+
+La possibilité de travail à distance se gagne par la tenue d’un indicateur
+d’implication élevée et d’un indicateur de difficulté inférieur bas. Le travail
+à distance sur les heures de présentiel consomme des "Francs", la valeur d'une
+heure de travail à distance est librement définie par l'EFRITS. Les indicateurs
+d'implication et de difficulté sont librement établis par l'EFRITS.
+
+Le travail à distance est mesuré par la connexion de l'Apprenant aux services
+de l'EFRITS (intranet et serveurs). L'information de la longueur du
+travail supposé constaté est disponible sur l'intranet. Le système mesure
+également la présence physique sur une machine de l'EFRITS.
+
+]
+

@@ -1,0 +1,39 @@
+
+## Article S[#C;S] - Limitation de responsabilité et force majeure
+
+[@Size;1]
+[@Columns;3;
+La responsabilité de l’EFRITS est expressément limitée à l’indemnisation
+des dommages directs prouvés par l’Apprenant. 
+
+En aucun cas, la responsabilité de l’EFRITS ne pourrait être engagée
+pour des dommages indirects comme la perte de données, de fichiers. 
+
+L’EFRITS ne pourra être tenue responsable des dommages directs et indirects causés
+au matériel de l’utilisateur lors de l’accès à la Plateforme, et résultant
+de l’utilisation d’un matériel ne répondant pas aux conditions prévues,
+soit de l’apparition d’un bug ou d’une incompatibilité. 
+
+[#IfC;NoPaiement;==;0;
+Dans tous les cas, la responsabilité de l’EFRITS est plafonnée au
+montant du prix payé hors taxes par l’Apprenant. Ce montant sera le maximum considéré
+comme indemnité (dommage et intérêts) et pénalités, quels que soient
+les préjudices présentés et les fondements juridiques retenus à moins
+que la loi ou la jurisprudence ne s’y oppose.
+]
+
+Dans le cadre des Cursus de l’Etablissement, l’EFRITS est tenue à une
+obligation de moyen vis-à-vis des Apprenants. L’EFRITS ne pourra être
+tenue responsable à l’égard des Apprenants en cas d’inexécution
+de ses obligations résultant d’un évènement fortuit ou de force majeure.
+Sont ici considérés comme cas fortuit ou de force majeure, outre
+ceux habituellement reconnus par la jurisprudence : la maladie ou
+l’accident d’un formateur, d’un intervenant ou du responsable
+pédagogique, les grèves ou conflits sociaux externes à l’EFRITS,
+les désastres naturels, les crises sanitaires, les incendies,
+l’interruption des télécommunications, de l’approvisionnement en
+énergie, ou des transports de tout type, ou toute autre circonstance
+échappant au contrôle raisonnable de l’EFRITS.
+
+]
+

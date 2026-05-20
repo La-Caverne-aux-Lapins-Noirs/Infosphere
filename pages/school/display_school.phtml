@@ -1,72 +1,157 @@
-<td class="click_list">
-    <?php
-    // On sélectionne seulement ceux qui ne sont pas la
-    $users = db_select_all("
-	  user.id, user.codename
-          FROM user
-          LEFT JOIN user_school
-            ON user.id = user_school.id_user
-            AND user_school.authority = 0
-            AND user_school.id_school = {$school["id"]}
-          WHERE deleted IS NULL
-          AND user_school.id IS NULL
-          ORDER BY codename ASC
-          ");
-    if (count($users)) { ?>
-	<?php foreach ($users as $usr) { ?>
-	    <div class="userclicklist" onclick="add_to_listfield(this, '<?=$usr["codename"]; ?>', 'user<?=$school["id"]; ?>_name');">
-		<div <?=clickable("index.php?p=ProfileMenu&amp;a={$usr["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-		<?=display_avatar($usr, 50); ?>
-		<p><?=$usr["codename"]; ?></p>
+<?php
+$can_edit_school = is_director_for_school($school["id"]);
+
+$school_identity_fields = [
+    "legal_name" => "LegalName",
+    "address" => "Address",
+    "phone" => "Phone",
+    "mail" => "Mail",
+];
+
+$school_legal_fields = [
+    "main_info" => "MainInfo",
+    "school_info" => "PrivateSchoolInfo",
+    "formation_info" => "TrainingOrganizationInfo",
+    "alternation_info" => "CfaInfo",
+];
+
+$school_staff_roles = [
+    ["field" => "director", "admin" => "only_admin"],
+    ["field" => "teacher", "admin" => "is_director_for_school"],
+    ["field" => "commercial", "admin" => "is_director_for_school"],
+    ["field" => "librarian", "admin" => "is_director_for_school"],
+];
+?>
+
+<div class="school_admin_page" id="school<?=$school["id"]; ?>_configuration">
+    <div class="school_admin_header">
+	<div class="school_admin_icon">
+	    <?php $pic = $Configuration->SchoolsDir($school["codename"])."icon.png"; ?>
+	    <div style="background-image: url('<?=$pic; ?>');"></div>
+	</div>
+	<div class="school_admin_title">
+	    <h3><?=$Dictionnary["SchoolConfiguration"]; ?></h3>
+	    <p><?=$Dictionnary["CodeName"]; ?>: <b><?=$school["codename"]; ?></b></p>
+	</div>
+    </div>
+
+    <form
+	method="put"
+	action="/api/school/<?=$school["id"]; ?>"
+	class="school_admin_card school_admin_form"
+	onsubmit="return silent_submitf(this, {after_success: refresh});"
+    >
+	<h4><?=$Dictionnary["Identity"]; ?></h4>
+
+	<div class="school_admin_identity_grid">
+	    <label class="school_admin_codename">
+		<?=$Dictionnary["CodeName"]; ?>
+		<input type="text" value="<?=htmlspecialchars($school["codename"], ENT_QUOTES); ?>" readonly />
+	    </label>
+
+	    <div class="school_admin_languages">
+		<?php forge_language_formular(["name" => "text"], $school, "school_language_entry"); ?>
 	    </div>
-	<?php } ?>
-    <?php } else { ?>
-	<?=$Dictionnary["Empty"]; ?>
-    <?php } ?>
-</td>
+	</div>
 
-<td>
-    <?php list_of_links([
-	"hook_name" => "school",
-	"hook_id" => $school["id"],
-	"linked_name" => "user",
-	"linked_elems" => $school["user"],
-	"admin_func" => "is_director_for_school",
-    ]); ?>
-</td>
+	<div class="school_admin_grid_two">
+	    <?php foreach ($school_identity_fields as $field => $label) { ?>
+		<label>
+		    <?=$Dictionnary[$label]; ?>
+		    <?php if ($field == "address") { ?>
+			<textarea name="<?=$field; ?>"><?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?></textarea>
+		    <?php } else { ?>
+			<input
+			    type="text"
+			    name="<?=$field; ?>"
+			    value="<?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?>"
+			/>
+		    <?php } ?>
+		</label>
+	    <?php } ?>
+	</div>
 
-<td class="click_list">
-    <?php
-    $cycs = db_select_all("
-       cycle.id, codename, {$Language}_name as name
-       FROM cycle
-       LEFT JOIN school_cycle
-         ON cycle.id = school_cycle.id_cycle
-         AND school_cycle.id_school = {$school["id"]}
-       WHERE is_template = 0
-	AND deleted IS NULL
-	AND first_day > '".db_form_date(now() - 60 * 60 * 24 * 7 * 16)."'
-        AND school_cycle.id IS NULL
-        AND done IS NULL
-       ");
-    if (count($cycs)) { ?>
-	<?php foreach ($cycs as $cyc) { ?>
-	    <div onclick="add_to_listfield(this, '<?=$cyc["codename"]; ?>', 'cycle<?=$school["id"]; ?>_name');">
-		<div <?=clickable("index.php?p=CycleMenu&amp;a={$cyc["id"]}"); ?>>&#x1F50D;&#xFE0E</div>
-		<p><?=$cyc["codename"]; ?> <?=$cyc["name"]; ?></p>
+	<h4><?=$Dictionnary["LegalConfiguration"]; ?></h4>
+	<div class="school_admin_legal_grid">
+	    <?php foreach ($school_legal_fields as $field => $label) { ?>
+		<label>
+		    <?=$Dictionnary[$label]; ?>
+		    <textarea name="<?=$field; ?>"><?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?></textarea>
+		</label>
+	    <?php } ?>
+	</div>
+
+	<div class="school_admin_actions">
+	    <input
+		type="button"
+		onclick="silent_submitf(this.parentNode.parentNode, {});"
+		value="<?=$Dictionnary["Save"]; ?>"
+	    />
+	</div>
+    </form>
+
+    <div class="school_admin_management_grid">
+	<section class="school_admin_card school_admin_staff">
+	    <div class="school_admin_staff_grid">
+		<?php foreach ($school_staff_roles as $role) { ?>
+		    <div class="school_admin_linkbox">
+			<?php
+			$field = $role["field"];
+			$linked_name = [
+			    "table" => "user",
+			    "name" => $field,
+			    "placeholder" => ucfirst($field),
+			    "" => $field,
+			];
+
+			list_of_links([
+			    "hook_name" => "school",
+			    "hook_id" => $school["id"],
+			    "linked_name" => $linked_name,
+			    "linked_elems" => $school[$field],
+			    "admin_func" => $role["admin"],
+			]);
+			?>
+		    </div>
+		<?php } ?>
 	    </div>
-	<?php } ?>
-    <?php } else { ?>
-	<?=$Dictionnary["Empty"]; ?>
-    <?php } ?>
-</td>
+	</section>
 
-<td>
-    <?php list_of_links([
-	"hook_name" => "school",
-	"hook_id" => $school["id"],
-	"linked_name" => "cycle",
-	"linked_elems" => $school["cycle"],
-	"admin_func" => "is_director_for_school",
-    ]); ?>
-</td>
+	<section class="school_admin_card school_admin_students">
+	    <div class="school_admin_linkbox">
+		<?php list_of_links([
+		    "hook_name" => "school",
+		    "hook_id" => $school["id"],
+		    "linked_name" => "user",
+		    "linked_elems" => $school["user"],
+		    "admin_func" => "is_director_for_school",
+		]); ?>
+	    </div>
+	</section>
+
+	<section class="school_admin_card school_admin_cycles">
+	    <div class="school_admin_linkbox">
+		<?php list_of_links([
+		    "hook_name" => "school",
+		    "hook_id" => $school["id"],
+		    "linked_name" => "cycle",
+		    "linked_elems" => $school["cycle"],
+		    "admin_func" => "is_director_for_school",
+		]); ?>
+	    </div>
+	</section>
+    </div>
+
+    <?php if (is_admin()) { ?>
+	<section class="school_admin_card school_admin_danger">
+	    <?php $confirm = addslashes($Dictionnary["ConfirmDeletion"]); ?>
+	    <form method="delete" action="/api/school/<?=$school["id"]; ?>" onsubmit="return false;">
+		<input
+		    type="button"
+		    onclick="if (window.confirm('<?=$confirm; ?>')) silent_submitf(this.parentNode, {after_success: function(){document.location='index.php?p=SchoolMenu';}});"
+		    value="<?=$Dictionnary["DeleteSchool"]; ?>"
+		/>
+	    </form>
+	</section>
+    <?php } ?>
+</div>

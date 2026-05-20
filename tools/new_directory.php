@@ -1,30 +1,39 @@
 <?php
 
-function new_directory($dir)
+function new_directory($path)
 {
-    $dir = explode("/", $dir);
-    if ($dir[count($dir) - 1] != "")
-	unset($dir[count($dir) - 1]);
-    $dir = implode("/", $dir);
-    $cmd = "";
-    if (system($cmd = "mkdir -p $dir && chmod 775 $dir") === false)
+    $dir = $path;
+
+    if ($dir != "" && substr($dir, -1) != "/" && pathinfo($dir, PATHINFO_EXTENSION) != "")
+	$dir = dirname($dir);
+
+    if ($dir == "" || $dir == ".")
+	return (new Response);
+
+    if (!is_dir($dir))
     {
-	if (is_admin())
-	    return (new ErrorResponse("CannotExecute", $cmd));
-	return (new ErrorResponse("CannotExecute"));
+	if (!mkdir($dir, 0775, true))
+	{
+	    if (is_admin())
+		return (new ErrorResponse("CannotCreateDirectory", $dir));
+	    return (new ErrorResponse("CannotCreateDirectory"));
+	}
     }
-    if (system($cmd = "echo '<?php http_response_code(404);' > $dir/index.php") === false)
+
+    @chmod($dir, 0775);
+
+    $index = $dir."/index.php";
+    if (!file_exists($index))
     {
-	if (is_admin())
-	    return (new ErrorResponse("CannotExecute", $cmd));
-	return (new ErrorResponse("CannotExecute"));
+	if (file_put_contents($index, "<?php http_response_code(404);\n") === false)
+	{
+	    if (is_admin())
+		return (new ErrorResponse("CannotWriteFile", $index));
+	    return (new ErrorResponse("CannotWriteFile"));
+	}
     }
-    if (system($cmd = "chmod 755 $dir/index.php") === false)
-    {
-	if (is_admin())
-	    return (new ErrorResponse("CannotExecute", $cmd));
-	return (new ErrorResponse("CannotExecute"));
-    }
+
+    @chmod($index, 0755);
+
     return (new Response);
 }
-

@@ -1,0 +1,657 @@
+/*
+** Cycle administration page
+**
+** Layout:
+**
+**   A B C
+**   D E E
+**
+** A = edit cycle
+** B = group mail / instantiate
+** C = activities
+** D = management: teachers, school, export, delete
+** E = students
+*/
+
+.cycle_admin_page
+{
+    box-sizing: border-box;
+    display: grid;
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+
+    --cycle_top_row_height: 600px;
+    --cycle_bottom_row_height: 600px;
+}
+
+/*
+** Cards
+*/
+
+.cycle_admin_card
+{
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: white !important;
+    min-width: 0;
+    padding: 12px;
+}
+
+.cycle_admin_card h2,
+.cycle_admin_card h3,
+.cycle_admin_card h4,
+.cycle_admin_card p
+{
+    margin: 0;
+}
+
+.cycle_admin_card h2
+{
+    flex: 0 0 auto;
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.cycle_admin_card h3
+{
+    font-size: 22px;
+}
+
+.cycle_admin_card h4
+{
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.cycle_admin_card p
+{
+    margin-top: 4px;
+}
+
+/*
+** Header
+*/
+
+.cycle_admin_header
+{
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.cycle_admin_header_stats
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.cycle_admin_header_stats span
+{
+    background: rgba(0, 80, 0, 0.45);
+    border: 1px solid rgba(0, 180, 0, 0.55);
+    border-radius: 5px;
+    padding: 4px 8px;
+}
+
+/*
+** Main grid
+*/
+
+.cycle_admin_grid
+{
+    align-items: stretch !important;
+    display: grid !important;
+    gap: 12px !important;
+    grid-template-columns:
+	minmax(360px, 1fr)
+	minmax(420px, 1.15fr)
+	minmax(440px, 1.20fr) !important;
+    grid-template-rows:
+	var(--cycle_top_row_height)
+	var(--cycle_bottom_row_height) !important;
+    width: 100% !important;
+}
+
+.cycle_admin_grid > section.cycle_admin_card
+{
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+.cycle_admin_edit
+{
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+}
+
+.cycle_admin_mail
+{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+.cycle_admin_activities
+{
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+}
+
+.cycle_admin_management
+{
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    overflow-y: auto !important;
+}
+
+.cycle_admin_students
+{
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+}
+
+/*
+** Generic forms
+*/
+
+.cycle_admin_form
+{
+    display: grid !important;
+    gap: 10px !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
+    padding-right: 4px;
+    width: 100% !important;
+}
+
+.cycle_admin_edit > form
+{
+    flex: 0 0 auto !important;
+}
+
+.cycle_admin_identity_grid
+{
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.cycle_admin_languages
+{
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr;
+}
+
+.cycle_language_entry
+{
+    margin: 0;
+}
+
+.cycle_language_entry span
+{
+    display: block;
+    font-weight: bold;
+}
+
+.cycle_admin_form label,
+.cycle_admin_mail label
+{
+    display: block !important;
+    font-weight: bold;
+    min-width: 0;
+    width: 100% !important;
+}
+
+.cycle_admin_form input[type="text"],
+.cycle_admin_form input[type="number"],
+.cycle_admin_form input[type="date"],
+.cycle_admin_form select,
+.cycle_admin_form textarea,
+.cycle_admin_mail input[type="text"],
+.cycle_admin_mail input[type="date"],
+.cycle_admin_mail textarea,
+.cycle_admin_management select,
+.cycle_admin_exports select
+{
+    box-sizing: border-box !important;
+    display: block !important;
+    margin-top: 3px;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_form textarea,
+.cycle_admin_mail textarea
+{
+    resize: vertical;
+}
+
+.cycle_admin_checkbox
+{
+    align-items: center;
+    display: flex !important;
+    gap: 5px;
+}
+
+.cycle_admin_actions
+{
+    flex: 0 0 auto;
+    margin-top: 8px;
+    text-align: right;
+}
+
+.cycle_admin_actions input[type="button"],
+.cycle_admin_exports input[type="submit"]
+{
+    min-width: 90px;
+}
+
+/*
+** Mail block
+*/
+
+.cycle_admin_mail form
+{
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+.cycle_admin_mail form label
+{
+    flex: 0 0 auto;
+}
+
+.cycle_admin_mail form label:last-of-type
+{
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+}
+
+.cycle_admin_mail textarea
+{
+    flex: 1 1 auto !important;
+    min-height: 120px !important;
+    overflow-y: auto !important;
+}
+
+/*
+** Management block
+*/
+
+.cycle_admin_side_block
+{
+    border-top: 1px solid rgba(0, 180, 0, 0.35);
+    margin-top: 12px;
+    padding-top: 10px;
+}
+
+.cycle_admin_side_block:first-child
+{
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.cycle_admin_exports form
+{
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.cycle_admin_danger
+{
+    border-top-color: rgba(255, 0, 0, 0.60);
+}
+
+.cycle_admin_danger input[type="button"]
+{
+    color: red;
+}
+
+/*
+** Activities: fixed panel, internal scroll
+*/
+
+.cycle_admin_scrollbox
+{
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding-right: 4px;
+    width: 100% !important;
+}
+
+/*
+** list_of_links local reset
+*/
+
+.cycle_admin_page .list_of_link
+{
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_page .list_of_link h5,
+.cycle_admin_page .list_of_link form
+{
+    box-sizing: border-box !important;
+    margin: 0;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_page .list_of_link h5
+{
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.cycle_admin_page .list_of_link > br
+{
+    display: none !important;
+}
+
+/*
+** Add form generated by list_of_links
+*/
+
+.cycle_admin_page .list_of_link > form[id$="_form"]
+{
+    display: grid !important;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    margin-bottom: 6px;
+}
+
+.cycle_admin_page .list_of_link > form[id$="_form"] input[type="hidden"]
+{
+    display: none !important;
+}
+
+.cycle_admin_page .list_of_link > form[id$="_form"] input[type="text"]
+{
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_page .list_of_link > form[id$="_form"] input[type="button"]
+{
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+/*
+** Existing linked elements
+*/
+
+.cycle_admin_page .sublist_of_link
+{
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_page .sublist_of_link div
+{
+    align-items: center;
+    box-sizing: border-box !important;
+    display: grid !important;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-width: 0 !important;
+    padding: 1px 4px;
+    width: 100% !important;
+}
+
+.cycle_admin_page .sublist_of_link div a
+{
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cycle_admin_page .sublist_of_link input[type="button"]
+{
+    box-sizing: border-box !important;
+    padding: 0;
+    width: 100% !important;
+}
+
+/*
+** Extra property forms generated after linked elements
+*/
+
+.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link)
+{
+    display: grid !important;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    margin-bottom: 8px;
+}
+
+.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="text"]
+{
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="button"]
+{
+    box-sizing: border-box !important;
+    height: auto !important;
+    min-width: 0 !important;
+    position: static !important;
+    width: 100% !important;
+}
+
+/*
+** Students: wide panel, internal scroll
+*/
+
+.cycle_admin_students > .list_of_link
+{
+    align-content: start !important;
+    display: grid !important;
+    flex: 1 1 auto !important;
+    gap: 6px 12px !important;
+    grid-template-columns: repeat(2, minmax(300px, 1fr)) !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding-right: 6px;
+}
+
+.cycle_admin_students .list_of_link > h5,
+.cycle_admin_students .list_of_link > form[id$="_form"]
+{
+    grid-column: 1 / -1 !important;
+}
+
+.cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link)
+{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 40px !important;
+}
+
+.cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="button"]
+{
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+}
+
+/*
+** Activities: compact property forms
+*/
+
+.cycle_admin_activities .list_of_link > form:not([id$="_form"]):not(.sublist_of_link)
+{
+    grid-template-columns: minmax(0, 1fr) 34px !important;
+}
+
+/*
+** Template instances
+*/
+
+.cycle_admin_instances
+{
+    display: grid;
+    gap: 4px;
+}
+
+.cycle_admin_page a
+{
+    color: #00e000;
+}
+
+/*
+** Medium screens
+*/
+
+@media (max-width: 1350px)
+{
+    .cycle_admin_page
+    {
+	--cycle_top_row_height: 600px;
+	--cycle_bottom_row_height: clamp(240px, 34vh, 440px);
+    }
+
+    .cycle_admin_grid
+    {
+	grid-template-columns:
+	    minmax(320px, 1fr)
+	    minmax(420px, 1fr) !important;
+	grid-template-rows:
+	    var(--cycle_top_row_height)
+	    var(--cycle_top_row_height)
+	    var(--cycle_bottom_row_height) !important;
+    }
+
+    .cycle_admin_edit
+    {
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+    }
+
+    .cycle_admin_mail
+    {
+	grid-column: 2 !important;
+	grid-row: 1 !important;
+    }
+
+    .cycle_admin_management
+    {
+	grid-column: 1 !important;
+	grid-row: 2 !important;
+    }
+
+    .cycle_admin_activities
+    {
+	grid-column: 2 !important;
+	grid-row: 2 !important;
+    }
+
+    .cycle_admin_students
+    {
+	grid-column: 1 / 3 !important;
+	grid-row: 3 !important;
+    }
+}
+
+/*
+** Small screens
+*/
+
+@media (max-width: 900px)
+{
+    .cycle_admin_page
+    {
+	--cycle_top_row_height: auto;
+	--cycle_bottom_row_height: auto;
+    }
+
+    .cycle_admin_header
+    {
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 8px;
+    }
+
+    .cycle_admin_grid
+    {
+	grid-template-columns: 1fr !important;
+	grid-template-rows: auto auto auto auto auto !important;
+    }
+
+    .cycle_admin_identity_grid,
+    .cycle_admin_students > .list_of_link,
+    .cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link)
+    {
+	grid-template-columns: 1fr !important;
+    }
+
+    .cycle_admin_edit
+    {
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+	max-height: none !important;
+	overflow: visible !important;
+    }
+
+    .cycle_admin_mail
+    {
+	grid-column: 1 !important;
+	grid-row: 2 !important;
+	max-height: none !important;
+    }
+
+    .cycle_admin_activities
+    {
+	grid-column: 1 !important;
+	grid-row: 3 !important;
+	max-height: 50vh !important;
+    }
+
+    .cycle_admin_management
+    {
+	grid-column: 1 !important;
+	grid-row: 4 !important;
+	max-height: 50vh !important;
+    }
+
+    .cycle_admin_students
+    {
+	grid-column: 1 !important;
+	grid-row: 5 !important;
+	max-height: 60vh !important;
+    }
+
+    .cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="button"]
+    {
+	grid-column: auto !important;
+	grid-row: auto !important;
+    }
+}
+
+

@@ -1,0 +1,32 @@
+
+## Article P5 - Les Francs
+
+[@Size;2]
+[@Columns;2;
+
+Les Apprenants par la participation à des activités et le rendu de
+travaux peuvent gagner des « Francs ». Il s’agit de points permettant
+de rattraper une erreur tel qu’un rendu modérément en retard, un
+oubli d’inscription à une activité, un oubli de déclaration de présence
+à une activité où l’Apprenant peut apporter la preuve de sa présence,
+l’acceptation d’un membre d’équipe, etc. 
+
+Les Francs peuvent également servir à demander des corrections
+automatiques supplémentaires, au-delà des quotas spécifiés par
+les activités. Le nombre de points requis pour chaque cas est
+précisé par une table disponible sur l’intranet associé à une activité.
+Toute modification de cette table est annoncée par le biais de l'intranet.
+
+Les Francs ne sont pas transférable d’un Apprenant à un autre. Dans
+le cadre d’un travail en équipe, seul l’administrateur est en capacité
+d’utiliser des Francs, ceux-là étant tirés de tous les membres de l’équipe. 
+
+La perte de Francs, jusqu’à leur mise à zéro, est une sanction
+envisageable en cas de fraude ou de non-respect du règlement
+intérieur ou pédagogique. 
+
+Les Francs sont des points bonus et ne sont pas néccessaire
+à la réussite de la formation.
+
+]
+

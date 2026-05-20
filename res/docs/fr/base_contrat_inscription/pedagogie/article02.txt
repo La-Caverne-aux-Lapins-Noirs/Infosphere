@@ -1,0 +1,43 @@
+
+## Article P2 - Médailles
+
+[@Size;2]
+[@Columns;2;
+
+Les médailles incarnent des réalisations réussies ou au contraire
+des échecs. Les médailles sont précises en ce qu’elle qualifie un
+événement précis, ne sont pas comparable entre elles, n’ont pas
+de valeur d’échange l’une avec l’autres et ne sont pas, à l’exception
+de quelques-unes traitant de compétences très proches, hiérarchisées. 
+
+Elles peuvent être distribués lors d’une correction automatique,
+d’une soutenance, d’une présentation, d’un suivi, d’un recode ou
+tout autre activité. 
+
+Les médailles servent deux propos : permettre aux Apprenants eux-mêmes
+ainsi qu’au membres du corps pédagogique de connaitre l’étendue des
+capacités des Apprenants vis-à-vis de la formation, et incarner le
+moyen par lequel cette formation est validée. 
+
+Les médailles peuvent être d’un certain niveau de fiabilité,
+dépendant du contexte d’acquisition. Les médailles obtenues seul
+en examen ou en recode ont une fiabilité maximale. Les autres
+types d’activités, tel que les travaux pratiques, les projets seul
+comme en équipe, les examens en équipe, permettent un niveau de
+fiabilité plus faible. Ce faible niveau de fiabilité nécessite
+l’acquisition à plusieurs reprises de la médaille afin de bénéficier
+d’un niveau de fiabilité maximale attestant définitivement de
+l’acquisition de la compétence. 
+
+Les médailles ayant trait au travail en équipe ne peuvent être
+acquis que lors de travaux en équipe. Le statut faible ou fort
+d’une telle médaille dépendant alors de l’ampleur du travail à réaliser. 
+
+L’ajout de nouvelles médailles est un processus trivial réalisé
+au besoin par le corps pédagogique afin de valoriser un travail
+supplémentaire ou original. En tant qu’Apprenant, il ne faut pas
+hésiter à faire valoir son droit à la représentation d’un travail
+supplémentaire.
+
+]
+

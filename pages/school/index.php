@@ -27,9 +27,7 @@ $page = "school";
 
 <?php if ($unique) { ?>
 
-    <table class="big_top_table"><tr>
-	<?php require ("display_school.phtml"); ?>
-    </tr></table>
+    <?php require ("display_school.phtml"); ?>
     
 <?php } else { ?>
 

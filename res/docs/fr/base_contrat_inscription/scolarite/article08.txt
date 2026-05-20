@@ -1,0 +1,85 @@
+
+[#IfC;NoPaiement;==;0;
+
+## Article S[#C;S] - Informations concernant l'exercice du droit de rétractation
+
+[@Size;1]
+[@Columns;3;
+
+[#IfC;Ecole;==;1;
+L’Apprenant a le droit de se rétracter sans donner de
+motif dans un délai de quatorze (14) jours après le jour de la signature
+du présent document.
+;
+L’Apprenant dispose d’un délai de dix (10) jours à compter de la
+signature du présent document pour se rétracter. En cas de signature à
+distance, ce délai est porté à quatorze (14) jours.
+]
+
+Pour exercer le droit de rétractation, l’Apprenant doit notifier à l’EFRITS sa
+décision de se rétracter par une déclaration sans ambiguïté,
+la lettre avec accusé de réception, adressé à l’EFRITS - ou par courriel à
+l'adresse admissions@efrits.fr.
+
+Pour que le délai de rétractation soit respecté, il suffit que l’Apprenant
+transmette sa demande d'exercice du droit de rétractation avant l'expiration
+du délai de rétractation.
+
+[#IfC;Ecole;==;1;
+En cas de rétractation, l’EFRITS remboursera tous
+les paiements reçus, sans retard excessif et, au plus tard quatorze
+jours à compter du jour où l’Etablissement est informé de la décision de
+rétractation.
+
+Le remboursement se fera en utilisant le même moyen de paiement que
+celui utilisé pour la transaction initiale, sauf si un moyen différent
+est convenu expressément sans que ce remboursement n'occasionne de
+frais pour l’Apprenant.
+;
+Aucun frais ne sera encaissé avant la fin du délai de rétractation.
+Les modalités de paiement prévues à l’article S6 respectent les dispositions
+applicables du Code du travail : aucune somme ne peut être exigée
+avant l’expiration du délai de rétractation - à l’issue de ce délai,
+il ne peut être exigé une somme supérieure à 30% du prix convenu, le
+solde donnant lieu à échelonnement au fur et à mesure du déroulement de l’action de formation.
+]
+
+La formation ne peut débuter avant l’issue du délai de rétractation
+sauf renonciation expresse de l’Apprenant, formulée dans le présent
+document. En cas de renonciation, l’Apprenant reconnaît demander l’exécution
+immédiate de la formation.
+
+L’Apprenant peut utiliser le modèle de formulaire de rétractation
+fourni ci-dessous mais ce n'est pas obligatoire.
+]
+
+[@ELine]
+[@ELine]
+[@ELine]
+
+[@Size;5]
+>
+> **Formulaire de retractation**
+>
+> Prénom, Nom
+> Adresse postale
+>
+> A l'attention de Monsieur le Directeur de l'EFRITS
+> 33 rue Delaporte 94700 Maisons-Alfort
+>
+> [@ELine]
+>
+> Envoi par lettre recommandée avec accusé de réception ou
+> par courriel à l'Etablissement.
+>
+> Je vous notifie par la présente ma rétractation
+> de mon inscription en NomFormation de l'année
+> Année-Année pour laquelle nous avons signé le JJ/MM/AAAA.
+>
+> [@ELine]
+>
+> Date et signature (seulement si envoi par courrier postal)
+>
+>
+
+]

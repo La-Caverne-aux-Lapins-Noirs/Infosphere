@@ -1,0 +1,89 @@
+Document = "Report"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5]
+    Bulletin de fin de trimestre
+  Left]
+  Right = [Text($,Right)
+    [@Image;res/efrits.png;width=3cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0] EFRITS SAS, 33 rue Delaporte, 94700 Maisons-Alfort immatriculé sous le numéro 909 292 773 au R.C.S. de Créteil
+  Etablissement d'enseignement supérieur privé, immatriculé sous le numéro 0942530P auprès du rectorat de Créteil
+  Organisme de formation professionnelle, déclaration d’activité enregistrée sous le numéro 11941128194 auprès du préfet de région d’Ile-de-France
+Footer]
+
+[Cycle
+  Code = "EF6E"
+  Year = 6
+  Trimester = 5
+  Start = "01/01/1970"
+  End = "01/04/1970"
+  Comment = [Text($,Comment)
+    Super cycle.
+  Comment]
+  {Modules
+    [
+      Code = "GFX-01B-XXX"
+      Name = "Programmation graphique"
+      Comment = [Text($,Comment)
+        Super élève.
+      Comment]
+      Grade = "C"
+      [Flames
+        Min = 10
+        Max = 12
+        Result = 8
+      ]
+      [Activities
+        Attendance = 8
+        NonAttendance = 4
+        Unregistered = 6
+      ]
+      [Exam
+        Attendance = 8
+        NonAttendance = 4
+        Unregistered = 6
+      ]
+      [Work
+        Delivered = 6
+        Undelivered = 4
+        Unregistered = 1
+      ]
+    ]
+  }
+]
+
+[School
+  Name = "EFRITS"
+  Title = "Etablissement d'enseignement supérieur privé"
+  Address = [Text($,Address)
+    32a Avenue Pierre Sémard
+    94200 Ivry-sur-Seine
+  Address]
+]
+
+[People
+  [Student
+    Id = "9400025"
+    INE = "6416a4aze"
+    BirthDate = "36 Fubrance 2042"
+    Role = "Elève"
+    Identity = "Student STUDENT"
+    PreviousFlames = 10
+  ]
+  [Tutor
+    Role = "Responsable légal"
+    Identity = "Tutor TUTOR"
+    Address = "42 Avenue du Boulevard des Rues\\\\68000 Colmar"
+  ]
+  [Director
+    Role = "Directeur"
+    Identity = "Jason Brillante"
+    'Signature = @"jason.brillante.png"
+    'Initials = @"jason.brillante.initials.png"
+  ]
+]

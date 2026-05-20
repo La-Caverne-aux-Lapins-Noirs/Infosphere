@@ -1,0 +1,43 @@
+
+## Article S[#C;S] - Admission
+
+[@Size;1]
+[@Columns;1;
+L’admission à l’EFRITS se fait via un système d’évaluation du
+niveau des Apprenants permettant à chacun d’entrer dans le
+Cursus le plus adapté à son niveau de connaissances et ses attentes.
+]
+
+[@Table;4;
+| Etape 1 | Etape 2 | Etape 3 | Etape 4 |
+|:-------:|:-------:|:-------:|:-------:|
+| Réunion d'information ou journée porte ouverte | Epreuve InnoTech | Entretien de motivation et d'orientation | Admission et envoi du dossier d'inscription |
+]
+
+[@Size;1]
+[@Columns;3;
+Si l’Apprenant est novice, sous réserve de places disponibles,
+l’EFRITS peut également organiser un atelier d’essai à la programmation
+ou une journée d’immersion permettant à l’Apprenant de s’initier à celle-ci. 
+
+Si l’Apprenant a déjà été initié préalablement à la
+programmation et souhaite rejoindre un Cursus nécessitant des prérequis,
+un test de positionnement pourra lui être envoyé si nécessaire afin de
+juger de sa capacité à suivre le Cursus sollicité. 
+
+Au terme de ces deux premières étapes, aura lieu un entretien de
+motivation et d’orientation. Cet entretien dont le but sera de
+déterminer le niveau de cursus permettra également à l’EFRITS
+d’évaluer la capacité du candidat à tenir le cursus choisi jusqu’au bout. 
+
+À l’issue de l’entretien de motivation et d’orientation, l’Apprenant pourra soit :
+
+- Être accepté dans le cursus initialement sollicité. 
+
+- Être orienté par l’EFRITS vers un cursus plus adapté au profil qu’aura révélé le test de positionnement. 
+
+À l’issue de ce choix l’Apprenant recevra alors le Dossier d’inscription à l’EFRITS. 
+
+Le bureau d’admission peut être contacté par courriel à l’adresse : admissions@efrits.fr.
+
+]

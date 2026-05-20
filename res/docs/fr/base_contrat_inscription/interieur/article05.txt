@@ -1,0 +1,37 @@
+
+## Article I5 - Accès aux formations et communications
+
+[@Columns;1;
+L’accès aux formations et la communication entre l’EFRITS
+et les Apprenants se font via :
+]
+
+- La plateforme https://intra.efrits.fr avec les identifiants remis
+à l'Apprenant en début de formation. 
+
+- La plateforme Discord via : Serveur EFRITS. 
+
+- Les locaux mis à leur disposition pendant la durée de la formation. 
+
+[@Size;1]
+[@Columns;3;
+Les Apprenants ont accès aux locaux où se déroule la formation exclusivement
+pour suivre la formation à laquelle ils ou elles sont inscrit(e)s. Ils
+ou elles ne peuvent y entrer ou y demeurer à d’autres fins, sauf autorisation. 
+
+Les Apprenants n’ont accès aux lieux mis à leur disposition que pour le
+déroulement des formations. Il est interdit d’y introduire des personnes
+étrangères à la formation sans accord préalable de la direction de l'EFRITS. 
+
+Sauf accord exprès de l’EFRITS, les Apprenants ne peuvent quitter la formation
+avant l’heure de fin prévue. Dans le cas où l'Apprenant serait autorisé(e) à
+quitter la formation avant l’heure, il ou elle veillera à la quitter le
+plus discrètement possible afin de ne pas perturber le bon déroulement
+de la formation. 
+ 
+Les dispositions du présent règlement sont applicables au sein de tout
+local ou espace accessoire à l’EFRITS. 
+
+Toute communication publique au nom de l’EFRITS sans l’accord préalable
+de l’administration de l’EFRITS est formellement interdite. 
+]
