@@ -13,6 +13,7 @@ if ($BaseDir == "")
 
 require_once ("require.php");
 require_once ("trace.php");
+require_once ("distrans_status.php");
 require_once ("alerts.php");
 require_once ("medal_tooltip.php");
 require_once ("cursus_match.php");

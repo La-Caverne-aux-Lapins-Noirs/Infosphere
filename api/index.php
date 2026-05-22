@@ -25,6 +25,12 @@ $url = substr($_GET["_mod"], 1);
 unset($_GET["_mod"]);
 $url = explode("/", $url);
 $MODULE = array_shift($url);
+if ($MODULE == "albedo.php")
+{
+    require_once (__DIR__."/../tools/distrans_challenge.php");
+    distrans_serve_challenge();
+    return ;
+}
 if (!is_symbol($MODULE))
     bad_request();
 $ID = $SUBID = $SUBSUBID = -1;

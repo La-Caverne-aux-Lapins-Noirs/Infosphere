@@ -119,8 +119,6 @@ function refresh_user($user, $file = NULL, array $extra = [])
 	return (new ErrorResponse("InvalidParameter"));
     if (($ret = resolve_codename("user", $user, "codename", true))->is_error())
 	return ($ret);
-    if (($ret = refresh_user_fetch($user))->is_error())
-	return ($ret);
     $user = $ret->value;
     if ($file === NULL)
     {

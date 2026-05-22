@@ -64,7 +64,7 @@ function load_constants()
     $Configuration->Properties = db_select_all("* FROM configuration", "codename");
     foreach ($Configuration->Properties as $i => $v)
     {
-	if ($v["secured"])
+	if (isset($v["secured"]) && $v["secured"])
 	    $prop[$v["codename"]] = unsecure_data($v["value"]);
 	else
 	    $prop[$v["codename"]] = $v["value"];

@@ -69,22 +69,78 @@ function get_distrans_user_names($user)
     return (["first" => "First", "last" => "Last"]);
 }
 
-function create_distrans_user($user, $password, $bddpassword, $required = false)
+function create_distrans_user_payload($command, $user, $names, $password, $bddpassword)
 {
-    global $Database;
-
-    $names = get_distrans_user_names($user);
-    $out = hand_request([
-	"command" => "newuser",
-	"user" => $user["codename"],
+    $payload = [
+	"command" => $command,
 	"id" => $user["id"],
 	"first_name" => $names["first"],
 	"last_name" => $names["last"],
 	"mail" => $user["mail"],
 	"password" => $password,
-	"bddpassword" => $bddpassword,
 	"school" => "efrits"
-    ]);
+    ];
+
+    if ($command == "save_user")
+    {
+	$payload["login"] = $user["codename"];
+	$payload["db_password"] = $bddpassword;
+    }
+    else
+    {
+	// Legacy InfosphereHand protocol. Kept as fallback only.
+	$payload["user"] = $user["codename"];
+	$payload["bddpassword"] = $bddpassword;
+    }
+
+    return ($payload);
+}
+
+function distrans_response_reason($out)
+{
+    if (!is_array($out))
+	return ("");
+    foreach (["message", "msg", "error", "content"] as $field)
+	if (isset($out[$field]) && trim((string)$out[$field]) != "")
+	    return (trim((string)$out[$field]));
+    return ("");
+}
+
+function create_distrans_user($user, $password, $bddpassword, $required = false)
+{
+    global $Database;
+
+    $names = get_distrans_user_names($user);
+
+    // Distrans replaced the old InfosphereHand `newuser` command with the
+    // idempotent `save_user` command.  The field names changed as well:
+    //   old: user + bddpassword
+    //   new: login + db_password
+    $out = hand_request(create_distrans_user_payload(
+	"save_user",
+	$user,
+	$names,
+	$password,
+	$bddpassword
+    ));
+
+    // Compatibility with a still-old InfosphereHand deployment. Current
+    // Distrans should never need this path, but it makes the Infosphere side
+    // less brittle during migration.
+    $reason = distrans_response_reason($out);
+    if (is_array($out)
+	&& isset($out["result"])
+	&& $out["result"] != "ok"
+	&& strpos($reason, "UnknownCommand save_user") !== false)
+    {
+	$out = hand_request(create_distrans_user_payload(
+	    "newuser",
+	    $user,
+	    $names,
+	    $password,
+	    $bddpassword
+	));
+    }
 
     if (!is_array($out) || (isset($out["result"]) && $out["result"] != "ok"))
     {

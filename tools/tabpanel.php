@@ -12,14 +12,29 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
     $PanelScript = true;
     $idd = uniqid();
 ?>
-    <div class="tabpanel">
+    <div class="tabpanel" data-tabpanel="<?=$idd; ?>">
 	<div class="tablist">
 	    <?php foreach ($files as $k => $val) { ?>
-		<a onclick="dis<?=$idd; ?>('<?=md5($k); ?>');">
+		<?php
+		$tab_hash = md5($k);
+		$button_id = "dis".$idd."_".$tab_hash;
+		$panel_selector = '[data-tabpanel-content="'.$idd.'"]';
+		$button_selector = '[data-tabpanel-button="'.$idd.'"]';
+		$onclick =
+		    "localStorage.setItem(".json_encode($position).", ".json_encode($tab_hash).");".
+		    "document.querySelectorAll(".json_encode($panel_selector).").forEach(function(n){n.style.display=(n.getAttribute('data-tabpanel-tab')===".json_encode($tab_hash).")?'block':'none';});".
+		    "document.querySelectorAll(".json_encode($button_selector).").forEach(function(n){n.classList.remove('selected');});".
+		    "document.getElementById(".json_encode($button_id).").classList.add('selected');".
+		    "return false;"
+		;
+		?>
+		<a href="#" onclick="<?=htmlspecialchars($onclick, ENT_QUOTES); ?>">
 		    <div
 			class="<?=$listclass; ?> disbut<?=$idd; ?> <?=$default == $k ? "selected" : ""; ?>"
 			style="width: <?=100 / count($files) - 0.1; ?>%;"
-			id="dis<?=$idd."_".md5($k); ?>"
+			id="<?=$button_id; ?>"
+			data-tabpanel-button="<?=$idd; ?>"
+			data-tabpanel-tab="<?=$tab_hash; ?>"
 		    >
 			<?=$k; ?>
 		    </div>
@@ -29,10 +44,13 @@ function tabpanel(array $files, $position, $default, $listclass = "", $contentcl
 	<div class="tabcontent">
 	    <?php $i = 0; ?>
 	    <?php foreach ($files as $k => $val) { ?>
+		<?php $tab_hash = md5($k); ?>
 		<div
-		    id="<?=md5($k); ?>"
+		    id="<?=$tab_hash; ?>"
 		    class="<?=$contentclass; ?>"
-		    style="display: none;"
+		    style="display: <?=$default == $k ? "block" : "none"; ?>;"
+		    data-tabpanel-content="<?=$idd; ?>"
+		    data-tabpanel-tab="<?=$tab_hash; ?>"
 		>
 		    <?php if (!isset($add_data[$i])) { ?>
 			<?php $tab_data = NULL; ?>

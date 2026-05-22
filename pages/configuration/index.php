@@ -1,6 +1,7 @@
 <?php
-require_once ("fetch_log.php");
-require_once ("usual_operation.php");
+require_once (__DIR__."/model.php");
+require_once (__DIR__."/fetch_log.php");
+require_once (__DIR__."/usual_operation.php");
 
 if (!is_admin())
 {
@@ -9,6 +10,7 @@ if (!is_admin())
 }
 
 $result = "";
+$outfile = NULL;
 if (file_exists(__DIR__."/handle_request.php")
     && is_admin()
     && isset($_POST["action"]))
@@ -18,118 +20,22 @@ if (file_exists(__DIR__."/handle_parameters.php"))
     require_once (__DIR__."/handle_parameters.php");
 
 require_once (__DIR__."/../error_net.php");
+require_once (__DIR__."/style.php");
 
-if ($result != "")
-{
-    echo "<h2>".$Dictionnary["Results"]."</h2>";
-    echo '<div style="width: 100%; height: 600px; overflow: auto; border: 3px black solid; background-color: #ff69b4;">';
-    $result = str_replace("\n", "<br/>", $result);
-    $result = str_replace(" ", "&nbsp;", $result);
-    echo $result;
-    if ($outfile != NULL)
-    {
-	echo '<a download="backup.tar.gz" ';
-	echo 'href="application/gzip;base64,'.base64_encode($outfile).'"';
-	echo '>'.$Dictionnary["Download"].'</a>';
-    }
-    echo '</div>';
-}
+$configuration_panels = [
+    "Stats et alertes" => __DIR__."/stats_alerts_panel.php",
+    "Logs" => __DIR__."/logs_panel.php",
+    "Configuration" => __DIR__."/configuration_panel.php",
+    "Commandes usuelles" => __DIR__."/operations_panel.php"
+];
 ?>
 
-<h2><?=$Dictionnary["Storage"]; ?></h2>
-<div class="bar">
-    <div class="fill_bar" style="float: left; width: <?=100-disk_free_space('./') / disk_total_space('./')*100; ?>%; background-color: <?=((disk_free_space('./')/disk_total_space('./')) >= 0.5 ? "green" : ((disk_free_space('./')/disk_total_space('./')) >= 0.2 ? "yellow" : "red")) ?>">
-	<?=intval(100-disk_free_space('./') / disk_total_space('./')*100); ?>%
-    </div>
-    <div class="fill_bar" style="float: right; width: <?=(disk_free_space('./') / disk_total_space('./')*100); ?>%;">
-	<?=intval(disk_free_space('./') / disk_total_space('./')*100); ?>%
-    </div>
+<div class="configuration-admin configuration-tabbed-admin">
+    <?php tabpanel(
+        $configuration_panels,
+        "configuration-admin-tabs",
+        "Logs",
+        "configuration-tab-button",
+        "configuration-tab-content"
+    ); ?>
 </div>
-
-<p class="storage-text"><?=intval(disk_free_space('./')/1e+9); ?>Go restant</p>
-
-<h2><?=$Dictionnary["Logs"]; ?></h2>
-
-<div style="width: 100%;">
-    <div style="width: 49%; float: left;">
-	<table class="content_table">
-	    <tr>
-		<th rowspan="2">#</th>
-		<th colspan="2"><?=$Dictionnary["User"]; ?></th>
-		<th rowspan="2"><?=$Dictionnary["Date"]; ?></th>
-		<th rowspan="2"><?=$Dictionnary["Type"]; ?></th>
-		<th rowspan="2"><?=$Dictionnary["Message"]; ?></th>
-		<th rowspan="2"><?=$Dictionnary["IP"]; ?></th>
-	    </tr>
-	    <tr>
-		<td style="color: blue;">#</td>
-		<td style="color: blue;"><?=$Dictionnary["Nickname"]; ?></td>
-	    </tr>
-	    <?php
-	    $cnt = 0;
-	    foreach (fetch_log() as $y) {
-	    ?>
-		<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>">
-		    <td><?=$y["id"]; ?></td>
-		    <td><?=$y["id_user"]; ?></td>
-		    <td><?=$y["user"]; ?></td>
-		    <td><?=strftime("%d %b %Y à %H:%M:%S", strtotime($y["date"])); ?></td>
-		    <td><?=$y["type"]; ?></td>
-		    <td><?=$y["message"]; ?></td>
-		    <td><?=$y["ip"]; ?></td>
-		</tr>
-	    </a>
-	    <?php } ?>
-	</table>
-    </div>
-    <div style="width: 49%; float: left; margin-left: 2%;">
-	<table class="content_table">
-	    <tr>
-		<th style="width: 50%;">#</th>
-		<th>Value</th>
-	    </tr>
-	    <?php foreach ($Configuration->Properties as $k => $v) { ?>
-		<tr>
-		    <td><?=$k; ?></td>
-		    <td>
-			<form action="api/configuration" method="put">
-			    <textarea
-				style="width: 100%; height: 100%;"
-				id="property_<?=$k; ?>"
-				name="<?=$k; ?>"
-				oninput="delay_before_submit(1000, this, 'property_<?=$k; ?>');"
-			    ><?=$v; ?></textarea>
-			</form>
-		    </td>
-		</tr>
-	    <?php } ?>
-	</table>
-    </div>
-    <div style="width: 49%; float: left; margin-left: 2%; height: 49%;">
-	<table class="content_table">
-	    <tr>
-		<th style="width: 5%;">#</th>
-		<th>SQL</th>
-		<th style="width: 12%;"><img src="./res/configuration.png" /></th>
-	    </tr>
-	    <?php foreach ($Operations as $i => $ope) { ?>
-		<tr style="border: 1px solid black;">
-		    <td><?=$i; ?></td>
-		    <td>
-			<div style="overflow: auto; width; height: 200px; text-align: left;">
-			    <?php highlight_file(__DIR__."/".$ope); ?>
-			</div>
-		    </td>
-		    <td>
-			<form method="post" action="index.php?<?=unrollget(); ?>">
-			    <input type="hidden" name="action" value="execute_query" />
-			    <input type="hidden" name="operation" value="<?=$i; ?>" />
-			    <input type="submit" value="&#10003;" style="width: 100%; height: 200px;" />
-			</form>
-		    </td>
-		</tr>
-	    <?php } ?>
-	</table>
-    </div>
-</div>
-

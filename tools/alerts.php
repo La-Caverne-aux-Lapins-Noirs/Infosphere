@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/distrans_status.php");
+
 function retrieve_alerts()
 {
     global $OriginalUser;
@@ -14,13 +16,26 @@ function retrieve_alerts()
     }
 
     $last = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Albedo stops.' ORDER BY log_date DESC");
-    $lastcheck = db_select_one("log_date FROM log WHERE id_user = 1 AND type = 0 AND message = 'Distrans runs.' ORDER BY log_date DESC");
-    $trace_ddos = db_select_all("* FROM log WHERE type = 6 AND DATEDIFF(log_date, NOW()) < 2 GROUP BY ip ORDER BY log_date DESC");
+    $lastcheck = distrans_last_running_log(1, defined("TRACE") ? TRACE : "0");
+    $report_type = defined("REPORT") ? REPORT : "6";
+    $trace_ddos = db_select_all("
+        ip,
+        MAX(log_date) as last_report,
+        COUNT(*) as report_count,
+        SUBSTRING_INDEX(GROUP_CONCAT(message ORDER BY log_date DESC SEPARATOR '\n'), '\n', 1) as message
+        FROM log
+        WHERE type = $report_type
+        AND log_date >= DATE_SUB(NOW(), INTERVAL 2 DAY)
+        AND message LIKE 'Trace report%'
+        GROUP BY ip
+        ORDER BY last_report DESC
+        LIMIT 20
+    ");
     if (count($trace_ddos))
     {
 	$alert["ddos"] = "";
 	foreach ($trace_ddos as $td)
-	    $alert["ddos"] .= $td["message"]."<br />";
+	    $alert["ddos"] .= $td["message"]." (".$td["report_count"]." reports, dernier: ".$td["last_report"].")<br />";
     }
     
     // Il doit s'executer toutes les 2 minutes, et ca fait 3 minutes qu'il n'y a rien

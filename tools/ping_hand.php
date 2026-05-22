@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/distrans_status.php");
+
 function ping_hand()
 {
     // On check l'état de Distrans
@@ -11,7 +13,7 @@ function ping_hand()
         ($out["result"] ?? null) === "ok" &&
         ($out["pong"] ?? false) === true)
     {
-        add_log(TRACE, "Distrans runs.", 1, true);
+        distrans_touch_running_log(1);
         return (true);
     }
     add_log(REPORT, "Distrans failure.", 1, true);

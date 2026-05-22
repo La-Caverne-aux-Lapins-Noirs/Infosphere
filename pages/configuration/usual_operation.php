@@ -15,24 +15,24 @@ $Operations = [
     "get_versions.php"
 ];
 
-$out = "
-<Files .htaccess>
-  Order allow,deny
-  Deny from all
-</Files>
-";
+foreach (["custom_*.php", "operation_*.php", "usual_*.php"] as $pattern)
+    foreach (glob(__DIR__."/".$pattern) as $file)
+        if (!in_array(basename($file), $Operations))
+            $Operations[] = basename($file);
 
-foreach ($Operations as $ope)
+if (function_exists("configuration_write_htaccess"))
+    configuration_write_htaccess();
+else
 {
-    $out .= "
-<Files $ope>
-  Order alllow,deny
-  Deny from all
-</Files>
-";
+    $out = "<Files .htaccess>\n  Order allow,deny\n  Deny from all\n</Files>\n";
+    foreach ($Operations as $ope)
+    {
+        $ope = basename($ope);
+        if (!preg_match('/^[a-zA-Z0-9_\-.]+\.php$/', $ope) || !file_exists(__DIR__."/".$ope))
+            continue ;
+        $out .= "\n<Files $ope>\n  Order allow,deny\n  Deny from all\n</Files>\n";
+    }
+    $get = file_exists(__DIR__."/.htaccess") ? file_get_contents(__DIR__."/.htaccess") : "";
+    if ($get != $out)
+        file_put_contents(__DIR__."/.htaccess", $out);
 }
-
-$get = file_get_contents(__DIR__."/.htaccess");
-if ($get != $out)
-    file_put_contents(__DIR__."/.htaccess", $out);
-

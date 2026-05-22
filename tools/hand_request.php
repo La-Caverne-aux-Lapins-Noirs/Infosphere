@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/distrans_challenge.php");
+
 // On ne peut pas effectuer une écriture de taille supérieure à 4k, donc
 // on éclate tout. Le séparateur de commande devient tabulation verticale.
 function hand_packet($data)
@@ -148,15 +150,16 @@ function hand_request(array $data, bool $code = true)
     // et potentiellement de haut emmerdement en cas de requêtes croisées.
     // Je la laisse telle quelle pour l’instant puisque Distrans va lire via URL.
     $albx = "";
+    $rnd = NULL;
     if ($code)
     {
         $rnd = base64_encode(openssl_random_pseudo_bytes(64));
-        $albx = __DIR__ . "/../api/albedo.php";
-
-        file_put_contents($albx, "");
-        chmod($albx, 0600);
-        file_put_contents($albx, $rnd, FILE_APPEND);
-
+        $albx = distrans_write_challenge($rnd);
+        if ($albx === false)
+        {
+            add_log(REPORT, "Distrans error: cannot write challenge file");
+            return (false);
+        }
         $data["code"] = $rnd;
     }
 
@@ -164,7 +167,7 @@ function hand_request(array $data, bool $code = true)
     if ($packet === "")
     {
         if ($albx != "")
-            @unlink($albx);
+            distrans_clear_challenge($albx, $rnd);
         add_log(REPORT, "Distrans error: invalid json packet");
         return (false);
     }
@@ -172,7 +175,7 @@ function hand_request(array $data, bool $code = true)
     $out = run_ssh_packet_with_inline_key($packet, $acc, $url, $port, $key);
 
     if ($albx != "")
-        @unlink($albx);
+        distrans_clear_challenge($albx, $rnd);
 
     if ($out["stdout"] === null)
     {
@@ -191,6 +194,20 @@ function hand_request(array $data, bool $code = true)
     {
         add_log(REPORT, "Distrans error: invalid JSON response: " . $out["stdout"]);
         return (false);
+    }
+
+    if (isset($decoded["result"]) && $decoded["result"] != "ok")
+    {
+        $reason = "";
+        foreach (["message", "msg", "error", "content"] as $field)
+            if (isset($decoded[$field]) && trim((string)$decoded[$field]) != "")
+            {
+                $reason = trim((string)$decoded[$field]);
+                break ;
+            }
+        if ($reason == "")
+            $reason = json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        add_log(REPORT, "Distrans error: " . ($data["command"] ?? "unknown") . " returned " . $decoded["result"] . ": " . $reason);
     }
 
     // add_log(REPORT, "Distrans success: ".$out["stdout"]);
