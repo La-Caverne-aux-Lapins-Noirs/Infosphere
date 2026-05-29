@@ -123,13 +123,26 @@ function render_dynamic_table($table_id, $fields, $rows)
         {
             $type = $field["type"] ?? "text";
             $name = $field["name"] ?? "";
+            $classes = [];
 	    $copyable = $field["copyable"] ?? "";
 	    
 	    if ($copyable)
-		$copyable = 'class="copyable"';
+		$classes[] = "copyable";
 
+            if (isset($field["cell_class"]))
+            {
+                if (is_callable($field["cell_class"]))
+                    $cell_class = $field["cell_class"]($row);
+                else
+                    $cell_class = $field["cell_class"];
+                foreach (explode(" ", (string)$cell_class) as $class)
+                    if (trim($class) != "")
+                        $classes[] = trim($class);
+            }
+
+            $class = count($classes) ? ' class="'.htmlspecialchars(implode(" ", $classes)).'"' : '';
             $colspan = (int)($field["colspan"] ?? 1);
-            echo '<td' . ($colspan > 1 ? ' colspan="' . $colspan . '"' : '') . " $copyable>";
+            echo '<td' . ($colspan > 1 ? ' colspan="' . $colspan . '"' : '') . $class . '>';
 
             if (isset($field["render"]) && is_callable($field["render"]))
                 echo $field["render"]($row);

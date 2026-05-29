@@ -4,6 +4,59 @@ table input
     width: calc(100% - 20px);
 }
 
+
+.prospect_file_browser
+{
+    width: 100%;
+    height: 75px;
+    min-height: 75px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+    box-sizing: border-box;
+
+    transition: height 0.2s ease-in-out;
+}
+
+.prospect_file_browser form
+{
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.prospect_file_browser input[type="file"]
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.prospect_file_browser .path_browser
+{
+    width: 100% !important;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.prospect_file_browser .file_browser
+{
+    flex: 1 1 auto;
+    min-height: 0;
+
+    width: 100%;
+    height: auto !important;
+
+    margin: 0;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.prospect_file_browser.open
+{
+    height: var(--prospect-file-browser-open-height, 150px);
+}
+
 .action_div
 {
     border: 1px solid black;
@@ -227,4 +280,178 @@ td
 .dynamic_table_button
 {
     width: 200px;
+}
+
+.dynamic_table td.prospecting_age_0
+{
+    background-color: #f2f2f2;
+    color: black;
+}
+
+.dynamic_table td.prospecting_age_1
+{
+    background-color: #d9d9d9;
+    color: black;
+}
+
+.dynamic_table td.prospecting_age_2
+{
+    background-color: #bfbfbf;
+    color: black;
+}
+
+.dynamic_table td.prospecting_age_3
+{
+    background-color: #999999;
+    color: black;
+}
+
+.dynamic_table td.prospecting_age_4
+{
+    background-color: #737373;
+    color: white;
+}
+
+.dynamic_table td.prospecting_age_5
+{
+    background-color: #4d4d4d;
+    color: white;
+}
+
+.dynamic_table td.prospecting_age_0 a,
+.dynamic_table td.prospecting_age_1 a,
+.dynamic_table td.prospecting_age_2 a,
+.dynamic_table td.prospecting_age_3 a
+{
+    color: black;
+}
+
+.dynamic_table td.prospecting_age_4 a,
+.dynamic_table td.prospecting_age_5 a
+{
+    color: white;
+}
+
+.campaign_add,
+.campaign_card
+{
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid black;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.65);
+}
+
+.campaign_add form,
+.campaign_edit
+{
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 150px 150px 160px;
+    gap: 10px;
+    align-items: end;
+}
+
+.campaign_add textarea,
+.campaign_edit textarea
+{
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.campaign_add input,
+.campaign_edit input,
+.campaign_delete input
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.campaign_edit h2
+{
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.campaign_edit label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: small;
+    font-weight: bold;
+}
+
+.campaign_description
+{
+    grid-column: 1 / -2;
+}
+
+.campaign_delete
+{
+    float: right;
+    width: 160px;
+    margin-top: 10px;
+}
+
+.campaign_period,
+.campaign_text
+{
+    clear: both;
+}
+
+.campaign_stat_grid
+{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.campaign_stat_grid div
+{
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.80);
+    text-align: center;
+}
+
+.campaign_stat_grid strong
+{
+    display: block;
+    font-size: 2em;
+}
+
+.campaign_stat_grid span
+{
+    display: block;
+    font-size: small;
+}
+
+.campaign_table
+{
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.campaign_table th,
+.campaign_table td
+{
+    border: 1px solid black;
+    padding: 5px;
+}
+
+.campaign_table th
+{
+    background-color: rgba(0, 0, 0, 0.80);
+}
+
+.campaign_table td a
+{
+    font-weight: bold;
+    padding: 5px;
+    background-color: black;
 }

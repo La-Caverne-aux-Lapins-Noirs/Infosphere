@@ -96,11 +96,31 @@ function RegeneratePassword($id, $data, $method, $output, $module)
 
 function GenerateScolarityContract($id, $data, $method, $output, $module)
 {
-    global $Dictionnary;
-
     if ($id == -1)
 	bad_request();
-    $user = fetch_user($id);
+
+    $extra = [];
+    if (isset($data["fields"]))
+    {
+	if (!is_array($data["fields"]))
+	    $data["fields"] = explode(" ", $data["fields"]);
+	foreach ($data["fields"] as $field)
+	{
+	    if (!preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/', $field, $match))
+		return (new ErrorResponse("InvalidParameter", $field));
+	    $extra[$match[1]] = $match[2];
+	}
+    }
+    if (isset($data["output"]))
+	$extra["Output"] = $data["output"];
+
+    $ret = build_user_contract($id, document_builder_contract_kind($data), $extra);
+    if ($ret->is_error())
+	return ($ret);
+    return (new ValueResponse([
+	"msg" => "Contrat généré",
+	"content" => document_builder_public_url($ret->value["output"])
+    ]));
 }
 
 function SetUserProperties($id, $data, $method, $output, $module)
@@ -302,7 +322,41 @@ function file_access($id, $file, $public = false, $read = false)
     return ($file);
 }
 
-function GetFileDir($id, $data, $method, $output, $module, $msg = "")
+function user_subscription_file_root()
+{
+    return ("admin/subscription");
+}
+
+function user_file_path_is_under($file, $base)
+{
+    $file = resolve_path($file);
+    $base = resolve_path($base);
+
+    return ($file == $base ||
+            strncmp($file, $base."/", strlen($base) + 1) == 0);
+}
+
+function subscription_file_access($id, $file, $public = false, $read = false)
+{
+    $base = user_subscription_file_root();
+
+    $file = resolve_path($file);
+    if ($file == "")
+	$file = $base;
+    else if (!user_file_path_is_under($file, $base))
+    {
+	$filex = explode("/", $file);
+	if (isset($filex[0]) && $filex[0] == "admin")
+	    forbidden();
+	$file = resolve_path($base."/".$file);
+    }
+    $file = file_access($id, $file, $public, $read);
+    if (!user_file_path_is_under($file, $base))
+	forbidden();
+    return ($file);
+}
+
+function GetUserFileDir($id, $data, $method, $output, $module, $msg, $type, $access_function, $locked_path = "")
 {
     global $Configuration;
     global $Dictionnary;
@@ -322,17 +376,45 @@ function GetFileDir($id, $data, $method, $output, $module, $msg = "")
     $fbid = "file_browser";
     if (isset($data["fbid"]))
 	$fbid = $data["fbid"];
+    $path_browser_can_cd = !$nocd;
+    if (isset($data["path_browser_can_cd"]))
+	$path_browser_can_cd = !!$data["path_browser_can_cd"];
+    $language = "";
+    if (isset($data["language"]))
+	$language = $data["language"];
 
-    $file = file_access($id, $data["path"], false, true);
+    $file = $access_function($id, $data["path"], false, true);
     $root = $Configuration->UsersDir($user["codename"]);
-    $html = get_dir($root, $file, "user", $id, "file", $fbid, true, "", $nocd);
+    $html = get_dir($root, $file, "user", $id, $type, $fbid, true, $language, $nocd, $locked_path, $path_browser_can_cd);
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
 	"content" => $html
     ])));
 }
 
-function AddFile($id, $data, $method, $output, $module)
+function GetFileDir($id, $data, $method, $output, $module, $msg = "")
+{
+    return (GetUserFileDir($id, $data, $method, $output, $module, $msg, "file", "file_access"));
+}
+
+function GetSubscriptionFileDir($id, $data, $method, $output, $module, $msg = "")
+{
+    $data["nocd"] = 0;
+    $data["path_browser_can_cd"] = 1;
+    return (GetUserFileDir(
+	$id,
+	$data,
+	$method,
+	$output,
+	$module,
+	$msg,
+	"subscription_file",
+	"subscription_file_access",
+	user_subscription_file_root()
+    ));
+}
+
+function AddUserFile($id, $data, $method, $output, $module, $access_function, $return_function)
 {
     global $Configuration;
     global $User;
@@ -340,7 +422,8 @@ function AddFile($id, $data, $method, $output, $module)
     if ($id == -1 || !isset($data["file"]) || !isset($data["path"]))
 	bad_request();
     $id = (int)$id;
-    $path = file_access($id, $data["path"], false);
+    $path = $access_function($id, $data["path"], false);
+    $data["path"] = $path;
     if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
 	not_found();
     $root = $Configuration->UsersDir($user["codename"]);
@@ -397,27 +480,38 @@ function AddFile($id, $data, $method, $output, $module)
 	file_put_contents($target.$files["name"], $content);
 	system("chmod 640 ".$target.$files["name"]);
     }
-    return (GetFileDir($id, $data, "GET", $output, $module, "FileAdded"));
+    return ($return_function($id, $data, "GET", $output, $module, "FileAdded"));
 }
 
-function RemoveFile($id, $data, $method, $output, $module)
+function AddFile($id, $data, $method, $output, $module)
+{
+    return (AddUserFile($id, $data, $method, $output, $module, "file_access", "GetFileDir"));
+}
+
+function AddSubscriptionFile($id, $data, $method, $output, $module)
+{
+    return (AddUserFile($id, $data, $method, $output, $module, "subscription_file_access", "GetSubscriptionFileDir"));
+}
+
+function RemoveUserFile($id, $data, $method, $output, $module, $url_key, $access_function, $return_function)
 {
     global $Configuration;
 
     // C'est file parceque c'est /api/user/id/file/etc.
-    if ($id == -1 || !isset($data["file"]))
+    if ($id == -1 || !isset($data[$url_key]))
 	bad_request();
     $id = (int)$id;
     if (($user = db_select_one("codename FROM user WHERE id = $id")) == NULL)
 	not_found();
     $root = $Configuration->UsersDir($user["codename"]);
-    $file = $data["file"];
+    $file = $data[$url_key];
     if ($file[0] == "-")
 	$file = substr($file, 1);
     $file = str_replace("@", "/", $file);
     if (strncmp($root, $file, strlen($root)) != 0)
 	bad_request();
-    $file = file_access($id, $file, false);
+    $file = substr($file, strlen($root));
+    $file = $access_function($id, $file, false);
     if (strstr($file, "*"))
 	forbidden();
     if (strstr($file, "["))
@@ -427,9 +521,22 @@ function RemoveFile($id, $data, $method, $output, $module)
 	forbidden();
     if (basename($file) == "public")
 	forbidden();
-    $file = escapeshellarg($file);
+    if ($access_function == "subscription_file_access" &&
+	resolve_path($file) == user_subscription_file_root())
+	forbidden();
+    $file = escapeshellarg($root.$file);
     system("rm -r $file");
-    return (GetFileDir($id, $data, "GET", $output, $module, "FileRemoved"));
+    return ($return_function($id, $data, "GET", $output, $module, "FileRemoved"));
+}
+
+function RemoveFile($id, $data, $method, $output, $module)
+{
+    return (RemoveUserFile($id, $data, $method, $output, $module, "file", "file_access", "GetFileDir"));
+}
+
+function RemoveSubscriptionFile($id, $data, $method, $output, $module)
+{
+    return (RemoveUserFile($id, $data, $method, $output, $module, "subscription_file", "subscription_file_access", "GetSubscriptionFileDir"));
 }
 
 $Tab = [
@@ -442,6 +549,10 @@ $Tab = [
 	"file" => [
 	    "logged_in",
 	    "GetFileDir",
+	],
+	"subscription_file" => [
+	    "is_director_for_student",
+	    "GetSubscriptionFileDir",
 	],
     ],
     "POST" => [
@@ -458,6 +569,10 @@ $Tab = [
 	    // car admin/ ne peut etre lu et écrit que par la direction
 	    "is_me_or_director_for_student",
 	    "AddFile",
+	],
+	"subscription_file" => [
+	    "is_director_for_student",
+	    "AddSubscriptionFile",
 	],
     ],
     "PUT" => [
@@ -499,6 +614,10 @@ $Tab = [
 	    "logged_in",
 	    "GetFileDir",
 	],
+	"subscription_file" => [
+	    "is_director_for_student",
+	    "GetSubscriptionFileDir",
+	],
 	"" => [
 	    "only_admin",
 	    "UndeleteUser"
@@ -530,6 +649,10 @@ $Tab = [
 	    // car admin/ ne peut etre lu et écrit que par la direction
 	    "is_me_or_director_for_student",
 	    "RemoveFile",
+	],
+	"subscription_file" => [
+	    "is_director_for_student",
+	    "RemoveSubscriptionFile",
 	],
     ]
 ];

@@ -1,4 +1,18 @@
 <h4><?=$Dictionnary["AppointmentSlots"]; ?></h4>
+<?php if ($activity->progressive_slot_opening || $activity->team_based_slot_opening) { ?>
+    <div class="appointment_slot_notice">
+	<?php if ($activity->progressive_slot_opening) { ?>
+	    <div><?=$Dictionnary["ProgressiveSlotOpeningNotice"]; ?></div>
+	<?php } ?>
+	<?php if ($activity->team_based_slot_opening) { ?>
+	    <div><?=$Dictionnary["TeamBasedSlotOpeningNotice"]; ?></div>
+	<?php } ?>
+    </div>
+<?php } ?>
+<?php if (!count($activity->unique_session->slot)) { ?>
+    <div><?=$Dictionnary["NoAppointmentSlotOpened"]; ?></div>
+    <?php return ; ?>
+<?php } ?>
 <?php
 $firstdate = NULL;
 $psess = 0;

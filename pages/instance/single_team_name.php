@@ -7,10 +7,9 @@ if ($activity->teamable)
 ?>
     <input
 	style="
-	       position: absolute;
-	       width: 30%;
-	       left: 0px;
+	       width: 100%;
 	       height: 35px;
+	       box-sizing: border-box;
 	       font-weight: bold;
 	       "
 	type="button"
@@ -19,10 +18,9 @@ if ($activity->teamable)
 <?php } else { ?>
     <div
 	style="
-	       position: absolute;
-	       width: 30%;
-	       left: 0px;
+	       width: 100%;
 	       height: 35px;
+	       box-sizing: border-box;
 	       font-weight: bold;
 	       "
     >

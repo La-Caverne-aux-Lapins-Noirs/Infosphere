@@ -35,13 +35,28 @@ function set_user_attributes($user, $new)
 	$nv = $Database->real_escape_string($new["mail"]);
 	$forgery[] = "$nk = '$nv'";
     }
+    $clear_password = NULL;
     if (isset($new["password"]))
     {
 	if (($msg = regenerate_password($user, $new["password"]))->is_error())
 	    return ($msg); // @codeCoverageIgnore
+	$clear_password = $new["password"];
 	$npassword = $nv = $msg->value;
 	$password_regenerated = true;
 	$forgery[] = "password = '$nv'";
+    }
+
+    if ($password_regenerated)
+    {
+	$out = hand_request([
+	    "command" => "newpassword",
+	    "login" => $user["codename"],
+	    "user" => $user["codename"],
+	    "id" => $user["id"],
+	    "password" => $clear_password
+	]);
+	if (!is_array($out) || (isset($out["result"]) && $out["result"] != "ok"))
+	    return (new ErrorResponse("InfosphereHandDoesNotRun"));
     }
 
     if (count($forgery) == 0)
@@ -73,12 +88,6 @@ function set_user_attributes($user, $new)
     if ($password_regenerated)
     {
 	add_log(CRITICAL_USER_DATA, "User ".$user["id"]." changed password.");
-	$out = hand_request([
-	    "command" => "newpassword",
-	    "user" => $user["codename"],
-	    "id" => $user["id"],
-	    "password" => $npassword
-	]);
 	send_password_change_mail($new_user, $new["password"]);
     }
     return (new ValueResponse($new_user));

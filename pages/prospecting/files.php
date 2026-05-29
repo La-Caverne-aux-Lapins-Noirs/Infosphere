@@ -1,30 +1,35 @@
 <?php
 $fbid = "file_browser".$p["id"];
-$nocd = true;
+$nocd = false;
+$hide_path_browser = true;
+$path_browser_can_cd = true;
 $language = "";
-$type = "file";
+$type = "subscription_file";
 $page = "user";
 $id = $p["id"];
 $path = "admin/subscription/";
-$target = $Configuration->UsersDir($p["codename"]).$path;
+$locked_path = $path;
+$target = $Configuration->UsersDir($p["codename"]).$path."/";
 ?>
 
-<div style="width: 100%;">
+<div class="prospect_file_browser" data-prospect-id="<?=$p["id"]; ?>">
     <?php $js = "silent_submit(this, '$fbid');"; ?>
     <form
 	method="post"
 	onsubmit="return <?=$js; ?>;"
-	action="/api/user/<?=$p["id"]; ?>/file"
+	action="/api/user/<?=$p["id"]; ?>/subscription_file"
     >
 	<input type="hidden" name="fbid" value="<?=$fbid; ?>" />
 	<input type="hidden" name="nocd" value="<?=$nocd ? 1 : 0; ?>" />
+	<input type="hidden" name="path_browser_can_cd" value="<?=$path_browser_can_cd ? 1 : 0; ?>" />
+	<input type="hidden" name="language" value="<?=$language; ?>" />
 	<input id="path<?=$p["id"]; ?>" type="hidden" name="path" value="<?=$path; ?>" />
 	<input
 	    type="file"
 	    name="file"
 	    multiple="true"
 	    onchange="
-		  document.getElementById('path<?=$p["id"]; ?>').value = document.getElementById('path<?=$fbid.$language; ?>').value; <?=$js; ?>
+		  path_browser_sync_upload_path(this); <?=$js; ?>
 		  "
 	/>
     </form>

@@ -38,4 +38,8 @@
     border-bottom: 1px solid black;
 }
 
-
+.appointment_slot_notice
+{
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgba(255, 255, 255, 0.35);
+}

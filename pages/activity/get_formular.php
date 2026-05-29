@@ -80,6 +80,22 @@ else
 			<label for="slot_duration"><?=$Dictionnary["SlotDuration"]; ?></label>
 			<input type="text" name="slot_duration" value="<?=$activity->slot_duration; ?>" />
 		    </div>
+		    <div>
+			<label for="progressive_slot_opening"><?=$Dictionnary["ProgressiveSlotOpening"]; ?></label>
+			<input
+			    type="checkbox"
+			    name="progressive_slot_opening"
+			    <?=$activity->progressive_slot_opening ? "checked" : ""; ?>
+			/>
+		    </div>
+		    <div>
+			<label for="team_based_slot_opening"><?=$Dictionnary["TeamBasedSlotOpening"]; ?></label>
+			<input
+			    type="checkbox"
+			    name="team_based_slot_opening"
+			    <?=$activity->team_based_slot_opening ? "checked" : ""; ?>
+			/>
+		    </div>
 		<?php } ?>
 		<div>
 		    <label for="allow_unregistration"><?=$Dictionnary["AllowUnregistration"]; ?></label>

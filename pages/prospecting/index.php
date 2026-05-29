@@ -1,5 +1,12 @@
 <?php
 
+
+if ($Position == "CampaignMenu")
+{
+    require_once ("campaign.php");
+    return ;
+}
+
 $class_level = [
     "Autre", "CM1", "CM2", "6ème",
     "5ème", "4ème", "3ème",
@@ -25,6 +32,25 @@ $target_entry = [
     "Avril",
 ];
 
+
+function prospecting_age_level($p)
+{
+    $registration = date_to_timestamp($p["registration_date"] ?? NULL);
+
+    if ($registration == NULL)
+        return (0);
+
+    $days = max(0, floor((now() - $registration) / (60 * 60 * 24)));
+
+    // Six niveaux mensuels: < 1 mois, 1 mois, 2 mois, 3 mois, 4 mois, 5 mois et plus.
+    return (min(5, (int)floor($days / 30)));
+}
+
+function prospecting_age_class($p)
+{
+    return ("prospecting_age_".prospecting_age_level($p));
+}
+
 $fields = [
     [
         "name"  => "id",
@@ -33,6 +59,7 @@ $fields = [
         "width" => "50px",
         "raw"   => fn($p) => $p["id"],
         "render"=> fn($p) => $p["id"],
+        "cell_class" => fn($p) => prospecting_age_class($p),
 	"copyable" => true,
     ],
     [
@@ -46,7 +73,8 @@ $fields = [
 	    $b = htmlspecialchars($p["family_name"] ?? "");
 	    $id = $p["id"];
 	    return ("<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>");
-	}
+	},
+        "cell_class" => fn($p) => prospecting_age_class($p),
     ],
     [
         "name"  => "registration_date",
@@ -54,6 +82,7 @@ $fields = [
         "type"  => "number",
         "raw"   => fn($p) => $p["registration_date"] ?? 0,
         "render"=> fn($p) => datex("d/m/Y", $p["registration_date"]),
+        "cell_class" => fn($p) => prospecting_age_class($p),
     ],
     [
         "name"  => "mail",
@@ -147,7 +176,7 @@ $fields = [
         "name"    => "actions_3",
         "label"   => "",
         "type"    => "misc",
-        "width"   => "170px",
+        "width"   => "120px",
         "render"  => function($p) {
 	    global $Dictionnary;
 
@@ -169,6 +198,12 @@ $fields = [
     onclick="document.location='?p=Subscribe&amp;prospect=1&amp;pp=<?=$Position; ?>'"
     value="<?=$Dictionnary["AddProspect"]; ?>"
     style="width: 300px; background-color: #00FF00; color: black; font-weight: bold;"
+/>
+<input
+    type="button"
+    onclick="document.location='?p=CampaignMenu&amp;pp=<?=$Position; ?>'"
+    value="Campagnes de prospection"
+    style="width: 300px; background-color: #FFD700; color: black; font-weight: bold;"
 />
 
 <?php

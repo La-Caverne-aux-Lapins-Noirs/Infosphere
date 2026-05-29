@@ -13,7 +13,7 @@ else
 ?>
 
 <?php if (!$activity->is_assistant && $activity->unique_session != NULL) { ?>
-    <div style="position: absolute; width: 5%; left: 30%;">
+    <div style="display: inline-block; min-width: 90px; white-space: nowrap;">
 	<?php if ($cteam["present"] == 1) { ?>
 	    <span style="color: green;"><?=$Dictionnary["Present"]; ?></span>
 	<?php } else if ($cteam["present"] == -1) { ?>
@@ -29,9 +29,10 @@ else
 <?php if ($activity->is_assistant) { ?>    
     <?php if ($activity->unique_session != NULL && $activity->reference_activity == -1) { ?>
 	<div style="
-		    position: absolute;
-		    width: 20%; left: 30%;
-		    text-align: center;
+		    display: inline-block;
+		    min-width: 170px;
+		    white-space: nowrap;
+		    text-align: left;
 		    "
 	>
 	    <?=$Dictionnary["Presence"]; ?>:&nbsp;

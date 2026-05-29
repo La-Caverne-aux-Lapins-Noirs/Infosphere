@@ -13,7 +13,7 @@ PriceReduction=0
     [@Size;5] $([].Title)
   Left]
   Right = [Text($,Right)
-    [@Image;res/efrits.png;width=3cm;height=2cm]
+    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
   Right]
 ]
 

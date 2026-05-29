@@ -91,6 +91,7 @@ $Unlisted = [
     "SupportMenu" => "./pages/support/",
     "SupportAssetMenu" => "./pages/support/",
     "SupportCategoryMenu" => "./pages/support/",
+    "CampaignMenu" => "./pages/prospecting/",
 ];
 
 $TopMenu = [

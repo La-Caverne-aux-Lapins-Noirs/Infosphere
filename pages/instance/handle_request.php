@@ -48,7 +48,7 @@ if ($User != NULL && isset($_POST["action"]))
     }
     else if ($_POST["action"] == "generate_slots")
     {
-	if (!isset($_POST["duration"]))
+	if (!isset($_POST["duration"]) && $activity->slot_duration <= 0)
 	    $request = new ErrorResponse("MissingDuration");
 	else if (!$activity->is_teacher)
 	{
@@ -59,9 +59,15 @@ if ($User != NULL && isset($_POST["action"]))
 	{
 	    if (!is_number($_POST["simultaneous"]))
 		$_POST["simultaneous"] = 1;
-	    $dur = (int)$_POST["duration"];
+	    if (isset($_POST["duration"]) && is_number($_POST["duration"]))
+		$dur = (int)$_POST["duration"];
+	    else
+		$dur = (int)$activity->slot_duration;
 	    $dur = sprintf("%02d:%02d", $dur / 60, $dur % 60);
-	    $request = @generate_slots($session, $dur, $_POST["simultaneous"]);
+	    if ($activity->team_based_slot_opening)
+		$request = @generate_slots_from_registered_teams($session, $dur);
+	    else
+		$request = @generate_slots($session, $dur, $_POST["simultaneous"]);
 	    $LogMsg = "SlotsGenerated";
 	}
     }

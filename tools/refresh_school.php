@@ -1,5 +1,31 @@
 <?php
 
+function refresh_school_logo_path($school)
+{
+    global $Configuration;
+
+    $root = dirname(__DIR__);
+    $codename = $school["codename"] ?? "";
+    $candidates = [];
+    if ($codename != "")
+    {
+	foreach (["icon.png", "icon.jpg", "icon.jpeg", "logo.png", "logo.jpg", "logo.jpeg", "logo.pdf"] as $name)
+	    $candidates[] = $Configuration->SchoolsDir($codename).$name;
+    }
+    foreach (["res/logo.png", "res/logo.jpg", "res/no_avatar_lab.png"] as $name)
+	$candidates[] = $name;
+
+    foreach ($candidates as $candidate)
+    {
+	$absolute = $candidate;
+	if ($absolute != "" && $absolute[0] != "/")
+	    $absolute = $root."/".$absolute;
+	if (file_exists($absolute) && !is_dir($absolute))
+	    return ($absolute);
+    }
+    return ("");
+}
+
 function refresh_school($school)
 {
     global $Configuration;
@@ -41,7 +67,9 @@ function refresh_school($school)
 	    "formation" => $formation_info,
 	    "alternation" => $alternation_info,
 
-	    "logo" => $Configuration->SchoolsDir($school["codename"])."icon.png",
+	    "logo" => refresh_school_logo_path($school),
+	    "logo_width" => "3cm",
+	    "logo_height" => "2cm",
 	]
     ];
 

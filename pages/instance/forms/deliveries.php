@@ -3,9 +3,9 @@
     ?>
     <div
 	style="
-	       position: absolute;
-	       width: 100%;
+	       display: inline-block;
 	       text-align: center;
+	       vertical-align: top;
 	       "
     >
 	<?=$Dictionnary["Delivery"]; ?>:&nbsp;

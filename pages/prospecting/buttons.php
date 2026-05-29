@@ -15,11 +15,12 @@
     </form>
 <?php } ?>
 
-<?php $js = "silent_submit(this, {toremove: 'prospects_table".$p["id"]."'}); window.open('/dres/user/".$p["codename"]."/admin/contract.pdf');"; ?>
+<?php $js = "silent_submitf(this, {after_success: open_generated_contract});"; ?>
 <form method="put" action="/api/prospect/<?=$p["id"]; ?>" style="display: inline-block;" class="decision_buttons">
     <input type="hidden" name="decision" value="ecole" />
     <input type="button" value="ECL" style="color: lightgreen; font-weight: bold;" onclick="<?=$js; ?>" />
 </form>
+<br />
 <form method="put" action="/api/prospect/<?=$p["id"]; ?>" style="display: inline-block;" class="decision_buttons">
     <input type="hidden" name="decision" value="of" />
     <input type="button" value="OF" style="color: lightblue; font-weight: bold;" onclick="<?=$js; ?>" />

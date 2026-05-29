@@ -84,6 +84,13 @@ class CConfiguration
 	    new_directory($dir."public/index.php");
 	    new_directory($dir."admin/index.php");
 	    new_directory($dir."admin/subscription/index.php");
+	    new_directory($dir."admin/subscription/diplomas/index.php");
+	    new_directory($dir."admin/subscription/school_reports/index.php");
+	    new_directory($dir."admin/subscription/identity/index.php");
+	    new_directory($dir."admin/subscription/residence/index.php");
+	    new_directory($dir."admin/paid_invoices/index.php");
+	    new_directory($dir."admin/invoices_to_pay/index.php");
+	    new_directory($dir."admin/school_reports/index.php");
 	}
 	return ($dir);
     }

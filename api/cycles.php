@@ -249,7 +249,9 @@ function SetUser($id, $data, $method, $output, $module)
 	return ($users);
     $users = $users->value;
     if (($ret = handle_links($users, $id, "user", "cycle"))->is_error())
-	return ($ret);   
+	return ($ret);
+    if (($ret = automatic_subscription_subscribe_user_to_cycle($users, $id))->is_error())
+	add_log(WARNING, "Automatic cycle subscription failed: ".strval($ret), 1);
     $cycle = fetch_cycle($module, $id, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];
     return (new ValueResponse([
@@ -346,6 +348,8 @@ function SetMatter($id, $data, $method, $output, $module)
 	bad_request();
     if (($ret = handle_links($data["activity"], $id, "activity", "cycle"))->is_error())
 	return ($ret);
+    if ($module == "cycle" && ($ret = automatic_subscription_subscribe_cycle_to_matter($id, $data["activity"]))->is_error())
+	add_log(WARNING, "Automatic matter subscription failed: ".strval($ret), 1);
     $cycle = fetch_cycle($module, $id, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];
     return (new ValueResponse([
@@ -408,6 +412,8 @@ function SetMatterProps($id, $data, $method, $output, $module)
 	["id", "id_activity", "id_cycle", "activity", "action"]
     ))->is_error())
 	return ($ret);
+    if ($module == "cycle" && ($ret = automatic_subscription_subscribe_cycle_to_matter($cyc, $actid))->is_error())
+	add_log(WARNING, "Automatic matter subscription failed: ".strval($ret), 1);
         
     $cycle = fetch_cycle($module, $id, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];

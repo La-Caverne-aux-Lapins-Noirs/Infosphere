@@ -106,20 +106,6 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
 	    $idcn = get_codename("user", $id);
 	    add_log(TRACE, "User $idcn #$id join team #$target_team as administrator");
 
-	    // Si il y a des sous activité, on s'inscrit à tous ce qui est d'inscription automatique
-	    $sub = db_select_all("
-                activity.id FROM activity
-                LEFT JOIN activity as template
-                ON activity.id_template = template.id
-	        WHERE activity.parent_activity = {$activity->id}
-                AND activity.is_template = 0
-                AND (activity.subscription = 2 OR (activity.subscription IS NULL AND template.subscription = 2))
-		");
-	    foreach ($sub as $s)
-	    {
-		if (($err = subscribe_to_instance($s["id"], $id, -1, $admin, $accept))->is_error())
-		    return ($err);
-	    }
 	}
 	// Sinon on verifie que l'equipe qu'on veut rejoindre existe
 	else if (check_id("team", $target_team) == false)
@@ -160,5 +146,13 @@ function subscribe_to_instance($activity, $login = NULL, $target_team = -1, $adm
     	return (new ErrorResponse("AlreadySubscribed"));
 
     add_log(TRACE, "Team #$team_id join activity $activity->codename #$activity->id");
+
+    // Une inscription à une matière doit provoquer l'inscription aux activités
+    // à inscription automatique. On le fait aussi quand l'équipe existait déjà,
+    // afin que la réparation soit idempotente et puisse corriger les anciens cas.
+    if (($activity->parent_activity == -1 || $activity->parent_activity == NULL) &&
+	function_exists("automatic_subscription_subscribe_user_to_activity_children"))
+	automatic_subscription_subscribe_user_to_activity_children($id, $activity->id);
+
     return (new ValueResponse(["id_team" => $team_id]));
 }

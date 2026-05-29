@@ -277,9 +277,10 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	return (new ErrorResponse("MailUsed", $mail));
     }
 
+    $prospect = $fake ? 1 : 0;
     if (($Database->query("
-      INSERT INTO user (codename, password, registration_date, salt, local_salt, mail)
-      VALUES ('$login', '$hash', NOW(), '$salt', '$local_salt', '$mail')
+      INSERT INTO user (codename, password, registration_date, salt, local_salt, mail, prospect)
+      VALUES ('$login', '$hash', NOW(), '$salt', '$local_salt', '$mail', $prospect)
     ")) == false)
     {
 	if (!INSTALLATION)

@@ -762,6 +762,9 @@ function EditActivity($id, $data, $method, $output, $module)
     foreach (["type", "subscription"] as $ints)
 	if (isset($data[$ints]))
 	    $data[$ints] = (int)$data[$ints];
+    foreach (["progressive_slot_opening", "team_based_slot_opening"] as $bool)
+	if (isset($data[$bool]))
+	    $data[$bool] = $data[$bool] ? 1 : 0;
     if (isset($data["enabled"]))
     {
 	if ($data["enabled"])
@@ -804,7 +807,8 @@ function EditActivity($id, $data, $method, $output, $module)
     // General treatment
     $fields = array_merge([
 	"type", "subscription", "disabled", "allow_unregistration", "hidden", "validated", "grade_a", "grade_b", "grade_c", "grade_d",
-	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration", "repository_name",
+	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration",
+	"progressive_slot_opening", "team_based_slot_opening", "repository_name",
 	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation",
 	"declaration_type"
     ], $lng_fields);

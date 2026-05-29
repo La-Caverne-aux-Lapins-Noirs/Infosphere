@@ -115,6 +115,8 @@ class FullActivity extends Response
     public $todolist = "";
 
     public $slot_duration = -1;
+    public $progressive_slot_opening = 0;
+    public $team_based_slot_opening = 0;
     public $estimated_work_duration = 0;
     public $configuration = NULL;
     public $current_configuration = NULL;
@@ -298,7 +300,7 @@ class FullActivity extends Response
 	$fields = [
 	    "id", "codename", "type", "type_name", "type_type", "hidden", "parent_activity", "reference_activity", "parent_codename",
 	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "mark",
-	    "subscription", "slot_duration", "estimated_work_duration", "configuration", "subject", "emergence_date", "done_date", "registration_date",
+	    "subscription", "slot_duration", "progressive_slot_opening", "team_based_slot_opening", "estimated_work_duration", "configuration", "subject", "emergence_date", "done_date", "registration_date",
 	    "close_date", "subject_appeir_date", "subject_disappeir_date", "pickup_date", "id_template",
 	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "deleted", "parent_name",
 	    "maximum_subscription", "validation", "repository_name",

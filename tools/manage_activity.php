@@ -65,6 +65,8 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
     default_bool_val($tfields, $fields, "hidden", 0);
     default_int_val($tfields, $fields, "subscription", 0);
     default_int_val($tfields, $fields, "slot_duration", -1);
+    default_bool_val($tfields, $fields, "progressive_slot_opening", 0);
+    default_bool_val($tfields, $fields, "team_based_slot_opening", 0);
     default_int_val($tfields, $fields, "estimated_work_duration", 0);
     default_date_val($tfields, $fields, "disabled", NULL);
     if ($tfields["slot_duration"] <= 0)

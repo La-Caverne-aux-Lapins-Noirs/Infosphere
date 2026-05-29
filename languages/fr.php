@@ -893,6 +893,15 @@ $Dictionnary = [
     "Failure" => "Echec",
     "OtherSessions" => "Autres sessions",
     "AppointmentSlots" => "Créneaux de rendez-vous",
+    "ProgressiveSlotOpening" => "Ouverture progressive des créneaux",
+    "TeamBasedSlotOpening" => "Créneaux selon les équipes liées",
+    "ProgressiveSlotOpeningNotice" => "Les créneaux de rendez-vous seront ouverts progressivement. Si aucun créneau ne vous convient ou si aucun créneau n'est encore disponible, revenez plus tard.",
+    "TeamBasedSlotOpeningNotice" => "Les créneaux de rendez-vous sont préparés en fonction des équipes inscrites à l'activité liée.",
+    "TeamBasedSlotGenerationEnabled" => "Mode automatique actif : le nombre de créneaux en parallèle sera calculé à partir des équipes inscrites à l'activité liée et de la capacité disponible.",
+    "NoAppointmentSlotOpened" => "Aucun créneau de rendez-vous n'est actuellement ouvert.",
+    "SessionTooShortForAppointmentSlots" => "La session est trop courte pour générer des créneaux de cette durée.",
+    "NoTeamToOpenSlotsFor" => "Aucune équipe inscrite n'a été trouvée pour générer les créneaux.",
+    "NotEnoughRoomForAppointmentSlots" => "La capacité disponible ne permet pas d'ouvrir assez de créneaux en parallèle.",
     "SlotOpened" => "Créneau disponible",
     "SlotLocked" => "Créneau verrouillé",
     "GenerateSlots" => "Générer des créneaux",
@@ -1255,33 +1264,33 @@ $Dictionnary = [
         "Tu peux y écrire ce que tu souhaites, des mémos par exemple.",
 
     ###### MAILS
-    "MailChangedTitle" => "Changement d'adresse mail sur votre compte Infosphere",
+    "MailChangedTitle" => "Changement d'adresse mail sur votre compte Infosphère",
     "MailChangedContent"
     => "Bonjour,\n\n".
-     "L'adresse mail de votre compte sur l'Infosph&egrave;re %s a &eacute;t&eacute; modifi&eacute;e.\n".
+     "L'adresse mail de votre compte sur l'Infosphère %s a été modifiée.\n".
      "Votre nouvelle adresse est %s.\n".
-     "L'adresse IP ayant modifi&eacute; votre adresse mail est %s.\n\n".
-     "Si vous n'&ecirc;tes pas &agrave; l'origine de ce changement, contactez nous.\n\n".
+     "L'adresse IP ayant modifié votre adresse mail est %s.\n\n".
+     "Si vous n'êtes pas à l'origine de ce changement, contactez-nous.\n\n".
      "Cordialement\nAlbedo",
     ######
-    "PasswordChangedTitle" => "Changement de mot de passe sur votre compte Infosphere",
+    "PasswordChangedTitle" => "Changement de mot de passe sur votre compte Infosphère",
     "PasswordChangedContent"
     => "Bonjour,\n\n".
-     "Le mot de passe de votre compte sur l'Infosph&egrave;re %s a &eacute;t&eacute; modifi&eacute;.\n".
+     "Le mot de passe de votre compte sur l'Infosphère %s a été modifié.\n".
      "Votre nouveau mot de passe est, ici entre guillemet, \"%s\".\n".
-     "L'adresse IP ayant modifi&eacute; votre mot de passe est %s.\n\n".
-     "Si vous n'&ecirc;tes pas &agrave; l'origine de ce changement, contactez nous.\n\n".
+     "L'adresse IP ayant modifié votre mot de passe est %s.\n\n".
+     "Si vous n'êtes pas à l'origine de ce changement, contactez-nous.\n\n".
      "Cordialement\nAlbedo",
     ######
-    "SubscribeTitle" => "Inscription sur l'Infosphere",
+    "SubscribeTitle" => "Inscription sur l'Infosphère",
     "SubscribeContent"
     => "Bonjour,\n\n".
-     "Votre compte sur l'Infosph&egrave;re %s vient d'&ecirc;tre cr&eacute;&eacute;e.\n".
+     "Votre compte sur l'Infosphère %s vient d'être créé.\n".
      "Votre identifiant est %s et votre mot de passe, ".
-     "ici entre guillemets, est \"%s\".\n".
-     "Vous disposez &eacute;galement d'un acc&agrave;s &agrave; notre service de base de donn&eacute;es ".
-     "avec le m&ecirc;me identifiant et le mot de passe, toujours entre guillemets \"%s\".\n\n".
-     "N'h&eacute;sitez pas &agrave; nous contacter en cas de probl&egrave;me.\n\n".
+     "ici entre guillemets, est \"%s\".\n\n".
+     "Vous disposez également d'un accès à notre service de base de données ".
+     "avec le même identifiant et le mot de passe, toujours entre guillemets, est \"%s\".\n\n".
+     "N'hésitez pas à nous contacter en cas de problème.\n\n".
      "Cordialement\nAlbedo",
     ######
     "SecretIdentity" =>
@@ -1292,12 +1301,12 @@ $Dictionnary = [
     ######
     "ManagedActivityReportTitle" => "Encadrement d'activites sur la semaine du %s",
     "ManagedActivityReportContent" => "Bonjour,\n\n".
-        "Ci-dessous les activit&eacute;s auquel vous prenez part comme encadrant dans la semaine du %s.\n\n".
-        "%s\nVous pouvez d&eacute;sactiver cette notification depuis votre profil sur Infosph&egrave;re.\n\n".
+        "Ci-dessous les activités auxquelles vous prenez part comme encadrant dans la semaine du %s.\n\n".
+        "%s\nVous pouvez désactiver cette notification depuis votre profil sur Infosphère.\n\n".
         "Cordialement\nAlbedo",
-    "ManagedActivityReportStartProject" => "Liste des projets commen&ccedil;ant cette semaine:",
+    "ManagedActivityReportStartProject" => "Liste des projets commençant cette semaine:",
     "ManagedActivityReportStopProject" => "Liste des projets terminant cette semaine:",
-    "ManagedActivityReportClass" => "Liste des activit&eacute;s en salle de cette semaine:",
+    "ManagedActivityReportClass" => "Liste des activités en salle de cette semaine:",
 
     ###### ERRORS
     "UnknownLogin" => "Identifiant inconnu.",

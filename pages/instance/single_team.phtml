@@ -1,27 +1,43 @@
-<div style="position: relative; width: 98%; margin-left: 1%; margin-top: 1%; height: 30px;">
-    <?php require ("single_team_name.php"); ?>
-    <section id="team_presence<?=$cteam["id"]; ?>">
-	<?php require ("single_team_presence.php"); ?>
-    </section>
+<div style="position: relative; width: 98%; margin-left: 1%; margin-top: 1%; min-height: 75px;">
+    <div style="position: relative; width: 100%; height: 35px; margin-bottom: 5px;">
+	<?php require ("single_team_name.php"); ?>
+    </div>
 
-    <div style="position: absolute; width: 40%; text-align: right; right: 0px;">
-	<?php
-	if ($activity->is_assistant)
-	{
-	    require ("forms/deliveries.php");
-	    if ($activity->teamable)
-		require ("forms/add_user.phtml");
-	    if (count($cteam["user"]) < $activity->min_team_size)
-		require ("forms/complete_team.phtml");
-	}
-	if (($activity->is_assistant || $cteam["leader"]["id"] == $User["id"]) && $activity->teamable)
-	    require ("forms/lock_team.phtml");
-	
-	if ($activity->is_assistant)
-	    require ("forms/delete_full_team.phtml");
-	else if (!$activity->registered && $cteam["canjoin"] && $cteam["real_members"] < $activity->max_team_size)
-	    require ("forms/join_team.phtml");
-	?>
+    <div style="
+		position: relative;
+		width: 100%;
+		min-height: 35px;
+		display: flex;
+		align-items: flex-start;
+		gap: 5px;
+		flex-wrap: wrap;
+		">
+	<section
+	    id="team_presence<?=$cteam["id"]; ?>"
+	    style="display: inline-flex; align-items: center; min-height: 35px;"
+	>
+	    <?php require ("single_team_presence.php"); ?>
+	</section>
+
+	<div style="flex: 1 1 300px; min-height: 35px; text-align: right;">
+	    <?php
+	    if ($activity->is_assistant)
+	    {
+		require ("forms/deliveries.php");
+		if ($activity->teamable)
+		    require ("forms/add_user.phtml");
+		if (count($cteam["user"]) < $activity->min_team_size)
+		    require ("forms/complete_team.phtml");
+	    }
+	    if (($activity->is_assistant || $cteam["leader"]["id"] == $User["id"]) && $activity->teamable)
+		require ("forms/lock_team.phtml");
+
+	    if ($activity->is_assistant)
+		require ("forms/delete_full_team.phtml");
+	    else if (!$activity->registered && $cteam["canjoin"] && $cteam["real_members"] < $activity->max_team_size)
+		require ("forms/join_team.phtml");
+	    ?>
+	</div>
     </div>
 </div>
 
@@ -54,7 +70,7 @@
 	    require ("forms/team_comment_medal.phtml");
 	else
 	{
-	?>   
+	?>
 	    <div style="
 			width: calc((100% - 170px) / 2 - 10px);
 			height: calc(170px);

@@ -11,6 +11,14 @@
 $entries = [];
 if (!isset($nocd))
     $nocd = false;
+if (!isset($locked_path))
+    $locked_path = "";
+if (!isset($path_browser_can_cd))
+    $path_browser_can_cd = !$nocd;
+else
+    $path_browser_can_cd = !!$path_browser_can_cd;
+$locked_path = resolve_path($locked_path);
+$current_path = resolve_path($path);
 ?>
 <?php if ($target !== NULL) { ?>
     <?php
@@ -21,7 +29,12 @@ if (!isset($nocd))
 	<?php
 	if ($content == "." || $content == "index.php")
 	    continue ;
-	if ($content == ".." && ($nocd || $path == "/" || $path == ""))
+	if ($content == ".." && (
+	    !$path_browser_can_cd ||
+	    $current_path == "/" ||
+	    $current_path == "" ||
+	    ($locked_path != "" && $current_path == $locked_path)
+	))
 	    continue ;
 	if ($content != ".." && $content[0] == ".")
 	    continue ;
@@ -37,12 +50,9 @@ if (!isset($nocd))
 	    <?php if (in_array(pathinfo($content, PATHINFO_EXTENSION), ["jpg", "jpeg", "png", "gif", "bmp", "webp"])) { ?>
 		style="background-image: url('<?=$content; ?>?<?=now(); ?>'); background-size: contain;"
 	    <?php } ?>
-	    <?php if (is_dir($content) && !$nocd) { ?>
-	        ondblclick="
-		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=$written = ($path.($path != "/" ? "/" : "").pathinfo($content, PATHINFO_BASENAME)); ?>';
-		   silent_submit(document.getElementById('path<?=$fbid.$language; ?>'), '<?=$fbid.$language; ?>');
-		   document.getElementById('path<?=$fbid.$language; ?>').value = '<?=($writen = resolve_path($written)) == "" ? "/" : $written; ?>';
-		   "
+	    <?php if (is_dir($content) && $path_browser_can_cd) { ?>
+		<?php $written = resolve_path($path.($path != "/" ? "/" : "").pathinfo($content, PATHINFO_BASENAME)); ?>
+	        ondblclick="return path_browser_cd(this, <?=htmlspecialchars(json_encode($written == "" ? "/" : $written, JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>);"
 	    <?php } else if (!is_dir($content)) { ?>
 	        ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
 	    <?php } ?>
@@ -63,10 +73,12 @@ if (!isset($nocd))
 		    <?php $this_field = "path".$fbid.$language.pathinfo($content, PATHINFO_BASENAME); ?>
 		    <input type="hidden" name="path" id="<?=$this_field; ?>" value="" />
 		    <input type="hidden" name="nocd" value="<?=$nocd ? 1 : 0; ?>" />
+		    <input type="hidden" name="path_browser_can_cd" value="<?=$path_browser_can_cd ? 1 : 0; ?>" />
 		    <input type="hidden" name="fbid" value="<?=$fbid; ?>" />
+		    <input type="hidden" name="language" value="<?=$language; ?>" />
 		    <input type="button" onclick="
 			if (ShiftPressed || window.confirm()) {
-                            document.getElementById('<?=$this_field; ?>').value = document.getElementById('path<?=$fbid.$language; ?>').value;
+                            path_browser_fill_form_path(this);
 			    silent_submit(this, '<?=$fbid.$language; ?>');
 			}
 			"

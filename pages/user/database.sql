@@ -37,7 +37,8 @@ CREATE TABLE `user` (
   `current_class` int(11) DEFAULT NULL,
   `target_class` int(11) DEFAULT NULL,
   `target_entry` int(11) DEFAULT NULL,
-  `prefered_hour` varchar(128) DEFAULT NULL
+  `prefered_hour` varchar(128) DEFAULT NULL,
+  `prospect` int(11) NOT NULL DEFAULT 0
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

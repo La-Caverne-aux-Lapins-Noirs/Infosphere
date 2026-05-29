@@ -126,7 +126,8 @@ function refresh_user($user, $file = NULL, array $extra = [])
 	    return (new ErrorResponse("MissingCodeName"));
 	$file = $Configuration->UsersDir($user["codename"])."admin/identity.dab";
     }
-    $fields = refresh_user_fields($user, $target);
+    $target = "user";
+    $fields = refresh_user_fields($user);
     $fields = array_merge($fields, $extra);
     $fields = refresh_user_clean_dabsic_values($fields);
     return (generate_dabsic([

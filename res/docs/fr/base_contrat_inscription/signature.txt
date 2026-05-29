@@ -17,3 +17,22 @@ En deux exemplaires.
 
 [#ELine]
 
+[@Columns;2;
+  Pour l'établissement:
+
+  [#Variable;Signatories.Director.Role]
+
+  [#Variable;Signatories.Director.Identity]
+
+  [@IfC;Signatories.Director.Signature;!=;;
+    [@Image;[#Variable;Signatories.Director.Signature];width=4cm;height=2cm]
+  ]
+
+  Pour l'apprenant:
+
+  [#Variable;Signatories.Student.Role]
+
+  Signature:
+]
+
+[#ELine]

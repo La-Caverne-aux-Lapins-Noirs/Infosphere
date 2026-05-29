@@ -16,6 +16,41 @@ function xconfirm(select)
     return (true);
 }
 
+function get_file_browser_for_action_div(action_div)
+{
+    let row = action_div.closest("tr");
+
+    if (!row)
+        return (null);
+
+    return (row.querySelector(".prospect_file_browser"));
+}
+
+function expand_file_browser_for_action_div(action_div)
+{
+    let file_browser = get_file_browser_for_action_div(action_div);
+
+    if (!file_browser)
+        return;
+
+    file_browser.style.setProperty(
+        "--prospect-file-browser-open-height",
+        Math.max(75, action_div.scrollHeight) + "px"
+    );
+    file_browser.classList.add("open");
+}
+
+function close_file_browser_for_action_div(action_div)
+{
+    let file_browser = get_file_browser_for_action_div(action_div);
+
+    if (!file_browser)
+        return;
+
+    file_browser.classList.remove("open");
+    file_browser.style.removeProperty("--prospect-file-browser-open-height");
+}
+
 function open_action_div(div)
 {
     let menu = div.querySelector(".action_menu");
@@ -25,6 +60,7 @@ function open_action_div(div)
 
     div.classList.add("open");
     div.style.maxHeight = div.scrollHeight + "px";
+    expand_file_browser_for_action_div(div);
 }
 
 function close_action_div(div)
@@ -36,6 +72,7 @@ function close_action_div(div)
 
     div.classList.remove("open");
     div.style.maxHeight = "20px";
+    close_file_browser_for_action_div(div);
 }
 
 function toggle_action_menu(btn)
@@ -103,3 +140,9 @@ document.addEventListener('click', async function (event) {
 
     }
 });
+
+function open_generated_contract(result, msg, content, parameter)
+{
+    if (content)
+	window.open(content);
+}

@@ -15,6 +15,11 @@ use Mailgun\Mailgun;
 //
 // send_mail(["example1@mail.fr", "example2@mail.fr"], "Example Title", "A content", NULL, [["filename1" => "file1 content"], ["filename2" => "file2 content"]], false);
 
+function send_mail_plain_text($text)
+{
+    return (html_entity_decode((string)$text, ENT_QUOTES | ENT_HTML5, "UTF-8"));
+}
+
 function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true, $sender = NULL)
 {
     global $Configuration;
@@ -42,10 +47,10 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
     }
     if ($title === "")
 	$title = "Mail from Efrits";
-    $mail_content['subject'] = $title;
+    $mail_content['subject'] = send_mail_plain_text($title);
     if ($content === "")
 	$content = "This mail has been send by the Efrits administration";
-    $mail_content['text'] = $content;
+    $mail_content['text'] = send_mail_plain_text($content);
 
     if ($attachements != NULL && count($attachements) > 0)
     {

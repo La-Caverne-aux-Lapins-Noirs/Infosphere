@@ -101,7 +101,10 @@ if ($cnt > 0)
 
 $right_panel[$Dictionnary["Intercom"]] = __DIR__."/discussion.php";
 
-if ($activity->unique_session && count($activity->unique_session->slot))
+if ($activity->unique_session
+    && (count($activity->unique_session->slot)
+	|| $activity->progressive_slot_opening
+	|| $activity->team_based_slot_opening))
     $right_panel[$Dictionnary["AppointmentSlots"]] = __DIR__."/slots.php";
 if ($activity->evaluation != NULL)
     $right_panel[$Dictionnary["Evaluation"]] = __DIR__."/evaluation.php";

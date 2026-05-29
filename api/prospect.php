@@ -73,30 +73,13 @@ function ConcludeProspect($id, $data, $method, $output, $module)
     if (!in_array($data["decision"], ["ecole", "of", "ofa", "cfa"]))
 	bad_request();
 
-    // On écrase le fichier actuellement présent par un placeholder
-    $target = __DIR__."/../dres/user/".$codename."/admin/contract.pdf";
-    shell_exec("cp ".__DIR__."/../res/please_wait.pdf $target");
-    // On crée la configuration Dabsic qui sera utilisée
-    refresh_user($id);
-
-    // On génère le vrai contrat - qui écrasera le placeholder une fois terminé    
-    if ($data["decision"] == "of")
-    {
-
-    }
-    if ($data["decision"] == "ofa") // of alternance
-    {
-
-    }
-    if ($data["decision"] == "cfa") // apprentissage
-    {
-
-    }
-    if ($data["decision"] == "ecole")
-    {
-
-    }
-    
+    $ret = build_user_contract($id, document_builder_contract_kind($data));
+    if ($ret->is_error())
+	return ($ret);
+    return (new ValueResponse([
+	"msg" => "Contrat généré",
+	"content" => document_builder_public_url($ret->value["output"])
+    ]));
 }
 
 function DeleteAction($id, $data, $method, $output, $module)

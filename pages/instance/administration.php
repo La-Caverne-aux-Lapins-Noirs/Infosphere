@@ -207,15 +207,22 @@
 		<input
 		    type="text"
 		    name="duration"
+		    placeholder="<?=$activity->slot_duration > 0 ? $activity->slot_duration : ""; ?>"
 		    style="width: 96%; text-align: center;"
 		/>
+		<?php if ($activity->team_based_slot_opening) { ?>
+		    <div class="appointment_slot_notice">
+			<?=$Dictionnary["TeamBasedSlotGenerationEnabled"]; ?>
+		    </div>
+		<?php } ?>
 		<label for="simultaneous">
 		    <?=$Dictionnary["SimultaneousSlot"]; ?>
 		</label>
 		<input
 		    type="input"
 			  name="simultaneous"
-			  placeholder="<?=$Dictionnary["SimultaneousSlot"]; ?>"
+			  placeholder="<?=$activity->team_based_slot_opening ? $Dictionnary["Automatic"] : $Dictionnary["SimultaneousSlot"]; ?>"
+			  <?=$activity->team_based_slot_opening ? "disabled" : ""; ?>
 			  style="width: 96%; text-align: center;"
 		/><br />
 		<input type="submit" style="width: 96%;" value="<?=$Dictionnary["Generate"]; ?>" />
