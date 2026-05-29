@@ -4,7 +4,8 @@ function fetch_support(
     $id = -1,
     $cat = NULL,
     $by_name = false,
-    $asset_by_name = false
+    $asset_by_name = false,
+    $load_assets = true
 )
 {
     if ($cat == NULL)
@@ -25,9 +26,14 @@ function fetch_support(
 	{
 	    $support["type"] = "support";
 	    $support["selected"] = true;
-	    if (($out = fetch_support_asset(-1, $support["id"], $asset_by_name))->is_error())
-		return ($out);
-	    $support["asset"] = $out->value;
+	    if ($load_assets)
+	    {
+		if (($out = fetch_support_asset(-1, $support["id"], $asset_by_name))->is_error())
+		    return ($out);
+		$support["asset"] = $out->value;
+	    }
+	    else
+		$support["asset"] = [];
 	}
     if ($id != -1)
 	return (new ValueResponse($supports[array_key_first($supports)]));

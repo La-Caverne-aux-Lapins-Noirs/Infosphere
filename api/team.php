@@ -13,15 +13,27 @@ function DisplaySprint($id, $data, $method, $output, $module)
 	ON team.id_activity = activity.id
         WHERE team.id = $id AND activity.deleted IS NULL
     ");
+    if ($act == NULL)
+	bad_request();
     ($activity = new FullActivity)->build($act["id"]);
+    $found_team = false;
     foreach ($activity->team as &$team)
 	if ($team["id"] == $id)
+	{
 	    $activity->user_team = &$team;
+	    $found_team = true;
+	    break ;
+	}
+    if (!$found_team)
+	forbidden();
 
     ob_start();
     if (isset($data["id_sprint"]))
     {
-	$tab_data = $data["id_sprint"];
+	$tab_data = [
+	    "id_sprint" => $data["id_sprint"],
+	    "id_ticket" => $data["id_ticket"] ?? -1,
+	];
 	require ("./pages/instance/ticket_list.php");
     }
     else
@@ -135,17 +147,33 @@ function SetTicket($id, $data, $method, $output, $module)
     $description = $Database->real_escape_string($data["description"]);
     if (($estimated_time = (int)$data["estimated_time"]) < 0)
 	bad_request();
-    $id_user = (int)$data["id_user"];
+    if (!isset($data["id_user"]) || $data["id_user"] === "" || $data["id_user"] === NULL)
+	$id_user = "NULL";
+    else if (($id_user = (int)$data["id_user"]) < 0)
+	bad_request();
     if (($id_sprint = (int)$data["id_sprint"]) <= 0)
 	bad_request();
+    $check = db_select_one("
+       id FROM sprint WHERE id = $id_sprint AND id_team = $id_team AND deleted IS NULL
+    ");
+    if ($check == NULL || $check["id"] != $id_sprint)
+	bad_request();
+    if ($id_user !== "NULL")
+    {
+	$check = db_select_one("
+	   id FROM user_team WHERE id_team = $id_team AND id_user = $id_user
+	");
+	if ($check == NULL)
+	    bad_request();
+    }
 
     if ($method == "POST")
     {
 	$Database->query("
 	  INSERT INTO ticket
-           (id_sprint, id_author, id_user, estimated_time, title, description)
+           (id_team, id_sprint, id_author, id_user, estimated_time, real_time, title, description, status, creation_date)
            VALUES
-           ($id_sprint, {$User["id"]}, $id_user, $estimated_time, '$title', '$description')
+           ($id_team, $id_sprint, {$User["id"]}, $id_user, $estimated_time, 0, '$title', '$description', 0, NOW())
 	   ");
 	$new_data = [
 	    "id_sprint" => $id_sprint,
@@ -156,7 +184,7 @@ function SetTicket($id, $data, $method, $output, $module)
     foreach (["status", "real_time"] as $verif)
 	if (!isset($data[$verif]))
 	    return (new ErrorResponse("MissingField", $verif));
-    if (($status = (int)$data["status"]) < -1 || $status > 3)
+    if (($status = (int)$data["status"]) < -2 || $status > 3)
 	bad_request();
     if (($real_time = (int)$data["real_time"]) < 0)
 	bad_request();
@@ -164,34 +192,30 @@ function SetTicket($id, $data, $method, $output, $module)
     if ($id == -1)
 	bad_request();
     $id = abs($data["ticket"]);
-    $check = db_select_one("
-       id FROM sprint WHERE id = $id_sprint AND id_team = $id_team
-    ");
-    if ($check == NULL || $check["id"] != $id_sprint)
-	bad_request();
     if ($method == "DELETE")
+    {
 	$Database->query("
           UPDATE ticket SET deleted = NOW() WHERE id = $id AND id_sprint = $id_sprint
 	");
-    else
-    {
-	if ($status == 3 || $status == -2)
-	    $done_date = "'".db_form_date(now(), true)."'";
-	else
-	    $done_date = "NULL";
-	$Database->query("
-	  UPDATE ticket SET
-            title = '$title',
-            description = '$description',
-            id_user = $id_user,
-            status = $status,
-            estimated_time = $estimated_time,
-            real_time = real_time + $real_time,
-            done_date = $done_date
-          WHERE id = $id AND id_sprint = $id_sprint
-	");
+	return (DisplaySprint($id_team, ["id_sprint" => $id_sprint], "GET", $output, $module));
     }
-    return (DisplaySprint($id_team, ["id_sprint" => $id_sprint], "GET", $output, $module));
+
+    if ($status == 3 || $status == -2)
+	$done_date = "'".db_form_date(now(), true)."'";
+    else
+	$done_date = "NULL";
+    $Database->query("
+      UPDATE ticket SET
+        title = '$title',
+        description = '$description',
+        id_user = $id_user,
+        status = $status,
+        estimated_time = $estimated_time,
+        real_time = COALESCE(real_time, 0) + $real_time,
+        done_date = $done_date
+      WHERE id = $id AND id_sprint = $id_sprint
+    ");
+    return (DisplaySprint($id_team, ["id_sprint" => $id_sprint, "id_ticket" => $id], "GET", $output, $module));
 }
 
 function SetSprint($id, $data, $method, $output, $module)

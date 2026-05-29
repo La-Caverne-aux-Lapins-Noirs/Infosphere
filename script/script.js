@@ -56,6 +56,41 @@ function roll_unroll(id)
     }
 }
 
+function set_roll_state(id, opened)
+{
+    var idx = document.getElementById(id);
+    var button = document.getElementById(id + "_button");
+
+    if (!idx || !button)
+	return ;
+    if (opened)
+    {
+	idx.style.display = "block";
+	button.value = "−";
+	localStorage.setItem(id, "+");
+    }
+    else
+    {
+	idx.style.display = "none";
+	button.value = "+";
+	localStorage.setItem(id, "−");
+    }
+}
+
+function roll_unroll_all(button_class, opened)
+{
+    var buttons = document.getElementsByClassName(button_class);
+
+    for (var i = 0; i < buttons.length; ++i)
+    {
+	var id = buttons[i].getAttribute("data-roll-target");
+
+	if (!id)
+	    id = buttons[i].id.replace(/_button$/, "");
+	set_roll_state(id, opened);
+    }
+}
+
 function toggle_roll(id, size)
 {
     var div = document.getElementById(id);

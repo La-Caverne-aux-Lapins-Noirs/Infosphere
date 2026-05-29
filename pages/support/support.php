@@ -9,24 +9,17 @@
      <?php } ?>
  ];
 </script>
-<table class="submenu" style="height: 100%;">
+<table class="submenu support_view_layout">
     <tr class="submenutr">
-	<td class="submenutd" style="
-		   <?php if (1 || is_teacher()) { // Toujours grand ?>
-		   width: 420px;
-		   <?php } else { ?>
-		   width: 220px;
-		   <?php } ?>
-		   "
-	>
+	<td class="submenutd support_asset_cell">
 	    <div
-		class="module_menubar asset_menubar"
+		class="module_menubar asset_menubar module_scroll_menu support_asset_menubar"
 		id="support<?=$support["id"]; ?>"
 	    >
 		<?php require ("support_menu.php"); ?>
 	    </div>
 	</td>
-	<td class="submenutd">
+	<td class="submenutd support_screen_cell">
 	    <?php require ("screen.php"); ?>
 	</td>
     </tr>

@@ -3,7 +3,7 @@ if (file_exists(__DIR__."/handle_parameters.php"))
     require_once (__DIR__."/handle_parameters.php");
 
 $top_support = [];
-if (($categories = fetch_my_support_category())->is_error())
+if (($categories = fetch_my_support_category(false))->is_error())
     $categories = [];
 else
     $categories = $categories->value;
@@ -13,57 +13,122 @@ require_once (__DIR__."/../error_net.php");
 ?>
 <form method="get" action="/api/support_category/1/get_menu" id="fetch_menu_form">
 </form>
-<table class="submenu"><tr class="submenutr"><td class="submenutd" id="main_menu">
-    <div class="module_menubar">
+<table class="submenu support_page_layout"><tr class="submenutr"><td class="submenutd">
+    <div class="module_menubar module_scroll_menu" id="main_menu">
 	<?php require_once ("menu.phtml"); ?>
     </div>
-</td><td class="submenutd">
+</td><td class="submenutd module_panel_cell">
+    <div class="module_panel_area support_panel_area">
     <div
 	class="module_panel"
 	id="resume"
 	style="display: none;"
-    >
-	<?php $selcat = false; ?>
-	<?php require ("resume.php"); ?>
-    </div>
-    <?php $catsdup = $categories; ?>
-    <?php foreach ($catsdup as $catdup) { ?>
+    ></div>
+    <?php foreach ($categories as $category) { ?>
+	<?php if ($category["selected"] == false) continue ; ?>
 	<div
 	    class="module_panel"
-	    id="category_<?=$catdup["id"]; ?>"
+	    id="category_<?=$category["id"]; ?>"
 	    style="display: none;"
-	>
-	    <?php $categories = $catdup["support"]; ?>
-	    <?php $category = $catdup; ?>
-	    <?php $selcat = true; ?>
-	    <?php require ("resume.php"); ?>
-	</div>
-	<?php foreach ($catdup["support"] as $support) { ?>
+	></div>
+	<?php foreach ($category["support"] as $support) { ?>
+	    <?php if ($support["selected"] == false) continue ; ?>
 	    <div
 		class="module_panel"
 		id="support_<?=$support["id"]; ?>"
+		data-category="<?=$category["id"]; ?>"
 		style="display: none; height: 100%;"
-	    >
-		<?php require ("support.php"); ?>
-	    </div>
+	    ></div>
 	<?php } ?>
     <?php } ?>
+    </div>
 </td></tr></table>
 
 <script>
+ var support_loaded_panel = {};
+ var support_base_display_panel = window.display_panel;
+ var support_pending_callback = null;
+
+ function support_loading_message()
+ {
+     return '<div style="width: 100%; text-align: center; margin-top: 20%; font-size: x-large; color: gray;">...</div>';
+ }
+
+ function support_panel_url(page, panel)
+ {
+     if (page == 'category')
+	 return '/api/support_category/' + panel + '/panel';
+     if (page == 'support')
+     {
+	 let node = document.getElementById('support_' + panel);
+	 let category = node ? node.getAttribute('data-category') : '-1';
+	 return '/api/support_category/' + category + '/support/' + panel;
+     }
+     return null;
+ }
+
+ function support_lazy_load_panel(page, panel, callback)
+ {
+     let target = panel == -1 ? 'resume' : page + '_' + panel;
+     let node = document.getElementById(target);
+     let url = support_panel_url(page, panel);
+
+     if (!node || !url)
+     {
+	 if (callback)
+	     callback();
+	 return ;
+     }
+     if (support_loaded_panel[target])
+     {
+	 if (callback)
+	     callback();
+	 return ;
+     }
+
+     node.innerHTML = support_loading_message();
+     send_ajax(
+	 'GET',
+	 url,
+	 null,
+	 target,
+	 null,
+	 null,
+	 null,
+	 function(success) {
+	     if (success)
+		 support_loaded_panel[target] = true;
+	     if (success && callback)
+		 callback();
+	 }
+     );
+ }
+
+ function support_display_panel(page, panel, to_admin = false, to_user = false, after_load = null)
+ {
+     support_base_display_panel(page, panel, to_admin, to_user);
+     support_lazy_load_panel(page, panel, after_load);
+ }
+
+ window.display_panel = support_display_panel;
+
  <?php if ($gparams) { ?>
 
      <?php if ($gtype != 0) { ?>
-       display_panel('<?=["", "support", "category"][$gtype]; ?>', <?=$gid; ?>);
+       display_panel('<?= ["", "support", "category"][$gtype]; ?>', <?=$gid; ?>);
      <?php } else { ?>
        display_panel(
 	   'support',
-	   <?=$id_support; ?>
-       );
-       switch_asset(document.getElementById("asset<?=$gid; ?>button"),
-		    'screen_<?=$id_support; ?>',
-		    '<?=$gasset["type"]; ?>',
-		    '<?=addslashes($gasset["content"]); ?>',
+	   <?=$id_support; ?>,
+	   false,
+	   true,
+	   function() {
+	       switch_asset(document.getElementById("asset<?=$gid; ?>button"),
+			    'screen_<?=$id_support; ?>',
+			    '<?=$gasset["type"]; ?>',
+			    '<?=addslashes($gasset["content"]); ?>'
+	       );
+	   }
        );
      <?php } ?>
 

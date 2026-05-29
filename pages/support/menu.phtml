@@ -1,8 +1,21 @@
-<h2><?=$Dictionnary["Class"]; ?></h2>
-<a onclick="display_panel('category', -1, false, true);">
-    <?=$Dictionnary["GoToRootPage"]; ?>
-</a>
-<br />
+<div class="module_menu_header">
+    <h2><?=$Dictionnary["Class"]; ?></h2>
+    <div class="module_menu_actions">
+	<a onclick="display_panel('category', -1, false, true);">
+	    <?=$Dictionnary["GoToRootPage"]; ?>
+	</a>
+	<input
+	    type="button"
+	    value="Tout dérouler"
+	    onclick="roll_unroll_all('support_roll_button', true);"
+	/>
+	<input
+	    type="button"
+	    value="Tout enrouler"
+	    onclick="roll_unroll_all('support_roll_button', false);"
+	/>
+    </div>
+</div>
 <br />
 
 <?php foreach ($categories as $category) { ?>
@@ -33,7 +46,8 @@
 	    id="menu_category_<?=$category["id"]; ?>_button"
 		type="button"
 		onclick="roll_unroll('menu_category_<?=$category["id"]; ?>');"
-		class="rollbutton"
+		class="rollbutton support_roll_button"
+		data-roll-target="menu_category_<?=$category["id"]; ?>"
 		value="+"
 	/>
 	<script>

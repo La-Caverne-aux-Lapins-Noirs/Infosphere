@@ -741,11 +741,16 @@ class FullActivity extends Response
 			$sprint["hour_real"] = 0;
 			foreach ($sprint["tickets"] as &$ticket)
 			{
+			    $ticket["estimated_time"] = (int)($ticket["estimated_time"] ?? 0);
+			    $ticket["real_time"] = (int)($ticket["real_time"] ?? 0);
+			    $ticket["status"] = (int)($ticket["status"] ?? 0);
+
 			    if ($ticket["id_user"] != NULL
-				&& $ticket["id_user"] != 0)
+				&& $ticket["id_user"] != 0
+				&& isset($team["user"][$ticket["id_user"]]))
 			        $ticket["user"] = &$team["user"][$ticket["id_user"]];
 			    else
-			    {} // $ticket["user"] = NULL;
+			        $ticket["user"] = NULL;
 			    
 			    if ($ticket["status"] == 3 || $ticket["status"] == 2)
 			    {

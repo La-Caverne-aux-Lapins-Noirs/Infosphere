@@ -15,7 +15,7 @@
 	    <?php } ?>
 
 	</td><td rowspan="2">
-	    <?php if ($act->is_teacher) { ?>
+	    <?php if ($act->is_teacher && isset($is_admin_module) && $is_admin_module) { ?>
 		<?php
 		$link = [
 		    "p" => "InstancesMenu",

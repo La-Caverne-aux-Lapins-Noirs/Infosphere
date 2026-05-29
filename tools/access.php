@@ -205,15 +205,11 @@ function is_my_team($id = -1)
 
 function is_my_team_or_assistant($id = -1)
 {
-    global $User;
-    
     if (is_admin())
 	return (true);
     if (is_my_team($id))
 	return (true);
-    return (is_teacher(NULL, [
-	"id" => $User["id"]
-    ], 1));
+    return (is_assistant_for_team($id));
 }
 
 function is_subscribed_or_teacher($id = -1)

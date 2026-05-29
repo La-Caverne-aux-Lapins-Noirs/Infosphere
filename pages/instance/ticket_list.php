@@ -2,28 +2,46 @@
 // Les informations sur le sprint
 if (!isset($tab_data) || $tab_data == NULL)
     return ;
-$id_sprint = $tab_data;
+if (is_array($tab_data))
+{
+    $id_sprint = $tab_data["id_sprint"] ?? -1;
+    $id_ticket = $tab_data["id_ticket"] ?? -1;
+}
+else
+{
+    $id_sprint = $tab_data;
+    $id_ticket = -1;
+}
 if (!isset($activity->user_team["sprints"][$id_sprint]["tickets"]))
     return ;
 $sprint = $activity->user_team["sprints"][$id_sprint];
+
+if (!function_exists("scrum_user_label"))
+{
+    function scrum_user_label($activity, $id_user)
+    {
+	if ($id_user == NULL || $id_user == 0 || $id_user == -1)
+	    return ("/");
+	if (isset($activity->user_team["user"][$id_user]))
+	    return (display_nickname($activity->user_team["user"][$id_user]));
+	if (($user = resolve_codename("user", $id_user, "id", true))->is_error())
+	    return ("#".$id_user);
+	return (display_nickname($user->value));
+    }
+}
 ?>
 
 <div style="width: 100%; margin-top: 10px; margin-bottom: 20px;">
     <h2 style="float: left; width: 36%; text-align: center; border-radius: 5px; background-color: rgba(0, 0, 0, 0.1); margin-right: 2%; margin-left: 2%">
-	<?=$sprint["title"]; ?>
+	<?=htmlspecialchars($sprint["title"], ENT_QUOTES); ?>
     </h2>
-    <p style="float: right: width: 56%; text-align: justify; margin-left: 2%; margin-right: 2%; background-color: white; border-radius: 5px;">
-	<?=$sprint["description"]; ?>
+    <p style="float: right; width: 56%; text-align: justify; margin-left: 2%; margin-right: 2%; background-color: white; border-radius: 5px;">
+	<?=nl2br(htmlspecialchars($sprint["description"], ENT_QUOTES)); ?>
     </p>
 </div>
 
 <?php
 $tickets = $sprint["tickets"];
-// When used by the API
-if (isset($data["id_sprint"]))
-    $id_ticket = $data["id_sprint"];
-else
-    $id_ticket = -1;
 ?>
 
 <style>
@@ -54,20 +72,15 @@ else
     <?php $total_real_time = 0; ?>
     <?php if (count($tickets)) { ?>
 	<?php foreach ($tickets as $ticket) { ?>
+	    <?php $status = isset($ticket["status"]) ? (int)$ticket["status"] : 0; ?>
 	    <tr class="small_titles">
 		<td><?=$ticket["id"]; ?></td>
-		<td><?=$ticket["title"]; ?></td>
+		<td><?=htmlspecialchars($ticket["title"], ENT_QUOTES); ?></td>
 		<td>
-		    <?=display_nickname($activity->user_team["user"][$ticket["id_author"]]); ?>
+		    <?=scrum_user_label($activity, $ticket["id_author"]); ?>
 		</td>
 		<td>
-		    <?php if ($ticket["id_user"] != NULL
-			      && $ticket["id_user"] != 0
-			      && $ticket["id_user"] != -1) { ?>
-			<?=display_nickname($activity->user_team["user"][$ticket["id_user"]]); ?>
-		    <?php } else { ?>
-			/
-		    <?php } ?>
+		    <?=scrum_user_label($activity, $ticket["id_user"]); ?>
 		</td>
 		<td>
 		    <?=$ticket["estimated_time"]; ?>
@@ -79,19 +92,25 @@ else
 		</td>
 		<td
 		    style="
-		    <?php if ($ticket["status"] < 0) { ?>
+		    <?php if ($status < 0) { ?>
 			color: red;
 		    <?php } else { ?>
-		        color: <?=["black", "blue", "orange", "green"][$ticket["status"]]; ?>;
+		        color: <?=(["black", "blue", "orange", "green"][$status] ?? "black"); ?>;
 		    <?php } ?>
-	            <?php if ($ticket["status"] == 2) { ?>
+	            <?php if ($status == 2) { ?>
 			font-weight: bold;
 		    <?php } ?>
 			   "
 		>
-		    <?=$TicketStatus[$ticket["status"]]; ?>
+		    <?=$TicketStatus[$status] ?? $TicketStatus[0]; ?>
 		</td>
-		<td><?=datex("d/m", $ticket["creation_date"]); ?></td>
+		<td>
+		    <?php if ($ticket["creation_date"] != NULL) { ?>
+			<?=datex("d/m", $ticket["creation_date"]); ?>
+		    <?php } else { ?>
+			/
+		    <?php } ?>
+		</td>
 		<td>
 		    <?php if ($ticket["done_date"] != NULL) { ?>
 			<?=datex("d/m", $ticket["done_date"]); ?>
@@ -140,10 +159,9 @@ else
 	    </td>
 	</tr>
     <?php } else { ?>
-	<tr><td colspan="10" style="text-align: center;" font-size: italic;">
+	<tr><td colspan="10" style="text-align: center; font-style: italic;">
 	    <?=$Dictionnary["NoTicket"]; ?>
 	</td></tr>
     <?php } ?>
 </table>
 <hr /><br />
-

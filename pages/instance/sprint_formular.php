@@ -1,18 +1,24 @@
-<?php $js = "silent_submitf(this, {tofill: 'sprint_list', clear_form: ".(isset($sprint["id"]) ? "false" : "true")."});"; ?>
+<?php
+$sprint_id = isset($sprint["id"]) ? (int)$sprint["id"] : NULL;
+$sprint_title = htmlspecialchars(isset($sprint["title"]) ? $sprint["title"] : "", ENT_QUOTES);
+$sprint_description = htmlspecialchars(isset($sprint["description"]) ? $sprint["description"] : "", ENT_QUOTES);
+$sprint_form_config = "{tofill: 'sprint_list', clear_form: ".($sprint_id ? "false" : "true").", after_success: refresh}";
+$js = "silent_submitf(this, $sprint_form_config);";
+?>
 <form
-    id="sprint_form<?=isset($sprint["id"]) ? $sprint["id"] : ""; ?>"
-    <?php if (isset($sprint["id"])) { ?>
+    id="sprint_form<?=$sprint_id ? $sprint_id : ""; ?>"
+    <?php if ($sprint_id) { ?>
 	method="put"
     <?php } else { ?>
         method="post"
     <?php } ?>
     onsubmit="return <?=$js; ?>"
-    action="/api/team/<?=$activity->user_team["id"]; ?>/sprint<?=isset($sprint["id"]) ? "/".$sprint["id"] : ""; ?>"
+    action="/api/team/<?=$activity->user_team["id"]; ?>/sprint<?=$sprint_id ? "/".$sprint_id : ""; ?>"
 >
     <input
-	type="input"
+	type="text"
 	name="title"
-	value="<?=isset($sprint["title"]) ? $sprint["title"] : ""; ?>"
+	value="<?=$sprint_title; ?>"
 	placeholder="<?=$Dictionnary["Title"]; ?>"
 	style="width: calc(100% - 40px); margin-left: 20px; font-size: large;"
     /><br />
@@ -22,13 +28,13 @@
 	<textarea
 	    name="description"
 	    style="resize: none; width: calc(100% - 80px); margin-left: 20px; height: 110px; float: left;"
-	><?=isset($sprint["description"]) ? $sprint["description"] : ""; ?></textarea>
-	<?php if (isset($sprint["id"])) { ?>
+	><?=$sprint_description; ?></textarea>
+	<?php if ($sprint_id) { ?>
 	    <?php $sfh = 50; ?>
 	    <input
 		style="width: 50px; margin-left: 10px; height: <?=$sfh; ?>px; float: right; color: red; margin-bottom: 10px;"
 		type="button"
-		onclick="confirm('<?=$Dictionnary["Delete"]; ?>') && (this.form.method = 'delete') && <?=$js; ?>"
+		onclick="return confirm('<?=$Dictionnary["Delete"]; ?>') && scrum_submit(this, 'delete', <?=$sprint_form_config; ?>);"
 		value="&#10007;"
 	    />  
 	<?php } else { ?>
@@ -37,8 +43,8 @@
 	<input
 	    style="width: 50px; margin-left: 10px; height: <?=$sfh; ?>px; float: right; color: green; font-weight: bold;"
 	    type="button"
-	    onclick="<?=$js; ?>"
-	    value="<?=isset($sprint["id"]) ? "&#10003;" : "+"; ?>"
+	    onclick="return scrum_submit(this, '<?=$sprint_id ? "put" : "post"; ?>', <?=$sprint_form_config; ?>);"
+	    value="<?=$sprint_id ? "&#10003;" : "+"; ?>"
 	/>
     </div>
     
@@ -67,4 +73,3 @@
 	<br />
     </div>
 </form>
-

@@ -20,7 +20,7 @@ else
 	<?php foreach ($activity->user_team["sprints"] as $sprint) { ?>
 	    <tr <?=$sfi % 2 ? 'style="background-color: lightgray;"' : ""; ?>>
 		<td><?=$sprint["id"]; ?></td>
-		<td><?=$sprint["title"]; ?></td>
+		<td><?=htmlspecialchars($sprint["title"], ENT_QUOTES); ?></td>
 		<td><?=datex("d/m/y", $sprint["start_date"]); ?></td>
 		<td><?=datex("d/m/y", $sprint["done_date"]); ?></td>
 		<td>

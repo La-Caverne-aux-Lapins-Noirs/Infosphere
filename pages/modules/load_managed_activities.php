@@ -11,6 +11,36 @@ $user->managed_activities = list_of_managed_activities
 );
 foreach ($user->managed_activities["activities"] as $man)
 {
+    // En affichage normal de la page Matières, on ne veut que le menu.
+    // Le panneau complet de la matière sera chargé à la demande par AJAX.
+    if ($api_id_activity == 0)
+    {
+	$matter = (object)[];
+	$matter->id = $man["id_activity"];
+	$matter->codename = $man["codename"];
+	$matter->fr_name =
+	    @$man["activity_name"] ?:
+	    @$man["template_name"] ?:
+	    @$man["reference_name"] ?:
+	    @$man["name"] ?:
+	    @$man["template_codename"] ?:
+	    @$man["reference_codename"] ?:
+	    @$man["codename"];
+	$matter->name = $matter->fr_name;
+	$matter->emergence_date = @$man["emergence_date"] ?: now();
+	$matter->is_teacher = true;
+	$matter->full_activity = $matter;
+	$matter->sublayer = [];
+	$matter->medal = [];
+	$matter->medal_listed = false;
+
+	if (isset($requested) && $requested != NULL && $requested->id == $matter->id)
+	    $requested_listed = true;
+	$year = datex("Y/m", $matter->emergence_date);
+	$mdatas[$year][] = $matter;
+	continue ;
+    }
+
     $get_medal = $api_id_activity == $man["id_activity"];
     ($matter = new FullActivity)->buildp(
 	$man["id_activity"], [
@@ -24,7 +54,7 @@ foreach ($user->managed_activities["activities"] as $man)
 		"activity_support",
 		"activity_details",
 	    ]
-    ]);
+	]);
     if ($get_medal)
     {
 	foreach ($matter->team as &$subx)
@@ -102,4 +132,3 @@ foreach ($user->managed_activities["activities"] as $man)
 
 ksort($mdatas);
 $mdatas = array_reverse($mdatas);
-

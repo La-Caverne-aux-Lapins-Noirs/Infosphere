@@ -1,6 +1,6 @@
 <?php
 
-function fetch_my_support_category()
+function fetch_my_support_category($load_assets = true)
 {
     global $User;
 
@@ -11,11 +11,11 @@ function fetch_my_support_category()
     // Il faudra probablement changer cette technique à terme
 
     if (is_admin())
-	return (fetch_support_category(-1, true));
+	return (fetch_support_category(-1, true, false, false, $load_assets));
     if ($User == NULL)
 	return (new ErrorResponse("NotMyActivity"));
     $id_user = $User["id"];
-    if (($categories = fetch_support_category(-1, true))->is_error())
+    if (($categories = fetch_support_category(-1, true, false, false, $load_assets))->is_error())
 	return ($categories);
     $categories = $categories->value;
     foreach ($categories as &$c)
@@ -36,6 +36,21 @@ function fetch_my_support_category()
        WHERE user_team.id_user = $id_user
        AND activity.deleted IS NULL
     ");
+    if (!$load_assets)
+    {
+	$asset_parents = db_select_all("
+            support_asset.id as id_asset,
+            support.id as id_support,
+            support.id_support_category as id_support_category
+            FROM support_asset
+            LEFT JOIN support ON support.id = support_asset.id_support
+            WHERE support_asset.deleted IS NULL
+            AND support.deleted IS NULL
+	", "id_asset");
+    }
+    else
+	$asset_parents = [];
+
     foreach ($activities as $act)
     {
 	$supports = fetch_activity_support($act["id"], true);
@@ -85,18 +100,40 @@ function fetch_my_support_category()
 	    // dessus
 	    else if ($sup["type"] == 0)
 	    {
-		foreach ($categories as &$c)
+		if (!$load_assets && isset($asset_parents[$sup["id_support_asset"]]))
 		{
-		    foreach ($c["support"] as &$s)
+		    $parent = $asset_parents[$sup["id_support_asset"]];
+		    foreach ($categories as &$c)
 		    {
-			foreach ($s["asset"] as &$a)
+			if ($c["id"] != $parent["id_support_category"])
+			    continue ;
+			$c["selected"] = true;
+			foreach ($c["support"] as &$s)
 			{
-			    if ($a["id"] == $sup["id_support_asset"])
+			    if ($s["id"] == $parent["id_support"])
 			    {
-				$c["selected"] = true;
 				$s["selected"] = true;
-				$a["selected"] = true;
-				break 3;
+				break ;
+			    }
+			}
+			break ;
+		    }
+		}
+		else
+		{
+		    foreach ($categories as &$c)
+		    {
+			foreach ($c["support"] as &$s)
+			{
+			    foreach ($s["asset"] as &$a)
+			    {
+				if ($a["id"] == $sup["id_support_asset"])
+				{
+				    $c["selected"] = true;
+				    $s["selected"] = true;
+				    $a["selected"] = true;
+				    break 3;
+				}
 			    }
 			}
 		    }

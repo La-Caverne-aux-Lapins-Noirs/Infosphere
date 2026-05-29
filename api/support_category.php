@@ -1,5 +1,67 @@
 <?php
 
+
+function DisplaySupportCategoryPanel($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if (($categories = fetch_my_support_category(true))->is_error())
+	return ($categories);
+    $categories = $categories->value;
+
+    ob_start();
+    if ($id == -1)
+    {
+	$selcat = false;
+	require ("./pages/support/resume.php");
+	return (new ValueResponse(["content" => ob_get_clean()]));
+    }
+
+    foreach ($categories as $catdup)
+    {
+	if ($catdup["id"] != $id || $catdup["selected"] == false)
+	    continue ;
+	$categories = $catdup["support"];
+	$category = $catdup;
+	$selcat = true;
+	require ("./pages/support/resume.php");
+	return (new ValueResponse(["content" => ob_get_clean()]));
+    }
+
+    ob_end_clean();
+    not_found();
+}
+
+function DisplaySupportPanel($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $SUBID;
+
+    if ($SUBID == -1)
+	bad_request();
+    if (($categories = fetch_my_support_category(true))->is_error())
+	return ($categories);
+    $categories = $categories->value;
+
+    foreach ($categories as $category)
+    {
+	if ($category["selected"] == false)
+	    continue ;
+	if ($id != -1 && $category["id"] != $id)
+	    continue ;
+	foreach ($category["support"] as $support)
+	{
+	    if ($support["id"] != $SUBID || $support["selected"] == false)
+		continue ;
+	    ob_start();
+	    require ("./pages/support/support.php");
+	    return (new ValueResponse(["content" => ob_get_clean()]));
+	}
+    }
+
+    not_found();
+}
+
 function DisplaySupportList($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -60,7 +122,7 @@ function DisplaySupportMenu($id, $data, $method, $output, $module)
     global $Database;
 
     if (is_admin())
-	$categories = fetch_support_category(-1, true)->value;
+	$categories = fetch_support_category(-1, true, false, false, false)->value;
     else
 	$categories = [];
     ob_start();
@@ -386,6 +448,14 @@ $Tab = [
 	"get_menu" => [
 	    "logged_in",
 	    "DisplaySupportMenu",
+	],
+	"panel" => [
+	    "logged_in",
+	    "DisplaySupportCategoryPanel",
+	],
+	"support" => [
+	    "logged_in",
+	    "DisplaySupportPanel",
 	],
     ],
     "POST" => [

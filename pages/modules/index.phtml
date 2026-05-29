@@ -103,77 +103,173 @@ function sort_by_codename($a, $b)
 <?php require_once ("load_my_activities.php"); ?>
 <?php require_once ("load_managed_activities.php"); ?>
 
-<table class="submenu"><tr class="submenutr"><td class="submenutd">
-    <div class="module_menubar">
+<table class="submenu module_page_layout"><tr class="submenutr"><td class="submenutd">
+    <div class="module_menubar module_scroll_menu">
 	<?php
 	require_once ("matter_menu.phtml");
 	if (isset($mdatas) && count($mdatas))
 	    require_once ("managed_menu.phtml");
 	?>
     </div>
-</td><td class="submenutd">
-    <?php $is_admin_module = false; ?>
+</td><td class="submenutd module_panel_cell">
+    <div class="module_panel_area module_page_panel_area">
     <?php foreach ($datas as $data) { ?>
 	<?php foreach ($data["matter_to_sort"] as $matter) { ?>
 	    <div
 		class="module_panel"
 		id="module_<?=$matter->id; ?>"
-		style="display: none;"		
-	    >
-	        <?php require ("module.phtml"); ?>
-	    </div>
+		style="display: none;"
+	    ></div>
 	<?php } ?>
     <?php } ?>
-    <?php $is_admin_module = true; ?>
     <?php foreach ($mdatas as $matters) { ?>
 	<?php foreach ($matters as $matter) { ?>
 	    <div
 		class="module_panel"
 		id="module_<?=$matter->id; ?>"
-		style="display: none;"		
-	    >
-		<?php require ("module.phtml"); ?>
-	    </div>
+		data-managed="1"
+		style="display: none;"
+	    ></div>
 	    <div
 		class="module_panel module_admin_panel"
 		id="module_<?=$matter->id; ?>_admin"
 		style="display: none; margin-left: 20px; margin-right: 20px;"
-	    >
-		<?php require ("module_admin.php"); ?>
-	    </div>
+	    ></div>
 	<?php } ?>
     <?php } ?>
     <?php if (isset($requested->id) && $requested_listed == false) { ?>
-	<?php $is_admin_module = $requested->is_teacher; ?>
+	<div
+	    class="module_panel"
+	    id="module_<?=$requested->id; ?>"
+	    <?php if ($requested->is_teacher) { ?>data-managed="1"<?php } ?>
+	    style="display: none;"
+	></div>
+	<?php if ($requested->is_teacher) { ?>
 	    <div
-		class="module_panel"
-		id="module_<?=$requested->id; ?>"
-		style="display: none;"		
-	    >
-		<?php $matter = $requested; ?>
-		<?php require ("module.phtml"); ?>
-	    </div>
-	    <?php if ($is_admin_module) { ?>
-		<div
-		    class="module_panel module_admin_panel"
-		    id="module_<?=$requested->id; ?>_admin"
-		    style="display: none"
-		>
-		    <?php require ("module_admin.php"); ?>
-		</div>
-	    <?php } ?>
+		class="module_panel module_admin_panel"
+		id="module_<?=$requested->id; ?>_admin"
+		style="display: none"
+	    ></div>
+	<?php } ?>
     <?php } ?>
 
     <div
 	class="module_panel"
 	id="resume"
-	style="display: none;"		
+	style="display: none;"
     >
         <?php require_once ("resume.php"); ?>
+    </div>
     </div>
 </td></tr></table>
 
 <script>
+ var module_loaded_panel = {};
+ var module_base_display_panel = window.display_panel;
+
+ function module_loading_message()
+ {
+     return '<div style="width: 100%; text-align: center; margin-top: 20%; font-size: x-large; color: gray;">...</div>';
+ }
+
+ function module_current_target(panel, to_user)
+ {
+     if (panel == -1)
+	 return 'resume';
+     if (!to_user && localStorage.getItem('admin_module') == 1 && document.getElementById('module_' + panel + '_admin') != null)
+	 return 'module_' + panel + '_admin';
+     return 'module_' + panel;
+ }
+
+ function module_panel_url(target, panel)
+ {
+     if (target == 'resume')
+	 return null;
+     if (target.endsWith('_admin'))
+	 return '/api/activity/' + panel + '/admin';
+
+     let node = document.getElementById(target);
+     let url = '/api/module/' + panel + '/panel';
+     if (node && node.dataset && node.dataset.managed == '1')
+	 url += '?managed=1';
+     return url;
+ }
+
+ function module_lazy_load_panel(panel, to_user)
+ {
+     let target = module_current_target(panel, to_user);
+     let node = document.getElementById(target);
+     let url = module_panel_url(target, panel);
+
+     if (!node || !url || module_loaded_panel[target])
+	 return ;
+     node.innerHTML = module_loading_message();
+     send_ajax(
+	 'GET',
+	 url,
+	 null,
+	 target,
+	 null,
+	 null,
+	 null,
+	 function(success) {
+	     if (!success)
+		 return ;
+	     module_loaded_panel[target] = true;
+	     if (target.endsWith('_admin'))
+		 adapt_scroll_size('' + panel);
+	 }
+     );
+ }
+
+ function module_display_panel(page, panel, to_admin = false, to_user = false)
+ {
+     if (page != 'module')
+     {
+	 module_base_display_panel(page, panel, to_admin, to_user);
+	 return ;
+     }
+     if (to_admin)
+	 localStorage.setItem('admin_' + page, 1);
+     if (to_user)
+	 localStorage.setItem('admin_' + page, 0);
+
+     let panels = document.getElementsByClassName('module_panel');
+     let links = document.getElementsByClassName('module_link');
+
+     Array.prototype.forEach.call(panels, function(el) {
+	 el.style.display = 'none';
+     });
+     Array.prototype.forEach.call(links, function(el) {
+	 el.classList.remove('selected');
+     });
+
+     if (panel == -1)
+	 document.getElementById('resume').style.display = 'block';
+     else
+     {
+	 let target = module_current_target(panel, to_user);
+	 if (target.endsWith('_admin') && document.getElementById(target) == null)
+	     target = 'module_' + panel;
+
+	 let lnk = document.getElementById(page + '_link' + panel);
+	 let mod = document.getElementById(target);
+
+	 if (lnk)
+	     lnk.classList.add('selected');
+	 if (mod)
+	     mod.style.display = 'block';
+     }
+
+     <?php if (isset($User["id"])) { ?>
+     localStorage.setItem(page + '<?=$User["id"]; ?>', panel);
+     localStorage.setItem("<?=$Position; ?>_last_panel", page);
+     <?php } ?>
+     module_lazy_load_panel(panel, to_user);
+ }
+
+ window.display_panel = module_display_panel;
+
  <?php if (isset($_GET["a"])) { ?>
  display_panel("module", <?=$_GET["a"]; ?>);
  <?php } else { ?>

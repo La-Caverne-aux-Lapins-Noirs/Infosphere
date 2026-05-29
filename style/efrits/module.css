@@ -209,3 +209,24 @@
     width: 100%;
     overflow-x: hidden;
 }
+
+.module_scroll_menu::-webkit-scrollbar,
+.module_panel_area::-webkit-scrollbar
+{
+    width: 8px;
+    height: 8px;
+}
+
+.module_scroll_menu::-webkit-scrollbar-track,
+.module_panel_area::-webkit-scrollbar-track
+{
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+}
+
+.module_scroll_menu::-webkit-scrollbar-thumb,
+.module_panel_area::-webkit-scrollbar-thumb
+{
+    background-color: rgba(0, 255, 0, 0.35);
+    border-radius: 8px;
+}

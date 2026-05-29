@@ -4,7 +4,8 @@ function fetch_support_category(
     $id = -1,
     $by_name = false,
     $support_by_name = false,
-    $asset_by_name = false
+    $asset_by_name = false,
+    $load_assets = true
 )
 {
     if (($class = fetch_data(
@@ -19,7 +20,7 @@ function fetch_support_category(
 	$category["type"] = "category";
 	$category["selected"] = true;
 	if (($category["support"] = fetch_support
-	    (-1, $category["id"], $support_by_name, $asset_by_name)
+	    (-1, $category["id"], $support_by_name, $asset_by_name, $load_assets)
 	)->is_error())
 	    return ($category["support"]);
 	$category["support"] = $category["support"]->value;

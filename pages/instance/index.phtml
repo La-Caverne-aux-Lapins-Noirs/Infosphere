@@ -51,6 +51,9 @@ if (isset($activity->user_team["id"]) && $activity->max_team_size > 1)
     $left_panel[$Dictionnary["Forum"]] = __DIR__."/forum.php";
     $left_panel[$Dictionnary["WorkSplit"]] = __DIR__."/scrum.php";
 }
+$left_panel_default = $Dictionnary["About"];
+if ((isset($_GET["c"]) || isset($_GET["d"])) && isset($left_panel[$Dictionnary["WorkSplit"]]))
+    $left_panel_default = $Dictionnary["WorkSplit"];
 
 ob_start();
 $cnt = 0;
@@ -237,10 +240,18 @@ if ($activity->is_assistant)
 >
     <div style="height: 100%;">
 	<?php
+	if ($left_panel_default != $Dictionnary["About"])
+	{
+	?>
+	    <script>
+	     localStorage.setItem('<?=addslashes($Position.$activity->id."left"); ?>', '<?=md5($left_panel_default); ?>');
+	    </script>
+	<?php
+	}
 	tabpanel(
 	    $left_panel,
 	    $Position.$activity->id."left",
-	    $Dictionnary["About"],
+	    $left_panel_default,
 	    "toplist",
 	    "round_box leftbackground background"
 	);

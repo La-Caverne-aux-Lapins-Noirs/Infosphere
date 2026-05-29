@@ -1,7 +1,21 @@
-<h2><?=$Dictionnary["Matter"]; ?></h2>
-<a onclick="display_panel('module', -1);">
-    <?=$Dictionnary["AllMatters"]; ?>
-</a>
+<div class="module_menu_header">
+    <h2><?=$Dictionnary["Matter"]; ?></h2>
+    <div class="module_menu_actions">
+	<a onclick="display_panel('module', -1);">
+	    <?=$Dictionnary["AllMatters"]; ?>
+	</a>
+	<input
+	    type="button"
+	    value="Tout dérouler"
+	    onclick="roll_unroll_all('module_roll_button', true);"
+	/>
+	<input
+	    type="button"
+	    value="Tout enrouler"
+	    onclick="roll_unroll_all('module_roll_button', false);"
+	/>
+    </div>
+</div>
 <br />
 <?php if (isset($_GET["a"]) && $requested_listed == false) { ?>
     <br />
@@ -36,7 +50,8 @@
 	    id="menu_<?=$cycle->codename; ?>_button"
 	    type="button"
 	    onclick="roll_unroll('menu_<?=$cycle->codename; ?>');"
-	    class="rollbutton"
+	    class="rollbutton module_roll_button"
+	    data-roll-target="menu_<?=$cycle->codename; ?>"
 	    value="+"
 	/>
 	<script>

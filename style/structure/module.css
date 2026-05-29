@@ -208,3 +208,106 @@
     width: 46px !important;
     height: 46px !important;
 }
+
+/* Lazy module/support layouts: keep navigation columns independent from page scroll. */
+.submenu.module_page_layout,
+.submenu.support_page_layout,
+.submenu.support_view_layout
+{
+    height: 100%;
+}
+
+.module_page_layout > tbody > tr > .submenutd,
+.support_page_layout > tbody > tr > .submenutd,
+.support_view_layout > tbody > tr > .submenutd
+{
+    height: 100%;
+}
+
+.module_scroll_menu
+{
+    height: calc(100vh - 115px);
+    max-height: calc(100vh - 115px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.module_panel_cell
+{
+    height: 100%;
+}
+
+.module_panel_area
+{
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+.support_view_layout
+{
+    height: 100%;
+}
+
+.support_view_layout > tbody > tr > td:first-of-type
+{
+    width: clamp(420px, 30vw, 580px);
+}
+
+.support_screen_cell
+{
+    height: 100%;
+}
+
+.support_view_layout .support_screen
+{
+    height: calc(100vh - 115px);
+    max-height: calc(100vh - 115px);
+    overflow: hidden;
+}
+
+
+.module_page_layout > .submenutr > .submenutd,
+.support_page_layout > .submenutr > .submenutd,
+.support_view_layout > .submenutr > .submenutd
+{
+    height: 100%;
+}
+
+.support_asset_cell
+{
+    width: clamp(420px, 30vw, 580px);
+}
+
+.module_menu_header
+{
+    position: sticky;
+    top: 0px;
+    z-index: 20;
+    padding-top: 2px;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    background-color: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(10px);
+}
+
+.module_menu_header h2
+{
+    margin-top: 0px;
+    margin-bottom: 4px;
+}
+
+.module_menu_actions
+{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+}
+
+.module_menu_actions input[type="button"]
+{
+    font-size: small;
+    padding: 2px 6px;
+}

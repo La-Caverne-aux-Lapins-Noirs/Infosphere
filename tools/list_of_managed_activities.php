@@ -61,16 +61,25 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
           activity.codename as codename,
           activity.type as type,
           activity.parent_activity as parent_activity,
+          activity.reference_activity as reference_activity,
+          activity.id_template as id_template,
           activity.id as id_activity,
           activity.pickup_date as pickup_date,
           activity.close_date as close_date,
+          activity.emergence_date as emergence_date,
           activity.{$Language}_name as activity_name,
           activity.{$Language}_name as name,
+          template.codename as template_codename,
+          template.{$Language}_name as template_name,
+          reference.codename as reference_codename,
+          reference.{$Language}_name as reference_name,
           activity.is_template as is_template,
           activity_teacher.teacher_pay as teacher_pay,
           activity_teacher.assistant_pay as assistant_pay
           FROM activity
           LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
+          LEFT JOIN activity as template ON activity.id_template = template.id
+          LEFT JOIN activity as reference ON activity.reference_activity = reference.id
           LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
           LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
           WHERE (activity.parent_activity IS NULL OR activity.parent_activity = -1)
@@ -93,14 +102,23 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
           activity.codename as codename,
           activity.type as type,
           activity.parent_activity as parent_activity,
+          activity.reference_activity as reference_activity,
+          activity.id_template as id_template,
           activity.id as id_activity,
+          activity.emergence_date as emergence_date,
           activity.{$Language}_name as activity_name,
           activity.{$Language}_name as name,
+          template.codename as template_codename,
+          template.{$Language}_name as template_name,
+          reference.codename as reference_codename,
+          reference.{$Language}_name as reference_name,
           activity.is_template as is_template,
           activity_teacher.teacher_pay as teacher_pay,
           activity_teacher.assistant_pay as assistant_pay
           FROM activity
           LEFT JOIN activity_teacher ON activity_teacher.id_activity = activity.id
+          LEFT JOIN activity as template ON activity.id_template = template.id
+          LEFT JOIN activity as reference ON activity.reference_activity = reference.id
           LEFT JOIN laboratory ON activity_teacher.id_laboratory = laboratory.id
           LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
           WHERE (activity.parent_activity IS NOT NULL AND activity.parent_activity != -1)
@@ -116,14 +134,23 @@ function list_of_managed_activities(&$usr, $matter = true, $activ = true, $sess 
            activity.id as id_activity,
            activity.close_date as close_date,
            activity.pickup_date as pickup_date,
+           activity.emergence_date as emergence_date,
 	   activity.codename as activity_codename,
 	   activity.codename as codename,
            activity.type as type,
+           activity.reference_activity as reference_activity,
+           activity.id_template as id_template,
 	   activity.{$Language}_name as activity_name,
 	   activity.{$Language}_name as name,
+           template.codename as template_codename,
+           template.{$Language}_name as template_name,
+           reference.codename as reference_codename,
+           reference.{$Language}_name as reference_name,
 	   activity.parent_activity as parent_activity
            FROM activity
-           WHERE parent_activity = {$mat["id_activity"]}
+           LEFT JOIN activity as template ON activity.id_template = template.id
+           LEFT JOIN activity as reference ON activity.reference_activity = reference.id
+           WHERE activity.parent_activity = {$mat["id_activity"]}
            AND activity.deleted IS NULL
 	   ", "activity_codename");
 	foreach ($act as $k => $v)
