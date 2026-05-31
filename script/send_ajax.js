@@ -1,4 +1,22 @@
 
+function send_ajax_target(target, role)
+{
+    if (!target)
+	return (null);
+    if (typeof target == "string")
+    {
+	let id = target;
+
+	target = document.getElementById(id);
+	if (target == null)
+	{
+	    console.warn("send_ajax: unable to find " + role + " target #" + id);
+	    return (null);
+	}
+    }
+    return (target);
+}
+
 function send_ajax(method, url, data, tofill = null, toadd = null, toclear = null, toremove = null, gcall = null, bcall = null, verbose = false)
 {
     var xhr = new XMLHttpRequest();
@@ -82,34 +100,39 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 		gcall(true, result, msg, content);
 	    if (toclear)
 	    {
-		toclear = to_object_array(toclear);
+		toclear = single_to_array(toclear);
 		for (let i in toclear)
 		{
+		    toclear[i] = send_ajax_target(toclear[i], "clear");
+		    if (toclear[i] == null)
+			continue ;
 		    toclear[i].value = "";
 		    toclear[i].innerHTML = "";
 		}
 	    }
 	    if (toremove)
 	    {
-		if (typeof toremove == "string")
-		    toremove = document.getElementById(toremove);
-		toremove.remove();
+		toremove = send_ajax_target(toremove, "remove");
+		if (toremove != null)
+		    toremove.remove();
 	    }
 	    if (tofill)
 	    {
-		if (typeof tofill == "string")
-		    tofill = document.getElementById(tofill);
-		tofill.innerHTML = ""; // Pour forcer le rafraichissement des images
-		tofill.innerHTML = content;
+		tofill = send_ajax_target(tofill, "fill");
+		if (tofill != null)
+		{
+		    tofill.innerHTML = ""; // Pour forcer le rafraich des images
+		    tofill.innerHTML = content;
+		}
 	    }
 	    if (toadd)
 	    {
-		if (typeof toadd == "string")
-		    toadd = document.getElementById(toadd);
-		let ext = new DOMParser().parseFromString(content, "text/html");
-
-		// console.log(content);
-		toadd.appendChild(ext.firstChild);
+		toadd = send_ajax_target(toadd, "add");
+		if (toadd != null)
+		{
+		    let ext = new DOMParser().parseFromString(content, "text/html");
+		    toadd.appendChild(ext.firstChild);
+		}
 	    }
 	}
 	else if (result == "DEBUG")

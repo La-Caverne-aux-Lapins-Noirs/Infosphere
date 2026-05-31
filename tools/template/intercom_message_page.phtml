@@ -1,12 +1,27 @@
 <?php
 $subject = $intercom["subjects"][0];
 $msgbox = $intercom["div"]."_msg";
-$action =
-    "/api/intercom/{$subject["id_misc"]}".
-    "/{$subject["misc_type"]}".
-    "/{$subject["id"]}"
-;
+$action = intercom_api_url($intercom, $subject["id"]);
+$message_update_url = intercom_api_url($intercom, $subject["id"], [
+    "_method" => "subget",
+    "live" => 1,
+    "page" => $subject["page"],
+    "page_size" => $subject["page_size"]
+]);
 ?>
+<form
+    id="<?=$intercom["div"]; ?>_update_request"
+    method="get"
+    action="<?=htmlentities($message_update_url); ?>"
+    data-mode="message"
+    data-hash="<?=$intercom["content_hash"]; ?>"
+    data-page="<?=$subject["page"]; ?>"
+    data-page-size="<?=$subject["page_size"]; ?>"
+    data-count="<?=$subject["nbr_message"]; ?>"
+    data-last-id="<?=$subject["last_message_id"]; ?>"
+    data-on-last-page="<?=$subject["on_last_page"] ? 1 : 0; ?>"
+    onsubmit="return false;"
+></form>
 <div class="intercom_messages" style="
 	    height: 96%;
 	    width: calc(100% - 20px);
@@ -14,40 +29,18 @@ $action =
 	    position: relative;
 	    ">
 
-    <div style="height: 40px; width: 100%; position: absolute; top: 0px; left: 0px;">
-	<div style="width: 50px; 100%; position: absolute; top: 0px; left: 0px;">
-	    <form
-		<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."'})"; ?>
-		method="get"
-		action="<?=$intercom["base_url"]; ?>"
-		onsubmit="return <?=$js; ?>"
-	    >
-		<input
-		    type="button"
-		    value="&larr;"
-		    style="width: 40px; height: 30px; margin-top: 5px;"
-		    onclick="return <?=$js; ?>"
-		/>
-	    </form>
-	</div>
-	<div style="width: 70%; height: 40px; position: absolute; top: 0px; left: 50px; display: table;">
-	    <h5 style="display: table-cell; vertical-align: middle; fon-size: large;">
-		<?=$intercom["name"]." - ".htmlentities($subject["title"]); ?>
-	    </h5>
-	</div>
-	<?php $pbrowser = $subject; ?>
-	<?php require ("intercom_page_browser.phtml"); ?>
+    <div
+	id="<?=$intercom["div"]; ?>_message_controls"
+	style="height: 40px; width: 100%; position: absolute; top: 0px; left: 0px;"
+    >
+	<?php require ("intercom_message_controls.phtml"); ?>
     </div>
 
     <div id="<?=$msgbox; ?>" style="
 	     width: 100%;
-	     <?php if ($subject["on_last_page"]) { ?>
-	     height: calc(100% - 80px - 150px);
-	     <?php } else { ?>
-	     height: calc(100% - 80px);
-	     <?php } ?>
 	     position: absolute;
 	     top: 50px;
+	     bottom: <?=$subject["on_last_page"] ? "170px" : "10px"; ?>;
 	     left: 0px;
 	     overflow-y: auto;
 	     border-radius: 10px;
@@ -56,31 +49,11 @@ $action =
 	<?php require ("intercom_message_list.phtml"); ?>
     </div>
 
-    <?php if ($subject["on_last_page"]) { ?>
-	<div style="position: absolute; height: 150px; bottom: 10px; width: 100%;">
-	    <form
-		<?php $js = "silent_submitf(this, {tofill: '$msgbox'})"; ?>
-		method="post"
-		action="<?=$action; ?>"
-		onsubmit="return <?=$js; ?>;"
-		style="width: 100%; height: 100%; position: relative;"
-	    >
-		<input type="hidden" name="page" value="-1" />
-		<textarea name="message"
-			  style="width: calc(90%);
-				height: 100%;
-				resize: none;
-				position: absolute; top: 0px; left: 0px;"
-		></textarea>
-		<input
-		    type="button"
-		    style="width: 9%; height: 100%; margin-left: 1%;
-			  position: absolute; right: 0px; top: 0px;"
-		    onclick="<?=$js; ?>"
-		    value="+"
-		/>
-	    </form>
-	</div>
-    <?php } ?>
+    <div
+	id="<?=$intercom["div"]; ?>_message_composer"
+	style="position: absolute; height: 150px; bottom: 10px; width: 100%;"
+    >
+	<?php require ("intercom_message_composer.phtml"); ?>
+    </div>
 </div>
 

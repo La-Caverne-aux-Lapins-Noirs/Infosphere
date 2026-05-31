@@ -1,6 +1,29 @@
 <?php foreach ($subject["message"] as $message) { ?>
+    <?php /* intercom_skip_hidden_for_viewer */ ?>
+    <?php if (function_exists("intercom_message_hidden_for_viewer") && intercom_message_hidden_for_viewer($message)) continue ; ?>
+    <?php
+    if (function_exists("intercom_prepare_message_for_display")
+        && (!isset($message["can_moderate"]) || !isset($message["is_moderated"])))
+        intercom_prepare_message_for_display($message);
+    if (!isset($message["can_moderate"]))
+        $message["can_moderate"] = false;
+    if (!isset($message["is_moderated"]))
+        $message["is_moderated"] = false;
+    if (!isset($message["reported_by_user"]))
+        $message["reported_by_user"] = false;
+    if (!isset($message["report_count"]))
+        $message["report_count"] = 0;
+    ?>
+
     <div class="intercom_message" style="
 		width: calc(100% - 20px);
+                <?php /* intercom_moderated_message_visuals */ ?>
+                <?php if (isset($message["is_moderated"]) && $message["is_moderated"]) { ?>
+                opacity: 0.35;
+                filter: grayscale(1);
+                border: 1px dashed rgba(255, 255, 255, 0.60);
+                <?php } ?>
+		<?php if (isset($message["is_moderated"]) && $message["is_moderated"]) { ?> opacity: 0.35; filter: grayscale(1); <?php } ?>
 		margin-left: 10px;
 		position: relative;
 		box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
@@ -9,6 +32,19 @@
 		margin-top: 5px; margin-bottom: 5px;
 		">
 	<?php require ("intercom_message_info.phtml"); ?>
+        <?php if (isset($message["is_moderated"]) && $message["is_moderated"]) { ?>
+            <div class="intercom_moderated_banner" style="
+                    margin: 4px 120px 4px 10px;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    background: rgba(255, 255, 255, 0.16);
+                    border: 1px dashed rgba(255, 255, 255, 0.55);
+                    font-size: x-small;
+                    text-align: center;
+                ">
+                <?=isset($Dictionnary["IntercomModeratedPost"]) ? $Dictionnary["IntercomModeratedPost"] : "Message masqué"; ?>
+            </div>
+        <?php } ?>
 	<div style="
 		    width: calc(100% - 120px);
 		    <?php if ($message["id_user"] != $User["id"]) { ?>
@@ -18,6 +54,12 @@
 		    <?php } ?>
 		    margin-right: 10px;
 		    padding-bottom: 10px;
+                    <?php /* intercom_message_body_moderation_padding */ ?>
+                    <?php if ((isset($message["can_moderate"]) && $message["can_moderate"])
+                        || (isset($message["reported_by_user"]) && $message["reported_by_user"])
+                        || (isset($message["report_count"]) && $message["report_count"] > 0)) { ?>
+                    padding-top: 28px;
+                    <?php } ?>
 		    ">
 	    <?=markdown($message["message"], true); ?>
 	</div>

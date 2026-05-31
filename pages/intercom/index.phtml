@@ -8,20 +8,1537 @@ if (file_exists(__DIR__."/handle_parameters.php"))
     require_once (__DIR__."/handle_parameters.php");
 
 require_once (__DIR__."/../error_net.php");
-?>
 
-<h2><?=$Dictionnary["Discussion"]; ?></h2>
-<?php
-if (!is_admin())
+function intercom_page_label($row, $fallback = "")
 {
-    echo "L'intercom apparaitra dans quelques jours.";
-    return ;
+    global $Language;
+
+    if (isset($row["name"]) && strlen(trim((string)$row["name"])))
+        return ($row["name"]);
+    if (isset($row[$Language."_name"]) && strlen(trim((string)$row[$Language."_name"])))
+        return ($row[$Language."_name"]);
+    if (isset($row["codename"]) && strlen(trim((string)$row["codename"])))
+        return ($row["codename"]);
+    return ($fallback);
+}
+
+function intercom_page_h($value)
+{
+    return (htmlentities((string)$value));
+}
+
+function intercom_page_deleted_condition($alias)
+{
+    return ("($alias.deleted IS NULL OR $alias.deleted = 0)");
+}
+
+function intercom_page_name_sql($alias)
+{
+    global $Language;
+
+    $field = $Language."_name";
+    return ("COALESCE(NULLIF($alias.$field, ''), $alias.codename)");
+}
+
+function intercom_page_laboratory_authority($id_laboratory)
+{
+    if (function_exists("intercom_laboratory_authority_for_current_user"))
+        return (intercom_laboratory_authority_for_current_user($id_laboratory));
+
+    global $User;
+
+    $id_laboratory = (int)$id_laboratory;
+    $row = db_select_one("
+        authority FROM user_laboratory
+        WHERE id_user = ".((int)$User["id"])."
+          AND id_laboratory = $id_laboratory
+    ");
+    if ($row == NULL)
+        return (-1);
+    return ((int)$row["authority"]);
+}
+
+function intercom_page_cycle_is_current_condition($alias)
+{
+    return ("($alias.first_day IS NULL OR DATE_ADD($alias.first_day, INTERVAL 15 WEEK) >= NOW())");
+}
+
+function intercom_page_user_is_enrolled_in_cycle($id_cycle)
+{
+    global $User;
+
+    $id_cycle = (int)$id_cycle;
+    return (db_select_one("
+        id FROM user_cycle
+        WHERE id_user = ".((int)$User["id"])."
+          AND id_cycle = $id_cycle
+    ") != NULL);
+}
+
+function intercom_page_has_managed_activity_in_cycle($id_cycle)
+{
+    global $User;
+
+    if (is_admin())
+        return (true);
+    $uid = (int)$User["id"];
+    $id_cycle = (int)$id_cycle;
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+
+    return (db_select_one("
+        activity_teacher.id
+        FROM activity_teacher
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        LEFT JOIN activity as source
+          ON source.id = activity_teacher.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        LEFT JOIN activity_cycle
+          ON activity_cycle.id_activity = source.id
+          OR activity_cycle.id_activity = matter_source.id
+          OR activity_cycle.id_activity = target.id
+        WHERE activity_cycle.id_cycle = $id_cycle
+          AND (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+    ") != NULL);
+}
+
+function intercom_page_can_moderate_context($type, $id)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (function_exists("intercom_can_moderate_context"))
+        return (intercom_can_moderate_context($type, $id));
+    if (is_admin())
+        return (true);
+    $id = (int)$id;
+    if ($type == "cycle")
+        return (is_director_for_cycle($id));
+    if ($type == "laboratory")
+        return (intercom_page_laboratory_authority($id) >= 2);
+    if ($type == "activity")
+        return ((function_exists("is_teacher_or_director_for_activity") && is_teacher_or_director_for_activity($id))
+            || (function_exists("is_assistant_for_activity") && is_assistant_for_activity($id)));
+    if ($type == "team")
+    {
+        if (function_exists("is_assistant_for_team") && is_assistant_for_team($id))
+            return (true);
+        $team = db_select_one("id_activity FROM team WHERE id = $id");
+        if ($team == NULL)
+            return (false);
+        return (intercom_page_can_moderate_context("activity", $team["id_activity"]));
+    }
+    if ($type == "user")
+        return (is_director_for_student($id)
+            || is_cycle_director_for_student($id)
+            || is_teacher_for_student($id));
+    return (false);
+}
+
+function intercom_page_has_moderation_scope()
+{
+    global $User;
+
+    if (is_admin())
+        return (true);
+    $uid = (int)$User["id"];
+    if (db_select_one("
+        cycle_teacher.id
+        FROM cycle_teacher
+        LEFT JOIN cycle ON cycle.id = cycle_teacher.id_cycle
+        LEFT JOIN user_laboratory as cycle_laboratory
+          ON cycle_laboratory.id_laboratory = cycle_teacher.id_laboratory
+         AND cycle_laboratory.id_user = $uid
+         AND cycle_laboratory.authority >= 1
+        WHERE (cycle_teacher.id_user = $uid OR cycle_laboratory.id_user = $uid)
+          AND cycle.id IS NOT NULL
+          AND ".intercom_page_deleted_condition("cycle")."
+          AND ".intercom_page_cycle_is_current_condition("cycle")."
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        activity_teacher.id
+        FROM activity_teacher
+        LEFT JOIN activity ON activity.id = activity_teacher.id_activity
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        WHERE (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
+          AND activity.id IS NOT NULL
+          AND ".intercom_page_deleted_condition("activity")."
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        id FROM user_laboratory
+        WHERE id_user = $uid
+          AND authority >= 2
+    ") != NULL)
+        return (true);
+    return (false);
+}
+
+function intercom_page_fetch_reports()
+{
+    $rows = db_select_all("
+        message_report.id_message as id_message,
+        COUNT(*) as report_count,
+        MIN(message_report.postdate) as first_report_date,
+        MAX(message_report.postdate) as last_report_date,
+        reported.id as reported_message_id,
+        reported.id_user as reported_user_id,
+        reported.title as reported_title,
+        reported.message as reported_message,
+        reported.post_date as reported_post_date,
+        COALESCE(root.id, reported.id) as subject_id,
+        COALESCE(root.title, reported.title) as subject_title,
+        COALESCE(root.misc_type, reported.misc_type) as misc_type,
+        COALESCE(root.id_misc, reported.id_misc) as id_misc,
+        author.nickname as author_nickname,
+        author.codename as author_codename
+        FROM message_report
+        LEFT JOIN message as reported ON reported.id = message_report.id_message
+        LEFT JOIN message as root ON root.id = reported.id_message
+        LEFT JOIN user as author ON author.id = reported.id_user
+        WHERE message_report.status = 0
+          AND reported.id IS NOT NULL
+        GROUP BY message_report.id_message
+        ORDER BY MAX(message_report.postdate) DESC
+        LIMIT 100
+    ");
+
+    if (is_admin())
+        return ($rows);
+    $ret = [];
+    foreach ($rows as $row)
+        if (intercom_page_can_moderate_context($row["misc_type"], $row["id_misc"]))
+            $ret[] = $row;
+    return ($ret);
+}
+
+function intercom_page_report_nav_item($report)
+{
+    $type = $report["misc_type"];
+    $id = (int)$report["id_misc"];
+    $subject = (int)$report["subject_id"];
+    $title = trim((string)try_get($report, "subject_title", ""));
+    if ($title == "")
+        $title = $type."#".$id;
+    $count = (int)$report["report_count"];
+    $subtitle = $count." signalement".($count > 1 ? "s" : "");
+    $author = trim((string)(try_get($report, "author_nickname", "") ?: try_get($report, "author_codename", "")));
+    if ($author != "")
+        $subtitle .= " · ".$author;
+    $href = intercom_page_link($type, $id, NULL, $subject);
+    ?>
+    <a class="intercom_nav_item intercom_report_nav_item" href="<?=intercom_page_h($href); ?>">
+        <span class="intercom_nav_title">⚠ <?=intercom_page_h($title); ?></span>
+        <span class="intercom_nav_subtitle"><?=intercom_page_h($subtitle); ?></span>
+    </a>
+    <?php
+}
+
+function intercom_page_common_channels()
+{
+    $out = [];
+    foreach (intercom_common_channels() as $id => $channel)
+    {
+        $channel["id"] = (int)$id;
+        $channel["name"] = intercom_common_channel_name($id);
+        $channel["description"] = function_exists("intercom_common_channel_description") ? intercom_common_channel_description($id) : "";
+        $out[] = $channel;
+    }
+    return ($out);
+}
+
+function intercom_page_common_channel($id)
+{
+    $channel = intercom_common_channel_definition($id);
+    if ($channel == NULL)
+        return (NULL);
+    $channel["id"] = (int)$id;
+    $channel["name"] = intercom_common_channel_name($id);
+    $channel["description"] = function_exists("intercom_common_channel_description") ? intercom_common_channel_description($id) : "";
+    return ($channel);
+}
+
+function intercom_page_school_staff_access($id_school)
+{
+    return (intercom_school_staff_access($id_school));
+}
+
+function intercom_page_school_access($id_school)
+{
+    return (intercom_school_access($id_school));
+}
+
+function intercom_page_fetch_schools()
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $field = $GLOBALS["Language"]."_name";
+    $deleted = intercom_page_deleted_condition("school");
+    if (is_admin())
+        return (db_select_all("
+            DISTINCT
+                school.id,
+                school.codename,
+                school.$field as name,
+                1 as staff
+            FROM school
+            WHERE $deleted
+            ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+        "));
+
+    $rows = db_select_all("
+        DISTINCT
+            school.id,
+            school.codename,
+            school.$field as name,
+            MAX(CASE WHEN user_school.authority > 0 THEN 1 ELSE 0 END) as school_staff
+        FROM school
+        LEFT JOIN user_school
+          ON user_school.id_school = school.id
+         AND user_school.id_user = $uid
+        LEFT JOIN school_cycle
+          ON school_cycle.id_school = school.id
+        LEFT JOIN user_cycle
+          ON user_cycle.id_cycle = school_cycle.id_cycle
+         AND user_cycle.id_user = $uid
+        WHERE $deleted
+          AND (user_school.id_user = $uid OR user_cycle.id_user = $uid)
+        GROUP BY school.id
+        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+    ");
+    $out = [];
+    foreach ($rows as $row)
+    {
+        $row["staff"] = intercom_page_school_staff_access($row["id"]) ? 1 : (int)try_get($row, "school_staff", 0);
+        $out[(int)$row["id"]] = $row;
+    }
+
+    $staff_rows = db_select_all("
+        DISTINCT
+            school.id,
+            school.codename,
+            school.$field as name,
+            1 as staff
+        FROM school
+        LEFT JOIN school_cycle ON school_cycle.id_school = school.id
+        LEFT JOIN cycle_teacher ON cycle_teacher.id_cycle = school_cycle.id_cycle
+        LEFT JOIN user_laboratory as cycle_laboratory
+          ON cycle_laboratory.id_laboratory = cycle_teacher.id_laboratory
+         AND cycle_laboratory.id_user = $uid
+         AND cycle_laboratory.authority >= 1
+        LEFT JOIN school_laboratory ON school_laboratory.id_school = school.id
+        LEFT JOIN user_laboratory as school_lab_member
+          ON school_lab_member.id_laboratory = school_laboratory.id_laboratory
+         AND school_lab_member.id_user = $uid
+         AND school_lab_member.authority >= 1
+        WHERE $deleted
+          AND (
+              cycle_teacher.id_user = $uid
+              OR cycle_laboratory.id_user = $uid
+              OR school_lab_member.id_user = $uid
+          )
+        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+    ");
+    foreach ($staff_rows as $row)
+        $out[(int)$row["id"]] = $row;
+
+    $activity_staff_rows = db_select_all("
+        DISTINCT
+            school.id,
+            school.codename,
+            school.$field as name,
+            1 as staff
+        FROM activity_teacher
+        LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity_teacher.id_activity
+        LEFT JOIN school_cycle ON school_cycle.id_cycle = activity_cycle.id_cycle
+        LEFT JOIN school ON school.id = school_cycle.id_school
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        WHERE school.id IS NOT NULL
+          AND $deleted
+          AND (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
+        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+    ");
+    foreach ($activity_staff_rows as $row)
+        $out[(int)$row["id"]] = $row;
+
+    usort($out, function($a, $b) {
+        return (strcmp((string)intercom_page_label($a, ""), (string)intercom_page_label($b, "")));
+    });
+    return (array_values($out));
+}
+
+function intercom_page_common_nav_item($channel)
+{
+    $id = (int)$channel["id"];
+    $selected = intercom_page_is_selected("common", $id) ? " intercom_nav_item_selected" : "";
+    $title = try_get($channel, "name", intercom_common_channel_name($id));
+    $description = try_get($channel, "description", "");
+    ?>
+    <a class="intercom_nav_item<?=$selected; ?>" href="<?=intercom_page_h(intercom_page_link("common", $id)); ?>">
+        <span class="intercom_nav_title"><?=intercom_page_h($title); ?></span>
+        <span class="intercom_nav_subtitle"><?=intercom_page_h($description); ?></span>
+    </a>
+    <?php
+}
+
+function intercom_page_school_nav_item($school)
+{
+    $id = (int)$school["id"];
+    $name = intercom_page_label($school, "École #".$id);
+    $selected_public = intercom_page_is_selected("school", $id) ? " intercom_nav_item_selected" : "";
+    $selected_staff = intercom_page_is_selected("school_staff", $id) ? " intercom_nav_item_selected" : "";
+    ?>
+    <a class="intercom_nav_item<?=$selected_public; ?>" href="<?=intercom_page_h(intercom_page_link("school", $id)); ?>">
+        <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+        <span class="intercom_nav_subtitle">Salon école · tout le monde</span>
+    </a>
+    <?php if (try_get($school, "staff", 0)) { ?>
+        <a class="intercom_nav_item<?=$selected_staff; ?>" href="<?=intercom_page_h(intercom_page_link("school_staff", $id)); ?>">
+            <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+            <span class="intercom_nav_subtitle">Salon équipe pédagogique / école</span>
+        </a>
+    <?php } ?>
+    <?php
+}
+
+function intercom_page_fetch_cycles()
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $field = $GLOBALS["Language"]."_name";
+    $cycle_ok = intercom_page_deleted_condition("cycle");
+    $cycle_current = intercom_page_cycle_is_current_condition("cycle");
+    $cycles = [];
+
+    $add = function($row, $managed = false) use (&$cycles) {
+        $id = (int)$row["id"];
+        if ($id <= 0)
+            return ;
+        if (!isset($cycles[$id]))
+            $cycles[$id] = $row;
+        if ($managed)
+            $cycles[$id]["managed"] = 1;
+        else if (!isset($cycles[$id]["managed"]))
+            $cycles[$id]["managed"] = 0;
+    };
+
+    foreach (db_select_all("
+        DISTINCT
+            cycle.id,
+            cycle.codename,
+            cycle.$field as name,
+            cycle.first_day
+        FROM user_cycle
+        LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
+        WHERE user_cycle.id_user = $uid
+          AND cycle.id IS NOT NULL
+          AND $cycle_ok
+    ") as $cycle)
+        $add($cycle, false);
+
+    foreach (db_select_all("
+        DISTINCT
+            cycle.id,
+            cycle.codename,
+            cycle.$field as name,
+            cycle.first_day
+        FROM cycle_teacher
+        LEFT JOIN cycle ON cycle.id = cycle_teacher.id_cycle
+        LEFT JOIN user_laboratory as cycle_laboratory
+          ON cycle_laboratory.id_laboratory = cycle_teacher.id_laboratory
+         AND cycle_laboratory.id_user = $uid
+         AND cycle_laboratory.authority >= 1
+        WHERE (cycle_teacher.id_user = $uid OR cycle_laboratory.id_user = $uid)
+          AND cycle.id IS NOT NULL
+          AND $cycle_ok
+          AND $cycle_current
+    ") as $cycle)
+        $add($cycle, true);
+
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+    foreach (db_select_all("
+        DISTINCT
+            cycle.id,
+            cycle.codename,
+            cycle.$field as name,
+            cycle.first_day
+        FROM activity_teacher
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        LEFT JOIN activity as source ON source.id = activity_teacher.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        LEFT JOIN activity_cycle
+          ON activity_cycle.id_activity = source.id
+          OR activity_cycle.id_activity = matter_source.id
+          OR activity_cycle.id_activity = target.id
+        LEFT JOIN cycle ON cycle.id = activity_cycle.id_cycle
+        WHERE (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
+          AND cycle.id IS NOT NULL
+          AND $cycle_ok
+          AND $cycle_current
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+    ") as $cycle)
+        $add($cycle, true);
+
+    usort($cycles, function($a, $b) {
+        $ad = try_get($a, "first_day", "9999-12-31");
+        $bd = try_get($b, "first_day", "9999-12-31");
+        if ($ad == $bd)
+            return (strcmp((string)try_get($a, "codename", ""), (string)try_get($b, "codename", "")));
+        return (strcmp((string)$ad, (string)$bd));
+    });
+    return (array_values($cycles));
+}
+
+function intercom_page_fetch_activities()
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $name_target = intercom_page_name_sql("target");
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+
+    // On ne liste pas les activités fines / projets / sessions: on remonte
+    // toujours à la matière porteuse, puis à son modèle si elle en a un.
+    $from_teams = "
+        DISTINCT
+            target.id as id,
+            target.codename as codename,
+            $name_target as name
+        FROM user_team
+        LEFT JOIN team ON team.id = user_team.id_team
+        LEFT JOIN activity as source ON source.id = team.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE user_team.id_user = $uid
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (target.parent_activity IS NULL OR target.parent_activity = -1)
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+    ";
+
+    $from_cycles = "
+        DISTINCT
+            target.id as id,
+            target.codename as codename,
+            $name_target as name
+        FROM user_cycle
+        LEFT JOIN activity_cycle ON activity_cycle.id_cycle = user_cycle.id_cycle
+        LEFT JOIN activity as source ON source.id = activity_cycle.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE user_cycle.id_user = $uid
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (target.parent_activity IS NULL OR target.parent_activity = -1)
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+    ";
+
+    return (db_select_all("
+        DISTINCT id, codename, name
+        FROM (
+            SELECT $from_teams
+            UNION
+            SELECT $from_cycles
+        ) as available_activity_intercoms
+        ORDER BY
+        COALESCE(
+            NULLIF(target.fr_name, ''),
+            target.codename
+        )
+    "));
+}
+
+function intercom_page_fetch_laboratories()
+{
+    global $User;
+
+    return (db_select_all("
+         DISTINCT
+            laboratory.id,
+            laboratory.codename,
+            laboratory.".($GLOBALS["Language"])."_name as name,
+            user_laboratory.authority
+        FROM user_laboratory
+        LEFT JOIN laboratory ON laboratory.id = user_laboratory.id_laboratory
+        WHERE user_laboratory.id_user = ".((int)$User["id"])."
+          AND laboratory.id IS NOT NULL
+          AND ".intercom_page_deleted_condition("laboratory")."
+        ORDER BY user_laboratory.authority DESC,
+                 COALESCE(NULLIF(laboratory.".($GLOBALS["Language"])."_name, ''), laboratory.codename)
+    "));
+}
+
+function intercom_page_fetch_active_teams()
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $activity_name = intercom_page_name_sql("target");
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+
+    return (db_select_all("
+        DISTINCT
+            team.id,
+            $activity_name as name,
+            COALESCE(NULLIF(team.team_name, ''), CONCAT('Equipe #', team.id)) as context
+        FROM user_team
+        LEFT JOIN team ON team.id = user_team.id_team
+        LEFT JOIN activity as source ON source.id = team.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE user_team.id_user = $uid
+          AND team.id IS NOT NULL
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (team.closed IS NULL OR team.closed = 0)
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+          AND (source.emergence_date IS NULL OR source.emergence_date <= NOW())
+          AND (source.close_date IS NULL OR source.close_date >= NOW())
+          AND (source.done_date IS NULL OR source.done_date >= NOW())
+        ORDER BY COALESCE(source.close_date, source.done_date, '9999-12-31'), name, context
+        LIMIT 50
+    "));
+}
+
+function intercom_page_last_message($type, $id)
+{
+    global $Database;
+
+    $type = $Database->real_escape_string($type);
+    $id = (int)$id;
+    return (db_select_one("
+        
+            message.id,
+            message.title,
+            message.message,
+            message.post_date,
+            author.nickname,
+            author.codename
+        FROM message
+        LEFT JOIN message as root ON root.id = message.id_message
+        LEFT JOIN user as author ON author.id = message.id_user
+        WHERE (
+              message.misc_type = '$type'
+              AND message.id_misc = $id
+              AND message.id_message IS NULL
+          ) OR (
+              root.misc_type = '$type'
+              AND root.id_misc = $id
+          )
+        ORDER BY message.post_date DESC, message.id DESC
+    "));
+}
+
+function intercom_page_user_can_open($type, $id)
+{
+    global $User;
+
+    $id = (int)$id;
+    if ($id <= 0)
+        return (false);
+    if (is_admin())
+        return (true);
+    if ($type == "common")
+        return (intercom_page_common_channel($id) != NULL);
+    if ($type == "school")
+        return (intercom_page_school_access($id));
+    if ($type == "school_staff")
+        return (intercom_page_school_staff_access($id));
+    if (intercom_page_can_moderate_context($type, $id))
+        return (true);
+    if ($type == "cycle")
+        return (intercom_page_user_is_enrolled_in_cycle($id));
+    if ($type == "laboratory")
+        return (is_member_of_laboratory($id));
+    if ($type == "activity")
+    {
+        if (is_subscribed_or_assistant($id))
+            return (true);
+        $uid = (int)$User["id"];
+        return (db_select_one("
+            target.id
+            FROM activity as target
+            LEFT JOIN activity as source
+              ON source.id = target.id
+              OR source.id_template = target.id
+            LEFT JOIN activity_cycle ON activity_cycle.id_activity = source.id
+            LEFT JOIN user_cycle ON user_cycle.id_cycle = activity_cycle.id_cycle
+            LEFT JOIN team ON team.id_activity = source.id
+            LEFT JOIN user_team ON user_team.id_team = team.id
+            WHERE target.id = $id
+              AND (
+                  user_cycle.id_user = $uid
+                  OR user_team.id_user = $uid
+              )
+        ") != NULL);
+    }
+    if ($type == "team")
+        return ((function_exists("is_my_team") && is_my_team($id))
+            || (function_exists("is_assistant_for_team") && is_assistant_for_team($id))
+            || intercom_page_can_moderate_context("team", $id));
+    return (false);
+}
+
+function intercom_page_url($parameters = [])
+{
+    $query = [
+        "p" => try_get($_GET, "p", "IntercomMenu"),
+    ];
+    foreach ($parameters as $key => $value)
+    {
+        if ($value === NULL)
+            unset($query[$key]);
+        else
+            $query[$key] = $value;
+    }
+    return ("index.php?".http_build_query($query));
+}
+
+function intercom_page_open_url($type, $id)
+{
+    return (intercom_page_url([
+        "table" => $type,
+        "id" => (int)$id,
+    ]));
+}
+
+function intercom_page_card($type, $row, $extra = NULL)
+{
+    global $Dictionnary;
+
+    $id = (int)$row["id"];
+    $label = intercom_page_label($row, $type."#".$id);
+    $last = intercom_page_last_message($type, $id);
+    ?>
+    <a class="intercom_index_card" href="<?=intercom_page_h(intercom_page_open_url($type, $id)); ?>">
+        <span class="intercom_index_card_title"><?=intercom_page_h($label); ?></span>
+        <?php if ($extra !== NULL && strlen(trim((string)$extra))) { ?>
+            <span class="intercom_index_card_extra"><?=intercom_page_h($extra); ?></span>
+        <?php } ?>
+        <span class="intercom_index_card_last">
+            <?php if ($last != NULL) { ?>
+                <?=intercom_page_h(try_get($Dictionnary, "LastMessage", "Dernier message")); ?>:
+                <?=intercom_page_h(($last["nickname"] ?: $last["codename"])); ?>,
+                <?=human_date($last["post_date"]); ?>
+            <?php } else { ?>
+                <?=intercom_page_h(try_get($Dictionnary, "NoMessages", "Aucun message")); ?>
+            <?php } ?>
+        </span>
+    </a>
+    <?php
+}
+
+function intercom_page_section($title, $type, $rows, $empty_message, $extra_key = NULL)
+{
+    ?>
+    <section class="prettybox intercom_index_section">
+        <h3><?=intercom_page_h($title); ?></h3>
+        <?php if (!count($rows)) { ?>
+            <p class="intercom_index_empty"><?=intercom_page_h($empty_message); ?></p>
+        <?php } else { ?>
+            <div class="intercom_index_grid">
+                <?php foreach ($rows as $row) { ?>
+                    <?php intercom_page_card($type, $row, $extra_key !== NULL ? try_get($row, $extra_key, NULL) : NULL); ?>
+                <?php } ?>
+            </div>
+        <?php } ?>
+    </section>
+    <?php
+}
+
+function intercom_page_fetch_cycle_activities($id_cycle)
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $id_cycle = (int)$id_cycle;
+    $field = $GLOBALS["Language"]."_name";
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+
+    $matter_name = "COALESCE(
+        NULLIF(target.$field, ''),
+        NULLIF(matter_source.$field, ''),
+        NULLIF(source.$field, ''),
+        NULLIF(target.codename, ''),
+        NULLIF(matter_source.codename, ''),
+        source.codename
+    )";
+
+    $full_cycle_access = intercom_page_user_is_enrolled_in_cycle($id_cycle)
+        || intercom_page_can_moderate_context("cycle", $id_cycle);
+
+    if ($full_cycle_access)
+        $scope_where = "1";
+    else
+        $scope_where = "EXISTS (
+            SELECT 1
+            FROM activity_teacher as managed_teacher
+            LEFT JOIN user_laboratory as managed_laboratory
+              ON managed_laboratory.id_laboratory = managed_teacher.id_laboratory
+             AND managed_laboratory.id_user = $uid
+             AND managed_laboratory.authority >= 1
+            LEFT JOIN activity as managed_source
+              ON managed_source.id = managed_teacher.id_activity
+            LEFT JOIN activity as managed_matter_source
+              ON managed_matter_source.id = CASE
+                  WHEN managed_source.parent_activity IS NOT NULL AND managed_source.parent_activity != -1
+                      THEN managed_source.parent_activity
+                  ELSE managed_source.id
+              END
+            LEFT JOIN activity as managed_target
+              ON managed_target.id = CASE
+                  WHEN managed_matter_source.id_template IS NOT NULL AND managed_matter_source.id_template != -1
+                      THEN managed_matter_source.id_template
+                  ELSE managed_matter_source.id
+              END
+            WHERE (managed_teacher.id_user = $uid OR managed_laboratory.id_user = $uid)
+              AND managed_target.id = target.id
+        )";
+
+    return (db_select_all("
+        DISTINCT
+            target.id as id,
+            target.codename as codename,
+            $matter_name as name,
+            matter_source.id as instance_id
+        FROM activity_cycle
+        LEFT JOIN activity as source
+          ON source.id = activity_cycle.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE activity_cycle.id_cycle = $id_cycle
+          AND $scope_where
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (target.parent_activity IS NULL OR target.parent_activity = -1)
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+        ORDER BY
+            $matter_name
+    "));
+}
+
+function intercom_page_fetch_cycle_matter_teams($id_cycle)
+{
+    global $User;
+
+    $uid = (int)$User["id"];
+    $id_cycle = (int)$id_cycle;
+    $field = $GLOBALS["Language"]."_name";
+    $source_ok = intercom_page_deleted_condition("source");
+    $matter_ok = intercom_page_deleted_condition("matter_source");
+    $target_ok = intercom_page_deleted_condition("target");
+    $cycle_manager = intercom_page_can_moderate_context("cycle", $id_cycle);
+
+    $matter_name = "COALESCE(
+        NULLIF(target.$field, ''),
+        NULLIF(matter_source.$field, ''),
+        NULLIF(source.$field, ''),
+        NULLIF(target.codename, ''),
+        NULLIF(matter_source.codename, ''),
+        source.codename
+    )";
+    $project_name = "COALESCE(
+        NULLIF(source.$field, ''),
+        NULLIF(source_template.$field, ''),
+        NULLIF(matter_source.$field, ''),
+        NULLIF(target.$field, ''),
+        NULLIF(source.codename, ''),
+        NULLIF(source_template.codename, ''),
+        NULLIF(matter_source.codename, ''),
+        target.codename
+    )";
+
+    $scope_where = $cycle_manager ? "1" : "(
+        user_team.id_user = $uid
+        OR activity_teacher.id_user = $uid
+        OR activity_laboratory.id_user = $uid
+    )";
+
+    $rows = db_select_all("
+        DISTINCT
+            target.id as matter_id,
+            $matter_name as matter_name,
+            source.id as activity_id,
+            $project_name as activity_name,
+            team.id as id,
+            COALESCE(NULLIF(team.team_name, ''), CONCAT('Equipe #', team.id)) as name,
+            COALESCE(team_members.member_count, 0) as member_count
+        FROM team
+        LEFT JOIN user_team ON user_team.id_team = team.id
+        LEFT JOIN (
+            SELECT id_team, COUNT(DISTINCT id_user) as member_count
+            FROM user_team
+            GROUP BY id_team
+        ) as team_members ON team_members.id_team = team.id
+        LEFT JOIN activity as source ON source.id = team.id_activity
+        LEFT JOIN activity as source_template ON source_template.id = source.id_template
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+                  THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity_cycle
+          ON activity_cycle.id_activity = source.id
+          OR activity_cycle.id_activity = matter_source.id
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+                  THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        LEFT JOIN activity_teacher
+          ON activity_teacher.id_activity = source.id
+          OR activity_teacher.id_activity = matter_source.id
+          OR activity_teacher.id_activity = target.id
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        WHERE activity_cycle.id_cycle = $id_cycle
+          AND $scope_where
+          AND team.id IS NOT NULL
+          AND COALESCE(team_members.member_count, 0) > 1
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (team.closed IS NULL OR team.closed = 0)
+          AND $source_ok
+          AND $matter_ok
+          AND $target_ok
+          AND (source.emergence_date IS NULL OR source.emergence_date <= NOW())
+          AND (source.close_date IS NULL OR source.close_date >= NOW())
+          AND (source.done_date IS NULL OR source.done_date >= NOW())
+        ORDER BY $matter_name,
+                 COALESCE(source.close_date, source.done_date, '9999-12-31'),
+                 $project_name,
+                 name
+    ");
+
+    $ret = [];
+    foreach ($rows as $row)
+    {
+        $matter = (int)$row["matter_id"];
+        $activity = (int)$row["activity_id"];
+        if (!isset($ret[$matter]))
+            $ret[$matter] = [];
+        if (!isset($ret[$matter][$activity]))
+            $ret[$matter][$activity] = [
+                "id" => $activity,
+                "name" => $row["activity_name"],
+                "team_count" => 0,
+                "teams" => [],
+            ];
+        $ret[$matter][$activity]["team_count"] += 1;
+        $ret[$matter][$activity]["teams"][] = $row;
+    }
+    foreach ($ret as $matter => $projects)
+        $ret[$matter] = array_values($projects);
+    return ($ret);
+}
+
+function intercom_page_find_row($rows, $id)
+{
+    $id = (int)$id;
+    foreach ($rows as $row)
+        if ((int)$row["id"] == $id)
+            return ($row);
+    return (NULL);
+}
+
+function intercom_page_selected_cycle($cycles)
+{
+    global $position;
+    global $id_position;
+
+    $id = (int)try_get($_GET, "menu_cycle", -1);
+    if ($id <= 0 && $position == "cycle")
+        $id = (int)$id_position;
+    if ($id <= 0)
+        return (-1);
+    return (intercom_page_find_row($cycles, $id) != NULL ? $id : -1);
+}
+
+function intercom_page_link($type, $id, $menu_cycle = NULL, $ref = NULL)
+{
+    $params = [
+        "table" => $type,
+        "id" => (int)$id,
+        "ref" => $ref,
+    ];
+    if ($menu_cycle !== NULL && (int)$menu_cycle > 0)
+        $params["menu_cycle"] = (int)$menu_cycle;
+    else
+        $params["menu_cycle"] = NULL;
+    return (intercom_page_url($params));
+}
+
+function intercom_page_is_selected($type, $id)
+{
+    global $unique;
+    global $position;
+    global $id_position;
+
+    return ($unique && $position == $type && (int)$id_position == (int)$id);
+}
+
+function intercom_page_nav_anchor($type, $row, $menu_cycle = NULL, $subtitle = NULL)
+{
+    $id = (int)$row["id"];
+    $selected = intercom_page_is_selected($type, $id) ? " intercom_nav_item_selected" : "";
+    ?>
+    <a class="intercom_nav_item<?=$selected; ?>" href="<?=intercom_page_h(intercom_page_link($type, $id, $menu_cycle)); ?>">
+        <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($row, $type."#".$id)); ?></span>
+        <?php if ($subtitle !== NULL && strlen(trim((string)$subtitle))) { ?>
+            <span class="intercom_nav_subtitle"><?=intercom_page_h($subtitle); ?></span>
+        <?php } ?>
+    </a>
+    <?php
+}
+
+function intercom_page_nav_section($title, $type, $rows, $empty_message, $menu_cycle = NULL)
+{
+    ?>
+    <section class="intercom_nav_section">
+        <h3><?=intercom_page_h($title); ?></h3>
+        <?php if (!count($rows)) { ?>
+            <p class="intercom_nav_empty"><?=intercom_page_h($empty_message); ?></p>
+        <?php } else { ?>
+            <?php foreach ($rows as $row) { ?>
+                <?php intercom_page_nav_anchor($type, $row, $menu_cycle); ?>
+            <?php } ?>
+        <?php } ?>
+    </section>
+    <?php
+}
+
+function intercom_page_matter_nav_item($matter, $projects, $menu_cycle)
+{
+    global $position;
+    global $id_position;
+
+    $id = (int)$matter["id"];
+    $selected = intercom_page_is_selected("activity", $id) ? " intercom_nav_item_selected" : "";
+    $team_selected = false;
+    foreach ($projects as $project)
+        foreach ($project["teams"] as $team)
+            if ($position == "team" && (int)$id_position == (int)$team["id"])
+                $team_selected = true;
+    ?>
+    <div class="intercom_matter_item<?=$selected; ?><?=($team_selected ? " intercom_matter_item_contains_selected" : ""); ?>">
+        <a class="intercom_matter_link" href="<?=intercom_page_h(intercom_page_link("activity", $id, $menu_cycle)); ?>">
+            <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($matter, "activity#".$id)); ?></span>
+        </a>
+        <?php if (count($projects)) { ?>
+            <details class="intercom_team_roll"<?=($team_selected ? " open" : ""); ?>>
+                <summary><?=intercom_page_h(count($projects)." projet".(count($projects) > 1 ? "s" : "")); ?></summary>
+                <div class="intercom_team_roll_content">
+                    <?php foreach ($projects as $project) { ?>
+                        <details class="intercom_project_roll"<?php
+                            $project_selected = false;
+                            foreach ($project["teams"] as $team)
+                                if ($position == "team" && (int)$id_position == (int)$team["id"])
+                                    $project_selected = true;
+                            if ($project_selected) echo " open";
+                        ?>>
+                            <summary>
+                                <span class="intercom_project_title"><?=intercom_page_h($project["name"]); ?></span>
+                                <span class="intercom_project_count"><?=intercom_page_h($project["team_count"]." équipe".($project["team_count"] > 1 ? "s" : "")); ?></span>
+                            </summary>
+                            <div class="intercom_project_teams">
+                                <?php foreach ($project["teams"] as $team) { ?>
+                                    <?php
+                                    $subtitle = ((int)try_get($team, "member_count", 0))." membre".(((int)try_get($team, "member_count", 0)) > 1 ? "s" : "");
+                                    intercom_page_nav_anchor("team", $team, $menu_cycle, $subtitle);
+                                    ?>
+                                <?php } ?>
+                            </div>
+                        </details>
+                    <?php } ?>
+                </div>
+            </details>
+        <?php } ?>
+    </div>
+    <?php
+}
+
+function intercom_page_display_shell()
+{
+    global $Dictionnary;
+    global $unique;
+    global $position;
+    global $id_position;
+
+    $schools = intercom_page_fetch_schools();
+    $common_channels = intercom_page_common_channels();
+    $cycles = intercom_page_fetch_cycles();
+    $laboratories = intercom_page_fetch_laboratories();
+    $reports = intercom_page_fetch_reports();
+    $show_reports = count($reports) || intercom_page_has_moderation_scope();
+    $menu_cycle = intercom_page_selected_cycle($cycles);
+    $selected_cycle = $menu_cycle > 0 ? intercom_page_find_row($cycles, $menu_cycle) : NULL;
+    $matters = $menu_cycle > 0 ? intercom_page_fetch_cycle_activities($menu_cycle) : [];
+    $matter_teams = $menu_cycle > 0 ? intercom_page_fetch_cycle_matter_teams($menu_cycle) : [];
+    $has_second = $selected_cycle != NULL;
+    ?>
+    <style>
+     .intercom_page_shell { width: calc(100% - 18px); margin: 0 auto; }
+     .intercom_page_header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0 10px 0; }
+     .intercom_page_shell h2 { margin: 0; }
+     .intercom_share_tools { display: flex; align-items: center; gap: 8px; }
+     .intercom_share_button { cursor: pointer; border: 1px solid rgba(0, 255, 0, .45); border-radius: 7px; background: rgba(0, 70, 0, .55); color: inherit; padding: 6px 10px; }
+     .intercom_share_button:hover { background: rgba(0, 120, 0, .55); }
+     .intercom_share_feedback { font-size: .85em; opacity: .72; min-width: 70px; }
+     .intercom_workspace { display: grid; grid-template-columns: 275px minmax(0, 1fr); gap: 10px; align-items: stretch; min-height: calc(100vh - 150px); }
+     .intercom_workspace_has_second { grid-template-columns: 250px 330px minmax(420px, 1fr); }
+     .intercom_nav_panel, .intercom_main_panel { border: 1px solid rgba(0, 255, 0, .32); border-radius: 8px; background: rgba(0, 35, 0, .35); }
+     .intercom_nav_panel { max-height: calc(100vh - 150px); overflow-y: auto; padding: 8px; scrollbar-width: thin; }
+     .intercom_main_panel { min-width: 0; overflow: hidden; padding: 8px; }
+     .intercom_main_panel [id$="_intercom"] { height: calc(100vh - 210px) !important; min-height: 420px !important; }
+     .intercom_nav_panel_title { font-size: 1.05em; font-weight: bold; margin: 2px 4px 10px 4px; opacity: .95; }
+     .intercom_nav_section { margin: 0 0 14px 0; }
+     .intercom_nav_section h3 { font-size: .95em; margin: 8px 4px 6px 4px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
+     .intercom_nav_item, .intercom_matter_link { display: block; padding: 8px 10px; margin: 4px 0; border-radius: 6px; border: 1px solid rgba(0, 255, 0, .18); background: rgba(0, 70, 0, .33); color: inherit; text-decoration: none; }
+     .intercom_nav_item:hover, .intercom_matter_link:hover { background: rgba(0, 120, 0, .45); }
+     .intercom_nav_item_selected, .intercom_matter_item.intercom_nav_item_selected > .intercom_matter_link, .intercom_matter_item_contains_selected > .intercom_matter_link { border-color: rgba(160, 255, 160, .8); background: rgba(0, 135, 0, .55); }
+     .intercom_report_nav_item { border-color: rgba(255, 180, 80, .55); background: rgba(100, 55, 0, .38); }
+     .intercom_report_nav_item:hover { background: rgba(145, 85, 0, .52); }
+     .intercom_nav_title { display: block; font-weight: bold; line-height: 1.2; }
+     .intercom_nav_subtitle { display: block; margin-top: 3px; font-size: .84em; opacity: .76; line-height: 1.2; }
+     .intercom_nav_empty { opacity: .65; font-style: italic; margin: 6px 8px 10px 8px; }
+     .intercom_matter_item { margin: 4px 0 8px 0; }
+     .intercom_matter_link { margin-bottom: 3px; }
+     .intercom_team_roll { margin: 0 0 0 12px; border-left: 1px solid rgba(0, 255, 0, .25); padding-left: 8px; }
+     .intercom_team_roll > summary { display: inline-block; cursor: pointer; font-size: .82em; opacity: .82; padding: 3px 8px; margin: 1px 0 4px 0; border-radius: 999px; background: rgba(0, 80, 0, .45); user-select: none; }
+     .intercom_team_roll > summary:hover { background: rgba(0, 120, 0, .55); }
+     .intercom_project_roll { margin: 4px 0 6px 0; }
+     .intercom_project_roll > summary { cursor: pointer; list-style-position: outside; padding: 7px 8px; border-radius: 6px; border: 1px solid rgba(0, 255, 0, .16); background: rgba(0, 55, 0, .32); }
+     .intercom_project_roll > summary:hover { background: rgba(0, 95, 0, .42); }
+     .intercom_project_title { display: block; font-weight: bold; line-height: 1.18; }
+     .intercom_project_count { display: block; margin-top: 2px; font-size: .82em; opacity: .72; }
+     .intercom_project_teams { margin: 3px 0 6px 10px; }
+     .intercom_project_teams .intercom_nav_item { margin-left: 0; font-size: .9em; }
+     .intercom_loading { opacity: .72; pointer-events: none; }
+     .intercom_placeholder { opacity: .75; text-align: center; padding: 70px 20px; }
+
+     /* intercom two-column searchable menus */
+     .intercom_workspace { grid-template-columns: minmax(420px, 30vw) minmax(0, 1fr); }
+     .intercom_workspace_has_second { grid-template-columns: minmax(400px, 26vw) minmax(460px, 31vw) minmax(360px, 1fr); }
+     .intercom_nav_search { position: sticky; top: -8px; z-index: 3; padding: 0 0 8px 0; margin: 0 0 8px 0; background: linear-gradient(to bottom, rgba(0, 35, 0, .96), rgba(0, 35, 0, .78)); }
+     .intercom_nav_search input { box-sizing: border-box; width: 100%; border: 1px solid rgba(0, 255, 0, .34); border-radius: 7px; background: rgba(0, 15, 0, .72); color: inherit; padding: 7px 9px; outline: none; }
+     .intercom_nav_search input:focus { border-color: rgba(150, 255, 150, .78); background: rgba(0, 35, 0, .82); }
+     .intercom_nav_section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 6px; align-items: start; }
+     .intercom_nav_section > h3, .intercom_nav_section > .intercom_nav_empty, .intercom_nav_section > .intercom_search_empty { grid-column: 1 / -1; }
+     .intercom_nav_section > .intercom_nav_item, .intercom_nav_section > .intercom_matter_item { margin: 0; min-width: 0; }
+     .intercom_nav_section > .intercom_matter_item .intercom_matter_link { margin-top: 0; }
+     .intercom_search_empty { display: none; opacity: .65; font-style: italic; margin: 6px 8px 10px 8px; }
+     .intercom_search_section_empty > .intercom_search_empty { display: block; }
+     .intercom_search_hidden { display: none !important; }
+     @media (max-width: 1450px) {
+        .intercom_workspace { grid-template-columns: minmax(380px, 34vw) minmax(0, 1fr); }
+        .intercom_workspace_has_second { grid-template-columns: minmax(360px, 31vw) minmax(420px, 35vw) minmax(320px, 1fr); }
+     }
+
+     @media (max-width: 1100px) {
+        .intercom_workspace, .intercom_workspace_has_second { grid-template-columns: 1fr; }
+        .intercom_nav_panel { max-height: 260px; }
+     }
+    </style>
+    <div class="intercom_page_shell">
+        <div class="intercom_page_header">
+            <h2><?=intercom_page_h(try_get($Dictionnary, "Discussion", "Discussion")); ?></h2>
+            <div class="intercom_share_tools">
+                <button type="button" class="intercom_share_button" id="intercom_share_button">Partager</button>
+                <span class="intercom_share_feedback" id="intercom_share_feedback"></span>
+            </div>
+        </div>
+        <div class="intercom_workspace<?=($has_second ? " intercom_workspace_has_second" : ""); ?>">
+            <nav class="intercom_nav_panel">
+                <div class="intercom_nav_panel_title">Intercoms</div>
+                <div class="intercom_nav_search">
+                    <input type="search" data-intercom-menu-search placeholder="Rechercher dans ce menu" autocomplete="off">
+                </div>
+                <?php if ($show_reports) { ?>
+                    <section class="intercom_nav_section">
+                        <h3>Signalements</h3>
+                        <?php if (!count($reports)) { ?>
+                            <p class="intercom_nav_empty">Aucun signalement actif.</p>
+                        <?php } else { ?>
+                            <?php foreach ($reports as $report) { ?>
+                                <?php intercom_page_report_nav_item($report); ?>
+                            <?php } ?>
+                        <?php } ?>
+                    </section>
+                <?php } ?>
+                <section class="intercom_nav_section">
+                    <h3>École</h3>
+                    <?php if (!count($schools)) { ?>
+                        <p class="intercom_nav_empty">Aucun salon école disponible.</p>
+                    <?php } else { ?>
+                        <?php foreach ($schools as $school) { ?>
+                            <?php intercom_page_school_nav_item($school); ?>
+                        <?php } ?>
+                    <?php } ?>
+                </section>
+                <section class="intercom_nav_section">
+                    <h3>Salons communs</h3>
+                    <?php foreach ($common_channels as $channel) { ?>
+                        <?php intercom_page_common_nav_item($channel); ?>
+                    <?php } ?>
+                </section>
+                <section class="intercom_nav_section">
+                    <h3>Cycles</h3>
+                    <?php if (!count($cycles)) { ?>
+                        <p class="intercom_nav_empty">Vous n'avez accès à aucun cycle.</p>
+                    <?php } else { ?>
+                        <?php foreach ($cycles as $cycle) { ?>
+                            <?php intercom_page_nav_anchor("cycle", $cycle, (int)$cycle["id"], ((int)try_get($cycle, "managed", 0) ? "À gérer" : NULL)); ?>
+                        <?php } ?>
+                    <?php } ?>
+                </section>
+                <?php intercom_page_nav_section("Laboratoires", "laboratory", $laboratories, "Vous n'êtes membre d'aucun laboratoire.", NULL); ?>
+            </nav>
+
+            <?php if ($has_second) { ?>
+                <nav class="intercom_nav_panel">
+                    <div class="intercom_nav_panel_title"><?=intercom_page_h(intercom_page_label($selected_cycle, "cycle#".$menu_cycle)); ?></div>
+                <div class="intercom_nav_search">
+                    <input type="search" data-intercom-menu-search placeholder="Rechercher dans ce menu" autocomplete="off">
+                </div>
+                    <section class="intercom_nav_section">
+                        <h3>Matières</h3>
+                        <?php if (!count($matters)) { ?>
+                            <p class="intercom_nav_empty">Aucune matière accessible pour ce cycle.</p>
+                        <?php } else { ?>
+                            <?php foreach ($matters as $matter) { ?>
+                                <?php intercom_page_matter_nav_item($matter, try_get($matter_teams, (int)$matter["id"], []), $menu_cycle); ?>
+                            <?php } ?>
+                        <?php } ?>
+                    </section>
+                </nav>
+            <?php } ?>
+
+            <main class="intercom_main_panel">
+                <?php if ($unique) { ?>
+                    <?php if (!intercom_page_user_can_open($position, $id_position)) { ?>
+                        <div class="intercom_placeholder"><?=intercom_page_h(try_get($Dictionnary, "IntercomDenied", "Intercom inaccessible.")); ?></div>
+                    <?php } else { ?>
+                        <?php intercom_display($position, (int)$id_position, false, try_get($_GET, "ref", -1)); ?>
+                    <?php } ?>
+                <?php } else { ?>
+                    <div class="intercom_placeholder">
+                        Choisis un salon, un cycle, un laboratoire ou une matière dans les menus de gauche pour ouvrir son intercom.
+                    </div>
+                <?php } ?>
+            </main>
+        </div>
+    </div>
+    <script>
+    (function() {
+        if (window.__intercomIndexAjaxInstalled)
+        {
+            if (window.__intercomIndexBind)
+                window.__intercomIndexBind();
+            return;
+        }
+        window.__intercomIndexAjaxInstalled = true;
+
+        function currentShell()
+        {
+            return document.querySelector(".intercom_page_shell");
+        }
+
+        function canAjaxNavigate(anchor)
+        {
+            if (!anchor || !anchor.href)
+                return false;
+            var url = new URL(anchor.href, window.location.href);
+            if (url.origin != window.location.origin)
+                return false;
+            return url.searchParams.get("p") == "IntercomMenu";
+        }
+
+        function setShareFeedback(text)
+        {
+            var feedback = document.getElementById("intercom_share_feedback");
+            if (!feedback)
+                return;
+            feedback.textContent = text;
+            if (text)
+                setTimeout(function() {
+                    var current = document.getElementById("intercom_share_feedback");
+                    if (current && current.textContent == text)
+                        current.textContent = "";
+                }, 1800);
+        }
+
+        async function loadIntercomPage(url, push)
+        {
+            var shell = currentShell();
+            if (!shell)
+            {
+                window.location.href = url;
+                return;
+            }
+            shell.classList.add("intercom_loading");
+            try
+            {
+                var response = await fetch(url, {
+                    credentials: "same-origin",
+                    headers: {"X-Requested-With": "XMLHttpRequest"}
+                });
+                if (!response.ok)
+                    throw new Error("HTTP " + response.status);
+                var html = await response.text();
+                var doc = new DOMParser().parseFromString(html, "text/html");
+                var next = doc.querySelector(".intercom_page_shell");
+                if (!next)
+                    throw new Error("Missing intercom shell");
+                shell.replaceWith(next);
+                if (push)
+                    history.pushState({intercom: true}, "", url);
+                bindIntercomIndex();
+            }
+            catch (err)
+            {
+                window.location.href = url;
+            }
+        }
+
+        function shareCurrentIntercom()
+        {
+            var url = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText)
+                navigator.clipboard.writeText(url).then(function() {
+                    setShareFeedback("Lien copié");
+                }, function() {
+                    prompt("Lien à partager", url);
+                });
+            else
+                prompt("Lien à partager", url);
+        }
+
+
+        function intercomNormalizeSearch(value)
+        {
+            return (value || "")
+                .toString()
+                .toLocaleLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        }
+
+        function directSearchItems(section)
+        {
+            return Array.prototype.filter.call(section.children, function(child) {
+                return child.classList
+                    && (child.classList.contains("intercom_nav_item")
+                        || child.classList.contains("intercom_matter_item"));
+            });
+        }
+
+        function directSearchEmpty(section)
+        {
+            var found = null;
+            Array.prototype.forEach.call(section.children, function(child) {
+                if (child.classList && child.classList.contains("intercom_search_empty"))
+                    found = child;
+            });
+            if (!found)
+            {
+                found = document.createElement("p");
+                found.className = "intercom_search_empty";
+                found.textContent = "Aucun résultat.";
+                section.appendChild(found);
+            }
+            return found;
+        }
+
+        function bindIntercomMenuSearch(shell)
+        {
+            shell.querySelectorAll(".intercom_nav_panel").forEach(function(panel) {
+                var input = panel.querySelector("[data-intercom-menu-search]");
+                if (!input || input.dataset.intercomSearchBound)
+                    return;
+                input.dataset.intercomSearchBound = "1";
+
+                function applySearch()
+                {
+                    var term = intercomNormalizeSearch(input.value);
+                    panel.querySelectorAll(".intercom_nav_section").forEach(function(section) {
+                        var items = directSearchItems(section);
+                        var any = false;
+                        items.forEach(function(item) {
+                            var text = intercomNormalizeSearch(item.textContent);
+                            var match = !term || text.indexOf(term) != -1;
+                            item.classList.toggle("intercom_search_hidden", !match);
+                            if (match)
+                            {
+                                any = true;
+                                if (term)
+                                    item.querySelectorAll("details").forEach(function(details) {
+                                        details.open = true;
+                                    });
+                            }
+                        });
+                        directSearchEmpty(section);
+                        section.classList.toggle(
+                            "intercom_search_section_empty",
+                            !!term && items.length > 0 && !any
+                        );
+                    });
+                }
+
+                input.addEventListener("input", applySearch);
+                applySearch();
+            });
+        }
+
+        function bindIntercomIndex()
+        {
+            var shell = currentShell();
+            if (!shell)
+                return;
+            bindIntercomMenuSearch(shell);
+            shell.querySelectorAll("a[href]").forEach(function(anchor) {
+                if (anchor.dataset.intercomAjaxBound || !canAjaxNavigate(anchor))
+                    return;
+                anchor.dataset.intercomAjaxBound = "1";
+                anchor.addEventListener("click", function(event) {
+                    if (event.defaultPrevented || event.button != 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+                        return;
+                    event.preventDefault();
+                    loadIntercomPage(anchor.href, true);
+                });
+            });
+            var share = document.getElementById("intercom_share_button");
+            if (share && !share.dataset.intercomShareBound)
+            {
+                share.dataset.intercomShareBound = "1";
+                share.addEventListener("click", shareCurrentIntercom);
+            }
+        }
+
+        window.__intercomIndexBind = bindIntercomIndex;
+        window.addEventListener("popstate", function() {
+            loadIntercomPage(window.location.href, false);
+        });
+        bindIntercomIndex();
+    })();
+    </script>
+    <?php
 }
 ?>
-<?php
-if (!$unique)
-    require_once ("list_categories.php");
-else
-    require_once ("list_topics.php");
-?>
 
+<?php intercom_page_display_shell(); ?>

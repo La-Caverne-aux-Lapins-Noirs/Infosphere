@@ -1,16 +1,26 @@
 <h4>Intercom</h4>
-<?php $intercom = get_intercom("user", $user->id); ?>
+<?php $id_subject = (int)try_get($_GET, "ref", -1); ?>
+<?php if ($id_subject != -1) { ?>
+    <script>
+     localStorage.setItem(
+         '<?=addslashes($Position.$user->id."cursus"); ?>',
+         '<?=md5("<span class='very_small_tab'>".$Dictionnary["Intercom"]."</span>"); ?>'
+     );
+    </script>
+<?php } ?>
+<?php $intercom = get_intercom("user", $user->id, $id_subject, $id_subject != -1); ?>
 <?php $intercom["div"] = "user_intercom"; ?>
-<form
-    id="update_request"
-    method="get"
-    action="/api/intercom/<?=$intercom["id_misc"]; ?>/<?=$intercom["misc_type"]; ?>?_method=subget"
-    onsubmit="return false;"
->
-</form>
+<?php $intercom["base_url"] = intercom_api_url($intercom); ?>
+<?php $intercom["default_visibility"] = INTERCOM_PRIVATE; ?>
+<?php $intercom["allow_visibility"] = is_admin(); ?>
+<?php $intercom["allow_laboratory"] = false; ?>
 <script>
  setTimeout(check_update, 5000, "<?=$intercom["div"]; ?>");
 </script>
-<div id="<?=$intercom["div"]; ?>">
-    <?php require_once ("./tools/template/intercom_subject_page.phtml"); ?>
+<div id="<?=$intercom["div"]; ?>" style="position: relative; min-height: 360px; height: 55vh; width: 100%;">
+    <?php if ($id_subject == -1 || count($intercom["subjects"]) == 0) { ?>
+	<?php require_once ("./tools/template/intercom_subject_page.phtml"); ?>
+    <?php } else { ?>
+	<?php require_once ("./tools/template/intercom_message_page.phtml"); ?>
+    <?php } ?>
 </div>

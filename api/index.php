@@ -102,6 +102,21 @@ if (isset($_GET["page"]))
     $DATA["page"] = (int)$_GET["page"];
 if (isset($_GET["page_size"]))
     $DATA["page_size"] = (int)$_GET["page_size"];
+if (isset($_GET["div"]) && !isset($DATA["div"]))
+    $DATA["div"] = $_GET["div"];
+
+// Intercom live polling needs a few GET parameters even when the
+// effective API method is SUBGET. Keep the scope narrow to avoid
+// changing the behaviour of the other APIs.
+if ($MODULE == "intercom")
+{
+    foreach ([
+        "live", "known_hash", "known_count", "known_on_last_page",
+        "known_page", "since"
+    ] as $key)
+        if (isset($_GET[$key]))
+            $DATA[$key] = $_GET[$key];
+}
 
 // On s'authentifie
 require_once ("login/index.php");

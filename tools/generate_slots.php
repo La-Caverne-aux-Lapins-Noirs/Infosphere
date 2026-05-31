@@ -92,6 +92,94 @@ function get_slot_generation_capacity($context)
     return (max(1, min(20, (int)floor($capacity / $team_size))));
 }
 
+
+function get_slot_generation_team_where($context)
+{
+    if ($context["reference_activity"] != NULL && (int)$context["reference_activity"] != -1)
+	return ("team.id_activity = ".(int)$context["reference_activity"]);
+    return ("team.id_session = ".(int)$context["id"]);
+}
+
+function get_slot_generation_teams($context)
+{
+    $where = get_slot_generation_team_where($context);
+    return (db_select_all("
+       team.id
+       FROM team
+       WHERE $where
+       ORDER BY team.id
+    "));
+}
+
+function assign_registered_teams_to_slots($session)
+{
+    global $Database;
+
+    if (($context = get_slot_generation_context($session))->is_error())
+	return ($context);
+    $context = $context->value;
+
+    $already = db_select_all("
+       appointment_slot.id_team
+       FROM appointment_slot
+       WHERE appointment_slot.id_session = ".(int)$context["id"]."
+       AND appointment_slot.id_team > 0
+    ", "id_team");
+
+    $teams = [];
+    foreach (get_slot_generation_teams($context) as $team)
+    {
+	if (!isset($already[$team["id"]]))
+	    $teams[] = (int)$team["id"];
+    }
+    if (!count($teams))
+	return (new ValueResponse(["assigned" => 0]));
+
+    $slots = db_select_all("
+       appointment_slot.id
+       FROM appointment_slot
+       WHERE appointment_slot.id_session = ".(int)$context["id"]."
+       AND appointment_slot.id_team = -1
+       ORDER BY appointment_slot.begin_date ASC, appointment_slot.id ASC
+    ");
+    if (count($slots) < count($teams))
+	return (new ErrorResponse("NotEnoughAppointmentSlots", count($slots)."/".count($teams)));
+
+    shuffle($teams);
+    shuffle($slots);
+    $assigned = 0;
+    foreach ($teams as $i => $id_team)
+    {
+	$id_slot = (int)$slots[$i]["id"];
+	if (!$Database->query("UPDATE appointment_slot SET id_team = $id_team WHERE id = $id_slot AND id_team = -1"))
+	    return (new ErrorResponse("CannotEdit"));
+	$assigned += 1;
+    }
+    return (new ValueResponse(["assigned" => $assigned]));
+}
+
+function has_automatic_appointment_subscription($activity_id)
+{
+    $activity_id = (int)$activity_id;
+    $activity = db_select_one("
+       COALESCE(activity.subscription, template.subscription) as subscription
+       FROM activity
+       LEFT JOIN activity as template ON activity.id_template = template.id AND activity.template_link = 1
+       WHERE activity.id = $activity_id
+    ");
+    if ($activity != NULL && (int)$activity["subscription"] == 2)
+	return (true);
+
+    $cycle = db_select_one("
+       activity_cycle.id
+       FROM activity_cycle
+       WHERE activity_cycle.id_activity = $activity_id
+       AND activity_cycle.replacement_subscription = 2
+       LIMIT 1
+    ");
+    return ($cycle != NULL);
+}
+
 function generate_slots_from_registered_teams($session, $duration)
 {
     if (($duration_ts = hour_to_timestamp($duration)) < 5 * 60)

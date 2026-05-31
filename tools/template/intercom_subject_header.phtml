@@ -1,0 +1,10 @@
+<?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
+
+<?php
+$pbrowser = $intercom;
+$action =
+    "/api/intercom/{$intercom["id_misc"]}".
+    "/{$intercom["misc_type"]}"
+;
+require ("intercom_page_browser.phtml");
+?>

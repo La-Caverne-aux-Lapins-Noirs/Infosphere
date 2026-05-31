@@ -1,4 +1,25 @@
-<div style="
+<?php
+$subject_update_url = intercom_api_url($intercom, NULL, [
+    "_method" => "subget",
+    "live" => 1,
+    "page" => $intercom["page"],
+    "page_size" => $intercom["page_size"]
+]);
+?>
+<form
+    id="<?=$intercom["div"]; ?>_update_request"
+    method="get"
+    action="<?=htmlentities($subject_update_url); ?>"
+    data-mode="subject"
+    data-hash="<?=$intercom["content_hash"]; ?>"
+    data-page="<?=$intercom["page"]; ?>"
+    data-page-size="<?=$intercom["page_size"]; ?>"
+    data-on-last-page="<?=$intercom["on_last_page"] ? 1 : 0; ?>"
+    onsubmit="return false;"
+></form>
+<div
+    id="<?=$intercom["div"]; ?>_subject_header"
+    style="
 	    height: 30px;
 	    text-align: center;
 	    font-size: x-large;
@@ -8,23 +29,14 @@
 	    right: 10px;
 	    vertical-align: top;"
 >
-    <?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
-
-    <?php
-    $pbrowser = $intercom;
-    $action =
-	"/api/intercom/{$intercom["id_misc"]}".
-	"/{$intercom["misc_type"]}"
-    ;
-    require ("intercom_page_browser.phtml");
-    ?>
+    <?php require ("intercom_subject_header.phtml"); ?>
 </div>
 
 <div style="height: 110px; position: absolute; top: 60px; left: 10px; right: 10px;">
     <form
-	<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."_subject_list'});"; ?>
+	<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."', clear_form: true, after_success: intercom_after_full_subject_update, after_success_parameter: '".$intercom["div"]."'});"; ?>
 	method="post"
-	action="/api/intercom/<?=$intercom["id_misc"]; ?>/<?=$intercom["misc_type"]; ?>"
+	action="<?=intercom_api_url_html($intercom); ?>"
 	onsubmit="return <?=$js; ?>"
 	style="width: calc(100% - 20px);
 		height: 110px;
@@ -32,12 +44,28 @@
 		position: relative;
 		"
     >
+	<input type="hidden" name="full" value="1" />
+	<?php if (isset($intercom["allow_visibility"]) && $intercom["allow_visibility"]) { ?>
+	    <select
+		name="visibility"
+		style="position: absolute; top: 0px; right: 50px; width: 150px; height: 30px;"
+	    >
+		<option value="0" <?=((int)$intercom["default_visibility"] == 0) ? "selected" : ""; ?>><?=$Dictionnary["Public"]; ?></option>
+		<option value="1" <?=((int)$intercom["default_visibility"] == 1) ? "selected" : ""; ?>><?=$Dictionnary["Administrative"]; ?></option>
+		<?php if ($intercom["misc_type"] == "user") { ?>
+		    <option value="2" <?=((int)$intercom["default_visibility"] == 2) ? "selected" : ""; ?>><?=$Dictionnary["PrivateMessage"]; ?></option>
+		<?php } ?>
+	    </select>
+	<?php } else { ?>
+	    <input type="hidden" name="visibility" value="<?=isset($intercom["default_visibility"]) ? (int)$intercom["default_visibility"] : intercom_visibility($intercom["misc_type"]); ?>" />
+	<?php } ?>
+	<input type="hidden" name="laboratory" value="" />
 	<input
 	    type="text"
 	    name="title"
 	    id="<?=$intercom["div"]; ?>_title"
 	    style="
-		  width: calc(100% - 50px); height: 30px;
+		  width: <?=isset($intercom["allow_visibility"]) && $intercom["allow_visibility"] ? "calc(100% - 210px)" : "calc(100% - 50px)"; ?>; height: 30px;
 		  position: absolute; top: 0px; left: 0px;
 		  "
 	    placeholder="<?=$Dictionnary["Title"]; ?>"

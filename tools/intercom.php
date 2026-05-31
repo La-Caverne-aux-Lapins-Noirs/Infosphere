@@ -1,5 +1,362 @@
 <?php
 
+function intercom_api_url($intercom, $id_subject = NULL, $parameters = [])
+{
+    $url =
+	"/api/intercom/".
+	$intercom["id_misc"].
+	"/".
+	$intercom["misc_type"]
+    ;
+    if ($id_subject !== NULL)
+	$url .= "/".(int)$id_subject;
+    if (isset($intercom["div"]))
+	$parameters["div"] = $intercom["div"];
+    if (count($parameters))
+	$url .= "?".http_build_query($parameters);
+    return ($url);
+}
+
+function intercom_api_url_html($intercom, $id_subject = NULL, $parameters = [])
+{
+    return (htmlentities(intercom_api_url($intercom, $id_subject, $parameters)));
+}
+
+function intercom_escape($value)
+{
+    global $Database;
+
+    return ($Database->real_escape_string($value));
+}
+
+function intercom_message_text($value)
+{
+    $value = strip_tags($value);
+    $value = trim($value);
+    return (intercom_escape($value));
+}
+
+function intercom_visibility($misc_type, $visibility = NULL)
+{
+    if ($visibility === NULL || $visibility === "")
+    {
+	if ($misc_type == "user")
+	    return (INTERCOM_PRIVATE);
+	return (INTERCOM_PUBLIC);
+    }
+    $visibility = (int)$visibility;
+    if ($visibility < INTERCOM_PUBLIC || $visibility > INTERCOM_PRIVATE)
+	return (NULL);
+    if ($visibility == INTERCOM_PRIVATE && $misc_type != "user")
+	return (NULL);
+    return ($visibility);
+}
+
+function intercom_laboratory_sql($laboratory)
+{
+    if ($laboratory === NULL || $laboratory === "" || $laboratory == -1)
+	return ("NULL");
+    if (($lab = resolve_codename("laboratory", $laboratory))->is_error())
+	return ($lab);
+    return ((int)$lab->value);
+}
+
+function intercom_common_channels()
+{
+    return ([
+        1 => ["codename" => "announcements", "name_key" => "IntercomCommonAnnouncementsName", "description_key" => "IntercomCommonAnnouncementsDescription"],
+        2 => ["codename" => "discussion", "name_key" => "IntercomCommonDiscussionName", "description_key" => "IntercomCommonDiscussionDescription"],
+        3 => ["codename" => "creations", "name_key" => "IntercomCommonCreationsName", "description_key" => "IntercomCommonCreationsDescription"],
+        4 => ["codename" => "events", "name_key" => "IntercomCommonEventsName", "description_key" => "IntercomCommonEventsDescription"],
+        5 => ["codename" => "offtopic", "name_key" => "IntercomCommonOfftopicName", "description_key" => "IntercomCommonOfftopicDescription"],
+        6 => ["codename" => "media", "name_key" => "IntercomCommonMediaName", "description_key" => "IntercomCommonMediaDescription"],
+        7 => ["codename" => "ideas", "name_key" => "IntercomCommonIdeasName", "description_key" => "IntercomCommonIdeasDescription"],
+        8 => ["codename" => "suggestions", "name_key" => "IntercomCommonSuggestionsName", "description_key" => "IntercomCommonSuggestionsDescription"],
+        9 => ["codename" => "sel", "name_key" => "IntercomCommonSelName", "description_key" => "IntercomCommonSelDescription"],
+    ]);
+}
+
+function intercom_common_channel_definition($id)
+{
+    $id = (int)$id;
+    $channels = intercom_common_channels();
+    return (isset($channels[$id]) ? $channels[$id] : NULL);
+}
+
+function intercom_common_channel_name($id)
+{
+    global $Dictionnary;
+
+    $channel = intercom_common_channel_definition($id);
+    if ($channel == NULL)
+        return ("common#".(int)$id);
+    if (isset($channel["name_key"])
+        && isset($Dictionnary[$channel["name_key"]])
+        && strlen($Dictionnary[$channel["name_key"]]))
+        return ($Dictionnary[$channel["name_key"]]);
+    return ($channel["codename"]);
+}
+
+function intercom_common_channel_description($id)
+{
+    global $Dictionnary;
+
+    $channel = intercom_common_channel_definition($id);
+    if ($channel == NULL)
+        return ("");
+    if (isset($channel["description_key"])
+        && isset($Dictionnary[$channel["description_key"]])
+        && strlen($Dictionnary[$channel["description_key"]]))
+        return ($Dictionnary[$channel["description_key"]]);
+    return ("");
+}
+
+function intercom_school_row($id_school)
+{
+    global $Language;
+
+    $id_school = (int)$id_school;
+    return (db_select_one("
+        id,
+        codename,
+        $Language"."_name as name
+        FROM school
+        WHERE id = $id_school
+          AND (deleted IS NULL OR deleted = 0)
+    "));
+}
+
+function intercom_school_name($id_school)
+{
+    $school = intercom_school_row($id_school);
+    if ($school == NULL)
+        return ("school#".(int)$id_school);
+    if (isset($school["name"]) && strlen($school["name"]))
+        return ($school["name"]);
+    return ($school["codename"]);
+}
+
+function intercom_school_staff_access($id_school)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    $uid = (int)$User["id"];
+    $id_school = (int)$id_school;
+    if ($id_school <= 0)
+        return (false);
+    if (db_select_one("
+        id FROM user_school
+        WHERE id_user = $uid
+          AND id_school = $id_school
+          AND authority > 0
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        cycle_teacher.id
+        FROM cycle_teacher
+        LEFT JOIN school_cycle ON school_cycle.id_cycle = cycle_teacher.id_cycle
+        LEFT JOIN user_laboratory as cycle_laboratory
+          ON cycle_laboratory.id_laboratory = cycle_teacher.id_laboratory
+         AND cycle_laboratory.id_user = $uid
+         AND cycle_laboratory.authority >= 1
+        WHERE school_cycle.id_school = $id_school
+          AND (cycle_teacher.id_user = $uid OR cycle_laboratory.id_user = $uid)
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        activity_teacher.id
+        FROM activity_teacher
+        LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity_teacher.id_activity
+        LEFT JOIN school_cycle ON school_cycle.id_cycle = activity_cycle.id_cycle
+        LEFT JOIN user_laboratory as activity_laboratory
+          ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND activity_laboratory.id_user = $uid
+         AND activity_laboratory.authority >= 1
+        WHERE school_cycle.id_school = $id_school
+          AND (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        user_laboratory.id
+        FROM user_laboratory
+        LEFT JOIN school_laboratory
+          ON school_laboratory.id_laboratory = user_laboratory.id_laboratory
+        WHERE user_laboratory.id_user = $uid
+          AND user_laboratory.authority >= 1
+          AND school_laboratory.id_school = $id_school
+    ") != NULL)
+        return (true);
+    return (false);
+}
+
+function intercom_school_access($id_school)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    $uid = (int)$User["id"];
+    $id_school = (int)$id_school;
+    if (db_select_one("
+        id FROM user_school
+        WHERE id_user = $uid
+          AND id_school = $id_school
+    ") != NULL)
+        return (true);
+    if (db_select_one("
+        user_cycle.id
+        FROM user_cycle
+        LEFT JOIN school_cycle ON school_cycle.id_cycle = user_cycle.id_cycle
+        WHERE user_cycle.id_user = $uid
+          AND school_cycle.id_school = $id_school
+    ") != NULL)
+        return (true);
+    return (intercom_school_staff_access($id_school));
+}
+
+function intercom_can_moderate_school($id_school)
+{
+    if (is_admin())
+        return (true);
+    if (function_exists("is_director_for_school") && is_director_for_school($id_school))
+        return (true);
+    return (intercom_school_staff_access($id_school));
+}
+
+function intercom_context_name($misc_type, $id_misc)
+{
+    global $Language;
+
+    $id_misc = (int)$id_misc;
+    if ($misc_type == "common")
+        return (intercom_common_channel_name($id_misc));
+    if ($misc_type == "school")
+        return ("École — ".intercom_school_name($id_misc));
+    if ($misc_type == "school_staff")
+        return ("Équipe — ".intercom_school_name($id_misc));
+    if ($misc_type == "team")
+    {
+	$team = db_select_one("team_name FROM team WHERE id = $id_misc");
+	if ($team && @strlen($team["team_name"]))
+	    return ($team["team_name"]);
+	return ("team#$id_misc");
+    }
+    if ($misc_type == "user")
+    {
+	$user = db_select_one("nickname, codename FROM user WHERE id = $id_misc");
+	if ($user == NULL)
+	    return ("user#$id_misc");
+	if (@strlen($user["nickname"]))
+	    return ($user["nickname"]);
+	return ($user["codename"]);
+    }
+    if ($misc_type == "activity")
+    {
+	$field = $Language."_name";
+	$activity = db_select_one("$field as name, codename FROM activity WHERE id = $id_misc");
+	if ($activity == NULL)
+	    return ("activity#$id_misc");
+	if (@strlen($activity["name"]))
+	    return ($activity["name"]);
+	return ($activity["codename"]);
+    }
+    if (is_symbol($misc_type)
+	&& ($row = db_select_one("* FROM `$misc_type` WHERE id = $id_misc")) != NULL)
+    {
+	if (isset($row[$Language."_name"]) && @strlen($row[$Language."_name"]))
+	    return ($row[$Language."_name"]);
+	if (isset($row["name"]) && @strlen($row["name"]))
+	    return ($row["name"]);
+	if (isset($row["codename"]) && @strlen($row["codename"]))
+	    return ($row["codename"]);
+    }
+    return ($misc_type."#".$id_misc);
+}
+
+function intercom_activity_visible_to_current_user($id_activity, $visibility)
+{
+    $id_activity = (int)$id_activity;
+    if ($visibility == INTERCOM_ADMIN)
+    {
+	if (is_teacher_or_director_for_activity($id_activity)
+	    || is_assistant_for_activity($id_activity))
+	    return (true);
+    }
+    else if (is_subscribed_or_assistant($id_activity))
+	return (true);
+
+    foreach (db_select_all("
+        id
+        FROM activity
+        WHERE id_template = $id_activity
+           OR reference_activity = $id_activity
+           OR parent_activity = $id_activity
+        LIMIT 100
+    ") as $activity)
+    {
+	if ($visibility == INTERCOM_ADMIN)
+	{
+	    if (is_teacher_or_director_for_activity($activity["id"])
+		|| is_assistant_for_activity($activity["id"]))
+		return (true);
+	}
+	else if (is_subscribed_or_assistant($activity["id"]))
+	    return (true);
+    }
+    return (false);
+}
+
+function intercom_team_visible_to_current_user($id_team, $visibility)
+{
+    if ($visibility == INTERCOM_ADMIN)
+	return (is_assistant_for_team($id_team));
+    return (is_my_team($id_team) || is_assistant_for_team($id_team));
+}
+
+function intercom_subject_visible($subject)
+{
+    global $User;
+
+    $visibility = $subject["visibility"];
+    if ($visibility === NULL)
+	$visibility = INTERCOM_PUBLIC;
+
+    if ($subject["misc_type"] == "user")
+    {
+	if ($visibility == INTERCOM_PRIVATE)
+	    return ($subject["id_user"] == $User["id"] || $subject["id_misc"] == $User["id"]);
+	if ($visibility == INTERCOM_ADMIN)
+	    return (is_director_for_student($subject["id_misc"])
+		|| is_cycle_director_for_student($subject["id_misc"])
+		|| is_teacher_for_student($subject["id_misc"]));
+	return (true);
+    }
+    if ($subject["misc_type"] == "activity")
+	return (intercom_activity_visible_to_current_user($subject["id_misc"], $visibility));
+    if ($subject["misc_type"] == "team")
+	return (intercom_team_visible_to_current_user($subject["id_misc"], $visibility));
+    if ($visibility == INTERCOM_ADMIN)
+	return (is_admin());
+    return (true);
+}
+
+function intercom_mark_subject_read($id_subject)
+{
+    global $Database;
+    global $User;
+
+    $id_subject = (int)$id_subject;
+    $Database->query("\n        UPDATE message_user\n        SET view_date = NOW()\n        WHERE id_user = {$User["id"]}\n          AND id_message = $id_subject\n    ");
+    if ($Database->affected_rows == 0)
+	$Database->query("\n            INSERT INTO message_user (id_user, id_message, view_date)\n            VALUES ({$User["id"]}, $id_subject, NOW())\n        ");
+}
+
 function sort_by_last_message($a, $b)
 {
     return (
@@ -15,7 +372,7 @@ function get_intercomf($misc_type, $id_misc, $conf = [])
 	"id_subject" => -1,
 	"recursive" => false,
 	"page" => 0,
-	"page_size" => 10
+	"page_size" => 10,
     ];
     $cnf = array_merge($cnf, $conf);
     return (get_intercom(
@@ -23,8 +380,355 @@ function get_intercomf($misc_type, $id_misc, $conf = [])
 	$cnf["id_subject"],
 	$cnf["recursive"],
 	$cnf["page"],
-	$cnf["page_size"],
+	$cnf["page_size"]
     ));
+}
+
+
+
+function intercom_message_is_root($message)
+{
+    return (!isset($message["id_message"])
+        || $message["id_message"] == NULL
+        || (int)$message["id_message"] == -1);
+}
+
+function intercom_context_from_message($message)
+{
+    if ($message == NULL)
+        return (NULL);
+    if (!intercom_message_is_root($message))
+    {
+        $root = db_select_one("* FROM message WHERE id = ".((int)$message["id_message"]));
+        if ($root != NULL)
+            return ($root);
+    }
+    return ($message);
+}
+
+
+function intercom_laboratory_authority_for_current_user($id_laboratory)
+{
+    global $User;
+
+    if (!$User)
+        return (0);
+    if (is_admin())
+        return (3);
+    $id_laboratory = (int)$id_laboratory;
+    $row = db_select_one("
+        authority
+        FROM user_laboratory
+        WHERE id_user = ".((int)$User["id"])."
+          AND id_laboratory = $id_laboratory
+    ");
+    if ($row == NULL)
+        return (0);
+    return ((int)$row["authority"]);
+}
+
+function intercom_can_moderate_laboratory($id_laboratory)
+{
+    return (intercom_laboratory_authority_for_current_user($id_laboratory) >= 2);
+}
+
+function intercom_can_moderate_team($id_team)
+{
+    $id_team = (int)$id_team;
+    if (function_exists("is_assistant_for_team") && is_assistant_for_team($id_team))
+        return (true);
+    $team = db_select_one("id_activity FROM team WHERE id = $id_team");
+    if ($team == NULL)
+        return (false);
+    return (intercom_can_moderate_context("activity", $team["id_activity"]));
+}
+
+function intercom_can_moderate_context($misc_type, $id_misc)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    $id_misc = (int)$id_misc;
+    if ($misc_type == "common")
+        return (is_admin());
+    if ($misc_type == "school")
+        return (intercom_can_moderate_school($id_misc));
+    if ($misc_type == "school_staff")
+        return (intercom_school_staff_access($id_misc));
+    if ($misc_type == "activity")
+        return (is_teacher_or_director_for_activity($id_misc)
+            || is_assistant_for_activity($id_misc));
+    if ($misc_type == "session")
+        return (is_teacher_or_director_for_session($id_misc)
+            || is_assistant_for_session($id_misc));
+    if ($misc_type == "cycle")
+        return (is_director_for_cycle($id_misc));
+    if ($misc_type == "laboratory")
+        return (intercom_can_moderate_laboratory($id_misc));
+    if ($misc_type == "team")
+        return (intercom_can_moderate_team($id_misc));
+    if ($misc_type == "user")
+        return (is_director_for_student($id_misc)
+            || is_cycle_director_for_student($id_misc)
+            || is_teacher_for_student($id_misc));
+    return (false);
+}
+
+function intercom_can_moderate_message($id_message)
+{
+    $message = db_select_one("* FROM message WHERE id = ".((int)$id_message));
+    if ($message == NULL)
+        return (false);
+    $context = intercom_context_from_message($message);
+    if ($context == NULL)
+        return (false);
+    return (intercom_can_moderate_context($context["misc_type"], $context["id_misc"]));
+}
+
+function intercom_message_is_moderated($message)
+{
+    if (isset($message["is_moderated"]))
+        return ((bool)$message["is_moderated"]);
+    if (!isset($message["id"]))
+        return (false);
+    return (db_select_one("
+        id FROM message_report
+        WHERE id_message = ".((int)$message["id"])."
+        AND status = -1
+    ") != NULL);
+}
+
+function intercom_report_count($id_message)
+{
+    $report = db_select_one("
+        COUNT(*) as cnt FROM message_report
+        WHERE id_message = ".((int)$id_message)."
+        AND status = 0
+    ");
+    if ($report == NULL)
+        return (0);
+    return ((int)$report["cnt"]);
+}
+
+function intercom_reported_by_user($id_message)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (db_select_one("
+        id FROM message_report
+        WHERE id_message = ".((int)$id_message)."
+        AND id_user = ".((int)$User["id"])."
+        AND status = 0
+    ") != NULL);
+}
+
+function intercom_prepare_message_for_display(&$message)
+{
+    global $Dictionnary;
+
+    $context = intercom_context_from_message($message);
+    if ($context == NULL)
+        return ;
+    $can_moderate = intercom_can_moderate_context($context["misc_type"], $context["id_misc"]);
+    $message["can_moderate"] = $can_moderate;
+    $message["is_moderated"] = intercom_message_is_moderated($message);
+    $message["reported_by_user"] = intercom_reported_by_user($message["id"]);
+    $message["report_count"] = $can_moderate ? intercom_report_count($message["id"]) : 0;
+    $message["hidden_for_viewer"] = $message["is_moderated"] && !$can_moderate;
+    if ($message["hidden_for_viewer"])
+    {
+        // Fallback defensif: les templates recents sautent entierement ces messages.
+        // Ces libelles ne doivent donc apparaitre que si un vieux fragment les rend encore.
+        if (isset($message["title"]))
+            $message["title"] = $Dictionnary["ModeratedIntercomSubject"];
+        if (isset($message["message"]))
+            $message["message"] = $Dictionnary["ModeratedIntercomMessage"];
+    }
+}
+
+
+
+function intercom_message_hidden_for_viewer($message)
+{
+    if (!isset($message["id"]))
+        return (false);
+    if (isset($message["can_moderate"]) && $message["can_moderate"])
+        return (false);
+    if (isset($message["hidden_for_viewer"]) && $message["hidden_for_viewer"])
+        return (true);
+    if (!intercom_message_is_moderated($message))
+        return (false);
+    return (!intercom_can_moderate_message($message["id"]));
+}
+
+function intercom_filter_hidden_messages_for_viewer(&$subject)
+{
+    $viewer_can_moderate = false;
+    if (isset($subject["id"]))
+        $viewer_can_moderate = intercom_can_moderate_message($subject["id"]);
+    else if (isset($subject["can_moderate"]))
+        $viewer_can_moderate = $subject["can_moderate"];
+    if ($viewer_can_moderate)
+        return ;
+
+    if (isset($subject["message"]) && is_array($subject["message"]))
+    {
+        $messages = [];
+        foreach ($subject["message"] as $message)
+        {
+            if (isset($message["hidden_for_viewer"]) && $message["hidden_for_viewer"])
+                continue ;
+            $messages[] = $message;
+        }
+        $subject["message"] = $messages;
+    }
+
+    if (!isset($subject["id"]))
+        return ;
+
+    $id_parent = (int)$subject["id"];
+    $visible_count = db_select_one("
+        COUNT(*) as cnt
+        FROM message
+        WHERE id_message = $id_parent
+          AND NOT EXISTS (
+              SELECT id
+              FROM message_report
+              WHERE message_report.id_message = message.id
+                AND message_report.status = -1
+          )
+    ");
+    if ($visible_count != NULL)
+        $subject["nbr_message"] = (int)$visible_count["cnt"];
+
+    $visible_last = db_select_one("
+        id, post_date, id_user
+        FROM message
+        WHERE id_message = $id_parent
+          AND NOT EXISTS (
+              SELECT id
+              FROM message_report
+              WHERE message_report.id_message = message.id
+                AND message_report.status = -1
+          )
+        ORDER BY post_date DESC, id DESC
+    ");
+    if ($visible_last != NULL)
+    {
+        $subject["last_post"] = $visible_last;
+        $subject["last_message_id"] = (int)$visible_last["id"];
+    }
+    else
+    {
+        $subject["last_post"] = [
+            "id" => $subject["id"],
+            "id_user" => $subject["id_user"],
+            "post_date" => $subject["post_date"],
+        ];
+        $subject["last_message_id"] = (int)$subject["id"];
+    }
+}
+
+function intercom_report_message($id_message, $reason = "")
+{
+    global $Database;
+    global $User;
+
+    if (!$User)
+        return (new ErrorResponse("Forbidden"));
+    $id_message = (int)$id_message;
+    if (($message = db_select_one("* FROM message WHERE id = $id_message")) == NULL)
+        return (new ErrorResponse("NotFound"));
+    if (intercom_can_moderate_message($id_message))
+        return (new ErrorResponse("ModeratorCannotReport"));
+    if (intercom_message_is_moderated($message))
+        return (new ErrorResponse("MessageAlreadyModerated"));
+    $reason = trim(strip_tags($reason));
+    $reason = $Database->real_escape_string($reason);
+    $check = db_select_one("
+        id FROM message_report
+        WHERE id_message = $id_message
+        AND id_user = ".((int)$User["id"])."
+        AND status = 0
+    ");
+    if ($check == NULL)
+        $Database->query("
+            INSERT INTO message_report (id_message, id_user, status, reason, postdate)
+            VALUES ($id_message, ".((int)$User["id"]).", 0, '$reason', NOW())
+        ");
+    else
+        $Database->query("
+            UPDATE message_report
+            SET reason = '$reason', postdate = NOW()
+            WHERE id = ".((int)$check["id"])."
+        ");
+    return (new ValueResponse(["msg" => "MessageReported"]));
+}
+
+
+function intercom_close_message_reports($id_message)
+{
+    global $Database;
+
+    $id_message = (int)$id_message;
+    if (!intercom_can_moderate_message($id_message))
+        return (new ErrorResponse("Forbidden"));
+    if (db_select_one("id FROM message WHERE id = $id_message") == NULL)
+        return (new ErrorResponse("NotFound"));
+    $Database->query("
+        UPDATE message_report SET status = 3
+        WHERE id_message = $id_message
+        AND status = 0
+    ");
+    return (new ValueResponse(["msg" => "IntercomReportsClosed"]));
+}
+
+function intercom_set_message_moderation($id_message, $moderated)
+{
+    global $Database;
+    global $User;
+
+    $id_message = (int)$id_message;
+    if (!intercom_can_moderate_message($id_message))
+        return (new ErrorResponse("Forbidden"));
+    if (db_select_one("id FROM message WHERE id = $id_message") == NULL)
+        return (new ErrorResponse("NotFound"));
+    if ($moderated)
+    {
+        $check = db_select_one("
+            id FROM message_report
+            WHERE id_message = $id_message
+            AND status = -1
+        ");
+        if ($check == NULL)
+            $Database->query("
+                INSERT INTO message_report (id_message, id_user, status, reason, postdate)
+                VALUES ($id_message, ".((int)$User["id"]).", -1, 'moderated', NOW())
+            ");
+        else
+            $Database->query("
+                UPDATE message_report
+                SET id_user = ".((int)$User["id"]).", postdate = NOW()
+                WHERE id = ".((int)$check["id"])."
+            ");
+        $Database->query("
+            UPDATE message_report SET status = 1
+            WHERE id_message = $id_message
+            AND status = 0
+        ");
+    }
+    else
+        $Database->query("
+            UPDATE message_report SET status = 2
+            WHERE id_message = $id_message
+            AND status = -1
+        ");
+    return (new ValueResponse(["msg" => $moderated ? "MessageModerated" : "MessageRestored"]));
 }
 
 function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false, $page = NULL, $page_size = NULL)
@@ -32,59 +736,41 @@ function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false
     global $User;
     global $Database;
 
-    $misc_type = $Database->real_escape_string($misc_type);
+    $misc_type = intercom_escape($misc_type);
     $id_misc = (int)$id_misc;
     $id_subject = (int)$id_subject;
+    $subject_filter = $id_subject != -1 ? " AND message.id = $id_subject " : "";
 
-    if ($id_subject != -1)
-	$id_subject = " AND message.id = $id_subject ";
-    else
-	$id_subject = "";
-
-    if ($page !== NULL && $page_size !== NULL)
-    {
-	$page = (int)$page;
-	$page_size = (int)$page_size;
-	if ($page < 0)
-	{ // On récupère la dernière page
-	    $cnt = db_select_one("
-		  COUNT(*) as cnt FROM message LEFT JOIN message_user
-                  ON message_user.id_user = {$User["id"]}
-                  AND message_user.id_message = message.id
-                  WHERE message.misc_type = '$misc_type'
-                  AND message.id_misc = $id_misc
-                  AND message.id_message IS NULL
-                 $id_subject
-		  ");
-	    $page = (int)($cnt["cnt"] / $page_size);
-	    if ($cnt["cnt"] % $page_size == 0 && $page > 0)
-		$page -= 1;
-	}
-	$page *= $page_size;
-    }
-    else
+    if ($page === NULL || $page_size === NULL)
     {
 	$page = 0;
 	$page_size = 10;
     }
-    $pagesql = " LIMIT $page, $page_size ";
+    $page = (int)$page;
+    $page_size = max(1, (int)$page_size);
 
-    $subjectsx = db_select_all("
-	message.*, message_user.view_date FROM message
-        LEFT JOIN message_user
-          ON message_user.id_user = {$User["id"]}
-          AND message_user.id_message = message.id
-        WHERE message.misc_type = '$misc_type'
-        AND message.id_misc = $id_misc
-        AND message.id_message IS NULL
-        $id_subject
-        $pagesql
-	  ");
+    if ($page < 0)
+    {
+	if ($id_subject != -1)
+	    $cnt = db_select_one("\n                COUNT(*) as cnt\n                FROM message\n                WHERE message.id_message = $id_subject\n            ")["cnt"];
+	else
+	    $cnt = db_select_one("\n                COUNT(*) as cnt\n                FROM message\n                WHERE message.misc_type = '$misc_type'\n                  AND message.id_misc = $id_misc\n                  AND message.id_message IS NULL\n                  $subject_filter\n            ")["cnt"];
+	$page = (int)($cnt / $page_size);
+	if ($cnt % $page_size == 0 && $page > 0)
+	    $page -= 1;
+    }
+    $offset = $page * $page_size;
+    $pagesql = " LIMIT $offset, $page_size ";
 
-    $nbr_post = db_select_one("
-        COUNT(*) as cnt FROM message WHERE id_message IS NULL
-    ")["cnt"];
-    
+    $view_join = "\n        LEFT JOIN (\n            SELECT id_message, MAX(view_date) as view_date\n            FROM message_user\n            WHERE id_user = {$User["id"]}\n            GROUP BY id_message\n        ) as message_user\n          ON message_user.id_message = message.id\n    ";
+
+    $subjectsx = db_select_all("\n        message.*, message_user.view_date\n        FROM message\n        $view_join\n        WHERE message.misc_type = '$misc_type'\n          AND message.id_misc = $id_misc\n          AND message.id_message IS NULL\n          $subject_filter\n        ORDER BY COALESCE((\n            SELECT MAX(child.post_date)\n            FROM message as child\n            WHERE child.id_message = message.id\n        ), message.post_date) DESC\n        $pagesql\n    ");
+
+    if ($id_subject != -1 && $recursive)
+	$nbr_post = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE message.id_message = $id_subject\n        ")["cnt"];
+    else
+	$nbr_post = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE message.misc_type = '$misc_type'\n              AND message.id_misc = $id_misc\n              AND message.id_message IS NULL\n              $subject_filter\n        ")["cnt"];
+
     $labs = [];
     foreach (get_user_laboratories($User)["laboratories"] as $lab)
 	$labs[$lab["id"]] = true;
@@ -93,195 +779,96 @@ function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false
     $subjects = [];
     foreach ($subjectsx as $subject)
     {
-	if ($misc_type == "user")
-	{
-	    if ($subject["visibility"] == INTERCOM_PRIVATE)
-	    {
-		if ($subject["id_user"] != $User["id"]
-		    && $subject["id_misc"] != $User["id"])
-		    continue ;
-	    }
-	    else if ($subject["visibility"] == INTERCOM_ADMIN)
-	    {
-		if (!is_director_for_student($subject["id_misc"])
-		    && !is_cycle_director_for_student($subject["id_misc"])
-		    && !is_teacher_for_student($subject["id_misc"]))
-		continue ;
-	    }
-	}
-
-	if (!is_admin() && $subject["id_laboratory"] != NULL && !isset($labs[$subject["id_laboratory"]]))
+	if (!intercom_subject_visible($subject))
 	    continue ;
-	$id_parent = $subject["id"];
-	if ($page == 0)
-	    $subject["message"] = [$subject];
-	else
-	    $subject["message"] = [];
+	if (!is_admin()
+	    && $subject["id_laboratory"] !== NULL
+	    && !isset($labs[$subject["id_laboratory"]]))
+	    continue ;
+
+	$id_parent = (int)$subject["id"];
+	$subject["message"] = ($offset == 0) ? [$subject] : [];
 	if ($recursive)
 	{
-	    $subject["message"] = array_merge($subject["message"], db_select_all("
-                  * FROM message WHERE id_message = $id_parent
-                  ORDER BY post_date ASC
-              $pagesql
-	    "));
-	    if ($subject["view_date"] == NULL)
-		$Database->query("
-		    INSERT INTO message_user (id_user, id_message) VALUES
-		    ({$User["id"]}, {$subject["id"]})
-		    ");
-	    else
-		$Database->query("
-		    UPDATE message_user SET view_date = NOW()
-		    WHERE id_user = {$User["id"]} AND id_message = {$subject["id"]}
-		    ");
+	    $subject["message"] = array_merge($subject["message"], db_select_all("\n                *\n                FROM message\n                WHERE id_message = $id_parent\n                ORDER BY post_date ASC\n                $pagesql\n            "));
+	    intercom_mark_subject_read($id_parent);
 	}
-	if (($subject["nbr_message"] = db_select_one("
-            COUNT(*) as cnt FROM message WHERE id_message = $id_parent
-	")["cnt"]))
-	    $subject["last_post"] = db_select_one("
-                post_date, id_user FROM message WHERE id_message = $id_parent
-                ORDER BY post_date DESC
-	    ");
+	$subject["nbr_message"] = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE id_message = $id_parent\n        ")["cnt"];
+	if ($subject["nbr_message"])
+	{
+	    $subject["last_post"] = db_select_one("\n                id, post_date, id_user\n                FROM message\n                WHERE id_message = $id_parent\n                ORDER BY post_date DESC, id DESC\n            ");
+	    $subject["last_message_id"] = (int)$subject["last_post"]["id"];
+	}
 	else
+	{
 	    $subject["last_post"] = [
+		"id" => $subject["id"],
 		"id_user" => $subject["id_user"],
-		"post_date" => $subject["post_date"]
+		"post_date" => $subject["post_date"],
 	    ];
+	    $subject["last_message_id"] = (int)$subject["id"];
+	}
 
-	$content_hash .= $subject["id"].$subject["nbr_message"];
+	$content_hash .= $subject["id"]."/".$subject["nbr_message"]."/".$subject["last_post"]["post_date"]."/".$subject["last_message_id"];
+	if (!$recursive)
+	    if (function_exists("intercom_prepare_message_for_display"))
+	    {
+	    	foreach ($subject["message"] as &$message)
+	    		intercom_prepare_message_for_display($message);
+	    	unset($message);
+	    	intercom_prepare_message_for_display($subject);
+        intercom_filter_hidden_messages_for_viewer($subject);
+    /* intercom_hidden_root_subject_filter */
+    if (isset($subject["is_moderated"]) && $subject["is_moderated"]
+        && (!isset($subject["can_moderate"]) || !$subject["can_moderate"]))
+        continue ;
+	    }
 
-	$subject["page"] = $page / $page_size;
+	    $content_hash .=
+	    	$subject["id"]."/".
+	    	$subject["nbr_message"]."/".
+	    	$subject["last_post"]["post_date"]."/".
+	    	$subject["last_message_id"]."/".
+	    	(isset($subject["is_moderated"]) && $subject["is_moderated"] ? 1 : 0)."/".
+	    	(isset($subject["reported_by_user"]) && $subject["reported_by_user"] ? 1 : 0)."/".
+	    	(isset($subject["report_count"]) ? (int)$subject["report_count"] : 0);
+	    if (!$recursive)
+	    	$content_hash .= "/".$subject["view_date"];
+	    foreach ($subject["message"] as $message)
+	    	$content_hash .=
+	    	    "/".$message["id"].".".
+	    	    (isset($message["is_moderated"]) && $message["is_moderated"] ? 1 : 0).".".
+	    	    (isset($message["reported_by_user"]) && $message["reported_by_user"] ? 1 : 0).".".
+	    	    (isset($message["report_count"]) ? (int)$message["report_count"] : 0);
+
+	$subject["page"] = $page;
 	$subject["page_size"] = $page_size;
-	$subject["on_last_page"] = ($subject["page"] + 1) * $subject["page_size"] >= $subject["nbr_message"];
+	$subject["on_last_page"] = ($offset + $page_size) >= $subject["nbr_message"];
+	$subject["page_count"] = max(1, (int)ceil(max(1, (int)$subject["nbr_message"]) / $page_size));
 	$subjects[] = $subject;
     }
 
     uasort($subjects, "sort_by_last_message");
-    
+    $subjects = array_values($subjects);
+
     return ([
 	"id_misc" => $id_misc,
 	"misc_type" => $misc_type,
-	"name" => $misc_type."#".get_codename($misc_type, $id_misc),
+	"name" => intercom_context_name($misc_type, $id_misc),
 	"subjects" => $subjects,
 	"content_hash" => hash("md5", $content_hash),
-	"page" => $page / $page_size,
+	"page" => $page,
 	"page_size" => $page_size,
-	"on_last_page" => ($page / $page_size) * $page_size >= $nbr_post
+	"on_last_page" => ($offset + $page_size) >= $nbr_post,
     ]);
 }
 
 function intercom_get($table, $id_misc, $ref = -1, $id = -1)
 {
-    global $Database;
-    global $User;
-    global $Language;
-    global $OriginalUser;
-
     if (($id_misc = resolve_codename($table, $id_misc))->is_error())
 	return ($id_misc);
-    $id_misc = $id_misc->value;
-    if (!is_number($ref))
-	return (new ErrorResponse("InvalidParameter", $ref));
-    $labs = db_select_all("id_laboratory FROM user_laboratory WHERE id_user = {$User["id"]}", "id_laboratory");
-    if ($table == "user")
-    {
-	if (!($ret = resolve_codename($table, $id_misc))->is_error())
-	    $ret = $ret->value;
-	else
-	    $ret = -1;
-    }
-    else
-	$ret = -1;
-
-    if ($id != -1)
-	$id = " AND message.id = $id ";
-    else
-	$id = " AND message.id_message = $ref GROUP BY message.id";
-
-    if ($ref == -1)
-	$order = "DESC";
-    else
-	$order = "ASC";
-
-    $topic = [];
-    $tmp = db_select_all("
-      message.*,
-      author.id as aid, author.salt as asalt,
-      author.nickname as nickname, author.codename as codename,
-      target.id as tid, target.salt as tsalt
-      FROM message
-      LEFT OUTER JOIN user as author ON author.id = message.id_user
-      LEFT OUTER JOIN user as target ON target.id = message.id_misc
-      WHERE misc_type = '$table'
-        AND id_misc = '$id_misc'
-        $id
-      ORDER BY visibility $order
-    ");
-
-    foreach ($tmp as $t)
-    {
-	if ($ref == -1)
-	{
-	    // On est à la racine.
-	    if ($t["id_laboratory"] != -1 && !isset($labs[$t["id_laboratory"]]))
-		continue ;
-	    if ($t["visibility"] == 3 && !is_admin())
-		continue ;
-	    if ($t["visibility"] == 2 && $t["id_user"] != $OriginalUser["id"] && $ret != $OriginalUser["id"])
-		continue ;
-	    if ($t["status"] == 0 && isset($t["id_status"]))
-	    {
-		$Database->query("
-                  UPDATE message_alert
-                  SET status = 1
-                  WHERE id = {$t["id_status"]}
-		  ");
-	    }
-	}
-	else
-	{
-	    // On est dans un sujet. On regarde le sujet racine pour voir ses droits d'accès.
-	    $top = intercom_get($table, $id_misc, -1, $t["id_message"]);
-	    // Si on l'a pas, c'est qu'on y a pas le droit...
-	    if ($top->is_error() || !isset($top->value[0]))
-		continue ;
-	    $t["visibility"] = $top->value[0]["visibility"];
-	    $t["id_laboratory"] = $top->value[0]["id_laboratory"];
-	    if ($top->value[0]["status"] != 2)
-	    {
-		if (isset($top->value[0]["id_status"]))
-		    $Database->query("
-                      UPDATE message_alert
-                      SET status = 2
-                      WHERE id = {$top->value[0]["id_status"]}
-		      ");
-		else
-		    $Database->query("
-                      INSERT INTO message_alert (id_message, id_user, status)
-                      VALUES ({$t["id"]}, {$User["id"]}, 2)
-		      ");
-	    }
-	}
-	if ($t["id_laboratory"] != -1)
-	    $t["laboratory"] = db_select_one(
-		"{$Language}_name as name FROM laboratory WHERE id = {$t["id_laboratory"]}");
-	$t["author"] = db_select_one("* FROM user WHERE id = {$t["id_user"]}");
-
-	if ($t["visibility"] > 1 || $t["id_laboratory"] != -1)
-	{
-	    $cipher = crc32($t["aid"].$t["asalt"]);
-	    $cipher .= crc32($t["tid"].$t["tsalt"]);
-	}
-	else
-	    $cipher = "";
-
-	if (@strlen($t["title"]))
-	    $t["title"] = get_secured_text($t["title"], $cipher);
-	if (@strlen($t["message"]))
-	    $t["message"] = get_secured_text($t["message"], $cipher);
-	$topic[] = $t;
-    }
-    return (new ValueResponse($topic));
+    $intercom = get_intercom($table, $id_misc->value, $id == -1 ? $ref : $id, $ref != -1);
+    return (new ValueResponse($intercom["subjects"]));
 }
 
 function intercom_add_com($table, $id_misc, $ref, $msg)
@@ -289,167 +876,67 @@ function intercom_add_com($table, $id_misc, $ref, $msg)
     global $Database;
     global $User;
 
+    if (($id_misc = resolve_codename($table, $id_misc))->is_error())
+	return ($id_misc);
+    $id_misc = (int)$id_misc->value;
+    $ref = (int)$ref;
     if ($ref == -1)
 	return (new ErrorResponse("NotAnId", $ref));
-    if (!is_symbol($table))
-	return (new ErrorResponse("BadCodeName", $table));
-    $ref = (int)$ref;
-    $id_misc = (int)$id_misc;
-
-    // Cipher message
-    $up = db_select_one("
-       message.*,
-       author.id as aid, author.salt as asalt,
-       target.id as tid, target.salt as tsalt
-       FROM message
-       LEFT OUTER JOIN user as author ON author.id = message.id_user
-       LEFT OUTER JOIN user as target ON target.id = message.id_misc
-       WHERE message.id = $ref
-    ");
-    if ($up["visibility"] > 1 || $up["id_laboratory"] != -1)
-    {
-	$cipher = crc32($up["aid"].$up["asalt"]);
-	$cipher .= crc32($up["tid"].$up["tsalt"]);
-    }
-    else
-	$cipher = "";
-    $msg = secure_text($msg, $cipher);
-    $Database->query("
-	INSERT INTO message
-	(position, id_user, id_misc, id_message, message, visibility)
-	VALUES
-	('$table', {$User["id"]}, $id_misc, $ref, '$msg', {$up["visibility"]})
-	");
-    $ret = new ValueResponse($Database->insert_id);
-    $Database->query("
-	UPDATE message SET lastdate = NOW() WHERE id = $ref
-    ");
-
-    // On va récupérer ceux dont il est pertinent qu'ils soient mis au courant du message
-    // Déjà, on liste ceux qui ont déja posté dans le forum
-    $users = [];
-    $posters = db_select_all("
-       id_user as id
-       FROM message
-       WHERE position = '$table' AND id_misc = $id_misc
-    ");
-    foreach ($posters as $v)
-    {
-	$users[$v["id"]] = " id = ".$v["id"];
-    }
-
-    // On prend ceux du laboratoire a qui est destiné le topic
-    if ($up["id_laboratory"] != -1)
-    {
-	$labos = db_select_all("id_user as id FROM user_laboratory WHERE user_laboratory.id_laboratory = {$up["id_laboratory"]}");
-	foreach ($labos as $v)
-	{
-	    $users[$v["id"]] = " id = ".$v["id"];
-	}
-    }
-
-    if ($table == "user") // C'est la page d'un utilisateur, il est donc concerné...
-	$specific = [["id" => $up["id_misc"]]];
-    else // C'est une autre page, donc... regardons du coté de user_$nompage
-	$specific = db_select_all("id_user as id FROM user_{$table} WHERE id_{$table} = {$up["id_misc"]}");
-    foreach ($specific as $v)
-    {
-	$users[$v["id"]] = " id = ".$v["id"];
-    }
-    if (count($users) == 0)
-	return ($ret);
-
-    // Maintenant on va filtrer ceux qui sont bannis ou sont pas venu depuis très longtemps
-    $users = implode($users, " OR ");
-    $users = db_select_all("
-       id FROM user
-       WHERE ( $users )
-         AND authority > 0
-         AND last_visit > NOW() - 60 * 60 * 24 * 365
-    ");
-    // Et enfin, on peut ajouter l'alerte nouveau message
-    foreach ($users as $usr)
-    {
-	$status = 0;
-	if ($User["id"] == $usr["id"])
-	    $status = 2;
-	// Dans tous les cas, on met l'alerte sur le TOPIC.
-	// Evidemment, si il y a deja un systeme d'alerte, on le met a jour.
-	$check = db_select_one("
-            * FROM message_alert
-            WHERE id_message = {$ret->value}
-            AND id_user = {$usr["id"]}
-	    ");
-	if ($check == NULL)
-	    $Database->query("
-		INSERT INTO message_alert (id_message, id_user, status)
-                VALUES ({$ret->value}, {$usr["id"]}, $status)
-		");
-	else
-	    $Database->query("
-                 UPDATE message_alert SET status = $status, postdate = NOW()
-                 WHERE id = {$check["id"]}
-		 ");
-	// Et si c'est une ANNONCE, on le met aussi sur le MESSAGE
-	// Pour que celui ci puisse etre traité seul, car il sera affiché sur le DASHBOARD
-	$Database->query("
-           INSERT INTO message_alert (id_message, id_user, status)
-                VALUES ($ref, {$usr["id"]}, $status)
-		");
-    }
-
-    return ($ret);
+    $up = db_select_one("\n        *\n        FROM message\n        WHERE id = $ref\n          AND id_message IS NULL\n    ");
+    if ($up == NULL || !intercom_subject_visible($up))
+	return (new ErrorResponse("IntercomDenied"));
+    $msg = intercom_message_text($msg);
+    if (strlen($msg) < 2)
+	return (new ErrorResponse("InvalidRequest"));
+    $Database->query("\n        INSERT INTO message\n        (id_user, id_laboratory, visibility, misc_type, id_misc, id_message, message)\n        VALUES\n        ({$User["id"]}, ".($up["id_laboratory"] === NULL ? "NULL" : (int)$up["id_laboratory"]).",\n         ".($up["visibility"] === NULL ? "NULL" : (int)$up["visibility"]).",\n         '{$up["misc_type"]}', {$up["id_misc"]}, $ref, '$msg')\n    ");
+    intercom_mark_subject_read($ref);
+    return (new ValueResponse($Database->insert_id));
 }
 
-function intercom_add_topic($table, $id_misc, $title, $msg, $visibility = 0, $labs = -1)
+function intercom_add_topic($table, $id_misc, $title, $msg, $visibility = NULL, $labs = NULL)
 {
     global $Database;
     global $User;
 
-    if (($visibility >= 4 || $visibility < 0))
+    if (($id_misc = resolve_codename($table, $id_misc))->is_error())
+	return ($id_misc);
+    $id_misc = (int)$id_misc->value;
+    if (($visibility = intercom_visibility($table, $visibility)) === NULL)
 	return (new ErrorResponse("InvalidParameter", $visibility));
-    if (($visibility == 1 || $visibility == 3) && !is_admin())
+    if ($visibility == INTERCOM_ADMIN && !is_admin())
 	return (new ErrorResponse("InvalidParameter", $visibility));
-    if ($visibility == 2 && $table != "user")
-	return (new ErrorResponse("InvalidParameter", $visibility));
-    if ($visibility > 1 || $labs != -1)
-    {
-	$author = db_select_one("* FROM user WHERE id = {$User["id"]}");;
-	$target = db_select_one("* FROM user WHERE id = ".((int)$id_misc)."");
-	$cipher = crc32($author["id"].$author["salt"]);
-	$cipher .= crc32($target["id"].$target["salt"]);
-    }
-    else
-	$cipher = "";
-    $title = secure_text($title, $cipher);
-    $Database->query("
-	INSERT INTO message
-	(position, id_user, id_laboratory, visibility, id_misc, title)
-	VALUES
-	('$table', {$User["id"]}, $labs, $visibility, $id_misc, '$title')
-	");
-    return (intercom_add_com($table, $id_misc, $Database->insert_id, $msg));
+    if (($labs = intercom_laboratory_sql($labs)) instanceof Response)
+	return ($labs);
+
+    $title = intercom_message_text(str_replace("\n", " ", $title));
+    $msg = intercom_message_text($msg);
+    if (strlen($title) < 3 || strlen($msg) < 2)
+	return (new ErrorResponse("InvalidRequest"));
+
+    $Database->query("\n        INSERT INTO message\n        (id_user, id_laboratory, visibility, misc_type, id_misc, id_message, title, message)\n        VALUES\n        ({$User["id"]}, $labs, $visibility, '$table', $id_misc, NULL, '$title', '$msg')\n    ");
+    $id_message = $Database->insert_id;
+    intercom_mark_subject_read($id_message);
+    return (new ValueResponse($id_message));
 }
 
 function intercom_handle_request($table, $id_misc)
 {
-    global $_POST;
-
-    if (!isset($_POST["action"]) || !isset($_POST["ref"]) || !isset($_POST["message"]))
-	return (new ErrorResponse("InvalidRequest"));
-    if ($_POST["action"] != "add_message" || strlen($_POST["message"]) < 2)
+    if (!isset($_POST["action"]))
+	return (new Response);
+    if ($_POST["action"] != "add_message" || !isset($_POST["ref"]) || !isset($_POST["message"]))
 	return (new ErrorResponse("InvalidRequest"));
     if ($_POST["ref"] == -1)
     {
-	if (!isset($_POST["title"]) || !isset($_POST["laboratory"]) || !isset($_POST["visibility"]))
+	if (!isset($_POST["title"]))
 	    return (new ErrorResponse("InvalidRequest"));
-	if ($_POST["laboratory"] == "")
-	    $lab = -1;
-	else if (($lab = resolve_codename("laboratory", $_POST["laboratory"]))->is_error())
-	    return ($lab);
-	else
-	    $lab = $lab->value;
-	return (intercom_add_topic($table, $id_misc, $_POST["title"], $_POST["message"], $_POST["visibility"], $lab));
+	return (intercom_add_topic(
+	    $table,
+	    $id_misc,
+	    $_POST["title"],
+	    $_POST["message"],
+	    try_get($_POST, "visibility", NULL),
+	    try_get($_POST, "laboratory", NULL)
+	));
     }
     return (intercom_add_com($table, $id_misc, $_POST["ref"], $_POST["message"]));
 }
@@ -457,175 +944,61 @@ function intercom_handle_request($table, $id_misc)
 function intercom_display($table, $id_misc, $public = false, $ref = -1, $labs = true)
 {
     global $Dictionnary;
+    global $User;
 
-    if ($ref == -1)
-	$colspan = $public ? 3 : 4;
+    if ($table == "common")
+    {
+        $id_misc = (int)$id_misc;
+        if (!function_exists("intercom_common_channel_definition")
+            || intercom_common_channel_definition($id_misc) == NULL)
+        {
+            echo $Dictionnary["IntercomIsCurrentlyNotAvailable"];
+            return (new ErrorResponse("IntercomDenied"));
+        }
+    }
     else
-	$colspan = 1;
-    if (($subjects = intercom_get($table, $id_misc, $ref))->is_error())
     {
-	echo $Dictionnary["IntercomIsCurrentlyNotAvailable"];
-	return ($subjects);
+        $resolve_table = $table == "school_staff" ? "school" : $table;
+        if (($ret = resolve_codename($resolve_table, $id_misc))->is_error())
+        {
+            echo $Dictionnary["IntercomIsCurrentlyNotAvailable"];
+            return ($ret);
+        }
+        $id_misc = (int)$ret->value;
     }
-    if ($ref != -1 && ($parent = intercom_get($table, $id_misc, -1, $ref))->is_error())
-    {
-	echo $Dictionnary["IntercomIsCurrentlyNotAvailable"];
-	return ($parent);
-    }
-    if ($ref != -1 && !isset($parent->value[0]["title"]))
+    $ref = try_get($_GET, "ref", $ref);
+    $ref = (int)$ref;
+    $intercom = get_intercomf($table, $id_misc, [
+	"id_subject" => $ref,
+	"recursive" => $ref != -1,
+	"page" => try_get($_GET, "page", 0),
+	"page_size" => 10,
+    ]);
+    if ($ref != -1 && count($intercom["subjects"]) == 0)
     {
 	echo $Dictionnary["IntercomDenied"];
 	return (new Response);
     }
-?>
-    <table style="width: 100%; text-align: center;">
-	<tr>
-	    <th colspan="<?=$colspan; ?>">
-		<?=$Dictionnary["Channel"]; ?> #<?=$id_misc; ?>
-		<?php if ($ref != -1) { ?>
-		    : <?=$parent->value[0]["title"]; ?>
-		    <a href="index.php?<?=unrollget(["ref" => NULL]); ?>">
-			&larr;
-		    </a>
-		<?php } ?>
-	    </th>
-	</tr>
-	<?php if ($ref == -1) { ?>
-	    <tr>
-		<th><?=$Dictionnary["Title"]; ?></th>
-		<th><?=$Dictionnary["Author"]; ?></th>
-		<?php if ($public == false) { ?>
-		    <th><?=$Dictionnary["Visibility"]; ?></th>
-		<?php } ?>
-		<th><?=$Dictionnary["LastModified"]; ?></th>
-	    </tr>
-	<?php } ?>
-
-	<?php if ($ref == -1) { ?>
-	    <?php foreach ($subjects->value as $sub) { ?>
-		<tr>
-		    <td>
-			<a
-			    href="index.php?<?=unrollget(["ref" => $sub["id"]]); ?>"
-			    style="line-height: 20px; text-decoration: none;"
-			>
-			    <div style="width: 100%; height: 100%; background-color: gray;">
-				<?php if ($sub["status"] == 0) { ?>
-				    <img src="./res/new_message.png" style="width: 20px; height: 20px; position: relative; top: 5px;" />
-				<?php } else if ($sub["status"] == 1) { ?>
-				    <img src="./res/unread_message.png" style="width: 20px; height: 20px; position: relative; top: 5px;" />
-				<?php } else { ?>
-				    <img src="./res/message.png" style="width: 20px; height: 20px; position: relative; top: 5px;" />
-				<?php } ?>
-				<?=$sub["title"]; ?>
-			    </div>
-			</a>
-		    </td>
-		    <td>
-			<a href="index.php?p=ProfileMenu&amp;a=<?=$sub["author"]["id"]; ?>">
-			    <?=$sub["author"]["codename"]; ?>
-			</a>
-		    </td>
-		    <?php if ($public == false) { ?>
-			<td>
-			    <?php $vis = ["Public", "Announcement", "PrivateMessage", "Administrative"]; ?>
-
-			    <?php if ($sub["id_laboratory"] != -1) { ?>
-				<?=$sub["laboratory"]["name"]; ?>
-			    <?php } else { ?>
-				<?=$Dictionnary[$vis[$sub["visibility"]]]; ?>
-			    <?php } ?>
-			</td>
-		    <?php } ?>
-		    <td><?=$sub["lastdate"]; ?></td>
-		</tr>
-	    <?php } ?>
-	    <tr>
-		<td>&nbsp;</td><td></td><td></td>
-		<?php if ($public == false) { ?>
-		    <td></td>
-		<?php } ?>
-	    </tr>
-	<?php } else { // INTERIEUR DU FORUM ?>
-	    <?php foreach ($subjects->value as $sub) { ?>
-		<tr>
-		    <td style="text-align: left; border: 1px solid black; position: relative;">
-			<div style="width: 120px; display: inline-block; text-align: left;">
-			    <?=strlen($sub["nickname"]) ? $sub["nickname"] : $sub["codename"]; ?>
-			    <?php display_avatar($sub, 100); ?>
-			</div>
-			<div style="display: inline-block; position: absolute; top: 0px;">
-			    <?=datex("d/m/Y H:i", date_to_timestamp($sub["lastdate"])); ?>
-			    <br />
-			    <?=$sub["message"]; ?>
-			</div>
-		    </td>
-		</tr>
-	    <?php } ?>
-	<?php } ?>
-
-
-	<tr>
-	    <td colspan="<?=$colspan; ?>" style="position: relative;">
-		<hr />
-		<p style="text-align: center;">
-		    <?=$Dictionnary["AddAnEntry"]; ?>
-		</p>
-		<form method="post" action="index.php?<?=unrollget(["ref" => $ref]); ?>">
-		    <input type="hidden" name="action" value="add_message" />
-		    <input type="hidden" name="ref" value="<?=$ref; ?>" />
-		    <div style="width: 90%; position: absolute; left: 0px;">
-			<?php if ($ref == -1) { ?>
-			    <input type="text"
-				   name="title"
-				   placeholder="<?=$Dictionnary["Title"]; ?>"
-				   style="width: 33%;"
-			    />
-			    <?php if ($labs != false) { ?>
-				<input
-				    type="text"
-				    name="laboratory"
-				    placeholder="<?=$Dictionnary["Laboratory"]; ?>"
-				    style="width: 33%;"
-				/>
-			    <?php } else { ?>
-				<input
-				    type="hidden"
-				    name="laboratory"
-				    value=""
-				/>
-			    <?php } ?>
-			    <?php if ($public == false) { ?>
-				<select
-				    name="visibility"
-					  style="width: 32%;"
-				>
-				    <option value="0"><?=$Dictionnary["Public"]; ?></option>
-				    <option value="2"><?=$Dictionnary["PrivateMessage"]; ?></option>
-				    <?php if (is_admin()) { ?>
-					<option value="1"><?=$Dictionnary["Annoucement"]; ?></option>
-					<option value="3"><?=$Dictionnary["Administrative"]; ?></option>
-				    <?php } ?>
-				</select>
-			    <?php } else { ?>
-				<input type="hidden" name="visibility" value="0" />
-			    <?php } ?>
-			<?php } ?>
-			<br />
-			<textarea
-			    name="message"
-			    style="width: 99%; height: 50px;"
-			></textarea>
-		    </div>
-		    <?php
-		    $height = ($ref == -1) ? 70 : 50;
-		    ?>
-		    <div style="width: 10%; position: absolute; right: 0px; height: <?=$height; ?>px;">
-			<input type="submit" value="+" style="width: 100%; height: 100%;" />
-		    </div>
-		</form>
-	    </td>
-	</tr>
-    </table>
-<?php
+    $intercom["div"] = $table."_".$id_misc."_intercom";
+    $intercom["base_url"] = "/api/intercom/".$intercom["id_misc"]."/".$intercom["misc_type"];
+    $intercom["default_visibility"] = $public ? INTERCOM_PUBLIC : intercom_visibility($table);
+    $intercom["allow_visibility"] = !$public && is_admin();
+    $intercom["allow_laboratory"] = $labs !== false;
+    ?>
+    <script>
+     setTimeout(check_update, 5000, "<?=$intercom["div"]; ?>");
+    </script>
+    <div
+	id="<?=$intercom["div"]; ?>"
+	style="position: relative; min-height: 360px; height: 55vh; width: 100%;"
+    >
+	<?php
+	if ($ref == -1)
+	    require ("./tools/template/intercom_subject_page.phtml");
+	else
+	    require ("./tools/template/intercom_message_page.phtml");
+	?>
+    </div>
+    <?php
+    return (new Response);
 }

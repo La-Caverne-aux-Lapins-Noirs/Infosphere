@@ -1,0 +1,22 @@
+<div style="width: 50px; height: 100%; position: absolute; top: 0px; left: 0px;">
+    <form
+	<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."'})"; ?>
+	method="get"
+	action="<?=$intercom["base_url"]; ?>"
+	onsubmit="return <?=$js; ?>"
+    >
+	<input
+	    type="button"
+	    value="&larr;"
+	    style="width: 40px; height: 30px; margin-top: 5px;"
+	    onclick="return <?=$js; ?>"
+	/>
+    </form>
+</div>
+<div style="width: 70%; height: 40px; position: absolute; top: 0px; left: 50px; display: table;">
+    <h5 style="display: table-cell; vertical-align: middle; font-size: large;">
+	<?=$intercom["name"]." - ".htmlentities($subject["title"]); ?>
+    </h5>
+</div>
+<?php $pbrowser = $subject; ?>
+<?php require ("intercom_page_browser.phtml"); ?>

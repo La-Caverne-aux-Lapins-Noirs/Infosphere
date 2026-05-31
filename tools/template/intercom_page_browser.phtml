@@ -3,7 +3,7 @@
     <?php if ($pbrowser["page"]) { ?>
 	<form
 	    method="get"
-	    action="<?=$action; ?>?page=<?=$pbrowser["page"] - 1; ?>"
+	    action="<?=intercom_api_url_html($intercom, isset($pbrowser["id"]) ? $pbrowser["id"] : NULL, ["page" => $pbrowser["page"] - 1]); ?>"
 	    onsubmit="return <?=$js; ?>"
 	    style="display: inline-block;"
 	>
@@ -32,7 +32,7 @@
     <?php if (!$pbrowser["on_last_page"]) { ?>
 	<form
 	    method="get"
-	    action="<?=$action; ?>?page=<?=$pbrowser["page"] + 1; ?>"
+	    action="<?=intercom_api_url_html($intercom, isset($pbrowser["id"]) ? $pbrowser["id"] : NULL, ["page" => $pbrowser["page"] + 1]); ?>"
 	    onsubmit="return <?=$js; ?>"
 	    style="display: inline-block;"
 	>
