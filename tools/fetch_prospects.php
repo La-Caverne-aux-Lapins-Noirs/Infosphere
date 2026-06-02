@@ -8,7 +8,7 @@ function fetch_prospects($attr = [], $id = -1)
 	$attr = [
 	    "id", "codename", "first_name", "family_name",
 	    "registration_date", "phone", "mail", "target_entry", "target_class",
-	    "current_class", "deleted"
+	    "current_class", "deleted", "password"
 	];
     if (!array_search("codename", $attr))
 	$attr[] = "codename";
@@ -26,7 +26,7 @@ function fetch_prospects($attr = [], $id = -1)
 	    $id = [$id];
     }
 
-    $select = " WHERE password = '' ";
+    $select = " WHERE prospect = 1 ";
     $select .= is_admin() ? "" : " AND authority != ".BANISHED." ";
     $select .= $id == -1  ? "" : " AND id IN (".implode(", ", $id).") ";
 
@@ -35,6 +35,9 @@ function fetch_prospects($attr = [], $id = -1)
         $forge FROM user $select ORDER BY codename ASC", "codename"
     );
     foreach ($students as &$s)
+    {
+	$s["password"] = $s["password"] != "";
 	get_user_school($s);
+    }
     return ($students);
 }

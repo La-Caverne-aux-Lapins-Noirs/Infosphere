@@ -6,6 +6,7 @@ $allowed_intercom_positions = [
     "cycle" => true,
     "activity" => true,
     "laboratory" => true,
+    "laboratory_public" => true,
     "team" => true,
     "school_staff" => true,
     "school" => true,

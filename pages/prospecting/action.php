@@ -1,3 +1,4 @@
+<?php $def_action = 0; ?>
 <?php foreach ($actions as $action) { ?>
     <?php $js = "silent_submitf(this, {tofill: 'actions$id', toclear: 'actions$id', clear_form: true});"; ?>
     <form
@@ -16,14 +17,19 @@
 	></button>
     </form>
     <?php $score += [
-	"lost" => -100,
+	"lost" => -1000,
 	"transformed" => +100,
 	"still" => 0,
 	"progress" => 1,
 	"regress" => -1,
     ][$action["consequence"]];
-    if ($action["consequence"] == "lost" || $action["consequence"] == "transformed")
+    if ($action["consequence"] == "lost")
 	$done = true;
+    else if ($action["consequence"] == "transformed")
+    {
+	if (($def_action += 1) >= 2)
+	    $done = true;
+    }
     if ($last_action < date_to_timestamp($action["action_date"]))
 	$last_action = date_to_timestamp($action["action_date"]);
     ?>

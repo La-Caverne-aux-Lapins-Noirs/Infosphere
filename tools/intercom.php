@@ -234,6 +234,8 @@ function intercom_context_name($misc_type, $id_misc)
     global $Language;
 
     $id_misc = (int)$id_misc;
+    if ($misc_type == "laboratory_public")
+        return (intercom_laboratory_public_name($id_misc));
     if ($misc_type == "common")
         return (intercom_common_channel_name($id_misc));
     if ($misc_type == "school")
@@ -466,6 +468,8 @@ function intercom_can_moderate_context($misc_type, $id_misc)
             || is_assistant_for_session($id_misc));
     if ($misc_type == "cycle")
         return (is_director_for_cycle($id_misc));
+    if ($misc_type == "laboratory_public")
+        return (intercom_can_moderate_laboratory_public($id_misc));
     if ($misc_type == "laboratory")
         return (intercom_can_moderate_laboratory($id_misc));
     if ($misc_type == "team")
@@ -863,9 +867,61 @@ function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false
     ]);
 }
 
+
+function intercom_laboratory_public_name($id_laboratory)
+{
+    global $Language;
+    global $Dictionnary;
+
+    $id_laboratory = (int)$id_laboratory;
+    $field = $Language."_name";
+    $lab = db_select_one("\n        codename, $field as name\n        FROM laboratory\n        WHERE id = $id_laboratory\n    ");
+    if ($lab == NULL)
+        return ("laboratory_public#$id_laboratory");
+    $name = isset($lab["name"]) && strlen($lab["name"]) ? $lab["name"] : $lab["codename"];
+    $suffix = isset($Dictionnary["IntercomLaboratoryPublicSuffix"])
+        ? $Dictionnary["IntercomLaboratoryPublicSuffix"]
+        : "public";
+    return ($name." (".$suffix.")");
+}
+
+function intercom_laboratory_public_access($id_laboratory)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    $uid = (int)$User["id"];
+    $id_laboratory = (int)$id_laboratory;
+    if ($id_laboratory <= 0)
+        return (false);
+    if (function_exists("is_member_of_laboratory") && is_member_of_laboratory($id_laboratory))
+        return (true);
+    if (db_select_one("\n        id FROM user_laboratory\n        WHERE id_user = $uid\n          AND id_laboratory = $id_laboratory\n    ") != NULL)
+        return (true);
+    if (db_select_one("\n        school_laboratory.id_laboratory\n        FROM school_laboratory\n        LEFT JOIN user_school\n          ON user_school.id_school = school_laboratory.id_school\n         AND user_school.id_user = $uid\n        LEFT JOIN school_cycle\n          ON school_cycle.id_school = school_laboratory.id_school\n        LEFT JOIN user_cycle\n          ON user_cycle.id_cycle = school_cycle.id_cycle\n         AND user_cycle.id_user = $uid\n        WHERE school_laboratory.id_laboratory = $id_laboratory\n          AND (user_school.id_user IS NOT NULL OR user_cycle.id_user IS NOT NULL)\n    ") != NULL)
+        return (true);
+    return (false);
+}
+
+function intercom_can_moderate_laboratory_public($id_laboratory)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    $id_laboratory = (int)$id_laboratory;
+    $uid = (int)$User["id"];
+    return (db_select_one("\n        id FROM user_laboratory\n        WHERE id_user = $uid\n          AND id_laboratory = $id_laboratory\n    ") != NULL);
+}
+
 function intercom_get($table, $id_misc, $ref = -1, $id = -1)
 {
-    if (($id_misc = resolve_codename($table, $id_misc))->is_error())
+    if (($id_misc = resolve_codename($table == "laboratory_public" ? "laboratory" : $table, $id_misc))->is_error())
 	return ($id_misc);
     $intercom = get_intercom($table, $id_misc->value, $id == -1 ? $ref : $id, $ref != -1);
     return (new ValueResponse($intercom["subjects"]));
@@ -876,7 +932,7 @@ function intercom_add_com($table, $id_misc, $ref, $msg)
     global $Database;
     global $User;
 
-    if (($id_misc = resolve_codename($table, $id_misc))->is_error())
+    if (($id_misc = resolve_codename($table == "laboratory_public" ? "laboratory" : $table, $id_misc))->is_error())
 	return ($id_misc);
     $id_misc = (int)$id_misc->value;
     $ref = (int)$ref;
@@ -898,7 +954,7 @@ function intercom_add_topic($table, $id_misc, $title, $msg, $visibility = NULL, 
     global $Database;
     global $User;
 
-    if (($id_misc = resolve_codename($table, $id_misc))->is_error())
+    if (($id_misc = resolve_codename($table == "laboratory_public" ? "laboratory" : $table, $id_misc))->is_error())
 	return ($id_misc);
     $id_misc = (int)$id_misc->value;
     if (($visibility = intercom_visibility($table, $visibility)) === NULL)
@@ -958,7 +1014,7 @@ function intercom_display($table, $id_misc, $public = false, $ref = -1, $labs = 
     }
     else
     {
-        $resolve_table = $table == "school_staff" ? "school" : $table;
+        $resolve_table = $table == "school_staff" ? "school" : ($table == "laboratory_public" ? "laboratory" : $table);
         if (($ret = resolve_codename($resolve_table, $id_misc))->is_error())
         {
             echo $Dictionnary["IntercomIsCurrentlyNotAvailable"];

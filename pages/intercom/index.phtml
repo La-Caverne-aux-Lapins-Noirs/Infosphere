@@ -136,6 +136,10 @@ function intercom_page_can_moderate_context($type, $id)
     $id = (int)$id;
     if ($type == "cycle")
         return (is_director_for_cycle($id));
+    if ($type == "laboratory_public")
+        return (function_exists("intercom_can_moderate_laboratory_public")
+            ? intercom_can_moderate_laboratory_public($id)
+            : intercom_page_laboratory_authority($id) >= 1);
     if ($type == "laboratory")
         return (intercom_page_laboratory_authority($id) >= 2);
     if ($type == "activity")
@@ -400,12 +404,17 @@ function intercom_page_fetch_schools()
 function intercom_page_common_nav_item($channel)
 {
     $id = (int)$channel["id"];
+    $unread = intercom_page_unread_count("common", $id);
     $selected = intercom_page_is_selected("common", $id) ? " intercom_nav_item_selected" : "";
+    $unread_class = $unread > 0 ? " intercom_nav_item_has_unread" : "";
     $title = try_get($channel, "name", intercom_common_channel_name($id));
     $description = try_get($channel, "description", "");
     ?>
-    <a class="intercom_nav_item<?=$selected; ?>" href="<?=intercom_page_h(intercom_page_link("common", $id)); ?>">
-        <span class="intercom_nav_title"><?=intercom_page_h($title); ?></span>
+    <a class="intercom_nav_item<?=$selected; ?><?=$unread_class; ?>" href="<?=intercom_page_h(intercom_page_link("common", $id)); ?>">
+        <span class="intercom_nav_title_row">
+            <span class="intercom_nav_title"><?=intercom_page_h($title); ?></span>
+            <?php intercom_page_unread_badge_count($unread); ?>
+        </span>
         <span class="intercom_nav_subtitle"><?=intercom_page_h($description); ?></span>
     </a>
     <?php
@@ -415,16 +424,26 @@ function intercom_page_school_nav_item($school)
 {
     $id = (int)$school["id"];
     $name = intercom_page_label($school, "École #".$id);
+    $public_unread = intercom_page_unread_count("school", $id);
+    $staff_unread = intercom_page_unread_count("school_staff", $id);
     $selected_public = intercom_page_is_selected("school", $id) ? " intercom_nav_item_selected" : "";
     $selected_staff = intercom_page_is_selected("school_staff", $id) ? " intercom_nav_item_selected" : "";
+    $public_unread_class = $public_unread > 0 ? " intercom_nav_item_has_unread" : "";
+    $staff_unread_class = $staff_unread > 0 ? " intercom_nav_item_has_unread" : "";
     ?>
-    <a class="intercom_nav_item<?=$selected_public; ?>" href="<?=intercom_page_h(intercom_page_link("school", $id)); ?>">
-        <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+    <a class="intercom_nav_item<?=$selected_public; ?><?=$public_unread_class; ?>" href="<?=intercom_page_h(intercom_page_link("school", $id)); ?>">
+        <span class="intercom_nav_title_row">
+            <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+            <?php intercom_page_unread_badge_count($public_unread); ?>
+        </span>
         <span class="intercom_nav_subtitle">Salon école · tout le monde</span>
     </a>
     <?php if (try_get($school, "staff", 0)) { ?>
-        <a class="intercom_nav_item<?=$selected_staff; ?>" href="<?=intercom_page_h(intercom_page_link("school_staff", $id)); ?>">
-            <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+        <a class="intercom_nav_item<?=$selected_staff; ?><?=$staff_unread_class; ?>" href="<?=intercom_page_h(intercom_page_link("school_staff", $id)); ?>">
+            <span class="intercom_nav_title_row">
+                <span class="intercom_nav_title"><?=intercom_page_h($name); ?></span>
+                <?php intercom_page_unread_badge_count($staff_unread); ?>
+            </span>
             <span class="intercom_nav_subtitle">Salon équipe pédagogique / école</span>
         </a>
     <?php } ?>
@@ -628,6 +647,22 @@ function intercom_page_fetch_activities()
     "));
 }
 
+
+function intercom_page_fetch_public_laboratories()
+{
+    global $User;
+    global $Language;
+
+    $uid = (int)$User["id"];
+    $name = "laboratory.".$Language."_name";
+    $deleted = intercom_page_deleted_condition("laboratory");
+    $access = is_admin()
+        ? "1"
+        : "(user_school.id_user IS NOT NULL OR user_cycle.id_user IS NOT NULL OR user_laboratory.id_user IS NOT NULL)";
+
+    return (db_select_all("\n        DISTINCT\n            laboratory.id,\n            laboratory.codename,\n            $name as name,\n            'Salon public du laboratoire' as context\n        FROM laboratory\n        LEFT JOIN school_laboratory\n          ON school_laboratory.id_laboratory = laboratory.id\n        LEFT JOIN user_school\n          ON user_school.id_school = school_laboratory.id_school\n         AND user_school.id_user = $uid\n        LEFT JOIN school_cycle\n          ON school_cycle.id_school = school_laboratory.id_school\n        LEFT JOIN user_cycle\n          ON user_cycle.id_cycle = school_cycle.id_cycle\n         AND user_cycle.id_user = $uid\n        LEFT JOIN user_laboratory\n          ON user_laboratory.id_laboratory = laboratory.id\n         AND user_laboratory.id_user = $uid\n        WHERE laboratory.id IS NOT NULL\n          AND $deleted\n          AND $access\n        ORDER BY COALESCE(NULLIF($name, ''), laboratory.codename)\n    "));
+}
+
 function intercom_page_fetch_laboratories()
 {
     global $User;
@@ -722,6 +757,92 @@ function intercom_page_last_message($type, $id)
           )
         ORDER BY message.post_date DESC, message.id DESC
     "));
+}
+
+
+function intercom_page_unread_count($type, $id)
+{
+    global $Database;
+    global $User;
+
+    static $cache = [];
+
+    if (!$User)
+        return (0);
+    $type = (string)$type;
+    $id = (int)$id;
+    if ($id <= 0 || $type == "")
+        return (0);
+    $key = $type."/".$id;
+    if (isset($cache[$key]))
+        return ($cache[$key]);
+
+    $etype = $Database->real_escape_string($type);
+    $uid = (int)$User["id"];
+    $can_moderate = intercom_page_can_moderate_context($type, $id);
+    $hidden_root_filter = "";
+    $hidden_item_filter = "";
+    if (!$can_moderate)
+    {
+        $hidden_root_filter = "
+          AND NOT EXISTS (
+              SELECT 1 FROM message_report as hidden_root
+              WHERE hidden_root.id_message = root.id
+                AND hidden_root.status = -1
+          )";
+        $hidden_item_filter = "
+              AND NOT EXISTS (
+                  SELECT 1 FROM message_report as hidden_item
+                  WHERE hidden_item.id_message = item.id
+                    AND hidden_item.status = -1
+              )";
+    }
+
+    $row = db_select_one("
+        COUNT(DISTINCT root.id) as cnt
+        FROM message as root
+        LEFT JOIN message_user as viewed
+          ON viewed.id_message = root.id
+         AND viewed.id_user = $uid
+        WHERE root.misc_type = '$etype'
+          AND root.id_misc = $id
+          AND root.id_message IS NULL
+          $hidden_root_filter
+          AND EXISTS (
+              SELECT 1
+              FROM message as item
+              WHERE (item.id = root.id OR item.id_message = root.id)
+                AND item.id_user != $uid
+                AND (viewed.view_date IS NULL OR item.post_date > viewed.view_date)
+                $hidden_item_filter
+          )
+    ");
+    $cache[$key] = $row == NULL ? 0 : (int)$row["cnt"];
+    return ($cache[$key]);
+}
+
+function intercom_page_unread_badge_count($count)
+{
+    $count = (int)$count;
+    if ($count <= 0)
+        return ;
+    $label = $count > 99 ? "99+" : (string)$count;
+    ?>
+    <span class="intercom_unread_badge" title="<?=intercom_page_h($count." sujet".($count > 1 ? "s" : "")." non lu".($count > 1 ? "s" : "")); ?>"><?=intercom_page_h($label); ?></span>
+    <?php
+}
+
+function intercom_page_unread_badge($type, $id)
+{
+    intercom_page_unread_badge_count(intercom_page_unread_count($type, $id));
+}
+
+function intercom_page_project_unread_count($project)
+{
+    $count = 0;
+    foreach (try_get($project, "teams", []) as $team)
+        $count += intercom_page_unread_count("team", (int)$team["id"]);
+    return ($count);
 }
 
 function intercom_page_user_can_open($type, $id)
@@ -1095,10 +1216,15 @@ function intercom_page_is_selected($type, $id)
 function intercom_page_nav_anchor($type, $row, $menu_cycle = NULL, $subtitle = NULL)
 {
     $id = (int)$row["id"];
+    $unread = intercom_page_unread_count($type, $id);
     $selected = intercom_page_is_selected($type, $id) ? " intercom_nav_item_selected" : "";
+    $unread_class = $unread > 0 ? " intercom_nav_item_has_unread" : "";
     ?>
-    <a class="intercom_nav_item<?=$selected; ?>" href="<?=intercom_page_h(intercom_page_link($type, $id, $menu_cycle)); ?>">
-        <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($row, $type."#".$id)); ?></span>
+    <a class="intercom_nav_item<?=$selected; ?><?=$unread_class; ?>" href="<?=intercom_page_h(intercom_page_link($type, $id, $menu_cycle)); ?>">
+        <span class="intercom_nav_title_row">
+            <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($row, $type."#".$id)); ?></span>
+            <?php intercom_page_unread_badge_count($unread); ?>
+        </span>
         <?php if ($subtitle !== NULL && strlen(trim((string)$subtitle))) { ?>
             <span class="intercom_nav_subtitle"><?=intercom_page_h($subtitle); ?></span>
         <?php } ?>
@@ -1128,7 +1254,9 @@ function intercom_page_matter_nav_item($matter, $projects, $menu_cycle)
     global $id_position;
 
     $id = (int)$matter["id"];
+    $unread = intercom_page_unread_count("activity", $id);
     $selected = intercom_page_is_selected("activity", $id) ? " intercom_nav_item_selected" : "";
+    $unread_class = $unread > 0 ? " intercom_nav_item_has_unread" : "";
     $team_selected = false;
     foreach ($projects as $project)
         foreach ($project["teams"] as $team)
@@ -1136,8 +1264,11 @@ function intercom_page_matter_nav_item($matter, $projects, $menu_cycle)
                 $team_selected = true;
     ?>
     <div class="intercom_matter_item<?=$selected; ?><?=($team_selected ? " intercom_matter_item_contains_selected" : ""); ?>">
-        <a class="intercom_matter_link" href="<?=intercom_page_h(intercom_page_link("activity", $id, $menu_cycle)); ?>">
-            <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($matter, "activity#".$id)); ?></span>
+        <a class="intercom_matter_link<?=$unread_class; ?>" href="<?=intercom_page_h(intercom_page_link("activity", $id, $menu_cycle)); ?>">
+            <span class="intercom_nav_title_row">
+                <span class="intercom_nav_title"><?=intercom_page_h(intercom_page_label($matter, "activity#".$id)); ?></span>
+                <?php intercom_page_unread_badge_count($unread); ?>
+            </span>
         </a>
         <?php if (count($projects)) { ?>
             <details class="intercom_team_roll"<?=($team_selected ? " open" : ""); ?>>
@@ -1151,9 +1282,13 @@ function intercom_page_matter_nav_item($matter, $projects, $menu_cycle)
                                     $project_selected = true;
                             if ($project_selected) echo " open";
                         ?>>
-                            <summary>
+                            <?php $project_unread = intercom_page_project_unread_count($project); ?>
+                            <summary<?=($project_unread > 0 ? ' class="intercom_project_has_unread"' : ""); ?>>
                                 <span class="intercom_project_title"><?=intercom_page_h($project["name"]); ?></span>
-                                <span class="intercom_project_count"><?=intercom_page_h($project["team_count"]." équipe".($project["team_count"] > 1 ? "s" : "")); ?></span>
+                                <span class="intercom_project_count">
+                                    <?=intercom_page_h($project["team_count"]." équipe".($project["team_count"] > 1 ? "s" : "")); ?>
+                                    <?php intercom_page_unread_badge_count($project_unread); ?>
+                                </span>
                             </summary>
                             <div class="intercom_project_teams">
                                 <?php foreach ($project["teams"] as $team) { ?>
@@ -1183,6 +1318,7 @@ function intercom_page_display_shell()
     $common_channels = intercom_page_common_channels();
     $cycles = intercom_page_fetch_cycles();
     $laboratories = intercom_page_fetch_laboratories();
+    $public_laboratories = intercom_page_fetch_public_laboratories();
     $reports = intercom_page_fetch_reports();
     $show_reports = count($reports) || intercom_page_has_moderation_scope();
     $menu_cycle = intercom_page_selected_cycle($cycles);
@@ -1214,6 +1350,16 @@ function intercom_page_display_shell()
      .intercom_report_nav_item { border-color: rgba(255, 180, 80, .55); background: rgba(100, 55, 0, .38); }
      .intercom_report_nav_item:hover { background: rgba(145, 85, 0, .52); }
      .intercom_nav_title { display: block; font-weight: bold; line-height: 1.2; }
+
+     /* intercom unread menu badges */
+     .intercom_nav_title_row { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; }
+     .intercom_nav_title_row > .intercom_nav_title { flex: 1 1 auto; min-width: 0; }
+     .intercom_unread_badge { flex: 0 0 auto; display: inline-block; min-width: 1.55em; padding: 1px 5px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .72); background: rgba(255, 255, 255, .92); color: #003500; font-size: .78em; font-weight: bold; line-height: 1.35; text-align: center; box-shadow: 0 0 7px rgba(185, 255, 185, .45); }
+     .intercom_nav_item_has_unread { border-color: rgba(220, 255, 220, .78); background: rgba(0, 115, 0, .52); }
+     .intercom_nav_item_has_unread:hover { background: rgba(0, 145, 0, .62); }
+     .intercom_project_count .intercom_unread_badge { margin-left: 5px; vertical-align: middle; }
+     .intercom_project_has_unread { border-color: rgba(220, 255, 220, .58) !important; background: rgba(0, 95, 0, .46) !important; }
+
      .intercom_nav_subtitle { display: block; margin-top: 3px; font-size: .84em; opacity: .76; line-height: 1.2; }
      .intercom_nav_empty { opacity: .65; font-style: italic; margin: 6px 8px 10px 8px; }
      .intercom_matter_item { margin: 4px 0 8px 0; }
@@ -1306,7 +1452,8 @@ function intercom_page_display_shell()
                         <?php } ?>
                     <?php } ?>
                 </section>
-                <?php intercom_page_nav_section("Laboratoires", "laboratory", $laboratories, "Vous n'êtes membre d'aucun laboratoire.", NULL); ?>
+                <?php intercom_page_nav_section("Laboratoires publics", "laboratory_public", $public_laboratories, "Aucun laboratoire public disponible.", "Public"); ?>
+                <?php intercom_page_nav_section("Mes laboratoires", "laboratory", $laboratories, "Vous n'êtes membre d'aucun laboratoire.", "Interne"); ?>
             </nav>
 
             <?php if ($has_second) { ?>
@@ -1382,6 +1529,141 @@ function intercom_page_display_shell()
                 }, 1800);
         }
 
+        function intercomPanelChildren(workspace)
+        {
+            if (!workspace)
+                return [];
+            return Array.prototype.filter.call(workspace.children, function(child) {
+                return child.classList && child.classList.contains("intercom_nav_panel");
+            });
+        }
+
+        function intercomMainPanel(workspace)
+        {
+            if (!workspace)
+                return null;
+            return workspace.querySelector(":scope > .intercom_main_panel")
+                || workspace.querySelector(".intercom_main_panel");
+        }
+
+        function intercomLinkKey(anchor)
+        {
+            if (!anchor || !anchor.href)
+                return "";
+            var url = new URL(anchor.href, window.location.href);
+            if (url.searchParams.get("p") != "IntercomMenu")
+                return "";
+            return [
+                url.searchParams.get("table") || "",
+                url.searchParams.get("id") || "",
+                url.searchParams.get("ref") || "",
+                url.searchParams.get("menu_cycle") || ""
+            ].join("|");
+        }
+
+        function intercomCopyMenuAnchorState(currentPanel, nextPanel)
+        {
+            var current = {};
+            currentPanel.querySelectorAll("a[href]").forEach(function(anchor) {
+                var key = intercomLinkKey(anchor);
+                if (key)
+                    current[key] = anchor;
+            });
+            nextPanel.querySelectorAll("a[href]").forEach(function(nextAnchor) {
+                var key = intercomLinkKey(nextAnchor);
+                var anchor = key ? current[key] : null;
+                if (!anchor)
+                    return;
+                anchor.className = nextAnchor.className;
+                anchor.innerHTML = nextAnchor.innerHTML;
+            });
+        }
+
+        function intercomCopyMatterWrapperState(currentPanel, nextPanel)
+        {
+            var current = {};
+            currentPanel.querySelectorAll(".intercom_matter_item").forEach(function(item) {
+                var link = item.querySelector("a[href]");
+                var key = intercomLinkKey(link);
+                if (key)
+                    current[key] = item;
+            });
+            nextPanel.querySelectorAll(".intercom_matter_item").forEach(function(nextItem) {
+                var link = nextItem.querySelector("a[href]");
+                var key = intercomLinkKey(link);
+                var item = key ? current[key] : null;
+                if (!item)
+                    return;
+                item.className = nextItem.className;
+            });
+        }
+
+        function intercomSyncMenuPanel(currentPanel, nextPanel)
+        {
+            if (!currentPanel || !nextPanel)
+                return;
+            intercomCopyMenuAnchorState(currentPanel, nextPanel);
+            intercomCopyMatterWrapperState(currentPanel, nextPanel);
+        }
+
+        function intercomMenuCycleFromUrl(url)
+        {
+            var parsed = new URL(url, window.location.href);
+            return parsed.searchParams.get("menu_cycle") || "";
+        }
+
+        function intercomActivateEmbeddedScripts(root)
+        {
+            if (!root)
+                return;
+            root.querySelectorAll("script").forEach(function(script) {
+                var fresh = document.createElement("script");
+                Array.prototype.forEach.call(script.attributes, function(attr) {
+                    fresh.setAttribute(attr.name, attr.value);
+                });
+                fresh.text = script.textContent;
+                script.replaceWith(fresh);
+            });
+        }
+
+        function intercomReplaceMainPanel(workspace, nextWorkspace)
+        {
+            var main = intercomMainPanel(workspace);
+            var nextMain = intercomMainPanel(nextWorkspace);
+            if (!main || !nextMain)
+                return false;
+            main.replaceWith(nextMain);
+            intercomActivateEmbeddedScripts(nextMain);
+            return true;
+        }
+
+        function intercomUpdateSecondMenu(workspace, nextWorkspace, currentPanels, nextPanels, url)
+        {
+            var currentSecond = currentPanels.length > 1 ? currentPanels[1] : null;
+            var nextSecond = nextPanels.length > 1 ? nextPanels[1] : null;
+            var currentCycle = intercomMenuCycleFromUrl(window.location.href);
+            var nextCycle = intercomMenuCycleFromUrl(url);
+            var mustReplace = currentCycle != nextCycle || (!!currentSecond) != (!!nextSecond);
+
+            if (!mustReplace)
+            {
+                if (currentSecond && nextSecond)
+                    intercomSyncMenuPanel(currentSecond, nextSecond);
+                return;
+            }
+
+            if (currentSecond && nextSecond)
+                currentSecond.replaceWith(nextSecond);
+            else if (!currentSecond && nextSecond)
+            {
+                var main = intercomMainPanel(workspace);
+                if (main)
+                    workspace.insertBefore(nextSecond, main);
+            }
+            else if (currentSecond && !nextSecond)
+                currentSecond.remove();
+        }
+
         async function loadIntercomPage(url, push)
         {
             var shell = currentShell();
@@ -1404,7 +1686,21 @@ function intercom_page_display_shell()
                 var next = doc.querySelector(".intercom_page_shell");
                 if (!next)
                     throw new Error("Missing intercom shell");
-                shell.replaceWith(next);
+
+                var workspace = shell.querySelector(".intercom_workspace");
+                var nextWorkspace = next.querySelector(".intercom_workspace");
+                if (!workspace || !nextWorkspace)
+                    throw new Error("Missing intercom workspace");
+
+                var currentPanels = intercomPanelChildren(workspace);
+                var nextPanels = intercomPanelChildren(nextWorkspace);
+                if (currentPanels[0] && nextPanels[0])
+                    intercomSyncMenuPanel(currentPanels[0], nextPanels[0]);
+                intercomUpdateSecondMenu(workspace, nextWorkspace, currentPanels, nextPanels, url);
+                workspace.className = nextWorkspace.className;
+
+                if (!intercomReplaceMainPanel(workspace, nextWorkspace))
+                    throw new Error("Missing intercom main panel");
                 if (push)
                     history.pushState({intercom: true}, "", url);
                 bindIntercomIndex();
@@ -1412,6 +1708,12 @@ function intercom_page_display_shell()
             catch (err)
             {
                 window.location.href = url;
+            }
+            finally
+            {
+                var current = currentShell();
+                if (current)
+                    current.classList.remove("intercom_loading");
             }
         }
 

@@ -90,5 +90,13 @@ $Dictionnary = [
     "IntercomCommonSuggestionsDescription" => "More concrete suggestions and improvement requests.",
     "IntercomCommonSelName" => "SEL",
     "IntercomCommonSelDescription" => "Local exchange system, mutual aid and service swapping.",
+    "IntercomLaboratoryPublicSuffix" => "public",
 ];
 
+$Dictionnary["HomeIntercomNoUnread"] = "No unread message.";
+$Dictionnary["HomeIntercomPrivateMessages"] = "Private messages";
+$Dictionnary["HomeIntercomGeneralAnnouncements"] = "Announcements and updates";
+$Dictionnary["HomeIntercomSchoolAnnouncements"] = "School announcements";
+$Dictionnary["HomeIntercomStaffAnnouncements"] = "Staff announcements";
+$Dictionnary["HomeIntercomCycleAnnouncements"] = "Cycle announcements";
+$Dictionnary["HomeIntercomActivityAnnouncements"] = "Course announcements";

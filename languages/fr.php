@@ -1476,24 +1476,32 @@ $Dictionnary = [
     "Complex" => "Complexes",
     "Wise" => "Sages",
     "IntercomCommonAnnouncementsName" => "Annonces et mises à jour",
-    "IntercomCommonAnnouncementsDescription" => "Informations importantes et changements visibles de tous.",
+    "IntercomCommonAnnouncementsDescription" => "",
     "IntercomCommonDiscussionName" => "Débat et discussion",
-    "IntercomCommonDiscussionDescription" => "Discussions générales et débats.",
+    "IntercomCommonDiscussionDescription" => "",
     "IntercomCommonCreationsName" => "Vos créations",
-    "IntercomCommonCreationsDescription" => "Projets, travaux personnels et réalisations.",
+    "IntercomCommonCreationsDescription" => "",
     "IntercomCommonEventsName" => "Événements",
-    "IntercomCommonEventsDescription" => "Événements, sorties et rendez-vous collectifs.",
+    "IntercomCommonEventsDescription" => "",
     "IntercomCommonOfftopicName" => "Mèmes et hors sujet",
-    "IntercomCommonOfftopicDescription" => "Détente, humour et hors sujet.",
+    "IntercomCommonOfftopicDescription" => "",
     "IntercomCommonMediaName" => "Images, musiques et autres médias",
-    "IntercomCommonMediaDescription" => "Partage de médias.",
+    "IntercomCommonMediaDescription" => "",
     "IntercomCommonIdeasName" => "Boîte à idées",
-    "IntercomCommonIdeasDescription" => "Idées générales pour l'école et les projets.",
+    "IntercomCommonIdeasDescription" => "",
     "IntercomCommonSuggestionsName" => "Suggestions",
-    "IntercomCommonSuggestionsDescription" => "Suggestions plus concrètes et demandes d'amélioration.",
-    "IntercomCommonSelName" => "SEL",
-    "IntercomCommonSelDescription" => "Système d'échange local, entraide et troc de services.",
+    "IntercomCommonSuggestionsDescription" => "",
+    "IntercomCommonSelName" => "Sel: Plaintes et raleries",
+    "IntercomCommonSelDescription" => "",
+    "IntercomLaboratoryPublicSuffix" => "public",
 ];
 
 // @codeCoverageIgnoreEnd
+$Dictionnary["HomeIntercomNoUnread"] = "Aucun message non lu.";
+$Dictionnary["HomeIntercomPrivateMessages"] = "Messages privés";
+$Dictionnary["HomeIntercomGeneralAnnouncements"] = "Annonces et mises à jour";
+$Dictionnary["HomeIntercomSchoolAnnouncements"] = "Annonces école";
+$Dictionnary["HomeIntercomStaffAnnouncements"] = "Annonces équipe";
+$Dictionnary["HomeIntercomCycleAnnouncements"] = "Annonces de cycle";
+$Dictionnary["HomeIntercomActivityAnnouncements"] = "Annonces de matière";
 ?>

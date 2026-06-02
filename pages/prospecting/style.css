@@ -245,13 +245,19 @@ tr:nth-child(even)
 #prospects_table td a
 {
     font-weight: bold;
-    color: inherit;
-    background: transparent;
 }
 
-#prospects_table td a:hover
+#prospects_table tbody td:nth-child(3)
 {
-    text-decoration: underline;
+    padding: 5px;
+    background-color: black;
+    color: white;
+}
+
+#prospects_table tbody td:nth-child(3) a
+{
+    color: inherit;
+    background: transparent;
 }
 
 tr:nth-child(odd)
@@ -285,6 +291,14 @@ td
 .dynamic_table_button
 {
     width: 200px;
+}
+
+.dynamic_table_name a
+{
+    text-shadow:
+	0px 0px 3px black,
+	0px 0px 3px black
+    ;
 }
 
 .dynamic_table td.prospecting_age_0

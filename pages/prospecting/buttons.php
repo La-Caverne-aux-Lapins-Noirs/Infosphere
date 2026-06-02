@@ -1,3 +1,4 @@
+<?php if ($p["password"]) return ; ?>
 <?php if ($p["deleted"] === NULL) { ?>
     <?php $js = "silent_submitf(this, {toremove: 'prospects_table".$p["id"]."'});"; ?>
     <form method="put" action="/api/prospect/<?=$p["id"]; ?>" style="display: inline-block;" class="decision_buttons" onsubmit="return <?=$js; ?>">

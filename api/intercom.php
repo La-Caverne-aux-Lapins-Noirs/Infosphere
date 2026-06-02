@@ -16,6 +16,8 @@ function intercom_resolve_context($misc_type, $id)
 	return ($ret);
     $id = (int)$ret->value;
 
+    if ($misc_type == "laboratory_public")
+        return (resolve_codename("laboratory", $id));
     if ($misc_type == "activity")
     {
 	if (!($tmp = db_select_one("id_template FROM activity WHERE id = $id")))
@@ -24,6 +26,33 @@ function intercom_resolve_context($misc_type, $id)
 	    $id = (int)$tmp;
     }
     return (new ValueResponse($id));
+}
+
+
+function intercom_api_resolve_context($misc_type, $id)
+{
+    if ($misc_type == "common")
+    {
+        $id = (int)$id;
+        if (!function_exists("intercom_common_channel_definition")
+            || intercom_common_channel_definition($id) == NULL)
+            return (new ErrorResponse("NotFound"));
+        return (new ValueResponse($id));
+    }
+    if ($misc_type == "school_staff")
+        return (resolve_codename("school", $id));
+    if ($misc_type == "laboratory_public")
+        return (resolve_codename("laboratory", $id));
+    return (resolve_codename($misc_type, $id));
+}
+
+function intercom_api_laboratory_public_access($id)
+{
+    if (($ret = resolve_codename("laboratory", $id))->is_error())
+        return (false);
+    if (function_exists("intercom_laboratory_public_access"))
+        return (intercom_laboratory_public_access((int)$ret->value));
+    return (function_exists("is_member_of_laboratory") && is_member_of_laboratory((int)$ret->value));
 }
 
 function intercom_activity_access($id)
@@ -553,3 +582,13 @@ foreach (["SUBGET", "GET", "POST", "PUT", "DELETE"] as $intercom_method)
     $Tab[$intercom_method]["school_staff"] = ["intercom_api_school_staff_access", $intercom_method == "DELETE" ? "DeleteMessage" : ($intercom_method == "POST" || $intercom_method == "PUT" ? "PostMessage" : "GetIntercom")];
 }
 
+
+
+// Intercom public des laboratoires.
+foreach (["SUBGET", "GET", "POST", "PUT", "DELETE"] as $intercom_method)
+{
+    $Tab[$intercom_method]["laboratory_public"] = [
+        "intercom_api_laboratory_public_access",
+        $intercom_method == "DELETE" ? "DeleteMessage" : ($intercom_method == "POST" || $intercom_method == "PUT" ? "PostMessage" : "GetIntercom")
+    ];
+}

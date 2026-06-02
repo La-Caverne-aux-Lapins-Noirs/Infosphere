@@ -59,7 +59,6 @@ $fields = [
         "width" => "50px",
         "raw"   => fn($p) => $p["id"],
         "render"=> fn($p) => $p["id"],
-        "cell_class" => fn($p) => prospecting_age_class($p),
 	"copyable" => true,
     ],
     [
@@ -74,7 +73,7 @@ $fields = [
 	    $id = $p["id"];
 	    return ("<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>");
 	},
-        "cell_class" => fn($p) => prospecting_age_class($p),
+	"cell_class" => "dynamic_table_name"
     ],
     [
         "name"  => "registration_date",
