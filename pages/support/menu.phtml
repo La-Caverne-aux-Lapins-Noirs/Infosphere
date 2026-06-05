@@ -1,3 +1,5 @@
+<?php require_once (__DIR__."/menu_helpers.php"); ?>
+<?php support_menu_mark_empty_supports($categories); ?>
 <div class="module_menu_header">
     <h2><?=$Dictionnary["Class"]; ?></h2>
     <div class="module_menu_actions">
@@ -32,13 +34,9 @@
 	    style="cursor: pointer;"
 	    id="category_link<?=$category["id"]; ?>"
 	>
-	    <?php if (@strlen($category["name"])) { ?>
-		<?=$category["name"]; ?>
-		<?php if (is_teacher()) { ?>
-		    (@<?=$category["codename"]; ?>) <?=$category["id"]; ?>
-		<?php } ?>
-	    <?php } else { ?>
-		<?=@$category["codename"]; ?>
+	    <?php support_compact_label($category); ?>
+	    <?php if (can_edit_supports()) { ?>
+		<?php support_copy_codename_button($category["codename"], "@"); ?>
 	    <?php } ?>
 	</span>
 	<br /><br />
@@ -62,7 +60,7 @@
 	<?php foreach ($category["support"] as $support) { ?>
 	    <?php if ($support["selected"] == false) continue ; ?>
 	    <li>
-		<?php if (is_teacher()) { ?>
+		<?php if (can_edit_supports()) { ?>
 		    <?php
 		    $js = "
 			silent_submitf(this, {
@@ -74,27 +72,24 @@
 			action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>"
 			style="display: inline-block;"
 		    >
-			<input type="button" name="up" value="&uarr;" onclick="<?=$js; ?>" style="width: 30px;" />
-		    </form>&nbsp;
+			<input type="button" name="up" value="&uarr;" onclick="<?=$js; ?>" class="support_admin_button" title="Monter" />
+		    </form>
 		    <form
 			method="put"
 			action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?>"
 			style="display: inline-block;"
 		    >
-			<input type="button" name="down" value="&darr;" onclick="<?=$js; ?>" style="width: 30px;" />
-		    </form>&nbsp;
+			<input type="button" name="down" value="&darr;" onclick="<?=$js; ?>" class="support_admin_button" title="Descendre" />
+		    </form>
+		<?php } ?>
+		<?php if (can_edit_supports()) { ?>
+		    <?php support_copy_codename_button($support["codename"]); ?>
 		<?php } ?>
 		<a onclick="display_panel('support', <?=$support["id"]; ?>, false, true);" style="cursor: pointer;">
 		    <div class="module_link" id="support_link<?=$support["id"]; ?>" style="display: inline-block;">
 			<h4 style="display: inline-block;">
-			    <?php if (@strlen($support["name"])) { ?>
-				<?=$support["name"]; ?>
-				<?php if (is_teacher()) { ?>
-				    (<?=$support["codename"]; ?>) #<?=$support["id"]; ?>
-				<?php } ?>
-			    <?php } else { ?>
-				<?=$support["codename"]; ?>
-			    <?php } ?>
+			    <?php support_unseen_marker(isset($support["unseen_asset_count"]) ? $support["unseen_asset_count"] : 0, $support["id"]); ?>
+			    <?php support_compact_label($support, support_empty_menu_class($support), support_empty_menu_title($support)); ?>
 			</h4>
 		    </div>
 		</a>

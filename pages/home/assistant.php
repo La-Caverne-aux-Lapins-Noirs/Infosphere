@@ -35,6 +35,20 @@ if (rand(0, 1000) == 500)
 	 ".</b><br />"
 	 ;
 }
+$unseen_supports = support_progress_count_unseen_for_current_user();
+if ($unseen_supports > 0)
+{
+    $label = $unseen_supports == 1
+    ? "1 support de cours non consulté"
+	   : $unseen_supports." supports de cours non consultés";
+    echo '<b style="color: orange;">◆ '.
+	 '<a href="'.unrollurl(["p" => "SupportMenu"]).'" style="color: inherit;">'.
+	 $label.
+	 '</a>.'.
+	 '</b><br />'
+	 ;
+}
+
 if ($User["greatest_cycle"] != -1)
 {
     $cyc = $User["greatest_cycle_data"]["id_cycle"];

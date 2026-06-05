@@ -21,6 +21,8 @@ else
 <form
     method="post"
     action="/api/support_category/<?=$support["id_support_category"]; ?>/support/<?=$support["id"]; ?><?=$asset_id; ?>"
+    enctype="multipart/form-data"
+    data-direct-file-upload="1"
     class="support_add_formular"
     onsubmit="return <?=$js; ?>,"
 >

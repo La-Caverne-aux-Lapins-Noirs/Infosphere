@@ -81,7 +81,12 @@ if (@strlen($input))
 	parse_str($input, $tmp);
     $DATA = array_merge($DATA, $tmp);
 }
-// Si il y en a pas et qu'on a précisé une méthode (donc... pas GET, a priori)
+// Les formulaires multipart/form-data sont parsés par PHP directement
+// dans $_POST / $_FILES. On fusionne $_POST ici pour éviter de forcer
+// les gros fichiers à transiter en base64 dans le navigateur.
+if (!empty($_POST))
+    $DATA = array_merge($DATA, $_POST);
+// Si il n'y en a pas et qu'on a précisé une méthode (donc... pas GET, a priori)
 else if (isset($_GET["_method"]) && strtoupper($_GET["_method"]) != "GET")
 {
     // C'est qu'on veut debugger. On passe les paramètres POST/PUT/etc. par l'URL

@@ -132,9 +132,18 @@ var current_language = getCookie("<?=$page; ?>-language");
 var current_category = getCookie("<?=$page; ?>-category");
 var current_ressource = getCookie("<?=$page; ?>-ressource");
 
+function activity_language_for_resource(resource)
+{
+    if (resource == "actions" || resource == "mood" || resource == "softwares")
+	return ("NA");
+    return (current_language);
+}
+
 function select_formular()
 {
     var blocks = document.getElementsByClassName("activity_configuration_block");
+    var category_language = current_language;
+    var resource_language = activity_language_for_resource(current_ressource);
 
     if (document.getElementById("edit_formular").innerText == "")
     {
@@ -142,11 +151,16 @@ function select_formular()
 	return ;
     }
 
+    if (category_language == null || category_language == "")
+	category_language = "NA";
+    if (resource_language == null || resource_language == "")
+	resource_language = "NA";
+
     for (let mod of blocks)
     {
-	if (mod.classList.contains(current_category + "_" + current_language))
+	if (mod.classList.contains(current_category + "_" + category_language))
 	    mod.style.display = "block";
-	else if (mod.classList.contains(current_ressource + "_" + current_language))
+	else if (mod.classList.contains(current_ressource + "_" + resource_language))
 	    mod.style.display = "block";
 	else
 	    mod.style.display = "none";

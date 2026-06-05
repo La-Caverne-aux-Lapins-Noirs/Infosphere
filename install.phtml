@@ -95,6 +95,12 @@
 		    <br />
 		    - Some softwares from the TechnoCore suite could be exploited by Infosphere
 		    to keep track of students using a school it infrastructure.
+		    <br />
+		    - For optimized HLS support videos, the installer tries to write
+		    <b>/etc/apache2/conf-available/infosphere-hls.conf</b>, enable it,
+		    and download <b>script/ext/hls.min.js</b>. If the web server user cannot
+		    write Apache configuration, the file is generated in
+		    <b>res/install/apache/infosphere-hls.conf</b> for manual installation.
 		</p>
 	    </div>
 	    <p id="bottom">

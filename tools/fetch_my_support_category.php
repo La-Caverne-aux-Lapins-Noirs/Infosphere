@@ -10,7 +10,7 @@ function fetch_my_support_category($load_assets = true)
     ////////////////////////////////////////////////////////////////////
     // Il faudra probablement changer cette technique à terme
 
-    if (is_admin())
+    if (can_edit_supports())
 	return (fetch_support_category(-1, true, false, false, $load_assets));
     if ($User == NULL)
 	return (new ErrorResponse("NotMyActivity"));

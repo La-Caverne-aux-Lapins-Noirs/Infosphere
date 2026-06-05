@@ -13,6 +13,11 @@ require_once (__DIR__."/../error_net.php");
 ?>
 <form method="get" action="/api/support_category/1/get_menu" id="fetch_menu_form">
 </form>
+<?php if (can_edit_supports()) { ?>
+<div id="support_clipboard_preview" class="support_clipboard_preview">
+    Presse-papier code : <span id="support_clipboard_preview_content"></span>
+</div>
+<?php } ?>
 <table class="submenu support_page_layout"><tr class="submenutr"><td class="submenutd">
     <div class="module_menubar module_scroll_menu" id="main_menu">
 	<?php require_once ("menu.phtml"); ?>
@@ -45,6 +50,78 @@ require_once (__DIR__."/../error_net.php");
 </td></tr></table>
 
 <script>
+
+ <?php if (can_edit_supports()) { ?>
+ var support_codename_clipboard = "";
+
+ function support_refresh_clipboard_preview(value)
+ {
+     support_codename_clipboard = value == null ? "" : String(value);
+     let preview = document.getElementById("support_clipboard_preview_content");
+     let box = document.getElementById("support_clipboard_preview");
+
+     if (!preview || !box)
+	 return ;
+     preview.innerText = support_codename_clipboard;
+     box.style.display = support_codename_clipboard == "" ? "none" : "block";
+ }
+
+ async function support_write_clipboard(value)
+ {
+     try
+     {
+	 await navigator.clipboard.writeText(value);
+	 return (true);
+     }
+     catch (e)
+     {
+	 let node = document.createElement("textarea");
+	 node.value = value;
+	 node.style.position = "fixed";
+	 node.style.left = "-10000px";
+	 document.body.appendChild(node);
+	 node.focus();
+	 node.select();
+	 let ret = document.execCommand("copy");
+	 document.body.removeChild(node);
+	 return (ret);
+     }
+ }
+
+ async function support_read_clipboard()
+ {
+     try
+     {
+	 return (await navigator.clipboard.readText());
+     }
+     catch (e)
+     {
+	 return (support_codename_clipboard);
+     }
+ }
+
+ async function support_copy_codename(event, codename)
+ {
+     if (event)
+     {
+	 event.preventDefault();
+	 event.stopPropagation();
+     }
+
+     let value = String(codename);
+     if (event && event.shiftKey)
+     {
+	 let current = await support_read_clipboard();
+	 current = String(current == null ? "" : current).trim();
+	 if (current != "" && !current.endsWith(";"))
+	     current += ";";
+	 value = current + value;
+     }
+     await support_write_clipboard(value);
+     support_refresh_clipboard_preview(value);
+     return (false);
+ }
+ <?php } ?>
  var support_loaded_panel = {};
  var support_base_display_panel = window.display_panel;
  var support_pending_callback = null;
@@ -126,7 +203,8 @@ require_once (__DIR__."/../error_net.php");
 	       switch_asset(document.getElementById("asset<?=$gid; ?>button"),
 			    'screen_<?=$id_support; ?>',
 			    '<?=$gasset["type"]; ?>',
-			    '<?=addslashes($gasset["content"]); ?>'
+			    '<?=addslashes($gasset["content"]); ?>',
+			    '<?=isset($gasset["hls_content"]) ? addslashes($gasset["hls_content"]) : ""; ?>'
 	       );
 	   }
        );

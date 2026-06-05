@@ -55,4 +55,16 @@ foreach ($files as $f)
 {
     require ($f);
 }
+
+// Last Albedo task: process at most one queued support video encoding.
+// Video jobs can be long-running; the worker has its own lock, so a later
+// Albedo run will not start a second ffmpeg process for the same queue.
+add_log(TRACE, "Albedo starts support video job processing.", 1, true);
+$VideoJobs = support_video_process_jobs(1, false);
+if ($VideoJobs["locked"])
+    add_log(TRACE, "Support video job processing skipped: worker already running.", 1, true);
+else
+    add_log(TRACE, "Support video job processing done: ".
+		   $VideoJobs["processed"]." processed, ".
+		   $VideoJobs["errors"]." error(s).", 1, true);
 add_log(TRACE, "Albedo stops.", 1, true);

@@ -43,6 +43,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false, $activit
        support_asset.id as id_support_asset,
        support_asset.codename as support_asset_codename,
        support_asset.{$Language}_name as support_asset_name,
+       support_asset.{$Language}_content as support_asset_content,
 
        support_category.id as id_support_category,
        support_category.codename as support_category_codename,
@@ -83,6 +84,7 @@ function fetch_activity_support($id, $gather = false, $by_name = false, $activit
 	    $s["position"] = "ClassMenu";
 	    $s["id_support_asset"] = $a["id_support_asset"];
 	    $s["name"] = $a["support_asset_name"];
+	    $s["content"] = $a["support_asset_content"];
 	}
 	else if ($a["id_support"] !== NULL)
 	{

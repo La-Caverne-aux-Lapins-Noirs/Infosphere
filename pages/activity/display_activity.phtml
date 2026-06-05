@@ -468,237 +468,266 @@ $js = "silent_submit(this)";
 		</div>
 		<?php // Sujet/Configuration ?>
 		<div class="activity_configuration_block subject_configuration_<?=$k; ?>">
+		    <?php $fbid = "subject_browser"; ?>
 		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, 'subject_configuration_$k');"; ?>
+			<?php $js = "silent_submit(this, '$fbid$k');"; ?>
 			<form
 			    method="post"
 			    onsubmit="return <?=$js; ?>;"
 			    action="/api/<?=$page; ?>/<?=$module->id; ?>/subject"
+			    class="activity_file_upload_form"
 			>
-			    <label for="file"><?=$Dictionnary["SubjectOrConfiguration"]; ?></label>
+			    <label for="file"><?=$Dictionnary["Configuration"]; ?></label>
 			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input type="hidden" name="kind" value="configuration" />
 			    <input
 				type="file"
 				name="file"
-				multiple="true"
+				accept=".dab"
+				onchange="<?=$js; ?>"
+			    />
+			</form>
+			<form
+			    method="post"
+			    onsubmit="return <?=$js; ?>;"
+			    action="/api/<?=$page; ?>/<?=$module->id; ?>/subject"
+			    class="activity_file_upload_form"
+			>
+			    <label for="file"><?=$Dictionnary["Subject"]; ?></label>
+			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input type="hidden" name="kind" value="subject" />
+			    <input
+				type="file"
+				name="file"
+				accept=".pdf,.txt,.htm,.html"
 				onchange="<?=$js; ?>"
 			    />
 			</form>
 		    <?php } ?>
 		    <?php if (is_assistant_for_activity($module->id)) { ?>
-			<br />
-			<div id="subject_configuration_<?=$k; ?>">
-			    <?php if (@$module->subject[$k][0] || @$module->configuration[$k][0]) { ?>
-				<?php if (@$module->subject[$k][0]) { ?>
-				    <a href="<?=@$module->subject[$k][0]; ?>">
-					<?=$Dictionnary["SeeSubject"]; ?>
-				    </a>
-				<?php } ?>
-				<?php if (@$module->configuration[$k][0]) { ?>
-				    <a href="<?=@$module->configuration[$k][0]; ?>">
-					<?=$Dictionnary["SeeConfiguration"]; ?>
-				    </a>
-				<?php } ?>
-				<br /><br /><br /><br />
-				<form
-				    method="delete"
-				    onsubmit="return window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>;"
-				    action="/api/<?=$page; ?>/<?=$module->id; ?>/subject"
-				>
-				    <input
-					type="button"
-					onclick="window.confirm('<?=$Dictionnary["Confirm"]; ?>') && <?=$js; ?>"
-					value="<?=$Dictionnary["Delete"]; ?>"
-					style="width: 100px;"
-				    />
-				</form>
-			    <?php } ?>
+			<div class="activity_file_browser_box">
+			    <?=render_activity_subject_browser($page, $module->id, $module, $k); ?>
 			</div>
 		    <?php } ?>
 		</div>
 		<?php // Fichiers disponibles pour les élèves ?>
 		<div class="activity_configuration_block files_<?=$k; ?>">
-		    <?php $fbid = "file_browser"; ?>
-		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, '$fbid$k');"; ?>
-			<form
-			    method="post"
-			    onsubmit="return <?=$js; ?>;"
-			    action="/api/<?=$page; ?>/<?=$module->id; ?>/ressource"
-			>
-			    <label for="file"><?=$Dictionnary["File"]; ?></label>
-			    <input type="hidden" name="language" value="<?=$k; ?>" />
-			    <input id="path<?=$k; ?>2" type="hidden" name="path" value="" />
-			    <input
-				type="file"
-				name="file"
-				multiple="true"
-				onchange="document.getElementById('path<?=$k; ?>2').value = document.getElementById('pathfile_browser<?=$k; ?>').value; <?=$js; ?>"
-			    />
-			</form>
-		    <?php } ?>
-		    <?php if ($module->ressource && is_assistant_for_activity($module->id)) { ?>
-			<div id="subject_ressources_<?=$k; ?>">
-			    <?php
-			    $language = $k;
-			    $target = @$module->ressource[$k][0];
-			    $path = preg_replace("/^\.\/dres\/activity\//", "", @$module->ressource[$k][0]);
-			    $path = preg_replace("/^dres\/activity\//", "", @$module->ressource[$k][0]);
-			    $path = preg_replace("/^[a-zA-Z0-9\-_]+\//", "", $path);
-			    if ($language != "NA")
-				$path = preg_replace("/^$k\//", "", $path);
-			    $path = preg_replace("/^ressource/", "", $path);
-			    $type = "ressource";
-			    require ("./tools/template/path_browser.phtml");
-			    ?>
-			</div>
-		    <?php } ?>
+		    <div class="activity_file_column">
+			<h5><?=$Dictionnary["Ressources"]; ?></h5>
+			<?php $fbid = "file_browser"; ?>
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <?php $js = "silent_submit(this, '$fbid$k');"; ?>
+			    <form
+				method="post"
+				onsubmit="return <?=$js; ?>;"
+				action="/api/<?=$page; ?>/<?=$module->id; ?>/ressource"
+				class="activity_file_upload_form"
+			    >
+				<label for="file"><?=$Dictionnary["File"]; ?></label>
+				<input type="hidden" name="language" value="<?=$k; ?>" />
+				<input id="path<?=$k; ?>2" type="hidden" name="path" value="" />
+				<input
+				    type="file"
+				    name="file"
+				    multiple="true"
+				    onchange="document.getElementById('path<?=$k; ?>2').value = document.getElementById('pathfile_browser<?=$k; ?>').value; <?=$js; ?>"
+				/>
+			    </form>
+			<?php } ?>
+			<?php if (is_assistant_for_activity($module->id)) { ?>
+			    <div id="subject_ressources_<?=$k; ?>">
+				<?php
+				$language = $k;
+				$root = $Configuration->ActivitiesDir($module->codename, $k == "NA" ? "" : $k)."ressource/";
+				$path = "/";
+				$target = $root;
+				$type = "ressource";
+				$hidden_entries = ["admin"];
+				new_directory($target);
+				require ("./tools/template/path_browser.phtml");
+				unset($hidden_entries);
+				?>
+			    </div>
+			<?php } ?>
+		    </div>
+		    <div class="activity_file_column">
+			<h5>Admin</h5>
+			<?php $fbid = "admin_file_browser"; ?>
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <?php $js = "silent_submit(this, '$fbid$k');"; ?>
+			    <form
+				method="post"
+				onsubmit="return <?=$js; ?>;"
+				action="/api/<?=$page; ?>/<?=$module->id; ?>/ressource"
+				class="activity_file_upload_form"
+			    >
+				<label for="file"><?=$Dictionnary["File"]; ?></label>
+				<input type="hidden" name="language" value="<?=$k; ?>" />
+				<input type="hidden" name="locked_path" value="admin" />
+				<input id="admin_path<?=$k; ?>" type="hidden" name="path" value="admin" />
+				<input
+				    type="file"
+				    name="file"
+				    multiple="true"
+				    onchange="document.getElementById('admin_path<?=$k; ?>').value = document.getElementById('pathadmin_file_browser<?=$k; ?>').value; <?=$js; ?>"
+				/>
+			    </form>
+			<?php } ?>
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <div id="subject_admin_ressources_<?=$k; ?>">
+				<?php
+				$language = $k;
+				$root = $Configuration->ActivitiesDir($module->codename, $k == "NA" ? "" : $k)."ressource/";
+				$path = "/admin";
+				$target = $root."admin/";
+				$type = "ressource";
+				$locked_path = "admin";
+				new_directory($target);
+				require ("./tools/template/path_browser.phtml");
+				unset($locked_path);
+				?>
+			    </div>
+			<?php } ?>
+		    </div>
 		</div>
-		<?php // Fichiers d'ambiances ?>
-		<div class="activity_configuration_block mood_<?=$k; ?>">
-		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, 'wallpaper_configuration_$k');"; ?>
-			<form
-			    method="post"
-			    onsubmit="return <?=$js; ?>;"
-			    action="/api/<?=$page; ?>/<?=$module->id; ?>/wallpaper"
-			>
-			    <label for="file"><?=$Dictionnary["Wallpaper"]; ?></label>
-			    <input type="hidden" name="language" value="<?="NA"; ?>" />
-			    <input
-				type="file"
-				name="file"
-				multiple="true"
-				onchange="<?=$js; ?>"
-			    />
-			</form>
-		    <?php } ?>		    
-		    <?php if (is_assistant_for_activity($module->id)) { ?>
-			<div id="wallpaper_configuration_<?=$k; ?>">
-			    <?php if (isset($module->wallpaper["NA"][0])) { ?>
-			    <div
-				class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper["NA"][0]; ?>');"
-				ondblclick="window.open('<?=$module->wallpaper["NA"][0]; ?>', '_blank');"
+		<?php // Fichiers d'ambiances - communs à toutes les langues ?>
+		<?php if ($k == "NA") { ?>
+		<div class="activity_configuration_block mood_NA">
+		    <div class="activity_mood_unique_files">
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <?php $js = "silent_submit(this, 'wallpaper_configuration_$k');"; ?>
+			    <form
+				method="post"
+				onsubmit="return <?=$js; ?>;"
+				action="/api/<?=$page; ?>/<?=$module->id; ?>/wallpaper"
+				class="activity_file_upload_form"
 			    >
+				<label for="file"><?=$Dictionnary["Wallpaper"]; ?></label>
+				<input type="hidden" name="language" value="NA" />
+				<input
+				    type="file"
+				    name="file"
+				    accept=".jpg,.jpeg,.png"
+				    onchange="<?=$js; ?>"
+				/>
+			    </form>
+			<?php } ?>
+			<?php if (is_assistant_for_activity($module->id) && 0) { ?>
+			    <div class="activity_mood_preview" id="wallpaper_configuration_<?=$k; ?>">
+				<?php if (isset($module->wallpaper["NA"][0])) { ?>
+				<div
+				    class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper["NA"][0]; ?>');"
+				    ondblclick="window.open('<?=$module->wallpaper["NA"][0]; ?>', '_blank');"
+				>
+				</div>
+				<?php } ?>
 			    </div>
-			    <?php } ?>
-			</div>
-		    <?php } ?>
-		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, 'icon_configuration_$k');"; ?>
-			<form
-			    method="post"
-			    onsubmit="return <?=$js; ?>;"
-			    action="/api/<?=$page; ?>/<?=$module->id; ?>/icon"
-			>
-			    <label for="file"><?=$Dictionnary["Icon"]; ?></label>
-			    <input type="hidden" name="language" value="<?="NA"; ?>" />
-			    <input
-				type="file"
-				name="file"
-				multiple="true"
-				onchange="<?=$js; ?>"
-			    />
-			</form>
-		    <?php } ?>		    
-		    <?php if (is_assistant_for_activity($module->id)) { ?>
-			<div id="icon_configuration_<?=$k; ?>">
-			    <?php if (isset($module->icon["NA"][0])) { ?>
-			    <div
-				class="wallpaper_sample" style="background-image: url('<?=$module->icon["NA"][0]; ?>');"
-				ondblclick="window.open('<?=$module->icon["NA"][0]; ?>', '_blank');"
+			<?php } ?>
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <?php $js = "silent_submit(this, 'icon_configuration_$k');"; ?>
+			    <form
+				method="post"
+				onsubmit="return <?=$js; ?>;"
+				action="/api/<?=$page; ?>/<?=$module->id; ?>/icon"
+				class="activity_file_upload_form"
 			    >
+				<label for="file"><?=$Dictionnary["Icon"]; ?></label>
+				<input type="hidden" name="language" value="NA" />
+				<input
+				    type="file"
+				    name="file"
+				    accept=".jpg,.jpeg,.png"
+				    onchange="<?=$js; ?>"
+				/>
+			    </form>
+			<?php } ?>
+			<?php if (is_assistant_for_activity($module->id) && 0) { ?>
+			    <div class="activity_mood_preview" id="icon_configuration_<?=$k; ?>">
+				<?php if (isset($module->icon["NA"][0])) { ?>
+				<div
+				    class="wallpaper_sample" style="background-image: url('<?=$module->icon["NA"][0]; ?>');"
+				    ondblclick="window.open('<?=$module->icon["NA"][0]; ?>', '_blank');"
+				>
+				</div>
+				<?php } ?>
 			    </div>
-			    <?php } ?>
-			</div>
-		    <?php } ?>
-		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, 'intro_configuration_$k');"; ?>
-			<form
-			    method="post"
-			    onsubmit="return <?=$js; ?>;"
-			    action="/api/<?=$page; ?>/<?=$module->id; ?>/intro"
-			>
-			    <label for="file"><?=$Dictionnary["AnimatedWallpaper"]; ?></label>
-			    <input type="hidden" name="language" value="<?="NA"; ?>" />
-			    <input
-				type="file"
-				name="file"
-				multiple="true"
-				onchange="<?=$js; ?>"
-			    />
-			</form>
-		    <?php } ?>
-		    <?php if (is_assistant_for_activity($module->id)) { ?>
-			<div id="intro_configuration_<?=$k; ?>">
-			    <?php if (isset($module->intro["NA"][0])) { ?>
-			    <video
-				controls
-				class="wallpaper_sample" src="<?=$module->intro["NA"][0]; ?>"
-				ondblclick="window.open('<?=$module->intro["NA"][0]; ?>', '_blank');"
+			<?php } ?>
+			<?php if (is_teacher_for_activity($module->id)) { ?>
+			    <?php $js = "silent_submit(this, 'intro_configuration_$k');"; ?>
+			    <form
+				method="post"
+				onsubmit="return <?=$js; ?>;"
+				action="/api/<?=$page; ?>/<?=$module->id; ?>/intro"
+				class="activity_file_upload_form"
 			    >
-			    </video>
-			    <?php } ?>
-			</div>
-		    <?php } ?>
-		    <?php $fbid = "mood_browser"; ?>
+				<label for="file"><?=$Dictionnary["AnimatedWallpaper"]; ?></label>
+				<input type="hidden" name="language" value="NA" />
+				<input
+				    type="file"
+				    name="file"
+				    accept=".mp4,.ogv"
+				    onchange="<?=$js; ?>"
+				/>
+			    </form>
+			<?php } ?>
+			<?php if (is_assistant_for_activity($module->id) && 0) { ?>
+			    <div class="activity_mood_preview" id="intro_configuration_<?=$k; ?>">
+				<?php if (isset($module->intro["NA"][0])) { ?>
+				<video
+				    controls
+				    class="wallpaper_sample" src="<?=$module->intro["NA"][0]; ?>"
+				    ondblclick="window.open('<?=$module->intro["NA"][0]; ?>', '_blank');"
+				>
+				</video>
+				<?php } ?>
+			    </div>
+			<?php } ?>
+		    </div>
+		    <div class="activity_mood_music_files">
+		    <?php $fbid = "mood_browser_"; ?>
 		    <?php if (is_teacher_for_activity($module->id)) { ?>
-			<?php $js = "silent_submit(this, '$fbid$k');"; ?>
+			<?php $js = "silent_submit(this, '{$fbid}NA');"; ?>
 			<form
 			    method="post"
 			    onsubmit="return <?=$js; ?>;"
 			    action="/api/<?=$page; ?>/<?=$module->id; ?>/mood"
+			    class="activity_file_upload_form"
 			>
 			    <label for="file"><?=$Dictionnary["MusicOrPlaylist"]; ?></label>
-			    <input type="hidden" name="language" value="<?=$k; ?>" />
+			    <input type="hidden" name="language" value="NA" />
+			    <input type="hidden" name="fbid" value="<?=$fbid; ?>" />
 			    <input
 				type="file"
 				name="file"
 				multiple="true"
+				accept=".txt,.mp3,.ogg"
 				onchange="<?=$js; ?>"
 			    />
 			</form>
 		    <?php } ?>
 		    <?php if (is_assistant_for_activity($module->id)) { ?>
-			<div id="music_configuration_<?=$k; ?>">
+			<div class="activity_mood_browser" id="music_configuration_<?=$k; ?>">
 			    <?php
-			    $file_browser_height =
-				"calc(100% - 4 * 35px ".
-				(isset($module->wallpaper["NA"][0]) ? "- 50px " : "").
-				(isset($module->icon["NA"][0]) ? "- 50px " : "").
-				(isset($module->intro["NA"][0]) ? "- 50px " : "").
-				")";
-			    $language = $k;
-			    $target = @$module->music["NA"][0];
-			    $path = preg_replace("/^\.\/dres\/activity\//", "", @$module->music["NA"][0]);
-			    $path = preg_replace("/^[a-zA-Z0-9\-_]+\//", "", $path);
-			    $path = preg_replace("/^mood/", "", $path);
+			    $file_browser_height = "calc(100% - 45px)";
+			    $language = "NA";
+			    $root = $Configuration->ActivitiesDir($module->codename, "")."mood/";
+			    $path = "/";
+			    $target = $root;
 			    $type = "mood";
+			    new_directory($target);
 			    require ("./tools/template/path_browser.phtml");
 			    ?>
 			</div>
 		    <?php } ?>
+		    </div>
 		</div>
-		<?php // Moulinettes et binaire de référence ?>
-		<div class="activity_configuration_block softwares_<?=$k; ?> softwares">
-		    <?php ob_start(); ?>
-		    <select name="type" style="width: 100%;">
-			<option value="0"><?=$Dictionnary["EvaluatorRepository"]; ?></option>
-			<option value="1"><?=$Dictionnary["ReferenceRepository"]; ?></option>
-			<option value="2"><?=$Dictionnary["ToolsRepository"]; ?></option>
-		    </select>
-		    <?php $html = ob_get_clean(); ?>
-		    <?php list_of_links([
-			"hook_name" => "activity",
-			"hook_id" => $module->id,
-			"linked_name" => "software",
-			"linked_elems" => $module->repositories,
-			"additional_html" => $html,
-			"admin_func" => "is_teacher_for_activity",
-			"display_link" => false,
-			"extra_form_id" => $k
-		    ]); ?>
+		<?php } ?>
+		<?php // Moulinettes et binaire de référence - communs à toutes les langues ?>
+		<?php if ($k == "NA") { ?>
+		<div class="activity_configuration_block softwares_NA">
+		    <?=render_activity_software_panel($page, $module->id, $module, "NA"); ?>
 		</div>
+		<?php } ?>
 	    <?php } ?>
 	</div></td>
     </tr>

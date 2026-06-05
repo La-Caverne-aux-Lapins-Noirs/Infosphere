@@ -68,7 +68,7 @@ function DisplaySupportList($id, $data, $method, $output, $module)
     global $Configuration;
     global $Database;
     
-    if (is_admin())
+    if (can_edit_supports())
     {
 	if (($categories = fetch_support_category($id, true))->is_error())
 	    return ($categories);
@@ -98,7 +98,7 @@ function DisplayAssetList($id, $data, $method, $output, $module)
 
     if ($id == -1)
 	bad_request();
-    if (is_admin())
+    if (can_edit_supports())
     {
 	if (($support = fetch_support($id))->is_error())
 	    return ($support);
@@ -121,7 +121,7 @@ function DisplaySupportMenu($id, $data, $method, $output, $module)
     global $Configuration;
     global $Database;
 
-    if (is_admin())
+    if (can_edit_supports())
 	$categories = fetch_support_category(-1, true, false, false, false)->value;
     else
 	$categories = [];
@@ -166,6 +166,30 @@ function AddSupportList($id, $data, $method, $output, $module)
     return (DisplaySupportList($id, $data, "GET", $output, $module));
 }
 
+function support_asset_uploaded_file($field)
+{
+    if (!isset($_FILES[$field]))
+        return (NULL);
+    $file = $_FILES[$field];
+    if (is_array($file["name"]))
+    {
+        if (count($file["name"]) == 0)
+            return (NULL);
+        $file = [
+            "name" => $file["name"][0],
+            "type" => $file["type"][0],
+            "tmp_name" => $file["tmp_name"][0],
+            "error" => $file["error"][0],
+            "size" => $file["size"][0]
+        ];
+    }
+    if ($file["error"] == UPLOAD_ERR_NO_FILE)
+        return (NULL);
+    if ($file["error"] != UPLOAD_ERR_OK)
+        return (new ErrorResponse("UploadError", $field." #".$file["error"]));
+    return ($file);
+}
+
 function AddSupportAsset($id, $data, $method, $output, $module)
 {
     global $Configuration;
@@ -203,41 +227,63 @@ function AddSupportAsset($id, $data, $method, $output, $module)
     
     $assetlist = [];
     
-    foreach ($data as $k => $v)
+    foreach ($LanguageList as $lk => $lv)
     {
-	foreach ($LanguageList as $lk => $lv)
+	$upload = support_asset_uploaded_file($lk."_content");
+	if ($upload instanceof ErrorResponse)
+	    return ($upload);
+	if ($upload !== NULL)
 	{
-	    if (!isset($data[$lk."_content"][0]["name"]) ||
-		!isset($data[$lk."_content"][0]["content"]))
-	    {
-		if (isset($data[$lk."_content"]))
-		    unset($data[$lk."_content"]);
-	        continue ;
-	    }
-	    $asset_name = $data[$lk."_content"][0]["name"];
-	    if (in_array(pathinfo($asset_name, PATHINFO_EXTENSION), [
+	    $asset_name = $upload["name"];
+	    if (in_array(strtolower(pathinfo($asset_name, PATHINFO_EXTENSION)), [
 		"php", "sh", "pl"
 	    ]) !== false)
-	        forbidden();
+		forbidden();
 	    $assetlist[] = [
 		"lng" => $lk,
-		"data" => $data[$lk."_content"][0]["content"],
+		"upload" => $upload,
 		"name" => $asset_name
 	    ];
+	    continue ;
 	}
+	if (!isset($data[$lk."_content"][0]["name"]) ||
+	    !isset($data[$lk."_content"][0]["content"]))
+	{
+	    if (isset($data[$lk."_content"]))
+		unset($data[$lk."_content"]);
+	    continue ;
+	}
+	$asset_name = $data[$lk."_content"][0]["name"];
+	if (in_array(strtolower(pathinfo($asset_name, PATHINFO_EXTENSION)), [
+	    "php", "sh", "pl"
+	]) !== false)
+	    forbidden();
+	$assetlist[] = [
+	    "lng" => $lk,
+	    "data" => $data[$lk."_content"][0]["content"],
+	    "name" => $asset_name
+	];
     }
 
     foreach ($assetlist as $asset)
     {
-	if (($ext = pathinfo($asset["name"], PATHINFO_EXTENSION)) == "gz")
+	$ext = strtolower(pathinfo($asset["name"], PATHINFO_EXTENSION));
+	if ($ext == "gz")
 	    $ext = "tar.gz";
+	$stored_ext = support_video_output_extension($ext);
 	$target = $Configuration->SupportDir(
-	    $category, $support, $data["codename"].".$ext", $asset["lng"]
+	    $category, $support, $data["codename"].".$stored_ext", $asset["lng"]
 	);
-	$data[$asset["lng"]."_content"] = $target;
-	$content = base64_decode($asset["data"]);
-	if (file_put_contents($target, $content) === false)
-	    return (new ErrorResponse("CannotWriteFile", $target));
+	if (isset($asset["upload"]))
+	    $ret = support_video_store_uploaded($target, $asset["upload"], $asset["name"]);
+	else
+	{
+	    $content = base64_decode($asset["data"]);
+	    $ret = support_video_store_optimized($target, $content, $asset["name"]);
+	}
+	if ($ret->is_error())
+	    return ($ret);
+	$data[$asset["lng"]."_content"] = $ret->value;
     }
 
     $ch = db_select_one("
@@ -432,6 +478,13 @@ function DeleteSupportAsset($id, $data, $method, $output, $module)
 		    $lk."_content" => $to
 		]);
 		system("mv $from $to");
+		$hls_from = support_video_hls_directory($from);
+		$hls_to = support_video_hls_directory($to);
+		if (is_dir($hls_from))
+		{
+		    support_video_remove_tree($hls_to);
+		    @rename($hls_from, $hls_to);
+		}
 	    }
 	    return (DisplayAssetList($id_support, $data, "GET", $output, $module));
 	}
@@ -460,27 +513,27 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_teacher",
+	    "can_edit_supports",
 	    "AddSupportList",
 	],
 	"support" => [
-	    "is_teacher",
+	    "can_edit_supports",
 	    "AddSupportAsset",
 	],
     ],
     "PUT" => [
 	"support" => [
-	    "is_teacher",
+	    "can_edit_supports",
 	    "EditSupportAsset",
 	]
     ],
     "DELETE" => [
 	"" => [
-	    "is_teacher",
+	    "can_edit_supports",
 	    "DeleteSupport", // Handle support and category
 	],
 	"support" => [
-	    "is_teacher",
+	    "can_edit_supports",
 	    "DeleteSupportAsset", // Call DeleteSupport if id_asset is -1
 	],
     ]

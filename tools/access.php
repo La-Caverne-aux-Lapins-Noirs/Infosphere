@@ -394,6 +394,11 @@ function is_teacher_for_school($id)
     return ($match != NULL);
 }
 
+function can_edit_supports($id = -1)
+{
+    return (is_teacher_for_school(-1));
+}
+
 function is_director_for_room($id)
 {
     global $User;

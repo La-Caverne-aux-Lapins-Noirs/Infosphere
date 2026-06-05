@@ -913,6 +913,109 @@ function EditMedal($id, $data, $method, $output, $module)
     ]));
 }
 
+
+function activity_software_repository_labels()
+{
+    global $Dictionnary;
+
+    return ([
+	0 => $Dictionnary["EvaluatorRepository"],
+	1 => $Dictionnary["ReferenceRepository"],
+	2 => $Dictionnary["ToolsRepository"],
+    ]);
+}
+
+function render_activity_software_panel($page, $id, $module, $extra_form_id = "", $wrap = true)
+{
+    global $Dictionnary;
+
+    $panel_id = "software-".$id.$extra_form_id;
+    $labels = activity_software_repository_labels();
+    $repositories = [];
+    foreach ($labels as $type => $unused)
+	$repositories[$type] = [];
+    foreach ($module->repositories as $repo)
+    {
+	$type = isset($repo["type"]) ? (int)$repo["type"] : 2;
+	if (!isset($repositories[$type]))
+	    $repositories[$type] = [];
+	$repositories[$type][] = $repo;
+    }
+
+    ob_start();
+?>
+<?php if ($wrap) { ?>
+<div class="activity_software_panel" id="<?=$panel_id; ?>">
+<?php } ?>
+    <?php if (is_teacher_for_activity($id)) { ?>
+	<form
+	    method="put"
+	    action="/api/<?=$page; ?>/<?=$id; ?>/software"
+	    onsubmit="return silent_submit(this, '<?=$panel_id; ?>');"
+	    class="activity_software_add_form"
+	>
+	    <input type="hidden" name="extra_form_id" value="<?=$extra_form_id; ?>" />
+	    <select name="type">
+		<?php foreach ($labels as $type => $label) { ?>
+		    <option value="<?=$type; ?>"><?=$label; ?></option>
+		<?php } ?>
+	    </select>
+	    <input
+		type="text"
+		name="software"
+		placeholder="git://, svn://, https://..."
+	    />
+	    <input
+		type="button"
+		onclick="silent_submit(this, '<?=$panel_id; ?>');"
+		value="&#10003;"
+		style="color: green;"
+	    />
+	</form>
+    <?php } ?>
+
+    <?php foreach ($labels as $type => $label) { ?>
+	<div class="activity_software_group">
+	    <h5><?=$label; ?></h5>
+	    <?php if (count($repositories[$type]) == 0) { ?>
+		<p><?=$Dictionnary["Empty"]; ?></p>
+	    <?php } else { ?>
+		<?php foreach ($repositories[$type] as $repo) { ?>
+		    <?php
+		    $repository = $repo["software"];
+		    $href = htmlspecialchars($repository, ENT_QUOTES);
+		    $text = htmlspecialchars($repository, ENT_QUOTES);
+		    ?>
+		    <form
+			method="delete"
+			action="/api/<?=$page; ?>/<?=$id; ?>/software/<?=$repo["id"]; ?>"
+			onsubmit="return silent_submit(this, '<?=$panel_id; ?>');"
+			class="activity_software_entry"
+		    >
+			<input type="hidden" name="extra_form_id" value="<?=$extra_form_id; ?>" />
+			<span>
+			    <a href="<?=$href; ?>"><?=$text; ?></a>
+			</span>
+			<?php if (is_teacher_for_activity($id)) { ?>
+			    <input
+				type="button"
+				onclick="silent_submit(this, '<?=$panel_id; ?>');"
+				value="&#10007;"
+				style="color: red;"
+			    />
+			<?php } ?>
+		    </form>
+		<?php } ?>
+	    <?php } ?>
+	</div>
+    <?php } ?>
+<?php if ($wrap) { ?>
+</div>
+<?php } ?>
+<?php
+    return (ob_get_clean());
+}
+
 function SetSoftware($id, $data, $method, $output, $module)
 {
     global $Database;
@@ -920,34 +1023,20 @@ function SetSoftware($id, $data, $method, $output, $module)
 
     if ($id == -1)
 	bad_request();
+    $page = $module;
     if (($data["type"] = (int)$data["type"]) < 0 || $data["type"] > 2)
 	bad_request();
-    $data["software"] = $Database->real_escape_string($data["software"]);
+    if (!isset($data["software"]) || trim($data["software"]) == "")
+	bad_request();
+    $data["software"] = $Database->real_escape_string(trim($data["software"]));
     $Database->query("
        INSERT INTO activity_software (id_activity, software, type)
        VALUES ($id, '{$data["software"]}', {$data["type"]})
        ");
-    ($module = new FullActivity)->build($id);
-    $html = '<select name="type" style="width: 100%;">';
-    foreach ([
-	$Dictionnary["EvaluatorRepository"],
-	$Dictionnary["ReferenceRepository"],
-	$Dictionnary["ToolsRepository"],
-    ] as $k => $label)
-    $html .= "<option value=\"$k\">$label</option>";
-    $html .= '</select>';
+    ($activity = new FullActivity)->build($id);
     return (new ValueResponse([
 	"msg" => $Dictionnary["Added"],
-	"content" => list_of_linksb([
-	    "hook_name" => "activity",
-	    "hook_id" => $id,
-	    "linked_name" => "software",
-	    "linked_elems" => $module->repositories,
-	    "admin_func" => "is_teacher_for_activity",
-	    "display_link" => false,
-	    "additional_html" => $html,
-	    "extra_form_id" => @$data["extra_form_id"],
-	])
+	"content" => render_activity_software_panel($page, $id, $activity, @$data["extra_form_id"], false)
     ]));
 }
 
@@ -959,88 +1048,189 @@ function RemoveSoftware($id, $data, $method, $output, $module)
 
     if ($id == -1)
 	bad_request();
-    $data["software"] = (int)$data["software"];
+    $page = $module;
     $SUBID = abs((int)$SUBID);
     $Database->query("
 	DELETE FROM activity_software
 	WHERE id = $SUBID
 	AND id_activity = $id
     ");
-    ($module = new FullActivity)->build($id);
-    $tabs = [
-	$Dictionnary["EvaluatorRepository"],
-	$Dictionnary["ReferenceRepository"],
-	$Dictionnary["ToolsRepository"],
-    ];
-    $html = "<select name=\"type\" style=\"width: 100%;\">\n";
-    foreach ($tabs as $k => $v)
-	$html .= "<option value=\"$k\">$v</option>\n";
-    $html = "</select>";
+    ($activity = new FullActivity)->build($id);
     return (new ValueResponse([
 	"msg" => $Dictionnary["Deleted"],
-	"content" => list_of_linksb([
-	    "hook_name" => "activity",
-	    "hook_id" => $id,
-	    "linked_name" => "software",
-	    "linked_elems" => $module->repositories,
-	    "admin_func" => "is_teacher_for_activity",
-	    "display_link" => false,
-	    "additional_html" => $html
-    ])]));
+	"content" => render_activity_software_panel($page, $id, $activity, @$data["extra_form_id"], false)
+    ]));
+}
+
+function activity_subject_language($data)
+{
+    global $Language;
+    global $LanguageList;
+
+    if (!isset($data["language"]) || ($data["language"] != "NA" && !isset($LanguageList[$data["language"]])))
+	return ($Language);
+    return ($data["language"]);
+}
+
+function activity_subject_files()
+{
+    return (["subject.pdf", "subject.txt", "subject.htm", "subject.html"]);
+}
+
+function remove_activity_subject_files($target)
+{
+    foreach (activity_subject_files() as $file)
+	@unlink($target.$file);
+}
+
+function render_activity_subject_browser($page, $id, $activity, $language, $wrap = true)
+{
+    global $Configuration;
+    global $Dictionnary;
+
+    $root = $Configuration->ActivitiesDir($activity->codename, $language == "NA" ? "" : $language);
+    $files = array_merge(["configuration.dab"], activity_subject_files());
+    $entries = [];
+    foreach ($files as $file)
+	if (file_exists($root.$file))
+	    $entries[] = $root.$file;
+
+    ob_start();
+?>
+<?php if ($wrap) { ?>
+<div class="file_browser" id="subject_browser<?=$language; ?>">
+<?php } ?>
+    <?php foreach ($entries as $content) { ?>
+	<div
+	    class="icon <?=pathinfo($content, PATHINFO_EXTENSION); ?>"
+	    ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
+	>
+	    <form action="/api/<?=$page; ?>/<?=$id; ?>/subject/<?=str_replace("/", "@", $content); ?>" method="delete" style="z-index: 3;">
+		<input type="hidden" name="language" value="<?=$language; ?>" />
+		<input type="hidden" name="fbid" value="subject_browser" />
+		<input type="button" onclick="
+		    if (ShiftPressed || window.confirm())
+			silent_submit(this, 'subject_browser<?=$language; ?>');
+		"
+		value="&#10007;"
+		/>
+	    </form>
+	    <div class="filename" style="z-index: 2;"><?=pathinfo($content, PATHINFO_BASENAME); ?></div>
+	</div>
+    <?php } ?>
+    <?php if (count($entries) == 0) { ?>
+	<p style="text-align: center;">
+	    <br />
+	    <?=$Dictionnary["Empty"]; ?>
+	    <br />
+	</p>
+    <?php } ?>
+<?php if ($wrap) { ?>
+</div>
+<?php } ?>
+<?php
+    return (ob_get_clean());
+}
+
+function GetSubjectDir($id, $data, $method, $output, $module, $msg = "")
+{
+    if ($id == -1)
+	bad_request();
+
+    $language = activity_subject_language($data);
+    ($activity = new FullActivity)->build($id);
+    $html = render_activity_subject_browser($module, $id, $activity, $language, false);
+
+    $msg = $msg ? ["msg" => $msg] : [];
+    return (new ValueResponse(array_merge($msg, [
+	"content" => $html
+    ])));
 }
 
 function SetSubject($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
     global $Configuration;
-    global $Language;
-    global $LanguageList;
 
     if ($id == -1)
 	bad_request();
-    if (!isset($data["language"]) || ($data["language"] != "NA" && !isset($LanguageList[$data["language"]])))
-	$data["language"] = $Language;
-    ($module = new FullActivity)->build($id);
-    $target = $Configuration->ActivitiesDir($module->codename, $data["language"] == "NA" ? "" : $data["language"]);
+
+    $language = activity_subject_language($data);
+    ($activity = new FullActivity)->build($id);
+    $target = $Configuration->ActivitiesDir($activity->codename, $language == "NA" ? "" : $language);
+    new_directory($target);
+
+    if (isset($data["subject"]))
+    {
+	$file = $data["subject"];
+	if ($file[0] == "-")
+	    $file = substr($file, 1);
+	$file = str_replace("@", "/", $file);
+	$allowed_files = array_merge(["configuration.dab"], activity_subject_files());
+	if (strncmp($target, $file, strlen($target)) != 0)
+	    bad_request();
+	if (dirname($file)."/" != $target)
+	    bad_request();
+	if (!in_array(basename($file), $allowed_files))
+	    bad_request();
+	if (remove_ressource_file("activity_subject", $id, $file) == false)
+	    bad_request();
+	return (GetSubjectDir($id, $data, "GET", $output, $module, "Deleted"));
+    }
+
     if (!isset($data["file"]) || count($data["file"]) == 0)
     {
-	@unlink($target."subject.pdf");
-	@unlink($target."subject.htm");
-	@unlink($target."configuration.dab");
-	$html = ""; goto GetOut; // web-mode a du mal avec l'indentation avec un else...
+	$kind = isset($data["kind"]) ? $data["kind"] : "";
+	if ($kind == "configuration")
+	    @unlink($target."configuration.dab");
+	else if ($kind == "subject")
+	    remove_activity_subject_files($target);
+	else
+	{
+	    remove_activity_subject_files($target);
+	    @unlink($target."configuration.dab");
+	}
+	return (GetSubjectDir($id, $data, "GET", $output, $module, "Deleted"));
     }
+
+    $kind = isset($data["kind"]) ? $data["kind"] : "";
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))
 	    bad_request();
-	$ext = pathinfo($files["name"], PATHINFO_EXTENSION);
+	$ext = strtolower(pathinfo($files["name"], PATHINFO_EXTENSION));
 	$content = base64_decode($files["content"]);
-	new_directory($target);
-	if ($ext == "html")
-	    $ext = "htm";
-	if ($ext == "pdf" || $ext == "htm")
-	    file_put_contents($target."subject.$ext", $content);
-	else if ($ext == "dab")
+	if ($kind == "configuration")
+	{
+	    if ($ext != "dab")
+		return (new ErrorResponse("InvalidFile", $ext, $Dictionnary["SupportedFormats"].": dab"));
 	    file_put_contents($target."configuration.dab", $content);
+	}
+	else if ($kind == "subject")
+	{
+	    if (!in_array($ext, ["pdf", "txt", "htm", "html"]))
+		return (new ErrorResponse("InvalidFile", $ext, $Dictionnary["SupportedFormats"].": pdf, txt, htm, html"));
+	    remove_activity_subject_files($target);
+	    if ($ext == "htm")
+		$ext = "html";
+	    file_put_contents($target."subject.$ext", $content);
+	}
 	else
-	    return (new ErrorResponse("InvalidFile", $ext, $Dictionnary["SupportedFormats"].": pdf, htm, dab"));
+	{
+	    if ($ext == "dab")
+		file_put_contents($target."configuration.dab", $content);
+	    else if (in_array($ext, ["pdf", "txt", "htm", "html"]))
+	    {
+		remove_activity_subject_files($target);
+		if ($ext == "htm")
+		    $ext = "html";
+		file_put_contents($target."subject.$ext", $content);
+	    }
+	    else
+		return (new ErrorResponse("InvalidFile", $ext, $Dictionnary["SupportedFormats"].": pdf, txt, htm, html, dab"));
+	}
     }
-    ($module = new FullActivity)->build($id);
-    ob_start();
-?>
-<a href="<?=@$module->subject[$data["language"]][0]; ?>">
-    <?=@$module->subject[$data["language"]][0] ? $Dictionnary["SeeSubject"] : ""; ?>
-</a>
-<a href="<?=@$module->configuration[$data["language"]][0]; ?>">
-    <?=@$module->configuration[$data["language"]][0] ? $Dictionnary["SeeConfiguration"] : ""; ?>
-</a>
-<?php
-$html = ob_get_clean();
-GetOut:
-	return (new ValueResponse([
-	    "msg" => $Dictionnary["Added"],
-	    "content" => $html
-	]));
+    return (GetSubjectDir($id, $data, "GET", $output, $module, "Added"));
 }
 
 function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
@@ -1063,8 +1253,12 @@ function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
     $fbid = "file_browser";
     if (isset($data["fbid"]))
 	$fbid = $data["fbid"];
+    $locked_path = isset($data["locked_path"]) ? $data["locked_path"] : "";
+    $path_browser_can_cd = NULL;
+    if (isset($data["path_browser_can_cd"]))
+	$path_browser_can_cd = !!$data["path_browser_can_cd"];
     
-    $html = get_dir($root, $data["path"], $page, $id, "ressource", $fbid, is_teacher_for_activity($id), $data["language"], $nocd);
+    $html = get_dir($root, $data["path"], $page, $id, "ressource", $fbid, is_teacher_for_activity($id), $data["language"], $nocd, $locked_path, $path_browser_can_cd);
 
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
@@ -1079,25 +1273,29 @@ function AddRessource($id, $data, $method, $output, $module)
 
     if ($id == -1 || !isset($data["file"]) || !isset($data["language"]))
 	bad_request();
+    $page = $module;
     if (!isset($data["path"]))
 	$data["path"] = "";
     ($module = new FullActivity)->build($id);
     $path = resolve_path($data["path"]);
     $root = $Configuration->ActivitiesDir($module->codename, $data["language"] == "NA" ? "" : $data["language"])."ressource/";
     $target = resolve_path($root.$path)."/";
+    if (strncmp($root, $target, strlen($root)) != 0)
+	bad_request();
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))
 	    bad_request();
 	if ($files["name"] == "index.php")
 	    continue ; // Clairement, non.
-	$ext = pathinfo($files["name"], PATHINFO_EXTENSION);
+	$filename = str_replace(" ", "_", $files["name"]);
 	$content = base64_decode($files["content"]);
 	new_directory($target);
-	file_put_contents($target.str_replace(" ", "_", $files["name"]), $content);
-	system("chmod 640 ".$target.$files["name"]); // Surtout si il peut y avoir du script...
+	file_put_contents($target.$filename, $content);
+	$protected_target = escapeshellarg($target.$filename);
+	system("chmod 640 $protected_target"); // Surtout si il peut y avoir du script...
     }
-    return (GetRessourceDir($id, $data, "GET", $output, $module, "RessourceAdded"));
+    return (GetRessourceDir($id, $data, "GET", $output, $page, "RessourceAdded"));
 }
 
 function RemoveRessource($id, $data, $method, $output, $module)
@@ -1110,9 +1308,11 @@ function RemoveRessource($id, $data, $method, $output, $module)
     if (!isset($data["language"]))
 	$data["language"] = "";
 
+    $page = $module;
+
     // On vérifie que le dossier est bien celui de l'activité demandé...
     ($module = new FullActivity)->build($id);
-    $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"]);
+    $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"] == "NA" ? "" : $data["language"])."ressource/";
     $file = $data["ressource"];
     if ($file[0] == "-")
 	$file = substr($file, 1);
@@ -1123,7 +1323,7 @@ function RemoveRessource($id, $data, $method, $output, $module)
     // Tout est bon, on envoi à la poubelle
     if (remove_ressource_file("activity_ressource", $id, $file) == false)
 	bad_request();
-    return (GetRessourceDir($id, $data, "GET", $output, $module, "RessourceDeleted"));
+    return (GetRessourceDir($id, $data, "GET", $output, $page, "RessourceDeleted"));
 }
 
 function GetMoodDir($id, $data, $method, $output, $module, $msg = "")
@@ -1138,11 +1338,17 @@ function GetMoodDir($id, $data, $method, $output, $module, $msg = "")
     // Requis seulement pour éviter les collisions de formulaire, sinon inutile pour la mécanique interne
     if (!isset($data["language"]))
 	$data["language"] = "NA";
+    $fbid = isset($data["fbid"]) ? $data["fbid"] : "mood_browser";
+    $nocd = isset($data["nocd"]) ? !!$data["nocd"] : false;
+    $locked_path = isset($data["locked_path"]) ? $data["locked_path"] : "";
+    $path_browser_can_cd = NULL;
+    if (isset($data["path_browser_can_cd"]))
+	$path_browser_can_cd = !!$data["path_browser_can_cd"];
     
     $page = $module;
     ($activity = new FullActivity)->build($id);
     $root = $Configuration->ActivitiesDir($activity->codename, "")."mood/";
-    $html = get_dir($root, $data["path"], $page, $id, "mood", "mood_browser", is_teacher_for_activity($id), $data["language"]);
+    $html = get_dir($root, $data["path"], $page, $id, "mood", $fbid, is_teacher_for_activity($id), $data["language"], $nocd, $locked_path, $path_browser_can_cd);
 
     $msg = $msg ? ["msg" => $msg] : [];
     return (new ValueResponse(array_merge($msg, [
@@ -1157,63 +1363,75 @@ function AddMood($id, $data, $method, $output, $module)
 
     if ($id == -1 || !isset($data["file"]) || !isset($data["action"]))
 	bad_request();
+    $page = $module;
     if (in_array($action = $data["action"], ["wallpaper", "icon", "mood", "intro"]) == false)
 	bad_request();
     if (!isset($data["path"]))
 	$data["path"] = "";
-    ($module = new FullActivity)->build($id);
+    ($activity = new FullActivity)->build($id);
     $path = resolve_path($data["path"]);
-    $root = $Configuration->ActivitiesDir($module->codename, "");
-    $target = resolve_path($root."mood/".$path)."/";
+    $root = $Configuration->ActivitiesDir($activity->codename, "");
+    $mood_root = $root."mood/";
+    $target = resolve_path($mood_root.$path)."/";
+    if (strncmp($mood_root, $target, strlen($mood_root)) != 0)
+	bad_request();
     foreach ($data["file"] as $files)
     {
 	if (!isset($files["name"]) || !isset($files["content"]))
 	    bad_request();
 	if ($files["name"] == "index.php")
 	    continue ; // Clairement, non.
-	$ext = pathinfo($files["name"], PATHINFO_EXTENSION);
+	$ext = strtolower(pathinfo($files["name"], PATHINFO_EXTENSION));
 	$content = base64_decode($files["content"]);
 	new_directory($target);
 	$tar = NULL;
 	if (in_array($ext, ["jpg", "jpeg", "png"]) && ($action == "wallpaper" || $action == "icon"))
+	{
+	    foreach (["jpg", "jpeg", "png"] as $old_ext)
+		@unlink($root.$action.".".$old_ext);
 	    $tar = $root.$action.".".$ext;
+	}
 	else if (in_array($ext, ["mp4", "ogv"]) && $action == "intro")
+	{
+	    foreach (["mp4", "ogv"] as $old_ext)
+		@unlink($root."intro.".$old_ext);
 	    $tar = $root."intro.".$ext;
+	}
 	else if (in_array($ext, ["txt"]) && $action == "mood")
-	    $tar = $root."playlist.".$ext;
+	    $tar = $root."mood/playlist.txt";
 	else if (in_array($ext, ["mp3", "ogg"]) && $action == "mood")
-	    $tar = $target.str_replace(" ", "_", $files["name"]);
+	    $tar = $target.basename($files["name"]);
 	if ($tar)
 	{
 	    file_put_contents($tar, $content);
-	    $tar = escapeshellarg($tar);
-	    system("chmod 640 $tar"); // Surtout si il peut y avoir du script...
+	    $protected_target = escapeshellarg($tar);
+	    system("chmod 640 $protected_target"); // Surtout si il peut y avoir du script...
 	}
     }
     if ($action == "mood")
-	return (GetMoodDir($id, $data, "GET", $output, $module, "MoodAdded"));
+	return (GetMoodDir($id, $data, "GET", $output, $page, "MoodAdded"));
     $language = "NA";
-    ($module = new FullActivity)->build($id);
+    ($activity = new FullActivity)->build($id);
     ob_start();
-    if ($action == "wallpaper") { ?>
+    if ($action == "wallpaper" && isset($activity->wallpaper[$language][0])) { ?>
     <div
-	class="wallpaper_sample" style="background-image: url('<?=$module->wallpaper[$language][0]; ?>?<?=now(); ?>');"
-	ondblclick="window.open('<?=$module->wallpaper[$language][0]; ?>', '_blank');"
+	class="wallpaper_sample" style="background-image: url('<?=$activity->wallpaper[$language][0]; ?>?<?=now(); ?>');"
+	ondblclick="window.open('<?=$activity->wallpaper[$language][0]; ?>', '_blank');"
     >
     </div>
 <?php }
-if ($action == "icon") { ?>
+if ($action == "icon" && isset($activity->icon[$language][0])) { ?>
     <div
-	class="wallpaper_sample" style="background-image: url('<?=$module->icon[$language][0]; ?>?<?=now(); ?>');"
-	ondblclick="window.open('<?=$module->icon[$language][0]; ?>', '_blank');"
+	class="wallpaper_sample" style="background-image: url('<?=$activity->icon[$language][0]; ?>?<?=now(); ?>');"
+	ondblclick="window.open('<?=$activity->icon[$language][0]; ?>', '_blank');"
     >
     </div>
 <?php }
-if ($action == "intro") { ?>
+if ($action == "intro" && isset($activity->intro[$language][0])) { ?>
     <video
 	controls
-	class="wallpaper_sample" src="<?=$module->intro[$language][0]; ?>?<?=now(); ?>"
-	ondblclick="window.open('<?=$module->intro[$language][0]; ?>', '_blank');"
+	class="wallpaper_sample" src="<?=$activity->intro[$language][0]; ?>?<?=now(); ?>"
+	ondblclick="window.open('<?=$activity->intro[$language][0]; ?>', '_blank');"
     >
     </video>
 <?php }
@@ -1225,15 +1443,18 @@ return (new ValueResponse([
 
 function RemoveMood($id, $data, $method, $output, $module)
 {
-    if ($id == -1 || !isset($data["file"]))
+    global $Configuration;
+
+    if ($id == -1 || !isset($data["mood"]))
 	bad_request();
     if (!isset($data["language"]))
-	$data["language"] = "";
+	$data["language"] = "NA";
+    $page = $module;
 
     // On vérifie que le dossier est bien celui de l'activité demandé...
-    ($module = new FullActivity)->build($id);
-    $normal_dir = $Configuration->ActivitiesDir($module->codename, $data["language"]);
-    $file = $data["file"];
+    ($activity = new FullActivity)->build($id);
+    $normal_dir = $Configuration->ActivitiesDir($activity->codename, "")."mood/";
+    $file = $data["mood"];
     if ($file[0] == "-")
 	$file = substr($file, 1);
     $file = str_replace("@", "/", $file);
@@ -1243,7 +1464,7 @@ function RemoveMood($id, $data, $method, $output, $module)
     // Tout est bon, on envoi à la poubelle
     if (remove_ressource_file("activity_mood", $id, $file) == false)
 	bad_request();
-    return (GetMoodDir($id, $data, "GET", $output, $module, "MoodDeleted"));
+    return (GetMoodDir($id, $data, "GET", $output, $page, "MoodDeleted"));
 }
 
 function EditTodoList($id, $data, $method, $output, $module)

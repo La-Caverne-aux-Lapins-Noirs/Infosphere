@@ -143,6 +143,9 @@ $cache = json_decode($user->cache);
 		$Dictionnary["AuthorizedFunctions"] => __DIR__."/authorized_functions.phtml",
 		$Dictionnary["Laboratory"] => __DIR__."/laboratories.phtml",
 	    ];
+	    if (function_exists("support_progress_can_view_user") &&
+		support_progress_can_view_user($user->id))
+		$panel["Supports vus"] = __DIR__."/support_progress.phtml";
 	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext", "profile_data");
 	    ?>
 	</td>

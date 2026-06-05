@@ -10,13 +10,195 @@
 require_once ("language.php");
 require_once ("tools/response.php");
 require_once ("tools/hand_request.php");
-require_once ("tools/authentication.php");
+require_once ("tools/authentication/index.php");
 require_once ("tools/set_cookie.php");
 require_once ("tools/log.php");
 require_once ("tools/database.php");
-require_once ("tools/send_mail.php");
 require_once ("tools/utils.php");
 require_once ("tools/ext/sql_formatter.php");
+
+
+function install_append_warning(&$warnings, $message)
+{
+    $warnings[] = $message;
+    error_log("Infosphere install: ".$message);
+}
+
+function install_write_file_if_different($path, $content)
+{
+    if (file_exists($path) && file_get_contents($path) === $content)
+	return (true);
+    return (@file_put_contents($path, $content) !== false);
+}
+
+function install_command_path($command)
+{
+    if (!function_exists("shell_exec"))
+	return ("");
+    return (trim((string)@shell_exec("command -v ".escapeshellarg($command)." 2> /dev/null")));
+}
+
+function install_exec($command, &$output, &$return_value)
+{
+    $output = [];
+    $return_value = 127;
+    if (!function_exists("exec"))
+	return (false);
+    @exec($command, $output, $return_value);
+    return (true);
+}
+
+function install_apache_hls_configuration(&$warnings)
+{
+    $content = "<IfModule mod_mime.c>\n".
+	"  AddType application/vnd.apple.mpegurl .m3u8\n".
+	"  AddType video/iso.segment .m4s\n".
+	"  AddType video/mp4 .mp4\n".
+	"</IfModule>\n";
+    @mkdir("res/install/apache", 0775, true);
+    @file_put_contents("res/install/apache/infosphere-hls.conf", $content);
+
+    $available = "/etc/apache2/conf-available";
+    $target = $available."/infosphere-hls.conf";
+    if (!is_dir($available))
+    {
+	install_append_warning(
+	    $warnings,
+	    "Apache2 conf-available was not found; HLS MIME configuration was written to res/install/apache/infosphere-hls.conf only."
+	);
+	return (false);
+    }
+    if (!is_writable($available) && !(file_exists($target) && is_writable($target)))
+    {
+	install_append_warning(
+	    $warnings,
+	    "Cannot write ".$target."; copy res/install/apache/infosphere-hls.conf there manually and enable it with a2enconf infosphere-hls."
+	);
+	return (false);
+    }
+    if (!install_write_file_if_different($target, $content))
+    {
+	install_append_warning($warnings, "Cannot write ".$target.".");
+	return (false);
+    }
+    @chmod($target, 0644);
+
+    $a2enconf = install_command_path("a2enconf");
+    if ($a2enconf != "")
+    {
+	$out = [];
+	$ret = 0;
+	install_exec(escapeshellcmd($a2enconf)." infosphere-hls 2>&1", $out, $ret);
+	if ($ret != 0)
+	    install_append_warning($warnings, "a2enconf infosphere-hls failed: ".implode(" ", $out));
+    }
+    else
+    {
+	$enabled = "/etc/apache2/conf-enabled/infosphere-hls.conf";
+	if (is_dir(dirname($enabled)) && is_writable(dirname($enabled)) && !file_exists($enabled))
+	    @symlink($target, $enabled);
+	if (!file_exists($enabled))
+	    install_append_warning($warnings, "a2enconf was not found; enable infosphere-hls.conf manually.");
+    }
+
+    $apache2ctl = install_command_path("apache2ctl");
+    if ($apache2ctl != "")
+    {
+	$out = [];
+	$ret = 0;
+	install_exec(escapeshellcmd($apache2ctl)." configtest 2>&1", $out, $ret);
+	if ($ret != 0)
+	{
+	    install_append_warning($warnings, "apache2ctl configtest failed after adding infosphere-hls.conf: ".implode(" ", $out));
+	    return (false);
+	}
+    }
+
+    if (function_exists("posix_geteuid") && posix_geteuid() == 0)
+    {
+	$out = [];
+	$ret = 0;
+	install_exec("systemctl reload apache2 2>&1", $out, $ret);
+	if ($ret != 0)
+	{
+	    $out = [];
+	    install_exec("service apache2 reload 2>&1", $out, $ret);
+	}
+	if ($ret != 0)
+	    install_append_warning($warnings, "Apache2 was configured for HLS but could not be reloaded automatically; reload it manually.");
+    }
+    else
+    {
+	install_append_warning($warnings, "Apache2 was configured for HLS; reload it manually if this installer was not allowed to do so.");
+    }
+    return (true);
+}
+
+function install_download_file($url, $destination)
+{
+    $tmp = $destination.".download";
+    @unlink($tmp);
+    $context = stream_context_create([
+	"http" => ["timeout" => 60],
+	"https" => ["timeout" => 60]
+    ]);
+    $data = @file_get_contents($url, false, $context);
+    if ($data !== false && strlen($data) > 50000 && @file_put_contents($tmp, $data) !== false)
+    {
+	@rename($tmp, $destination);
+	return (file_exists($destination) && filesize($destination) > 50000);
+    }
+
+    $commands = [
+	"curl -fsSL --max-time 60 -o ".escapeshellarg($tmp)." ".escapeshellarg($url),
+	"wget -q -T 60 -O ".escapeshellarg($tmp)." ".escapeshellarg($url)
+    ];
+    foreach ($commands as $cmd)
+    {
+	$out = [];
+	$ret = 0;
+	install_exec($cmd." 2>&1", $out, $ret);
+	if ($ret == 0 && file_exists($tmp) && filesize($tmp) > 50000)
+	{
+	    @rename($tmp, $destination);
+	    return (file_exists($destination) && filesize($destination) > 50000);
+	}
+    }
+    @unlink($tmp);
+    return (false);
+}
+
+function install_hls_javascript(&$warnings)
+{
+    $dir = "script/ext";
+    $destination = $dir."/hls.min.js";
+    if (file_exists($destination) && filesize($destination) > 50000)
+	return (true);
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true))
+    {
+	install_append_warning($warnings, "Cannot create ".$dir." to install hls.min.js.");
+	return (false);
+    }
+    if (!is_writable($dir))
+    {
+	install_append_warning($warnings, "Cannot write ".$destination."; download hls.min.js manually into script/ext/.");
+	return (false);
+    }
+    $url = "https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js";
+    if (!install_download_file($url, $destination))
+    {
+	install_append_warning($warnings, "Cannot download hls.min.js from ".$url."; HLS playback will still fall back to direct MP4 when needed.");
+	return (false);
+    }
+    @chmod($destination, 0644);
+    return (true);
+}
+
+function install_hls_support(&$warnings)
+{
+    install_apache_hls_configuration($warnings);
+    install_hls_javascript($warnings);
+}
 
 function build_htaccess()
 {
@@ -36,6 +218,7 @@ function build_htaccess()
 }
 
 $ErrorMsg = "";
+$InstallWarnings = [];
 if (isset($_POST["destroy"]) && file_exists("version.php"))
 {
     if (($json = json_decode(file_get_contents("./database.json"), true)) != NULL)
@@ -164,8 +347,20 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
 	$ErrorMsg = $out;
 	goto Formular;
     }
+    install_hls_support($InstallWarnings);
 }
     
+if (isset($_POST["setup_hls"]) && file_exists("version.php"))
+{
+    if (($json = json_decode(file_get_contents("./database.json"), true)) != NULL)
+    {
+	if ($json["password"] == $_POST["password"])
+	    install_hls_support($InstallWarnings);
+	else
+	    $ErrorMsg = "BadInstall";
+    }
+}
+
 if (file_exists("version.php"))
 {
     require_once ("version.php"); ?>
@@ -200,9 +395,23 @@ if (file_exists("version.php"))
 		     ">
 		    Infosphere installed.<br />
 		    Version is <?=$version; ?><br />
+		    <?php if ($ErrorMsg != "") { ?>
+		        <div style="font-size: large; color: darkred; background: rgba(255, 255, 255, 0.70); margin: 20px auto; padding: 10px; width: 80%; text-align: left;">
+			    <?=isset($Dictionnary[$ErrorMsg]) ? $Dictionnary[$ErrorMsg] : htmlspecialchars($ErrorMsg); ?>
+			</div>
+		    <?php } ?>
+		    <?php if (!empty($InstallWarnings)) { ?>
+		        <div style="font-size: large; color: #6b3f00; background: rgba(255, 255, 255, 0.70); margin: 20px auto; padding: 10px; width: 80%; text-align: left;">
+			    <b>Installation warnings:</b><br />
+			    <?php foreach ($InstallWarnings as $warning) { ?>
+			        - <?=htmlspecialchars($warning); ?><br />
+			    <?php } ?>
+			</div>
+		    <?php } ?>
 		    <br />
 		    <form method="post" action="install.php">
 			<input type="password" name="password" placeholder="Database password" />
+			<input type="submit" name="setup_hls" value="Install / refresh HLS support" />
 			<input type="submit" name="destroy" value="Destroy infosphere" />
 		    </form>
 		</div>

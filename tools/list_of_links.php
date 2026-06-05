@@ -1,5 +1,15 @@
 <?php
 
+function list_of_links_extra_class($hook_name, $this_node_name, $elm)
+{
+    if ($hook_name == "activity"
+	&& $this_node_name == "support_asset"
+	&& isset($elm["content"])
+	&& trim((string)$elm["content"]) == "")
+	return (" list_of_link_empty_support_asset");
+    return ("");
+}
+
 function single_link($params)
 {
     // ($hook_name, $hook_id, $linked_name, $linked_elem, $method = "put", $link = NULL, $display_link = true, $admin_func = "only_admin")
@@ -40,7 +50,7 @@ function single_link($params)
 	method="delete"
 	action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
 	id="<?=$form_id; ?>"
-	class="sublist_of_link"
+	class="sublist_of_link<?=list_of_links_extra_class($hook_name, $this_node_name, $elm); ?>"
 	onsubmit="return <?=$submit; ?>;"
     >
 	<input type="hidden" name="extra_form_id" value="<?=$extra_form_id; ?>" />

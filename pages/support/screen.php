@@ -5,8 +5,8 @@
     ></div>
     <iframe class="screen_media" src=""></iframe>
     <video class="screen_media" controls preload="metadata">
-	<source src="" type="video/mp4">
+	<source src="">
 	<!--source src="" type="video/webm" /-->
     </video>
-    <audio class="screen_media" controls src="" type="video/mp3"></audio>
+    <audio class="screen_media" controls src="" type="audio/mpeg"></audio>
 </div>

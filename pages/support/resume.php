@@ -1,4 +1,4 @@
-<?php if (is_teacher()) { ?>
+<?php if (can_edit_supports()) { ?>
     <?php
     $js = "silent_submitf(this, ".
 	  "{".

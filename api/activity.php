@@ -108,6 +108,10 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "SetSoftware"
 	],
+	"subject" => [
+	    "is_assistant_for_activity",
+	    "GetSubjectDir"
+	],
 	"ressource" => [
 	    "is_assistant_for_activity",
 	    "GetRessourceDir"
@@ -193,6 +197,10 @@ $Tab = [
 	"ressource" => [
 	    "is_teacher_for_activity",
 	    "RemoveRessource"
+	],
+	"mood" => [
+	    "is_teacher_for_activity",
+	    "RemoveMood"
 	],
 	"registration" => [
 	    "everybody", // Autorisation trop complexe pour etre ici.

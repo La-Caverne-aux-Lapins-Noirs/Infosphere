@@ -161,7 +161,8 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 
     xhr.open(method, url, true);
     // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    if (!(typeof FormData != "undefined" && data instanceof FormData))
+	xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(data);
 
 }

@@ -68,6 +68,27 @@ function gather_form(form, wrapper, ismap)
     return (data);
 }
 
+
+function form_has_direct_file_upload(form)
+{
+    if (!form || !form.getAttribute)
+	return (false);
+    if (form.getAttribute("data-direct-file-upload") != "1")
+	return (false);
+
+    let fields = form.elements;
+
+    for (let name in fields)
+	if (fields[name].type == "file" && fields[name].files && fields[name].files.length > 0)
+	    return (true);
+    return (false);
+}
+
+function gather_form_data(form)
+{
+    return (new FormData(form));
+}
+
 function silent_submitf(form, cnf)
 {
     return (silent_submit(
@@ -98,7 +119,8 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
 	return (false);
     }
     // Ca y est, le paquet est pret !
-    data = JSON.stringify(data);
+    if (!(typeof FormData != "undefined" && data instanceof FormData))
+	data = JSON.stringify(data);
     // console.log(data);
     // On lance l'AJAX
     form.style.backgroundColor = "yellow";
@@ -160,11 +182,18 @@ function silent_submit(form, tofill = null, toadd = null, toclear = null, toremo
 
     // On remonte les informations du formulaire
     if (method.toUpperCase() != "GET" && body == null)
-	data = gather_form(form, wrapper, ismap);
+    {
+	if (form_has_direct_file_upload(form))
+	    data = gather_form_data(form);
+	else
+	    data = gather_form(form, wrapper, ismap);
+    }
     else
 	data = body;
 
-    if (file_load_counter == 0)
+    if (data instanceof FormData)
+	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
+    else if (file_load_counter == 0)
 	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
     else
 	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, method, data);
