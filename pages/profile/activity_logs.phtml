@@ -1,4 +1,6 @@
 <?php
+require_once ("./tools/student_log.php");
+
 $start = $_GET["s"];
 $end = $_GET["e"];
 $_GET["lm"] = "b";
@@ -6,81 +8,65 @@ $_GET["lm"] = "b";
 $start = db_form_date($start, true);
 $end = db_form_date($end, true);
 
-$intra_logs = [];
-$query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 0 AND id_user = {$user->id}
-  AND log_date >= '$start' AND log_date <= '$end'
-", "log_date");
-foreach ($query as $kk => $vv)
-    $intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["intra_logs"] = $intra_logs;
+$active_students_sql = "
+    SELECT DISTINCT user_cycle.id_user
+    FROM user_cycle
+    LEFT JOIN user ON user.id = user_cycle.id_user
+    LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
+    WHERE user.id IS NOT NULL
+      AND user.deleted IS NULL
+      AND (user.prospect IS NULL OR user.prospect = 0)
+      AND cycle.id IS NOT NULL
+      AND cycle.deleted IS NULL
+      AND (cycle.is_template IS NULL OR cycle.is_template = 0)
+      AND (cycle.done IS NULL OR cycle.done = 0)
+      AND (cycle.first_day IS NULL OR cycle.first_day <= NOW())
+";
+$active_students_count = db_select_one("
+    COUNT(*) as count
+    FROM ($active_students_sql) as active_students
+");
+$active_students_count = $active_students_count == NULL ? 0 : (int)$active_students_count["count"];
 
-$work_logs = [];
-$query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 1 AND id_user = {$user->id}
-  AND log_date >= '$start' AND log_date <= '$end'
-", "log_date");
-foreach ($query as $kk => $vv)
-    $work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["work_logs"] = $work_logs;
+$activity_log_series = function ($type, $average = false) use ($start, $end, $user, $active_students_sql, $active_students_count)
+{
+    $type = (int)$type;
+    $out = [];
+    if ($average && $active_students_count <= 0)
+        return ($out);
+    $select = $average
+        ? "SUM(user_log.duration) / $active_students_count as duration"
+        : "user_log.duration as duration";
+    $filter_user = $average
+        ? "AND user_log.id_user IN ($active_students_sql)"
+        : "AND user_log.id_user = {$user->id}";
+    $group = $average ? "GROUP BY user_log.log_date" : "";
+    $query = db_select_all("
+      user_log.log_date as log_date, $select
+      FROM user_log
+      WHERE user_log.type = $type
+      $filter_user
+      AND user_log.log_date >= '$start'
+      AND user_log.log_date <= '$end'
+      $group
+    ", "log_date");
+    foreach ($query as $kk => $vv)
+        $out[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+    return ($out);
+};
 
-$distant_logs = [];
-$query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 2 AND id_user = {$user->id}
-  AND log_date >= '$start' AND log_date <= '$end'
-", "log_date");
-foreach ($query as $kk => $vv)
-    $distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["distant_logs"] = $distant_logs;
-
-
-$lock_logs = [];
-$query = db_select_all("
-  log_date, duration FROM user_log WHERE type = -1 AND id_user = {$user->id}
-  AND log_date >= '$start' AND log_date <= '$end'
-", "log_date");
-foreach ($query as $kk => $vv)
-    $lock_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["lock_logs"] = $lock_logs;
+$_GET["d"]["intra_logs"] = $activity_log_series(USER_LOG_INTRA);
+$_GET["d"]["work_logs"] = $activity_log_series(USER_LOG_WORK);
+$_GET["d"]["distant_logs"] = $activity_log_series(USER_LOG_DISTANT);
+$_GET["d"]["lock_logs"] = $activity_log_series(USER_LOG_LOCK);
+$_GET["d"]["ssh_idle_logs"] = $activity_log_series(USER_LOG_SSH_IDLE);
 
 // MOYENNES
-
-$avg_intra_logs = [];
-$query = db_select_all("
-  log_date, AVG(duration) as duration FROM user_log WHERE type = 0
-  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
-", "log_date");
-foreach ($query as $kk => $vv)
-    $avg_intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["avg_intra_logs"] = $avg_intra_logs;
-
-$avg_work_logs = [];
-$query = db_select_all("
-  log_date, AVG(duration) as duration FROM user_log WHERE type = 1
-  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
-", "log_date");
-foreach ($query as $kk => $vv)
-    $avg_work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["avg_work_logs"] = $avg_work_logs;
-
-$avg_distant_logs = [];
-$query = db_select_all("
-  log_date, AVG(duration) as duration FROM user_log WHERE type = 2
-  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
-", "log_date");
-foreach ($query as $kk => $vv)
-    $avg_distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["avg_distant_logs"] = $avg_distant_logs;
-
-
-$avg_lock_logs = [];
-$query = db_select_all("
-  log_date, AVG(duration) as duration FROM user_log WHERE type = -1
-  AND log_date >= '$start' AND log_date <= '$end' GROUP BY log_date
-", "log_date");
-foreach ($query as $kk => $vv)
-    $avg_lock_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-$_GET["d"]["avg_lock_logs"] = $avg_lock_logs;
+$_GET["d"]["avg_intra_logs"] = $activity_log_series(USER_LOG_INTRA, true);
+$_GET["d"]["avg_work_logs"] = $activity_log_series(USER_LOG_WORK, true);
+$_GET["d"]["avg_distant_logs"] = $activity_log_series(USER_LOG_DISTANT, true);
+$_GET["d"]["avg_lock_logs"] = $activity_log_series(USER_LOG_LOCK, true);
+$_GET["d"]["avg_ssh_idle_logs"] = $activity_log_series(USER_LOG_SSH_IDLE, true);
 
 $_GET["d"] = json_encode($_GET["d"], JSON_UNESCAPED_SLASHES);
 $_GET["d"] = base64_encode($_GET["d"]);

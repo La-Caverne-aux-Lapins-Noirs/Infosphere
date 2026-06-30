@@ -160,7 +160,7 @@ function home_intercom_unread_entries_for_context($context, $limit = 8)
     $limit = max(1, (int)$limit);
     $visible = home_intercom_visible_message_clause("msg");
 
-    return (db_select_all("\n        root.id as id_subject,\n        root.title as title,\n        COALESCE(last_msg.message, root.message) as excerpt,\n        COALESCE(last_msg.post_date, root.post_date) as post_date,\n        COALESCE(last_author.id, root_author.id) as uid,\n        COALESCE(last_author.nickname, root_author.nickname) as nickname,\n        COALESCE(last_author.codename, root_author.codename) as ucodename,\n        COALESCE(last_msg.id, root.id) as last_message_id\n        FROM message as root\n        LEFT JOIN message_user\n          ON message_user.id_user = $uid\n         AND message_user.id_message = root.id\n        LEFT JOIN message as last_msg\n          ON last_msg.id = (\n              SELECT msg.id\n              FROM message as msg\n              WHERE (msg.id = root.id OR msg.id_message = root.id)\n                AND msg.id_user != $uid\n                AND $visible\n                AND (message_user.view_date IS NULL OR msg.post_date > message_user.view_date)\n              ORDER BY msg.post_date DESC, msg.id DESC\n              LIMIT 1\n          )\n        LEFT JOIN user as last_author ON last_author.id = last_msg.id_user\n        LEFT JOIN user as root_author ON root_author.id = root.id_user\n        WHERE root.misc_type = '$misc_type'\n          AND root.id_misc = $id_misc\n          AND root.id_message IS NULL\n          AND last_msg.id IS NOT NULL\n        ORDER BY last_msg.post_date DESC, last_msg.id DESC\n        LIMIT $limit\n    "));
+    return (db_select_all("\n        root.id as id_subject,\n        root.title as title,\n        COALESCE(last_msg.message, root.message) as excerpt,\n        COALESCE(last_msg.post_date, root.post_date) as post_date,\n        COALESCE(last_author.id, root_author.id) as uid,\n        COALESCE(last_author.nickname, root_author.nickname) as nickname,\n        COALESCE(last_author.codename, root_author.codename) as ucodename,\n        COALESCE(last_msg.id, root.id) as last_message_id\n        FROM message as root\n        LEFT JOIN (\n            SELECT id_message, MAX(view_date) as view_date\n            FROM message_user\n            WHERE id_user = $uid\n            GROUP BY id_message\n        ) as message_user\n          ON message_user.id_message = root.id\n        LEFT JOIN message as last_msg\n          ON last_msg.id = (\n              SELECT msg.id\n              FROM message as msg\n              WHERE (msg.id = root.id OR msg.id_message = root.id)\n                AND msg.id_user != $uid\n                AND $visible\n                AND (message_user.view_date IS NULL OR msg.post_date > message_user.view_date)\n              ORDER BY msg.post_date DESC, msg.id DESC\n              LIMIT 1\n          )\n        LEFT JOIN user as last_author ON last_author.id = last_msg.id_user\n        LEFT JOIN user as root_author ON root_author.id = root.id_user\n        WHERE root.misc_type = '$misc_type'\n          AND root.id_misc = $id_misc\n          AND root.id_message IS NULL\n          AND last_msg.id IS NOT NULL\n        ORDER BY last_msg.post_date DESC, last_msg.id DESC\n        LIMIT $limit\n    "));
 }
 }
 
@@ -169,10 +169,15 @@ if (!function_exists("home_intercom_unread_entries"))
 function home_intercom_unread_entries()
 {
     $entries = [];
+    $seen = [];
     foreach (home_intercom_user_contexts() as $context)
     {
         foreach (home_intercom_unread_entries_for_context($context) as $entry)
         {
+            $signature = $context["misc_type"]."/".$context["id_misc"]."/".$entry["id_subject"]."/".$entry["last_message_id"];
+            if (isset($seen[$signature]))
+                continue ;
+            $seen[$signature] = true;
             $entry["context"] = $context;
             $entry["context_title"] = home_intercom_context_title($context);
             $entries[] = $entry;

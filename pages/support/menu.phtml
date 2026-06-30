@@ -1,5 +1,6 @@
 <?php require_once (__DIR__."/menu_helpers.php"); ?>
 <?php support_menu_mark_empty_supports($categories); ?>
+<?php support_menu_enrich_pedagogical_links($categories); ?>
 <div class="module_menu_header">
     <h2><?=$Dictionnary["Class"]; ?></h2>
     <div class="module_menu_actions">
@@ -36,6 +37,7 @@
 	>
 	    <?php support_compact_label($category); ?>
 	    <?php if (can_edit_supports()) { ?>
+		<?php support_pedagogical_coverage_warning_marker(support_pedagogical_category_content_coverage($category), "Catégorie contenant du contenu non couvert par une matière ou activité"); ?>
 		<?php support_copy_codename_button($category["codename"], "@"); ?>
 	    <?php } ?>
 	</span>
@@ -89,6 +91,11 @@
 		    <div class="module_link" id="support_link<?=$support["id"]; ?>" style="display: inline-block;">
 			<h4 style="display: inline-block;">
 			    <?php support_unseen_marker(isset($support["unseen_asset_count"]) ? $support["unseen_asset_count"] : 0, $support["id"]); ?>
+			    <?php
+			    $support_intercom_unread = isset($support["asset_intercom_unread_count"]) ? (int)$support["asset_intercom_unread_count"] : 0;
+			    support_new_message_marker($support_intercom_unread, $support_intercom_unread == 1 ? "1 élément avec nouveau message" : $support_intercom_unread." éléments avec nouveaux messages");
+			    ?>
+			    <?php support_pedagogical_coverage_warning_marker(support_pedagogical_support_content_coverage($support), "Chapitre contenant du contenu non couvert par une matière ou activité"); ?>
 			    <?php support_compact_label($support, support_empty_menu_class($support), support_empty_menu_title($support)); ?>
 			</h4>
 		    </div>

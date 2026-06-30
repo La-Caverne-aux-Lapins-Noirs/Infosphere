@@ -40,6 +40,26 @@
     background-repeat: no-repeat !important;
 }
 
+.desk.room_desk_exam
+{
+    box-shadow: 0px 0px 0px 3px rgba(255, 190, 0, 0.95);
+}
+
+.desk.room_desk_exam::after
+{
+    content: "EXAM";
+    position: absolute;
+    right: -18px;
+    bottom: -9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: bold;
+    line-height: 10px;
+    background: rgba(255, 190, 0, 0.95);
+    color: black;
+}
+
 .roomdiv .info h5
 {
     height: 20px;
@@ -54,14 +74,6 @@
     height: 100px;
 }
 
-.roomdiv .info .deskinfo
-{
-    position: absolute;
-    left: 10px;
-    width: calc(100% - 20px);
-    font-size: x-small;
-}
-
 .roomdiv .sublist_of_link div
 {
     display: inline-block;
@@ -70,6 +82,8 @@
 .mapinfo
 {
     width: 100%;
+    background-color: rgba(0, 0, 0, 0.50);
+    border-radius: 6px;
 }
 
 .mapinfo td
@@ -77,4 +91,355 @@
     width: 50%;
     text-align: center;
     font-size: small;
+}
+
+.room_unknown_users_box
+{
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.room_unknown_users_box h2
+{
+    margin-top: 0px;
+    margin-bottom: 8px;
+    font-size: large;
+}
+
+.room_unknown_users_notice,
+.room_unknown_users_empty
+{
+    font-size: x-small;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.room_unknown_users_list
+{
+    margin: 0px;
+    padding-left: 18px;
+    font-size: small;
+}
+
+.room_unknown_users_list li
+{
+    margin-bottom: 8px;
+}
+
+.room_unknown_users_list span
+{
+    font-size: x-small;
+}
+
+.room_unknown_user_flag
+{
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: xx-small !important;
+}
+
+
+.room_desk_tooltip
+{
+    position: fixed;
+    z-index: 10000;
+    display: none;
+    max-width: 360px;
+    padding: 8px;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.room_editor_panel
+{
+    margin: 4px 8px 6px 8px;
+    padding: 6px;
+    box-sizing: border-box;
+    font-size: x-small;
+}
+
+.room_editor_panel button
+{
+    margin: 2px;
+}
+
+.room_editor_hint
+{
+    margin: 4px 0px;
+    font-size: xx-small;
+}
+
+.room_editor_field_label
+{
+    display: block;
+    margin-top: 4px;
+    margin-bottom: 1px;
+    font-size: 12px;
+}
+
+.room_desk_editor
+{
+    display: none;
+}
+
+.room_desk_editor.room_editor_open
+{
+    display: block;
+}
+
+.room_desk_picker,
+.room_desk_editor input,
+.room_desk_editor select,
+.room_desk_editor textarea
+{
+    width: calc(100% - 8px);
+    margin: 2px 0px;
+    box-sizing: border-box;
+}
+
+.room_desk_editor textarea
+{
+    height: 38px;
+    resize: vertical;
+}
+
+.room_desk_picker
+{
+    display: block;
+}
+
+.roomdiv.room_edit_mode .desk
+{
+    cursor: move;
+}
+
+.roomdiv.room_edit_mode .map
+{
+    cursor: crosshair;
+}
+
+.desk.room_linked,
+.roomdiv.room_edit_mode .desk.room_editor_selected
+{
+    z-index: 4;
+}
+
+.room_presences
+{
+    margin: 6px 8px;
+    max-height: 92px;
+    overflow-y: auto;
+}
+
+.room_presences h6
+{
+    margin: 0px 0px 4px 0px;
+    font-size: small;
+}
+
+.room_presence_avatar
+{
+    display: inline-block;
+    position: relative;
+    width: 42px;
+    height: 42px;
+    margin: 2px;
+    vertical-align: top;
+}
+
+.room_presence_avatar img
+{
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.room_presence_avatar.room_user_distant
+{
+    opacity: 0.50;
+}
+
+.room_presence_lock
+{
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.room_exam_badge,
+.room_exam_notice
+{
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: x-small;
+    font-weight: bold;
+    background: rgba(255, 190, 0, 0.95);
+    color: black;
+}
+
+.room_exam_notice
+{
+    display: block;
+    margin: 0px 8px 4px 8px;
+}
+
+.room_presence_avatar.room_user_locked img
+{
+    filter: grayscale(100%);
+}
+
+.room_presence_avatar.room_linked
+{
+    opacity: 1.0;
+}
+
+.room_form_hint
+{
+    font-size: x-small;
+    margin: 4px 0px;
+}
+
+.roomdiv .info
+{
+    background-color: rgba(0, 0, 0, 0.50);
+    box-sizing: border-box;
+    padding: 4px 6px;
+}
+
+.roomdiv .info input,
+.roomdiv .info select,
+.roomdiv .info textarea,
+.roomdiv .info button,
+.formular_slot input,
+.formular_slot select,
+.formular_slot textarea,
+.formular_slot button
+{
+    font-size: 12px;
+    line-height: 1.25em;
+    min-height: 24px;
+    box-sizing: border-box;
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.room_desk_picker,
+.room_desk_editor input,
+.room_desk_editor select,
+.room_desk_editor textarea,
+.room_map_editor input,
+.room_map_editor button
+{
+    font-size: 12px;
+}
+
+.room_map_editor
+{
+    margin: 4px 0px;
+    height: auto !important;
+    font-size: 12px !important;
+}
+
+.room_map_editor label
+{
+    display: block;
+    margin-bottom: 2px;
+}
+
+.room_map_editor input[type=file]
+{
+    width: 100%;
+}
+
+.room_editor_panel button:disabled,
+.room_desk_editor button:disabled
+{
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.room_map_editor_hidden
+{
+    display: none !important;
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.room_desk_picker,
+.room_desk_editor input,
+.room_desk_editor select,
+.room_desk_editor textarea,
+.formular_slot input,
+.formular_slot select,
+.formular_slot textarea,
+.formular_slot button
+{
+    font-size: 14px;
+    line-height: 1.35em;
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.formular_slot input[type=button],
+.formular_slot button
+{
+    min-height: 30px;
+    padding: 4px 8px;
+    font-weight: bold;
+}
+
+/* Correctif lisibilité éditeur salle : quand l'éditeur est ouvert, l'ancien
+ * panneau deskinfo absolu chevauche le formulaire. Le tooltip JS reste utilisé
+ * pour les informations au survol, donc on masque deskinfo uniquement en mode
+ * édition.
+ */
+.roomdiv.room_edit_mode .info .deskinfo
+{
+    display: none;
+}
+
+.roomdiv.room_edit_mode .room_editor_panel
+{
+    position: relative;
+    z-index: 8;
+}
+
+.roomdiv.room_edit_mode .room_desk_editor.room_editor_open
+{
+    display: block;
+    clear: both;
+}
+
+.roomdiv.room_edit_mode .room_desk_editor input,
+.roomdiv.room_edit_mode .room_desk_editor select,
+.roomdiv.room_edit_mode .room_desk_editor textarea,
+.roomdiv.room_edit_mode .room_desk_picker
+{
+    display: block;
+    width: 100%;
+    margin: 4px 0px;
+}
+
+.roomdiv.room_edit_mode .room_desk_editor textarea
+{
+    min-height: 46px;
+}
+
+.roomdiv.room_edit_mode .room_desk_editor button
+{
+    margin-top: 4px;
 }

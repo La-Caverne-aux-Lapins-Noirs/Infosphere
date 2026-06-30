@@ -26,6 +26,7 @@ $configuration_panels = [
     "Stats et alertes" => __DIR__."/stats_alerts_panel.php",
     "Logs" => __DIR__."/logs_panel.php",
     "Configuration" => __DIR__."/configuration_panel.php",
+    "Citations" => __DIR__."/quotes_panel.php",
     "Commandes usuelles" => __DIR__."/operations_panel.php"
 ];
 ?>

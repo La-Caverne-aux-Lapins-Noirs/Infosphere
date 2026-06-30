@@ -242,7 +242,7 @@
 }
 .configuration-log-filters {
     display: grid;
-    grid-template-columns: minmax(300px, 2.4fr) minmax(130px, 0.8fr) minmax(150px, 0.9fr) minmax(110px, 0.65fr) minmax(140px, 0.9fr) minmax(160px, 1fr) minmax(160px, 1fr) auto auto;
+    grid-template-columns: minmax(300px, 2.4fr) minmax(130px, 0.8fr) minmax(150px, 0.9fr) minmax(110px, 0.65fr) minmax(140px, 0.9fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
     gap: 8px;
     align-items: end;
     margin-bottom: 10px;
@@ -393,6 +393,82 @@
 .configuration-field input[type="password"] {
     width: 100%;
 }
+.configuration-quote-sort {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+    justify-content: end;
+}
+.configuration-quote-sort label,
+.configuration-quote-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.configuration-quote-sort select,
+.configuration-quote-form input,
+.configuration-quote-form textarea {
+    border: 1px solid rgba(0, 0, 0, 0.36);
+    border-radius: 8px;
+    padding: 7px;
+    max-width: 100%;
+    background: #fff;
+    color: #111;
+}
+.configuration-quote-add {
+    margin-bottom: 10px;
+}
+.configuration-quote-add summary,
+.configuration-quote-row summary {
+    cursor: pointer;
+}
+.configuration-quote-list {
+    display: grid;
+    gap: 8px;
+}
+.configuration-quote-row {
+    border: 1px solid rgba(0, 220, 0, 0.22);
+    border-radius: 10px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.62);
+}
+.configuration-quote-row summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+.configuration-quote-summary-main {
+    min-width: 0;
+}
+.configuration-quote-summary-main strong,
+.configuration-quote-summary-main span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+.configuration-quote-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(180px, 0.5fr) auto;
+    gap: 8px;
+    align-items: end;
+    margin-top: 8px;
+}
+.configuration-quote-form textarea {
+    min-height: 74px;
+    resize: vertical;
+}
+.configuration-quote-actions,
+.configuration-quote-delete {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 8px;
+}
+.configuration-quote-delete {
+    margin-top: 6px;
+}
 .configuration-field form {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -505,7 +581,9 @@
     }
     .configuration-card-header,
     .configuration-field summary,
-    .configuration-field form {
+    .configuration-field form,
+    .configuration-quote-row summary,
+    .configuration-quote-form {
         grid-template-columns: 1fr;
         display: grid;
     }
@@ -537,8 +615,6 @@ function configurationResetLogs(form)
         if (form.elements[name])
             form.elements[name].value = "";
     });
-    if (form.elements["log_system"])
-        form.elements["log_system"].checked = false;
     if (form.elements["log_page"])
         form.elements["log_page"].value = "0";
     return (silent_submit(form, "configuration-logs-panel"));

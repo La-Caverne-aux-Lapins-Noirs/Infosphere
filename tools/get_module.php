@@ -57,7 +57,6 @@ function get_modules($template, $id = -1)
 	    foreach ($syms as $sym)
 	    {
 		$sym = str_replace("*", "%", $sym);
-		$forge = " activity.codename ";
 		if ($sym[0] == '-')
 		{
 		    $sym = substr($sym, 1);
@@ -74,6 +73,52 @@ function get_modules($template, $id = -1)
 		       " ) AND ( ".
 		       implode(" AND ", $outs).
 		       " )) ";
+	}
+    }
+
+    if (isset($_COOKIE["filter_cycle_$page"]) &&
+	$_COOKIE["filter_cycle_$page"] != "")
+    {
+	$cfilter = $_COOKIE["filter_cycle_$page"];
+	$cfilter = str_replace("XXXSEPARATORXXX", ";", $cfilter);
+	if (!($syms = split_symbols($cfilter, ";", true, true, "", ["*"], true))->is_error())
+	{
+	    $ins = ["0"];
+	    $outs = ["1"];
+	    $syms = $syms->value;
+	    foreach ($syms as $sym)
+	    {
+		$sym = str_replace("*", "%", $sym);
+		if ($sym[0] == '-')
+		{
+		    $sym = substr($sym, 1);
+		    $sym = $Database->real_escape_string($sym);
+		    $outs[] = "NOT EXISTS (
+			SELECT cycle_filter.id
+			FROM activity_cycle AS activity_cycle_filter
+			LEFT JOIN cycle AS cycle_filter
+			  ON cycle_filter.id = activity_cycle_filter.id_cycle
+			WHERE activity_cycle_filter.id_activity = activity.id
+			  AND cycle_filter.codename LIKE '$sym'
+		    )";
+		}
+		else
+		{
+		    $sym = $Database->real_escape_string($sym);
+		    $ins[] = "EXISTS (
+			SELECT cycle_filter.id
+			FROM activity_cycle AS activity_cycle_filter
+			LEFT JOIN cycle AS cycle_filter
+			  ON cycle_filter.id = activity_cycle_filter.id_cycle
+			WHERE activity_cycle_filter.id_activity = activity.id
+			  AND cycle_filter.codename LIKE '$sym'
+		    )";
+		}
+	    }
+	    $filterc .= " AND (( ".implode(" OR ", $ins).
+			" ) AND ( ".
+			implode(" AND ", $outs).
+			" )) ";
 	}
     }
     $request = "

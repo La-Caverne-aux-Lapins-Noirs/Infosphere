@@ -90,6 +90,7 @@ class CConfiguration
 	    new_directory($dir."admin/subscription/residence/index.php");
 	    new_directory($dir."admin/paid_invoices/index.php");
 	    new_directory($dir."admin/invoices_to_pay/index.php");
+	    new_directory($dir."admin/deleted_invoices/index.php");
 	    new_directory($dir."admin/school_reports/index.php");
 	}
 	return ($dir);

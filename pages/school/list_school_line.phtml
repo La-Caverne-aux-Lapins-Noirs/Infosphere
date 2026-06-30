@@ -3,9 +3,10 @@
 <tr>
     <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
     <td <?=clickable($URL); ?>>
-	<?php $pic = $Configuration->SchoolsDir($content["codename"])."icon.png"; ?>
+	<?php $pic = school_site_logo_path($content, false, true); ?>
+	<?php $pic_version = file_exists($pic) ? filemtime($pic) : 0; ?>
 	<div
-	    style="background-image: url('<?=$pic; ?>');
+	    style="background-image: url('<?=$pic; ?>?<?=$pic_version; ?>');
 		   background-size: contain;
 		   width: 150px;
 		   height: 150px;

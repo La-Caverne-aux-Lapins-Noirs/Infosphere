@@ -128,6 +128,31 @@ if ($activity->is_assistant)
  .content
  {
  }
+
+ .automatic_evaluation_status
+ {
+     margin-top: 8px;
+     margin-bottom: 8px;
+     padding: 8px 10px;
+     border-radius: 10px;
+     background-color: rgba(0, 0, 0, 0.18);
+     border: 1px solid rgba(255, 255, 255, 0.14);
+ }
+ .automatic_evaluation_status h4
+ {
+     margin-top: 0px;
+     margin-bottom: 4px;
+ }
+ .automatic_evaluation_status_detail,
+ .automatic_evaluation_countdown
+ {
+     font-size: small;
+ }
+ .automatic_evaluation_countdown
+ {
+     font-weight: bold;
+     margin-left: 8px;
+ }
  <?php if ($activity->current_wallpaper) { ?>
  .background
  {
@@ -232,6 +257,76 @@ if ($activity->is_assistant)
 	 button.classList.remove('bin');
      }
  }
+
+ function automatic_evaluation_format_delay(seconds)
+ {
+     seconds = Math.max(0, Math.floor(seconds));
+     let minutes = Math.floor(seconds / 60);
+     let hours = Math.floor(minutes / 60);
+
+     minutes = minutes % 60;
+     seconds = seconds % 60;
+     if (hours > 0)
+         return "dans " + hours + "h " + String(minutes).padStart(2, "0") + "m";
+     if (minutes > 0)
+         return "dans " + minutes + "m " + String(seconds).padStart(2, "0") + "s";
+     return "au prochain passage";
+ }
+
+ function automatic_evaluation_refresh_countdowns()
+ {
+     let now = Math.floor(Date.now() / 1000);
+
+     Array.prototype.forEach.call(
+         document.getElementsByClassName("automatic_evaluation_countdown"),
+         function(node) {
+             let next = parseInt(node.getAttribute("data-next-timestamp") || "0", 10);
+             if (!next)
+                 return ;
+             node.innerText = automatic_evaluation_format_delay(next - now);
+         }
+     );
+ }
+
+ function automatic_evaluation_refresh_boxes()
+ {
+     Array.prototype.forEach.call(
+         document.getElementsByClassName("automatic_evaluation_status"),
+         function(node) {
+             let url = node.getAttribute("data-refresh-url");
+             if (!url || node.getAttribute("data-refreshing") == "1")
+                 return ;
+             node.setAttribute("data-refreshing", "1");
+             send_ajax(
+                 "GET",
+                 url,
+                 null,
+                 node.id,
+                 null,
+                 null,
+                 null,
+                 function() {
+                     let fresh = document.getElementById(node.id);
+                     if (fresh)
+                         fresh.setAttribute("data-refreshing", "0");
+                     automatic_evaluation_refresh_countdowns();
+                 },
+                 function() {
+                     let fresh = document.getElementById(node.id);
+                     if (fresh)
+                         fresh.setAttribute("data-refreshing", "0");
+                 }
+             );
+         }
+     );
+ }
+
+ if (!window.automatic_evaluation_status_timer)
+ {
+     window.automatic_evaluation_status_timer = setInterval(automatic_evaluation_refresh_countdowns, 1000);
+     window.automatic_evaluation_status_ajax_timer = setInterval(automatic_evaluation_refresh_boxes, 30000);
+ }
+ automatic_evaluation_refresh_countdowns();
 </script>
 
 <div

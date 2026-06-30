@@ -59,7 +59,9 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
     default_int_val($tfields, $fields, "credit_b", 0);
     default_int_val($tfields, $fields, "credit_c", 0);
     default_int_val($tfields, $fields, "credit_d", 0);
-    default_int_val($tfields, $fields, "mark", 0);
+    default_int_val($tfields, $fields, "money", 0);
+    if ($tfields["money"] < 0)
+	return (new ErrorResponse("InvalidValue", $fields["money"]));
     default_string_val($tfields, $fields, "repository_name", "");
     default_bool_val($tfields, $fields, "allow_unregistration", 0);
     default_bool_val($tfields, $fields, "hidden", 0);
@@ -68,6 +70,15 @@ function check_activity_field(&$fields, $files, $is_template = false, $id_templa
     default_bool_val($tfields, $fields, "progressive_slot_opening", 0);
     default_bool_val($tfields, $fields, "team_based_slot_opening", 0);
     default_int_val($tfields, $fields, "estimated_work_duration", 0);
+    if (isset($fields["automatic_correction_frequency"]))
+    {
+	if ($fields["automatic_correction_frequency"] === "" || $fields["automatic_correction_frequency"] === NULL)
+	    $tfields["automatic_correction_frequency"] = NULL;
+	else if (is_number($fields["automatic_correction_frequency"]) && (int)$fields["automatic_correction_frequency"] >= 0)
+	    $tfields["automatic_correction_frequency"] = (int)$fields["automatic_correction_frequency"];
+	else
+	    return (new ErrorResponse("InvalidValue", $fields["automatic_correction_frequency"]));
+    }
     default_date_val($tfields, $fields, "disabled", NULL);
     if ($tfields["slot_duration"] <= 0)
 	$tfields["slot_duration"] = NULL;

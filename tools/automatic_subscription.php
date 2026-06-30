@@ -22,6 +22,20 @@ function automatic_subscription_resolve_id($table, $id)
     return (new ValueResponse((int)$ids->value[0]));
 }
 
+
+function automatic_subscription_effective_sql($activity_alias, $template_alias = "template", $replacement_alias = NULL)
+{
+    $activity_alias = is_symbol($activity_alias) ? $activity_alias : "activity";
+    $template_alias = is_symbol($template_alias) ? $template_alias : "template";
+    $activity_subscription = "$activity_alias.subscription = 2";
+    $template_subscription = "($activity_alias.subscription IS NULL AND $template_alias.subscription = 2)";
+    $effective = "($activity_subscription OR $template_subscription)";
+
+    if ($replacement_alias !== NULL && is_symbol($replacement_alias))
+        return ("($replacement_alias.replacement_subscription = 2 OR ($replacement_alias.replacement_subscription IS NULL AND $effective))");
+    return ($effective);
+}
+
 function automatic_subscription_user_has_activity($id_user, $id_activity)
 {
     $id_user = (int)$id_user;
@@ -80,7 +94,7 @@ function automatic_subscription_subscribe_user_to_activity_children($id_user, $i
         AND ( child.is_template = 0 OR child.is_template IS NULL )
         AND child.deleted IS NULL
         AND child.disabled IS NULL
-        AND ( child.subscription = 2 OR ( child.subscription IS NULL AND template.subscription = 2 ) )
+        AND ".automatic_subscription_effective_sql("child", "template")."
         AND ( child.registration_date IS NULL OR child.registration_date <= NOW() )
         AND ( child.close_date IS NULL OR child.close_date > NOW() )
         AND ( child.done_date IS NULL OR child.done_date > NOW() )
@@ -117,11 +131,10 @@ function automatic_subscription_subscribe_user_to_cycle_matter($id_user, $id_cyc
 	return (new ErrorResponse("InvalidParameter"));
 
     $matter = db_select_one("
-        activity.id,
-        activity_cycle.replacement_subscription as replacement_subscription,
-        activity.subscription as subscription
+        activity.id
         FROM activity_cycle
         LEFT JOIN activity ON activity.id = activity_cycle.id_activity
+        LEFT JOIN activity as template ON activity.id_template = template.id
         WHERE activity_cycle.id_cycle = $id_cycle
         AND activity_cycle.id_activity = $id_activity
         AND ( activity.parent_activity IS NULL OR activity.parent_activity = -1 )
@@ -131,12 +144,9 @@ function automatic_subscription_subscribe_user_to_cycle_matter($id_user, $id_cyc
         AND ( activity.registration_date IS NULL OR activity.registration_date <= NOW() )
         AND ( activity.close_date IS NULL OR activity.close_date > NOW() )
         AND ( activity.done_date IS NULL OR activity.done_date > NOW() )
+        AND ".automatic_subscription_effective_sql("activity", "template", "activity_cycle")."
     ");
     if ($matter == NULL)
-	return (new ValueResponse(0));
-    if ($matter["replacement_subscription"] !== NULL)
-	$matter["subscription"] = $matter["replacement_subscription"];
-    if ((int)$matter["subscription"] != 2)
 	return (new ValueResponse(0));
 
     return (automatic_subscription_subscribe_user_to_activity(
@@ -156,11 +166,10 @@ function automatic_subscription_subscribe_one_user_to_cycle($id_user, $id_cycle,
     $errors = [];
 
     $matters = db_select_all("
-        activity.id as id_activity,
-        activity_cycle.replacement_subscription as replacement_subscription,
-        activity.subscription as subscription
+        activity.id as id_activity
         FROM activity_cycle
         LEFT JOIN activity ON activity.id = activity_cycle.id_activity
+        LEFT JOIN activity as template ON activity.id_template = template.id
         WHERE activity_cycle.id_cycle = $id_cycle
         AND ( activity.parent_activity IS NULL OR activity.parent_activity = -1 )
         AND ( activity.is_template = 0 OR activity.is_template IS NULL )
@@ -169,10 +178,7 @@ function automatic_subscription_subscribe_one_user_to_cycle($id_user, $id_cycle,
         AND ( activity.registration_date IS NULL OR activity.registration_date <= NOW() )
         AND ( activity.close_date IS NULL OR activity.close_date > NOW() )
         AND ( activity.done_date IS NULL OR activity.done_date > NOW() )
-        AND (
-            activity_cycle.replacement_subscription = 2
-            OR ( activity_cycle.replacement_subscription IS NULL AND activity.subscription = 2 )
-        )
+        AND ".automatic_subscription_effective_sql("activity", "template", "activity_cycle")."
         ORDER BY activity.id
         $lim
     ");
@@ -317,6 +323,7 @@ function automatic_subscription_repair_matters($limit)
         LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
         LEFT JOIN activity_cycle ON activity_cycle.id_cycle = user_cycle.id_cycle
         LEFT JOIN activity ON activity.id = activity_cycle.id_activity
+        LEFT JOIN activity as template ON activity.id_template = template.id
         WHERE user.deleted IS NULL
         AND cycle.deleted IS NULL
         AND ( cycle.done IS NULL OR cycle.done = 0 )
@@ -329,10 +336,7 @@ function automatic_subscription_repair_matters($limit)
         AND ( activity.registration_date IS NULL OR activity.registration_date <= NOW() )
         AND ( activity.close_date IS NULL OR activity.close_date > NOW() )
         AND ( activity.done_date IS NULL OR activity.done_date > NOW() )
-        AND (
-            activity_cycle.replacement_subscription = 2
-            OR ( activity_cycle.replacement_subscription IS NULL AND activity.subscription = 2 )
-        )
+        AND ".automatic_subscription_effective_sql("activity", "template", "activity_cycle")."
         AND NOT EXISTS (
             SELECT 1
             FROM team
@@ -385,7 +389,7 @@ function automatic_subscription_repair_activities($limit)
         AND ( child.is_template = 0 OR child.is_template IS NULL )
         AND child.deleted IS NULL
         AND child.disabled IS NULL
-        AND ( child.subscription = 2 OR ( child.subscription IS NULL AND template.subscription = 2 ) )
+        AND ".automatic_subscription_effective_sql("child", "template")."
         AND ( child.registration_date IS NULL OR child.registration_date <= NOW() )
         AND ( child.close_date IS NULL OR child.close_date > NOW() )
         AND ( child.done_date IS NULL OR child.done_date > NOW() )

@@ -12,6 +12,8 @@ function intercom_api_url($intercom, $id_subject = NULL, $parameters = [])
 	$url .= "/".(int)$id_subject;
     if (isset($intercom["div"]))
 	$parameters["div"] = $intercom["div"];
+    if (isset($intercom["short_name"]) && $intercom["short_name"])
+	$parameters["short_name"] = 1;
     if (count($parameters))
 	$url .= "?".http_build_query($parameters);
     return ($url);
@@ -136,6 +138,300 @@ function intercom_school_name($id_school)
     return ($school["codename"]);
 }
 
+
+function support_asset_intercom_row($id_asset)
+{
+    global $Language;
+
+    $id_asset = (int)$id_asset;
+    if ($id_asset <= 0)
+        return (NULL);
+    $field = $Language."_name";
+    return (db_select_one("
+        support_asset.id,
+        support_asset.codename,
+        support_asset.$field as name,
+        support.id as id_support,
+        support.codename as support_codename,
+        support.$field as support_name,
+        support_category.id as id_support_category,
+        support_category.codename as category_codename,
+        support_category.$field as category_name
+        FROM support_asset
+        LEFT JOIN support ON support.id = support_asset.id_support
+        LEFT JOIN support_category ON support_category.id = support.id_support_category
+        WHERE support_asset.id = $id_asset
+          AND (support_asset.deleted IS NULL OR support_asset.deleted = 0)
+          AND support.id IS NOT NULL
+          AND (support.deleted IS NULL OR support.deleted = 0)
+          AND support_category.id IS NOT NULL
+          AND (support_category.deleted IS NULL OR support_category.deleted = 0)
+    "));
+}
+
+function support_asset_intercom_asset_name_from_row($row)
+{
+    if ($row == NULL)
+        return ("");
+    $asset = trim((string)try_get($row, "name", ""));
+    if ($asset == "")
+        $asset = trim((string)try_get($row, "codename", ""));
+    if ($asset == "")
+        $asset = "support_asset#".(int)$row["id"];
+    return ($asset);
+}
+
+function support_asset_intercom_name_from_row($row)
+{
+    if ($row == NULL)
+        return ("");
+    $asset = support_asset_intercom_asset_name_from_row($row);
+    $support = trim((string)try_get($row, "support_name", ""));
+    if ($support == "")
+        $support = trim((string)try_get($row, "support_codename", ""));
+    if ($support != "")
+        return ($support." — ".$asset);
+    return ($asset);
+}
+
+function support_asset_intercom_asset_name($id_asset)
+{
+    $row = support_asset_intercom_row($id_asset);
+    if ($row == NULL)
+        return ("support_asset#".(int)$id_asset);
+    return (support_asset_intercom_asset_name_from_row($row));
+}
+
+function support_asset_intercom_context_name($id_asset)
+{
+    $row = support_asset_intercom_row($id_asset);
+    if ($row == NULL)
+        return ("support_asset#".(int)$id_asset);
+    return (support_asset_intercom_name_from_row($row));
+}
+
+function support_asset_intercom_can_moderate($id_asset = -1)
+{
+    return (function_exists("can_edit_supports") && can_edit_supports());
+}
+
+function support_asset_intercom_visible_asset_ids()
+{
+    static $cache = NULL;
+
+    global $User;
+
+    if (function_exists("can_edit_supports") && can_edit_supports())
+        return (NULL); // NULL signifie: tous les assets existants.
+    if ($cache !== NULL)
+        return ($cache);
+    $cache = [];
+    if (!$User || !function_exists("fetch_my_support_category"))
+        return ($cache);
+    if (($categories = fetch_my_support_category(true))->is_error())
+        return ($cache);
+    foreach ($categories->value as $category)
+    {
+        if (empty($category["selected"]) || !isset($category["support"]))
+            continue ;
+        foreach ($category["support"] as $support)
+        {
+            if (empty($support["selected"]) || !isset($support["asset"]))
+                continue ;
+            foreach ($support["asset"] as $asset)
+                if (!empty($asset["selected"]) && isset($asset["id"]))
+                    $cache[(int)$asset["id"]] = true;
+        }
+    }
+    return ($cache);
+}
+
+function support_asset_intercom_access($id_asset)
+{
+    $id_asset = (int)$id_asset;
+    if ($id_asset <= 0)
+        return (false);
+    if (support_asset_intercom_row($id_asset) == NULL)
+        return (false);
+    if (support_asset_intercom_can_moderate($id_asset))
+        return (true);
+    $visible = support_asset_intercom_visible_asset_ids();
+    return (is_array($visible) && isset($visible[$id_asset]));
+}
+
+function support_asset_intercom_visible_asset_sql_condition($alias = "support_asset")
+{
+    $visible = support_asset_intercom_visible_asset_ids();
+    if ($visible === NULL)
+        return ("1");
+    if (!count($visible))
+        return ("0");
+    return ($alias.".id IN (".implode(",", array_map("intval", array_keys($visible))).")");
+}
+
+function support_asset_intercom_participation_filter($root_alias, $uid, $can_moderate)
+{
+    $uid = (int)$uid;
+    if ($can_moderate)
+        return ("");
+    return ("
+          AND EXISTS (
+              SELECT 1
+              FROM message as my_support_asset_message
+              WHERE (my_support_asset_message.id = $root_alias.id
+                     OR my_support_asset_message.id_message = $root_alias.id)
+                AND my_support_asset_message.id_user = $uid
+          )");
+}
+
+function support_asset_intercom_unread_count($id_asset)
+{
+    global $Database;
+    global $User;
+
+    static $cache = [];
+
+    if (!$User)
+        return (0);
+    $id_asset = (int)$id_asset;
+    if ($id_asset <= 0 || !support_asset_intercom_access($id_asset))
+        return (0);
+    if (isset($cache[$id_asset]))
+        return ($cache[$id_asset]);
+
+    $uid = (int)$User["id"];
+    $can_moderate = support_asset_intercom_can_moderate($id_asset);
+    $participation_filter = support_asset_intercom_participation_filter("root", $uid, $can_moderate);
+    $hidden_root_filter = "";
+    $hidden_item_filter = "";
+    if (!$can_moderate)
+    {
+        $hidden_root_filter = "
+          AND NOT EXISTS (
+              SELECT 1 FROM message_report as hidden_root
+              WHERE hidden_root.id_message = root.id
+                AND hidden_root.status = -1
+          )";
+        $hidden_item_filter = "
+                AND NOT EXISTS (
+                    SELECT 1 FROM message_report as hidden_item
+                    WHERE hidden_item.id_message = item.id
+                      AND hidden_item.status = -1
+                )";
+    }
+
+    $row = db_select_one("
+        COUNT(DISTINCT root.id) as cnt
+        FROM message as root
+        LEFT JOIN message_user as viewed
+          ON viewed.id_message = root.id
+         AND viewed.id_user = $uid
+        WHERE root.misc_type = 'support_asset'
+          AND root.id_misc = $id_asset
+          AND root.id_message IS NULL
+          $hidden_root_filter
+          $participation_filter
+          AND EXISTS (
+              SELECT 1
+              FROM message as item
+              WHERE (item.id = root.id OR item.id_message = root.id)
+                AND item.id_user != $uid
+                AND (viewed.view_date IS NULL OR item.post_date > viewed.view_date)
+                $hidden_item_filter
+          )
+    ");
+    $cache[$id_asset] = $row == NULL ? 0 : (int)$row["cnt"];
+    return ($cache[$id_asset]);
+}
+
+function support_asset_intercom_unread_count_for_support($id_support)
+{
+    static $cache = [];
+
+    $id_support = (int)$id_support;
+    if ($id_support <= 0)
+        return (0);
+    if (isset($cache[$id_support]))
+        return ($cache[$id_support]);
+
+    $count = 0;
+    foreach (db_select_all("
+        id
+        FROM support_asset
+        WHERE id_support = $id_support
+          AND (deleted IS NULL OR deleted = 0)
+    ") as $asset)
+        if (support_asset_intercom_unread_count($asset["id"]) > 0)
+            $count += 1;
+    $cache[$id_support] = $count;
+    return ($count);
+}
+
+function support_asset_intercom_unread_assets($limit = 60)
+{
+    global $Language;
+
+    $limit = max(1, (int)$limit);
+    $field = $Language."_name";
+    $visible = support_asset_intercom_visible_asset_sql_condition("support_asset");
+    $rows = db_select_all("
+        support_asset.id,
+        support_asset.codename,
+        support_asset.$field as name,
+        support.id as id_support,
+        support.codename as support_codename,
+        support.$field as support_name,
+        support_category.id as id_support_category,
+        support_category.codename as category_codename,
+        support_category.$field as category_name,
+        (
+            SELECT MAX(item.post_date)
+            FROM message as root
+            LEFT JOIN message as item
+              ON item.id = root.id OR item.id_message = root.id
+            WHERE root.misc_type = 'support_asset'
+              AND root.id_misc = support_asset.id
+              AND root.id_message IS NULL
+        ) as last_post_date
+        FROM support_asset
+        LEFT JOIN support ON support.id = support_asset.id_support
+        LEFT JOIN support_category ON support_category.id = support.id_support_category
+        WHERE (support_asset.deleted IS NULL OR support_asset.deleted = 0)
+          AND support.id IS NOT NULL
+          AND (support.deleted IS NULL OR support.deleted = 0)
+          AND support_category.id IS NOT NULL
+          AND (support_category.deleted IS NULL OR support_category.deleted = 0)
+          AND $visible
+          AND EXISTS (
+              SELECT 1
+              FROM message as root
+              WHERE root.misc_type = 'support_asset'
+                AND root.id_misc = support_asset.id
+                AND root.id_message IS NULL
+          )
+        ORDER BY last_post_date DESC, support_asset.id DESC
+        LIMIT 500
+    ");
+
+    $out = [];
+    foreach ($rows as $row)
+    {
+        $unread = support_asset_intercom_unread_count($row["id"]);
+        if ($unread <= 0)
+            continue ;
+        $row["unread_count"] = $unread;
+        $row["label"] = support_asset_intercom_name_from_row($row);
+        $category = trim((string)try_get($row, "category_name", ""));
+        if ($category == "")
+            $category = trim((string)try_get($row, "category_codename", ""));
+        $row["subtitle"] = $category;
+        $out[] = $row;
+        if (count($out) >= $limit)
+            break ;
+    }
+    return ($out);
+}
+
 function intercom_school_staff_access($id_school)
 {
     global $User;
@@ -242,6 +538,8 @@ function intercom_context_name($misc_type, $id_misc)
         return ("École — ".intercom_school_name($id_misc));
     if ($misc_type == "school_staff")
         return ("Équipe — ".intercom_school_name($id_misc));
+    if ($misc_type == "support_asset")
+        return ("Support — ".support_asset_intercom_context_name($id_misc));
     if ($misc_type == "team")
     {
 	$team = db_select_one("team_name FROM team WHERE id = $id_misc");
@@ -338,6 +636,12 @@ function intercom_subject_visible($subject)
 		|| is_cycle_director_for_student($subject["id_misc"])
 		|| is_teacher_for_student($subject["id_misc"]));
 	return (true);
+    }
+    if ($subject["misc_type"] == "support_asset")
+    {
+        if ($visibility == INTERCOM_ADMIN)
+            return (support_asset_intercom_can_moderate($subject["id_misc"]));
+        return (support_asset_intercom_access($subject["id_misc"]));
     }
     if ($subject["misc_type"] == "activity")
 	return (intercom_activity_visible_to_current_user($subject["id_misc"], $visibility));
@@ -460,6 +764,8 @@ function intercom_can_moderate_context($misc_type, $id_misc)
         return (intercom_can_moderate_school($id_misc));
     if ($misc_type == "school_staff")
         return (intercom_school_staff_access($id_misc));
+    if ($misc_type == "support_asset")
+        return (support_asset_intercom_can_moderate($id_misc));
     if ($misc_type == "activity")
         return (is_teacher_or_director_for_activity($id_misc)
             || is_assistant_for_activity($id_misc));

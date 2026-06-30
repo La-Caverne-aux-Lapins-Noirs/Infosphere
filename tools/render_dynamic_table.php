@@ -164,8 +164,8 @@ function render_dynamic_table($table_id, $fields, $rows)
     */
     ?>
     <script>
-    let <?=$js_ns; ?>_current_order_field = null;
-    let <?=$js_ns; ?>_current_order_direction = 0;
+    var <?=$js_ns; ?>_current_order_field = null;
+    var <?=$js_ns; ?>_current_order_direction = 0;
 
     function <?=$js_ns; ?>_get_table()
     {

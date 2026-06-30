@@ -6,7 +6,7 @@ function get_week_projects($pro)
 
     if ($pro == NULL)
 	return ([]);
-    $start = first_day_of_week(time());
+    $start = first_day_of_week(now());
     $stop = $start + 60 * 60 * 24 * 7;
     $act = [];
     foreach ($pro->sublayer as $cycle)

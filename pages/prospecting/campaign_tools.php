@@ -48,7 +48,7 @@ function campaign_fetch_prospect($campaign)
     $end = $Database->real_escape_string($campaign["end_date"]);
     $origin_ids = campaign_origin_action_sql();
 
-    return (db_select_all("
+    $prospects = db_select_all("
         user.id,
         user.codename,
         user.first_name,
@@ -57,6 +57,10 @@ function campaign_fetch_prospect($campaign)
         user.phone,
         user.registration_date,
         user.password,
+        user.target_entry,
+        user.target_class,
+        user.current_class,
+        user.deleted,
         origin.id_action AS origin_action,
         origin.action_name AS origin_name,
         terminal.consequence AS terminal_consequence,
@@ -97,7 +101,19 @@ function campaign_fetch_prospect($campaign)
         AND user.registration_date >= '$start 00:00:00'
         AND user.registration_date <= '$end 23:59:59'
         ORDER BY user.registration_date ASC, user.codename ASC
-    "));
+    ");
+
+    foreach ($prospects as &$prospect)
+    {
+        $prospect["password"] = trim((string)($prospect["password"] ?? "")) != "";
+        if (function_exists("get_user_school"))
+            get_user_school($prospect);
+        else if (!isset($prospect["last_school"]))
+            $prospect["last_school"] = NULL;
+    }
+    unset($prospect);
+
+    return ($prospects);
 }
 
 function campaign_prospect_status($prospect)

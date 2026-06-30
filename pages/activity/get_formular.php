@@ -69,12 +69,16 @@ else
 			<input type="text" name="reference_repository" value="<?=$activity->reference_repository; ?>" />
 		    </div>
 		    <div>
-			<label for="mark"><?=$Dictionnary["Money"]; ?></label>
-			<input type="text" name="mark" value="<?=$activity->mark; ?>" />
+			<label for="money"><?=$Dictionnary["ActivityMoneyReward"]; ?></label>
+			<input type="text" name="money" value="<?=$activity->money; ?>" />
 		    </div>
 		    <div>
 			<label for="estimated_work_duration"><?=$Dictionnary["EstimatedWorkDuration"]; ?></label>
 			<input type="text" name="estimated_work_duration" value="<?=$activity->estimated_work_duration; ?>" />
+		    </div>
+		    <div>
+			<label for="automatic_correction_frequency"><?=$Dictionnary["AutomaticCorrectionFrequency"]; ?></label>
+			<input type="text" name="automatic_correction_frequency" value="<?=$activity->automatic_correction_frequency; ?>" />
 		    </div>
 		    <div>
 			<label for="slot_duration"><?=$Dictionnary["SlotDuration"]; ?></label>

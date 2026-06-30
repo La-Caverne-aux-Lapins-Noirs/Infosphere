@@ -4,9 +4,9 @@ $mail = db_select_one("mail FROM user WHERE id = 1")["mail"];
 <h1><?=$Dictionnary["Welcome"]; ?></h1>
 <br />
 <br />
-<p id="quote">
-    <?=famous_quote((int)(now() / 60 / 60 / 24)); ?>.
-</p>
+<div id="quote">
+    <?php require (__DIR__."/quote.phtml"); ?>
+</div>
 <br />
 <?php $align = ($User == NULL) ? "center" : "justify"; ?>
 <p style="width: 90%; margin-left: 5%; text-align: <?=$align; ?>;">

@@ -63,7 +63,6 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
 	    ];
         }
         $mail_content['attachment'] = $mail_attachements;
-	debug_response($mail_content);
     }
     $Key = @$Configuration->Properties["mailgun_key"];
     if ($domain == NULL)

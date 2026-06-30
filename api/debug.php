@@ -58,7 +58,12 @@ function debug_packet()
 
     if ($debug_log != [])
     {
-	echo '{"result":"DEBUG","msg":"DEBUG","content":"'.implode($debug_log).'"}';
-	die();
+        header("Content-Type: application/json");
+        echo json_encode([
+            "result" => "DEBUG",
+            "msg" => "DEBUG",
+            "content" => implode($debug_log),
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        die();
     }
 }

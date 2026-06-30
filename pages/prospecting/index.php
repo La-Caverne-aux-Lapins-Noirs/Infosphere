@@ -81,7 +81,6 @@ $fields = [
         "type"  => "number",
         "raw"   => fn($p) => $p["registration_date"] ?? 0,
         "render"=> fn($p) => datex("d/m/Y", $p["registration_date"]),
-        "cell_class" => fn($p) => prospecting_age_class($p),
     ],
     [
         "name"  => "mail",
@@ -206,6 +205,6 @@ $fields = [
 />
 
 <?php
-render_dynamic_table("prospects_table", $fields, fetch_prospects());
+require_once (__DIR__."/campaign_pager.php");
 
 

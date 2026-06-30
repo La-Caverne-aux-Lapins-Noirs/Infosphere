@@ -121,10 +121,79 @@ function datex($format, $tm = NULL)
     return ($dt->format($format));
 }
 
-function now()
+function virtual_now_admin_mode_enabled()
+{
+    global $User;
+
+    if (isset($User) && is_array($User) && isset($User["admin_mode"]) && $User["admin_mode"])
+	return (true);
+    if (!isset($_COOKIE["admin_mode"]))
+	return (false);
+    $value = strtolower(trim((string)$_COOKIE["admin_mode"]));
+    return ($value != "" && $value != "0" && $value != "false" && $value != "off");
+}
+
+function virtual_now_original_user_is_admin()
+{
+    global $OriginalUser;
+    global $User;
+
+    $usr = NULL;
+    if (isset($OriginalUser) && is_array($OriginalUser))
+	$usr = $OriginalUser;
+    else if (isset($User) && is_array($User))
+	$usr = $User;
+    if ($usr == NULL)
+	return (false);
+    if (isset($usr["id"]) && (int)$usr["id"] == 1)
+	return (true);
+    if (!isset($usr["authority"]))
+	return (false);
+    if (defined("ADMINISTRATOR"))
+	return ((int)$usr["authority"] >= ADMINISTRATOR);
+    return ((int)$usr["authority"] >= 1);
+}
+
+function virtual_now_can_control()
+{
+    return (virtual_now_original_user_is_admin() && virtual_now_admin_mode_enabled());
+}
+
+function virtual_now_timestamp()
+{
+    if (!virtual_now_can_control())
+	return (NULL);
+    if (!isset($_COOKIE["virtual_now"]) || trim((string)$_COOKIE["virtual_now"]) == "")
+	return (NULL);
+    $value = trim((string)$_COOKIE["virtual_now"]);
+    if (!is_number($value))
+	$value = date_to_timestamp($value);
+    $value = (int)$value;
+    if ($value <= 0)
+	return (NULL);
+    return ($value);
+}
+
+function virtual_now_datetime_local_value()
+{
+    $tm = virtual_now_timestamp();
+
+    if ($tm === NULL)
+	$tm = now(true);
+    return (datex("Y-m-d\TH:i", $tm));
+}
+
+function sql_reference_timestamp()
+{
+    return (virtual_now_timestamp());
+}
+
+function now($real = false)
 {
     global $NoLocalisation;
 
+    if (!$real && ($virtual = virtual_now_timestamp()) !== NULL)
+	return ($virtual);
     $dt = new DateTime("now"); // Avec localisation
     return ($dt->getTimestamp() + $dt->getOffset());
 }

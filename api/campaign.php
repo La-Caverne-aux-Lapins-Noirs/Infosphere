@@ -12,6 +12,36 @@ function DisplayCampaign($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+
+function DisplayCampaignProspects($id, $data, $method, $output, $module)
+{
+    $id = (int)$id;
+    if ($id <= 0)
+        bad_request();
+
+    $campaign = campaign_fetch_one($id);
+    if ($campaign == NULL || $campaign["deleted"] != NULL)
+        return (new ErrorResponse("NotFound"));
+
+    $prospects = campaign_fetch_prospect($campaign);
+    if ($output == "json")
+        return (new ValueResponse(["content" => json_encode($prospects, JSON_UNESCAPED_SLASHES)]));
+
+    ob_start();
+    require_once ("./pages/prospecting/prospect_table.php");
+    ?>
+    <h2 class="prospecting_campaign_title">
+        <?=htmlspecialchars($campaign["name"]); ?>
+        <span><?=campaign_display_date($campaign["start_date"]); ?> — <?=campaign_display_date($campaign["end_date"]); ?></span>
+    </h2>
+    <?php if (count($prospects) == 0) { ?>
+        <p>Aucun prospect dans cette campagne.</p>
+    <?php } else { ?>
+        <?php prospecting_render_table($prospects); ?>
+    <?php }
+    return (new ValueResponse(["content" => ob_get_clean()]));
+}
+
 function ReadCampaignPayload($data, $required = true)
 {
     global $Database;
@@ -116,6 +146,10 @@ $Tab = [
         "" => [
             "is_commercial,is_secretariat",
             "DisplayCampaign",
+        ],
+        "prospects" => [
+            "is_commercial,is_secretariat",
+            "DisplayCampaignProspects",
         ],
     ],
     "POST" => [

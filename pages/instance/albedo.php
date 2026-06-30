@@ -12,11 +12,10 @@ $sessions = db_select_all("
       WHERE end_date >= '$begin' AND end_date < '$end'
 ");
 
-if ($Configuration->Properties["self_signing"] && 0)
+if (!empty($Configuration->Properties["self_signing"]))
     require_once (__DIR__."/albedo/self_signing.php");
-//require_once (__DIR__."/albedo/autosub.php");
-//require_once (__DIR__."/albedo/failed_medals.php");
 require_once (__DIR__."/albedo/pickup.php");
+require_once (__DIR__."/albedo/automatic_evaluation.php");
 require_once (__DIR__."/albedo/deploy_exam.php");
 require_once (__DIR__."/albedo/appointment_slots.php");
 

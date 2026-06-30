@@ -92,6 +92,8 @@ $Unlisted = [
     "SupportAssetMenu" => "./pages/support/",
     "SupportCategoryMenu" => "./pages/support/",
     "CampaignMenu" => "./pages/prospecting/",
+    "BillingTemplateMenu" => "./pages/billing/",
+    "BillingInvoiceMenu" => "./pages/billing/",
 ];
 
 $TopMenu = [
@@ -135,6 +137,7 @@ $BottomMenu = [
     "RobotMenu" => "./pages/robot/",
     "DocMenu" => "./pages/docs/",
     "ProspectingMenu" => "./pages/prospecting/",
+    "BillingMenu" => "./pages/billing/",
     "ConfigMenu" => "./pages/configuration/",
     "TestMenu" => "./pages/test/",
 ];

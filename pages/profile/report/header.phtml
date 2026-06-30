@@ -10,7 +10,7 @@
 		if ($school["id_school"] == $sch["id"])
 		{
 		    $schools[] = array_merge($sch, [
-			"picture" => $Configuration->SchoolsDir($school["codename"])."icon.png"
+			"picture" => school_document_logo_path($school, false, true)
 		    ]);
 		}
 	    }

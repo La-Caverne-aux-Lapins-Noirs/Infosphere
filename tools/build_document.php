@@ -67,18 +67,138 @@ function build_document_flatten_fields($prefix, $value, &$out)
 	$out[$prefix] = build_document_scalar($value);
 }
 
-function build_document($output_name, $input_files, array $dyndata = [], array $include_paths = [])
+function build_document_check_field_name($key)
 {
-    if (!function_exists("run_command"))
-	return (new ErrorResponse("CannotExecute", "run_command"));
+    return (preg_match('/^[a-zA-Z_][a-zA-Z0-9_\.]*$/', (string)$key));
+}
 
+function build_document_field_part($key, $value)
+{
+    if (!build_document_check_field_name($key))
+	return (new ErrorResponse("InvalidParameter", $key));
+    return ([
+	"type" => "field",
+	"key" => (string)$key,
+	"value" => build_document_scalar($value),
+    ]);
+}
+
+function build_document_file_part($file, $required = true)
+{
+    $file = build_document_clean_path($file);
+    if ($file === NULL)
+	return (new ErrorResponse("MissingFile"));
+    if (!file_exists($file) || is_dir($file))
+    {
+	if ($required)
+	    return (new ErrorResponse("MissingFile", $file));
+	return (NULL);
+    }
+    return ([
+	"type" => "file",
+	"file" => $file,
+    ]);
+}
+
+function build_document_normalize_part($part)
+{
+    if (is_array($part))
+    {
+	if (isset($part["file"]))
+	    return (build_document_file_part($part["file"], isset($part["required"]) ? $part["required"] : true));
+	if (isset($part["field"]) && isset($part["value"]))
+	    return (build_document_field_part($part["field"], $part["value"]));
+	if (isset($part["key"]) && isset($part["value"]))
+	    return (build_document_field_part($part["key"], $part["value"]));
+	return (new ErrorResponse("InvalidParameter", "document part"));
+    }
+
+    if (is_string($part) && preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/', $part, $match))
+	return (build_document_field_part($match[1], $match[2]));
+    return (build_document_file_part($part));
+}
+
+function build_document_mergeconf_command(array $parts, $output_file, array $include_paths = [])
+{
+    $cmd = "mergeconf";
+    foreach (build_document_existing_dirs($include_paths) as $path)
+	$cmd .= " -I ".escapeshellarg($path);
+    foreach ($parts as $part)
+    {
+	if ($part["type"] == "file")
+	    $cmd .= " -i ".escapeshellarg($part["file"]);
+	else if ($part["type"] == "field")
+	    $cmd .= " -m ".escapeshellarg($part["key"]."=".$part["value"]);
+    }
+    $cmd .= " -o ".escapeshellarg($output_file)." --resolve";
+    return ($cmd);
+}
+
+function build_document_render_command($input_file, $output_name, array $include_paths = [])
+{
+    $cmd = "docbuilder";
+    foreach (build_document_existing_dirs($include_paths) as $path)
+	$cmd .= " -I ".escapeshellarg($path);
+    $cmd .= " -i ".escapeshellarg($input_file);
+    $cmd .= " -o ".escapeshellarg($output_name);
+    return ($cmd);
+}
+
+function build_document_from_parts($output_name, array $document_parts, array $include_paths = [])
+{
     $output_name = build_document_clean_path($output_name);
     if ($output_name === NULL)
 	return (new ErrorResponse("MissingFile", "output"));
 
-    $input_files = build_document_existing_files($input_files);
-    if (!count($input_files))
+    $parts = [];
+    foreach ($document_parts as $part)
+    {
+	$part = build_document_normalize_part($part);
+	if (is_object($part) && $part->is_error())
+	    return ($part);
+	if ($part !== NULL)
+	    $parts[] = $part;
+    }
+    if (!count(array_filter($parts, function($part) { return ($part["type"] == "file"); })))
 	return (new ErrorResponse("MissingFile", "document model"));
+
+    if (!is_dir(dirname($output_name)))
+    {
+	$ret = new_directory($output_name);
+	if ($ret->is_error())
+	    return ($ret);
+    }
+
+    $tmp = tempnam(sys_get_temp_dir(), "infosphere_doc_");
+    if ($tmp === false)
+	return (new ErrorResponse("CannotWriteFile", "temporary document"));
+    @unlink($tmp);
+    $merged = $tmp.".dab";
+
+    $ret = run_command(build_document_mergeconf_command($parts, $merged, $include_paths));
+    if ($ret["exit_code"] !== 0 || !file_exists($merged))
+    {
+	@unlink($merged);
+	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
+    }
+
+    $ret = run_command(build_document_render_command($merged, $output_name, $include_paths));
+    @unlink($merged);
+    if ($ret["exit_code"] !== 0 || !file_exists($output_name))
+	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
+
+    return (new ValueResponse([
+	"output" => $output_name,
+	"stdout" => $ret["stdout"],
+	"stderr" => $ret["stderr"]
+    ]));
+}
+
+function build_document($output_name, $input_files, array $dyndata = [], array $include_paths = [])
+{
+    $parts = [];
+    foreach (build_document_list($input_files) as $file)
+	$parts[] = ["file" => $file];
 
     $flat = [];
     foreach ($dyndata as $key => $value)
@@ -88,40 +208,10 @@ function build_document($output_name, $input_files, array $dyndata = [], array $
 	else
 	    $flat[$key] = build_document_scalar($value);
     }
-    foreach ($flat as $key => $_)
-	if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_\.]*$/', $key))
-	    return (new ErrorResponse("InvalidParameter", $key));
+    foreach ($flat as $key => $value)
+	$parts[] = ["field" => $key, "value" => $value];
 
-    if (!is_dir(dirname($output_name)))
-    {
-	$ret = new_directory($output_name);
-	if ($ret->is_error())
-	    return ($ret);
-    }
-
-    $cmd = "docbuilder";
-    foreach (build_document_existing_dirs($include_paths) as $path)
-	$cmd .= " -I ".escapeshellarg($path);
-    $cmd .= " -i";
-    foreach ($input_files as $file)
-	$cmd .= " ".escapeshellarg($file);
-    if (count($flat))
-    {
-	$cmd .= " -m";
-	foreach ($flat as $key => $value)
-	    $cmd .= " ".escapeshellarg($key."=".$value);
-    }
-    $cmd .= " -o ".escapeshellarg($output_name);
-
-    $ret = run_command($cmd);
-    if ($ret["exit_code"] !== 0 || !file_exists($output_name))
-	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
-
-    return (new ValueResponse([
-	"output" => $output_name,
-	"stdout" => $ret["stdout"],
-	"stderr" => $ret["stderr"]
-    ]));
+    return (build_document_from_parts($output_name, $parts, $include_paths));
 }
 
 function document_builder_language_candidates($language = NULL)
@@ -219,6 +309,28 @@ function document_builder_contract_kind($data)
 	if (isset($data[$key]) && $data[$key] != "")
 	    return (strtoupper($data[$key]));
     return ("ECL");
+}
+
+function document_builder_request_extra_fields(array $data)
+{
+    $extra = [];
+
+    if (isset($data["fields"]))
+    {
+	$fields = is_array($data["fields"]) ? $data["fields"] : explode(" ", $data["fields"]);
+	foreach ($fields as $field)
+	{
+	    $field = trim((string)$field);
+	    if ($field == "")
+		continue ;
+	    if (!preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/', $field, $match))
+		return (new ErrorResponse("InvalidParameter", $field));
+	    $extra[$match[1]] = $match[2];
+	}
+    }
+    if (isset($data["output"]) && trim((string)$data["output"]) != "")
+	$extra["Output"] = trim((string)$data["output"]);
+    return (new ValueResponse($extra));
 }
 
 function document_builder_name(array $user)
@@ -459,6 +571,277 @@ function document_builder_contract_context(array $student, $kind)
     return ($ctx);
 }
 
+
+function document_builder_letter_file_root()
+{
+    return ("admin/letters");
+}
+
+function document_builder_original_generator()
+{
+    global $OriginalUser;
+
+    if (isset($OriginalUser) && isset($OriginalUser["id"]))
+    {
+	$ret = resolve_codename("user", (int)$OriginalUser["id"], "codename", true);
+	if (is_object($ret) && !$ret->is_error())
+	    return ($ret->value);
+    }
+    return ([]);
+}
+
+function document_builder_person_context(array $user)
+{
+    $fields = document_builder_contract_person_fields($user);
+    $fields["id"] = isset($user["id"]) ? (int)$user["id"] : -1;
+    $fields["codename"] = $user["codename"] ?? "";
+    $fields["nickname"] = $user["nickname"] ?? "";
+    $fields["identity"] = document_builder_name($user);
+    return ($fields);
+}
+
+function document_builder_financial_responsible(array $student)
+{
+    $parents = document_builder_fetch_legal_representatives($student["id"]);
+    if (count($parents))
+	return ($parents[0]);
+    return ($student);
+}
+
+function document_builder_student_school(array $student)
+{
+    $school = document_builder_fetch_student_school($student);
+    if (!is_array($school))
+	return ([]);
+    refresh_school($school);
+    return ($school);
+}
+
+function document_builder_school_context(array $school)
+{
+    if (!count($school))
+	return ([]);
+    return ([
+	"id" => $school["id"] ?? -1,
+	"codename" => $school["codename"] ?? "",
+	"name" => $school["name"] ?? ($school["fr_name"] ?? ($school["codename"] ?? "")),
+	"legal_name" => $school["legal_name"] ?? ($school["name"] ?? ($school["fr_name"] ?? "")),
+	"address" => $school["address"] ?? "",
+	"phone" => $school["phone"] ?? "",
+	"mail" => $school["mail"] ?? "",
+    ]);
+}
+
+function document_builder_letter_model_names($kind)
+{
+    $kind = trim((string)$kind);
+    if ($kind == "")
+	return ([]);
+    if (preg_match('/^[a-zA-Z0-9_\/\.-]+\.dab$/', $kind))
+	return ([$kind]);
+    if (!preg_match('/^[a-zA-Z0-9_\/-]+$/', $kind))
+	return ([]);
+    return ([
+	"letters/".$kind.".dab",
+	"lettres/".$kind.".dab",
+	"courriers/".$kind.".dab",
+	"letter_".$kind.".dab",
+	"lettre_".$kind.".dab",
+	"courrier_".$kind.".dab",
+	$kind.".dab",
+    ]);
+}
+
+function document_builder_find_letter_model($kind, $language = NULL)
+{
+    $kind = (string)$kind;
+    if (file_exists($kind) && !is_dir($kind))
+	return ($kind);
+    foreach (document_builder_model_dirs($language) as $dir)
+	foreach (document_builder_letter_model_names($kind) as $name)
+	    if (file_exists($dir.$name) && !is_dir($dir.$name))
+		return ($dir.$name);
+    return (NULL);
+}
+
+function document_builder_letter_models($language = NULL)
+{
+    $models = [];
+    foreach (document_builder_model_dirs($language) as $dir)
+    {
+	foreach (["letter_*.dab", "lettre_*.dab", "courrier_*.dab", "letters/*.dab", "lettres/*.dab", "courriers/*.dab"] as $pattern)
+	{
+	    foreach (glob($dir.$pattern) as $file)
+	    {
+		if (is_dir($file))
+		    continue ;
+		$key = preg_replace('/\.dab$/', '', basename($file));
+		$key = preg_replace('/^(letter_|lettre_|courrier_)/', '', $key);
+		$models[$key] = $file;
+	    }
+	}
+    }
+    ksort($models);
+    return ($models);
+}
+
+function document_builder_letter_context(array $student, array $generator, array $financial, array $school, $kind)
+{
+    global $Language;
+
+    return ([
+	"letter" => [
+	    "kind" => $kind,
+	    "type" => $kind,
+	    "generation_date" => datex("Y-m-d H:i:s"),
+	    "language" => $Language,
+	],
+	"student" => document_builder_person_context($student),
+	"generator" => document_builder_person_context($generator),
+	"financial" => document_builder_person_context($financial),
+	"financial_responsible" => document_builder_person_context($financial),
+	"responsible" => document_builder_person_context($financial),
+	"school" => document_builder_school_context($school),
+	"signatories" => [
+	    "student" => document_builder_person_context($student),
+	    "generator" => document_builder_person_context($generator),
+	    "financial" => document_builder_person_context($financial),
+	],
+    ]);
+}
+
+function document_builder_full_student($id_user)
+{
+    $id_user = (int)$id_user;
+    if (($ret = fetch_user($id_user))->is_error())
+	return ($ret);
+    $student = $ret->value;
+    if (($full = resolve_codename("user", $id_user, "codename", true))->is_error())
+	return ($full);
+    $student = array_merge($student, $full->value);
+    get_user_promotions($student);
+    get_user_school($student);
+    return (new ValueResponse($student));
+}
+
+function document_builder_output_from_extra($directory, $default_name, array $extra_fields)
+{
+    $directory = rtrim($directory, "/")."/";
+    if (isset($extra_fields["Output"]) && preg_match('/^[a-zA-Z0-9_\-.]+$/', $extra_fields["Output"]))
+	return ($directory.$extra_fields["Output"]);
+    return ($directory.$default_name);
+}
+
+function document_builder_context_field_parts($kind, array $fields, array $extra_fields)
+{
+    global $Language;
+
+    $parts = [];
+    foreach ($fields as $key => $value)
+	$parts[] = ["field" => $key, "value" => $value];
+    $parts[] = ["field" => "Language", "value" => $Language];
+    foreach ($extra_fields as $key => $value)
+	if ($key != "Output")
+	    $parts[] = ["field" => $key, "value" => $value];
+    return ($parts);
+}
+
+function build_user_document($student, $kind, $model, $document_dir, $context_name, $output_name, $context_builder, array $fields, array $extra_fields = [])
+{
+    global $Configuration;
+    global $Language;
+
+    if (!is_array($student) || !isset($student["id"]) || !isset($student["codename"]))
+	return (new ErrorResponse("InvalidParameter", "student"));
+    if ($model === NULL || $model == "")
+	return (new ErrorResponse("MissingFile", "document model"));
+
+    $user_dir = $Configuration->UsersDir($student["codename"]);
+    $document_dir = rtrim($document_dir, "/")."/";
+    $context = $document_dir.$context_name;
+    $output = document_builder_output_from_extra($document_dir, $output_name, $extra_fields);
+
+    if (($ret = refresh_user((int)$student["id"]))->is_error())
+	return ($ret);
+    $context_data = call_user_func($context_builder, $student, $kind);
+    if (is_object($context_data) && $context_data->is_error())
+	return ($context_data);
+    if (($ret = generate_dabsic($context_data, $context))->is_error())
+	return ($ret);
+
+    $inputs = [$model];
+    $include_paths = document_builder_model_dirs($Language);
+    $include_paths[] = dirname($model)."/";
+    $include_paths[] = $user_dir;
+    $include_paths[] = $user_dir."admin/";
+    $include_paths[] = $document_dir;
+
+    $school = document_builder_student_school($student);
+    if (count($school) && isset($school["codename"]))
+    {
+	$inputs = array_merge($inputs, document_builder_school_identity_files($school));
+	$include_paths[] = $Configuration->SchoolsDir($school["codename"]);
+    }
+
+    $inputs = array_merge($inputs, document_builder_identity_files($user_dir."admin/", ["identity.dab"]));
+    $inputs[] = $context;
+
+    $parts = [];
+    foreach (array_values(array_unique($inputs)) as $input)
+	$parts[] = ["file" => $input];
+    $parts = array_merge($parts, document_builder_context_field_parts($kind, $fields, $extra_fields));
+    return (build_document_from_parts($output, $parts, $include_paths));
+}
+
+function document_builder_letter_context_for_student(array $student, $kind)
+{
+    $generator = document_builder_original_generator();
+    if (!count($generator))
+	$generator = $GLOBALS["User"];
+    $financial = document_builder_financial_responsible($student);
+    $school = document_builder_student_school($student);
+
+    if (isset($generator["id"]) && (int)$generator["id"] > 0)
+	refresh_user((int)$generator["id"]);
+    if (isset($financial["id"]) && (int)$financial["id"] > 0 && (int)$financial["id"] != (int)$student["id"])
+	refresh_user((int)$financial["id"]);
+
+    return (document_builder_letter_context($student, $generator, $financial, $school, $kind));
+}
+
+function build_user_letter($id_user, $kind, array $extra_fields = [])
+{
+    global $Configuration;
+    global $Language;
+
+    if (($ret = document_builder_full_student($id_user))->is_error())
+	return ($ret);
+    $student = $ret->value;
+    $model = document_builder_find_letter_model($kind, $Language);
+    if ($model === NULL)
+	return (new ErrorResponse("MissingFile", "letter model: ".$kind));
+
+    $user_dir = $Configuration->UsersDir($student["codename"]);
+    $safe_kind = preg_replace('/[^a-zA-Z0-9_\.-]+/', "_", pathinfo($kind, PATHINFO_FILENAME));
+    if ($safe_kind == "")
+	$safe_kind = "letter";
+
+    return (build_user_document(
+	$student,
+	$kind,
+	$model,
+	$user_dir.document_builder_letter_file_root()."/",
+	$safe_kind."_context.dab",
+	datex("Ymd_His")."_".$safe_kind.".pdf",
+	"document_builder_letter_context_for_student",
+	[
+	    "Letter.Kind" => $kind,
+	    "Letter.Type" => $kind,
+	],
+	$extra_fields
+    ));
+}
+
 function document_builder_public_url($file)
 {
     $file = preg_replace('/^\.\//', '', $file);
@@ -472,66 +855,27 @@ function build_user_contract($id_user, $kind = "ECL", array $extra_fields = [])
     global $Configuration;
     global $Language;
 
-    $id_user = (int)$id_user;
-    if (($ret = fetch_user($id_user))->is_error())
+    if (($ret = document_builder_full_student($id_user))->is_error())
 	return ($ret);
     $student = $ret->value;
-    if (($full = resolve_codename("user", $id_user, "codename", true))->is_error())
-	return ($full);
-    $student = array_merge($student, $full->value);
-    get_user_promotions($student);
-    get_user_school($student);
     $kind = strtoupper($kind);
     $model = document_builder_find_model($kind, $Language);
     if ($model === NULL)
 	return (new ErrorResponse("MissingFile", "contract model: ".$kind));
 
     $user_dir = $Configuration->UsersDir($student["codename"]);
-    $contract_dir = $user_dir."admin/subscription/";
-    $context = $contract_dir."contract_".strtolower($kind)."_context.dab";
-    $output = $contract_dir."contract_".strtolower($kind).".pdf";
-    if (isset($extra_fields["Output"]) && preg_match('/^[a-zA-Z0-9_\-.]+$/', $extra_fields["Output"]))
-	$output = $contract_dir.$extra_fields["Output"];
-
-    if (($ret = refresh_user($id_user))->is_error())
-	return ($ret);
-    if (($ret = generate_dabsic(document_builder_contract_context($student, $kind), $context))->is_error())
-	return ($ret);
-
-    $inputs = [$model];
-    $include_paths = document_builder_model_dirs($Language);
-    $include_paths[] = dirname($model)."/";
-    $include_paths[] = $user_dir;
-    $include_paths[] = $user_dir."admin/";
-    $include_paths[] = $contract_dir;
-
-    if (isset($student["school"]) && count($student["school"]))
-    {
-	$school = $student["school"][array_key_first($student["school"])] ;
-	$full_school = NULL;
-	if (isset($school["id_school"]) && (int)$school["id_school"] > 0)
-	    $full_school = fetch_school($school["id_school"]);
-	else if (isset($school["codename"]) && $school["codename"] != "")
-	    $full_school = fetch_school($school["codename"]);
-	if (is_array($full_school) && isset($full_school["codename"]))
-	{
-	    refresh_school($full_school);
-	    $inputs = array_merge($inputs, document_builder_school_identity_files($full_school));
-	    $include_paths[] = $Configuration->SchoolsDir($full_school["codename"]);
-	}
-    }
-
-    $inputs = array_merge($inputs, document_builder_identity_files($user_dir."admin/", ["identity.dab"]));
-    $inputs[] = $context;
-    $inputs = array_values(array_unique($inputs));
-
-    $fields = [
-	"Contract.Type" => $kind,
-	"Contract.Kind" => $kind,
-	"Language" => $Language,
-    ];
-    foreach ($extra_fields as $key => $value)
-	$fields[$key] = $value;
-
-    return (build_document($output, $inputs, $fields, $include_paths));
+    return (build_user_document(
+	$student,
+	$kind,
+	$model,
+	$user_dir."admin/subscription/",
+	"contract_".strtolower($kind)."_context.dab",
+	"contract_".strtolower($kind).".pdf",
+	"document_builder_contract_context",
+	[
+	    "Contract.Type" => $kind,
+	    "Contract.Kind" => $kind,
+	],
+	$extra_fields
+    ));
 }

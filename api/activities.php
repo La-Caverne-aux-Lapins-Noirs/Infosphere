@@ -325,7 +325,9 @@ function PickupActivity($id, $data, $method, $output, $module)
 	    "official" => $official,
 	    "correction" => $correction,
 	    "configuration" => base64_encode($actConf),
-	    "allowFunc" => base64_encode($allowFunc)
+	    "allowFunc" => base64_encode($allowFunc),
+	    "is_exam" => ((isset($activity->type) ? (int)$activity->type : 0) >= 5
+		       && (isset($activity->type) ? (int)$activity->type : 0) <= 9)
 	]);
     }
     else
@@ -362,6 +364,8 @@ function PickupActivity($id, $data, $method, $output, $module)
 	//
 	send_mail($students_mail, $Dictionnary["EvaluationReport"]." ".basename($activity_name),
 		  $mail_content, NULL, [["report.tar.gz" => $content]], false);
+	if ($official)
+	    official_correction_mark_missing_medals_as_failed($activity, $team);
     }
 
     if ($official)
@@ -759,9 +763,18 @@ function EditActivity($id, $data, $method, $output, $module)
     }
     
     // Specific sanitizer
-    foreach (["type", "subscription"] as $ints)
+    foreach (["type", "subscription", "money"] as $ints)
 	if (isset($data[$ints]))
 	    $data[$ints] = (int)$data[$ints];
+    if (isset($data["money"]) && $data["money"] < 0)
+	return (new ErrorResponse("InvalidValue", $data["money"]));
+    if (isset($data["automatic_correction_frequency"]) && $data["automatic_correction_frequency"] !== "")
+    {
+	if (!is_number($data["automatic_correction_frequency"])
+	    || (int)$data["automatic_correction_frequency"] < 0)
+	    return (new ErrorResponse("InvalidValue", $data["automatic_correction_frequency"]));
+	$data["automatic_correction_frequency"] = (int)$data["automatic_correction_frequency"];
+    }
     foreach (["progressive_slot_opening", "team_based_slot_opening"] as $bool)
 	if (isset($data[$bool]))
 	    $data[$bool] = $data[$bool] ? 1 : 0;
@@ -807,10 +820,10 @@ function EditActivity($id, $data, $method, $output, $module)
     // General treatment
     $fields = array_merge([
 	"type", "subscription", "disabled", "allow_unregistration", "hidden", "validated", "grade_a", "grade_b", "grade_c", "grade_d",
-	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "mark", "slot_duration",
+	"grade_bonus", "credit_a", "credit_b", "credit_c", "credit_d", "money", "slot_duration",
 	"progressive_slot_opening", "team_based_slot_opening", "repository_name",
-	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration", "validation",
-	"declaration_type"
+	"reference_activity", "min_team_size", "max_team_size", "estimated_work_duration",
+	"automatic_correction_frequency", "validation", "declaration_type"
     ], $lng_fields);
     $edit = [];
     foreach ($fields as $field)
@@ -861,7 +874,7 @@ function AddMedal($id, $data, $method, $output, $module)
 	    "left_field_name" => "activity",
 	    "right_field_name" => "medal",
 	    "properties" => [
-		"mark" => isset($pfx["parameters"][0]) && $act != -1 ? (int)($pfx["parameters"][0]) : 1,
+		"money" => isset($pfx["parameters"][0]) && $act != -1 ? (int)($pfx["parameters"][0]) : 1,
 		"local" => $pfx["prefix"] == "#" ? 1 : 0,
 		"role" =>
 		    $act != -1 ?
@@ -890,9 +903,11 @@ function EditMedal($id, $data, $method, $output, $module)
     $page = $module;
     $id_medal = $data["medal"];
     $fields = [];
-    foreach (["local", "role", "mark"] as $f)
+    foreach (["local", "role", "money"] as $f)
 	if (isset($data[$f]))
 	    $fields[$f] = (int)$data[$f];
+    if (isset($fields["money"]) && $fields["money"] < 0)
+	return (new ErrorResponse("InvalidValue", $fields["money"]));
     if (count($fields) == 0)
 	bad_request();
     if (db_update_one(

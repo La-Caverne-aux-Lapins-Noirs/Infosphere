@@ -1,0 +1,32 @@
+<?php
+$home_quote = famous_quote_current();
+if ($home_quote != NULL) {
+    $home_quote_vote = famous_quote_get_user_vote($home_quote["id"]);
+?>
+    <?=famous_quote_format($home_quote); ?>.
+    <?php if ($User != NULL) { ?>
+        <span class="famous_quote_vote" aria-label="Voter pour la citation du jour">
+	    <form class="famous_quote_vote_form" method="post" action="api/quote/<?=famous_quote_html($home_quote["id"]); ?>/vote" onsubmit="return famous_quote_vote_submit(this);">
+                <input type="hidden" name="vote" value="-1" />
+                <button
+                    type="submit"
+                    class="famous_quote_vote_button <?=$home_quote_vote == -1 ? "selected" : ""; ?>"
+                    title="Je n'aime pas cette citation (<?=$home_quote["down_count"]; ?>)"
+                    aria-label="Je n'aime pas cette citation (<?=$home_quote["down_count"]; ?>)"
+                    aria-pressed="<?=$home_quote_vote == -1 ? "true" : "false"; ?>"
+                >&#128078;</button>
+            </form>
+	    (<?=$home_quote["score"]; ?>)
+            <form class="famous_quote_vote_form" method="post" action="api/quote/<?=famous_quote_html($home_quote["id"]); ?>/vote" onsubmit="return famous_quote_vote_submit(this);">
+                <input type="hidden" name="vote" value="1" />
+                <button
+                    type="submit"
+                    class="famous_quote_vote_button <?=$home_quote_vote == 1 ? "selected" : ""; ?>"
+                    title="J'aime cette citation (<?=$home_quote["up_count"]; ?>)"
+                    aria-label="J'aime cette citation (<?=$home_quote["up_count"]; ?>)"
+                    aria-pressed="<?=$home_quote_vote == 1 ? "true" : "false"; ?>"
+                >&#x1F44D;</button>
+            </form>
+        </span>
+    <?php } ?>
+<?php } ?>

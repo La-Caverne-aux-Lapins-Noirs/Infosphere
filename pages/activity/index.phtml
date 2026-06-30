@@ -24,14 +24,24 @@ if (isset($_GET["a"]))
     <?php $page = "template"; ?>
 <?php } ?>
 
-<input type="text"
-       id="filter_form"
-       name="filter_activity_<?=$page; ?>"
-       onchange="setCookie('filter_activity_<?=$page; ?>', this.value); list_modules();"
-       placeholder="<?=$Dictionnary["FilterActivities"]; ?>"
-       value="<?=isset($_COOKIE["filter_activity_$page"]) && !isset($_GET["a"]) ? $_COOKIE["filter_activity_$page"] : ""; ?>"
-/>
-<input type="button" onclick="document.getElementById('filter_form').value = ''; document.getElementById('filter_form').onchange();" value="&#10007;" style="color: red;" />
+<div class="activity_filter_bar">
+    <input type="text"
+	   id="filter_activity_form"
+	   name="filter_activity_<?=$page; ?>"
+	   onchange="setCookie('filter_activity_<?=$page; ?>', this.value); list_modules();"
+	   placeholder="<?=$Dictionnary["FilterActivities"]; ?>"
+	   value="<?=isset($_COOKIE["filter_activity_$page"]) && !isset($_GET["a"]) ? $_COOKIE["filter_activity_$page"] : ""; ?>"
+    />
+    <input type="button" onclick="document.getElementById('filter_activity_form').value = ''; document.getElementById('filter_activity_form').onchange();" value="&#10007;" style="color: red;" />
+    <input type="text"
+	   id="filter_cycle_form"
+	   name="filter_cycle_<?=$page; ?>"
+	   onchange="setCookie('filter_cycle_<?=$page; ?>', this.value); list_modules();"
+	   placeholder="<?=$Dictionnary["FilterActivityCycles"]; ?>"
+	   value="<?=isset($_COOKIE["filter_cycle_$page"]) && !isset($_GET["a"]) ? $_COOKIE["filter_cycle_$page"] : ""; ?>"
+    />
+    <input type="button" onclick="document.getElementById('filter_cycle_form').value = ''; document.getElementById('filter_cycle_form').onchange();" value="&#10007;" style="color: red;" />
+</div>
 
 <table id="activity_tab"><tr id="selectlist" style="height: 100%;"><td>
     <!-- MODULES -->

@@ -1,5 +1,5 @@
 <?php foreach ($user->school as $school) { ?>
-    <?php $icon = $Configuration->SchoolsDir($school["codename"])."icon.png"; ?>
+    <?php $icon = school_site_logo_path($school, false, true); ?>
     <div
 	onclick="document.location='index.php?p=SchoolMenu&amp;a=<?=$school["id"]; ?>"
 	class="school_profile_icon"

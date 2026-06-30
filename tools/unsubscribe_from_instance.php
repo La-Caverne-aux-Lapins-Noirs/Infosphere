@@ -29,7 +29,7 @@ function unsubscribe_from_instance($activity, $login = NULL, $admin = false)
 	    return (new ErrorResponse("YouAreNotSubscribed"));
 	if ($activity->allow_unregistration == false)
 	    return (new ErrorResponse("UnsubscribeForbidden"));
-	if (!period($activity->registration_date, $activity->close_date, time()))
+	if (!period($activity->registration_date, $activity->close_date, now()))
 	    return (new ErrorResponse("SubscriptionAreClosed"));
     }
 

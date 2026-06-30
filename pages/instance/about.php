@@ -237,6 +237,12 @@
 	</table>
     </td></tr>
 
+    <?php if ($activity->registered || $activity->is_assistant) { ?>
+        <tr><td colspan="2">
+            <?php require ("automatic_evaluation_status.php"); ?>
+        </td></tr>
+    <?php } ?>
+
     <?php if (@strlen($activity->repository_name) && ($activity->user_team != NULL || $activity->is_assistant)) { ?>
 	<tr><td colspan="2">
 	    <h4><b><?=$Dictionnary["PickupDirectory"]; ?></b></h4>
@@ -315,13 +321,13 @@
 		    ][$activity->subscription]]; ?>
 		</span></td>
 	    </tr>
-	    <?php if ($activity->mark) { ?>
+	    <?php if ($activity->money) { ?>
 		<tr>
 		    <td>
 			<b><?=$Dictionnary["MoneyToWin"]; ?></b>:
 		    </td>
 		    <td><span>
-			<?=$activity->mark; ?>
+			<?=$activity->money; ?>
 		    </span></td>
 		</tr>
 	    <?php } ?>

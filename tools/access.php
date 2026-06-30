@@ -408,7 +408,7 @@ function is_director_for_room($id)
     get_user_school($User);
     foreach ($User["school"] as $school)
     {
-	if ($school["authority"] == 0)
+	if ($school["authority"] != "DIRECTOR")
 	    continue ;
 	$ret = db_select_one("
 	    id FROM school_room

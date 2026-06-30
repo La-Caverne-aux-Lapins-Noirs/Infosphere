@@ -135,14 +135,14 @@ else
 		    style="height: 20px;"
 		    action="/api/<?=$page; ?>/<?=$module->id; ?>/medal/<?=$medal["id"]; ?>"
 		>
-		    <label for="mark" style="font-size: x-small;"><?=$Dictionnary["Mark"]; ?></label>
-		    <input type="hidden" id="previous_value_mark" value="<?=$medal["mark"]; ?>" />
+		    <label for="money" style="font-size: x-small;"><?=$Dictionnary["MedalMoneyReward"]; ?></label>
+		    <input type="hidden" id="previous_value_money" value="<?=$medal["money"]; ?>" />
 		    <input
 			type="text"
-			name="mark"
+			name="money"
 			style="font-size: x-small; height: 15px;"
-			value="<?=$medal["mark"]; ?>"
-			onchange="delay_before_submit(1000, this, 'mark');"
+			value="<?=$medal["money"]; ?>"
+			onchange="delay_before_submit(1000, this, 'money');"
 		    />
 		</form>
 	    <?php } ?>
@@ -182,8 +182,8 @@ if (count($sorted_medal))
 		$sfix = "#";
 	    else if ($medal["role"] == -1)
 		$sfix = "$";
-	    if ($medal["mark"] != 0)
-		$pfix = "(".$medal["mark"].")";
+	    if ($medal["money"] != 0)
+		$pfix = "(".$medal["money"].")";
 	}
 	else
 	{

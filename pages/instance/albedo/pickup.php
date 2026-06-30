@@ -39,7 +39,8 @@ foreach ($activities as $act)
     if (($activity = new FullActivity)->build($act["main_id"]) == false)
         not_found();
     global $Configuration;
-    [$actConf, $allowFunc] = buildEvaluatorConfiguration($activity, $team_leader["id"]);
+    [$actConf, $allowFunc] = build_evaluator_configuration($activity, $team_leader["id"]);
+    $full_activity = $activity;
     if (strlen($activity = $activity->repository_name) == 0)
         return (new ErrorResponse("NoRepositoryConfigured"));
     $activity_type = $act["type"];
@@ -70,4 +71,9 @@ foreach ($activities as $act)
     add_log(TRACE, print_r(send_mail($corrected_students, $Dictionnary["EvaluationReport"]." ".$act["actname"],
 	      "This Evaluation has been run automatically and is official", NULL,
 	      [["report.tar.gz" => base64_decode($ret["content"])]], false), true));
+    if (function_exists("official_correction_mark_missing_medals_as_failed"))
+        official_correction_mark_missing_medals_as_failed($full_activity, $team_id);
+    $rewarded = user_money_reward_completed_activity_for_team($act["main_id"], $team_id, true);
+    if ($rewarded)
+	add_log(TRACE, "Activity completion money reward paid to $rewarded student(s) for activity {$act["main_id"]}, team $team_id", 1);
 }

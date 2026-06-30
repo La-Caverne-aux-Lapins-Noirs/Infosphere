@@ -4,24 +4,33 @@ $Status = [
     $Dictionnary["Used"],
     $Dictionnary["Locked"],
     $Dictionnary["Unavailable"],
+    $Dictionnary["SSHOnly"],
 ];
 $Color = [
     "rgba(0, 255, 0, 0.3)",
     "rgba(255, 0, 0, 0.3)",
-    "rgba(0, 0, 255, 0.3)",
+    "rgba(255, 0, 0, 0.3)",
     "rgba(0, 0, 0, 0.3)",
+    "rgba(0, 128, 255, 0.3)",
 ];
 $BColor = [
     "rgba(0, 255, 0, 1.0)",
     "rgba(255, 0, 0, 1.0)",
-    "rgba(0, 0, 255, 1.0)",
+    "rgba(160, 0, 0, 1.0)",
     "rgba(0, 0, 0, 1.0)",
+    "rgba(0, 128, 255, 1.0)",
 ];
 $Types = [
     "/res/linux.png",
     "/res/windows.png",
     "/res/mac.png",
     "/res/rpi.png",
+];
+$TypeLabels = [
+    "Linux",
+    "Windows",
+    "Mac",
+    "Raspberry Pi",
 ];
 ?>
 
@@ -64,10 +73,15 @@ $Types = [
 <?php if (is_director()) { ?>
     </td><td class="formular_slot">
         <?php require ("add_room.phtml"); ?>
+        <br /><br />
+        <?php require ("unknown_users.php"); ?>
 	<?php if (($nd = db_select_all("* FROM room_desk WHERE id_room = -1"))) { ?>
 	    <br /><br />
 	    <?php require ("manage_desks.php"); ?>
 	<?php } ?>
     </td></tr></table>
 <?php } ?>
-  
+
+<script>
+<?php require (__DIR__."/script.js"); ?>
+</script>

@@ -6,7 +6,7 @@ if (isset($_POST["start"]) || isset($_GET["start"]))
     $start = date_to_timestamp($start);
 }
 else
-    $start = time();
+    $start = now();
 
 $start = first_day_of_week($start);
 $start = floor(($start / (60 * 60 * 24))) * 60 * 60 * 24;

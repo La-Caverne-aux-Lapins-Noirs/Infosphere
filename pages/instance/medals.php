@@ -10,6 +10,18 @@
 
 <div style="text-align: center;">
     <?php $no_text = false; ?>
+    <?php
+    $activity_has_acquired_eliminatory_medal = false;
+    foreach ($activity->medal as $activity_medal_state)
+    {
+	if ((int)try_get($activity_medal_state, "type", 0) == 2
+	    && (int)try_get($activity_medal_state, "result", 0) > 0)
+	{
+	    $activity_has_acquired_eliminatory_medal = true;
+	    break ;
+	}
+    }
+    ?>
     <?php foreach ($activity->medal as $medal) { ?>
 	<?php if ($medal["role"] < 0) continue; ?>
 	<?php

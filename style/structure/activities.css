@@ -13,7 +13,7 @@ h1
 #activity_tab
 {
     width: 100%;
-    height: calc(100% - 50px);
+    height: calc(100% - 62px);
 }
 #activity_tab > tr > td
 {
@@ -30,7 +30,7 @@ h1
 }
 #module_list, #activity_list, #session_list
 {
-    height: calc(100% - 20px);
+    height: calc(100% - 20px) !important;
     overflow-y: auto !important;
 }
 #activity_tab td > div

@@ -27,11 +27,20 @@
 	value="<?=try_get($_POST, "icon"); ?>"
     /><br />
     <br />
-    <h5><?=$Dictionnary["RoomDeskConfiguration"]; ?></h5>
-    <input
-	type="file"
-	name="configuration"
-    /><br />
+    <p class="room_form_hint">
+        Les postes se placent ensuite à la souris depuis l’éditeur de salle.
+    </p>
+    <?php if (is_admin()) { ?>
+        <select name="school">
+            <option value="">École à rattacher plus tard</option>
+            <?php foreach (fetch_school() as $school) { ?>
+                <option value="<?=$school["id"]; ?>">
+                    <?=htmlentities($school["codename"]); ?>
+                </option>
+            <?php } ?>
+        </select><br />
+        <small class="room_form_hint">L’administrateur peut aussi modifier le rattachement école depuis la salle.</small><br />
+    <?php } ?>
     
     <?php forge_language_formular(["name" => "text"], $_POST); ?>
     <br />

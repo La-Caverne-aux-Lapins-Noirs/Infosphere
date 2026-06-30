@@ -1,6 +1,27 @@
 <?php
 
-function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip = NULL, $distant = false)
+const USER_LOG_SSH_IDLE = -2;
+const USER_LOG_LOCK = -1;
+const USER_LOG_INTRA = 0;
+const USER_LOG_WORK = 1;
+const USER_LOG_DISTANT = 2;
+
+function user_log_valid_activity_types()
+{
+    return ([USER_LOG_INTRA, USER_LOG_WORK, USER_LOG_DISTANT]);
+}
+
+function user_log_sql_type_list($types)
+{
+    if (!is_array($types))
+        $types = [$types];
+    $out = [];
+    foreach ($types as $type)
+        $out[] = (int)$type;
+    return (implode(", ", array_unique($out)));
+}
+
+function compute_student_log($user = NULL, $type = USER_LOG_INTRA, $date = NULL, $client_ip = NULL, $distant = false)
 {
     global $OriginalUser;
     global $Database;
@@ -57,10 +78,9 @@ function compute_student_log($user = NULL, $type = 0, $date = NULL, $client_ip =
     ");
 }
 
-function get_student_log($user = NULL, $date = NULL)
+function get_student_log($user = NULL, $date = NULL, $types = NULL)
 {
     global $OriginalUser;
-    global $Database;
 
     if ($user == NULL)
 	if (($user = &$OriginalUser) == NULL)
@@ -69,11 +89,15 @@ function get_student_log($user = NULL, $date = NULL)
 	$date = now();
     else
 	$date = date_to_timestamp($date);
+    if ($types === NULL)
+        $types = user_log_valid_activity_types();
+    $types = user_log_sql_type_list($types);
     $fetch = db_select_one("
-       * FROM user_log
+       COALESCE(SUM(duration), 0) as duration FROM user_log
        WHERE id_user = {$user["id"]}
        AND log_date >= '".db_form_date($date, true)."'
        AND log_date < '".db_form_date($date + 60 * 60 * 24, true)."'
+       AND type IN ($types)
        ");
     if ($fetch == NULL)
 	return (0);
@@ -96,44 +120,22 @@ function get_week_average($user, $since = 60 * 60 * 24 * 14)
     $start = $end - $since;
     $end = db_form_date($end);
     $start = db_form_date($start);
+    $types = user_log_sql_type_list(user_log_valid_activity_types());
 
-    $intra_logs = [];
     $query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 0 AND id_user = $user
+  log_date, duration FROM user_log WHERE type IN ($types) AND id_user = $user
   AND log_date >= '$start' AND log_date <= '$end'
-    ", "log_date");
-    foreach ($query as $kk => $vv)
-	$intra_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-
-    $work_logs = [];
-    $query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 1 AND id_user = $user
-  AND log_date >= '$start' AND log_date <= '$end'
-    ", "log_date");
-    foreach ($query as $kk => $vv)
-	$work_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
-
-    $distant_logs = [];
-    $query = db_select_all("
-  log_date, duration FROM user_log WHERE type = 2 AND id_user = $user
-  AND log_date >= '$start' AND log_date <= '$end'
-    ", "log_date");
-    foreach ($query as $kk => $vv)
-	$distant_logs[date_to_timestamp($kk) / 60 / 60 / 24] = $vv["duration"] / (60 * 60);
+    ");
 
     $total = 0;
-    foreach ($intra_logs as $l)
-	$total += $l;
-    foreach ($work_logs as $l)
-	$total += $l;
-    foreach ($distant_logs as $l)
-	$total += $l;
+    foreach ($query as $vv)
+	$total += $vv["duration"] / (60 * 60);
     return ($total);
 }
 
 function get_last_activities_report($user, $since = 60 * 60 * 24 * 14)
 {
-    $act = collect_dashboard_activities(time() - $since, time(), false);
+    $act = collect_dashboard_activities(now() - $since, now(), false);
     $pres = 0;
     $total = 0;
     foreach ($act["participate"] as $a)
@@ -149,8 +151,8 @@ function get_last_activities_report($user, $since = 60 * 60 * 24 * 14)
 
 function get_last_medals_report($user, $since = 60 * 60 * 24 * 14)
 {
-    $act = collect_dashboard_activities(time() - $since, time(), false);
-    $prj = collect_dashboard_projects(time(), $since, true);
+    $act = collect_dashboard_activities(now() - $since, now(), false);
+    $prj = collect_dashboard_projects(now(), $since, true);
 
     $medal = 0;
     $total = 0;

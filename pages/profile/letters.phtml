@@ -1,0 +1,69 @@
+<?php if (!is_director_for_student($user->id)) return ; ?>
+<?php
+$letter_models = document_builder_letter_models($Language);
+$letter_root = document_builder_letter_file_root();
+$letter_dir = $Configuration->UsersDir($user->codename).$letter_root."/";
+new_directory($letter_dir."index.php");
+?>
+<script>
+ function profile_open_generated_letter(result, msg, content, parameter)
+ {
+     if (content && content.length)
+	 window.open(content, "_blank").focus();
+     let browser = document.getElementById(parameter);
+     if (browser)
+     {
+	 let form = browser.previousElementSibling;
+	 if (form)
+	     silent_submit(form, parameter);
+     }
+ }
+</script>
+<div class="profile_letters">
+    <h3><?=$Dictionnary["Letters"]; ?></h3>
+    <?php if (!count($letter_models)) { ?>
+	<p><?=$Dictionnary["NoLetterModel"]; ?></p>
+    <?php } else { ?>
+	<form
+	    method="put"
+	    action="/api/user/<?=$user->id; ?>/new_letter"
+	    onsubmit="return silent_submitf(this, {after_success: profile_open_generated_letter, after_success_parameter: 'letter_file_browser'});"
+	>
+	    <label><?=$Dictionnary["DocumentModel"]; ?></label><br />
+	    <select name="model" style="width: 100%;">
+		<?php foreach ($letter_models as $name => $file) { ?>
+		    <option value="<?=$name; ?>"><?=$name; ?></option>
+		<?php } ?>
+	    </select><br />
+	    <label><?=$Dictionnary["DocumentFields"]; ?></label><br />
+	    <input
+		type="text"
+		name="fields"
+		placeholder="Cle=Valeur AutreCle=AutreValeur"
+		style="width: 100%;"
+	    /><br />
+	    <label><?=$Dictionnary["OutputFile"]; ?></label><br />
+	    <input
+		type="text"
+		name="output"
+		placeholder="optionnel.pdf"
+		style="width: 100%;"
+	    /><br />
+	    <input type="button" value="<?=$Dictionnary["GenerateLetter"]; ?>" onclick="silent_submitf(this.form, {after_success: profile_open_generated_letter, after_success_parameter: 'letter_file_browser'});" />
+	</form>
+    <?php } ?>
+    <br />
+    <?php
+    $type = "letter_file";
+    $page = "user";
+    $id = $user->id;
+    $path = $letter_root;
+    $target = $letter_dir;
+    $fbid = "letter_file_browser";
+    $locked_path = $letter_root;
+    $path_browser_can_cd = true;
+    $nocd = false;
+    $file_browser_height = "260px";
+    require ("./tools/template/path_browser.phtml");
+    ?>
+</div>

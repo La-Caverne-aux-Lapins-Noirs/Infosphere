@@ -10,15 +10,15 @@
     // 8 heures par jour + 4h par week end (l'exam) + 4h le soir par sem)
     // Ca fait 50h par semaine en moyenne. Cela inclu les devoirs.
     // Sachant qu'en math sup, c'est 55-60h, et spé 60-70h d'après les stats.
-    $logcursor = [$wavg, 0, 200, 100];
+    $logcursor = [$wavg, 0, 200, $wtarget];
     require (__DIR__."/../../tools/student_status.php");
 
     $label = $Dictionnary["Presence"];
-    $logcursor = [$aavg, $amin, $amax, 0.8 * $amax];
+    $logcursor = [$aavg, $amin, $amax, $atarget];
     require (__DIR__."/../../tools/student_status.php");
 
     $label = $Dictionnary["MedalGain"];
-    $logcursor = [$mavg, $mmin, $mmax, 0.25 * $mmax];
+    $logcursor = [$mavg, $mmin, $mmax, $mtarget];
     require (__DIR__."/../../tools/student_status.php");
 
     $label = $Dictionnary["GlobalIndicator"];

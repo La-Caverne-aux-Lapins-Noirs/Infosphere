@@ -1,6 +1,6 @@
 <?php if ($activity->registered) { ?>
     <?php require ("forms/about_unsubscribe.php"); ?>
-    <?php if ($Configuration->Properties["self_signing"] && $activity->unique_session && !$activity->teamable) { ?>
+    <?php if ($Configuration->Properties["self_signing"] && $activity->unique_session && presence_declaration_is_available_for_activity($activity)) { ?>
 	<?php if ($activity->registered_elsewhere == false) { ?>
 	    <?php require ("forms/about_declare.php"); ?>
 	<?php } ?>

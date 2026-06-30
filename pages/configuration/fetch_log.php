@@ -17,7 +17,7 @@ function configuration_log_filters($source = NULL)
 {
     if ($source === NULL)
         $source = $_GET;
-    $size = (int)($source["log_size"] ?? 75);
+    $size = (int)($source["log_size"] ?? 100);
     if (!in_array($size, [25, 50, 75, 100, 150, 200]))
         $size = 75;
     return ([
@@ -31,8 +31,7 @@ function configuration_log_filters($source = NULL)
         "id_min" => trim((string)($source["log_id_min"] ?? "")),
         "id_max" => trim((string)($source["log_id_max"] ?? "")),
         "from" => trim((string)($source["log_from"] ?? "")),
-        "to" => trim((string)($source["log_to"] ?? "")),
-        "with_system" => (int)($source["log_system"] ?? 0) == 1
+        "to" => trim((string)($source["log_to"] ?? ""))
     ]);
 }
 
@@ -64,8 +63,7 @@ function configuration_log_where($filters)
     global $Database;
 
     $where = [];
-    if (!isset($filters["with_system"]) || !$filters["with_system"])
-        $where[] = "(log.id_user != 1 OR log.type != 0)";
+    $where[] = "NOT (log.id_user = 1 AND log.type = 0 AND log.message IN ('Albedo starts.', 'Albedo stops.'))";
     if (isset($filters["type"]) && $filters["type"] !== "" && is_number($filters["type"]))
         $where[] = "log.type = ".((int)$filters["type"]);
     if (isset($filters["id_min"]) && $filters["id_min"] !== "" && is_number($filters["id_min"]))
@@ -165,8 +163,7 @@ function configuration_log_hidden_inputs($filters, $extra = [])
         "log_url" => $filters["url"] ?? "",
         "log_from" => $filters["from"] ?? "",
         "log_to" => $filters["to"] ?? "",
-        "log_system" => !empty($filters["with_system"]) ? 1 : 0,
-        "log_size" => $filters["size"] ?? 75,
+        "log_size" => $filters["size"] ?? 100,
         "log_page" => $filters["page"] ?? 0
     ];
     foreach ($extra as $key => $value)

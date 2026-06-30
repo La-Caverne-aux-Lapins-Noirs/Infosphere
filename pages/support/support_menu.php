@@ -5,8 +5,13 @@ silent_submitf(this, {
   tofill: 'support".$support["id"]."'
 });
 ";
+if (function_exists("support_enrich_assets_pedagogical_links"))
+    support_enrich_assets_pedagogical_links($support);
 ?>
 <h2>
+    <?php if (can_edit_supports()) { ?>
+	<?php support_pedagogical_coverage_warning_marker(support_pedagogical_support_content_coverage($support), "Chapitre contenant du contenu non couvert par une matière ou activité"); ?>
+    <?php } ?>
     <?php support_compact_label($support); ?>
     <?php if (can_edit_supports()) { ?>
 	<?php support_copy_codename_button($support["codename"]); ?>
@@ -101,6 +106,7 @@ silent_submitf(this, {
 		id="asset<?=$asset["id"]; ?>button"
 		data-support-asset-id="<?=$asset["id"]; ?>"
 		data-support-id="<?=$support["id"]; ?>"
+		data-support-asset-type="<?=htmlentities($asset["type"]); ?>"
 		data-support-asset-progress="<?=isset($asset["view_progress"]) ? (int)$asset["view_progress"] : 0; ?>"
 		onclick="switch_asset(
 		       this,
@@ -114,8 +120,33 @@ silent_submitf(this, {
 		<?php if (!can_edit_supports() && !empty($asset["unseen"])) { ?>
 		    <span class="support_unseen_asset_marker" title="Support non consulté">◆</span>
 		<?php } ?>
+		<?php support_new_message_marker(function_exists("support_asset_intercom_unread_count") ? support_asset_intercom_unread_count($asset["id"]) : 0); ?>
+		<?php if (can_edit_supports()) { ?>
+		    <?php support_pedagogical_coverage_warning_marker(support_pedagogical_asset_coverage($support, $asset), "Ressource publiée non couverte par une matière ou activité"); ?>
+		<?php } ?>
 		<?php support_compact_label($asset, $empty_class, $empty_title, "#"); ?>
 	    </a>
 	</li>
     <?php } ?>
 </ul>
+<?php if (can_edit_supports()) { ?>
+    <div class="support_pedagogical_sidebox">
+        <?php support_pedagogical_render_support_panel($support); ?>
+        <div class="support_pedagogical_asset_zone" id="support_pedagogical_asset_zone_<?=$support["id"]; ?>">
+            <div class="support_pedagogical_asset_placeholder">
+                Sélectionne une ressource pour voir les liens précis qui la couvrent.
+            </div>
+            <?php foreach ($support["asset"] as $asset) { ?>
+                <?php if ($asset["selected"] == false) continue ; ?>
+                <div
+                    class="support_pedagogical_asset_details"
+                    id="support_pedagogical_asset_<?=$asset["id"]; ?>"
+                    data-support-pedagogical-asset="<?=$asset["id"]; ?>"
+                    style="display: none;"
+                >
+                    <?php support_pedagogical_render_asset_panel($support, $asset); ?>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+<?php } ?>

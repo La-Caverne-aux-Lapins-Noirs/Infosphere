@@ -72,6 +72,7 @@
 }
 
 .school_admin_form input[type="text"],
+.school_admin_form input[type="file"],
 .school_admin_form textarea
 {
     box-sizing: border-box;
@@ -353,3 +354,21 @@
 }
 
 
+
+.school_admin_logo_grid
+{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.school_admin_logo_preview
+{
+    width: 100%;
+    height: 120px;
+    margin: 6px 0px;
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
+}

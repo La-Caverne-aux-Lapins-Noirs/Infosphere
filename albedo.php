@@ -38,12 +38,7 @@ add_log(TRACE, "Albedo starts.", 1, true);
 
 // Ici, on est admin, si les paramètres étaient bons
 // C'est ici que commence le travail d'Albedo.
-if (($HandOk = ping_hand()))
-{
-    // On check si les rooms n'ont pas changé depuis le dernier appel
-    if (check_room_status() === true)
-	add_log(TRACE, "The rooms status has been edited", 1, true);
-}
+$HandOk = ping_hand();
 
 // Chaque fichier albedo doit commencer par vérifier les credentials
 $files = glob("*/albedo.php");

@@ -33,6 +33,12 @@ function add_school($codename, $icon, $lng)
     ))->is_error())
 	return ($ret);
 
+    $document_logo = $lng;
+    unset($document_logo["icon"]);
+    unset($document_logo["site_logo"]);
+    if (($logo_update = school_update_logos($codename, $document_logo))->is_error())
+	return ($logo_update);
+
     if (($refresh = refresh_school($ret->value["id"]))->is_error())
 	return ($refresh);
 

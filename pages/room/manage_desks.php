@@ -2,7 +2,7 @@
     <?=$Dictionnary["UnknownDesks"]; ?>
 </h2><br />
 <?php foreach ($nd as $desk) { ?>
-    <div id="desk<?=$desk["id"]; ?>" style="background-color: white; border-radius: 15px;">
+    <div id="desk<?=$desk["id"]; ?>" style="background-color: black; border-radius: 15px;">
 	<h3 style="text-align: center; width: 100%;">
 	    <?=$desk["codename"]; ?>
 	</h3>
@@ -14,18 +14,33 @@
 		<?=$Dictionnary["IpAddress"]; ?>: <?=$desk["ip"]; ?><br />
 		<?=$Dictionnary["Status"]; ?>: <?=$Status[$desk["status"]]; ?><br />
 		<?php
+		$select_system_codename = in_array("codename", db_select_rows("room_desk_user"))
+		    ? "room_desk_user.codename"
+		    : "NULL";
 		$usrs = db_select_all("
-                user.*, room_desk_user.distant, room_desk_user.locked
+                user.id as id,
+                COALESCE(user.codename, $select_system_codename) as codename,
+                user.nickname,
+                user.first_name,
+                user.family_name,
+                $select_system_codename as system_codename,
+                room_desk_user.distant,
+                room_desk_user.locked
                 FROM room_desk_user
 		LEFT JOIN user ON room_desk_user.id_user = user.id
-		WHERE id_room_desk = {$desk["id"]} AND last_update > NOW() - 5 * 60
+		WHERE id_room_desk = {$desk["id"]}
+                  AND TIMESTAMPDIFF(SECOND, room_desk_user.last_update, NOW()) < 60 * 5
 		");
 		?>
 		<?php if (count($usrs)) { ?>
 		    <h5><?=$Dictionnary["Users"]; ?></h5>
 		    <ul>
 			<?php foreach ($usrs as $usr) { ?>
-			    <?php display_nickname($usr); ?>
+			    <?php if ($usr["id"] != NULL) { ?>
+				<?php display_nickname($usr); ?>
+			    <?php } else { ?>
+				<b><?=htmlentities($usr["codename"]); ?></b>
+			    <?php } ?>
 			    <?php if ($usr["distant"]) { ?>
 				(SSH)
 			    <?php } ?>

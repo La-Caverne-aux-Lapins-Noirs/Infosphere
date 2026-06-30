@@ -61,6 +61,35 @@ function RenderConfigurationOperations($id, $data, $method, $output, $module)
     ]));
 }
 
+function RenderConfigurationQuotes($id, $data, $method, $output, $module)
+{
+    return (new ValueResponse([
+        "content" => configuration_render_panel_content("quotes_panel_content.php", $data)
+    ]));
+}
+
+function SaveConfigurationQuote($id, $data, $method, $output, $module)
+{
+    $result = famous_quote_save($data);
+    return (new ValueResponse([
+        "msg" => $result["msg"],
+        "content" => configuration_render_panel_content("quotes_panel_content.php", $data)
+    ]));
+}
+
+function DeleteConfigurationQuote($id, $data, $method, $output, $module)
+{
+    if (isset($data["quote"]))
+        $id = $data["quote"];
+    else if (isset($data["id"]))
+        $id = $data["id"];
+    $result = famous_quote_delete($id);
+    return (new ValueResponse([
+        "msg" => $result["msg"],
+        "content" => configuration_render_panel_content("quotes_panel_content.php", $data)
+    ]));
+}
+
 function ExecuteConfigurationOperation($id, $data, $method, $output, $module)
 {
     $execution = configuration_execute_operation_by_id($data["operation"] ?? -1, $outfile);
@@ -93,6 +122,10 @@ $Tab = [
             "only_admin",
             "RenderConfigurationOperations",
         ],
+        "quotes" => [
+            "only_admin",
+            "RenderConfigurationQuotes",
+        ],
     ],
     "POST" => [
         "stats" => [
@@ -110,6 +143,18 @@ $Tab = [
         "operations" => [
             "only_admin",
             "RenderConfigurationOperations",
+        ],
+        "quotes" => [
+            "only_admin",
+            "RenderConfigurationQuotes",
+        ],
+        "quote" => [
+            "only_admin",
+            "SaveConfigurationQuote",
+        ],
+        "quote_delete" => [
+            "only_admin",
+            "DeleteConfigurationQuote",
         ],
         "operation" => [
             "only_admin",

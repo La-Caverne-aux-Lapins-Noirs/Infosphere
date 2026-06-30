@@ -24,7 +24,8 @@ function AddRoom($id, $data, $method, $output, $module)
     
     if ($id != -1 || !isset($data["rooms"]))
 	bad_request();
-    get_user_school($User);
+    if (!is_admin())
+	get_user_school($User);
     foreach ($data["rooms"] as $room)
     {
 	if (!isset($room["codename"]))
@@ -41,10 +42,21 @@ function AddRoom($id, $data, $method, $output, $module)
 	}
 	if (($ret = add_room($room["codename"], @$room["capacity"], @$room["map"], $room["configuration"], $room))->is_error())
 	    return ($ret);
-	// Si on est directeur, il faut ajouter la jonction avec les écoles
-	foreach ($User["school"] as $school)
-	    if (($ret = handle_links($school["id_school"], $room["codename"], "school", "room"))->is_error())
-		return ($ret);
+	if (is_admin())
+	{
+	    if (isset($room["school"]) && trim((string)$room["school"]) != "")
+		if (($ret = handle_links($room["school"], $room["codename"], "school", "room"))->is_error())
+		    return ($ret);
+	}
+	else
+	{
+	    // Un directeur crée toujours la salle dans son école, et ne choisit pas
+	    // une école arbitraire. Les changements de rattachement restent admin.
+	    foreach ($User["school"] as $school)
+		if ($school["authority"] != "STUDENT")
+		    if (($ret = handle_links($school["id_school"], $room["codename"], "school", "room"))->is_error())
+			return ($ret);
+	}
     }
     $ret = DisplayRoom($id, $data, "GET", $output, $module);
     $ret->value["msg"] = $Dictionnary["Added"];

@@ -57,6 +57,11 @@
     padding-left: 10px;
 }
 
+.activity_medal_visual.medal_not_acquired > img
+{
+    opacity: 0.42;
+}
+
 .activity_material div
 {
     overflow: auto;

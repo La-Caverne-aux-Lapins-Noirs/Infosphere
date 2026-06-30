@@ -23,7 +23,9 @@ CREATE TABLE `team` (
   `closed` datetime DEFAULT NULL,
   `manual_credit` int(11) DEFAULT NULL,
   `manual_grade` int(11) DEFAULT NULL,
-  `canjoin` tinyint(1) NOT NULL DEFAULT 1
+  `canjoin` tinyint(1) NOT NULL DEFAULT 1,
+  `automatic_correction_date` datetime DEFAULT NULL,
+  KEY `automatic_correction_date` (`automatic_correction_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `user_team` (

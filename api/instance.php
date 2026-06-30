@@ -330,8 +330,25 @@ function SetMedal($id, $data, $method, $output, $module)
     ]));
 }
 
+
+function GetAutomaticEvaluationStatus($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+        bad_request();
+    if (($activity = new FullActivity)->build($id, false, false, -1) == false)
+        not_found();
+    ob_start();
+    require ("./pages/instance/automatic_evaluation_status.php");
+    return (new ValueResponse(["content" => ob_get_clean()]));
+}
+
 $Tab = [
-    "GET" => [], // Peut etre plus tard
+    "GET" => [
+        "automatic_evaluation" => [
+            "is_subscribed_or_assistant",
+            "GetAutomaticEvaluationStatus",
+        ],
+    ],
     "POST" => [],
     "PUT" => [
 	"declare" => [

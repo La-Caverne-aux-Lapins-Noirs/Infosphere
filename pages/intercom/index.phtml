@@ -142,6 +142,9 @@ function intercom_page_can_moderate_context($type, $id)
             : intercom_page_laboratory_authority($id) >= 1);
     if ($type == "laboratory")
         return (intercom_page_laboratory_authority($id) >= 2);
+    if ($type == "support_asset")
+        return (function_exists("support_asset_intercom_can_moderate")
+            && support_asset_intercom_can_moderate($id));
     if ($type == "activity")
         return ((function_exists("is_teacher_or_director_for_activity") && is_teacher_or_director_for_activity($id))
             || (function_exists("is_assistant_for_activity") && is_assistant_for_activity($id)));
@@ -773,6 +776,8 @@ function intercom_page_unread_count($type, $id)
     $id = (int)$id;
     if ($id <= 0 || $type == "")
         return (0);
+    if ($type == "support_asset" && function_exists("support_asset_intercom_unread_count"))
+        return (support_asset_intercom_unread_count($id));
     $key = $type."/".$id;
     if (isset($cache[$key]))
         return ($cache[$key]);
@@ -860,6 +865,9 @@ function intercom_page_user_can_open($type, $id)
         return (intercom_page_school_access($id));
     if ($type == "school_staff")
         return (intercom_page_school_staff_access($id));
+    if ($type == "support_asset")
+        return (function_exists("support_asset_intercom_access")
+            && support_asset_intercom_access($id));
     if (intercom_page_can_moderate_context($type, $id))
         return (true);
     if ($type == "cycle")
@@ -1232,6 +1240,30 @@ function intercom_page_nav_anchor($type, $row, $menu_cycle = NULL, $subtitle = N
     <?php
 }
 
+
+function intercom_page_support_asset_nav_item($asset)
+{
+    $id = (int)$asset["id"];
+    $unread = isset($asset["unread_count"])
+        ? (int)$asset["unread_count"]
+        : intercom_page_unread_count("support_asset", $id);
+    $selected = intercom_page_is_selected("support_asset", $id) ? " intercom_nav_item_selected" : "";
+    $unread_class = $unread > 0 ? " intercom_nav_item_has_unread" : "";
+    $title = try_get($asset, "label", intercom_page_label($asset, "support_asset#".$id));
+    $subtitle = try_get($asset, "subtitle", "");
+    ?>
+    <a class="intercom_nav_item<?=$selected; ?><?=$unread_class; ?>" href="<?=intercom_page_h(intercom_page_link("support_asset", $id)); ?>">
+        <span class="intercom_nav_title_row">
+            <span class="intercom_nav_title"><?=intercom_page_h($title); ?></span>
+            <?php intercom_page_unread_badge_count($unread); ?>
+        </span>
+        <?php if ($subtitle !== NULL && strlen(trim((string)$subtitle))) { ?>
+            <span class="intercom_nav_subtitle"><?=intercom_page_h($subtitle); ?></span>
+        <?php } ?>
+    </a>
+    <?php
+}
+
 function intercom_page_nav_section($title, $type, $rows, $empty_message, $menu_cycle = NULL)
 {
     ?>
@@ -1319,6 +1351,9 @@ function intercom_page_display_shell()
     $cycles = intercom_page_fetch_cycles();
     $laboratories = intercom_page_fetch_laboratories();
     $public_laboratories = intercom_page_fetch_public_laboratories();
+    $support_assets = function_exists("support_asset_intercom_unread_assets")
+        ? support_asset_intercom_unread_assets()
+        : [];
     $reports = intercom_page_fetch_reports();
     $show_reports = count($reports) || intercom_page_has_moderation_scope();
     $menu_cycle = intercom_page_selected_cycle($cycles);
@@ -1436,6 +1471,17 @@ function intercom_page_display_shell()
                         <?php } ?>
                     <?php } ?>
                 </section>
+                <section class="intercom_nav_section">
+                    <h3>Supports de cours</h3>
+                    <?php if (!count($support_assets)) { ?>
+                        <p class="intercom_nav_empty">Aucun nouveau message lié à un support.</p>
+                    <?php } else { ?>
+                        <?php foreach ($support_assets as $asset) { ?>
+                            <?php intercom_page_support_asset_nav_item($asset); ?>
+                        <?php } ?>
+                    <?php } ?>
+                </section>
+
                 <section class="intercom_nav_section">
                     <h3>Salons communs</h3>
                     <?php foreach ($common_channels as $channel) { ?>

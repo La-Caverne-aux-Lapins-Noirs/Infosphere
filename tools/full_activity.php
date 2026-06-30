@@ -83,7 +83,7 @@ class FullActivity extends Response
     public $credit_c = -1;
     public $credit_d = -1;
     public $credit = [];
-    public $mark = 0;
+    public $money = 0;
     public $repository_name = "";
     public $repositories = [];
     
@@ -118,6 +118,7 @@ class FullActivity extends Response
     public $progressive_slot_opening = 0;
     public $team_based_slot_opening = 0;
     public $estimated_work_duration = 0;
+    public $automatic_correction_frequency = NULL;
     public $configuration = NULL;
     public $current_configuration = NULL;
     public $subject = NULL;
@@ -299,8 +300,8 @@ class FullActivity extends Response
 	templated_fill("activity", $data, $datefields);
 	$fields = [
 	    "id", "codename", "type", "type_name", "type_type", "hidden", "parent_activity", "reference_activity", "parent_codename",
-	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "mark",
-	    "subscription", "slot_duration", "progressive_slot_opening", "team_based_slot_opening", "estimated_work_duration", "configuration", "subject", "emergence_date", "done_date", "registration_date",
+	    "mandatory", "name", "description", "objective", "method", "reference", "min_team_size", "max_team_size", "allow_unregistration", "money",
+	    "subscription", "slot_duration", "progressive_slot_opening", "team_based_slot_opening", "estimated_work_duration", "automatic_correction_frequency", "configuration", "subject", "emergence_date", "done_date", "registration_date",
 	    "close_date", "subject_appeir_date", "subject_disappeir_date", "pickup_date", "id_template",
 	    "is_template", "template_link", "medal_template", "support_template", "template_codename", "deleted", "parent_name",
 	    "maximum_subscription", "validation", "repository_name",
@@ -698,6 +699,7 @@ class FullActivity extends Response
                       *
                       FROM pickedup_work
                       WHERE id_team = {$team["id"]}
+			AND (status IS NULL OR status != 'automatic_correction')
                       ORDER BY pickedup_date DESC
 		      ");
 		    $team["real_members"] = 0;

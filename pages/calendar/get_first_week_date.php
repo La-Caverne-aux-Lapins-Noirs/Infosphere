@@ -6,8 +6,10 @@ function get_first_week_date()
     global $User;
 
     if (!isset($User["cycle"]))
+    {
 	// Set une date automatiquement a maintenant si aucun cycle n'est rataché
-	return (date("Y-m-d H:i:s"));
+	return (db_form_date(now()));
+    }
 
     $oldest_active = NULL;
     foreach ($User["cycle"] as $i => $v)
@@ -20,8 +22,10 @@ function get_first_week_date()
 	    $oldest_active = $v;
     }
     if ($oldest_active == NULL)
+    {
 	// Set une date automatiquement a maintenant
-	return (date("Y-m-d H:i:s"));
+	return (db_form_date(now()));
+    }
 
     return ($oldest_active["first_day"]);
 }

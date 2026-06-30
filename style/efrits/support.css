@@ -51,3 +51,50 @@
     color: rgb(0, 255, 0);
     cursor: pointer;
 }
+
+.support_asset_intercom_box,
+.support_asset_intercom_toolbar
+{
+    background-color: rgba(0, 255, 0, 0.035);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.10) solid;
+    border-radius: 10px;
+}
+
+.support_asset_intercom_toolbar
+{
+    padding: 3px 6px;
+}
+
+.support_asset_intercom_toolbar input.selected
+{
+    color: rgb(0, 255, 0);
+}
+
+.support_next_asset_prompt
+{
+    background-color: rgba(0, 0, 0, 0.82);
+    color: white;
+    border: 1px rgba(0, 255, 0, 0.55) solid;
+    border-radius: 10px;
+    box-shadow: 0px 0px 12px rgba(0, 255, 0, 0.28);
+    backdrop-filter: blur(12px);
+}
+
+.support_next_asset_prompt_title
+{
+    color: white;
+}
+
+.support_pedagogical_box
+{
+    background-color: rgba(0, 255, 0, 0.035);
+    border: 1px rgba(0, 255, 0, 0.10) solid;
+    border-radius: 8px;
+}
+
+.support_pedagogical_link_kind
+{
+    color: rgb(0, 255, 0);
+}

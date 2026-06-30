@@ -125,6 +125,183 @@ require_once (__DIR__."/../error_net.php");
  var support_loaded_panel = {};
  var support_base_display_panel = window.display_panel;
  var support_pending_callback = null;
+ var support_asset_intercom_current = {};
+ var support_asset_intercom_loading = {};
+
+ function support_asset_layout_storage_key(support_id)
+ {
+     return "support_asset_layout_" + support_id;
+ }
+
+ function support_set_asset_layout(support_id, mode)
+ {
+     let workspace = document.getElementById("support_asset_workspace_" + support_id);
+     let display_pane;
+     let intercom_pane;
+
+     if (!workspace)
+	 return ;
+     if (!["support_max", "support", "intercom", "intercom_max"].includes(mode))
+	 mode = "support";
+     display_pane = workspace.querySelector(".support_asset_display_pane");
+     intercom_pane = workspace.querySelector(".support_asset_intercom_pane");
+     if (!display_pane || !intercom_pane)
+	 return ;
+     workspace.classList.remove(
+	 "support_asset_workspace_support_max",
+	 "support_asset_workspace_support",
+	 "support_asset_workspace_intercom",
+	 "support_asset_workspace_intercom_max"
+     );
+     workspace.classList.add("support_asset_workspace_" + mode);
+
+     workspace.style.display = "flex";
+     workspace.style.flexDirection = "column";
+     workspace.style.gap = "10px";
+     workspace.style.alignItems = "stretch";
+     workspace.style.width = "100%";
+     workspace.style.boxSizing = "border-box";
+     workspace.style.height = "calc(100vh - 115px)";
+     workspace.style.maxHeight = "calc(100vh - 115px)";
+
+     display_pane.style.minWidth = "0";
+     display_pane.style.minHeight = "260px";
+     display_pane.style.height = "auto";
+     intercom_pane.style.minWidth = "0";
+     intercom_pane.style.minHeight = "240px";
+     intercom_pane.style.height = "auto";
+
+     if (mode == "support_max")
+     {
+	 display_pane.style.flex = "3 1 0";
+	 intercom_pane.style.flex = "1 1 0";
+     }
+     else if (mode == "intercom")
+     {
+	 display_pane.style.flex = "1 1 0";
+	 intercom_pane.style.flex = "2 1 0";
+     }
+     else if (mode == "intercom_max")
+     {
+	 display_pane.style.flex = "1 1 0";
+	 intercom_pane.style.flex = "3 1 0";
+     }
+     else
+     {
+	 display_pane.style.flex = "2 1 0";
+	 intercom_pane.style.flex = "1 1 0";
+     }
+
+     localStorage.setItem(support_asset_layout_storage_key(support_id), mode);
+     Array.prototype.forEach.call(
+	 workspace.querySelectorAll(".support_asset_intercom_toolbar input"),
+	 function(button) {
+	     button.classList.toggle("selected", button.getAttribute("onclick").indexOf("'" + mode + "'") != -1);
+	 }
+     );
+ }
+
+ function support_prepare_asset_layout(support_id)
+ {
+     let mode = localStorage.getItem(support_asset_layout_storage_key(support_id));
+
+     support_set_asset_layout(support_id, mode || "support");
+ }
+
+ window.addEventListener("resize", function() {
+     Array.prototype.forEach.call(
+	 document.querySelectorAll(".support_asset_workspace[data-support-id]"),
+	 function(workspace) {
+	     let support_id = workspace.getAttribute("data-support-id");
+	     let mode = localStorage.getItem(support_asset_layout_storage_key(support_id)) || "support";
+	     support_set_asset_layout(support_id, mode);
+	 }
+     );
+ });
+
+ function support_asset_intercom_placeholder(support_id, message)
+ {
+     let box = document.getElementById("support_asset_intercom_" + support_id);
+
+     if (box)
+	 box.innerHTML = '<div class="support_asset_intercom_placeholder">' + message + '</div>';
+ }
+
+ function support_load_asset_intercom(asset_id, support_id)
+ {
+     let div = "support_asset_intercom_" + support_id;
+     let box = document.getElementById(div);
+     let url;
+
+     if (!asset_id || !support_id || !box)
+	 return ;
+     if (support_asset_intercom_current[support_id] == asset_id)
+     {
+	 if (typeof check_update == "function")
+	     check_update(div);
+	 return ;
+     }
+     if (support_asset_intercom_loading[support_id] == asset_id)
+	 return ;
+     support_asset_intercom_loading[support_id] = asset_id;
+     support_asset_intercom_current[support_id] = asset_id;
+     support_asset_intercom_placeholder(support_id, "Chargement de la discussion...");
+     url = "/api/intercom/" + encodeURIComponent(asset_id) + "/support_asset?div=" + encodeURIComponent(div) + "&short_name=1";
+     send_ajax(
+	 "GET",
+	 url,
+	 null,
+	 div,
+	 null,
+	 null,
+	 null,
+	 function(success) {
+	     support_asset_intercom_loading[support_id] = null;
+	     if (!success)
+	     {
+		 support_asset_intercom_current[support_id] = null;
+		 support_asset_intercom_placeholder(support_id, "Discussion inaccessible pour cet élément.");
+		 return ;
+	     }
+	     if (typeof intercom_apply_message_layout == "function")
+		 intercom_apply_message_layout(div);
+	     if (typeof check_update == "function")
+		 check_update(div);
+	 }
+     );
+ }
+
+ function support_show_asset_pedagogy(support_id, asset_id)
+ {
+     let zone = document.getElementById("support_pedagogical_asset_zone_" + support_id);
+     let selected = document.getElementById("support_pedagogical_asset_" + asset_id);
+     let placeholders;
+
+     if (!zone)
+	 return ;
+     Array.prototype.forEach.call(
+	 zone.querySelectorAll(".support_pedagogical_asset_details"),
+	 function(panel) { panel.style.display = "none"; }
+     );
+     placeholders = zone.querySelectorAll(".support_pedagogical_asset_placeholder");
+     Array.prototype.forEach.call(placeholders, function(panel) {
+	 panel.style.display = selected ? "none" : "block";
+     });
+     if (selected)
+	 selected.style.display = "block";
+ }
+
+ function support_asset_switched(link, screen_id, type, asset_id)
+ {
+     if (!link || !link.getAttribute)
+	 return ;
+     let support_id = link.getAttribute("data-support-id");
+
+     if (!asset_id || !support_id)
+	 return ;
+     support_load_asset_intercom(asset_id, support_id);
+     support_show_asset_pedagogy(support_id, asset_id);
+ }
 
  function support_loading_message()
  {
@@ -174,7 +351,11 @@ require_once (__DIR__."/../error_net.php");
 	 null,
 	 function(success) {
 	     if (success)
+	     {
 		 support_loaded_panel[target] = true;
+		 if (page == 'support')
+		     support_prepare_asset_layout(panel);
+	     }
 	     if (success && callback)
 		 callback();
 	 }

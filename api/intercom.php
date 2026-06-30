@@ -300,6 +300,24 @@ function GetIntercom($id, $data, $method, $output, $module)
 	"page_size" => isset($data["page_size"]) ? (int)$data["page_size"] : 10,
     ]);
 
+    $support_asset_embedded_intercom =
+        $data["action"] == "support_asset"
+        && isset($data["div"])
+        && strpos((string)$data["div"], "support_asset_intercom_") === 0
+    ;
+    $support_asset_short_name =
+        $data["action"] == "support_asset"
+        && (
+            $support_asset_embedded_intercom
+            || (isset($data["short_name"]) && (int)$data["short_name"])
+        )
+    ;
+    if ($support_asset_short_name && function_exists("support_asset_intercom_asset_name"))
+    {
+        $intercom["name"] = support_asset_intercom_asset_name($id);
+        $intercom["short_name"] = 1;
+    }
+
     if (isset($data["update"]) && $data["update"] == 1)
 	return (new ValueResponse(["content" => $intercom["content_hash"]]));
     if ($output == "json")
@@ -589,6 +607,16 @@ foreach (["SUBGET", "GET", "POST", "PUT", "DELETE"] as $intercom_method)
 {
     $Tab[$intercom_method]["laboratory_public"] = [
         "intercom_api_laboratory_public_access",
+        $intercom_method == "DELETE" ? "DeleteMessage" : ($intercom_method == "POST" || $intercom_method == "PUT" ? "PostMessage" : "GetIntercom")
+    ];
+}
+
+
+// Intercoms lies aux assets des supports de cours.
+foreach (["SUBGET", "GET", "POST", "PUT", "DELETE"] as $intercom_method)
+{
+    $Tab[$intercom_method]["support_asset"] = [
+        "support_asset_intercom_access",
         $intercom_method == "DELETE" ? "DeleteMessage" : ($intercom_method == "POST" || $intercom_method == "PUT" ? "PostMessage" : "GetIntercom")
     ];
 }

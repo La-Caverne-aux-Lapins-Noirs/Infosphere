@@ -32,8 +32,10 @@ CREATE TABLE `room_desk_user` (
   PRIMARY KEY (`id`),
   `id_room_desk` int(11) NOT NULL,
   KEY `id_room_desk` (`id_room_desk`),
-  `id_user` int(11) NOT NULL,
+  `id_user` int(11) DEFAULT NULL,
   KEY `id_user` (`id_user`),
+  `codename` varchar(64) DEFAULT NULL,
+  KEY `codename` (`codename`),
   `distant` int(11) NOT NULL DEFAULT 0,
   `locked` int(11) NOT NULL DEFAULT 0,
   `last_update` datetime NOT NULL DEFAULT current_timestamp()

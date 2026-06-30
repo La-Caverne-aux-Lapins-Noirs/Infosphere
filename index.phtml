@@ -50,8 +50,9 @@
 
     <?php $logo = ""; ?>
     <body onload="remove_loading_screen();">
+	<?php $logo = school_site_logo_path($current_school_style, false, true); ?>
 	<div id="loading_logo"
-	     <?php if (file_exists($logo = $Configuration->SchoolsDir($current_school_style)."icon.png")) { ?>
+	     <?php if ($logo != "") { ?>
 	     style="background-image: url('<?=$logo; ?>');"
 	     <?php } else if (!file_exists("dres/logo.png")) { ?>
 	     style="background-image: url('/res/logo.png');"
@@ -63,13 +64,32 @@
 	<div id="loading_screen1"></div>
 	<div id="loading_screen2"></div>
 
+	<?php if (function_exists("virtual_now_timestamp") && ($virtual_now_timestamp = virtual_now_timestamp()) !== NULL) { ?>
+	    <div style="
+		position: fixed;
+		top: 5px;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 5000;
+		padding: 4px 12px;
+		border-radius: 10px;
+		background: rgba(180, 40, 40, 0.92);
+		color: white;
+		font-weight: bold;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+		pointer-events: none;
+	    ">
+		Date virtuelle active : <?=human_date($virtual_now_timestamp); ?>
+	    </div>
+	<?php } ?>
+
 	<!----------------------
 	---- MENU SUPERIEUR ----
 	----------------------->
 
 	<div id="head" class="menu">
 	    <a href="index.php" id="logo">
-		<?php if ($logo != "" && file_exists($logo)) { ?>
+		<?php if ($logo != "") { ?>
 		    <img src="<?=$logo; ?>" alt="Logo" />
 		<?php } else if (!file_exists("dres/logo.png")) { ?>
 		    <img src="res/logo.png" alt="Logo" />
@@ -83,19 +103,21 @@
 	    </div>
 	    <script type="text/javascript">
 	     var clock = document.getElementById("clock");
+	     var clock_reference = <?=((int)now()) * 1000; ?>;
+	     var clock_start = Date.now();
 
 	     function SetClockTime()
 	     {
 		 setTimeout(SetClockTime, 1000);
 		 if (clock_content != "")
 		     return ;
-		 date = new Date();
-		 var d = String(date.getDate()).padStart(2, '0');
-		 var m = String(date.getMonth() + 1).padStart(2, '0');
-		 var y = date.getFullYear();
-		 var h = String(date.getHours()).padStart(2, '0');
-		 var min = String(date.getMinutes()).padStart(2, '0');
-		 var sec = String(date.getSeconds()).padStart(2, '0');
+		 date = new Date(clock_reference + Date.now() - clock_start);
+		 var d = String(date.getUTCDate()).padStart(2, '0');
+		 var m = String(date.getUTCMonth() + 1).padStart(2, '0');
+		 var y = date.getUTCFullYear();
+		 var h = String(date.getUTCHours()).padStart(2, '0');
+		 var min = String(date.getUTCMinutes()).padStart(2, '0');
+		 var sec = String(date.getUTCSeconds()).padStart(2, '0');
 
 		 clock.innerHTML =
 		     d + "/" + m + "/" + y + " " + h + ":" + min + ":" + sec

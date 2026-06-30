@@ -1,0 +1,30 @@
+
+'Peut etre un champ, ou deux (Left Right) ou trois (Left Middle Right)
+[Header
+  Left = [Text($,Left)
+    [@Size;9] $([.].Company.Name)
+  Left]
+  Right = [Text($,Right)
+    [@Image;$([.].Company.Logo);width=4cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Center] [@Size;2] $([.].Company.Name), $([.].Company.Street) $([.].Company.City)
+Footer]
+
+From = [Text($,From)
+  $([.].Company.Name)
+  $([.].Company.Street)
+  $([.].Company.City)
+  $([.].Company.Phone)
+  $([.].Company.Mail)
+From]
+
+Target = [Text($,Target)
+  $([.].Destination.Name)
+  $([.].Destination.Street)
+  $([.].Destination.City)
+Target]
+
+Document = "Letter"

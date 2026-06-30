@@ -27,10 +27,11 @@ CREATE TABLE `activity` (
   `hidden` tinyint(1) DEFAULT NULL,
   `mandatory` tinyint(1) DEFAULT NULL,
   `maximum_subscription` int(11) DEFAULT NULL,
-  `mark` int(11) DEFAULT NULL,
+  `money` int(11) NOT NULL DEFAULT 0,
   `subscription` int(11) DEFAULT NULL,
   `repository_name` varchar(255) DEFAULT NULL,
   `estimated_work_duration` int(11) DEFAULT NULL,
+  `automatic_correction_frequency` int(11) DEFAULT NULL,
   `slot_duration` int(11) DEFAULT NULL,
   `validation` int(11) DEFAULT 3,
   `credit_a` int(11) DEFAULT NULL,
@@ -96,7 +97,7 @@ CREATE TABLE `activity_medal` (
   `id_medal` int(11) NOT NULL,
   KEY `id_medal` (`id_medal`),
   `role` int(11) NOT NULL DEFAULT 1,
-  `mark` int(11) NOT NULL DEFAULT 0,
+  `money` int(11) NOT NULL DEFAULT 0,
   `local` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

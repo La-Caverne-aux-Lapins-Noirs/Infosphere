@@ -45,6 +45,34 @@
     height: 100%;
 }
 
+#about_you
+{
+    overflow: hidden !important;
+}
+
+#about_you > table
+{
+    table-layout: fixed;
+}
+
+#about_you > table tr td
+{
+    vertical-align: top;
+}
+
+#about_you h5
+{
+    margin: 0px 0px 4px 0px !important;
+    text-align: left !important;
+    font-size: small;
+}
+
+#about_you p
+{
+    margin-top: 4px;
+    margin-bottom: 0px;
+}
+
 #student_status
 {
     width: 200px;
@@ -55,84 +83,9 @@
 {
     position: relative;
     width: calc(100% - 20px) !important;
-    height: 40px !important;
-    margin-left: 10px !important;
-    margin-right: 10px !important;
-    overflow: hidden !important;
-}
-
-.logcursor > *
-{
-    font-size: small;
-    fon-weight: bold;
-}
-
-.logcursor > .label
-{
-    font-size: small;
-    position: absolute;
-    width: 90%;
-    top: 0px;
-    left: 5%;
-    text-align: center;
-    z-index: 1000;
-}
-
-.logcursor > .minvalue
-{
-    position: absolute;
-    top: calc((100% - 20px) / 2);
-    left: 10px;
-    line-height: 20px;
-    z-index: 1000;
-}
-
-.logcursor > .maxvalue
-{
-    position: absolute;
-    top: calc((100% - 20px) / 2);
-    right: 10px;
-    line-height: 20px;
-    z-index: 1000;
-}
-
-.logcursor .line
-{
-    position: absolute;
-    top: 0px;
-    height: 100%;
-    width: 6px;
-    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5), transparent);
-    z-index: 750;
-}
-
-.logcursor > .refvalue, .logcursor > .curvalue
-{
-    position: absolute;
-    height: 20px;
-    bottom: 0px;
-    width: 30px;
-    text-align: center;
-    z-index: 1000;
-    line-height: 20px;
-}
-
-.logcursor > .logbarl, .logcursor > .logbarr
-{
-    position: absolute;
-    z-index: 500;
-    top: 0%;
-    height: 100%;
-}
-
-.logcursor > .logbarl
-{
-    background: linear-gradient(to right, red, red, red, yellow);
-}
-
-.logcursor > .logbarr
-{
-    background: linear-gradient(to right, green, lightgreen);
+    height: 42px !important;
+    margin: 4px 8px 6px 8px !important;
+    overflow: visible !important;
 }
 
 .logcursor > *
@@ -143,18 +96,90 @@
 	0px 0px 3px black,
 	0px 0px 3px black,
 	0px 0px 3px black,
-	0px 0px 3px black,
-	0px 0px 3px black,
-	0px 0px 3px black,
-	0px 0px 3px black
-    ;
+	0px 0px 3px black;
 }
 
-.logcursor > .curline
+.logcursor > .label
 {
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
-    animation: pulseShadow 3s infinite;
-    background-color: rgba(0, 0, 0, 0.5);
+    font-size: 11px;
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 1000;
+}
+
+.logcursor > .gauge_track
+{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 14px;
+    height: 14px;
+    border-radius: 999px;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(240, 255, 240, 0.9);
+    box-shadow:
+	inset 0px 0px 6px rgba(0, 0, 0, 0.7),
+	0px 0px 4px rgba(255, 255, 255, 0.25);
+    z-index: 200;
+}
+
+.logcursor .gauge_fill
+{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    min-width: 2px;
+    max-width: 100%;
+    border-radius: 999px 0px 0px 999px;
+    overflow: hidden;
+    background: linear-gradient(to right, rgba(0, 180, 0, 0.95), rgba(120, 255, 120, 0.98));
+    z-index: 300;
+}
+
+.logcursor .current_text
+{
+    position: absolute;
+    left: 6px;
+    top: 0px;
+    height: 14px;
+    line-height: 14px;
+    font-size: 10px;
+    white-space: nowrap;
+    z-index: 500;
+}
+
+.logcursor .threshold_marker
+{
+    position: absolute;
+    bottom: -7px;
+    width: 0px;
+    height: 0px;
+    margin-left: -5px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid rgba(255, 255, 255, 0.95);
+    filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.9));
+    z-index: 800;
+}
+
+.logcursor > .threshold_label
+{
+    position: absolute;
+    top: 31px;
+    transform: translateX(-50%);
+    padding: 0px 2px;
+    font-size: 10px;
+    line-height: 10px;
+    white-space: nowrap;
+    z-index: 900;
 }
 
 @keyframes pulseShadow
@@ -171,4 +196,55 @@
   100% {
       box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
   }
+}
+
+#quote .famous_quote_vote
+{
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.42;
+    transition: opacity 0.15s ease-in-out;
+}
+
+#quote:hover .famous_quote_vote,
+#quote .famous_quote_vote:focus-within
+{
+    opacity: 0.9;
+}
+
+#quote .famous_quote_vote_form
+{
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#quote .famous_quote_vote_button
+{
+    min-width: 18px;
+    height: 18px;
+    line-height: 14px;
+    padding: 0 4px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+    opacity: 0.66;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#quote .famous_quote_vote_button:hover,
+#quote .famous_quote_vote_button:focus,
+#quote .famous_quote_vote_button.selected
+{
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.16);
 }

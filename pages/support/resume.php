@@ -1,3 +1,4 @@
+<?php require_once (__DIR__."/menu_helpers.php"); ?>
 <?php if (can_edit_supports()) { ?>
     <?php
     $js = "silent_submitf(this, ".
@@ -68,6 +69,10 @@
 	    />
 	</div>
     </form>
+<?php } ?>
+
+<?php if (can_edit_supports() && isset($selcat) && $selcat) { ?>
+    <?php support_pedagogical_render_category_panel($category); ?>
 <?php } ?>
 
 <div id="resume_class_list<?=$selcat ? $category["id"] : ""; ?>">

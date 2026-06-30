@@ -64,6 +64,89 @@ function support_progress_update_display(asset_id, progress)
     }
 }
 
+function support_find_next_asset_link(link)
+{
+    if (!link || !link.getAttribute)
+	return (null);
+
+    let support_id = link.getAttribute("data-support-id");
+    let asset_id = link.getAttribute("data-support-asset-id");
+    let links;
+    let found = false;
+
+    if (!support_id || !asset_id)
+	return (null);
+    links = document.querySelectorAll(
+	'.asset_link[data-support-id="' + support_id + '"][data-support-asset-id]'
+    );
+    for (let next of links)
+    {
+	if (found)
+	    return (next);
+	if (next == link || next.getAttribute("data-support-asset-id") == asset_id)
+	    found = true;
+    }
+    return (null);
+}
+
+function support_next_asset_name(link)
+{
+    if (!link)
+	return ("");
+
+    let label = link.querySelector(".support_compact_pretty");
+    let text = label ? label.textContent : link.textContent;
+
+    text = String(text || "").replace(/\s+/g, " ").trim();
+    return (text);
+}
+
+function support_hide_next_asset_prompt(screen)
+{
+    if (typeof screen == "string")
+	screen = document.getElementById(screen);
+    if (!screen)
+	return ;
+    for (let prompt of screen.getElementsByClassName("support_next_asset_prompt"))
+	prompt.remove();
+}
+
+function support_show_next_asset_prompt(screen_id, current_link)
+{
+    let screen = document.getElementById(screen_id);
+    let next = support_find_next_asset_link(current_link);
+    let prompt;
+    let title;
+    let button;
+
+    if (!screen || !next)
+	return ;
+    support_hide_next_asset_prompt(screen);
+    prompt = document.createElement("div");
+    prompt.className = "support_next_asset_prompt";
+    title = document.createElement("span");
+    title.className = "support_next_asset_prompt_title";
+    title.textContent = support_next_asset_name(next);
+    button = document.createElement("input");
+    button.type = "button";
+    button.value = next.getAttribute("data-support-asset-type") == "video"
+	? "Enchaîner la vidéo suivante"
+	: "Enchaîner la ressource suivante";
+    button.onclick = function(event) {
+	if (event)
+	{
+	    event.preventDefault();
+	    event.stopPropagation();
+	}
+	support_hide_next_asset_prompt(screen);
+	next.click();
+	return (false);
+    };
+    prompt.appendChild(title);
+    prompt.appendChild(button);
+    screen.appendChild(prompt);
+}
+
 function support_record_asset_progress(asset_id, progress)
 {
     asset_id = parseInt(asset_id, 10);
@@ -100,6 +183,7 @@ function support_record_asset_progress(asset_id, progress)
 
 function support_video_reset_player(video)
 {
+    support_hide_next_asset_prompt(video.parentElement);
     if (video._infosphere_hls != null)
     {
 	video._infosphere_hls.destroy();
@@ -157,9 +241,10 @@ function support_stop_all_media()
 	    support_media_reset_player(media);
 }
 
-function support_video_play(video, asset, hls_asset, asset_id = null)
+function support_video_play(video, asset, hls_asset, asset_id = null, link = null, screen_id = null)
 {
     support_video_reset_player(video);
+    support_hide_next_asset_prompt(screen_id);
     video._infosphere_progress_asset_id = asset_id;
     if (asset_id)
     {
@@ -171,6 +256,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null)
 	};
 	video.onended = function() {
 	    support_record_asset_progress(asset_id, 100);
+	    support_show_next_asset_prompt(screen_id, link);
 	};
     }
 
@@ -210,10 +296,12 @@ function switch_asset(link, screen, type, asset, hls_asset = "")
 {
     var links = document.getElementsByClassName("asset_link");
     var screens = document.getElementsByClassName("screen_media");
+    var screen_id = screen;
 
     if ((screen = document.getElementById(screen)) == null)
 	return ;
     let asset_id = link && link.getAttribute ? link.getAttribute("data-support-asset-id") : null;
+    support_hide_next_asset_prompt(screen_id);
     support_stop_all_media();
     Array.prototype.forEach.call(links, function(el) {
 	el.classList.remove("selected");
@@ -229,7 +317,7 @@ function switch_asset(link, screen, type, asset, hls_asset = "")
     {
 	screen = screen.getElementsByTagName("video")[0];
 	screen.style.display = "";
-	support_video_play(screen, asset, hls_asset, asset_id);
+	support_video_play(screen, asset, hls_asset, asset_id, link, screen_id);
     }
     else if (type == "audio")
     {
@@ -277,6 +365,8 @@ function switch_asset(link, screen, type, asset, hls_asset = "")
     if (asset_id && type != "video")
 	support_record_asset_progress(asset_id, 100);
     screen.style.display = "block";
+    if (typeof support_asset_switched == "function")
+	support_asset_switched(link, screen_id, type, asset_id);
 }
 
 function display_panel(page, panel, to_admin = false, to_user = false)

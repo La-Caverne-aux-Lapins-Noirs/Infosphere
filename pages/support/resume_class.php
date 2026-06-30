@@ -1,8 +1,16 @@
+<?php require_once (__DIR__."/menu_helpers.php"); ?>
 <div
     class="resume_module"
     id="resume_module_<?=$category["type"].$category["id"]; ?>"
 >
     <h3 style="width: 70%;">
+	<?php if (can_edit_supports()) { ?>
+	    <?php if ($category["type"] == "category") { ?>
+		<?php support_pedagogical_coverage_warning_marker(support_pedagogical_category_content_coverage($category), "Catégorie contenant du contenu non couvert par une matière ou activité"); ?>
+	    <?php } else { ?>
+		<?php support_pedagogical_coverage_warning_marker(support_pedagogical_support_content_coverage($category), "Chapitre contenant du contenu non couvert par une matière ou activité"); ?>
+	    <?php } ?>
+	<?php } ?>
 	<?=strlen($category["name"]) ? $category["name"] : $category["codename"]; ?>
     </h3>
     <?php if (can_edit_supports()) { ?>

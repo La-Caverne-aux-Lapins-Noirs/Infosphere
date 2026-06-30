@@ -26,8 +26,9 @@ $school_staff_roles = [
 <div class="school_admin_page" id="school<?=$school["id"]; ?>_configuration">
     <div class="school_admin_header">
 	<div class="school_admin_icon">
-	    <?php $pic = $Configuration->SchoolsDir($school["codename"])."icon.png"; ?>
-	    <div style="background-image: url('<?=$pic; ?>');"></div>
+	    <?php $pic = school_site_logo_path($school, false, true); ?>
+	    <?php $pic_version = file_exists($pic) ? filemtime($pic) : 0; ?>
+	    <div style="background-image: url('<?=$pic; ?>?<?=$pic_version; ?>');"></div>
 	</div>
 	<div class="school_admin_title">
 	    <h3><?=$Dictionnary["SchoolConfiguration"]; ?></h3>
@@ -52,6 +53,23 @@ $school_staff_roles = [
 	    <div class="school_admin_languages">
 		<?php forge_language_formular(["name" => "text"], $school, "school_language_entry"); ?>
 	    </div>
+	</div>
+
+	<div class="school_admin_logo_grid">
+	    <label class="school_admin_logo_field">
+		<?=$Dictionnary["SchoolSiteLogo"]; ?>
+		<?php $site_logo = school_site_logo_path($school, false, true); ?>
+		<?php $site_logo_version = file_exists($site_logo) ? filemtime($site_logo) : 0; ?>
+		<div class="school_admin_logo_preview" style="background-image: url('<?=$site_logo; ?>?<?=$site_logo_version; ?>');"></div>
+		<input type="file" name="icon" accept="image/png,image/jpeg" />
+	    </label>
+	    <label class="school_admin_logo_field">
+		<?=$Dictionnary["SchoolDocumentLogo"]; ?>
+		<?php $document_logo = school_document_logo_path($school, false, true); ?>
+		<?php $document_logo_version = file_exists($document_logo) ? filemtime($document_logo) : 0; ?>
+		<div class="school_admin_logo_preview" style="background-image: url('<?=$document_logo; ?>?<?=$document_logo_version; ?>');"></div>
+		<input type="file" name="document_logo" accept="image/png,image/jpeg" />
+	    </label>
 	</div>
 
 	<div class="school_admin_grid_two">
@@ -84,7 +102,7 @@ $school_staff_roles = [
 	<div class="school_admin_actions">
 	    <input
 		type="button"
-		onclick="silent_submitf(this.parentNode.parentNode, {});"
+		onclick="silent_submitf(this.form, {after_success: refresh});"
 		value="<?=$Dictionnary["Save"]; ?>"
 	    />
 	</div>

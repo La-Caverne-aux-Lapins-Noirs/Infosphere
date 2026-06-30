@@ -1,5 +1,6 @@
 *~
 #*
+*.patch
 .htaccess
 database.json
 profiling.htm

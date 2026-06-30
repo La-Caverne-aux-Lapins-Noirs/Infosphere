@@ -1,0 +1,683 @@
+#billing_panel table input,
+#billing_panel table select
+{
+    width: calc(100% - 20px);
+    box-sizing: border-box;
+}
+
+#billing_table
+{
+    width: 100%;
+}
+
+#billing_table td,
+#billing_table th
+{
+    text-align: center;
+    font-size: small;
+}
+
+#billing_table tr:nth-child(even)
+{
+    background-color: rgba(192, 192, 192, 0.5);
+}
+
+#billing_table tr:nth-child(odd)
+{
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+#billing_table td a
+{
+    font-weight: bold;
+}
+
+.billing_student_name a
+{
+    text-shadow:
+        0px 0px 3px black,
+        0px 0px 3px black;
+}
+
+.billing_account_box
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.billing_account_box strong
+{
+    font-size: 1.35em;
+}
+
+.billing_account_box span,
+.billing_account_box small,
+.billing_account_box b
+{
+    display: block;
+}
+
+#billing_table td.billing_account_late
+{
+    background-color: rgba(180, 0, 0, 0.80);
+    color: white;
+}
+
+#billing_table td.billing_account_billed_unpaid
+{
+    background-color: rgba(185, 118, 0, 0.88);
+    color: white;
+}
+
+#billing_table td.billing_account_advance
+{
+    background-color: rgba(0, 110, 0, 0.75);
+    color: white;
+}
+
+#billing_table td.billing_account_ok
+{
+    background-color: rgba(0, 0, 0, 0.78);
+    color: white;
+}
+
+.billing_action_div
+{
+    border: 1px solid black;
+    border-radius: 10px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(245, 245, 245, 0.75);
+}
+
+.billing_action_div.open,
+.billing_action_div.billing_pending_open
+{
+    overflow: visible;
+    z-index: 5;
+}
+
+.billing_actions
+{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(100% - 220px);
+    min-height: 44px;
+    box-sizing: border-box;
+    text-align: left;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: normal;
+}
+
+.billing_action_edit
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 210px;
+    margin-left: auto;
+    box-sizing: border-box;
+}
+
+.billing_action_edit > button
+{
+    width: 210px;
+    height: 44px;
+    border: 1px solid black;
+    background: black;
+    cursor: pointer;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.billing_action_menu
+{
+    width: 320px;
+    border: 1px solid black;
+    background: white;
+    color: black;
+    margin-top: 2px;
+    padding: 8px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.billing_action_menu.hidden
+{
+    display: none;
+}
+
+.billing_action_menu h4
+{
+    margin: 8px 0 4px 0;
+    font-size: small;
+}
+
+.billing_action_menu h4:first-child
+{
+    margin-top: 0;
+}
+
+.billing_action_menu form
+{
+    display: grid;
+    grid-template-columns: 1fr 95px;
+    gap: 4px;
+    margin: 0 0 8px 0;
+}
+
+.billing_action_menu input,
+.billing_action_menu select
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_action_menu input[type="button"]
+{
+    grid-column: 1 / -1;
+}
+
+.billing_event_form
+{
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+.billing_event,
+.billing_empty_timeline
+{
+    margin-top: 6px;
+    margin-bottom: 6px;
+    margin-right: 4px;
+    height: 30px;
+    min-width: 30px;
+    line-height: 30px;
+    display: inline-block;
+    cursor: default;
+    position: relative;
+    border: 1px solid black;
+    box-sizing: border-box;
+    text-align: center;
+    font-weight: bold;
+    padding: 0 8px;
+}
+
+button.billing_event
+{
+    cursor: pointer;
+    font: inherit;
+}
+
+.billing_invoice_pending,
+.billing_invoice_sent,
+.billing_invoice_partial,
+.billing_invoice_paid_ready,
+.billing_invoice_paid
+{
+    border-radius: 15px;
+}
+
+.billing_invoice_pending
+{
+    background-color: rgba(255, 180, 0, 0.85);
+    color: black;
+    border-style: dashed;
+}
+
+.billing_invoice_sent
+{
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+}
+
+.billing_payment_received
+{
+    min-width: 42px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border: 0;
+    border-radius: 2px;
+    background-color: rgba(0, 150, 0, 0.85);
+    color: white;
+    clip-path: polygon(9px 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 9px 100%, 0 50%);
+    box-shadow: inset 0 0 0 1px black;
+}
+
+.billing_invoice_partial
+{
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0, 150, 0, 0.85) 0%,
+            rgba(0, 150, 0, 0.85) var(--billing-paid-percent, 50%),
+            rgba(0, 0, 0, 0.85) var(--billing-paid-percent, 50%),
+            rgba(0, 0, 0, 0.85) 100%
+        );
+    color: white;
+}
+
+.billing_empty_timeline
+{
+    border-radius: 15px;
+    background-color: transparent;
+    color: black;
+    border-color: transparent;
+}
+
+.billing_event_delete_selected
+{
+    opacity: 0.45;
+    filter: saturate(40%);
+    outline: 2px solid rgba(180, 0, 0, 0.85);
+    outline-offset: 2px;
+}
+
+.billing_pending_invoice_menu
+{
+    position: absolute;
+    left: 0;
+    top: 38px;
+    z-index: 50;
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 6px;
+    background: white;
+    color: black;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+}
+
+.billing_pending_invoice_menu.hidden
+{
+    display: none;
+}
+
+.billing_pending_invoice_menu button
+{
+    min-width: 80px;
+    padding: 4px 7px;
+    border: 1px solid black;
+    border-radius: 4px;
+    background: #f5f5f5;
+    color: black;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.billing_pending_invoice_menu button:hover
+{
+    background: black;
+    color: white;
+}
+
+.billing_event::after
+{
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: pre-line;
+    min-width: 200px;
+    max-width: 360px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+    font-size: 14px;
+    z-index: 10;
+}
+
+.billing_event:hover::after
+{
+    opacity: 1;
+}
+
+.billing_template_add,
+.billing_template_table
+{
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid black;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.65);
+}
+
+.billing_template_add form
+{
+    display: grid;
+    grid-template-columns: 110px 100px minmax(180px, 1fr) repeat(5, 120px) 90px;
+    gap: 10px;
+    align-items: end;
+}
+
+.billing_template_add input,
+.billing_template_add select
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_template_hint
+{
+    margin: 5px 0 12px 0;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.billing_template_table table
+{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.billing_template_table th,
+.billing_template_table td
+{
+    border: 1px solid black;
+    padding: 5px;
+    text-align: center;
+}
+
+.billing_template_table th
+{
+    background-color: rgba(0, 0, 0, 0.80);
+}
+
+#billing_table
+{
+    table-layout: fixed;
+    min-width: 980px;
+}
+
+#billing_table td,
+#billing_table th
+{
+    vertical-align: middle;
+}
+
+#billing_table td.billing_student_name
+{
+    width: 200px;
+    max-width: 200px;
+    padding-left: 6px;
+    padding-right: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#billing_table td.billing_timeline_cell
+{
+    width: auto;
+    min-width: 360px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+#billing_table td.billing_tariff_year
+{
+    width: 110px;
+}
+
+.billing_tariff_year_box
+{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: default;
+}
+
+.billing_tariff_year_box strong,
+.billing_tariff_year_box small
+{
+    display: block;
+}
+
+.billing_tariff_year_empty
+{
+    opacity: 0.6;
+}
+
+.billing_tariff_year_box::after
+{
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: pre-line;
+    min-width: 220px;
+    max-width: 360px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+    font-size: 14px;
+    z-index: 10;
+}
+
+.billing_tariff_year_box:hover::after
+{
+    opacity: 1;
+}
+
+.billing_invoice_paid_ready
+{
+    background-color: rgba(50, 120, 220, 0.85);
+    color: white;
+}
+
+.billing_invoice_paid
+{
+    background-color: rgba(120, 0, 150, 0.85);
+    color: white;
+}
+
+.billing_event::after,
+.billing_tariff_year_box::after
+{
+    display: none;
+}
+
+.billing_global_tooltip
+{
+    position: fixed;
+    z-index: 100000;
+    display: none;
+    max-width: 420px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: rgba(20, 20, 20, 0.96);
+    color: white;
+    white-space: pre-line;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.35em;
+    pointer-events: none;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+}
+
+.billing_global_tooltip.visible
+{
+    display: block;
+}
+
+.billing_history_toggle
+{
+    display: inline-block;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    margin-right: 4px;
+    height: 30px;
+    line-height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(0, 0, 0, 0.65);
+    border-radius: 15px;
+    background: rgba(60, 60, 60, 0.70);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.billing_history_events.hidden
+{
+    display: none;
+}
+
+.billing_history_events.visible
+{
+    display: inline;
+}
+
+.billing_history_events .billing_event
+{
+    opacity: 0.60;
+    filter: grayscale(35%);
+}
+
+#billing_invoice_panel
+{
+    padding-bottom: 35px;
+}
+
+#billing_invoice_table
+{
+    width: 100%;
+    min-width: 1360px;
+    table-layout: fixed;
+}
+
+#billing_invoice_table td,
+#billing_invoice_table th
+{
+    text-align: center;
+    font-size: small;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#billing_invoice_table tr:nth-child(even)
+{
+    background-color: rgba(192, 192, 192, 0.5);
+}
+
+#billing_invoice_table tr:nth-child(odd)
+{
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+#billing_invoice_table td.billing_invoice_student,
+#billing_invoice_table td.billing_invoice_label,
+#billing_invoice_table td.billing_invoice_copy
+{
+    text-align: left;
+}
+
+#billing_invoice_table td.billing_invoice_student a
+{
+    font-weight: bold;
+    text-shadow:
+        0px 0px 3px black,
+        0px 0px 3px black;
+}
+
+.billing_invoice_hint
+{
+    margin: 10px 0 15px 0;
+    padding: 8px 12px;
+    border-left: 4px solid black;
+    background: rgba(255, 255, 255, 0.70);
+    font-size: small;
+}
+
+.billing_invoice_status
+{
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 105px;
+    padding: 4px 7px;
+    border: 1px solid black;
+    border-radius: 999px;
+    color: white;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+.billing_invoice_status small
+{
+    font-weight: normal;
+    font-size: 10px;
+}
+
+.billing_invoice_status_issued .billing_invoice_status
+{
+    background: rgba(0, 0, 0, 0.82);
+}
+
+.billing_invoice_status_partial .billing_invoice_status
+{
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0, 150, 0, 0.85) 0%,
+            rgba(0, 150, 0, 0.85) 50%,
+            rgba(0, 0, 0, 0.85) 50%,
+            rgba(0, 0, 0, 0.85) 100%
+        );
+}
+
+.billing_invoice_status_covered .billing_invoice_status
+{
+    background: rgba(0, 105, 160, 0.88);
+}
+
+.billing_invoice_status_paid .billing_invoice_status
+{
+    background: rgba(0, 130, 0, 0.88);
+}
+
+.billing_invoice_status_deleted .billing_invoice_status
+{
+    background: rgba(135, 0, 0, 0.78);
+    text-decoration: line-through;
+}
+
+.billing_invoice_copy_path
+{
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.billing_invoice_no_copy
+{
+    opacity: 0.45;
+}

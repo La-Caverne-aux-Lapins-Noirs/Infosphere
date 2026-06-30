@@ -11,6 +11,7 @@ $allowed_intercom_positions = [
     "school_staff" => true,
     "school" => true,
     "common" => true,
+    "support_asset" => true,
 ];
 $unique = $position != "" && isset($allowed_intercom_positions[$position]) && $id_position > 0;
 

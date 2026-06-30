@@ -84,14 +84,27 @@ $cache = json_decode($user->cache);
 		    <b><?=$Dictionnary["ConnectedTo"]; ?> :</b>
 		    <ul>
 			<?php foreach ($desks as $desk) { ?>
+			    <?php
+			    if ($desk["distant"] && $desk["locked"])
+				$connection_label = isset($Dictionnary["SSHIdle"]) ? $Dictionnary["SSHIdle"] : "SSH idle";
+			    else if ($desk["distant"])
+				$connection_label = isset($Dictionnary["SSHOnly"]) ? $Dictionnary["SSHOnly"] : "SSH";
+			    else if ($desk["locked"])
+				$connection_label = $Dictionnary["Locked"];
+			    else
+				$connection_label = $Dictionnary["Used"];
+			    ?>
 			    <li style="text-align: center; font-size: x-small;">
-				<?=$desk["locked"] ? "&#128274;" : ""; ?>
-				<?=$desk["distant"] ? "(SSH)" : "" ?>
+				<?=$desk["locked"] ? "&#128274; " : ""; ?>
 				<b><?=$desk["codename"]; ?></b>
-				<?=$desk["ip"]." - ".$desk["mac"]; ?>
-				
+				(<?=htmlentities($connection_label); ?>)
+				<?=htmlentities($desk["ip"]." - ".$desk["mac"]); ?>
+				<?php if (@strlen($desk["room_codename"])) { ?>
+				    — <?=htmlentities($desk["room_codename"]); ?>
+				<?php } ?>
+			    </li>
 			<?php } ?>
-			</li>
+		    </ul>
 		    <br />
 		<?php } ?>
 	    </div>
@@ -101,6 +114,8 @@ $cache = json_decode($user->cache);
 		$Dictionnary["PersonnalInformations"] => __DIR__."/data.phtml",
 		$Dictionnary["Files"] => __DIR__."/files.phtml"
 	    ];
+	    if (is_director_for_student($user->id))
+		$panel[$Dictionnary["Letters"]] = __DIR__."/letters.phtml";
 	    tabpanel($panel, $Position.$user->id."datafiles", $Dictionnary["PersonnalInformations"]);
 	    ?>
 	</td></tr></table>
@@ -130,7 +145,11 @@ $cache = json_decode($user->cache);
 	<?php
 	$_GET["w"] = 960;
 	$_GET["h"] = 400;
-	$_GET["e"] = now() + 60 * 60 * 12;
+	// tools/profile_stats.php utilise le jour de fin comme borne journalière exclusive.
+	// On vise donc demain pour que la journée en cours soit toujours dessinée,
+	// y compris le matin. Avec +12h, les logs du jour n'apparaissaient
+	// qu'après le milieu de journée.
+	$_GET["e"] = now() + 24 * 60 * 60;
 	$_GET["s"] = now() - 14 * 24 * 60 * 60;
 	?>
 	<td class="stats" style="height: 50%">

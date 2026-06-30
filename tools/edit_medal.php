@@ -101,7 +101,12 @@ function edit_medal($medal, $user = -1, $team = -1, $user_team = -1)
 	*/
 
 	if (($id_medal = resolve_codename("medal", $med["label"]))->is_error())
-	    return ($id_medal);
+	{
+	    if ($med["negative"] || !function_exists("official_correction_resolve_or_create_medal"))
+		return ($id_medal);
+	    if (($id_medal = official_correction_resolve_or_create_medal($med["label"]))->is_error())
+		return ($id_medal);
+	}
 	$id_medal = $id_medal->value;
 
 	// On cherche s'il existe une entrée similaire à celle qu'on a
@@ -149,6 +154,8 @@ function edit_medal($medal, $user = -1, $team = -1, $user_team = -1)
 	    );
 	    add_log(TRACE, "Editing user_medal ".$um["id"]." with results $result and strength $strength.");
 	}
+	if ($result > 0 && $activity != -1)
+	    user_money_reward_activity_medal($user, $activity, $id_medal, $team);
     }
     return (new Response);
 }

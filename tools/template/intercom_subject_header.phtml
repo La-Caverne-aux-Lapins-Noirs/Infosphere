@@ -1,4 +1,16 @@
-<?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
+<span
+    title="<?=htmlentities($Dictionnary["Channel"]." ".ucfirst($intercom["name"])); ?>"
+    style="
+        display: inline-block;
+        max-width: min(100%, calc(100% - 170px));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    "
+>
+    <?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
+</span>
 
 <?php
 $pbrowser = $intercom;

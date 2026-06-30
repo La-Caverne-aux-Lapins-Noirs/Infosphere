@@ -3,11 +3,146 @@ $start = $_GET["s"];
 $end = $_GET["e"];
 $_GET["lm"] = "m";
 
-$_GET["d"] = [];
-$_GET["d"]["medals"] = [];
-$_GET["d"]["mismedals"] = [];
+$start_sql = db_form_date($start, true);
+$end_sql = db_form_date($end, true);
+$target_user = (int)$user->id;
 
-$_GET["d"] = json_encode($_GET["d"], JSON_UNESCAPED_SLASHES);
+$medal_data = [];
+$medal_data["medal_acquired_hist"] = [];
+$medal_data["medal_missing_hist"] = [];
+$medal_data["medal_lost_hist"] = [];
+$medal_data["medal_negative_hist"] = [];
+
+$profile_medal_day = function ($date)
+{
+    return ((int)(date_to_timestamp($date) / 60 / 60 / 24));
+};
+
+$profile_medal_add = function (&$data, $key, $date, $value) use ($profile_medal_day)
+{
+    $day = $profile_medal_day($date);
+    if (!isset($data[$key][$day]))
+        $data[$key][$day] = 0;
+    $data[$key][$day] += $value;
+};
+
+$profile_medal_role = function ($id_activity, $id_medal)
+{
+    static $cache = [];
+
+    $id_activity = (int)$id_activity;
+    $id_medal = (int)$id_medal;
+    if ($id_activity <= 0 || $id_medal <= 0)
+        return (1);
+    if (!isset($cache[$id_activity]))
+    {
+        $cache[$id_activity] = [];
+        foreach (fetch_activity_medal($id_activity) as $medal)
+            if (isset($medal["id"]))
+                $cache[$id_activity][(int)$medal["id"]] = isset($medal["role"]) ? (int)$medal["role"] : 1;
+    }
+    return (isset($cache[$id_activity][$id_medal]) ? $cache[$id_activity][$id_medal] : 1);
+};
+
+// Événements réellement enregistrés: acquisition, échec/perte, médaille négative.
+foreach (db_select_all("
+    user_medal.id_medal,
+    user_medal.id_activity,
+    user_medal.id_team,
+    user_medal.result,
+    user_medal.insert_date
+    FROM user_medal
+    WHERE user_medal.id_user = $target_user
+      AND user_medal.insert_date >= '$start_sql'
+      AND user_medal.insert_date <= '$end_sql'
+") as $medal)
+{
+    $result = (int)$medal["result"];
+    $role = $profile_medal_role($medal["id_activity"], $medal["id_medal"]);
+    if ($role < 0 && $result > 0)
+        $profile_medal_add($medal_data, "medal_negative_hist", $medal["insert_date"], -1);
+    else if ($role >= 0 && $result > 0)
+        $profile_medal_add($medal_data, "medal_acquired_hist", $medal["insert_date"], 1);
+    else if ($role >= 0 && $result < 0)
+        $profile_medal_add($medal_data, "medal_lost_hist", $medal["insert_date"], -1);
+}
+
+$profile_medal_existing_result = function ($id_activity, $id_team, $id_medal) use ($target_user)
+{
+    $id_activity = (int)$id_activity;
+    $id_team = (int)$id_team;
+    $id_medal = (int)$id_medal;
+    $team_filter = $id_team > 0 ? "AND id_team = $id_team" : "";
+    return (db_select_one("
+        result
+        FROM user_medal
+        WHERE id_user = $target_user
+          AND id_activity = $id_activity
+          AND id_medal = $id_medal
+          $team_filter
+        ORDER BY insert_date DESC, id DESC
+    "));
+};
+
+$profile_medal_count_missing = function ($id_activity, $id_team, $date) use (&$medal_data, $profile_medal_add, $profile_medal_existing_result)
+{
+    $id_activity = (int)$id_activity;
+    $id_team = (int)$id_team;
+    if ($id_activity <= 0)
+        return ;
+
+    foreach (fetch_activity_medal($id_activity) as $medal)
+    {
+        if (!isset($medal["id"]))
+            continue ;
+        $role = isset($medal["role"]) ? (int)$medal["role"] : 1;
+        if ($role < 0)
+            continue ;
+        $result = $profile_medal_existing_result($id_activity, $id_team, $medal["id"]);
+        if ($result == NULL || (int)$result["result"] == 0)
+            $profile_medal_add($medal_data, "medal_missing_hist", $date, -1);
+    }
+};
+
+// Médailles attendues mais absentes, uniquement sur les séances terminées.
+foreach (db_select_all("
+    session.id as id_session,
+    session.id_activity,
+    session.end_date as medal_date,
+    team.id as id_team
+    FROM team
+    LEFT JOIN session ON session.id = team.id_session
+      AND session.id_activity != -1
+      AND session.deleted IS NULL
+    LEFT JOIN user_team ON team.id = user_team.id_team
+    WHERE user_team.id_user = $target_user
+      AND session.id IS NOT NULL
+      AND session.end_date >= '$start_sql'
+      AND session.end_date <= '$end_sql'
+      AND session.end_date <= NOW()
+") as $session)
+    $profile_medal_count_missing($session["id_activity"], $session["id_team"], $session["medal_date"]);
+
+// Même logique pour les projets dont le ramassage est passé.
+foreach (db_select_all("
+    activity.id as id_activity,
+    activity.pickup_date as medal_date,
+    team.id as id_team
+    FROM activity
+    LEFT JOIN activity as matter ON activity.parent_activity = matter.id
+    LEFT JOIN team ON matter.id = team.id_activity
+    LEFT JOIN user_team ON team.id = user_team.id_team
+    WHERE user_team.id_user = $target_user
+      AND activity.pickup_date IS NOT NULL
+      AND activity.pickup_date >= '$start_sql'
+      AND activity.pickup_date <= '$end_sql'
+      AND activity.pickup_date <= NOW()
+      AND activity.deleted IS NULL
+      AND matter.deleted IS NULL
+") as $project)
+    $profile_medal_count_missing($project["id_activity"], $project["id_team"], $project["medal_date"]);
+
+$_GET["d"] = json_encode($medal_data, JSON_UNESCAPED_SLASHES);
 $_GET["d"] = base64_encode($_GET["d"]);
 $params = [];
 foreach ($_GET as $gk => $gv)

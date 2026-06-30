@@ -42,6 +42,7 @@ class Database
     public $debug;
     public $insert_id;
     public $affected_rows;
+    private $sql_reference_timestamp = NULL;
 
     public $print_on_error = []; // Remplir ca pour afficher des informations en cas d'erreur
 
@@ -63,6 +64,22 @@ class Database
 	    exit ;
 	$this->dbname = $dbname;
 	$this->debug = $debug;
+    }
+
+    function apply_sql_reference_timestamp()
+    {
+	if (UNIT_TEST || !function_exists("sql_reference_timestamp"))
+	    return ;
+	$timestamp = sql_reference_timestamp();
+	if ($timestamp !== NULL)
+	    $timestamp = (int)$timestamp;
+	if ($timestamp === $this->sql_reference_timestamp)
+	    return ;
+	if ($timestamp === NULL)
+	    @$this->db->query("SET timestamp = DEFAULT");
+	else
+	    @$this->db->query("SET timestamp = $timestamp");
+	$this->sql_reference_timestamp = $timestamp;
     }
 
     function query($req, $display = false, $multi = false)
@@ -119,6 +136,8 @@ class Database
 	    else
 		debug_response($req);
 	}
+	$this->apply_sql_reference_timestamp();
+
 	$Before = microtime(true);
 	if ($multi)
 	    $last_query = @$this->db->multi_query($req);

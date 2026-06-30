@@ -174,7 +174,7 @@ class ModuleLayer extends Layer
                    medal.{$Language}_description as description,
                    medal.type as type,
                    activity_medal.local as local,
-                   activity_medal.mark as mark,
+                   activity_medal.money as money,
                    activity_medal.role as role
                    FROM user_medal
                    LEFT JOIN activity ON activity.id = user_medal.id_activity
@@ -266,7 +266,7 @@ class ModuleLayer extends Layer
 		if ($sub->registered && $activity->user_team && $activity->unique_session != NULL)
 		{
 		    if ($activity->unique_session->end_date != NULL &&
-			date_to_timestamp($activity->unique_session->end_date) < time())
+			date_to_timestamp($activity->unique_session->end_date) < now())
 		    {
 			if ($activity->user_team["present"] == -2)
 			    $sub->missing->add($activity->unique_session->begin_date, 1);
@@ -289,7 +289,7 @@ class ModuleLayer extends Layer
 	    if (array_search("activity_delivery", $blist) === false)
 	    {
 		// Rendu et pas rendu
-		if ($activity->user_team != NULL && $activity->pickup_date != NULL && date_to_timestamp($activity->pickup_date) < time())
+		if ($activity->user_team != NULL && $activity->pickup_date != NULL && date_to_timestamp($activity->pickup_date) < now())
 		{
 		    if (count($activity->user_team["work"]) == 0)
 			$sub->nowork->add($activity->pickup_date, 1);

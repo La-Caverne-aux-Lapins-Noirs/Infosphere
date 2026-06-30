@@ -15,3 +15,62 @@
 {
     background-color: red;
 }
+
+.room_unknown_users_box
+{
+    background-color: rgba(255, 200, 0, 0.12);
+    border: 1px solid rgba(255, 200, 0, 0.35);
+    border-radius: 8px;
+}
+
+.room_unknown_user_flag
+{
+    background-color: rgba(0, 0, 0, 0.18);
+}
+
+
+.room_desk_tooltip
+{
+    background-color: rgba(0, 0, 0, 0.88);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.room_editor_panel
+{
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+}
+
+.desk.room_linked,
+.roomdiv.room_edit_mode .desk.room_editor_selected
+{
+    box-shadow: 0px 0px 0px 4px rgba(255, 230, 0, 0.85), 0px 0px 14px rgba(255, 230, 0, 0.7);
+}
+
+.room_presence_avatar.room_linked img
+{
+    box-shadow: 0px 0px 0px 3px rgba(255, 230, 0, 0.85), 0px 0px 12px rgba(255, 230, 0, 0.6);
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.formular_slot input[type=button],
+.formular_slot button
+{
+    background-color: #222;
+    color: white;
+    border: 1px solid #777;
+    border-radius: 4px;
+}
+
+.room_editor_panel input,
+.room_editor_panel select,
+.room_editor_panel textarea,
+.room_map_editor input
+{
+    background-color: rgba(255, 255, 255, 0.95);
+    color: black;
+}

@@ -24,7 +24,7 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
        medal.{$Language}_description as description,
        activity_medal.role as role,
        activity_medal.local as local,
-       activity_medal.mark as mark,
+       activity_medal.money as money,
        activity_medal.id as id_activity_medal,
        activity.parent_activity as parent_activity
        FROM activity_medal
@@ -38,7 +38,7 @@ function fetch_activity_medal($id, $by_name = false, $type = 1) // id_activity
     {
 	$v["role"] = (int)$v["role"];
 	$v["local"] = (int)$v["local"];
-	$v["mark"] = (int)$v["mark"];
+	$v["money"] = (int)$v["money"];
 	$v["strong"] = $strong;
     }
     

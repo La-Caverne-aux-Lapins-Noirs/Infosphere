@@ -98,27 +98,32 @@ function GenerateScolarityContract($id, $data, $method, $output, $module)
 {
     if ($id == -1)
 	bad_request();
+    if (($extra = document_builder_request_extra_fields($data))->is_error())
+	return ($extra);
 
-    $extra = [];
-    if (isset($data["fields"]))
-    {
-	if (!is_array($data["fields"]))
-	    $data["fields"] = explode(" ", $data["fields"]);
-	foreach ($data["fields"] as $field)
-	{
-	    if (!preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/', $field, $match))
-		return (new ErrorResponse("InvalidParameter", $field));
-	    $extra[$match[1]] = $match[2];
-	}
-    }
-    if (isset($data["output"]))
-	$extra["Output"] = $data["output"];
-
-    $ret = build_user_contract($id, document_builder_contract_kind($data), $extra);
+    $ret = build_user_contract($id, document_builder_contract_kind($data), $extra->value);
     if ($ret->is_error())
 	return ($ret);
     return (new ValueResponse([
 	"msg" => "Contrat généré",
+	"content" => document_builder_public_url($ret->value["output"])
+    ]));
+}
+
+function GenerateUserLetter($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    if (!isset($data["model"]) || trim((string)$data["model"]) == "")
+	return (new ErrorResponse("InvalidParameter", "model"));
+    if (($extra = document_builder_request_extra_fields($data))->is_error())
+	return ($extra);
+
+    $ret = build_user_letter($id, $data["model"], $extra->value);
+    if ($ret->is_error())
+	return ($ret);
+    return (new ValueResponse([
+	"msg" => "Lettre générée",
 	"content" => document_builder_public_url($ret->value["output"])
     ]));
 }
@@ -356,6 +361,31 @@ function subscription_file_access($id, $file, $public = false, $read = false)
     return ($file);
 }
 
+function user_letter_file_root()
+{
+    return (document_builder_letter_file_root());
+}
+
+function letter_file_access($id, $file, $public = false, $read = false)
+{
+    $base = user_letter_file_root();
+
+    $file = resolve_path($file);
+    if ($file == "")
+	$file = $base;
+    else if (!user_file_path_is_under($file, $base))
+    {
+	$filex = explode("/", $file);
+	if (isset($filex[0]) && $filex[0] == "admin")
+	    forbidden();
+	$file = resolve_path($base."/".$file);
+    }
+    $file = file_access($id, $file, $public, $read);
+    if (!user_file_path_is_under($file, $base))
+	forbidden();
+    return ($file);
+}
+
 function GetUserFileDir($id, $data, $method, $output, $module, $msg, $type, $access_function, $locked_path = "")
 {
     global $Configuration;
@@ -411,6 +441,23 @@ function GetSubscriptionFileDir($id, $data, $method, $output, $module, $msg = ""
 	"subscription_file",
 	"subscription_file_access",
 	user_subscription_file_root()
+    ));
+}
+
+function GetLetterFileDir($id, $data, $method, $output, $module, $msg = "")
+{
+    $data["nocd"] = 0;
+    $data["path_browser_can_cd"] = 1;
+    return (GetUserFileDir(
+	$id,
+	$data,
+	$method,
+	$output,
+	$module,
+	$msg,
+	"letter_file",
+	"letter_file_access",
+	user_letter_file_root()
     ));
 }
 
@@ -524,6 +571,9 @@ function RemoveUserFile($id, $data, $method, $output, $module, $url_key, $access
     if ($access_function == "subscription_file_access" &&
 	resolve_path($file) == user_subscription_file_root())
 	forbidden();
+    if ($access_function == "letter_file_access" &&
+	resolve_path($file) == user_letter_file_root())
+	forbidden();
     $file = escapeshellarg($root.$file);
     system("rm -r $file");
     return ($return_function($id, $data, "GET", $output, $module, "FileRemoved"));
@@ -537,6 +587,11 @@ function RemoveFile($id, $data, $method, $output, $module)
 function RemoveSubscriptionFile($id, $data, $method, $output, $module)
 {
     return (RemoveUserFile($id, $data, $method, $output, $module, "subscription_file", "subscription_file_access", "GetSubscriptionFileDir"));
+}
+
+function RemoveLetterFile($id, $data, $method, $output, $module)
+{
+    return (RemoveUserFile($id, $data, $method, $output, $module, "letter_file", "letter_file_access", "GetLetterFileDir"));
 }
 
 $Tab = [
@@ -553,6 +608,10 @@ $Tab = [
 	"subscription_file" => [
 	    "is_director_for_student",
 	    "GetSubscriptionFileDir",
+	],
+	"letter_file" => [
+	    "is_director_for_student",
+	    "GetLetterFileDir",
 	],
     ],
     "POST" => [
@@ -588,6 +647,10 @@ $Tab = [
 	    "only_admin",
 	    "GenerateScolarityContract",
 	],
+	"new_letter" => [
+	    "is_director_for_student",
+	    "GenerateUserLetter",
+	],
 	"properties" => [
 	    "is_me_or_my_director",
 	    "SetUserProperties",
@@ -617,6 +680,10 @@ $Tab = [
 	"subscription_file" => [
 	    "is_director_for_student",
 	    "GetSubscriptionFileDir",
+	],
+	"letter_file" => [
+	    "is_director_for_student",
+	    "GetLetterFileDir",
 	],
 	"" => [
 	    "only_admin",
@@ -653,6 +720,10 @@ $Tab = [
 	"subscription_file" => [
 	    "is_director_for_student",
 	    "RemoveSubscriptionFile",
+	],
+	"letter_file" => [
+	    "is_director_for_student",
+	    "RemoveLetterFile",
 	],
     ]
 ];

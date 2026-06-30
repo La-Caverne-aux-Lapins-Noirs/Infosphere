@@ -12,7 +12,7 @@ $log_type_labels = configuration_log_type_labels();
         <div>
             <h2><?=configuration_html($Dictionnary["Logs"] ?? "Logs"); ?></h2>
             <p class="configuration-field-description">
-                Recherche et filtrage des traces, actions utilisateur, opérations critiques et rapports.
+                Recherche et filtrage des traces, actions utilisateur, opérations critiques et rapports. Les logs de démarrage/arrêt d'Albedo sont volontairement masqués.
             </p>
         </div>
         <div class="configuration-log-count">
@@ -58,10 +58,6 @@ $log_type_labels = configuration_log_type_labels();
         <label class="configuration-filter-date">
             Jusqu'à
             <input type="datetime-local" name="log_to" value="<?=configuration_html(str_replace(" ", "T", $log_filters["to"])); ?>" />
-        </label>
-        <label class="configuration-checkbox-label">
-            <input type="checkbox" name="log_system" value="1" <?=$log_filters["with_system"] ? "checked" : ""; ?> />
-            inclure système
         </label>
         <div class="configuration-filter-actions">
             <button type="submit">Filtrer</button>

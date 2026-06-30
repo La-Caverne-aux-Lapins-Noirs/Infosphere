@@ -1,0 +1,153 @@
+.room_unknown_users_box
+{
+    background-color: rgba(0, 255, 0, 0.05);
+    border: 1px solid rgba(255, 210, 0, 0.55);
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(255, 210, 0, 0.12);
+}
+
+.room_unknown_users_box h2
+{
+    color: #ffd95a;
+}
+
+.room_unknown_user_flag
+{
+    background-color: rgba(0, 255, 0, 0.20);
+    border: 1px solid rgba(0, 255, 0, 0.35);
+}
+
+
+.room_desk_tooltip
+{
+    background-color: rgba(0, 0, 0, 0.92);
+    border: 1px solid rgba(0, 255, 0, 0.55);
+    border-radius: 8px;
+    box-shadow: 0px 0px 14px rgba(0, 255, 0, 0.25);
+}
+
+.room_editor_panel
+{
+    background-color: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(0, 255, 0, 0.22);
+    border-radius: 8px;
+}
+
+.roomdiv
+{
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.desk.room_linked,
+.roomdiv.room_edit_mode .desk.room_editor_selected
+{
+    box-shadow: 0px 0px 0px 4px rgba(255, 220, 0, 0.90), 0px 0px 18px rgba(255, 220, 0, 0.65);
+}
+
+.room_presence_avatar.room_linked img
+{
+    box-shadow: 0px 0px 0px 3px rgba(255, 220, 0, 0.90), 0px 0px 12px rgba(255, 220, 0, 0.65);
+}
+
+.roomdiv .info
+{
+    color: white;
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.formular_slot input[type=button],
+.formular_slot button
+{
+    background-color: rgba(0, 80, 0, 0.95);
+    color: white;
+    border: 1px solid rgba(0, 255, 0, 0.75);
+    border-radius: 4px;
+    text-shadow: none;
+}
+
+.room_editor_panel button:hover,
+.room_desk_editor button:hover,
+.formular_slot input[type=button]:hover,
+.formular_slot button:hover
+{
+    background-color: rgba(0, 130, 0, 0.95);
+}
+
+.room_editor_panel button:disabled,
+.room_desk_editor button:disabled
+{
+    background-color: rgba(55, 55, 55, 0.95);
+    color: rgba(255, 255, 255, 0.75);
+    border-color: rgba(180, 180, 180, 0.55);
+}
+
+.room_editor_panel input,
+.room_editor_panel select,
+.room_editor_panel textarea,
+.room_map_editor input,
+.formular_slot input,
+.formular_slot select,
+.formular_slot textarea
+{
+    background-color: rgba(0, 0, 0, 0.82);
+    color: white;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+}
+
+.room_editor_panel input::placeholder,
+.room_editor_panel textarea::placeholder,
+.formular_slot input::placeholder,
+.formular_slot textarea::placeholder
+{
+    color: rgba(255, 255, 255, 0.70);
+}
+
+.room_editor_panel button,
+.room_desk_editor button,
+.formular_slot input[type=button],
+.formular_slot button
+{
+    background-color: rgba(0, 95, 0, 1.0) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(120, 255, 120, 0.95) !important;
+    text-shadow: 0px 1px 2px #000000 !important;
+}
+
+.room_editor_panel button:disabled,
+.room_desk_editor button:disabled
+{
+    background-color: rgba(45, 45, 45, 1.0) !important;
+    color: rgba(255, 255, 255, 0.80) !important;
+    border-color: rgba(180, 180, 180, 0.70) !important;
+}
+
+.room_editor_panel input,
+.room_editor_panel select,
+.room_editor_panel textarea,
+.formular_slot input,
+.formular_slot select,
+.formular_slot textarea
+{
+    background-color: rgba(0, 0, 0, 0.88) !important;
+    color: #ffffff !important;
+}
+
+/* L'éditeur de postes doit rester lisible sur le fond très contrasté d'EFRITS. */
+.roomdiv.room_edit_mode .room_editor_panel
+{
+    background-color: rgba(0, 0, 0, 0.68);
+}
+
+.roomdiv.room_edit_mode .room_editor_hint
+{
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.roomdiv.room_edit_mode .room_editor_panel input,
+.roomdiv.room_edit_mode .room_editor_panel select,
+.roomdiv.room_edit_mode .room_editor_panel textarea
+{
+    background-color: rgba(0, 0, 0, 0.94) !important;
+    color: #ffffff !important;
+}

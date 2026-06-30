@@ -1,5 +1,43 @@
 <?php
 
+
+function presence_declaration_is_exam_activity($activity)
+{
+    return ((int)$activity->type >= 5 && (int)$activity->type <= 9);
+}
+
+function presence_declaration_is_available_for_activity($activity)
+{
+    if (!is_object($activity))
+	return (false);
+    if (presence_declaration_is_exam_activity($activity))
+	return (false);
+    if (isset($activity->teamable) && $activity->teamable)
+	return (false);
+    return (true);
+}
+
+function presence_declaration_is_remote_activity($activity)
+{
+    return (isset($activity->declaration_type) && (int)$activity->declaration_type == 2);
+}
+
+function presence_declaration_check_physical_room($activity, $user)
+{
+    if (presence_declaration_is_remote_activity($activity))
+	return (new ValueResponse(true));
+    if (($wai = where_am_i($user)) == [])
+	return (new ErrorResponse("YouAreNotInClass"));
+    if (count($activity->unique_session->room) == 0)
+	return (new ValueResponse(true));
+    if ($activity->unique_session->room_space == -1)
+	return (new ValueResponse(true));
+    foreach ($activity->unique_session->room as $r)
+	if ($r["id"] == $wai["id"])
+	    return (new ValueResponse(true));
+    return (new ErrorResponse("YouAreInAWrongRoom"));
+}
+
 function declare_presence($activity, $session, $user = NULL)
 {
     global $User;
@@ -23,6 +61,8 @@ function declare_presence($activity, $session, $user = NULL)
 	return (new ErrorResponse("RegisteredElsewhere"));
     if (!$activity->registered)
 	return (new ErrorResponse("YouAreNotSubscribed"));
+    if (!presence_declaration_is_available_for_activity($activity))
+	return (new ErrorResponse("YouAreNotConcerned"));
     if ($activity->user_team["present"] != 0)
 	return (new ErrorResponse("PresenceAlreadyDeclared"));
     if (date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute > now())
@@ -40,26 +80,15 @@ function declare_presence($activity, $session, $user = NULL)
 	return (new ErrorResponse("DeclarationPeriodIsClosed"));
     }
     
-    $position_valid = false;
-    if (count($activity->unique_session->room) == 0)
-	$position_valid = true;
-    else if ($activity->unique_session->room_space == -1)
-	$position_valid = true;
-    else
-    {
-	if (($wai = where_am_i($user)) == [])
-	    return (new ErrorResponse("YouAreNotInClass"));
-	foreach ($activity->unique_session->room as $r)
-	{
-	    if ($r["id"] == $wai["id"])
-	    {
-		$position_valid = true;
-		break ;
-	    }
-	}
-	if ($position_valid == false)
-	    return (new ErrorResponse("YouAreInAWrongRoom"));
-    }
+    // PRESENCE_PHYSICAL_ROOM_GUARD_BEGIN
+    // Bloc volontairement très visible: commente ce bloc si tu veux
+    // neutraliser temporairement la vérification Persoc/Distrans/Infosphere.
+    // Règle: hors activité distante, l'étudiant doit être vu en X local,
+    // non SSH et non verrouillé; si une salle est indiquée, il doit être
+    // dans l'une des salles de la session.
+    if (($physical_presence = presence_declaration_check_physical_room($activity, $user))->is_error())
+	return ($physical_presence);
+    // PRESENCE_PHYSICAL_ROOM_GUARD_END
 
     if (period(date_to_timestamp($activity->unique_session->begin_date) - 2 * $five_minute,
 	       date_to_timestamp($activity->unique_session->begin_date) + $five_minute * 3))

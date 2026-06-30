@@ -1,18 +1,49 @@
-<div class="roomdiv">
-    <div class="map" style="background-image: url('<?=$room["map"]; ?>');">
+<?php
+$room_presences = [];
+foreach ($room["desk"] as $presence_desk)
+{
+    foreach ($presence_desk["users"] as $presence_user)
+    {
+        if ($presence_user["id"] == NULL)
+            continue ;
+        $presence_key = $presence_user["id"]."-".$presence_desk["id"]."-".(int)$presence_user["distant"]."-".(int)$presence_user["locked"];
+        $room_presences[$presence_key] = [
+            "desk" => $presence_desk,
+            "user" => $presence_user,
+        ];
+    }
+}
+
+$room_user_status_label = function ($usr) use ($Dictionnary)
+{
+    if (!empty($usr["distant"]) && !empty($usr["locked"]))
+        return (isset($Dictionnary["SSHIdle"]) ? $Dictionnary["SSHIdle"] : "SSH idle");
+    if (!empty($usr["distant"]))
+        return (isset($Dictionnary["SSHOnly"]) ? $Dictionnary["SSHOnly"] : "SSH");
+    if (!empty($usr["locked"]))
+        return (isset($Dictionnary["Locked"]) ? $Dictionnary["Locked"] : "Locked");
+    return (isset($Dictionnary["Used"]) ? $Dictionnary["Used"] : "Used");
+};
+?>
+<div class="roomdiv" data-room-id="<?=$room["id"]; ?>">
+    <div class="map" data-room-map="<?=$room["id"]; ?>" style="background-image: url('<?=$room["map"]; ?>');">
 	<?php foreach ($room["desk"] as $desk) { ?>
 	    <?php
+	    $desk_status = isset($Status[(int)$desk["status"]]) ? (int)$desk["status"] : 3;
 	    $Description = [
 		[$Dictionnary["DeskName"], $desk["codename"]],
-		[$Dictionnary["Type"], $desk["type"]],
+		[$Dictionnary["Type"], isset($TypeLabels[(int)$desk["type"]]) ? $TypeLabels[(int)$desk["type"]] : $desk["type"]],
 		[$Dictionnary["IpAddress"], $desk["ip"]],
 		[$Dictionnary["MacAddress"], $desk["mac"]],
-		[$Dictionnary["Status"], $Dictionnary[["Free", "Used", "Locked", "Shutdown"][$desk["status"]]]]
+		[$Dictionnary["Status"], $Status[$desk_status]]
 	    ];
 	    ob_start(); ?>
 	    <table class="mapinfo">
 		<?php foreach ($Description as $desc) { ?>
-		    <tr><td><b><?=$desc[0]; ?>:</b></td><td><?=$desc[1]; ?></td></tr>
+		    <tr><td><b><?=$desc[0]; ?>:</b></td><td><?=htmlentities((string)$desc[1]); ?></td></tr>
+		<?php } ?>
+		<?php if (!empty($desk["is_exam"])) { ?>
+		    <tr><td><b><?=$Dictionnary["Exam"]; ?>:</b></td><td><?=$Dictionnary["ExamInProgress"]; ?></td></tr>
 		<?php } ?>
 		<tr><td colspan="2">
 		    <?php foreach ($desk["users"] as $usr) { ?>
@@ -21,39 +52,61 @@
 			<?php } else { ?>
 			    <?=$Dictionnary["ConnectedTo"].": "; ?>
 			<?php } ?>
-			<a href="index.php?p=ProfileMenu&amp;a=<?=$usr["id"]; ?>">
-			    <?=$usr["codename"]; ?>
-			</a><?php if ($usr["locked"]) { ?>
+			<?php if ($usr["id"] != NULL) { ?>
+			    <a href="index.php?p=ProfileMenu&amp;a=<?=$usr["id"]; ?>">
+				<?=htmlentities($usr["codename"]); ?>
+			    </a>
+			<?php } else { ?>
+			    <b><?=htmlentities($usr["codename"]); ?></b>
+			<?php } ?>
+			<small>(<?=htmlentities($room_user_status_label($usr)); ?>)</small>
+			<?php if ($usr["locked"]) { ?>
 			    &#128274;
 			<?php } ?>
-			<?php echo "\n"; ?>
+			<?php echo "<br />\n"; ?>
 		    <?php } ?>
 		</td></tr>
-		<tr><td colspan="2"><?=$desk["misc"]; ?></td></tr>
+		<tr><td colspan="2"><?=htmlentities((string)$desk["misc"]); ?></td></tr>
 	    </table>
 	    <?php $deskdesc = ob_get_clean(); ?>
 	    <div
-		class="desk"
+		class="desk room_desk_js<?=!empty($desk["is_exam"]) ? " room_desk_exam" : ""; ?>"
+		data-room-id="<?=$room["id"]; ?>"
+		data-desk-id="<?=$desk["id"]; ?>"
+		data-desk-info="<?=htmlspecialchars($deskdesc, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+		data-codename="<?=htmlspecialchars((string)$desk["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+		data-mac="<?=htmlspecialchars((string)$desk["mac"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+		data-ip="<?=htmlspecialchars((string)$desk["ip"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+		data-type="<?=(int)$desk["type"]; ?>"
+		data-misc="<?=htmlspecialchars((string)$desk["misc"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+		data-x="<?=(int)$desk["x"]; ?>"
+		data-y="<?=(int)$desk["y"]; ?>"
 		style="
 		       right: <?=1250 - $desk["x"]; ?>px;
 		       top: <?=$desk["y"]; ?>px;
-		       background: url('<?=$Types[(int)$desk["type"]]; ?>'), <?=$Color[(int)$desk["status"]]; ?>;
-		       border-color: <?=$BColor[(int)$desk["status"]]; ?>;
+		       background: url('<?=$Types[(int)$desk["type"]]; ?>'), <?=$Color[$desk_status]; ?>;
+		       border-color: <?=$BColor[$desk_status]; ?>;
 		       "
-		onmouseover="document.getElementById('deskinfo<?=$room["id"]; ?>').innerHTML = '<?=htmlentities(str_replace("\n", "<br />", $deskdesc)); ?>';"
 	    >
 	    </div>
 	<?php } ?>
     </div>
     <div class="info">
 	<br />
-	<h5><?=$room["name"]; ?><?=is_admin() ? " (".$room["codename"].")" : ""; ?></h5>
+	<h5>
+	    <?=$room["name"]; ?><?=is_admin() ? " (".$room["codename"].")" : ""; ?>
+	    <?php if (!empty($room["is_exam"])) { ?>
+		<span class="room_exam_badge" title="<?=htmlentities((string)$room["exam"]["name"]); ?>">
+		    <?=$Dictionnary["ExamInProgress"]; ?>
+		</span>
+	    <?php } ?>
+	</h5>
 	<?php $js = "silent_submit(this);"; ?>
 	<form
 	    method="put"
 	    action="/api/room/<?=$room["id"]; ?>"
 	    onsubmit="return <?=$js; ?>;"
-	    style="height: <?=$roomh = ($isdir = is_director_for_room($room["id"])) ? 180 : 100; ?>px; font-size: small;"
+	    style="height: <?=$roomh = ($isdir = is_director_for_room($room["id"])) ? 88 : 100; ?>px; font-size: small;"
 	>
 	    <label for="capacity"><?=$Dictionnary["ComputerCapacity"]; ?></label>
 	    : <?=$room["computer_capacity"]; ?><br />
@@ -68,24 +121,90 @@
 		style="width: 50px;"
 		value="<?=$room["capacity"] ? $room["capacity"] : "0"; ?>"
 	    /><br />
-	    <br />
-	    <label for="map"><b><?=$Dictionnary["EditMap"]; ?></b></label><br />
-	    <input
-		type="file"
-		onchange="<?=$js; ?>"
-		name="map"
-	    /><br />
-	    <label for="configuration"><b><?=$Dictionnary["EditConfiguration"]; ?></b></label><br />
-	    <input
-		type="file"
-		onchange="<?=$js; ?>"
-		name="configuration"
-	    /><br />
-	    <br />
 	    <?php } else { ?>
 		: <?=$room["capacity"]; ?><br />
 	    <?php } ?>
 	</form>
+	<?php if (!empty($room["is_exam"])) { ?>
+	    <p class="room_exam_notice">
+		<?=$Dictionnary["RoomInExam"]; ?>:
+		<?=htmlentities((string)$room["exam"]["name"]); ?>
+	    </p>
+	<?php } ?>
+	<?php if ($isdir) { ?>
+	    <div class="room_editor_panel" data-room-editor-panel="<?=$room["id"]; ?>">
+		<button type="button" class="room_editor_button" data-room-edit-toggle="<?=$room["id"]; ?>">Éditer les postes</button>
+		<button type="button" class="room_editor_button" data-room-new-desk="<?=$room["id"]; ?>">Nouveau poste</button>
+		<div class="room_editor_hint" data-room-editor-hint="<?=$room["id"]; ?>">
+		    Choisis un poste existant pour le modifier, ou crée un nouveau poste puis clique sur le plan.
+		</div>
+		<button type="button" class="room_editor_button" data-room-change-map="<?=$room["id"]; ?>">Changer le plan</button>
+		<form
+		    class="room_map_editor room_map_editor_hidden"
+		    method="put"
+		    action="/api/room/<?=$room["id"]; ?>"
+		    onsubmit="return <?=$js; ?>;"
+		>
+		    <input id="map<?=$room["id"]; ?>" type="file" onchange="<?=$js; ?>" name="map" accept="image/png" />
+		</form>
+		<select class="room_desk_picker" data-room-desk-picker="<?=$room["id"]; ?>">
+		    <option value="">Poste configuré à modifier…</option>
+		    <?php foreach ($room["desk"] as $editor_desk) { ?>
+			<option value="<?=$editor_desk["id"]; ?>"><?=htmlentities($editor_desk["codename"]); ?></option>
+		    <?php } ?>
+		</select>
+		<form class="room_desk_editor" data-room-desk-editor="<?=$room["id"]; ?>" onsubmit="return false;">
+		    <input type="hidden" name="id_room" value="<?=$room["id"]; ?>" />
+		    <input type="hidden" name="x" value="" />
+		    <input type="hidden" name="y" value="" />
+		    <input type="text" name="codename" placeholder="Nom technique" />
+		    <input type="text" name="mac" placeholder="Adresse MAC" />
+		    <input type="text" name="ip" placeholder="Adresse IP" />
+		    <label class="room_editor_field_label">Type du poste</label>
+		    <select name="type">
+			<option value="0">Linux</option>
+			<option value="1">Windows</option>
+			<option value="2">Mac</option>
+			<option value="3">Raspberry Pi</option>
+		    </select>
+		    <textarea name="misc" placeholder="Notes"></textarea>
+		    <button type="button" data-room-save-desk="<?=$room["id"]; ?>" disabled>Enregistrer le poste</button>
+		    <button type="button" data-room-cancel-desk="<?=$room["id"]; ?>">Annuler</button>
+		</form>
+	    </div>
+	<?php } ?>
+	<?php if (count($room_presences)) { ?>
+	    <div class="room_presences" data-room-presences="<?=$room["id"]; ?>">
+		<h6>Présences</h6>
+		<?php foreach ($room_presences as $presence) { ?>
+		    <?php
+		    $usr = $presence["user"];
+		    $desk = $presence["desk"];
+		    $state_classes = [];
+		    if ($usr["distant"])
+			$state_classes[] = "room_user_distant";
+		    else
+			$state_classes[] = "room_user_present";
+		    if ($usr["locked"])
+			$state_classes[] = "room_user_locked";
+		    if ($usr["distant"] && $usr["locked"])
+			$state_classes[] = "room_user_ssh_idle";
+		    $state_class = implode(" ", $state_classes);
+		    ?>
+		    <span
+			class="room_presence_avatar <?=$state_class; ?>"
+			data-room-id="<?=$room["id"]; ?>"
+			data-desk-id="<?=$desk["id"]; ?>"
+			title="<?=htmlentities($usr["codename"]." — ".$desk["codename"]." — ".$room_user_status_label($usr)); ?>"
+		    >
+			<?php display_avatar($usr, 42, true); ?>
+			<?php if ($usr["locked"]) { ?>
+			    <span class="room_presence_lock" aria-hidden="true">&#128274;</span>
+			<?php } ?>
+		    </span>
+		<?php } ?>
+	    </div>
+	<?php } ?>
 	<div id="column scrollable" style="position: relative;">
 	    <?php list_of_links([
 		"hook_name" => "room",
@@ -95,6 +214,5 @@
 		"admin_func" => "only_admin"
 	    ]); ?>		    
 	</div>
-	<p class="deskinfo" id="deskinfo<?=$room["id"]; ?>" style="bottom: 0px; height: calc(100% - 200px);"></p>
     </div>
 </div>

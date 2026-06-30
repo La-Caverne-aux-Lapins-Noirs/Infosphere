@@ -7,10 +7,17 @@
     [$aavg, $amin, $amax] = get_last_activities_report($User);
     [$mavg, $mmin, $mmax] = get_last_medals_report($User);
 
-    $wavgc = $wavg / 100.0;
-    $wpronostic = $wavgc > 0.8 ? 1.0 : $wavgc / 0.8;
-    $apronostic = $aavg / $amax < 0.40 ? 0.25 : ($aavg < 0.6 ? 0.5 : ($aavg < 0.8 ? 0.75 : 1.0));
-    $mpronostic = $mavg > 0.5 ? 1.0 : $mavg / 0.5;
+    $wtarget = 100.0;
+    $atarget = max(1.0, 0.8 * $amax);
+    $mtarget = max(1.0, 0.25 * $mmax);
+
+    $wratio = $wtarget > 0 ? $wavg / $wtarget : 1.0;
+    $aratio = $amax > 0 ? $aavg / $amax : 1.0;
+    $mratio = $mtarget > 0 ? $mavg / $mtarget : 1.0;
+
+    $wpronostic = min(1.0, max(0.0, $wratio));
+    $apronostic = $aratio < 0.40 ? 0.25 : ($aratio < 0.60 ? 0.5 : ($aratio < 0.80 ? 0.75 : 1.0));
+    $mpronostic = min(1.0, max(0.0, $mratio));
 
     // Si l'étudiante ou l'étudiant réussi bien, on limite l'impact du manque
     // de presence.
