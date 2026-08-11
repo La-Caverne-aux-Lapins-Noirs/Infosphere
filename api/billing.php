@@ -29,7 +29,8 @@ function AddBillingEntry($id, $data, $method, $output, $module)
     if (!isset($data["label"]) || trim($data["label"]) == "")
         bad_request();
     $due_date = $data["due_date"] ?? dbnow();
-    if (!billing_add_entry($id_user, $data["label"], $amount, $due_date))
+    $invoice_type = billing_normalize_invoice_type($data["invoice_type"] ?? "school");
+    if (!billing_add_entry($id_user, $data["label"], $amount, $due_date, NULL, "tuition", $invoice_type))
         return (new ErrorResponse("CannotRegister"));
     return (new ValueResponse(["msg" => $Dictionnary["Added"]]));
 }
@@ -90,6 +91,16 @@ function SendBillingEntry($id, $data, $method, $output, $module)
         "msg" => $Dictionnary["Sent"],
         "invoice" => $invoice["relative_path"],
     ]));
+}
+
+function ViewBillingInvoice($id, $data, $method, $output, $module)
+{
+    if ($id <= 0)
+        bad_request();
+    $invoice = billing_invoice_pdf_response($id);
+    if ($invoice === false)
+        return (new ErrorResponse("CannotBuildInvoice"));
+    return (new ValueResponse($invoice));
 }
 
 function ArchivePaidBillingInvoices($id, $data, $method, $output, $module)
@@ -153,14 +164,15 @@ function AddBillingTemplate($id, $data, $method, $output, $module)
         bad_request();
 
     $name = $Database->real_escape_string(trim($data["name"]));
+    $invoice_type = $Database->real_escape_string(billing_normalize_invoice_type($data["invoice_type"] ?? "school"));
     $tariff_year = max(0, (int)$data["tariff_year"]);
     $actor = isset($User["id"]) ? (int)$User["id"] : "NULL";
 
     if ($Database->query("
         INSERT INTO billing_template
-        (id_school, tariff_year, name, amount_once, amount_twice, amount_four, amount_twelve, registration_fee, id_actor)
+        (id_school, tariff_year, name, invoice_type, amount_once, amount_twice, amount_four, amount_twelve, registration_fee, id_actor)
         VALUES
-        ($id_school, $tariff_year, '$name', $amount_once, $amount_twice, $amount_four, $amount_twelve, $registration, $actor)
+        ($id_school, $tariff_year, '$name', '$invoice_type', $amount_once, $amount_twice, $amount_four, $amount_twelve, $registration, $actor)
     ") == NULL)
         return (new ErrorResponse("CannotRegister"));
     return (new ValueResponse(["msg" => $Dictionnary["Added"]]));
@@ -184,6 +196,9 @@ function DeleteBillingTemplate($id, $data, $method, $output, $module)
 }
 
 $Tab = [
+    "GET" => [
+        "invoice" => ["is_billing_manager_for_billing_entry", "ViewBillingInvoice"],
+    ],
     "POST" => [
         "entry" => ["is_billing_manager", "AddBillingEntry"],
         "payment" => ["is_billing_manager", "AddBillingPayment"],

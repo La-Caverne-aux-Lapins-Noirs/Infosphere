@@ -18,6 +18,10 @@ function remove_down_formular()
     eraseCookie("<?=$page; ?>-session");
     document.getElementById("activity_list").innerText = "";
     document.getElementById("session_list").innerText = "";
+    document.getElementById("activity_add_form").style.display = "none";
+    document.getElementById("activity_import_form").style.display = "none";
+    document.getElementById("session_add_form").style.display = "none";
+    document.getElementById("session_import_form").style.display = "none";
 
     document.getElementById("edit_formular_title").innerHTML = "";
     document.getElementById("edit_formular").innerHTML = "";
@@ -49,8 +53,11 @@ function list_activities(module = "")
 	document.getElementById("session_list").innerText = "";
 	select_entry("module", module);
 	document.getElementById("activity_add_form").style.display = "block";
+	document.getElementById("activity_import_form").style.display = "flex";
 	document.getElementById("session_add_form").style.display = "none";
+	document.getElementById("session_import_form").style.display = "none";
 	document.getElementById("selected_module").value = module;
+	document.getElementById("selected_module_import").value = module;
 	send_ajax(
 	    "get",
 	    "/api/<?=$page; ?>/" + module + "?sub=1",
@@ -88,7 +95,9 @@ function list_sessions(activity = "")
 	eraseCookie("<?=$page; ?>-session");
 	select_entry("activity", activity);
 	document.getElementById("session_add_form").style.display = "block";
+	document.getElementById("session_import_form").style.display = "flex";
 	document.getElementById("selected_activity").value = activity;
+	document.getElementById("selected_activity_import").value = activity;
 	send_ajax(
 	    "get",
 	    "/api/activity/" + activity + "?sub=1",

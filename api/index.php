@@ -167,10 +167,11 @@ else if ($request instanceof ValueResponse)
 {
     if (isset($request->value["filename"]))
     {
-	header("Content-Type: application/octet-stream");
-	header("Content-Disposition: attachment; filename=".
-	       $request->value["filename"]
-	);
+        $content_type = $request->value["content_type"] ?? "application/octet-stream";
+        $disposition = $request->value["disposition"] ?? "attachment";
+        $filename = basename((string)$request->value["filename"]);
+	header("Content-Type: ".$content_type);
+	header("Content-Disposition: ".$disposition."; filename=\"".addslashes($filename)."\"");
 	echo $request->value["content"];
 	return ;
     }

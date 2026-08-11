@@ -50,8 +50,14 @@ function fetch_laboratory($id = -1, $by_name = false)
     if (!file_exists($lab["icon"]))
 	$lab["icon"] = "res/no_avatar_lab.png";
     $lab["school"] = db_select_all("
-	school.*, school.{$Language}_name as name
+	school.*,
+	organization.fr_name as fr_name,
+	organization.en_name as en_name,
+	organization.legal_name as legal_name,
+	COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name
 	FROM school
+	LEFT JOIN organization
+	ON organization.id = school.id_organization
 	LEFT JOIN school_laboratory
 	ON school.id = school_laboratory.id_school
 	WHERE school_laboratory.id_laboratory = $id

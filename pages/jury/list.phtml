@@ -1,0 +1,138 @@
+<?php
+if (!isset($juries))
+    $juries = fetch_juries();
+if (!isset($jury_titles))
+    $jury_titles = fetch_jury_titles();
+if (!isset($certification_skills))
+    $certification_skills = fetch_certification_skills();
+
+
+?>
+<script>
+function certification_current_tab()
+{
+    var panel = document.getElementById('jury_panel');
+    var selected;
+
+    if (!panel)
+        return (localStorage.getItem('jury_management_tabs'));
+    selected = panel.querySelector('[data-tabpanel-button].selected');
+    if (selected)
+        return (selected.getAttribute('data-tabpanel-tab'));
+    return (localStorage.getItem('jury_management_tabs'));
+}
+
+function certification_tab_content(tab)
+{
+    var panel = document.getElementById('jury_panel');
+
+    if (!panel || !tab)
+        return (null);
+    return (panel.querySelector('[data-tabpanel-content][data-tabpanel-tab="' + tab + '"]'));
+}
+
+function certification_restore_tab(tab)
+{
+    var panel = document.getElementById('jury_panel');
+    var contents;
+    var buttons;
+
+    if (!panel)
+        return ;
+    if (!tab)
+        tab = localStorage.getItem('jury_management_tabs');
+    contents = panel.querySelectorAll('[data-tabpanel-content]');
+    buttons = panel.querySelectorAll('[data-tabpanel-button]');
+    if (!tab && contents.length)
+        tab = contents[0].getAttribute('data-tabpanel-tab');
+    contents.forEach(function(content) {
+        content.style.display = content.getAttribute('data-tabpanel-tab') == tab ? 'block' : 'none';
+    });
+    buttons.forEach(function(button) {
+        if (button.getAttribute('data-tabpanel-tab') == tab)
+            button.classList.add('selected');
+        else
+            button.classList.remove('selected');
+    });
+    if (tab)
+        localStorage.setItem('jury_management_tabs', tab);
+}
+
+function certification_submit(form, cnf)
+{
+    var active_tab = certification_current_tab();
+    var active_content = certification_tab_content(active_tab);
+    var scroll_y = active_content ? active_content.scrollTop : 0;
+    var method;
+    var data;
+    var xhr;
+
+    cnf = cnf || {};
+    while (form != null && form.tagName.toLowerCase() != 'form')
+        form = form.parentNode;
+    if (form == null)
+        return (false);
+    method = (form.getAttribute('method') || 'post').toUpperCase();
+    data = JSON.stringify(gather_form(form, cnf['wrapper'] || '', cnf['ismap'] || false));
+    xhr = new XMLHttpRequest();
+    form.style.backgroundColor = 'yellow';
+    xhr.addEventListener('load', function() {
+        var json;
+        var target;
+
+        try
+        {
+            json = JSON.parse(xhr.responseText);
+        }
+        catch (e)
+        {
+            form.style.backgroundColor = 'red';
+            set_debug_div(xhr.responseText);
+            return ;
+        }
+        if (json['result'] == 'ok')
+        {
+            target = document.getElementById('jury_panel');
+            if (target && typeof json['content'] != 'undefined')
+            {
+                target.innerHTML = '';
+                target.innerHTML = json['content'];
+                certification_restore_tab(active_tab);
+                active_content = certification_tab_content(active_tab);
+                if (active_content)
+                    active_content.scrollTop = scroll_y;
+            }
+            if (json['msg'])
+                set_error_div(json['msg'], true);
+        }
+        else
+        {
+            form.style.backgroundColor = 'red';
+            set_error_div(json['msg'] || xhr.responseText, false);
+            setTimeout(function(){ form.style.backgroundColor = null; }, 1000);
+        }
+    });
+    xhr.addEventListener('error', function() {
+        form.style.backgroundColor = 'red';
+        set_error_div(xhr.responseText, false);
+        setTimeout(function(){ form.style.backgroundColor = null; }, 1000);
+    });
+    xhr.open(method, form.getAttribute('action'), true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(data);
+    return (false);
+}
+</script>
+<?php
+$jury_tabs = [
+    ($Dictionnary["Juries"] ?? "Jurys") => __DIR__."/juries_tab.phtml",
+    ($Dictionnary["Certifications"] ?? "Certifications") => __DIR__."/certifications_tab.phtml",
+    ($Dictionnary["Skills"] ?? ($Dictionnary["Skill"] ?? "Compétences")) => __DIR__."/skills_tab.phtml"
+];
+tabpanel(
+    $jury_tabs,
+    "jury_management_tabs",
+    $Dictionnary["Juries"] ?? "Jurys",
+    "jury_tab_button",
+    "jury_tab_content"
+);

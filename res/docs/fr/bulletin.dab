@@ -11,10 +11,46 @@ Document = "Report"
 ]
 
 Footer = [Text($,Footer)
-  [@Size;0] EFRITS SAS, 33 rue Delaporte, 94700 Maisons-Alfort immatriculé sous le numéro 909 292 773 au R.C.S. de Créteil
-  Etablissement d'enseignement supérieur privé, immatriculé sous le numéro 0942530P auprès du rectorat de Créteil
-  Organisme de formation professionnelle, déclaration d’activité enregistrée sous le numéro 11941128194 auprès du préfet de région d’Ile-de-France
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
 Footer]
+
+'TOUT CE QU'IL Y A EN DESSOUS DOIT ETRE AJOUTE DYNAMIQUEMENT
+
+[School
+  Name = "EFRITS"
+  Title = "Etablissement d'enseignement supérieur privé"
+  Address = [Text($,Address)
+    32a Avenue Pierre Sémard
+    94200 Ivry-sur-Seine
+  Address]
+]
+
+[People
+  [Student
+    Id = "9400025"
+    INE = "6416a4aze"
+    BirthDate = "36 Fubrance 2042"
+    Role = "Elève"
+    Identity = "Student STUDENT"
+    PreviousFlames = 10
+  ]
+  [Tutor
+    Role = "Responsable légal"
+    Identity = "Tutor TUTOR"
+    Address = "42 Avenue du Boulevard des Rues\\\\68000 Colmar"
+  ]
+  [Director
+    Role = "Directeur"
+    Identity = "Jason Brillante"
+    'Signature = @"jason.brillante.png"
+    'Initials = @"jason.brillante.initials.png"
+  ]
+]
 
 [Cycle
   Code = "EF6E"
@@ -57,33 +93,3 @@ Footer]
   }
 ]
 
-[School
-  Name = "EFRITS"
-  Title = "Etablissement d'enseignement supérieur privé"
-  Address = [Text($,Address)
-    32a Avenue Pierre Sémard
-    94200 Ivry-sur-Seine
-  Address]
-]
-
-[People
-  [Student
-    Id = "9400025"
-    INE = "6416a4aze"
-    BirthDate = "36 Fubrance 2042"
-    Role = "Elève"
-    Identity = "Student STUDENT"
-    PreviousFlames = 10
-  ]
-  [Tutor
-    Role = "Responsable légal"
-    Identity = "Tutor TUTOR"
-    Address = "42 Avenue du Boulevard des Rues\\\\68000 Colmar"
-  ]
-  [Director
-    Role = "Directeur"
-    Identity = "Jason Brillante"
-    'Signature = @"jason.brillante.png"
-    'Initials = @"jason.brillante.initials.png"
-  ]
-]

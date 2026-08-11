@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/dabsic_form.php");
+
 function build_document_list($value)
 {
     if ($value === NULL)
@@ -157,7 +159,16 @@ function build_document_from_parts($output_name, array $document_parts, array $i
 	if (is_object($part) && $part->is_error())
 	    return ($part);
 	if ($part !== NULL)
+	{
 	    $parts[] = $part;
+	    if ($part["type"] == "file")
+		foreach (dabsic_form_mergeconf_fields_for_file($part["file"]) as $field)
+		{
+		    $pos = strpos($field, "=");
+		    if ($pos !== false)
+			$parts[] = build_document_field_part(substr($field, 0, $pos), substr($field, $pos + 1));
+		}
+	}
     }
     if (!count(array_filter($parts, function($part) { return ($part["type"] == "file"); })))
 	return (new ErrorResponse("MissingFile", "document model"));
@@ -272,11 +283,23 @@ function document_builder_find_model($kind, $language = NULL)
     return (NULL);
 }
 
-function document_builder_identity_files($base, array $names = [])
+function document_builder_description_file_names(array $extra_names = [], $legacy = true)
+{
+    $names = ["description.dab"];
+    foreach ($extra_names as $name)
+	if ($name != "" && !in_array($name, $names))
+	    $names[] = $name;
+    if ($legacy)
+	foreach (["identity.dab", "identite.dab", "configuration.dab", "school.dab"] as $name)
+	    if (!in_array($name, $names))
+		$names[] = $name;
+    return ($names);
+}
+
+function document_builder_description_files($base, array $names = [], $legacy = true)
 {
     $base = rtrim($base, "/")."/";
-    if (!count($names))
-	$names = ["configuration.dab", "identity.dab", "identite.dab"];
+    $names = count($names) ? $names : document_builder_description_file_names([], $legacy);
     $files = [];
     foreach ($names as $name)
 	if (file_exists($base.$name) && !is_dir($base.$name))
@@ -284,7 +307,15 @@ function document_builder_identity_files($base, array $names = [])
     return ($files);
 }
 
-function document_builder_school_identity_files($school)
+function document_builder_identity_files($base, array $names = [])
+{
+    // Ancien nom conservé: les exports d'éléments de BDD s'appellent
+    // désormais description.dab. Les anciens noms ne sont lus qu'en
+    // compatibilité.
+    return (document_builder_description_files($base, $names));
+}
+
+function document_builder_school_description_files($school)
 {
     global $Configuration;
 
@@ -292,9 +323,14 @@ function document_builder_school_identity_files($school)
 	return ([]);
     $base = $Configuration->SchoolsDir($school["codename"]);
     return (array_merge(
-	document_builder_identity_files($base, ["configuration.dab", "identity.dab", "identite.dab", "school.dab"]),
-	document_builder_identity_files($base."admin/", ["configuration.dab", "identity.dab", "identite.dab", "school.dab"])
+	document_builder_description_files($base),
+	document_builder_description_files($base."admin/")
     ));
+}
+
+function document_builder_school_identity_files($school)
+{
+    return (document_builder_school_description_files($school));
 }
 
 function document_builder_contract_kind($data)
@@ -359,17 +395,21 @@ function document_builder_contract_person_fields(array $user)
     $fields = refresh_user_fields($user);
 
     $out = [
+	"id" => $user["id"] ?? -1,
+	"codename" => $user["codename"] ?? "",
 	"first_name" => $fields["first_name"] ?? "",
 	"use_name" => $fields["use_name"] ?? "",
 	"family_name" => $fields["family_name"] ?? "",
 	"gender" => $fields["gender"] ?? "",
 	"mail" => $fields["mail"] ?? "",
+	"courriel" => $fields["courriel"] ?? ($fields["mail"] ?? ""),
 	"phone" => $fields["phone"] ?? "",
 	"address" => $fields["address"] ?? "",
 	"city" => $fields["city"] ?? "",
 	"postal_code" => $fields["postal_code"] ?? "",
 	"birth_date" => $fields["birth_date"] ?? "",
 	"birth_city" => $fields["birth_city"] ?? "",
+	"birth_place" => $fields["birth_place"] ?? ($fields["birth_city"] ?? ""),
 	"birth_country" => $fields["birth_country"] ?? "",
 	"nationality" => $fields["nationality"] ?? "",
 
@@ -386,13 +426,28 @@ function document_builder_contract_person_fields(array $user)
 	"chosen_specialty" => $fields["chosen_specialty"] ?? "",
     ];
 
-    // Les cases suivantes sont volontairement laissées absentes du contexte
-    // généré: elles doivent rester à cocher manuellement sur le contrat.
-    // Ne pas injecter Handicap, Resubscribe, LastClassSuccess,
-    // SendSchoolReport ou IntranetAccess évite de pré-cocher Oui ou Non.
-    document_builder_optional_contract_field($fields, $out, "handicap_kind");
-    document_builder_optional_contract_field($fields, $out, "last_class");
+    $administrative = function_exists("user_identity_student_administrative_fields")
+        ? user_identity_student_administrative_fields($user) : [];
+    foreach ([
+        "handicap" => "Handicap",
+        "handicap_kind" => "HandicapKind",
+        "resubscribe" => "Resubscribe",
+        "last_class" => "LastClass",
+        "last_class_success" => "LastClassSuccess",
+        "send_school_report" => "SendSchoolReport",
+        "intranet_access" => "IntranetAccess"
+    ] as $field => $pascal)
+        if (array_key_exists($field, $user) || array_key_exists($field, $administrative) || array_key_exists($pascal, $administrative))
+            $out[$field] = $fields[$field];
 
+    if (count($administrative))
+        $out = user_identity_merge_dabsic_tree($out, $administrative);
+    if (function_exists("user_identity_signature_file"))
+    {
+        $signature = user_identity_signature_file($user);
+        if ($signature != "" && is_file($signature))
+            $out["signature"] = $signature;
+    }
     return ($out);
 }
 
@@ -498,10 +553,10 @@ function document_builder_contract_director_fields(array $student)
     return ($fields);
 }
 
-function document_builder_fetch_legal_representatives($student_id)
+function document_builder_fetch_relation_representatives($student_id, $relation)
 {
     $student_id = (int)$student_id;
-    return (db_select_all("
+    $rows = db_select_all("
         user.*,
         parent_child.relation as relation,
         parent_child.id as id_relation
@@ -511,7 +566,26 @@ function document_builder_fetch_legal_representatives($student_id)
         AND user.id IS NOT NULL
         AND user.authority != -1
         ORDER BY parent_child.id ASC
-    "));
+    ");
+    return (array_values(array_filter($rows, function($row) use ($relation) {
+        return (user_relation_has($row["relation"] ?? "", $relation));
+    })));
+}
+
+function document_builder_fetch_legal_representatives($student_id)
+{
+    return (document_builder_fetch_relation_representatives($student_id, "legal"));
+}
+
+
+function document_builder_signatory_context(array $person, $role)
+{
+    $role = trim((string)$role);
+    if ($role == "" || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $role) !== 1)
+        return ($person);
+    $person["Signatory"] = 1;
+    $person["As"] = $role;
+    return ($person);
 }
 
 function document_builder_contract_context(array $student, $kind)
@@ -520,6 +594,7 @@ function document_builder_contract_context(array $student, $kind)
 
     $student_fields = document_builder_contract_person_fields($student);
     $parents = document_builder_fetch_legal_representatives($student["id"]);
+    $financials = document_builder_fetch_relation_representatives($student["id"], "financial");
 
     $ctx = [
 	"contract" => [
@@ -533,14 +608,11 @@ function document_builder_contract_context(array $student, $kind)
 	],
     ];
 
-    if (isset($student["school"]) && count($student["school"]))
+    $school_context = document_builder_school_context(document_builder_student_school($student));
+    if (count($school_context))
     {
-	$school = $student["school"][array_key_first($student["school"])] ;
-	$ctx["school"] = [
-	    "id" => @$school["id_school"],
-	    "codename" => @$school["codename"],
-	    "name" => @$school["name"],
-	];
+	$ctx["company"] = $school_context;
+	$ctx["school"] = $school_context;
     }
     $director = document_builder_contract_director_fields($student);
     if (count($director))
@@ -564,13 +636,55 @@ function document_builder_contract_context(array $student, $kind)
 	    $ctx[$key] = [];
     }
 
-    // Aucun responsable financier ni contact d'urgence n'est déduit ici.
-    // Sans donnée explicite dédiée, il vaut mieux laisser les cases vides:
-    // l'administration les cochera à la main sur le contrat.
+    // Les réponses dynamiques du formulaire public complètent le contexte
+    // sans dupliquer dans PHP la liste des champs demandés par les modèles.
+    if (function_exists("user_identity_document_context"))
+        $ctx = user_identity_merge_dabsic_tree($ctx, user_identity_document_context($student));
 
+    // Finance and emergency contacts may explicitly designate an already
+    // known student or legal representative. Complete those blocks from the
+    // known person instead of asking for the same identity twice.
+    $ctx = dabsic_pascalcase_array($ctx);
+
+    // Une relation financière explicite dans parent_child est l'autorité sur
+    // l'identité du payeur. Elle doit donc primer sur un ancien bloc Finance
+    // conservé dans DocumentContext.
+    if (count($financials))
+    {
+        $financial = $financials[0];
+        $finance_is = "Other";
+        if (isset($parents[0]["id"]) && (int)$parents[0]["id"] == (int)$financial["id"])
+            $finance_is = "Legal1";
+        else if (isset($parents[1]["id"]) && (int)$parents[1]["id"] == (int)$financial["id"])
+            $finance_is = "Legal2";
+        $finance = dabsic_pascalcase_array(document_builder_contract_person_fields($financial));
+        $finance["Is"] = $finance_is;
+        if (!isset($ctx["Signatories"]) || !is_array($ctx["Signatories"]))
+            $ctx["Signatories"] = [];
+        $ctx["Signatories"]["Finance"] = $finance;
+    }
+    else
+    {
+        // Pour l'analyse du formulaire historique, Finance reste une projection
+        // du résultat normalisé DocBuilder. Sans payeur distinct, l'étudiant
+        // occupe aussi le rôle Finance.
+        if (!isset($ctx["Signatories"]) || !is_array($ctx["Signatories"]))
+            $ctx["Signatories"] = [];
+        $finance = $ctx["Signatories"]["Student"] ?? [];
+        $finance["Is"] = "Student";
+        $ctx["Signatories"]["Finance"] = $finance;
+    }
+
+    if (function_exists("user_identity_complete_signatory_context"))
+        $ctx = user_identity_complete_signatory_context($ctx);
     return ($ctx);
 }
 
+
+function document_builder_documentation_file_root()
+{
+    return ("admin/documentation");
+}
 
 function document_builder_letter_file_root()
 {
@@ -593,10 +707,14 @@ function document_builder_original_generator()
 function document_builder_person_context(array $user)
 {
     $fields = document_builder_contract_person_fields($user);
+    $identity = document_builder_name($user);
     $fields["id"] = isset($user["id"]) ? (int)$user["id"] : -1;
     $fields["codename"] = $user["codename"] ?? "";
     $fields["nickname"] = $user["nickname"] ?? "";
-    $fields["identity"] = document_builder_name($user);
+    $fields["identity"] = $identity;
+    $fields["name"] = $identity;
+    $fields["street"] = $fields["address"] ?? "";
+    $fields["postal_city"] = trim(($fields["postal_code"] ?? "")." ".($fields["city"] ?? ""));
     return ($fields);
 }
 
@@ -621,14 +739,40 @@ function document_builder_school_context(array $school)
 {
     if (!count($school))
 	return ([]);
+
+    $name = $school["name"] ?? ($school["fr_name"] ?? ($school["codename"] ?? ""));
+    $main_info = function_exists("school_main_info") ? school_main_info($school) : ($school["main_info"] ?? "");
+    $school_info = function_exists("school_private_school_info") ? school_private_school_info($school) : ($school["school_info"] ?? "");
+    $formation_info = function_exists("school_formation_info") ? school_formation_info($school) : ($school["formation_info"] ?? "");
+    $alternation_info = function_exists("school_alternation_info") ? school_alternation_info($school) : ($school["alternation_info"] ?? "");
+
     return ([
 	"id" => $school["id"] ?? -1,
 	"codename" => $school["codename"] ?? "",
-	"name" => $school["name"] ?? ($school["fr_name"] ?? ($school["codename"] ?? "")),
-	"legal_name" => $school["legal_name"] ?? ($school["name"] ?? ($school["fr_name"] ?? "")),
+	"name" => $name,
+	"legal_name" => $school["legal_name"] ?? $name,
 	"address" => $school["address"] ?? "",
+	"street" => $school["address"] ?? "",
+	"city" => $school["city"] ?? "",
 	"phone" => $school["phone"] ?? "",
 	"mail" => $school["mail"] ?? "",
+	"main_info" => $main_info,
+	"school_info" => $school_info,
+	"formation_info" => $formation_info,
+	"alternation_info" => $alternation_info,
+	"main" => $main_info,
+	"school" => $school_info,
+	"formation" => $formation_info,
+	"alternation" => $alternation_info,
+	"logo" => function_exists("school_document_logo_path") ? school_document_logo_path($school, true) : "",
+	"document_logo" => function_exists("school_document_logo_path") ? school_document_logo_path($school, true) : "",
+	"site_logo" => function_exists("school_site_logo_path") ? school_site_logo_path($school, true) : "",
+	"logo_width" => "3cm",
+	"logo_height" => "2cm",
+	"document_logo_width" => "3cm",
+	"document_logo_height" => "2cm",
+	"site_logo_width" => "3cm",
+	"site_logo_height" => "2cm",
     ]);
 }
 
@@ -689,6 +833,11 @@ function document_builder_letter_context(array $student, array $generator, array
 {
     global $Language;
 
+    $student_context = document_builder_person_context($student);
+    $generator_context = document_builder_person_context($generator);
+    $financial_context = document_builder_person_context($financial);
+    $school_context = document_builder_school_context($school);
+
     return ([
 	"letter" => [
 	    "kind" => $kind,
@@ -696,16 +845,19 @@ function document_builder_letter_context(array $student, array $generator, array
 	    "generation_date" => datex("Y-m-d H:i:s"),
 	    "language" => $Language,
 	],
-	"student" => document_builder_person_context($student),
-	"generator" => document_builder_person_context($generator),
-	"financial" => document_builder_person_context($financial),
-	"financial_responsible" => document_builder_person_context($financial),
-	"responsible" => document_builder_person_context($financial),
-	"school" => document_builder_school_context($school),
-	"signatories" => [
-	    "student" => document_builder_person_context($student),
-	    "generator" => document_builder_person_context($generator),
-	    "financial" => document_builder_person_context($financial),
+	"student" => $student_context,
+	"destination" => $student_context,
+	"target" => $student_context,
+	"generator" => $generator_context,
+	"financial" => $financial_context,
+	"financial_responsible" => $financial_context,
+	"responsible" => $financial_context,
+	"school" => $school_context,
+	"company" => $school_context,
+	"signature_sources" => [
+	    "student" => document_builder_signatory_context($student_context, "Student"),
+	    "generator" => document_builder_signatory_context($generator_context, "Generator"),
+	    "financial" => document_builder_signatory_context($financial_context, "Finance"),
 	],
     ]);
 }
@@ -778,12 +930,12 @@ function build_user_document($student, $kind, $model, $document_dir, $context_na
 
     $school = document_builder_student_school($student);
     if (count($school) && isset($school["codename"]))
-    {
-	$inputs = array_merge($inputs, document_builder_school_identity_files($school));
 	$include_paths[] = $Configuration->SchoolsDir($school["codename"]);
-    }
 
-    $inputs = array_merge($inputs, document_builder_identity_files($user_dir."admin/", ["identity.dab"]));
+    // Les exports permanents d'éléments de BDD sont maintenant des
+    // description.dab non scopés. On ne les inclut donc plus directement dans
+    // un document: le contexte temporaire ci-dessous place les mêmes données
+    // sous le scope attendu par le modèle (Company, Signatories.Student, etc.).
     $inputs[] = $context;
 
     $parts = [];

@@ -79,7 +79,7 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
 
     if (count($keys))
     {
-	$keys = ", ".implode($keys, ",");
+	$keys = ", ".implode(",", $keys);
 	$valss = "";
 	foreach ($vals as $v)
 	{

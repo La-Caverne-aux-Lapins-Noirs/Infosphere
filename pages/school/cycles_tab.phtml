@@ -1,0 +1,10 @@
+<section class="school_admin_card school_admin_linkbox school_admin_block school_admin_wide_block">
+    <h4>Cycles</h4>
+    <?php list_of_links([
+        "hook_name" => "school",
+        "hook_id" => $school["id"],
+        "linked_name" => "cycle",
+        "linked_elems" => $school["cycle"],
+        "admin_func" => "is_director_for_school",
+    ]); ?>
+</section>

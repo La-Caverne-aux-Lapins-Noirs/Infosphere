@@ -26,7 +26,7 @@ function fetch_prospect($id = -1)
 	      user.target_class as target_class,
 	      user.target_entry as target_entry
         FROM  user
-        WHERE user.id IN (".implode(",", $id).") && password = ''
+        WHERE user.id IN (".implode(",", $id).") && profile_status = 'prospect'
     ");
     if ($u == NULL)
 	return (new ErrorResponse("UserNotFound"));

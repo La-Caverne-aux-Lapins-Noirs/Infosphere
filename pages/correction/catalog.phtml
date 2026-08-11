@@ -1,0 +1,31 @@
+<?php
+global $CorrectionSyncStatus;
+if (isset($CorrectionSyncStatus))
+    require (__DIR__."/sync_status.phtml");
+?>
+<?php
+require_once ("tools/correction_catalog.php");
+$correction_catalog_issues = correction_catalog_validation();
+if (count($correction_catalog_issues))
+{
+?>
+<div class="correction-catalog-warning">
+    <h3>Catalogue incomplet</h3>
+    <p>La synchronisation est suspendue tant que les dépendances impératives suivantes ne sont pas disponibles.</p>
+    <ul>
+    <?php foreach ($correction_catalog_issues as $issue) { ?>
+        <li class="missing"><?=htmlspecialchars($issue['message']); ?></li>
+    <?php } ?>
+    </ul>
+</div>
+<?php
+}
+$correction_tabs = [
+    "Arborescence" => __DIR__."/tab_tree.phtml",
+    "Bibliothèques" => __DIR__."/tab_libraries.phtml",
+    "Fonctions évaluables" => __DIR__."/tab_functions.phtml",
+    "Fichiers Dabsic" => __DIR__."/tab_dabsic.phtml",
+    "Scénarios" => __DIR__."/tab_scenarios.phtml",
+];
+tabpanel($correction_tabs, "correction-catalog-tabs", "Arborescence", "correction-tab-button", "correction-tab-content");
+?>

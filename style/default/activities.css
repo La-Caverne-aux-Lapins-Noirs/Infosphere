@@ -33,7 +33,8 @@ b
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-#down_formular > td
+#down_formular > td,
+#import_formular > td
 {
     text-align: center;
 }
@@ -204,6 +205,30 @@ b
     color: red;
 }
 
+.file_browser > .icon .dabsic_editor_link
+{
+    color: white;
+    font-weight: bold;
+    background-color: rgba(0, 95, 38, 0.95);
+    border: 1px solid #54D76F;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.file_browser > .icon .dabsic_editor_link:hover,
+.file_browser > .icon .dabsic_editor_link:focus
+{
+    color: white;
+    background-color: rgba(0, 145, 55, 1);
+    border-color: white;
+    outline: none;
+}
+
+.file_browser > .icon .dabsic_editor_link:active
+{
+    background-color: rgba(0, 70, 28, 1);
+}
+
 .button_link
 {
     color: lightgray;
@@ -237,4 +262,25 @@ b
 	+0px -1px 0px black,
 	+0px +1px 0px black
     ;
+}
+
+.file_browser > .icon.path_browser_selected
+{
+    background-color: rgba(22, 112, 44, 0.72);
+    box-shadow: inset 0 0 0 2px rgba(105, 255, 130, 0.95);
+}
+
+.file_browser.path_browser_drop_target
+{
+    box-shadow:
+        inset 0 0 0 3px rgba(75, 255, 100, 0.95),
+        inset 0 0 28px rgba(0, 200, 35, 0.30);
+}
+
+.file_browser > .directory.path_browser_directory_drop_target
+{
+    background-color: rgba(0, 145, 45, 0.82);
+    box-shadow:
+        inset 0 0 0 2px rgba(160, 255, 170, 1),
+        0 0 8px rgba(0, 255, 45, 0.75);
 }

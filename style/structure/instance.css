@@ -167,3 +167,20 @@
     background-color: rgba(255, 255, 255, 0.25);
     font-size: small;
 }
+
+.instance_jury_list
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.instance_jury_card
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.08);
+}

@@ -68,47 +68,58 @@ function refresh_user_clean_dabsic_values($data)
 
 function refresh_user_fields($user)
 {
-    return ([
-	"first_name" => refresh_user_first_name($user),
-	"use_name" => refresh_user_value($user, "use_name", ""),
-	"family_name" => refresh_user_family_name($user),
-	"gender" => refresh_user_value($user, ["gender", "sex"], ""),
-	"mail" => refresh_user_value($user, "mail", ""),
-	"phone" => refresh_user_value($user, "phone", ""),
-	"address" => refresh_user_value($user, ["address", "street_name"], ""),
-	"city" => refresh_user_value($user, "city", ""),
-	"postal_code" => refresh_user_value($user, "postal_code", ""),
-	"birth_date" => refresh_user_date($user, "birth_date"),
-	"birth_city" => refresh_user_value($user, "birth_city", ""),
-	"birth_country" => refresh_user_value($user, "birth_country", ""),
-	"nationality" => refresh_user_value($user, "nationality", ""),
+    $administrative = function_exists("user_identity_student_administrative_fields")
+        ? user_identity_student_administrative_fields($user) : [];
+    $source = is_array($administrative) ? array_merge($user, $administrative) : $user;
+    $fields = [
+	"first_name" => refresh_user_first_name($source),
+	"use_name" => refresh_user_value($source, "use_name", ""),
+	"family_name" => refresh_user_family_name($source),
+	"gender" => refresh_user_value($source, ["gender", "sex"], ""),
+	"mail" => refresh_user_value($source, "mail", ""),
+	"courriel" => refresh_user_value($source, "mail", ""),
+	"phone" => refresh_user_value($source, "phone", ""),
+	"address" => refresh_user_value($source, ["address", "street_name"], ""),
+	"city" => refresh_user_value($source, "city", ""),
+	"postal_code" => refresh_user_value($source, "postal_code", ""),
+	"birth_date" => refresh_user_date($source, "birth_date"),
+	"birth_city" => refresh_user_value($source, "birth_city", ""),
+	"birth_place" => refresh_user_value($source, ["birth_place", "birth_city"], ""),
+	"birth_country" => refresh_user_value($source, "birth_country", ""),
+	"nationality" => refresh_user_value($source, "nationality", ""),
 
-	"ine" => refresh_user_value($user, ["ine", "ìne"], ""),
-	"nir" => refresh_user_value($user, "nir", ""),
-	"handicap" => refresh_user_bool($user, "handicap", false),
-	"handicap_kind" => refresh_user_value($user, "handicap_kind", ""),
-	"resubscribe" => refresh_user_bool($user, "resubscribe", false),
-	"last_class" => refresh_user_value($user, "last_class", ""),
-	"last_class_success" => refresh_user_bool($user, "last_class_success", false),
+	"ine" => refresh_user_value($source, ["ine", "ine"], ""),
+	"nir" => refresh_user_value($source, "nir", ""),
+	"handicap" => refresh_user_bool($source, "handicap", false),
+	"handicap_kind" => refresh_user_value($source, "handicap_kind", ""),
+	"resubscribe" => refresh_user_bool($source, "resubscribe", false),
+	"last_class" => refresh_user_value($source, "last_class", ""),
+	"last_class_success" => refresh_user_bool($source, "last_class_success", false),
 
-	"school_period" => refresh_user_value($user, "school_period", ""),
-	"chosen_class" => refresh_user_value($user, "chosen_class", ""),
-	"month" => refresh_user_value($user, "month", ""),
-	"other_month_day" => refresh_user_value($user, "other_month_day", ""),
-	"day" => refresh_user_value($user, "day", ""),
-	"chosen_specialty" => refresh_user_value($user, "chosen_specialty", ""),
+	"school_period" => refresh_user_value($source, "school_period", ""),
+	"chosen_class" => refresh_user_value($source, "chosen_class", ""),
+	"month" => refresh_user_value($source, "month", ""),
+	"other_month_day" => refresh_user_value($source, "other_month_day", ""),
+	"day" => refresh_user_value($source, "day", ""),
+	"chosen_specialty" => refresh_user_value($source, "chosen_specialty", ""),
 
-	"is" => refresh_user_value($user, "is", ""),
-	"send_school_report" => refresh_user_bool($user, "send_school_report", false),
-	"intranet_access" => refresh_user_bool($user, "intranet_access", false),
+	"is" => refresh_user_value($source, "is", ""),
+	"send_school_report" => refresh_user_bool($source, "send_school_report", false),
+	"intranet_access" => refresh_user_bool($source, "intranet_access", false),
 
-	"is" => refresh_user_value($user, "is", ""),
-	"first_name" => refresh_user_first_name($user),
-	"family_name" => refresh_user_family_name($user),
-	"mail" => refresh_user_value($user, "mail", ""),
-	"phone" => refresh_user_value($user, "phone", ""),
-	"address" => refresh_user_value($user, ["address", "street_name"], ""),
-    ]);
+	"is" => refresh_user_value($source, "is", ""),
+	"first_name" => refresh_user_first_name($source),
+	"family_name" => refresh_user_family_name($source),
+	"mail" => refresh_user_value($source, "mail", ""),
+	"courriel" => refresh_user_value($source, "mail", ""),
+	"phone" => refresh_user_value($source, "phone", ""),
+	"address" => refresh_user_value($source, ["address", "street_name"], ""),
+	"jury" => (user_profile_status($user["profile_status"] ?? "") == "jury"),
+    ];
+
+    if (function_exists("jury_user_title_context") && isset($user["id"]))
+	$fields = array_merge($fields, jury_user_title_context($user["id"]));
+    return ($fields);
 }
 
 function refresh_user($user, $file = NULL, array $extra = [])
@@ -124,14 +135,22 @@ function refresh_user($user, $file = NULL, array $extra = [])
     {
 	if (!isset($user["codename"]) || $user["codename"] == "")
 	    return (new ErrorResponse("MissingCodeName"));
-	$file = $Configuration->UsersDir($user["codename"])."admin/identity.dab";
+	$file = $Configuration->UsersDir($user["codename"])."admin/description.dab";
     }
-    $target = "user";
     $fields = refresh_user_fields($user);
     $fields = array_merge($fields, $extra);
+    $identity = trim(($fields["first_name"] ?? "")." ".($fields["family_name"] ?? ""));
+    if ($identity == "")
+	$identity = $user["codename"] ?? "";
+    if (!isset($fields["identity"]) || $fields["identity"] == "")
+	$fields["identity"] = $identity;
+    if (!isset($fields["name"]) || $fields["name"] == "")
+	$fields["name"] = $identity;
+    if (!isset($fields["street"]) || $fields["street"] == "")
+	$fields["street"] = $fields["address"] ?? "";
+    if (!isset($fields["postal_city"]) || $fields["postal_city"] == "")
+	$fields["postal_city"] = trim(($fields["postal_code"] ?? "")." ".($fields["city"] ?? ""));
     $fields = refresh_user_clean_dabsic_values($fields);
-    return (generate_dabsic([
-	$target => $fields
-    ], $file));
+    return (generate_dabsic($fields, $file));
 }
 

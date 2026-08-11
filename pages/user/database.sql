@@ -22,24 +22,27 @@ CREATE TABLE `user` (
   -- Informations personnelles
   `nickname` varchar(255) DEFAULT NULL,
   `first_name` tinytext DEFAULT NULL,
+  `use_name` tinytext DEFAULT NULL,
   `family_name` tinytext DEFAULT NULL,
+  `gender` varchar(32) DEFAULT NULL,
   `birth_date` datetime DEFAULT NULL,
+  `nationality` tinytext DEFAULT NULL,
   `phone` text DEFAULT NULL,
   `address_name` text DEFAULT NULL,
   `street_name` text DEFAULT NULL,
   `postal_code` text DEFAULT NULL,
   `city` text DEFAULT NULL,
   `country` text DEFAULT NULL,
+  `administrative_data` longtext NOT NULL DEFAULT '{}' COMMENT 'Données administratives et contexte documentaire dynamique au format JSON.',
   `bookbail` datetime DEFAULT NULL,
 
-  `ìne` varchar(11) DEFAULT NULL,
+  `ine` varchar(11) DEFAULT NULL,
   `objectives` text DEFAULT NULL,
   `current_class` int(11) DEFAULT NULL,
   `target_class` int(11) DEFAULT NULL,
   `target_entry` int(11) DEFAULT NULL,
-  `prefered_hour` varchar(128) DEFAULT NULL,
-  `prospect` int(11) NOT NULL DEFAULT 0
-
+  `remote` varchar(128) DEFAULT NULL,
+  `profile_status` enum('member', 'prospect', 'enterprise_contact', 'jury', 'extern') COLLATE utf8_bin NOT NULL DEFAULT 'member'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `user_cycle` (
@@ -109,7 +112,7 @@ CREATE TABLE `parent_child` (
   KEY `id_parent` (`id_parent`),
   `id_child` int(11) NOT NULL,
   KEY `id_child` (`id_child`),
-  `relation` int(11) DEFAULT NULL
+  `relation` set('financial','legal','emergency','internship') NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `comment` (
@@ -123,4 +126,52 @@ CREATE TABLE `comment` (
   `comment_date` datetime NOT NULL DEFAULT current_timestamp(),
   `content` text NOT NULL,
   `deleted` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `user_form` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
+  `id_creator` int(11) NOT NULL,
+  KEY `id_creator` (`id_creator`),
+  `recipient_mail` varchar(320) DEFAULT NULL,
+  `recipient_name` varchar(255) DEFAULT NULL,
+  `kind` varchar(32) NOT NULL,
+  `token_hash` char(64) NOT NULL,
+  UNIQUE KEY `token_hash` (`token_hash`),
+  `fields` longtext NOT NULL DEFAULT '{}',
+  `answers` longtext NOT NULL DEFAULT '{}',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL,
+  `last_saved_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `revoked_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+CREATE TABLE `user_form_signature_evidence` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_form` int(11) NOT NULL,
+  KEY `id_form` (`id_form`),
+  `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
+  `signature_group` varchar(128) NOT NULL,
+  `signed_at` datetime(6) NOT NULL,
+  `recipient_mail` varchar(320) NOT NULL DEFAULT '',
+  `signatory_name` varchar(255) NOT NULL DEFAULT '',
+  `client_ip` varchar(255) NOT NULL DEFAULT '',
+  `user_agent` text NOT NULL,
+  `consent_version` varchar(64) NOT NULL,
+  `consent_text` text NOT NULL,
+  `schema_sha256` char(64) NOT NULL,
+  `answers_sha256` char(64) NOT NULL,
+  `signature_sha256` char(64) NOT NULL,
+  `evidence_sha256` char(64) NOT NULL,
+  `signature_file` text NOT NULL,
+  `evidence` longtext NOT NULL,
+  UNIQUE KEY `form_signature_group` (`id_form`, `signature_group`),
+  KEY `evidence_sha256` (`evidence_sha256`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

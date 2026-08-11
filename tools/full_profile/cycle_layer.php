@@ -42,10 +42,15 @@ class CycleLayer extends Layer
 	{
 	    $this->school = db_select_all("
 		school.*,
-		school.{$Language}_name as name
+		organization.fr_name as fr_name,
+		organization.en_name as en_name,
+		organization.legal_name as legal_name,
+		COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name
 		FROM school_cycle
 		LEFT JOIN school
 		ON school.id = school_cycle.id_school
+		LEFT JOIN organization
+		ON organization.id = school.id_organization
 		WHERE school_cycle.id_cycle = $this->id
 	    ");
 	}
@@ -109,11 +114,14 @@ class CycleLayer extends Layer
 		if ($module->user_team)
 		{
 		    $sub->id_team = $module->user_team["id"];
-		    $sub->commentaries = "";
-		    if ($module->commentaries)
-			$sub->commentaries .= $module->commentaries["content"]."\n";
-		    if ($module->user_commentaries)
-			$sub->commentaries .= $module->user_commentaries["content"];
+		    $commentaries = [];
+		    // Toujours présenter le commentaire de l'équipe avant le
+		    // commentaire individuel porté par user_team.
+		    if ($module->commentaries && trim($module->commentaries["content"]) != "")
+			$commentaries[] = $module->commentaries["content"];
+		    if ($module->user_commentaries && trim($module->user_commentaries["content"]) != "")
+			$commentaries[] = $module->user_commentaries["content"];
+		    $sub->commentaries = implode("\n\n", $commentaries);
 		    $sub->bonus_grade_a = $module->bonus_grade_a;
 		    $sub->bonus_grade_b = $module->bonus_grade_b;
 		    $sub->bonus_grade_c = $module->bonus_grade_c;

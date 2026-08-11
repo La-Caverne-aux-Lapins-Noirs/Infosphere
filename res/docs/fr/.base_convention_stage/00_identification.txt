@@ -1,0 +1,64 @@
+
+# Parties prenantes
+
+Le présent contrat d'inscription est conclu entre les parties:
+
+## Etablissement
+
+[#Size;1]
+Raison sociale : [#FLine;[#Variable;School.LegalName]]
+SIRET : [#FLine;[#Variable;School.SIRET]]
+Adresse du siège social : [#FLine;[#Variable;School.LegalAddress]]
+Représenté par : [#FLine;[#Variable;School.Representative]]
+Fonction exercée : [#FLine;[#Variable;School.Role]]
+
+[#Variable;School.SchoolInfo]
+[#Variable;School.FormationInfo]
+
+Courriel : [#FLine;[#Variable;School.Courriel]]
+Téléphone : [#FLine;[#Variable;School.Phone]]
+
+## Organisme d'acceuil
+
+[#Size;1]
+Raison sociale : [#FLine;[#Variable;Company.LegalName]]
+SIRET : [#FLine;[#Variable;Company.SIRET]]
+Adresse du siège social : [#FLine;[#Variable;Company.LegalAddress]]
+Représenté par : [#FLine;[#Variable;Company.Representative]]
+Fonction exercée : [#FLine;[#Variable;Company.Role]]
+
+Courriel : [#FLine;[#Variable;Company.Courriel]]
+Téléphone : [#FLine;[#Variable;Company.Phone]]
+
+## Stagiaire
+
+Identité : [#FLine;[#Variable;Student.FirstName] [#Variable;Student.FamilyName]]
+Adresse : [#FLine;[#Variable;Student.Address]]
+Courriel : [#FLine;[#Variable;Student.Courriel]]
+
+Téléphone : [#FLine;[#Variable;Student.Phone]]
+Date de naissance : [#FLine;[#Variable;Student.BirthDate]]
+Lieu de naissance : [#FLine;[#Variable;Student.BirthPlace]]
+Nom de code élève : [#FLine;[#Variable;Student.Codename]]
+Identifiant élève : [#FLine;[#Variable;Student.Id]]
+INE : [#FLine;[#Variable;Student.INE]]
+NIR : [#FLine;[#Variable;Student.NIR]]
+
+Année en cours : [#FLine;[#Variable;Student.CurrentCurriculum] [#Variable;Student.CurrentYear]]
+
+## Responsables du stage
+
+### Au sein de l'établissement
+
+Identité : [#FLine;[#Variable;School.Tutor.FirstName] [#Variable;School.Tutor.FamilyName]]
+Fonction exercée : [#FLine;[#Variable;School.Tutor.Role]]
+Courriel :  [#FLine;[#Variable;School.Tutor.Mail]]
+Téléphone :  [#FLine;[#Variable;School.Tutor.Phone]]
+
+### Au sein de l'organisme d'acceuil
+
+Identité : [#FLine;[#Variable;Company.Tutor.FirstName] [#Variable;Company.Tutor.FamilyName]]
+Fonction exercée : [#FLine;[#Variable;Company.Tutor.Role]]
+Courriel :  [#FLine;[#Variable;Company.Tutor.Mail]]
+Téléphone :  [#FLine;[#Variable;Company.Tutor.Phone]]
+

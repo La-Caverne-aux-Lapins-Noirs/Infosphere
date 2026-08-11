@@ -1,0 +1,81 @@
+<?php
+$tree_categories = correction_categories();
+$tree_children = correction_category_children_map();
+$tree_assets = correction_assets_by_category();
+
+function correction_render_tree_category($category, $children, $assets)
+{
+    $category_id = (int)$category['id'];
+    $has_children = !empty($children[$category_id]) || !empty($assets[$category_id]);
+?>
+<li class="correction-tree-node correction-tree-folder-node"
+    data-correction-node-type="category"
+    data-correction-node-id="<?=$category_id; ?>"
+    data-correction-category-id="<?=$category_id; ?>"
+    draggable="<?=$category_id == 1 ? 'false' : 'true'; ?>">
+    <details open>
+        <summary class="correction-tree-row correction-tree-folder" data-correction-drop-category="<?=$category_id; ?>">
+            <input class="correction-tree-select" type="checkbox" name="category[]" value="<?=$category_id; ?>" onclick="event.stopPropagation();" />
+            <span class="correction-tree-expander" aria-hidden="true"></span>
+            <span class="correction-tree-icon" aria-hidden="true">📁</span>
+            <span class="correction-tree-name"><?=htmlspecialchars($category['name']); ?></span>
+            <code class="correction-tree-path"><?=htmlspecialchars(correction_category_path($category_id)); ?></code>
+            <span class="correction-tree-actions">
+                <button type="button" title="Importer un dossier depuis le système" onclick="return correctionTreeChooseFolder(<?=$category_id; ?>);">Importer un dossier</button>
+                <button type="button" title="Créer un sous-dossier" onclick="return correctionTreePromptDirectory(<?=$category_id; ?>);">＋ dossier</button>
+                <a class="button" href="/api/correction/<?=$category_id; ?>/download_category" title="Télécharger ce dossier en ZIP">Télécharger</a>
+                <button type="button" title="Créer un fichier Dabsic" onclick="return correctionTreePromptFile(<?=$category_id; ?>);">＋ fichier</button>
+                <?php if ($category_id != 1) { ?>
+                    <button type="button" class="danger" title="Supprimer ce dossier et son contenu" onclick="return correctionTreeDeleteCategory(<?=$category_id; ?>, <?=htmlspecialchars(json_encode($category['name']), ENT_QUOTES); ?>);">Supprimer</button>
+                <?php } ?>
+            </span>
+        </summary>
+        <ul class="correction-tree-children<?=$has_children ? '' : ' empty'; ?>">
+            <?php foreach (($children[$category_id] ?? []) as $child) correction_render_tree_category($child, $children, $assets); ?>
+            <?php foreach (($assets[$category_id] ?? []) as $asset) { ?>
+                <li class="correction-tree-node correction-tree-file-node"
+                    data-correction-node-type="asset"
+                    data-correction-node-id="<?=(int)$asset['id']; ?>"
+                    data-correction-category-id="<?=$category_id; ?>"
+                    draggable="true" data-correction-download-url="/api/correction/<?=(int)$asset['id']; ?>/download_asset" data-correction-download-name="<?=htmlspecialchars($asset['filename']); ?>">
+                    <div class="correction-tree-row correction-tree-file<?=$asset['kind'] == 'dabsic' ? ' correction-tree-editable' : ''; ?>"
+                         title="<?=htmlspecialchars($asset['kind'] == 'dabsic' ? 'Double-cliquez pour ouvrir dans l’éditeur Dabsic — '.$asset['relative_path'] : $asset['relative_path']); ?>"
+                         <?php if ($asset['kind'] == 'dabsic') { ?>ondblclick="if (!event.target.closest('button')) return correctionTreeOpenDabsic(<?=htmlspecialchars(json_encode($asset['relative_path']), ENT_QUOTES); ?>);"<?php } ?>>
+                        <input class="correction-tree-select" type="checkbox" name="asset[]" value="<?=(int)$asset['id']; ?>" onclick="event.stopPropagation();" />
+                        <span class="correction-tree-expander" aria-hidden="true"></span>
+                        <span class="correction-tree-icon" aria-hidden="true"><?=$asset['kind'] == 'library' ? '🧩' : ($asset['kind'] == 'dabsic' ? '📄' : '📎'); ?></span>
+                        <span class="correction-tree-name"><?=htmlspecialchars($asset['filename']); ?></span>
+                        <span class="correction-tree-kind"><?=$asset['kind'] == 'library' ? 'Bibliothèque' : ($asset['kind'] == 'dabsic' ? 'Dabsic' : 'Ressource'); ?></span>
+                        <span class="correction-tree-actions">
+                            <a class="button" href="/api/correction/<?=(int)$asset['id']; ?>/download_asset">Télécharger</a>
+                            <button type="button" class="danger" onclick="return correctionTreeDeleteAsset(<?=(int)$asset['id']; ?>, <?=htmlspecialchars(json_encode($asset['filename']), ENT_QUOTES); ?>);">Supprimer</button>
+                        </span>
+                    </div>
+                </li>
+            <?php } ?>
+        </ul>
+    </details>
+</li>
+<?php
+}
+?>
+<div class="correction-tree-panel">
+    <div class="correction-tree-toolbar">
+        <button type="button" onclick="correctionTreeExpandAll(true);">Tout dérouler</button>
+        <button type="button" onclick="correctionTreeExpandAll(false);">Tout replier</button>
+        <button type="button" onclick="return correctionTreePromptDirectory(0);">Créer un dossier racine</button>
+        <input id="correction-folder-input" type="file" webkitdirectory multiple hidden onchange="correctionTreeUploadInputFolder(this);" />
+        <button type="button" onclick="return correctionTreeDownloadSelection();">Télécharger la sélection</button>
+        <span>Glissez un fichier ou un dossier sur un dossier pour le déplacer.</span>
+    </div>
+    <div class="correction-tree-root" data-correction-drop-category="0">
+        <div class="correction-tree-root-label">
+            <span class="correction-tree-icon" aria-hidden="true">🗂️</span>
+            <strong>Corrections</strong>
+            <small>Déposez ici un dossier pour le replacer à la racine.</small>
+        </div>
+        <ul class="correction-tree correction-tree-root-list">
+            <?php foreach (($tree_children[0] ?? []) as $category) correction_render_tree_category($category, $tree_children, $tree_assets); ?>
+        </ul>
+    </div>
+</div>

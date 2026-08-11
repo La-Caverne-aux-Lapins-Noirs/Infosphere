@@ -3,6 +3,8 @@
 
 class Layer extends ArrayObject
 {
+    public $LAYER = "";
+    public $school = [];
     public $id = -1;
     public $codename = "";
     public $template_codename = "";

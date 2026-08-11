@@ -1,0 +1,18 @@
+CREATE TABLE `user_form` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
+  `id_creator` int(11) NOT NULL,
+  KEY `id_creator` (`id_creator`),
+  `kind` varchar(32) NOT NULL,
+  `token_hash` char(64) NOT NULL,
+  UNIQUE KEY `token_hash` (`token_hash`),
+  `fields` longtext NOT NULL DEFAULT '{}',
+  `answers` longtext NOT NULL DEFAULT '{}',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL,
+  `last_saved_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `revoked_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -3,12 +3,124 @@
 $date0 = "1970-01-01 00:00:00"; // date("Y-m-d H:i:s", 0);
 $NoLocalisation = new DateTimeZone("Etc/UTC");
 
+function school_base_url_normalize($url)
+{
+    $url = trim((string)$url);
+    if ($url == "")
+        return ("");
+
+    $parts = @parse_url($url);
+    if (!is_array($parts) || !isset($parts["scheme"]) || !isset($parts["host"]))
+        return (false);
+    $scheme = strtolower((string)$parts["scheme"]);
+    if ($scheme != "http" && $scheme != "https")
+        return (false);
+    if (isset($parts["user"]) || isset($parts["pass"]) || isset($parts["query"]) || isset($parts["fragment"]))
+        return (false);
+
+    $host = strtolower(rtrim((string)$parts["host"], "."));
+    if ($host == "")
+        return (false);
+    $port = isset($parts["port"]) ? (int)$parts["port"] : NULL;
+    if (($scheme == "http" && $port === 80) || ($scheme == "https" && $port === 443))
+        $port = NULL;
+
+    $path = isset($parts["path"]) ? preg_replace('#/+#', '/', (string)$parts["path"]) : "";
+    if ($path == "/")
+        $path = "";
+    else if ($path != "")
+        $path = "/".trim($path, "/");
+
+    return ($scheme."://".$host.($port !== NULL ? ":".$port : "").$path);
+}
+
+function school_base_url_route_key($url)
+{
+    if (($url = school_base_url_normalize($url)) === false || $url == "")
+        return (false);
+    $parts = parse_url($url);
+    $port = isset($parts["port"]) ? ":".(int)$parts["port"] : "";
+    $path = isset($parts["path"]) ? rtrim((string)$parts["path"], "/") : "";
+    return (strtolower((string)$parts["host"]).$port.$path);
+}
+
+function school_base_url_is_available($url, $except_school = -1)
+{
+    $key = school_base_url_route_key($url);
+    if ($key === false)
+        return (false);
+    if ($key == "")
+        return (true);
+    if (!function_exists("db_select_rows") || !in_array("base_url", db_select_rows("school")))
+        return (true);
+
+    foreach (db_select_all("id, base_url FROM school WHERE deleted IS NULL AND base_url IS NOT NULL AND TRIM(base_url) != ''") as $school)
+    {
+        if ((int)$school["id"] == (int)$except_school)
+            continue ;
+        if (school_base_url_route_key($school["base_url"]) === $key)
+            return (false);
+    }
+    return (true);
+}
+
+function get_school_from_url()
+{
+    static $done = false;
+    static $selected = NULL;
+
+    if ($done)
+        return ($selected);
+    $done = true;
+    if (!function_exists("db_select_rows") || !in_array("base_url", db_select_rows("school")))
+        return (NULL);
+
+    $host_header = $_SERVER["HTTP_HOST"] ?? ($_SERVER["SERVER_NAME"] ?? "");
+    $request = @parse_url("http://".$host_header);
+    if (!is_array($request) || !isset($request["host"]))
+        return (NULL);
+    $request_host = strtolower(rtrim((string)$request["host"], "."));
+    $request_port = isset($request["port"]) ? (int)$request["port"] : NULL;
+    $request_path = parse_url($_SERVER["REQUEST_URI"] ?? "/", PHP_URL_PATH);
+    if (!is_string($request_path) || $request_path == "")
+        $request_path = "/";
+
+    $best_length = -1;
+    foreach (db_select_all("id, codename, base_url FROM school WHERE deleted IS NULL AND base_url IS NOT NULL AND TRIM(base_url) != ''") as $school)
+    {
+        $normalized = school_base_url_normalize($school["base_url"]);
+        if ($normalized === false || $normalized == "")
+            continue ;
+        $parts = parse_url($normalized);
+        $host = strtolower(rtrim((string)$parts["host"], "."));
+        $port = isset($parts["port"]) ? (int)$parts["port"] : NULL;
+        if ($host !== $request_host || $port !== $request_port)
+            continue ;
+
+        $path = isset($parts["path"]) ? rtrim((string)$parts["path"], "/") : "";
+        if ($path != "" && $request_path !== $path && strpos($request_path, $path."/") !== 0)
+            continue ;
+        if (strlen($path) <= $best_length)
+            continue ;
+        $best_length = strlen($path);
+        $selected = $school;
+        $selected["base_url"] = $normalized;
+    }
+    return ($selected);
+}
+
 function get_school_name_from_url()
 {
-    $url = explode(".", $_SERVER["SERVER_NAME"]);
+    if (($school = get_school_from_url()) !== NULL)
+        return ($school["codename"]);
+
+    $server = $_SERVER["SERVER_NAME"] ?? "";
+    $url = explode(".", $server);
+    if (!count($url) || $url[0] == "")
+        return ("");
     if ($url[0] != "intra") // pour gérer nom_ecole.efrits.fr par exemple.
-	return ($url[0]); // au cas ou nom_ecole soit deja pris.
-    return ($url[count($url) - 2]);
+        return ($url[0]); // au cas ou nom_ecole soit deja pris.
+    return (count($url) >= 2 ? $url[count($url) - 2] : $url[0]);
 }
 
 function random_name()
@@ -584,7 +696,7 @@ function handle_french($body, $encode = true)
     $body = str_replace("ê", "e", $body);
     $body = str_replace("ë", "e", $body);
     $body = str_replace("à", "a", $body);
-    $body = str_replace("ù", "u;", $body);
+    $body = str_replace("ù", "u", $body);
     $body = str_replace("ç", "c", $body);
     $body = str_replace("ï", "i", $body);
     $body = str_replace("î", "i", $body);

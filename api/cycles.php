@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/../tools/attendance_register.php");
+
 function DisplayCycles($id, $data, $method, $output, $module)
 {
     global $Dictionnary;

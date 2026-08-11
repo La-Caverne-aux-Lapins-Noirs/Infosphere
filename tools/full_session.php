@@ -18,11 +18,15 @@ class FullSession
     public $end_minute = NULL;
     public $slot = [];
     public $room = [];
+    public $jury = [];
+    public $jury_loaded = false;
+    public $teacher = [];
     public $db_maximum_subscription = NULL;
     public $maximum_subscription = NULL;
     public $room_space = -1;
     public $room_full = false;
     public $current_occupation = -1;
+    public $full = false;
     public $team = [];
     public $nbr_students = 0;
     public $parent = NULL;
@@ -80,6 +84,9 @@ class FullSession
 	$this->db_maximum_subscription = $this->maximum_subscription;
 
 	$this->room = fetch_link("session", "room", $this->id, true, ["name"])->value;
+	$this->teacher = fetch_session_teachers($this->id, true, true, $this->id_activity, $parent);
+	$this->jury = [];
+	$this->jury_loaded = false;
 	if (count($this->room))
 	    $this->room_space = 0;
 	foreach ($this->room as $k => $rom)

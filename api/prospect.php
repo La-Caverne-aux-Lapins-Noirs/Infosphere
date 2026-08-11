@@ -58,7 +58,7 @@ function ConcludeProspect($id, $data, $method, $output, $module)
     {
 	$Database->query("
 		UPDATE user SET deleted = NOW()
-		WHERE id = $id AND password = ''
+		WHERE id = $id AND profile_status = 'prospect'
 	");
 	return (new ValueResponse(["msg" => $Dictionnary["Deleted"]]));
     }
@@ -66,7 +66,7 @@ function ConcludeProspect($id, $data, $method, $output, $module)
     {
 	$Database->query("
 		UPDATE user SET deleted = NULL
-		WHERE id = $id AND password = ''
+		WHERE id = $id AND profile_status = 'prospect'
 	");
 	return (new ValueResponse(["msg" => $Dictionnary["Restored"]]));
     }
@@ -79,6 +79,70 @@ function ConcludeProspect($id, $data, $method, $output, $module)
     return (new ValueResponse([
 	"msg" => "Contrat généré",
 	"content" => document_builder_public_url($ret->value["output"])
+    ]));
+}
+
+
+
+function GenerateProspectDocument($id, $data, $method, $output, $module)
+{
+    $id = (int)$id;
+    $document = trim((string)($data["document"] ?? ""));
+
+    if ($id <= 0 || $document == "")
+        bad_request();
+
+    if (preg_match('/^contract:(ECL|OF|OFA|CFA)$/', $document, $match))
+    {
+        $ret = build_user_contract($id, $match[1]);
+        $message = "Contrat généré";
+    }
+    else if ($document == "admission:domestic" || $document == "admission:foreign")
+    {
+        $ret = build_admission_certificate($id, [
+            "is_foreign" => ($document == "admission:foreign"),
+            "definitive" => true,
+        ]);
+        $message = "Attestation d’admission générée";
+    }
+    else
+        bad_request();
+
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $message,
+        "content" => document_builder_public_url($ret->value["output"])
+    ]));
+}
+
+function SendProspectRegistrationForm($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $result = registration_form_create_invitation((int)$id, $data["kind"] ?? "", (int)$User["id"]);
+    if (!$result["ok"])
+        return (new ErrorResponse($result["error"], $result["details"] ?? ""));
+    $student = $result["student"];
+    $name = trim(($student["first_name"] ?? "")." ".($student["family_name"] ?? ""));
+    $title = $Dictionnary["RegistrationFormMailTitle"] ?? "Votre dossier d'inscription";
+    $body = sprintf(
+        $Dictionnary["RegistrationFormMailContent"] ?? "Bonjour %s,\n\nVous pouvez compléter votre dossier d'inscription avec le lien suivant, valable quatorze jours :\n%s\n\nVous pouvez sauvegarder un brouillon avant la validation définitive.",
+        $name,
+        $result["url"]
+    );
+    $sent = send_mail($student["mail"], $title, $body);
+    if ($sent->is_error())
+    {
+        // Do not leave a valid but undelivered public link behind.
+        registration_form_revoke_token($result["token"]);
+        return ($sent);
+    }
+    add_log(EDITING_OPERATION, "Registration form sent to user ".(int)$id." for ".$data["kind"]);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["RegistrationFormSent"] ?? "Formulaire d'inscription envoyé.",
+        "content" => $result["url"]
     ]));
 }
 
@@ -122,6 +186,14 @@ $Tab = [
 	"transform" => [
 	    "is_commercial",
 	    "TransformProspect",
+	],
+	"registration" => [
+	    "is_commercial",
+	    "SendProspectRegistrationForm",
+	],
+	"document" => [
+	    "is_commercial",
+	    "GenerateProspectDocument",
 	],
     ],
     "DELETE" => [

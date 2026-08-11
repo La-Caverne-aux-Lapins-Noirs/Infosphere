@@ -15,12 +15,13 @@
 		<link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
 	    <?php } ?>
 	<?php } ?>
-	<?php $current_school_style = isset($User["last_school"]) ? $User["last_school"] : get_school_name_from_url(); ?>
+	<?php $school_from_url = get_school_from_url(); ?>
+	<?php $current_school_style = $school_from_url !== NULL ? $school_from_url["codename"] : (isset($User["last_school"]) ? $User["last_school"] : get_school_name_from_url()); ?>
 	<?php foreach (glob("./style/$current_school_style/*.css") as $css) { ?>
 	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
 	<?php } ?>
-	<?php if (file_exists($icon = "./dres/school/$current_school_style/favicon.png")) { ?>
-	    <link rel="icon" type="image/x-icon" href="<?=$icon; ?>" />
+	<?php if (($icon = school_favicon_path($current_school_style, false)) != "") { ?>
+	    <link rel="icon" type="image/png" href="<?=$icon; ?>?<?=filemtime($icon); ?>" />
 	<?php } ?>
 
 	<title>

@@ -1,0 +1,142 @@
+<?php
+$school_identity_fields = [
+    "address" => "Lieu de formation / adresse de l'établissement",
+    "phone" => "Téléphone établissement",
+    "mail" => "Mail établissement",
+];
+
+$school_registration_fields = [
+    "uai" => "UAI de l'établissement / UFA",
+    "cfa_name" => "Dénomination du CFA",
+    "executing_establishment_name" => "Nom de l'UFA / établissement exécutant",
+    "school_registration_number" => "Numéro rectorat établissement privé",
+    "school_registration_academy" => "Académie rectorat",
+    "formation_activity_number" => "Numéro de déclaration d'activité formation",
+    "formation_activity_region" => "Région de déclaration formation",
+    "alternation_registration_number" => "Numéro CFA",
+    "alternation_registration_academy" => "Académie CFA",
+];
+?>
+
+<div class="school_admin_tab_grid">
+    <form
+        method="put"
+        action="/api/school/<?=$school["id"]; ?>"
+        class="school_admin_card school_admin_form school_admin_block school_admin_full_block"
+        onsubmit="return silent_submitf(this, {after_success: refresh});"
+    >
+        <div class="school_config_columns">
+            <section class="school_config_section">
+                <h4>Organisation liée</h4>
+                <label>
+                    <?=$Dictionnary["CodeName"]; ?> école
+                    <input type="text" value="<?=htmlspecialchars($school["codename"], ENT_QUOTES); ?>" readonly />
+                </label>
+                <label>
+                    Codename société / organisation
+                    <input type="text" name="organization_codename" value="<?=htmlspecialchars($school["organization_codename"] ?? "", ENT_QUOTES); ?>" />
+                </label>
+                <label>
+                    URL de base de l'intranet pour cette école
+                    <input
+                        type="url"
+                        name="base_url"
+                        placeholder="https://intra.ecole.example"
+                        value="<?=htmlspecialchars($school["base_url"] ?? "", ENT_QUOTES); ?>"
+                    />
+                </label>
+                <p class="school_admin_notice">
+                    Les informations société se configurent sur la page
+                    <a href="index.php?p=EnterpriseMenu&amp;a=<?=$school["id_organization"]; ?>">Organisations</a>.
+                    Cette page ne configure que les informations propres à l'établissement et ses logos.
+                </p>
+            </section>
+
+            <section class="school_config_section">
+                <h4>Logos établissement</h4>
+                <div class="school_admin_logo_grid school_admin_logo_grid_compact">
+                    <label class="school_admin_logo_field">
+                        <?=$Dictionnary["SchoolSiteLogo"]; ?>
+                        <?php $site_logo = school_site_logo_path($school, false, true); ?>
+                        <?php $site_logo_version = file_exists($site_logo) ? filemtime($site_logo) : 0; ?>
+                        <div class="school_admin_logo_preview" style="background-image: url('<?=$site_logo; ?>?<?=$site_logo_version; ?>');"></div>
+                        <input type="file" name="icon" accept="image/png,image/jpeg" />
+                    </label>
+                    <label class="school_admin_logo_field">
+                        <?=$Dictionnary["SchoolDocumentLogo"]; ?>
+                        <?php $document_logo = school_document_logo_path($school, false, true); ?>
+                        <?php $document_logo_version = file_exists($document_logo) ? filemtime($document_logo) : 0; ?>
+                        <div class="school_admin_logo_preview" style="background-image: url('<?=$document_logo; ?>?<?=$document_logo_version; ?>');"></div>
+                        <input type="file" name="document_logo" accept="image/png,image/jpeg" />
+                    </label>
+                    <label class="school_admin_logo_field">
+                        Favicon de l'intranet (PNG)
+                        <?php $favicon = school_favicon_path($school, false); ?>
+                        <?php $favicon_version = $favicon != "" && file_exists($favicon) ? filemtime($favicon) : 0; ?>
+                        <div
+                            class="school_admin_logo_preview school_admin_favicon_preview"
+                            <?php if ($favicon != "") { ?>style="background-image: url('<?=$favicon; ?>?<?=$favicon_version; ?>');"<?php } ?>
+                        ></div>
+                        <input type="file" name="favicon" accept="image/png" />
+                    </label>
+                </div>
+            </section>
+
+            <section class="school_config_section">
+                <h4>Coordonnées établissement</h4>
+                <?php foreach ($school_identity_fields as $field => $label) { ?>
+                    <label>
+                        <?=$label; ?>
+                        <?php if ($field == "address") { ?>
+                            <textarea name="<?=$field; ?>"><?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?></textarea>
+                        <?php } else { ?>
+                            <input
+                                type="text"
+                                name="<?=$field; ?>"
+                                value="<?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?>"
+                            />
+                        <?php } ?>
+                    </label>
+                <?php } ?>
+            </section>
+
+            <section class="school_config_section school_config_section_wide">
+                <h4>Numéros administratifs école</h4>
+                <div class="school_admin_legal_grid school_admin_legal_grid_compact">
+                    <?php foreach ($school_registration_fields as $field => $label) { ?>
+                        <label>
+                            <?=$label; ?>
+                            <input
+                                type="text"
+                                name="<?=$field; ?>"
+                                value="<?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?>"
+                            />
+                        </label>
+                    <?php } ?>
+                </div>
+            </section>
+        </div>
+
+        <div class="school_admin_actions">
+            <input
+                type="button"
+                onclick="silent_submitf(this.form, {after_success: refresh});"
+                value="<?=$Dictionnary["Save"]; ?>"
+            />
+        </div>
+    </form>
+
+    <?php if (is_admin()) { ?>
+        <section class="school_admin_card school_admin_danger school_admin_block school_admin_narrow_block">
+            <h4>Zone dangereuse</h4>
+            <?php $confirm = addslashes($Dictionnary["ConfirmDeletion"]); ?>
+            <form method="delete" action="/api/school/<?=$school["id"]; ?>" onsubmit="return false;">
+                <input
+                    type="button"
+                    onclick="if (window.confirm('<?=$confirm; ?>')) silent_submitf(this.parentNode, {after_success: function(){document.location='index.php?p=SchoolMenu';}});"
+                    value="<?=$Dictionnary["DeleteSchool"]; ?>"
+                />
+            </form>
+        </section>
+    <?php } ?>
+</div>

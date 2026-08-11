@@ -1,6 +1,6 @@
 <?php
 
-function get_login_info($login, $password, $clear_password=true)
+function get_login_info($login, $password, $clear_password=true, $refresh_cookies=true)
 {
     global $Database;
     global $albedo;
@@ -29,7 +29,8 @@ function get_login_info($login, $password, $clear_password=true)
 
     $usr["children"] = db_select_all("
        user.codename as codename,
-       parent_child.id_child as id
+       parent_child.id_child as id,
+       parent_child.relation as relation
        FROM parent_child
        LEFT JOIN user ON parent_child.id_child = user.id
        WHERE parent_child.id_parent = ".$usr["id"]."
@@ -44,7 +45,7 @@ function get_login_info($login, $password, $clear_password=true)
     unset($usr["password"]);
     unset($usr["salt"]);
     unset($usr["local_salt"]);
-    if (!UNIT_TEST && !isset($albedo))
+    if ($refresh_cookies && !UNIT_TEST && !isset($albedo))
     {
 	set_cookie("login", $login, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore
 	set_cookie("password", $cookiehash, time() + 365 * 24 * 60 * 60); // @codeCoverageIgnore

@@ -3,7 +3,7 @@ $scale = db_select_all("
   id,
   codename,
   tag,
-  ${Language}_name as name,
+  {$Language}_name as name,
   last_edit_date
   FROM scale
   WHERE deleted = 0

@@ -1,0 +1,99 @@
+
+[@NewPage]
+
+# Programme
+
+### Modules
+
+[@Size;2]
+Les syllabus décrivant les formations de l'EFRITS sont disponibles en annexe.
+
+[#IfC;Certification;!=;;
+### Certification
+
+[#Variable;Certification]
+]
+
+[#IfC;Ecole;==;0;
+### Effectifs
+
+[@Size;2]
+Un session de formation (promotion/groupe) comporte jusqu'à 20 Apprenants du même niveau.
+Un unique Apprenant suffit à l'ouverture d'une session de formation.
+
+]
+
+### Durée
+
+[@Size;2]
+[@Columns;2;
+Un trimestre de formation suivi à l’EFRITS, hors période en entreprise, s’étend sur douze (12) semaines.
+Ces douze semaines sont réparties selon les périodes pédagogiques décrites ci-après. L’EFRITS est ouverte
+du lundi au vendredi, de 9 h 15 à 18 h, avec une pause déjeuner de 13 h à 14 h. Les horaires de formation sont
+fixés par le calendrier d’activités de chaque Apprenant. Le volume horaire moyen d’un trimestre est de quatre
+cent vingt (420) heures. Ce volume est donné à titre indicatif et peut varier en fonction du calendrier des
+activités, notamment des évaluations, des projets, des interventions et des jours fériés, dans le respect
+des objectifs pédagogiques de la formation. Les cursus sont organisés de la manière suivante :
+]
+
+[@Size;4]
+- Les formations EF1, EF2X, EF3X et EF5 comportent quatre (4) trimestres suivis à l’EFRITS.
+- Les formations EF2 et EF4 comportent quatre (4) trimestres, dont deux (2) suivis à l’EFRITS et deux (2) pouvant être consacrés à un passage en entreprise.
+- La formation EF3 comporte quatre (4) trimestres, dont trois (3) suivis à l’EFRITS et un (1) pouvant être consacré à un passage en entreprise.
+
+
+
+[#IfC;NoPaiement;==;0;
+[@Size;2]
+[@Columns;1;
+Lorsqu’ils sont réalisés, les passages en entreprise font l’objet d’une convention de stage.
+
+En cas de réamorce, dans les conditions prévues à l’article P15, certaines ou la totalité des
+périodes pouvant être consacrées à un passage en entreprise peuvent être remplacées par des activités de rattrapage.
+]
+
+]
+
+### Hyperespace
+
+[@Size;2]
+L'Hyperespace dure 2 semaines.
+- Des activités sont réalisées tous les jours pour le lendemain.
+- Il y a des travaux à réaliser sur le week-end. [#IfC;NoPaiement;==;1;Ces activités sont optionnelles.]
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h. [#IfC;NoPaiement;==;1;Ces activités sont optionnelles.]
+
+### Période dirigée
+
+[@Size;2]
+La période dirigée dure 5 semaines.
+- Des travaux pratiques ont lieu tous les matins du lundi au vendredi de 9h15 à 13h.
+- Une évaluation en équipe peut avoir lieu le mercredi de 14h à 18h.
+- Les activités d'expression et de langue occupent une après-midi de la semaine.
+- Trois (3) à six (6) mini-projets peuvent avoir lieu sur la période dirigée.
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h.
+- L'absence d'activité sur le calendrier est du temps disponible pour la réalisation
+des projets et ce temps est encadré par l'EFRITS à la demande.
+
+### Période libre
+
+[@Size;2]
+La période libre dure 5 semaines.
+
+- Une évaluation en équipe peut avoir lieu le mercredi de 14h à 18h.
+- Les activités d'expression et de langue occupent une après-midi de la semaine.
+- Deux (2) à trois (3) projets peuvent avoir lieu sur la période libre.
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h.
+- L'absence d'activité sur le calendrier est du temps disponible pour la réalisation
+des projets et ce temps est encadré par l'EFRITS à la demande.
+
+### Congés
+
+[@Size;2]
+La période de congé est située entre les trimestres. Les congés durent d'une (1)
+à trois (3) semaines.
+
+### Exceptions
+
+[@Size;2]
+Le premier trimestre de chaque formation est plus long d’une (1) semaine -
+la période d’Hyperespace est prolongée d’autant.

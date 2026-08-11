@@ -21,7 +21,10 @@ else
 		<?=$Dictionnary["Late"]; ?><?=$late; ?>
 	    </span>
 	<?php } else if ($cteam["present"] == -2) { ?>
-	    <span style="color: red;"><?=$Dictionnary["Missing"]; ?></span>
+	    <span style="color: red;">
+		<?=$Dictionnary["Missing"]; ?>
+		<?php if (!empty($cteam["absence_justified"])) { ?>(justifiée)<?php } ?>
+	    </span>
 	<?php } ?>
     </div>
 <?php } ?>
@@ -88,6 +91,22 @@ else
 			     "
 		/>
 	    </form>
+	    <?php if ((int)$cteam["present"] == -2) { ?>
+		<form
+		    method="put"
+		    action="/api/instance/<?=$activity->id; ?>/declare/<?=$cteam["id"]; ?>/<?=empty($cteam["absence_justified"]) ? "justify" : "unjustify"; ?>"
+		    onsubmit="return <?=$js; ?>"
+		    style="display: inline-block;"
+		>
+		    <input
+			type="button"
+			onclick="<?=$js; ?>"
+			value="<?=empty($cteam["absence_justified"]) ? "Justifier" : "Justifiée"; ?>"
+			title="<?=empty($cteam["absence_justified"]) ? "Marquer cette absence comme justifiée" : "Retirer la justification de cette absence"; ?>"
+			style="height: 30px;"
+		    />
+		</form>
+	    <?php } ?>
 	</div>
     <?php } ?>
 <?php } ?>

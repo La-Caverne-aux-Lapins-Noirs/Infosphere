@@ -1,0 +1,12 @@
+<?php
+if (!isset($session) || !is_object($session))
+    return ;
+if (function_exists("ensure_session_juries"))
+    ensure_session_juries($session);
+?>
+<div class="session_jury_editor" id="session_juries_<?=$session->id; ?>">
+    <?php list_of_links(session_jury_link_params($session)); ?>
+    <?php if (!count($session->jury)) { ?>
+        <span class="smalltext"><?=$Dictionnary["NoSessionJury"] ?? "Aucun jury associé à cette session."; ?></span>
+    <?php } ?>
+</div>

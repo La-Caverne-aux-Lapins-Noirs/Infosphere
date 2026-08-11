@@ -15,6 +15,9 @@ if (isset($_GET["modules"]) && (is_admin() || $user->id == $User["id"]))
     return ;
 }
 $user = get_full_profile($user, [
+    // Le profil est construit pour un élève précis : ne charger que son
+    // user_team afin de récupérer sans ambiguïté ses commentaires.
+    "only_user",
     "cycle_teacher",
     "cycle_school",
     // "activity_presence",
@@ -115,7 +118,9 @@ $cache = json_decode($user->cache);
 		$Dictionnary["Files"] => __DIR__."/files.phtml"
 	    ];
 	    if (is_director_for_student($user->id))
-		$panel[$Dictionnary["Letters"]] = __DIR__."/letters.phtml";
+		$panel[$Dictionnary["Documentation"]] = __DIR__."/documentation.phtml";
+	    if (is_director_for_student($user->id))
+		$panel[$Dictionnary["Logs"]] = __DIR__."/logs.phtml";
 	    tabpanel($panel, $Position.$user->id."datafiles", $Dictionnary["PersonnalInformations"]);
 	    ?>
 	</td></tr></table>

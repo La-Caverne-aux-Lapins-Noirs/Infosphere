@@ -1,0 +1,292 @@
+.dabsic-form-page
+{
+    box-sizing: border-box;
+    width: 100%;
+    min-height: calc(100vh - 145px);
+    padding: 12px 18px 28px 18px;
+}
+
+.dabsic-form-page *,
+.dabsic-form-page *::before,
+.dabsic-form-page *::after
+{
+    box-sizing: border-box;
+}
+
+.dabsic-form-header
+{
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.dabsic-form-header h2
+{
+    margin: 0 0 8px 0;
+}
+
+.dabsic-form-path-line
+{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 3px 0;
+}
+
+.dabsic-form-path-line code,
+.dabsic-form-field code
+{
+    font-family: "Courier New", Courier, monospace;
+}
+
+.dabsic-form-path-line code
+{
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #f0f0f0;
+}
+
+.dabsic-form-path-line small
+{
+    opacity: 0.75;
+}
+
+.dabsic-form-state
+{
+    min-width: 190px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.45);
+    color: #d8d8d8;
+}
+
+.dabsic-form-state.is-dirty
+{
+    background: #9a6500;
+    color: white;
+}
+
+.dabsic-form-state.is-saving
+{
+    background: #275d8c;
+    color: white;
+}
+
+.dabsic-form-state.is-saved
+{
+    background: #27734b;
+    color: white;
+}
+
+.dabsic-form-root
+{
+    max-width: 1150px;
+    margin: 0 auto;
+}
+
+.dabsic-form-introduction
+{
+    margin: 0 0 16px 0;
+    padding: 10px 13px;
+    border-left: 4px solid #16811b;
+    background: rgba(0, 0, 0, 0.42);
+}
+
+.dabsic-form-group
+{
+    margin: 0 0 16px 0;
+    padding: 13px 16px 16px 16px;
+    border: 1px solid rgba(95, 190, 100, 0.45);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.48);
+}
+
+.dabsic-form-group legend
+{
+    padding: 0 8px;
+    color: #8bd58f;
+    font-size: 1.08em;
+    font-weight: bold;
+}
+
+.dabsic-form-field
+{
+    display: grid;
+    grid-template-columns: minmax(230px, 34%) 1fr;
+    align-items: center;
+    gap: 14px;
+    margin: 9px 0;
+}
+
+.dabsic-form-field code
+{
+    overflow-wrap: anywhere;
+    color: #f2d37e;
+}
+
+.dabsic-form-field input
+{
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: #17191d;
+    color: #f3f3f3;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+}
+
+.dabsic-form-field input:focus
+{
+    outline: none;
+    border-color: #74b8ff;
+    box-shadow: 0 0 0 1px rgba(116, 184, 255, 0.45);
+}
+
+.dabsic-form-message
+{
+    display: none;
+    margin: 12px 0;
+    padding: 10px 13px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.dabsic-form-message:not(:empty)
+{
+    display: block;
+}
+
+.dabsic-form-message.is-error
+{
+    display: block;
+    border: 1px solid #a43a3a;
+    background: rgba(125, 20, 20, 0.72);
+    color: white;
+}
+
+.dabsic-form-message.is-success
+{
+    display: block;
+    border: 1px solid #2d8a4f;
+    background: rgba(25, 100, 55, 0.68);
+    color: white;
+}
+
+.dabsic-form-message pre
+{
+    margin: 8px 0 0 0;
+    padding: 8px;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.48);
+    color: inherit;
+    font-family: "Courier New", Courier, monospace;
+    white-space: pre-wrap;
+}
+
+.dabsic-form-actions
+{
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 11px 0 4px 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), #020702 35%);
+}
+
+.dabsic-form-save
+{
+    min-width: 180px;
+    min-height: 34px;
+    border: 1px solid #237d29;
+    border-radius: 4px;
+    background: #0a4c0e;
+    color: white;
+    cursor: pointer;
+}
+
+.dabsic-form-root.is-dirty .dabsic-form-save
+{
+    border-color: #ffb23c;
+    background: #a76600;
+}
+
+.dabsic-form-save:disabled
+{
+    cursor: default;
+    opacity: 0.45;
+}
+
+@media (max-width: 760px)
+{
+    .dabsic-form-header,
+    .dabsic-form-actions
+    {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dabsic-form-field
+    {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+}
+
+.dabsic-form-overrides-help
+{
+    margin: 0 0 10px 0;
+    opacity: 0.82;
+}
+
+.dabsic-form-override-row
+{
+    display: grid;
+    grid-template-columns: minmax(220px, 34%) 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin: 7px 0;
+}
+
+.dabsic-form-override-row input
+{
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: #17191d;
+    color: #f3f3f3;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+}
+
+.dabsic-form-override-add,
+.dabsic-form-override-remove
+{
+    min-height: 32px;
+    padding: 5px 10px;
+}
+
+.dabsic-form-override-remove
+{
+    background: #7f1111;
+}
+
+@media (max-width: 760px)
+{
+    .dabsic-form-override-row
+    {
+        grid-template-columns: 1fr;
+    }
+}

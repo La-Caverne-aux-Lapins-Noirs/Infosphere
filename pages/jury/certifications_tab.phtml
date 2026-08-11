@@ -1,0 +1,101 @@
+<?php
+if (!isset($jury_titles))
+    $jury_titles = fetch_jury_titles();
+if (!isset($certification_skills))
+    $certification_skills = fetch_certification_skills();
+?>
+<div class="jury_page jury_certification_page">
+    <section class="jury_card jury_titles_card">
+        <h3><?=$Dictionnary["Certifications"] ?? "Certifications"; ?></h3>
+        <form class="jury_title_add_form" method="post" action="/api/certification/-1/title" onsubmit="return certification_submit(this, {clear_form: true});">
+            <div class="jury_field">
+                <label><?=$Dictionnary["CodeName"] ?? "Nom de code"; ?></label>
+                <input type="text" name="codename" />
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["CertificationCode"] ?? "Code certification"; ?></label>
+                <input type="text" name="code" />
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["FrenchName"] ?? "Nom français"; ?></label>
+                <input type="text" name="fr_name" />
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["EnglishName"] ?? "Nom anglais"; ?></label>
+                <input type="text" name="en_name" />
+            </div>
+            <div class="jury_field certification_skill_links_field">
+                <label><?=$Dictionnary["RequiredSkills"] ?? "Compétences requises"; ?></label>
+                <input type="text" name="skills" placeholder="competence;+autre;-ancienne" />
+            </div>
+            <div class="jury_form_actions jury_title_add_action">
+                <input type="submit" value="<?=$Dictionnary["Add"] ?? "Ajouter"; ?>" />
+            </div>
+        </form>
+    </section>
+
+    <section class="jury_card jury_title_list_card">
+        <?php if (!count($jury_titles)) { ?>
+            <p class="smalltext"><?=$Dictionnary["NoCertification"] ?? "Aucune certification n'est encore renseignée."; ?></p>
+        <?php } else { ?>
+            <div class="jury_title_list">
+                <?php foreach ($jury_titles as $title) { ?>
+                    <?php
+                    $skill_codenames = [];
+                    foreach ($title["skills"] ?? [] as $skill)
+                        $skill_codenames[] = $skill["codename"];
+                    ?>
+                    <div class="jury_title_row">
+                        <form method="put" action="/api/certification/<?=$title["id"]; ?>/title" onsubmit="return certification_submit(this);">
+                            <div class="jury_title_code">
+                                <label><?=$Dictionnary["CodeName"] ?? "Nom de code"; ?></label>
+                                <code><?=htmlentities($title["codename"]); ?></code>
+                            </div>
+                            <div class="jury_field">
+                                <label><?=$Dictionnary["CertificationCode"] ?? "Code certification"; ?></label>
+                                <input type="text" name="code" value="<?=htmlentities($title["code"] ?? ""); ?>" />
+                            </div>
+                            <div class="jury_field">
+                                <label><?=$Dictionnary["FrenchName"] ?? "Nom français"; ?></label>
+                                <input type="text" name="fr_name" value="<?=htmlentities($title["fr_name"] ?? ""); ?>" />
+                            </div>
+                            <div class="jury_field">
+                                <label><?=$Dictionnary["EnglishName"] ?? "Nom anglais"; ?></label>
+                                <input type="text" name="en_name" value="<?=htmlentities($title["en_name"] ?? ""); ?>" />
+                            </div>
+                            <div class="jury_field certification_skill_links_field">
+                                <label><?=$Dictionnary["EditRequiredSkills"] ?? "Ajouter / retirer des compétences"; ?></label>
+                                <input type="text" name="skills" placeholder="competence;+autre;-ancienne" />
+                            </div>
+                            <?php if (count($title["skills"] ?? [])) { ?>
+                                <div class="jury_form_block certification_skill_picker">
+                                    <div class="jury_form_block_title"><?=$Dictionnary["LinkedSkills"] ?? "Compétences liées"; ?></div>
+                                    <div class="jury_linked_skill_list">
+                                        <?php foreach ($title["skills"] as $skill) { ?>
+                                            <div class="jury_linked_skill">
+                                                <div class="jury_linked_skill_label">
+                                                    <code><?=htmlentities($skill["codename"]); ?></code>
+                                                    <span><?=htmlentities(certification_skill_name($skill)); ?></span>
+                                                </div>
+                                                <div class="jury_field jury_skill_reference_field">
+                                                    <label><?=$Dictionnary["SkillReference"] ?? "Référence"; ?></label>
+                                                    <input type="text" name="skill_reference_<?=$skill["id"]; ?>" value="<?=htmlentities($skill["reference"] ?? ""); ?>" />
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <div class="jury_form_actions jury_title_row_actions">
+                                <input type="submit" value="<?=$Dictionnary["Save"] ?? "Enregistrer"; ?>" />
+                            </div>
+                        </form>
+                        <form method="delete" action="/api/certification/<?=$title["id"]; ?>/title" onsubmit="return window.confirm('<?=$Dictionnary["ConfirmDeletion"] ?? "Confirmer la suppression ?"; ?>') && certification_submit(this);">
+                            <input type="submit" value="×" />
+                        </form>
+                    </div>
+                <?php } ?>
+            </div>
+        <?php } ?>
+    </section>
+</div>

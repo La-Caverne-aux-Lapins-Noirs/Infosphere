@@ -15,6 +15,7 @@ if ($Position == "BillingInvoiceMenu")
 $students = billing_fetch_students();
 $templates = billing_fetch_templates();
 $schedule_labels = billing_schedule_labels();
+$invoice_type_labels = billing_invoice_types();
 
 function billing_e($str)
 {
@@ -178,7 +179,8 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
         $amount = max(1, (int)$entry["amount"]);
         $covered_amount = max(0, min((int)$covered_amount, $amount));
         $tooltip .= $Dictionnary["InvoiceIssued"]." : ".billing_date_label($entry["sent_date"])."\n".
-            $Dictionnary["Reference"]." : ".$entry["invoice_reference"]."\n";
+            $Dictionnary["Reference"]." : ".$entry["invoice_reference"]."\n".
+            $Dictionnary["BillingInvoiceType"]." : ".billing_invoice_type_label($entry["invoice_type"] ?? "school")."\n";
         $path = billing_invoice_relative_path($entry);
         if ($path != "")
             $tooltip .= $Dictionnary["InvoiceCopySavedIn"]." : ".$path."\n";
@@ -226,7 +228,8 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
         $Dictionnary["DueDate"]." : ".billing_date_label($entry["due_date"])
     );
     $tooltip .= $Dictionnary["InvoicePending"]."\n".
-        $Dictionnary["Reference"]." : ".$ref;
+        $Dictionnary["Reference"]." : ".$ref."\n".
+        $Dictionnary["BillingInvoiceType"]." : ".billing_invoice_type_label($entry["invoice_type"] ?? "school");
     ?>
     <form
         method="put"
@@ -245,6 +248,11 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
             onclick="return billing_open_pending_invoice_menu(this, event);"
         ><?=$month; ?></button>
         <span class="billing_pending_invoice_menu hidden">
+            <a
+                href="/api/billing/<?=$entry["id"]; ?>/invoice"
+                target="_blank"
+                onclick="event.stopPropagation();"
+            ><?=$Dictionnary["ViewInvoice"]; ?></a>
             <button type="button" onclick="return billing_pending_invoice_send(this, event);">
                 <?=$Dictionnary["SendInvoice"]; ?>
             </button>
@@ -296,6 +304,7 @@ function billing_render_timeline($student)
     global $Dictionnary;
     global $templates;
     global $schedule_labels;
+    global $invoice_type_labels;
 
     $id_user = (int)$student["id"];
     $paid_entry_ids = billing_paid_entry_ids_for_user($id_user);
@@ -375,6 +384,11 @@ function billing_render_timeline($student)
                 <form method="post" action="/api/billing/-1/entry" onsubmit="return billing_submit_and_refresh(this);">
                     <input type="hidden" name="id_user" value="<?=$id_user; ?>" />
                     <input type="text" name="label" placeholder="<?=$Dictionnary["BillingLabel"]; ?>" />
+                    <select name="invoice_type">
+                        <?php foreach ($invoice_type_labels as $key => $label) { ?>
+                            <option value="<?=billing_e($key); ?>"><?=billing_e($label); ?></option>
+                        <?php } ?>
+                    </select>
                     <input type="text" name="amount" placeholder="<?=$Dictionnary["EuroAmount"]; ?>" />
                     <input type="date" name="due_date" value="<?=date('Y-m-d'); ?>" />
                     <input type="button" onclick="billing_submit_and_refresh(this);" value="<?=$Dictionnary["AddBillableAmount"]; ?>" />
@@ -387,7 +401,7 @@ function billing_render_timeline($student)
                         <select name="id_template">
                             <?php foreach ($templates as $template) { ?>
                                 <option value="<?=$template["id"]; ?>">
-                                    <?=billing_e(($template["school_codename"] ? $template["school_codename"]." - " : "").$template["name"]); ?>
+                                    <?=billing_e(($template["school_codename"] ? $template["school_codename"]." - " : "")."[".billing_invoice_type_label($template["invoice_type"] ?? "school")."] ".$template["name"]); ?>
                                 </option>
                             <?php } ?>
                         </select>

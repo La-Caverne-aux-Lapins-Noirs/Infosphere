@@ -82,7 +82,6 @@ function error_backtrace($errno, $errstr, $errfile, $errline)
     {
 	case E_WARNING      :
 	case E_USER_WARNING :
-	case E_STRICT       :
 	case E_NOTICE       :
 	case E_USER_NOTICE  :
             $type = 'warning';

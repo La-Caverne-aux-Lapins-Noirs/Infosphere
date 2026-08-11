@@ -8,6 +8,10 @@ $Tab = [
 	"" => [
 	    "is_teacher",
 	    "DisplaySession"
+	],
+	"export" => [
+	    "is_teacher_or_director_for_session",
+	    "ExportSessionDescription"
 	]
     ],
     "PUT" => [
@@ -18,12 +22,24 @@ $Tab = [
 	"room" => [
 	    "is_teacher_or_director_for_session",
 	    "SetSessionRoom"
+	],
+	"jury" => [
+	    "is_teacher_or_director_for_session",
+	    "SetSessionJury"
 	]
     ],
     "POST" => [
 	"" => [
 	    "is_teacher", // Ca devrait etre le prof de l'activité...
 	    "AddSession"
+	],
+	"import" => [
+	    "is_teacher",
+	    "ImportSessionDescription"
+	],
+	"jury" => [
+	    "is_teacher_or_director_for_session",
+	    "SetSessionJury"
 	]
     ],
     "DELETE" => [
@@ -34,6 +50,10 @@ $Tab = [
 	"room" => [
 	    "is_teacher_or_director_for_session",
 	    "SetSessionRoom"
+	],
+	"jury" => [
+	    "is_teacher_or_director_for_session",
+	    "SetSessionJury"
 	]
     ]
 ];

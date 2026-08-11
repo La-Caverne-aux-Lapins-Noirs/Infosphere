@@ -172,7 +172,8 @@
 	<table>
 	    <tr style="border: 0;">
 		<th style="width: 50%;"><h4><b><?=$Dictionnary["Date"]; ?></b></h4></th>
-		<th><h4><b><?=$Dictionnary["Supervision"]; ?></b></h4></th>
+		<th><h4><b><?=$Dictionnary["Teachers"] ?? $Dictionnary["Supervision"]; ?></b></h4></th>
+		<th><h4><b><?=$Dictionnary["Jury"] ?? "Jury"; ?></b></h4></th>
 		<th><h4><b><?=$Dictionnary["Cycle"]; ?></b></h4></th>
 	    </tr>
 	    <tr style="border: 0;"><td>
@@ -214,14 +215,39 @@
 		    <?php } ?>
 		</table>
 	    </td><td>
-		<?php if (count($activity->teacher)) { ?>
-		    <?php foreach ($activity->teacher as $t) { ?>
+		<?php
+		$instance_teachers = $activity->teacher;
+		if ($activity->unique_session && isset($activity->unique_session->teacher))
+		    $instance_teachers = $activity->unique_session->teacher;
+		?>
+		<?php if (count($instance_teachers)) { ?>
+		    <?php foreach ($instance_teachers as $t) { ?>
 			<?php if (substr($t["codename"], 0, 1) == "#") { ?>
 			    <a href="index.php?p=GroupsMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>
 			<?php } else { ?>
 			    <a href="index.php?p=ProfileMenu&amp;a=<?=$t["id"]; ?>"><?=$t["codename"]; ?></a>&nbsp;
 			<?php } ?>
 		    <?php } ?>
+		<?php } else { ?>
+		    /
+		<?php } ?>
+	    </td><td>
+		<?php
+		if ($activity->unique_session && function_exists("ensure_session_juries"))
+		    ensure_session_juries($activity->unique_session);
+		?>
+		<?php if ($activity->unique_session && count($activity->unique_session->jury)) { ?>
+		    <div class="instance_jury_list">
+			<?php foreach ($activity->unique_session->jury as $jury) { ?>
+			    <div class="instance_jury_card">
+				<?php display_avatar($jury, 34, true); ?>
+				<div>
+				    <a href="<?=profile($jury["id"]); ?>"><?=htmlentities(jury_person_name($jury)); ?></a><br />
+				    <span class="smalltext"><?=htmlentities($jury["title_text"] ?? ""); ?></span>
+				</div>
+			    </div>
+			<?php } ?>
+		    </div>
 		<?php } else { ?>
 		    /
 		<?php } ?>

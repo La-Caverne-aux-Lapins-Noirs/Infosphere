@@ -1,0 +1,59 @@
+Document = "SignInSheet"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5]
+    Feuille d'émargement
+  Left]
+  Right = [Text($,Right)
+    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+'TOUT CE QU'IL Y A EN DESSOUS DOIT ETRE AJOUTE DYNAMIQUEMENT
+
+[School
+  Name = ""
+  Title = ""
+]
+
+[Cycle
+  Code = "EF6E"
+  Year = 6
+  Trimester = 5
+  Start = "01/01/1970"
+  End = "01/04/1970"
+  Director = ""
+]
+
+{People
+  [
+    Id = 0
+    INE = ""
+    Name = ""
+    {Dates
+      [
+        Day = ""
+        Morning = false
+        Afternoon = true
+        {Activities
+          [
+            CodeName = ""
+            Name = ""
+            Present = true
+          ]
+        }
+      ]
+    }
+  ]
+}
+

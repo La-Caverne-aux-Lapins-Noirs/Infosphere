@@ -1,0 +1,33 @@
+<?php
+require_once (__DIR__."/user_cards.php");
+
+$school_staff_roles = [
+    ["field" => "director", "label" => "Direction", "admin" => "only_admin"],
+    ["field" => "teacher", "label" => "Enseignement", "admin" => "is_director_for_school"],
+    ["field" => "commercial", "label" => "Commercial", "admin" => "is_director_for_school"],
+    ["field" => "secretariat", "label" => "Secrétariat", "admin" => "is_director_for_school"],
+    ["field" => "librarian", "label" => "Bibliothèque", "admin" => "is_director_for_school"],
+];
+?>
+
+<div class="school_staff_columns">
+    <?php foreach ($school_staff_roles as $role) { ?>
+        <?php
+        $field = $role["field"];
+        $can_manage = @strlen($role["admin"]) && $role["admin"]($school["id"]);
+        ?>
+        <section class="school_admin_card school_staff_column">
+            <h4><?=$role["label"]; ?></h4>
+            <?php school_admin_member_add_form($school["id"], $field, $role["label"], $can_manage); ?>
+            <div class="school_member_cards">
+                <?php if (!count($school[$field])) { ?>
+                    <p class="school_empty_people">Aucun membre.</p>
+                <?php } else { ?>
+                    <?php foreach ($school[$field] as $member) { ?>
+                        <?php school_admin_member_card($school["id"], $field, $member, $can_manage); ?>
+                    <?php } ?>
+                <?php } ?>
+            </div>
+        </section>
+    <?php } ?>
+</div>

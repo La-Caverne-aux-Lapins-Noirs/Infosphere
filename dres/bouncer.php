@@ -11,7 +11,7 @@ function render_file()
     http_response_code(200);
     // Limitons les risques
     if (in_array(pathinfo($_GET["target"], PATHINFO_EXTENSION), [
-	"php", "sh", "pl"
+	"php", "pl"
     ]) !== false)
 	not_found();
     header("Content-Type: ".mime_content_type($_GET["target"]));

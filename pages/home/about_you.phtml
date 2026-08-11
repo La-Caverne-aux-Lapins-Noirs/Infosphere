@@ -10,7 +10,17 @@
     // 8 heures par jour + 4h par week end (l'exam) + 4h le soir par sem)
     // Ca fait 50h par semaine en moyenne. Cela inclu les devoirs.
     // Sachant qu'en math sup, c'est 55-60h, et spé 60-70h d'après les stats.
-    $logcursor = [$wavg, 0, 200, $wtarget];
+    $home_total_hours = 0;
+    for ($home_log_day = 0; $home_log_day < 14; ++$home_log_day)
+    {
+	$home_total_hours += get_student_log(
+	    $User,
+	    now() - $home_log_day * 60 * 60 * 24,
+	    user_log_valid_activity_types()
+	) / (60 * 60);
+    }
+    $home_hour_target = isset($wtarget) ? $wtarget : 100;
+    $logcursor = [$home_total_hours, 0, 200, $home_hour_target];
     require (__DIR__."/../../tools/student_status.php");
 
     $label = $Dictionnary["Presence"];
@@ -60,7 +70,9 @@
 
 <p style="text-align: center;">
     <br />
-    <?php $today_time = get_student_log(); ?>
+    <?php
+    $today_time = get_student_log($User, now(), user_log_valid_activity_types());
+    ?>
     Aujourd'hui, vous avez travaillé <?=(int)($today_time / 60.0 / 60.0); ?> heures, <?=(int)(($today_time / 60.0) % 60); ?> minutes et <?=(int)($today_time % 60); ?> secondes.
     <?php if (($wai = where_am_i()) != []) { ?>
 	<?php $rooms = $trooms = fetch_rooms(-1, true); ?>

@@ -1,0 +1,591 @@
+#body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#body > h2.alignable_blocks {
+    flex: 0 0 auto;
+}
+
+#jury_panel {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 8px 0 8px;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#jury_panel .tabpanel {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#jury_panel .tablist {
+    position: static;
+    flex: 0 0 40px;
+    height: 30px;
+    padding-bottom: 10px;
+}
+
+#jury_panel .tabcontent {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#jury_panel .tabcontent > div {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding-bottom: 20px;
+    scrollbar-color: green darkgreen;
+}
+
+.jury_page {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+}
+
+.jury_juries_page {
+    grid-template-columns: minmax(300px, 0.85fr) minmax(340px, 1.15fr);
+}
+
+.jury_certification_page {
+    grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.jury_card {
+    background: rgba(0, 20, 0, 0.76);
+    border: 1px solid rgba(0, 255, 0, 0.28);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+    color: inherit;
+}
+
+.jury_card h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.jury_list_card,
+.jury_title_list_card {
+    grid-column: 1 / -1;
+}
+
+.jury_form_grid,
+.jury_filter_row,
+.jury_title_add_form,
+.jury_title_row form:first-child {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 12px;
+    align-items: end;
+}
+
+.jury_new_jury_grid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.jury_edit_jury_grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.jury_field,
+.jury_title_code {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.jury_field label,
+.jury_title_code label,
+.jury_form_block_title {
+    font-size: 0.88em;
+    opacity: 0.86;
+}
+
+.jury_title_code code {
+    display: block;
+    min-height: 20px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jury_card input[type="text"],
+.jury_card select,
+.jury_card textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.jury_card textarea {
+    min-height: 54px;
+    resize: vertical;
+}
+
+.jury_form_block {
+    margin-top: 12px;
+}
+
+.jury_form_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.jury_title_add_action,
+.jury_title_row_actions {
+    margin-top: 0;
+    align-self: end;
+}
+
+.jury_title_checkbox_list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.jury_title_checkbox_list label,
+.jury_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(0, 255, 0, 0.12);
+    font-size: 0.9em;
+}
+
+.jury_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.jury_row {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(0, 255, 0, 0.20);
+}
+
+.jury_row_form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin: 0;
+}
+
+.jury_row_avatar img {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.jury_identity_line {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.jury_identity_link {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.jury_row_save,
+.jury_row_archive {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.jury_row_save input,
+.jury_row_archive input,
+.jury_title_row input[type="submit"] {
+    white-space: nowrap;
+}
+
+.jury_sessions_details {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 255, 0, 0.14);
+}
+
+.jury_sessions_details summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.jury_sessions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.jury_sessions ul {
+    margin: 4px 0 0 18px;
+    padding: 0;
+}
+
+.jury_archived {
+    opacity: 0.58;
+}
+
+.jury_archived_badge {
+    background: rgba(120, 0, 0, 0.30);
+}
+
+.jury_title_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.jury_title_row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: end;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(0, 255, 0, 0.20);
+}
+
+.jury_tab_button {
+    box-sizing: border-box;
+}
+
+.session_jury_editor {
+    margin-top: 10px;
+}
+
+.session_jury_editor h5 {
+    margin-bottom: 4px;
+}
+
+.session_jury_add_form {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.session_jury_add_form input[type="text"] {
+    min-width: 0;
+    flex: 1;
+}
+
+.session_jury_list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.session_jury_item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.session_jury_item form {
+    margin-left: auto;
+}
+
+.instance_jury_list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.instance_jury_card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 900px) {
+    .jury_juries_page,
+    .jury_certification_page,
+    .jury_row,
+    .jury_row_form,
+    .jury_title_row {
+        display: block;
+    }
+
+    .jury_card,
+    .jury_row,
+    .jury_title_row {
+        margin-bottom: 12px;
+    }
+
+    .jury_row_avatar {
+        float: left;
+        margin-right: 10px;
+    }
+
+    .jury_form_actions {
+        justify-content: stretch;
+    }
+
+    .jury_form_actions input[type="submit"] {
+        width: 100%;
+    }
+}
+
+.jury_skills_page {
+    grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.jury_skill_add_form,
+.jury_skill_row form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px 12px;
+    align-items: end;
+}
+
+.jury_skill_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.jury_skill_row {
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(0, 255, 0, 0.20);
+}
+
+.certification_skill_picker {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .jury_skills_page,
+    .jury_skill_add_form,
+    .jury_skill_row form {
+        display: block;
+    }
+
+    .jury_skill_row {
+        margin-bottom: 12px;
+    }
+}
+
+.jury_note_field {
+    margin-top: 10px;
+}
+
+.jury_note_field textarea {
+    min-height: 72px;
+}
+
+.jury_skill_requirement {
+    align-items: stretch;
+    flex-direction: column;
+    min-width: 160px;
+}
+
+.jury_skill_requirement span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.jury_skill_requirement input[type="text"] {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Certification page refinements: denser cards, larger skill text boxes. */
+.jury_list,
+.jury_title_list,
+.jury_skill_list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.jury_row,
+.jury_title_row,
+.jury_skill_row {
+    min-width: 0;
+}
+
+.jury_title_row,
+.jury_skill_row {
+    height: 100%;
+}
+
+.jury_title_row form:first-child,
+.jury_skill_row form {
+    grid-template-columns: repeat(2, minmax(170px, 1fr));
+}
+
+.certification_skill_links_field,
+.certification_skill_picker,
+.jury_form_actions,
+.jury_skill_row .jury_field,
+.jury_skill_add_form .jury_field:nth-child(n+2) {
+    grid-column: 1 / -1;
+}
+
+.jury_linked_skill_list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.jury_linked_skill {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(120px, 0.45fr);
+    gap: 8px;
+    align-items: end;
+    padding: 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(0, 255, 0, 0.12);
+}
+
+.jury_linked_skill_label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.jury_linked_skill_label code,
+.jury_linked_skill_label span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jury_skill_add_form textarea,
+.jury_skill_row textarea {
+    min-height: 162px;
+}
+
+@media (max-width: 1200px) {
+    .jury_list,
+    .jury_title_list,
+    .jury_skill_list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .jury_list,
+    .jury_title_list,
+    .jury_skill_list,
+    .jury_linked_skill,
+    .jury_title_row form:first-child,
+    .jury_skill_row form {
+        display: block;
+    }
+}
+
+
+/* Certification page width: keep the tab content full-width and let cards use it. */
+#jury_panel,
+#jury_panel .tabpanel,
+#jury_panel .jury_page,
+#jury_panel .jury_card {
+    max-width: none;
+}
+
+#jury_panel .jury_page {
+    grid-template-columns: 1fr;
+    width: 100%;
+}
+
+#jury_panel .jury_add_card,
+#jury_panel .jury_filter_card,
+#jury_panel .jury_titles_card,
+#jury_panel .jury_skills_card,
+#jury_panel .jury_list_card,
+#jury_panel .jury_title_list_card,
+#jury_panel .jury_skill_list_card {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#jury_panel .jury_list,
+#jury_panel .jury_title_list,
+#jury_panel .jury_skill_list {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#jury_panel .jury_row,
+#jury_panel .jury_title_row,
+#jury_panel .jury_skill_row {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#jury_panel .jury_title_add_form,
+#jury_panel .jury_skill_add_form,
+#jury_panel .jury_filter_row,
+#jury_panel .jury_new_jury_grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+#jury_panel .jury_edit_jury_grid,
+#jury_panel .jury_title_row form:first-child,
+#jury_panel .jury_skill_row form {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+#jury_panel .jury_skills_page textarea,
+#jury_panel .jury_skill_add_form textarea,
+#jury_panel .jury_skill_row textarea {
+    min-height: 180px;
+}
+
+@media (max-width: 1300px) {
+    #jury_panel .jury_list,
+    #jury_panel .jury_title_list,
+    #jury_panel .jury_skill_list {
+        grid-template-columns: 1fr;
+    }
+}

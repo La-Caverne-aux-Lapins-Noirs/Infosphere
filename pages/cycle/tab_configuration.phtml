@@ -1,0 +1,220 @@
+<div class="cycle_admin_grid">
+    <section class="cycle_admin_card cycle_admin_edit">
+	<form
+	    method="put"
+	    action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>"
+	    class="cycle_admin_form"
+	    onsubmit="return silent_submitf(this, {after_success: refresh});"
+	>
+	    <h2><?=$Dictionnary["Edit"]; ?></h2>
+
+	    <div class="cycle_admin_identity_grid">
+		<label>
+		    <?=$Dictionnary["CodeName"]; ?>
+		    <input
+			type="text"
+			name="codename"
+			value="<?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?>"
+			<?=$can_edit_cycle ? "" : "readonly"; ?>
+		    />
+		</label>
+
+		<label>
+		    <?=$Dictionnary["CycleNumber"]; ?>
+		    <select name="year">
+			<?php for ($i = 0; $i < 4 * 5 + 1; ++$i) { ?>
+			    <option value="<?=$i; ?>" <?=$i == $cycle["cycle"] ? "selected" : ""; ?>>
+				<?php if ($i < 4 * 5) { ?>
+				    <?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+				    (<?=$Dictionnary["Year"]; ?> <?=floor($i / 4 + 1); ?>)
+				<?php } else { ?>
+				    <?=$Dictionnary["Cycle"]; ?> <?=$i; ?>
+				    (<?=$Dictionnary["OutOfYear"]; ?>)
+				<?php } ?>
+			    </option>
+			<?php } ?>
+		    </select>
+		</label>
+
+		<label>
+		    <?=$Dictionnary["Objective"]; ?>
+		    <input
+			type="number"
+			name="objective"
+			min="0"
+			value="<?=htmlspecialchars($cycle["objective"], ENT_QUOTES); ?>"
+		    />
+		</label>
+
+		<?php if ($page == "cycle") { ?>
+		    <label>
+			<?=$Dictionnary["FirstWeekDate"]; ?>
+			<input
+			    type="date"
+			    name="first_day"
+			    value="<?=htmlspecialchars(substr(try_get($cycle, "first_day", ""), 0, 10), ENT_QUOTES); ?>"
+			/>
+		    </label>
+		<?php } ?>
+	    </div>
+
+	    <div class="cycle_admin_languages">
+		<?php forge_language_formular($cycle_language_fields, $cycle, "cycle_language_entry"); ?>
+	    </div>
+
+	    <?php if ($page == "cycle") { ?>
+		<label class="cycle_admin_checkbox">
+		    <input type="hidden" name="check_done" value="1" />
+		    <input type="checkbox" name="done" <?=$cycle["done"] ? "checked" : ""; ?> />
+		    <?=$Dictionnary["CycleDone"]; ?>
+		</label>
+	    <?php } ?>
+
+	    <div class="cycle_admin_actions">
+		<input
+		    type="button"
+		    onclick="silent_submitf(this.parentNode.parentNode, {after_success: refresh});"
+		    value="<?=$Dictionnary["Edit"]; ?>"
+		/>
+	    </div>
+	</form>
+    </section>
+
+    <section class="cycle_admin_card cycle_admin_mail">
+	<?php if ($page == "cycle") { ?>
+	    <h2>Courriel groupé (Envoyé en tant que <?=$OriginalUser["codename"]; ?>)</h2>
+
+	    <form
+		method="post"
+		action="/api/cycle/<?=$cycle["id"]; ?>/mail"
+		onsubmit="return silent_submit(this);"
+	    >
+		<label>
+		    <?=$Dictionnary["Subject"]; ?>
+		    <input type="text" name="subject" />
+		</label>
+
+		<label>
+		    <?=$Dictionnary["Message"]; ?>
+		    <textarea name="content"></textarea>
+		</label>
+
+		<input type="file" name="file" multiple="true" />
+
+		<div class="cycle_admin_actions">
+		    <input
+			type="button"
+			onclick="if (window.confirm('Envoyer ce message à tous les étudiants du cycle ?')) silent_submit(this.parentNode.parentNode);"
+			value="<?=$Dictionnary["Send"]; ?>"
+		    />
+		</div>
+	    </form>
+	<?php } else { ?>
+	    <h2><?=$Dictionnary["Instantiate"]; ?></h2>
+
+	    <form method="post" action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>/instantiate">
+		<label>
+		    <?=$Dictionnary["FirstWeekDate"]; ?>
+		    <input type="date" name="first_week" />
+		</label>
+
+		<label>
+		    <?=$Dictionnary["CodeName"]; ?>
+		    <input type="text" name="instance_name" />
+		</label>
+
+		<div class="cycle_admin_actions">
+		    <input
+			type="button"
+			onclick="silent_submitf(this.parentNode.parentNode, {after_success: refresh});"
+			value="<?=$Dictionnary["Instantiate"]; ?>"
+		    />
+		</div>
+	    </form>
+
+	    <?php if (count($cycle["instance"])) { ?>
+		<h4><?=$Dictionnary["CycleInstances"]; ?></h4>
+		<div class="cycle_admin_instances">
+		    <?php foreach ($cycle["instance"] as $instance) { ?>
+			<a href="index.php?p=CycleMenu&amp;a=<?=$instance["id"]; ?>">
+			    <?=$instance["codename"]; ?>
+			</a>
+		    <?php } ?>
+		</div>
+	    <?php } ?>
+	<?php } ?>
+    </section>
+
+    <section class="cycle_admin_card cycle_admin_management">
+	<div class="cycle_admin_side_block">
+	    <h2>Responsables</h2>
+	    <?php list_of_links([
+		"hook_name" => $page,
+		"hook_id" => $cycle["id"],
+		"linked_name" => [
+		    "placeholder" => "Teacher or laboratory",
+		    "table" => "teacher",
+		    "" => "teacher",
+		    "#" => "laboratory",
+		],
+		"linked_elems" => $cycle["teacher"],
+		"admin_func" => "is_director_for_cycle",
+	    ]); ?>
+	</div>
+
+	<?php if ($page == "cycle") { ?>
+	    <div class="cycle_admin_side_block">
+		<h2><?=$Dictionnary["School"]; ?></h2>
+		<?php list_of_links([
+		    "hook_name" => "cycle",
+		    "hook_id" => $cycle["id"],
+		    "linked_name" => "school",
+		    "linked_elems" => $cycle["school"],
+		    "admin_func" => "is_director_for_cycle",
+		]); ?>
+	    </div>
+	<?php } ?>
+
+	<div class="cycle_admin_side_block cycle_admin_exports">
+	    <h2><?=$Dictionnary["Export"]; ?></h2>
+
+	    <form method="post" action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?>">
+		<input type="hidden" name="action" value="export_activity" />
+		<input type="hidden" name="cycle" value="<?=$cycle["id"]; ?>" />
+
+		<select name="format">
+		    <option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+		    <option value="detailed_sketch"><?=$Dictionnary["DetailedSketch"]; ?></option>
+		    <option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+		</select>
+
+		<input type="submit" value="<?=$Dictionnary["Export"]; ?>" />
+	    </form>
+
+	    <?php if ($page == "cycle" && $cycle["id_template"] != -1 && $cycle["id_template"] != NULL) { ?>
+		<div class="cycle_admin_side_block">
+		    <h2><?=$Dictionnary["Template"]; ?></h2>
+		    <p style="text-align: center">
+			<a href="index.php?p=CycleTemplateMenu&amp;a=<?=$cycle["id_template"]; ?>">
+			    <?=$cycle["codename_template"]; ?>
+			</a>
+		    </p>
+		</div>
+	    <?php } ?>
+	</div>
+
+	<?php if ($can_edit_cycle) { ?>
+	    <div class="cycle_admin_side_block cycle_admin_danger">
+		<h2><?=$Dictionnary["Delete"]; ?></h2>
+		<?php $confirm = addslashes($Dictionnary["ConfirmDeletion"]); ?>
+		<form method="delete" action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>" onsubmit="return false;">
+		    <input
+			type="button"
+			onclick="if (window.confirm('<?=$confirm; ?>')) silent_submitf(this.parentNode, {after_success: function(){document.location='index.php?p=<?=($page == "cycle" ? "CycleMenu" : "CycleTemplateMenu"); ?>';}});"
+			value="<?=$Dictionnary["Delete"]; ?>"
+		    />
+		</form>
+	    </div>
+	<?php } ?>
+    </section>
+</div>

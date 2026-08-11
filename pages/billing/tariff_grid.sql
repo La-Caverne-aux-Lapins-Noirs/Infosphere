@@ -15,6 +15,8 @@ CREATE TABLE `billing_template` (
   `tariff_year` int(11) NOT NULL DEFAULT 0,
   KEY `tariff_year` (`tariff_year`),
   `name` varchar(255) NOT NULL,
+  `invoice_type` varchar(32) NOT NULL DEFAULT 'school',
+  KEY `invoice_type` (`invoice_type`),
   `amount_once` int(11) NOT NULL DEFAULT 0,
   `amount_twice` int(11) NOT NULL DEFAULT 0,
   `amount_four` int(11) NOT NULL DEFAULT 0,

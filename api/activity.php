@@ -12,6 +12,10 @@ $Tab = [
 	    "is_teacher",
 	    "DisplayActivityAdmin"
 	],
+	"export" => [
+	    "is_teacher_for_activity",
+	    "ExportActivityDescription"
+	],
     ],
     "POST" => [
 	"" => [
@@ -53,6 +57,10 @@ $Tab = [
 	"duplicate" => [
 	    "is_teacher",
 	    "DuplicateActivity",
+	],
+	"import" => [
+	    "am_i_director,am_i_cycle_director",
+	    "ImportActivityDescription",
 	],
     ],
     "PUT" => [

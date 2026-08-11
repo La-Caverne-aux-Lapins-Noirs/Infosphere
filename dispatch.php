@@ -1,6 +1,7 @@
 <?php
 
-if ($Position == "Subscribe" && $User != NULL && !isset($_GET["prospect"]))
+if ($Position == "Subscribe" && $User != NULL
+    && !isset($_GET["prospect"]) && !isset($_GET["relation"]))
     $Position = "HomeMenu";
 
 if (isset($TopMenu[$Position]))

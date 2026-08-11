@@ -5,6 +5,11 @@
 <?php $medals = fetch_medal(); ?>
 <div>
     <h2 class="alignable_blocks"><?=$Dictionnary["Medals"]; ?></h2>
+    <?php if (is_teacher()) { ?>
+	<a class="alignable_blocks" href="index.php?p=FunctionMenu&amp;pp=MedalsMenu">
+	    <input type="button" value="<?=$Dictionnary["Functions"]; ?>" />
+	</a>
+    <?php } ?>
     <form
 	class="alignable_blocks searchbar"
 	method="get"
@@ -16,81 +21,6 @@
 	    placeholder="<?=$Dictionnary["Search"]; ?>"
 	/>
     </form>
-    <?php if (is_teacher()) { ?>
-	<?php
-	$editmeds = $srvmeds = NULL;
-	$FL = "";
-	if (($hrequest = hand_request(["command" => "getmedal"])) === NULL)
-	    $FL = "Failed to join the hand";
-	else
-	{
-	    if ($hrequest["result"] != "ok")
-		$FL = @$hrequest["message"];
-	    else
-	    {
-		$nmed = [];
-		foreach ($hrequest["content"] as $m)
-		    $nmed[$m] = $m;
-		$editmeds = $srvmeds = $nmed;
-	    }
-	}
-	if (isset($_POST["upload_new"]))
-	    $_POST["upload_all"] = 1;
-	else
-	    $editmeds = [];
-	if (isset($_POST["upload_all"]) && $editmeds != NULL)
-	{
-	    foreach ($medals as $med)
-	    {
-		if (isset($editmeds[$med["codename"]]))
-		    continue ;
-		$icon = file_get_contents(
-		    strlen(@$med["icon"]) ?
-		    $med["icon"] :
-		    $med["band"]
-		);
-		unset($med["command"]);
-		unset($med["id"]);
-		unset($med["icon"]);
-		unset($med["band"]);
-		unset($med["type"]);
-		unset($med["deleted"]);
-		foreach ($med as &$medv)
-		    $medv = str_replace("\n", "\\n", $medv);
-		$ret = hand_request([
-		    "command" => "installmedal",
-		    "medal" => [
-			[
-			    "data" => base64_encode(json_encode($med)),
-			    "icon" => base64_encode($icon)
-			]
-		    ]
-		]);
-		if (!isset($ret["result"]))
-		    $FL = "Failed to install medals";
-		else if ($ret["result"] != "ok")
-		{
-		    if (isset($ret["msg"]))
-			$FL = $ret["message"];
-		    else
-			$FL = "Failed to install medals. KO received.";
-		}
-		if (strlen($FL))
-		{
-		    $FL .= " (".$med["codename"].")";
-		    // break ;
-		}
-	    }
-	}
-	?>
-	<form action="<?=unrollurl(); ?>" method="post" class="alignable_blocks">
-	    <input type="submit" name="upload_new" value="<?=$Dictionnary["UploadNewMedals"]; ?>" />
-	</form>
-	<form action="<?=unrollurl(); ?>" method="post" class="alignable_blocks">
-	    <input type="submit" name="upload_all" value="<?=$Dictionnary["UploadAllMedals"]; ?>" />
-	</form>
-	<div class="alignable_blocks"><?=$FL; ?></div>
-    <?php } ?>
 </div>
 <br />
 <?php if (is_teacher()) { ?>
@@ -126,7 +56,7 @@
 <?php } ?>
 
 <?php if (is_teacher()) { ?>
-    <table class="afullscreen"><tr><td class="formular_slot" style="width: 65%;">
+    <table class="afullscreen medal_admin_layout"><tr><td class="formular_slot" style="width: 65%;">
 <?php } ?>
 <div class="fullscreen scrollable" id="medallist">
     <?php require_once ("list_medal.phtml"); ?>
@@ -134,7 +64,7 @@
 <?php if (is_teacher()) { ?>
 
     </td><td>
-	<table class="fullscreen"><tr><td class="formular_slot">
+	<table class="fullscreen medal_editor_layout"><tr><td class="formular_slot">
 
 	    <?php if (is_teacher()) { ?>
 		<?php $js = "silent_submit(this, 'medallist');"; ?>
@@ -232,6 +162,7 @@
 		>
 		    <label for="file"><?=$Dictionnary["PictureOrConfiguration"]; ?></label><br />
 		    <input id="path2" type="hidden" name="path" value="" />
+		    <input type="hidden" name="path_browser_dabsic_editor" value="<?=is_admin() ? 1 : 0; ?>" />
 		    <input
 			type="file"
 			name="file"
@@ -249,7 +180,9 @@
 		$path = "/";
 		$type = "ressource";
 		$id = "-1";
+                $path_browser_dabsic_editor = is_admin();
 		require ("./tools/template/path_browser.phtml");
+                unset($path_browser_dabsic_editor);
 		?>
 	    </div>
 	    <div style="height: 70px; width: calc(100% - 10px); margin-left: 5px;">

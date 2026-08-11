@@ -30,14 +30,18 @@ class FullProfile extends Layer
     public $mail;
     public $nickname = "";
     public $first_name = "";
+    public $use_name = "";
     public $family_name = "";
+    public $gender = "";
     public $birth_date = "";
+    public $nationality = "";
     public $phone = "";
     public $address_name = "";
     public $street_name = "";
     public $postal_code = "";
     public $city = "";
     public $country = "";
+    public $administrative_data = "{}";
     public $registration_date;
     public $visibility = 0;
     public $money = 0;
@@ -376,9 +380,9 @@ class FullProfile extends Layer
 	if (array_search("profile", $blist) === false)
 	{
 	    $fields = [
-		"id", "codename", "nickname", "mail", "registration_date", "first_name", "family_name",
-		"phone", "address_name", "street_name", "postal_code", "city", "country", "birth_date",
-		"authority", "visibility"
+		"id", "codename", "nickname", "mail", "registration_date", "first_name", "use_name", "family_name",
+		"gender", "phone", "street_name", "postal_code", "city", "country", "birth_date", "nationality",
+		"authority", "administrative_data", "visibility"
 	    ];
 	    foreach ($fields as $label)
 		$this->$label = @$data[$label];

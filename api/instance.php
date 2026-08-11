@@ -49,6 +49,32 @@ function SetPresenceDeclaration($id, $data, $method, $output, $module)
     ");
     if ($team == NULL || $team["id_session"] == -1)
 	not_found();
+
+    if (in_array($data["subaction"], ["justify", "unjustify"], true))
+    {
+	if ((int)$team["present"] != -2)
+	    bad_request();
+	db_update_one("team", $team["id"], [
+	    "absence_justified" => $data["subaction"] == "justify" ? 1 : 0,
+	]);
+
+	ob_start();
+	($activity = new FullActivity)->build($id);
+	foreach ($activity->team as $cteam)
+	{
+	    if ($cteam["id"] != $team["id"])
+		continue ;
+	    require ("./pages/instance/single_team_presence.php");
+	    break ;
+	}
+	return (new ValueResponse([
+	    "msg" => $data["subaction"] == "justify"
+		? "Absence marquée comme justifiée."
+		: "Justification de l'absence retirée.",
+	    "content" => ob_get_clean(),
+	]));
+    }
+
     $ptype = [
 	"present" => 1,
 	"late" => -1,
@@ -58,6 +84,7 @@ function SetPresenceDeclaration($id, $data, $method, $output, $module)
 	bad_request();
     db_update_one("team", $team["id"], [
 	"present" => $ptype[$data["subaction"]],
+	"absence_justified" => 0,
 	"declaration_date" => db_form_date(now()),
 	"late_time" => NULL
     ]);

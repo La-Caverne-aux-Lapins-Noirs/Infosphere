@@ -139,7 +139,7 @@ function SetStudent($id, $data, $method, $output, $module)
 	"left_field_name" => "user",
 	"right_field_name" => "school",
 	"properties" => [
-	    "authority" => 0
+	    "authority" => user_school_student_authority_value()
 	]
     ];
     if (($ret = handle_linksf($params))->is_error())
@@ -180,6 +180,64 @@ function SetCycle($id, $data, $method, $output, $module)
 	    "linked_elems" => $school["cycle"],
 	    "admin_func" => "is_director_for_school",
     ])]));
+}
+
+
+function SchoolMailRecipients($id, $target)
+{
+    $id = (int)$id;
+    $target = trim((string)$target);
+    $where = "";
+
+    if ($target == "students")
+        $where = " AND user_school.authority = 'STUDENT' ";
+    else if ($target == "staff")
+        $where = " AND user_school.authority <> 'STUDENT' ";
+
+    $rows = db_select_all("
+        DISTINCT user.mail as mail
+        FROM user_school
+        LEFT JOIN user ON user.id = user_school.id_user
+        WHERE user_school.id_school = $id
+        AND user.id IS NOT NULL
+        AND user.deleted IS NULL
+        AND user.authority != -1
+        AND user.mail IS NOT NULL
+        AND user.mail != ''
+        $where
+        ORDER BY user.mail ASC
+    ");
+    $mails = [];
+    foreach ($rows as $row)
+        if (filter_var($row["mail"], FILTER_VALIDATE_EMAIL))
+            $mails[] = $row["mail"];
+    return (array_values(array_unique($mails)));
+}
+
+function SendSchoolMail($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if ($id == -1)
+        bad_request();
+
+    $target = trim((string)($data["target"] ?? "all"));
+    if (!in_array($target, ["all", "staff", "students"], true))
+        $target = "all";
+
+    $subject = trim((string)($data["subject"] ?? ""));
+    $content = trim((string)($data["content"] ?? ""));
+    if ($subject == "" || $content == "")
+        return (new ErrorResponse("InvalidParameter"));
+
+    $mails = SchoolMailRecipients($id, $target);
+    if (!count($mails))
+        return (new ErrorResponse("NoMail"));
+
+    if (($ret = send_mail($mails, $subject, $content, NULL, NULL, true))->is_error())
+        return ($ret);
+    add_log(CREATIVE_OPERATION, "school mail $target", $id);
+    return (new ValueResponse(["msg" => ($Dictionnary["Sent"] ?? "Envoyé")." (".count($mails).")"]));
 }
 
 $Tab = [
@@ -227,6 +285,10 @@ $Tab = [
 	"" => [
 	    "only_admin",
 	    "AddSchool"
+	],
+	"mail" => [
+	    "is_director_for_school",
+	    "SendSchoolMail"
 	]
     ],
     "DELETE" => [

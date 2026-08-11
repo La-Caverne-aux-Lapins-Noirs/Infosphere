@@ -1,0 +1,10 @@
+Document = "AdmissionCertificate"
+TitleQualifier = "DÉFINITIVE"
+Admission.AutomaticSignature = 0
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Directeur(trice)"
+  ]
+]

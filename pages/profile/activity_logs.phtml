@@ -15,7 +15,7 @@ $active_students_sql = "
     LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
     WHERE user.id IS NOT NULL
       AND user.deleted IS NULL
-      AND (user.prospect IS NULL OR user.prospect = 0)
+      AND user.profile_status = 'member'
       AND cycle.id IS NOT NULL
       AND cycle.deleted IS NULL
       AND (cycle.is_template IS NULL OR cycle.is_template = 0)

@@ -2,7 +2,7 @@
 
 // Les variables page, id, type et fbid non utilisés dans la fonction
 // sont utilisés dans le template. => Ne pas les retirer!
-function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $poweruser = false, $language = NULL, $nocd = false, $locked_path = "", $path_browser_can_cd = NULL)
+function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $poweruser = false, $language = NULL, $nocd = false, $locked_path = "", $path_browser_can_cd = NULL, $show_hidden_entries = false, $path_browser_dabsic_editor = false)
 {
     global $Dictionnary;
     global $Configuration;
@@ -14,6 +14,8 @@ function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $power
 	$path_browser_can_cd = !$nocd;
     else
 	$path_browser_can_cd = !!$path_browser_can_cd;
+    $show_hidden_entries = !!$show_hidden_entries;
+    $path_browser_dabsic_editor = !!$path_browser_dabsic_editor;
 
     if ($path == "")
 	$path = "/";
@@ -33,7 +35,7 @@ function get_dir($root, $path, $page, $id, $type, $fbid = "file_browser", $power
     $target = $target."/";
 
     if (file_exists($target) == false && $poweruser == false)
-	return (get_dir($root, $locked_path == "" ? "/" : $locked_path, $page, $id, $type, $fbid, $poweruser, $language, $nocd, $locked_path, $path_browser_can_cd));
+	return (get_dir($root, $locked_path == "" ? "/" : $locked_path, $page, $id, $type, $fbid, $poweruser, $language, $nocd, $locked_path, $path_browser_can_cd, $show_hidden_entries, $path_browser_dabsic_editor));
     new_directory($target);
 
     if ($type !== NULL && $id !== NULL)

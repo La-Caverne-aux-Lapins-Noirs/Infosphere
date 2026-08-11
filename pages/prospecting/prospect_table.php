@@ -59,69 +59,78 @@ function prospecting_table_fields()
                 $a = htmlspecialchars($p["first_name"] ?? "");
                 $b = htmlspecialchars($p["family_name"] ?? "");
                 $id = (int)$p["id"];
-                return ("<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>");
+                $registration = isset($p["registration_date"])
+                    ? datex("d/m/Y", $p["registration_date"])
+                    : "";
+                $registration = htmlspecialchars($registration);
+                return (
+                    "<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>".
+                    ($registration != ""
+                        ? "<span class='prospect_registration_date'>Inscrit le $registration</span>"
+                        : "")
+                );
             },
-            "cell_class" => "dynamic_table_name"
+            "cell_class" => "dynamic_table_name prospect_identity_cell"
         ],
         [
-            "name"  => "registration_date",
-            "label" => $Dictionnary["RegisterDate"],
-            "type"  => "number",
-            "raw"   => fn($p) => $p["registration_date"] ?? 0,
-            "render"=> fn($p) => datex("d/m/Y", $p["registration_date"]),
-        ],
-        [
-            "name"  => "mail",
-            "label" => $Dictionnary["Mail"],
-            "type"  => "text",
-            "width" => "150px",
-            "raw"   => fn($p) => $p["mail"] ?? "",
-            "render"=> fn($p) => htmlspecialchars($p["mail"] ?? ""),
-            "copyable" => true,
-        ],
-        [
-            "name"  => "phone",
-            "label" => $Dictionnary["Phone"],
-            "type"  => "text",
-            "width" => "150px",
-            "raw"   => fn($p) => $p["phone"] ?? "",
-            "render"=> fn($p) => htmlspecialchars(format_phone_number($p["phone"] ?? "")),
-            "copyable" => true,
-        ],
-        [
-            "name"    => "current_class",
-            "label"   => $Dictionnary["CurrentClass"],
-            "type"    => "select",
-            "width"   => "70px",
-            "options" => array_combine(
-                array_map(fn($i) => (string)($i - 9), array_keys($class_level)),
-                $class_level
-            ),
-            "raw"     => fn($p) => isset($p["current_class"]) ? (int)$p["current_class"] : 10,
-            "render"  => function($p) use ($class_level)
+            "name"  => "contact",
+            "label" => "Contact",
+            "type"  => "misc",
+            "width" => "145px",
+            "filter" => false,
+            "render"=> function($p)
             {
-                $v = isset($p["current_class"]) ? (int)$p["current_class"] : 19;
-                $v = real_class_level($p["registration_date"], $v);
-                return htmlspecialchars($class_level[$v + 9] ?? "?");
+                $mail = trim((string)($p["mail"] ?? ""));
+                $phone = trim((string)($p["phone"] ?? ""));
+                $formatted_phone = $phone != "" ? format_phone_number($phone) : "";
+                $parts = [];
+
+                if ($mail != "")
+                {
+                    $parts[] = "<button type='button' class='prospect_contact_copy prospect_contact_mail' "
+                        ."data-prospect-copy-value='".htmlspecialchars($mail, ENT_QUOTES)."' "
+                        ."title='Copier l’adresse électronique'>"
+                        .htmlspecialchars($mail)."</button>";
+                }
+                if ($phone != "")
+                {
+                    $parts[] = "<button type='button' class='prospect_contact_copy prospect_contact_phone' "
+                        ."data-prospect-copy-value='".htmlspecialchars($formatted_phone, ENT_QUOTES)."' "
+                        ."title='Copier le numéro de téléphone'>"
+                        .htmlspecialchars($formatted_phone)."</button>";
+                }
+                if (!count($parts))
+                    return ("<span class='prospect_contact_empty'>—</span>");
+                return ("<div class='prospect_contact'>".implode("", $parts)."</div>");
             },
+            "cell_class" => "prospect_contact_cell",
         ],
         [
             "name"    => "target_class",
             "label"   => $Dictionnary["TargetedClass"],
             "type"    => "select",
-            "width"   => "50px",
+            "width"   => "74px",
             "options" => $target_class,
             "raw"     => fn($p) => isset($p["target_class"]) ? (int)$p["target_class"] : 0,
-            "render"  => function($p) use ($target_class)
+            "render"  => function($p) use ($target_class, $class_level)
             {
-                $v = isset($p["target_class"]) ? (int)$p["target_class"] : 0;
-                return (htmlspecialchars($target_class[$v] ?? "/"));
+                $target = isset($p["target_class"]) ? (int)$p["target_class"] : 0;
+                $current = isset($p["current_class"]) ? (int)$p["current_class"] : 19;
+                $current = real_class_level($p["registration_date"], $current);
+                $target_label = htmlspecialchars($target_class[$target] ?? "/");
+                $current_label = htmlspecialchars($class_level[$current + 9] ?? "?");
+                return (
+                    "<strong class='prospect_target_class'>$target_label</strong>".
+                    "<span class='prospect_current_class'>Niveau actuel : $current_label</span>"
+                );
             },
+            "cell_class" => "prospect_target_class_cell",
         ],
         [
             "name"    => "target_entry",
             "label"   => $Dictionnary["TargetedEntry"],
             "type"    => "select",
+            "width"   => "90px",
             "options" => $target_entry,
             "raw"     => fn($p) => isset($p["target_entry"]) ? (int)$p["target_entry"] : 0,
             "render"  => function($p) use ($target_entry)
@@ -134,7 +143,8 @@ function prospecting_table_fields()
             "name"   => "actions_1",
             "label"  => $Dictionnary["Actions"],
             "type"   => "misc",
-            "width"  => "auto",
+            "width"  => "600px",
+            "cell_class" => "prospect_action_history_cell",
             "render" => function($p) {
                 global $Dictionnary;
                 global $one_day;
@@ -148,7 +158,7 @@ function prospecting_table_fields()
             "name"   => "actions_2",
             "label"  => $Dictionnary["Actions"],
             "type"   => "misc",
-            "width"  => "200px",
+            "width"  => "195px",
             "render" => function($p) {
                 global $Dictionnary;
                 global $Configuration;
@@ -162,7 +172,8 @@ function prospecting_table_fields()
             "name"    => "actions_3",
             "label"   => "",
             "type"    => "misc",
-            "width"   => "120px",
+            "width"   => "180px",
+            "cell_class" => "prospect_document_actions_cell",
             "render"  => function($p) {
                 global $Dictionnary;
 

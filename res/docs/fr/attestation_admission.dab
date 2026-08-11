@@ -1,7 +1,3 @@
-
-Content = [Text($,Content)
-  Ceci est le contenu de la lettre.
-Content]
-
-@include "base_letter/base.dab"
-
+Document = "AdmissionCertificate"
+TitleQualifier = ""
+Admission.AutomaticSignature = 0

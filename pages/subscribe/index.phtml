@@ -1,17 +1,44 @@
 <?php
 function pf($str)
 {
-    if (isset($_POST[$str]))
-	return ('value="'.$_POST[$str].'"');
-    return ('value=""');
+    $value = isset($_POST[$str]) ? (string)$_POST[$str] : "";
+    return ('value="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8").'"');
 }
-$prospect = isset($_GET["prospect"]) && $_GET["prospect"];
 
-if (!$Configuration->Properties["subscription_possible"] && $prospect == false)
+function pselected($name, $value, $default = NULL)
+{
+    if (isset($_POST[$name]))
+        return ((string)$_POST[$name] === (string)$value ? "selected" : "");
+    return ($default !== NULL && (string)$default === (string)$value ? "selected" : "");
+}
+
+$relation_target = isset($_GET["relation"]) ? (int)$_GET["relation"] : 0;
+$relation_mode = $relation_target > 0;
+$prospect = !$relation_mode && isset($_GET["prospect"]) && $_GET["prospect"];
+$relation_target_name = "";
+
+if ($relation_mode)
+{
+    if (!logged_in() || (!is_commercial() && !is_identity_authority_for_user($relation_target)))
+    {
+        echo "<p>Vous n'êtes pas autorisé à ajouter une relation à cet utilisateur.</p>";
+        return ;
+    }
+    $relation_target_user = db_select_one("\n        id, codename, first_name, family_name\n        FROM user\n        WHERE id = $relation_target\n          AND authority != -1\n    ");
+    if ($relation_target_user == NULL)
+    {
+        echo "<p>Utilisateur introuvable.</p>";
+        return ;
+    }
+    $relation_target_name = trim(($relation_target_user["first_name"] ?? "")." ".($relation_target_user["family_name"] ?? ""));
+    if ($relation_target_name == "")
+        $relation_target_name = $relation_target_user["codename"];
+}
+
+if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$relation_mode)
     $prospect = true;
 ?>
 <style>
- 
  input[type="checkbox"]
  {
      width: 35px !important;
@@ -25,7 +52,7 @@ if (!$Configuration->Properties["subscription_possible"] && $prospect == false)
      text-align: left !important;
      margin-left: 10px;
  }
- <?php if ($prospect) { ?>
+ <?php if ($prospect || $relation_mode) { ?>
  #fullpage_form h2
  {
      top: 1%;
@@ -47,47 +74,88 @@ if (!$Configuration->Properties["subscription_possible"] && $prospect == false)
      line-height: 15px !important;
  }
  <?php } ?>
+ .subscription_relation_fieldset
+ {
+     box-sizing: border-box;
+     margin: 12px auto;
+     max-width: 720px;
+     padding: 12px 18px;
+     text-align: left;
+ }
+ .subscription_relation_fieldset legend
+ {
+     padding: 0 8px;
+ }
+ .subscription_relation_option
+ {
+     align-items: center;
+     box-sizing: border-box;
+     display: flex !important;
+     font-size: 18px !important;
+     gap: 8px;
+     margin: 5px 0 !important;
+     width: 100% !important;
+ }
+ .subscription_relation_option input
+ {
+     flex: 0 0 auto;
+     margin: 0;
+ }
 </style>
 <script>
  function check_repeat(rep, ori)
  {
      if (rep.value != ori.value)
-	 rep.style.backgroundColor = "red";
+         rep.style.backgroundColor = "red";
      else
-	 rep.style.backgroundColor = null;
+         rep.style.backgroundColor = null;
+ }
+ function check_relation_selection(form)
+ {
+     if (!form.querySelector('input[name="relation[]"]:checked'))
+     {
+         set_error_div("Sélectionnez au moins un type de relation.");
+         return false;
+     }
+     return true;
  }
 </script>
 <form
     id="fullpage_form"
     method="POST"
-    <?php if ($prospect == false) { ?>
-	action="index.php?p=<?=$PreviousPosition; ?>"
+    <?php if (!$prospect && !$relation_mode) { ?>
+        action="index.php?p=<?=$PreviousPosition; ?>"
     <?php } else { ?>
-	action="<?=unrollurl(); ?>"
+        action="<?=htmlspecialchars(unrollurl(), ENT_QUOTES); ?>"
     <?php } ?>
+    <?=$relation_mode ? 'onsubmit="return check_relation_selection(this);"' : ''; ?>
 >
-    
-    <?php if ($prospect) { ?>
-	<h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
-	<input type="hidden" name="logaction" value="conv_subscribe" />
+    <?php if ($relation_mode) { ?>
+        <h2>Ajouter une relation</h2>
+        <input type="hidden" name="logaction" value="conv_external_relation" />
+    <?php } else if ($prospect) { ?>
+        <h2><?=$Dictionnary["LeaveMyData"]; ?></h2>
+        <input type="hidden" name="logaction" value="conv_subscribe" />
     <?php } else { ?>
-	<input
-	    id="prospect"
-	    type="button"
-	    onclick="document.location='index.php?p=Subscribe&amp;prospect=1';"
-	    value="P"
-	    style="display: absolute; right: 50px; top: 50px;"
-	/>
-	<h2><?=$Dictionnary["Subscribe"]; ?></h2>
-	<input type="hidden" name="logaction" value="subscribe" />
+        <input
+            id="prospect"
+            type="button"
+            onclick="document.location='index.php?p=Subscribe&amp;prospect=1';"
+            value="P"
+            style="display: absolute; right: 50px; top: 50px;"
+        />
+        <h2><?=$Dictionnary["Subscribe"]; ?></h2>
+        <input type="hidden" name="logaction" value="subscribe" />
     <?php } ?>
 
     <p>
-	<?php require_once (__DIR__."/common.phtml"); ?>
-	<?php if ($prospect) { ?>
-	    <?php require_once (__DIR__."/prospect.phtml"); ?>
-	<?php } else { ?>
-	    <?php require_once (__DIR__."/user.phtml"); ?>
-	<?php } ?>
+        <?php require_once (__DIR__."/common.phtml"); ?>
+        <?php if ($relation_mode) { ?>
+            <?php require_once (__DIR__."/relation.phtml"); ?>
+        <?php } else if ($prospect) { ?>
+            <?php require_once (__DIR__."/prospect.phtml"); ?>
+        <?php } else { ?>
+            <?php require_once (__DIR__."/user.phtml"); ?>
+        <?php } ?>
     </p>
 </form>

@@ -397,3 +397,4 @@ if (isset($logs) && is_array($logs) && isset($logs["content"]))
 
 
 require_once (__DIR__."/albedo/money_bonus.php");
+require_once (__DIR__."/albedo/user_guidance.php");

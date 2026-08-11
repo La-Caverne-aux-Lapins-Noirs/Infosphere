@@ -1,0 +1,80 @@
+Document = "Report"
+Title = "Analyse du besoin"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Analyse du besoin
+  Left]
+  Right = [Text($,Right)
+    [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+  Right]
+]
+
+[Footer = [Text($,Footer)
+  [@Size;0]
+  [#Variable;School.MainInfo]
+  [#Variable;School.SchoolInfo]
+  [#Variable;School.FormationInfo]
+  [#Variable;School.AlternationInfo]
+  [#Variable;School.Phone] - [#Variable;School.Mail]
+Footer]]
+
+{Content
+  "# Fiche d'analyse du besoin\n\n",
+  "[@Size;1]\n",
+  "Cette fiche formalise l'analyse du besoin réalisée avant l'entrée en formation et permet de vérifier l'adéquation entre le projet du bénéficiaire et la prestation proposée.\n\n",
+
+  "## Identification\n\n",
+  "**Bénéficiaire :** [#Variable;Student.Identity]\n\n",
+  "**Courriel :** [#Variable;Student.Mail]\n\n",
+  "**Téléphone :** [#Variable;Student.Phone]\n\n",
+  "**Formation / parcours envisagé :** [#Variable;NeedsAnalysis.TargetTraining]\n\n",
+  "**Niveau d'entrée :** [#Variable;NeedsAnalysis.TargetLevel]\n\n",
+  "**Rentrée envisagée :** [#Variable;NeedsAnalysis.TargetEntry]\n\n",
+
+  "## Situation et projet du bénéficiaire\n\n",
+  "**Situation actuelle :** [#Variable;NeedsAnalysis.CurrentSituation]\n\n",
+  "**Dernier diplôme / niveau atteint :** [#Variable;NeedsAnalysis.LastDiploma]\n\n",
+  "**Formation(s) ou expérience(s) antérieure(s) pertinente(s) :** [#Variable;NeedsAnalysis.PreviousExperience]\n\n",
+  "**Projet professionnel / métier ou domaine visé :** [#Variable;NeedsAnalysis.ProfessionalProject]\n\n",
+  "**Motivations exprimées :** [#Variable;NeedsAnalysis.Motivations]\n\n",
+  "**Contraintes particulières connues :** [#Variable;NeedsAnalysis.Constraints]\n\n",
+
+  "## Besoin de formation identifié\n\n",
+  "**Compétences / connaissances déjà acquises :** [#Variable;NeedsAnalysis.AcquiredSkills]\n\n",
+  "**Compétences / connaissances à acquérir ou renforcer :** [#Variable;NeedsAnalysis.SkillsToAcquire]\n\n",
+  "**Objectif principal de la formation :** [#Variable;NeedsAnalysis.MainObjective]\n\n",
+  "**Attentes particulières du bénéficiaire :** [#Variable;NeedsAnalysis.Expectations]\n\n",
+  "**Besoin d'individualisation ou d'adaptation du parcours :** [#Variable;NeedsAnalysis.Individualization]\n\n",
+
+  "## Adéquation avec la formation\n\n",
+  "**Cohérence du projet avec les objectifs de la formation :** [#Variable;NeedsAnalysis.ProjectConsistency]\n\n",
+  "**Prérequis satisfaits :** [#Variable;NeedsAnalysis.Prerequisites]\n\n",
+  "**Niveau d'entrée adapté aux acquis :** [#Variable;NeedsAnalysis.EntryLevelConsistency]\n\n",
+  "**Rythme, durée et modalités compatibles avec la situation :** [#Variable;NeedsAnalysis.ModalitiesConsistency]\n\n",
+  "**Débouchés / poursuites cohérents avec le projet :** [#Variable;NeedsAnalysis.OutcomesConsistency]\n\n",
+
+  "## Besoins spécifiques et accessibilité\n\n",
+  "**Situation de handicap déjà déclarée :** [#Variable;Student.Handicap]\n\n",
+  "**Nature déclarée, le cas échéant :** [#Variable;Student.HandicapKind]\n\n",
+  "**Besoin particulier d'accessibilité ou d'aménagement :** [#Variable;NeedsAnalysis.AccessibilityNeed]\n\n",
+  "**Adaptation fonctionnelle envisagée :** [#Variable;NeedsAnalysis.AccessibilityAdaptation]\n\n",
+  "**Action prévue :** [#Variable;NeedsAnalysis.AccessibilityAction]\n\n",
+
+  "## Financement et tiers éventuel\n\n",
+  "**Modalité envisagée :** [#Variable;NeedsAnalysis.TrainingMode]\n\n",
+  "**Financement envisagé :** [#Variable;NeedsAnalysis.Funding]\n\n",
+  "**Entreprise / financeur / prescripteur :** [#Variable;NeedsAnalysis.ThirdParty]\n\n",
+  "**Attentes exprimées par le tiers :** [#Variable;NeedsAnalysis.ThirdPartyNeeds]\n\n",
+
+  "## Conclusion de l'analyse\n\n",
+  "**Conclusion :** [#Variable;NeedsAnalysis.Conclusion]\n\n",
+  "**Parcours retenu / proposition formulée :** [#Variable;NeedsAnalysis.ProposedPath]\n\n",
+  "**Adaptations / actions à réaliser avant l'entrée :** [#Variable;NeedsAnalysis.ActionsBeforeEntry]\n\n",
+  "**Prochaine étape :** [#Variable;NeedsAnalysis.NextStep]\n\n",
+  "**Observations complémentaires :** [#Variable;NeedsAnalysis.Notes]\n\n",
+
+  "## Traçabilité\n\n",
+  "**Analyse réalisée par :** [#Variable;Analyst.Identity]\n\n",
+  "**Date de l'analyse :** [#Variable;NeedsAnalysis.AnalysisDate]\n\n"
+}

@@ -26,7 +26,7 @@ h1
 }
 #selectlist td
 {
-    height: calc(100% - 40px);
+    height: calc(100% - 64px);
 }
 #module_list, #activity_list, #session_list
 {
@@ -53,6 +53,39 @@ h1
 #down_formular > td
 {
     height: 40px;
+}
+#import_formular > td
+{
+    height: 24px;
+}
+.activity_dabsic_import_form
+{
+    align-items: center;
+    display: flex;
+    gap: 2px;
+    height: 22px;
+    overflow: hidden;
+    text-align: left;
+    white-space: nowrap;
+    width: 100%;
+}
+.activity_dabsic_import_form input[type="file"]
+{
+    flex: 1 1 auto;
+    font-size: x-small;
+    height: 20px;
+    max-width: none;
+    min-width: 0;
+    width: calc(100% - 92px);
+}
+.activity_dabsic_import_form input[type="button"]
+{
+    flex: 0 0 88px;
+    font-size: x-small;
+    height: 20px;
+    max-width: none;
+    padding: 0;
+    width: 88px;
 }
 .entry
 {
@@ -313,8 +346,45 @@ h1
     position: absolute;
     right: 0px;
     top: 0px;
+    z-index: 6;
     height: 30px !important;
     width: 30px !important;
+}
+
+.file_browser > .icon .dabsic_editor_link
+{
+    position: absolute;
+    right: 31px;
+    top: 1px;
+    z-index: 5;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 86px;
+    height: 28px;
+    line-height: 26px;
+    text-align: center;
+    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.file_browser > .icon .dabsic_editor_link_icon
+{
+    flex: 0 0 auto;
+    font-size: 17px;
+    line-height: 1;
+}
+
+.file_browser > .icon .dabsic_editor_link_label
+{
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .file_browser .filename
@@ -326,6 +396,33 @@ h1
     position: absolute;
     top: 2px;
     line-height: 28px;
+    pointer-events: none;
+}
+
+.file_browser > .has_dabsic_editor .filename
+{
+    width: calc(100% - 118px);
+}
+
+@media (max-width: 700px)
+{
+    .file_browser > .icon .dabsic_editor_link
+    {
+        right: 30px;
+        top: 0px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .file_browser > .icon .dabsic_editor_link_label
+    {
+        display: none;
+    }
+
+    .file_browser > .has_dabsic_editor .filename
+    {
+        width: calc(100% - 60px);
+    }
 }
 
 .file_browser video
@@ -548,4 +645,65 @@ h1
 #down_edit_formular .list_of_link_empty_support_asset div a
 {
     color: #c8c8c8;
+}
+
+.session_jury_editor
+{
+    margin-top: 10px;
+}
+
+.session_jury_editor h5
+{
+    margin-bottom: 4px;
+}
+
+.session_jury_add_form
+{
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.session_jury_add_form input[type="text"]
+{
+    min-width: 0;
+    flex: 1;
+}
+
+.session_jury_list
+{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.session_jury_item
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.54);
+}
+
+.session_jury_item form
+{
+    margin-left: auto;
+}
+
+.file_browser > .icon
+{
+    cursor: default;
+    user-select: none;
+}
+
+.file_browser > .icon[draggable="true"]
+{
+    cursor: grab;
+}
+
+.file_browser > .icon[draggable="true"]:active
+{
+    cursor: grabbing;
 }

@@ -1,95 +1,278 @@
 <?php
-$me_or_director = is_me_or_director_for_student($user->id);
-if ($user->visibility == HIDDEN && !$me_or_director)
+$can_edit_identity = is_identity_authority_for_user($user->id);
+$can_manage_administrative_profile = can_manage_user_administrative_profile((int)$user->id);
+$can_edit_nickname = is_me($user->id) || $can_edit_identity;
+$can_edit_visibility = $can_edit_nickname;
+$can_view_identity = can_view_user_identity($user->id) || $can_manage_administrative_profile;
+if ($user->visibility == HIDDEN && !$can_view_identity)
     return ;
 $js = "silent_submit(this);";
+$public_fields = [
+    "mail" => true,
+    "nickname" => true,
+    "first_name" => true,
+    "family_name" => true,
+    "gender" => true,
+    "birth_date" => true,
+    "phone" => true,
+];
+$fields = [
+    "Mail" => ["mail", $can_edit_identity],
+    "Nickname" => ["nickname", $can_edit_nickname],
+    "FirstName" => ["first_name", $can_edit_identity],
+    "UseName" => ["use_name", $can_edit_identity],
+    "FamilyName" => ["family_name", $can_edit_identity],
+    "Gender" => ["gender", $can_edit_identity],
+    "BirthDate" => ["birth_date", $can_edit_identity],
+    "Nationality" => ["nationality", $can_edit_identity],
+    "Phone" => ["phone", $can_edit_identity],
+    "Address" => ["street_name", $can_edit_identity],
+    "PostalCode" => ["postal_code", $can_edit_identity],
+    "City" => ["city", $can_edit_identity],
+];
 ?>
+<style>
+.profile_administrative_data { margin: 0.5em 0; padding: 0.6em 0.8em; border: 1px solid #aaa; border-radius: 4px; }
+.profile_administrative_data table { width: 100%; }
+.profile_administrative_data td:first-child { width: 46%; }
+.profile_administrative_notice { margin: 0 0 0.6em; font-size: x-small; text-align: center; }
+.profile_administrative_invitation { margin-top: 0.9em; padding-top: 0.8em; border-top: 1px solid rgba(160, 160, 160, 0.45); text-align: center; }
+.profile_administrative_invitation form { display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; flex-wrap: wrap; }
+.profile_administrative_invitation select { min-width: 90px; }
+.profile_user_relations { margin: 0.5em 0; padding: 0.6em 0.8em; border: 1px solid #aaa; border-radius: 4px; }
+.profile_user_relations h4 { margin: 0.45em 0 0.25em; }
+.profile_user_relations ul { margin: 0.2em 0 0.6em; padding-left: 1.5em; }
+.profile_user_relation_tags { display: block; font-size: x-small; opacity: 0.8; }
+</style>
 <form method="put" onsubmit="return <?=$js; ?>" action="/api/user/<?=$user->id; ?>/properties">
     <table>
-	<?php
-	$fields = [
-	    "Mail" => "mail",
-	    "Nickname" => "nickname",
-	    "FirstName" => "first_name",
-	    "FamilyName" => "family_name",
-	    "BirthDate" => "birth_date",
-	    "Phone" => "phone",
-	    "AddressName" => "address_name",
-	    "Address" => "street_name",
-	    "PostalCode" => "postal_code",
-	    "City" => "city",
-	    //"Country" => "country",
-	];
-	foreach ($fields as $k => $v) { ?>
-	    <?php if ($k == "AddressName") { ?>
-		<?php if (!$me_or_director) break ; else { ?>
-		    <tr><td colspan="2" style="font-size: small; font-style: italic;">
-			<br />
-			<?=$Dictionnary["PostalInformationsArePrivate"]; ?>
-		    </td></tr>
-		<?php } ?>
-	    <?php } ?>
-	    <tr><td>
-		<b><?=$Dictionnary[$k]; ?></b> :
-	    </td><td>
-		<?php if (strstr($v, "date")) $user->$v = human_date($user->$v, true); ?>
-		<input
-		    <?=(is_admin() || $user->id == $User["id"]) && $v != "codename" ? "" : 'readonly disabled="disabled"'; ?>
-		    type="text"
-		    name="<?=$v; ?>"
-		    style="width: 100%; text-align: center;"
-		    value="<?=@strlen($user->$v) ? $user->$v : ""; ?>"
-		/>
-	    </td></tr>
-	<?php } ?>
-	<?php if ($me_or_director) { ?>
-	    <tr><td>
-		<b><?=$Dictionnary["ProfileVisibility"]; ?></b> :
-	    </td><td>
-		<select name="visibility">
-		    <?php foreach ([
-			HIDDEN => "HideEverything",
-			PROFILE_ONLY => "ShowProfileOnly",
-			SUCCESSFUL_ACTIVITIES => "ShowProfileAndSuccessfulActivities",
-			COMPLETE_PROFILE => "ShowEverything",
-		    ] as $vis => $visi) { ?>
-			<option value="<?=$vis; ?>" <?=$user->visibility == $vis ? "selected" : ""; ?>>
-			    <?=$Dictionnary[$visi]; ?>
-			</option>
-		    <?php } ?>
-		</select>
-	    </td></tr>
-	<?php } ?>
+        <?php foreach ($fields as $label => $definition) {
+            [$field, $editable] = $definition;
+            $value = $user->$field ?? "";
+            if (strstr($field, "date") && $value)
+                $value = human_date($value, true);
+            $public_marker = isset($public_fields[$field]) ? " *" : "";
+        ?>
+            <tr><td><b><?=$Dictionnary[$label] ?? $label; ?><?=$public_marker; ?></b> :</td><td>
+                <?php if ($field == "gender") { ?>
+                    <select name="<?=$field; ?>" <?=$editable ? "" : 'disabled="disabled"'; ?> style="width: 100%; text-align: center;">
+                        <?php foreach (["" => "", "female" => ($Dictionnary["Female"] ?? "Femme"), "male" => ($Dictionnary["Male"] ?? "Homme"), "other" => ($Dictionnary["Other"] ?? "Autre")] as $key => $caption) { ?>
+                            <option value="<?=htmlspecialchars($key, ENT_QUOTES); ?>" <?=$value == $key ? "selected" : ""; ?>><?=htmlspecialchars($caption); ?></option>
+                        <?php } ?>
+                    </select>
+                <?php } else { ?>
+                    <input <?=$editable ? "" : 'readonly disabled="disabled"'; ?> type="text" name="<?=$field; ?>"
+                        style="width: 100%; text-align: center;"
+                        value="<?=htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                <?php } ?>
+            </td></tr>
+        <?php } ?>
+        <?php if ($can_edit_visibility) { ?>
+            <tr><td><b><?=$Dictionnary["ProfileVisibility"]; ?></b> :</td><td>
+                <select name="visibility">
+                    <?php foreach ([
+                        HIDDEN => "HideEverything",
+                        PROFILE_ONLY => "ShowProfileOnly",
+                        SUCCESSFUL_ACTIVITIES => "ShowProfileAndSuccessfulActivities",
+                        COMPLETE_PROFILE => "ShowEverything",
+                    ] as $vis => $visi) { ?>
+                        <option value="<?=$vis; ?>" <?=$user->visibility == $vis ? "selected" : ""; ?>><?=$Dictionnary[$visi]; ?></option>
+                    <?php } ?>
+                </select>
+            </td></tr>
+        <?php } ?>
     </table>
-    <?php if ($me_or_director) { ?>
-	<br />
-	<p style="text-align: center;">
-	    <input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
-	</p>
+    <p style="font-size: xx-small; text-align: left; margin: 0.75em auto; max-width: 720px;">
+        <b>*</b><?=$Dictionnary["PublicFields"]; ?>
+    </p>
+    <?php if ($can_edit_nickname || $can_edit_identity || $can_edit_visibility) { ?>
+        <br /><p style="text-align: center;"><input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" /></p>
     <?php } ?>
 </form>
-<?php if ($me_or_director) { ?>
+<?php
+$id_profile_user = (int)$user->id;
+// Relire la ligne user directement : le FullProfile peut avoir été construit
+// avant la dernière validation du formulaire administratif. On veut ici les
+// valeurs persistées les plus récentes, notamment administrative_data.
+$profile_user_data = db_select_one("* FROM user WHERE id = $id_profile_user AND authority != -1");
+$profile_status = $profile_user_data["profile_status"] ?? "";
+$is_student_profile = db_select_one("
+    user.id
+    FROM user
+    LEFT JOIN user_school
+      ON user_school.id_user = user.id
+     AND user_school.authority = 'STUDENT'
+    LEFT JOIN user_cycle
+      ON user_cycle.id_user = user.id
+    WHERE user.id = $id_profile_user
+      AND (user_school.id IS NOT NULL OR user_cycle.id IS NOT NULL)
+") != NULL;
+$is_relation_administrative_profile = user_relation_is_administrative_contact($id_profile_user);
+$is_administrative_profile = $is_student_profile || $profile_status == "prospect" || $is_relation_administrative_profile;
+$can_edit_administrative = $can_manage_administrative_profile;
+$can_view_administrative = $is_administrative_profile
+    && (is_me($user->id) || $can_edit_identity || $can_edit_administrative);
+$can_send_administrative_form = can_send_user_administrative_form($id_profile_user);
+if ($can_view_administrative)
+{
+    $administrative_user = array_merge((array)$user, $profile_user_data ?: []);
+    // get_full_profile() expose ses champs via l'objet ; suivant son implémentation,
+    // le cast en tableau ne garantit pas que l'id virtuel soit présent.
+    $administrative_user["id"] = $id_profile_user;
+    if ($is_relation_administrative_profile && function_exists("user_identity_relation_administrative_fields"))
+        $administrative_fields = user_identity_relation_administrative_fields();
+    else
+        $administrative_fields = user_identity_contract_administrative_fields($administrative_user);
+    if ($is_relation_administrative_profile)
+        // Pour un responsable, ce bloc représente strictement le complément
+        // administrative_data de user. Ne pas le reconstruire depuis les champs
+        // d'identité : cela masque les données réellement persistées.
+        $administrative = user_identity_administrative_data($administrative_user);
+    else
+        $administrative = function_exists("user_identity_contract_administrative_values")
+            ? user_identity_contract_administrative_values($administrative_user)
+            : user_identity_administrative_data($administrative_user);
+    $administrative_role = "";
+    if ($is_relation_administrative_profile)
+    {
+        $roles = [];
+        foreach (user_relation_managed_children($id_profile_user) as $child)
+            foreach (user_relation_labels($child["relation"] ?? "") as $label)
+                if (in_array($label, ["Responsable légal", "Responsable financier"], true)
+                    && !in_array($label, $roles, true))
+                    $roles[] = $label;
+        if (count($roles))
+            $administrative_role = " — ".implode(" · ", $roles);
+    }
+?>
+    <br />
+    <fieldset class="profile_administrative_data">
+        <legend><b><?=$Dictionnary["AdministrativeData"] ?? "Données administratives"; ?><?=htmlspecialchars($administrative_role); ?></b></legend>
+        <p class="profile_administrative_notice">
+            <?=$can_edit_administrative
+                ? ($Dictionnary["AdministrativeDataEditableNotice"] ?? "Ces informations sont utilisées pour les contrats et documents administratifs.")
+                : ($Dictionnary["AdministrativeDataReadOnlyNotice"] ?? "Ces informations sont visibles uniquement par vous et les personnels autorisés."); ?>
+        </p>
+        <form method="put" action="/api/user/<?=$user->id; ?>/administrative_data" onsubmit="return <?=$js; ?>">
+            <input type="hidden" name="action" value="administrative_data" />
+            <table>
+                <?php foreach ($administrative_fields as $field => $type) {
+                    $value = $administrative[$field] ?? ($type == "boolean" ? false : "");
+                ?>
+                    <tr><td><b><?=htmlspecialchars($Dictionnary[$field] ?? $field); ?></b> :</td><td>
+                        <?php if ($type == "boolean") { ?>
+                            <?php if ($can_edit_administrative) { ?>
+                                <select name="<?=$field; ?>" style="width: 100%; text-align: center;">
+                                    <option value="0" <?=$value ? "" : "selected"; ?>><?=$Dictionnary["No"] ?? "Non"; ?></option>
+                                    <option value="1" <?=$value ? "selected" : ""; ?>><?=$Dictionnary["Yes"] ?? "Oui"; ?></option>
+                                </select>
+                            <?php } else { ?>
+                                <input type="text" readonly disabled="disabled" style="width: 100%; text-align: center;"
+                                    value="<?=htmlspecialchars($value ? ($Dictionnary["Yes"] ?? "Oui") : ($Dictionnary["No"] ?? "Non"), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <?php } ?>
+                        <?php } else { ?>
+                            <input type="<?=in_array($type, ["date", "email", "tel"], true) ? $type : "text"; ?>" name="<?=$field; ?>" <?=$can_edit_administrative ? "" : 'readonly disabled="disabled"'; ?>
+                                style="width: 100%; text-align: center;"
+                                value="<?=htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                        <?php } ?>
+                    </td></tr>
+                <?php } ?>
+            </table>
+            <?php if ($can_edit_administrative) { ?>
+                <br /><p style="text-align: center;"><input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" /></p>
+            <?php } ?>
+        </form>
+        <?php if ($is_relation_administrative_profile && function_exists("registration_form_latest_signature_evidence")) {
+            $signature_evidence = registration_form_latest_signature_evidence($id_profile_user);
+            if ($signature_evidence != NULL) { ?>
+                <p class="profile_administrative_notice">
+                    Signature électronique validée le <?=htmlspecialchars((string)$signature_evidence["signed_at"]); ?>
+                    — preuve <code><?=htmlspecialchars(substr((string)$signature_evidence["evidence_sha256"], 0, 20)); ?>…</code>
+                </p>
+            <?php }
+        } ?>
+        <?php if ($can_send_administrative_form) { ?>
+            <div class="profile_administrative_invitation">
+                <form method="put" action="/api/user/<?=$user->id; ?>/registration" onsubmit="return silent_submit(this);">
+                    <?php if ($profile_status == "prospect" && !$is_relation_administrative_profile) { ?>
+                        <label>
+                            <?=$Dictionnary["RegistrationFormKind"] ?? "Type de contrat"; ?>
+                            <select name="kind">
+                                <?php foreach (registration_form_kinds() as $kind) { ?>
+                                    <option value="<?=htmlspecialchars($kind, ENT_QUOTES); ?>"><?=$kind; ?></option>
+                                <?php } ?>
+                            </select>
+                        </label>
+                    <?php } else { ?>
+                        <input type="hidden" name="kind" value="<?=registration_form_profile_kind(); ?>" />
+                    <?php } ?>
+                    <input type="button"
+                        value="<?=$Dictionnary["SendAdministrativeForm"] ?? "✉ Envoyer le formulaire"; ?>"
+                        onclick="confirm('<?=htmlspecialchars($Dictionnary["AdministrativeFormConfirmSend"] ?? "Envoyer un formulaire administratif à cette personne ?", ENT_QUOTES); ?>') && silent_submit(this);" />
+                </form>
+            </div>
+        <?php } ?>
+    </fieldset>
+<?php } ?>
+
+<?php
+$profile_relations = fetch_user_relation_summary((int)$user->id);
+if (count($profile_relations["responsible_by"]) || count($profile_relations["responsible_for"]))
+{
+?>
+    <br />
+    <fieldset class="profile_user_relations">
+        <legend><b>Relations</b></legend>
+        <?php if (count($profile_relations["responsible_by"])) { ?>
+            <h4>Responsables / contacts</h4>
+            <ul>
+                <?php foreach ($profile_relations["responsible_by"] as $relation_user) { ?>
+                    <li>
+                        <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
+                            <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
+                        </a>
+                        <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
+                        <?php if (count($relation_labels)) { ?>
+                            <span class="profile_user_relation_tags">
+                                <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                            </span>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
+            </ul>
+        <?php } ?>
+        <?php if (count($profile_relations["responsible_for"])) { ?>
+            <h4>Responsable de</h4>
+            <ul>
+                <?php foreach ($profile_relations["responsible_for"] as $relation_user) { ?>
+                    <li>
+                        <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
+                            <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
+                        </a>
+                        <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
+                        <?php if (count($relation_labels)) { ?>
+                            <span class="profile_user_relation_tags">
+                                <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                            </span>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
+            </ul>
+        <?php } ?>
+    </fieldset>
+<?php } ?>
+
+<?php if ($can_edit_nickname) { ?>
     <br />
     <form method="put" action="/api/user/<?=$user->id; ?>/properties" onsubmit="return <?=$js; ?>">
-	<table>
-	    <tr><td>
-		<b><?=$Dictionnary["Avatar"]; ?></b>:
-	    </td><td>
-		<?php if ($user->id != $User["id"]) { ?>
-		    <select name="type">
-			<option value="set_avatar">Avatar</option>
-			<option value="set_photo">Photo</option>
-		    </select>
-		<?php } else { ?>
-		    <input type="hidden" name="action" value="set_avatar" />
-		<?php } ?>
-		<input type="file" name="avatar" />
-	    </td></tr>
-	</table>
-	<br />
-	<p style="text-align: center;">
-	    <input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" />
-	</p>
+        <table><tr><td><b><?=$Dictionnary["Avatar"]; ?></b>:</td><td>
+            <?php if ($user->id != $User["id"] && is_admin()) { ?>
+                <select name="type"><option value="set_avatar">Avatar</option><option value="set_photo">Photo</option></select>
+            <?php } else { ?>
+                <input type="hidden" name="action" value="set_avatar" />
+            <?php } ?>
+            <input type="file" name="avatar" />
+        </td></tr></table>
+        <br /><p style="text-align: center;"><input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" /></p>
     </form>
 <?php } ?>
-    

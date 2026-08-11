@@ -119,6 +119,7 @@ $js = "silent_submit(this)";
 	    "admin_func" => "is_teacher_or_director_for_session",
 	    "additional_html" => ob_get_clean()
 	]); ?>
+	<?php require (__DIR__."/session_juries.phtml"); ?>
     </div></td><td><div>
 	<?php $js = "silent_submitf(this, {after_success: list_sessions(getCookie('".($template ? "template" : "module")."-activity'))})"; ?>
 	<form
@@ -134,6 +135,12 @@ $js = "silent_submit(this)";
 	    />
 	</form>
 	<br />
+	<?php if (is_teacher_or_director_for_session($session->id)) { ?>
+	    <a class="button_link" href="/api/session/<?=$session->id; ?>/export">
+		<?=$Dictionnary["ExportDabsic"]; ?>
+	    </a>
+	    <br />
+	<?php } ?>
 	<?php if ($template == false) { ?>
 	    <a class="button_link" href="index.php?p=ActivityMenu&amp;a=<?=$module->id; ?>&amp;b=<?=$session->id; ?>">
 		<?=$Dictionnary["SeeTheActivity"]; ?>

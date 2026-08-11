@@ -1,0 +1,57 @@
+<?php
+if (!isset($certification_skills))
+    $certification_skills = fetch_certification_skills();
+?>
+<div class="jury_page jury_skills_page">
+    <section class="jury_card jury_skills_card">
+        <h3><?=$Dictionnary["AddSkill"] ?? "Ajouter une compétence"; ?></h3>
+        <form class="jury_skill_add_form" method="post" action="/api/certification/-1/skill" onsubmit="return certification_submit(this, {clear_form: true});">
+            <div class="jury_field">
+                <label><?=$Dictionnary["CodeName"] ?? "Nom de code"; ?></label>
+                <input type="text" name="codename" />
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["FrenchDescription"] ?? "Description française"; ?></label>
+                <textarea name="fr_description"></textarea>
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["EnglishDescription"] ?? "Description anglaise"; ?></label>
+                <textarea name="en_description"></textarea>
+            </div>
+            <div class="jury_form_actions">
+                <input type="submit" value="<?=$Dictionnary["Add"] ?? "Ajouter"; ?>" />
+            </div>
+        </form>
+    </section>
+
+    <section class="jury_card jury_skill_list_card">
+        <h3><?=$Dictionnary["Skills"] ?? ($Dictionnary["Skill"] ?? "Compétences"); ?></h3>
+        <?php if (!count($certification_skills)) { ?>
+            <p class="smalltext"><?=$Dictionnary["NoSkill"] ?? "Aucune compétence n'est encore renseignée."; ?></p>
+        <?php } else { ?>
+            <div class="jury_skill_list">
+                <?php foreach ($certification_skills as $skill) { ?>
+                    <div class="jury_skill_row">
+                        <form method="put" action="/api/certification/<?=$skill["id"]; ?>/skill" onsubmit="return certification_submit(this);">
+                            <div class="jury_title_code">
+                                <label><?=$Dictionnary["CodeName"] ?? "Nom de code"; ?></label>
+                                <code><?=htmlentities($skill["codename"]); ?></code>
+                            </div>
+                            <div class="jury_field">
+                                <label><?=$Dictionnary["FrenchDescription"] ?? "Description française"; ?></label>
+                                <textarea name="fr_description"><?=htmlentities($skill["fr_description"] ?? ""); ?></textarea>
+                            </div>
+                            <div class="jury_field">
+                                <label><?=$Dictionnary["EnglishDescription"] ?? "Description anglaise"; ?></label>
+                                <textarea name="en_description"><?=htmlentities($skill["en_description"] ?? ""); ?></textarea>
+                            </div>
+                            <div class="jury_form_actions jury_title_row_actions">
+                                <input type="submit" value="<?=$Dictionnary["Save"] ?? "Enregistrer"; ?>" />
+                            </div>
+                        </form>
+                    </div>
+                <?php } ?>
+            </div>
+        <?php } ?>
+    </section>
+</div>

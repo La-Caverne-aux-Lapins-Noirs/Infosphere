@@ -74,7 +74,7 @@
 <?php if (count($medals)) { ?>
     <?php if ($activity->is_assistant) { ?>
 	<img
-	    onclick="navigator.clipboard.writeText('<?=implode($medals, ";"); ?>');"
+	    onclick="navigator.clipboard.writeText('<?=implode(";", $medals); ?>');"
 	    width="<?=$activity->is_assistant ? 50 : 30; ?>"
 	    height="<?=$activity->is_assistant ? 50 : 30; ?>"
 		     title="<?=$Dictionnary["ClickToPutMedalsToClipboard"]; ?>"

@@ -54,4 +54,8 @@ $Tab["GET"]["panel"] = [
     "DisplayModulePanel",
 ];
 $Tab["POST"][""][1] = "AddModule";
+$Tab["POST"]["import"] = [
+    "am_i_director,am_i_cycle_director",
+    "ImportModuleDescription"
+];
 // $Tab["PUT"][0] = "is_teacher";

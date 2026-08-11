@@ -54,7 +54,10 @@ function fetch_medal($id = -1, $one = false, $hidden = false, $id_func = NULL)
     ");
     foreach ($out as &$v)
     {
-	$v["icon"] = $Configuration->MedalsDir($v["codename"])."icon.png";
+	$icon = $Configuration->MedalsDir($v["codename"])."icon.png";
+	$v["icon"] = file_exists($icon)
+	    ? $icon
+	    : "genicon.php?function=".rawurlencode($v["codename"]);
 	$v["band"] = $Configuration->MedalsDir($v["codename"])."band.png";
 	if (!file_exists($v["band"]))
 	    $v["band"] = NULL;

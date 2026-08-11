@@ -26,6 +26,10 @@ $Tab = [
 	    "is_director_for_cycle",
 	    "SendCycleMail",
 	],
+	"attendance-register" => [
+	    "is_director_for_cycle",
+	    "GenerateAttendanceRegister",
+	],
     ],
     "PUT" => [
 	"" => [

@@ -18,6 +18,7 @@ CREATE TABLE `team` (
   `id_session` int(11) DEFAULT NULL,
   KEY `id_session` (`id_session`),
   `present` int(11) NOT NULL DEFAULT 0,
+  `absence_justified` tinyint(1) NOT NULL DEFAULT 0,
   `declaration_date` datetime DEFAULT NULL,
   `late_time` datetime DEFAULT NULL,
   `closed` datetime DEFAULT NULL,

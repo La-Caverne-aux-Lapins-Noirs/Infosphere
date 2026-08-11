@@ -1,85 +1,80 @@
 <input
     type="text"
-	  pattern="[0-9]{5}"
-	  name="postal_code"
-	  placeholder="<?=$Dictionnary["PostalCode"]; ?>"
-	  <?=pf("postal_code"); ?>
+    pattern="[0-9]{5}"
+    name="postal_code"
+    placeholder="<?=$Dictionnary["PostalCode"]; ?>"
+    <?=pf("postal_code"); ?>
     required
 />
 <br />
 
-<select name="current_class">
+<select name="current_class" required>
     <?php if ($Language == "fr") { ?>
-	<option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
-	<option value="0" default>Terminale</option>
-	<option value="-1">Premi&egrave;re</option>
-	<option value="-2">Seconde</option>
-	<option value="9">En reconversion</option>
-	<option value="1">Bac+1</option>
-	<option value="2">Bac+2</option>
-	<option value="3">Bac+3</option>
-	<option value="4">Bac+4</option>
-	<option value="5">Bac+5</option>
-	<option value="6">Bac+6</option>
-	<option value="7">Bac+7</option>
-	<option value="8">Bac+8</option>
-	<option value="-3">3ème</option>
-	<option value="-4">4ème</option>
-	<option value="-5">5ème</option>
-	<option value="-6">6ème</option>
-	<option value="-7">CM2</option>
-	<option value="-8">CM1</option>
-	<option value="-9">Autre</option>
+    <option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
+    <option value="0" <?=pselected("current_class", 0, 0); ?>>Terminale</option>
+    <option value="-1" <?=pselected("current_class", -1); ?>>Premi&egrave;re</option>
+    <option value="-2" <?=pselected("current_class", -2); ?>>Seconde</option>
+    <option value="9" <?=pselected("current_class", 9); ?>>En reconversion</option>
+    <option value="1" <?=pselected("current_class", 1); ?>>Bac+1</option>
+    <option value="2" <?=pselected("current_class", 2); ?>>Bac+2</option>
+    <option value="3" <?=pselected("current_class", 3); ?>>Bac+3</option>
+    <option value="4" <?=pselected("current_class", 4); ?>>Bac+4</option>
+    <option value="5" <?=pselected("current_class", 5); ?>>Bac+5</option>
+    <option value="6" <?=pselected("current_class", 6); ?>>Bac+6</option>
+    <option value="7" <?=pselected("current_class", 7); ?>>Bac+7</option>
+    <option value="8" <?=pselected("current_class", 8); ?>>Bac+8</option>
+    <option value="-3" <?=pselected("current_class", -3); ?>>3ème</option>
+    <option value="-4" <?=pselected("current_class", -4); ?>>4ème</option>
+    <option value="-5" <?=pselected("current_class", -5); ?>>5ème</option>
+    <option value="-6" <?=pselected("current_class", -6); ?>>6ème</option>
+    <option value="-7" <?=pselected("current_class", -7); ?>>CM2</option>
+    <option value="-8" <?=pselected("current_class", -8); ?>>CM1</option>
+    <option value="-9" <?=pselected("current_class", -9); ?>>Autre</option>
     <?php } ?>
 </select>
 <br />
-<select name="target_class">
+<select name="target_class" required>
     <option value=""><?=$Dictionnary["TargetedClass"]; ?></option>
-    <option value="1"><?=$Dictionnary["Year"]; ?> 1</option>
-    <option value="2"><?=$Dictionnary["Year"]; ?> 2</option>
-    <option value="3"><?=$Dictionnary["Year"]; ?> 3</option>
-    <option value="4"><?=$Dictionnary["Year"]; ?> 4</option>
-    <option value="5"><?=$Dictionnary["Year"]; ?> 5</option>
-    <option value="6"><?=$Dictionnary["ShortTraining"]; ?></option>
-    <option value="7"><?=$Dictionnary["LongTraining"]; ?></option>
+    <?php for ($i = 1; $i <= 5; ++$i) { ?>
+        <option value="<?=$i; ?>" <?=pselected("target_class", $i); ?>><?=$Dictionnary["Year"]; ?> <?=$i; ?></option>
+    <?php } ?>
+    <option value="6" <?=pselected("target_class", 6); ?>><?=$Dictionnary["ShortTraining"]; ?></option>
+    <option value="7" <?=pselected("target_class", 7); ?>><?=$Dictionnary["LongTraining"]; ?></option>
 </select>
 <br />
-<select name="target_entry">
+<select name="target_entry" required>
     <option value=""><?=$Dictionnary["TargetedEntry"]; ?></option>
-    <option value="0"><?=$Dictionnary["EndOfSeptember"]; ?></option>
-    <option value="1"><?=$Dictionnary["StartOfJanuary"]; ?></option>
-    <option value="2"><?=$Dictionnary["StartOfApril"]; ?></option>
+    <option value="0" <?=pselected("target_entry", 0); ?>><?=$Dictionnary["EndOfSeptember"]; ?></option>
+    <option value="1" <?=pselected("target_entry", 1); ?>><?=$Dictionnary["StartOfJanuary"]; ?></option>
+    <option value="2" <?=pselected("target_entry", 2); ?>><?=$Dictionnary["StartOfApril"]; ?></option>
 </select>
-<select name="school">
+<select name="school" required>
+    <?php $posted_school = isset($_POST["school"]) ? (int)$_POST["school"] : 0; ?>
     <?php foreach (fetch_school() as $school) { ?>
-	<option
-	    value="<?=$school["id"]; ?>"
-	    <?php if ($User && $school["codename"] == $User["last_school"]) { ?>
-		selected
-	    <?php } ?>
-	>
-	    <?=$school["name"]; ?>
-	</option>
+    <option
+        value="<?=$school["id"]; ?>"
+        <?php if ($posted_school > 0 ? $posted_school == (int)$school["id"] : ($User && $school["codename"] == $User["last_school"])) { ?>
+            selected
+        <?php } ?>
+    >
+        <?=htmlspecialchars($school["name"]); ?>
+    </option>
     <?php } ?>
 </select>
 
 <textarea readonly
-	  style="resize: none;
-		 height: 100px;
-		 font-size: small;
-		 line-height: 1em;
-		 text-align: justify;
-		 "
+    style="resize: none; height: 100px; font-size: small; line-height: 1em; text-align: justify;"
 ><?php require ("privacy.txt"); ?>
 <?php require ("rules.txt"); ?></textarea>
 <br />
 <input
+    id="accept_privacy_prospect"
     name="accept_privacy"
-	  type="checkbox"
-	  <?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
+    type="checkbox"
+    <?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
     required
 />
-<label for="accept_privacy"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
+<label for="accept_privacy_prospect"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
 <br />
 
 <input type="submit" value="<?=$Dictionnary["Send"]; ?>" />

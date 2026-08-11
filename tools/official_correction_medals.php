@@ -131,9 +131,12 @@ function official_correction_create_unknown_medal($codename)
     if ($existing != NULL)
         return (new ValueResponse((int)$existing["id"]));
 
+    $command = $Database->real_escape_string(
+        "genicon sband ".$codename." -c dres/medals/.ressources/.default_style.dab"
+    );
     $Database->query("
-        INSERT INTO medal (codename, fr_name, en_name)
-        VALUES ('$escaped', '$escaped', '$escaped')
+        INSERT INTO medal (codename, tags, type, command, fr_name, en_name)
+        VALUES ('$escaped', 'automatic', 0, '$command', '$escaped', '$escaped')
     ");
     add_log(CREATIVE_OPERATION, "Automatically created medal '$codename' from correction report.", 1);
     return (new ValueResponse((int)$Database->insert_id));

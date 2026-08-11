@@ -10,3 +10,25 @@
 {
     background-color: rgba(180, 165, 165, 0.2);
 }
+
+/* The medal administration page sits on top of a very detailed background.
+ * Keep the EFRITS skin visible while restoring enough contrast to read the
+ * catalogue and the two editing panes comfortably. */
+#medallist .medal_box > tbody > tr > td,
+.medal_admin_layout > tbody > tr > td.formular_slot,
+.medal_editor_layout > tbody > tr > td.formular_slot
+{
+    background-color: rgba(28, 30, 30, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+#medallist .medal_box > tbody > tr > td
+{
+    border-color: rgba(150, 150, 150, 0.28);
+}
+
+#medallist .medal_box:hover > tbody > tr > td
+{
+    background-color: rgba(48, 52, 50, 0.86);
+}

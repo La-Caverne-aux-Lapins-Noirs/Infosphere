@@ -495,6 +495,13 @@ function DisplayActivity($id, $data, $method, $output, $module)
     return (new ValueResponse(["content" => ob_get_clean()]));
 }
 
+function ExportActivityDescription($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+	bad_request();
+    return (export_activity_description_response($id, true));
+}
+
 function AddActivity($id, $data, $method, $output, $module)
 {
     if ($id != -1)
@@ -513,11 +520,18 @@ function AddActivity($id, $data, $method, $output, $module)
 
 function DuplicateActivity($id, $data, $method, $output, $module)
 {
-    // copy_template.php
-    ($original = new FullActivity)->build($id);
-    if (($ret = copy_template($original, $data["codename"]))->is_error())
+    if ($id == -1 || !isset($data["codename"]))
+	bad_request();
+    if (($original = new FullActivity)->build($id) == false)
+	not_found();
+    if (($ret = copy_single_activity($original, $data["codename"]))->is_error())
 	return ($ret);
-    return (DisplayModule(-1, $data, "GET", $output, $module));
+
+    if ($original->parent_activity == -1)
+	return (DisplayModule(-1, $data, "GET", $output, $module));
+
+    $_GET["sub"] = 1;
+    return (DisplayModule($original->parent_activity, $data, "GET", $output, $module));
 }
 
 function SetActivityLink($id, $data, $method, $output, $module)
@@ -717,7 +731,7 @@ function EditActivity($id, $data, $method, $output, $module)
     // Specific treatment
     if (isset($data["codename"]))
     {
-	if (($ret = edit_codename("activity", $activity->codename, $data["codename"]))->is_error())
+	if (($ret = rename_activity_codename_with_children($activity, $data["codename"]))->is_error())
 	    return ($ret);
 	return (new ValueResponse([
 	    "msg" => $Dictionnary["Renamed"],
@@ -1113,11 +1127,23 @@ function render_activity_subject_browser($page, $id, $activity, $language, $wrap
     ob_start();
 ?>
 <?php if ($wrap) { ?>
-<div class="file_browser" id="subject_browser<?=$language; ?>">
+<div
+    class="file_browser"
+    id="subject_browser<?=$language; ?>"
+    data-path-browser-page="activity"
+    data-path-browser-id="<?=$id; ?>"
+    data-path-browser-type="subject"
+    data-path-browser-language="<?=htmlspecialchars((string)$language, ENT_QUOTES); ?>"
+>
 <?php } ?>
     <?php foreach ($entries as $content) { ?>
+        <?php $content_relative = pathinfo($content, PATHINFO_BASENAME); ?>
 	<div
 	    class="icon <?=pathinfo($content, PATHINFO_EXTENSION); ?>"
+            draggable="true"
+            data-path-browser-relative="<?=htmlspecialchars($content_relative, ENT_QUOTES); ?>"
+            data-path-browser-name="<?=htmlspecialchars($content_relative, ENT_QUOTES); ?>"
+            data-path-browser-directory="0"
 	    ondblclick="window.open('<?=$content; ?>', '_blank').focus();"
 	>
 	    <form action="/api/<?=$page; ?>/<?=$id; ?>/subject/<?=str_replace("/", "@", $content); ?>" method="delete" style="z-index: 3;">

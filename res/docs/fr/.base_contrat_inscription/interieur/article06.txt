@@ -1,0 +1,16 @@
+
+## Article I6 - Horaire des formations
+
+[@Size;1]
+[@Columns;3;
+Les horaires d’accueil et de la Formation seront précisés dans
+le livret d’accueil remis à l’Apprenant.
+
+L'Apprenant pourra trouver son calendrier sur https://intra.efrits.fr
+et s'engage à assurer sa présence aux dates, lieu(x) et heure(s)
+qui y sont prévues. 
+
+Les Apprenants sont tenus de respecter les horaires de formation fixés
+par la direction de l’EFRITS.
+
+]

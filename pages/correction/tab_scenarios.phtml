@@ -1,0 +1,26 @@
+<?php $scenarios = correction_scenarios(); ?>
+<div class="correction-panel correction-grid">
+    <?php if (!count($scenarios)) { ?><p class="correction-empty">Aucun scénario ou fichier autonome.</p><?php } ?>
+    <?php foreach ($scenarios as $scenario) { ?>
+        <article class="correction-card compact">
+            <header><div><h3><?=htmlspecialchars($scenario['filename']); ?></h3><code><?=htmlspecialchars($scenario['relative_path']); ?></code></div></header>
+            <p><?= $scenario['role'] == 'scenario' ? 'Scénario de correction composé de plusieurs étapes.' : 'Configuration Dabsic autonome, non rattachée à un symbole.'; ?></p>
+            <?php if (count($scenario['dependencies'])) { ?>
+                <h4>Dépendances</h4>
+                <ul>
+                <?php foreach ($scenario['dependencies'] as $dependency) { ?>
+                    <li class="<?=$dependency['missing'] ? 'missing' : 'ok'; ?>">
+                        <code><?=htmlspecialchars($dependency['requested_path']); ?></code>
+                        <?=$dependency['missing'] ? ' — manquante' : ''; ?>
+                    </li>
+                <?php } ?>
+                </ul>
+            <?php } ?>
+            <?php if (count($scenario['missing_dependencies'])) { ?>
+                <p><span class="status incomplete"><?=count($scenario['missing_dependencies']); ?> dépendance(s) manquante(s)</span></p>
+            <?php } else { ?>
+                <p><span class="status complete">Dépendances disponibles</span></p>
+            <?php } ?>
+        </article>
+    <?php } ?>
+</div>

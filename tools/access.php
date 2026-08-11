@@ -19,6 +19,19 @@ function is_me($id)
     return ($User != NULL && $User["id"] == $id);
 }
 
+function is_intranet_member_profile($usr = NULL)
+{
+    global $User;
+
+    if ($usr == NULL)
+	$usr = $User;
+    if (!is_array($usr))
+	return (false);
+    if (isset($usr["profile_status"]) && $usr["profile_status"] != "member")
+	return (false);
+    return (true);
+}
+
 function is_assistant($usr = NULL)
 {
     return (is_teacher(NULL, $usr, 1));
@@ -32,7 +45,9 @@ function is_teacher($id = NULL, $usr = NULL, $lvl = 2)
 	return (false);
     if ($usr == NULL)
 	$usr = $User;
-    if (is_admin())
+    if (!is_intranet_member_profile($usr))
+	return (false);
+    if ($User && $usr["id"] == $User["id"] && is_admin())
 	return (true);
     $ret = db_select_one("
 	activity_teacher.id
@@ -75,13 +90,19 @@ function is_assistant_for_session($id)
     global $Database;
     global $User;
     
+    if (!is_intranet_member_profile())
+	return (false);
     if (is_admin())
 	return (true);
+    $id = (int)$id;
     if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
 	return (false);
     $ida = $ida["id_activity"];
     ($activity = new FullActivity)->build($ida, false, false);
-    return ($activity->is_assistant);
+    $teachers = function_exists("fetch_session_teachers")
+        ? fetch_session_teachers($id, true, true, $ida, $activity)
+        : $activity->teacher;
+    return (retrieve_authority($teachers) >= ASSISTANT);
 }
 
 function is_teacher_or_director_for_session($id)
@@ -89,13 +110,19 @@ function is_teacher_or_director_for_session($id)
     global $Database;
     global $User;
     
+    if (!is_intranet_member_profile())
+	return (false);
     if (is_admin())
 	return (true);
+    $id = (int)$id;
     if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
 	return (false);
     $ida = $ida["id_activity"];
     ($activity = new FullActivity)->build($ida, false, false);
-    return ($activity->is_director || $activity->is_teacher);
+    $teachers = function_exists("fetch_session_teachers")
+        ? fetch_session_teachers($id, true, true, $ida, $activity)
+        : $activity->teacher;
+    return ($activity->is_director || retrieve_authority($teachers) >= TEACHER);
 }
 
 function is_teacher_or_director_for_activity($id)
@@ -111,13 +138,19 @@ function is_teacher_for_session($id)
     global $Database;
     global $User;
     
+    if (!is_intranet_member_profile())
+	return (false);
     if (is_admin())
 	return (true);
+    $id = (int)$id;
     if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
 	return (false);
     $ida = $ida["id_activity"];
     ($activity = new FullActivity)->build($ida, false, false);
-    return ($activity->is_teacher);
+    $teachers = function_exists("fetch_session_teachers")
+        ? fetch_session_teachers($id, true, true, $ida, $activity)
+        : $activity->teacher;
+    return (retrieve_authority($teachers) >= TEACHER);
 }
 
 function is_teacher_for_activity($id)
@@ -259,7 +292,7 @@ function is_cycle_director_of($id_user = -1, $id_cycle = -1)
     return (db_select_one("
         cycle_teacher.id_user, user_laboratory.id_user
         FROM cycle_teacher
-        LEFT JOIN laboratory ON cycle_teacher.id_laboratory
+        LEFT JOIN laboratory ON cycle_teacher.id_laboratory = laboratory.id
         LEFT JOIN user_laboratory ON user_laboratory.id_laboratory = laboratory.id
         WHERE (cycle_teacher.id_user = $id_user
         OR user_laboratory.id_user = $id_user
@@ -309,10 +342,10 @@ function is_director_for_student($id, $big_admin = true)
     get_user_school($user, true);
     foreach ($user["school"] as $school)
     {
-	if ($school["authority"] != 0)
+	if ($school["authority"] !== "STUDENT")
 	    continue ;
 	if (isset($User["school"][$school["codename"]]["authority"])
-	    && $User["school"][$school["codename"]]["authority"] == 1
+	    && $User["school"][$school["codename"]]["authority"] === "DIRECTOR"
 	)
 	    return (true);
     }
@@ -324,6 +357,32 @@ function is_me_or_director_for_student($id)
     if (is_me($id))
 	return (true);
     return (is_director_for_student($id));
+}
+
+function is_identity_authority_for_user($id)
+{
+    if (is_admin())
+        return (true);
+    if (!logged_in())
+        return (false);
+    if (is_director_for_student($id, false))
+        return (true);
+
+    $id = (int)$id;
+    foreach (db_select_all("id_school FROM user_school WHERE id_user = $id") as $school)
+        if (is_secretariat_for_school((int)$school["id_school"]))
+            return (true);
+    return (false);
+}
+
+function can_view_user_identity($id)
+{
+    return (is_me($id) || is_identity_authority_for_user($id));
+}
+
+function can_edit_user_profile($id)
+{
+    return (can_view_user_identity($id));
 }
 
 function is_director_for_session($id)
@@ -354,6 +413,8 @@ function is_director_for_school($id)
 {
     global $User;
 
+    if (!logged_in())
+	return (false);
     if (is_admin())
 	return (true);
     $id = $id == -1 ? "" : " AND id_school = $id ";
@@ -387,6 +448,8 @@ function is_teacher_for_school($id)
 {
     global $User;
 
+    if (!is_intranet_member_profile())
+	return (false);
     if (is_admin())
 	return (true);
     $id = $id == -1 ? "" : " AND id_school = $id ";
@@ -408,7 +471,7 @@ function is_director_for_room($id)
     get_user_school($User);
     foreach ($User["school"] as $school)
     {
-	if ($school["authority"] != "DIRECTOR")
+	if ($school["authority"] !== "DIRECTOR")
 	    continue ;
 	$ret = db_select_one("
 	    id FROM school_room
@@ -484,7 +547,7 @@ function am_i_director_of($id_school)
     {
 	if ($sc["id_school"] != $id_school)
 	    continue ;
-	if ($sc["authority"] == "DIRECTOR")
+	if ($sc["authority"] === "DIRECTOR")
 	    return (true);
     }
     return (false);
@@ -513,7 +576,7 @@ function is_my_director($id)
 	{
 	    if (abs($ms["id_school"]) != abs($school["id_school"]))
 		continue ;
-	    if ($ms["authority"] == "DIRECTOR" && $school["authority"] != "DIRECTOR")
+	    if ($ms["authority"] === "DIRECTOR" && $school["authority"] !== "DIRECTOR")
 		return (true);
 	}
     }

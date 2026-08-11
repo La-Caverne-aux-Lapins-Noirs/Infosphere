@@ -92,7 +92,7 @@ function home_intercom_user_contexts()
     );
 
     // Salons école accessibles.
-    $schools = db_select_all("\n        id, codename, $field as name\n        FROM school\n        WHERE deleted IS NULL OR deleted = 0\n        ORDER BY id ASC\n    ");
+    $schools = db_select_all("\n        school.id,\n        school.codename,\n        COALESCE(NULLIF(organization.$field, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name\n        FROM school\n        LEFT JOIN organization\n          ON organization.id = school.id_organization\n        WHERE school.deleted IS NULL OR school.deleted = 0\n        ORDER BY school.id ASC\n    ");
     foreach ($schools as $school)
     {
         $id_school = (int)$school["id"];

@@ -9,6 +9,7 @@ foreach (billing_managed_school_ids() as $id_school)
         $schools[] = $school;
 }
 $schedule_labels = billing_schedule_short_labels();
+$invoice_type_labels = billing_invoice_types();
 function billing_t_e($str) { return (htmlspecialchars((string)$str, ENT_QUOTES)); }
 ?>
 
@@ -40,6 +41,11 @@ function billing_t_e($str) { return (htmlspecialchars((string)$str, ENT_QUOTES))
             </select>
             <input type="number" name="tariff_year" min="0" step="1" placeholder="<?=$Dictionnary["TariffYear"]; ?>" />
             <input type="text" name="name" placeholder="<?=$Dictionnary["Name"]; ?>" />
+            <select name="invoice_type">
+                <?php foreach ($invoice_type_labels as $key => $label) { ?>
+                    <option value="<?=billing_t_e($key); ?>"><?=billing_t_e($label); ?></option>
+                <?php } ?>
+            </select>
             <input type="text" name="registration_fee" placeholder="<?=$Dictionnary["RegistrationFees"]; ?>" />
             <input type="text" name="amount_once" placeholder="<?=$Dictionnary["BillingScheduleOnceShort"]; ?>" />
             <input type="text" name="amount_twice" placeholder="<?=$Dictionnary["BillingScheduleTwiceShort"]; ?>" />
@@ -55,6 +61,7 @@ function billing_t_e($str) { return (htmlspecialchars((string)$str, ENT_QUOTES))
                 <th><?=$Dictionnary["School"]; ?></th>
                 <th><?=$Dictionnary["TariffYear"]; ?></th>
                 <th><?=$Dictionnary["Name"]; ?></th>
+                <th><?=$Dictionnary["BillingInvoiceType"]; ?></th>
                 <th><?=$Dictionnary["RegistrationFees"]; ?></th>
                 <th><?=$schedule_labels["once"]; ?></th>
                 <th><?=$schedule_labels["twice_two_months"]; ?></th>
@@ -67,6 +74,7 @@ function billing_t_e($str) { return (htmlspecialchars((string)$str, ENT_QUOTES))
                     <td><?=billing_t_e($template["school_name"] ?: $template["school_codename"]); ?></td>
                     <td><?=((int)$template["tariff_year"] > 0 ? $Dictionnary["Year"]." ".(int)$template["tariff_year"] : "—"); ?></td>
                     <td><?=billing_t_e($template["name"]); ?></td>
+                    <td><?=billing_t_e(billing_invoice_type_label($template["invoice_type"] ?? "school")); ?></td>
                     <td><?=billing_euros($template["registration_fee"]); ?></td>
                     <td><?=billing_euros($template["amount_once"]); ?></td>
                     <td><?=billing_euros($template["amount_twice"]); ?></td>

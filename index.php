@@ -46,6 +46,12 @@ if (isset($_GET["p"]))
     $Position = $_GET["p"];
 else
     $Position = "HomeMenu";
+if ($Position == "RegistrationForm")
+{
+    header("Cache-Control: no-store, private");
+    header("Referrer-Policy: no-referrer");
+    header("X-Robots-Tag: noindex, nofollow, noarchive");
+}
 if (isset($_GET["pp"]))
     $PreviousPosition = $_GET["pp"];
 else
@@ -94,6 +100,13 @@ $Unlisted = [
     "CampaignMenu" => "./pages/prospecting/",
     "BillingTemplateMenu" => "./pages/billing/",
     "BillingInvoiceMenu" => "./pages/billing/",
+    "FunctionMenu" => "./pages/function/",
+    "JuryMenu" => "./pages/jury/",
+    "DabsicEditorMenu" => "./pages/dabsic_editor/",
+    "DabsicFormMenu" => "./pages/dabsic_form/",
+    "RegistrationForm" => "./pages/registration_form/",
+    "DocumentSignaturePdf" => "./pages/document_pdf/",
+    "DocumentWorkflowPdf" => "./pages/document_pdf/",
 ];
 
 $TopMenu = [
@@ -106,6 +119,9 @@ $TopMenu = [
     
     // "FetchingMenu" => "./pages/fetching/", // Inutile. Le concept a changé.
     // "TokenMenu" => "./pages/token/", // Inutile. Le concept a changé.
+    "UsersMenu" => "./pages/user/",
+    "LaboratoriesMenu" => "./pages/laboratory/",
+    "MedalsMenu" => "./pages/medal/",
 
     "IntercomMenu" => "./pages/intercom/",
     "LibraryMenu" => "./pages/book/",
@@ -120,22 +136,18 @@ if (isset($Configuration->Properties["liblapin"]))
 $TopMenu["SearchMenu"] = "./pages/search/";
 
 $BottomMenu = [
-    "UsersMenu" => "./pages/user/",
-    "LaboratoryMenu" => "./pages/laboratory/",
-    "MedalsMenu" => "./pages/medal/",
-    "FunctionMenu" => "./pages/function/",
-
     "CycleTemplateMenu" => "./pages/cycle/",
     "ActivityTemplatesMenu" => "./pages/activity/",
+    "CycleMenu" => "./pages/cycle/",
+    "InstancesMenu" => "./pages/activity/",
+    "CorrectionMenu" => "./pages/correction/",
     "ScaleMenu" => "./pages/scale/",
     
+    "EnterpriseMenu" => "./pages/enterprise/",
     "SchoolMenu" => "./pages/school/",
-    "InstancesMenu" => "./pages/activity/",
-    "CycleMenu" => "./pages/cycle/",
-    
     "RoomsMenu" => "./pages/room/",
-    "RobotMenu" => "./pages/robot/",
     "DocMenu" => "./pages/docs/",
+    "CertificationMenu" => "./pages/jury/",
     "ProspectingMenu" => "./pages/prospecting/",
     "BillingMenu" => "./pages/billing/",
     "ConfigMenu" => "./pages/configuration/",

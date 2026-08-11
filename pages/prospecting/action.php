@@ -1,6 +1,7 @@
 <?php $def_action = 0; ?>
+<span class="action_items">
 <?php foreach ($actions as $action) { ?>
-    <?php $js = "silent_submitf(this, {tofill: 'actions$id', toclear: 'actions$id', clear_form: true});"; ?>
+    <?php $js = "silent_submitf(this, {tofill: 'actions$id', toclear: 'actions$id', clear_form: true, after_success: prospecting_after_action_update, after_success_parameter: $id});"; ?>
     <form
 	method="delete"
 	action="/api/prospect/<?=$id; ?>/paction/<?=$action["id"]; ?>"
@@ -34,6 +35,8 @@
 	$last_action = date_to_timestamp($action["action_date"]);
     ?>
 <?php } ?>
+</span>
+<span class="action_alert">
 <style>
  #actionbar<?=$id; ?> {
      <?php if ($done && $score > 0) { ?> 
@@ -63,3 +66,4 @@
 <?php } ?>
 
 
+</span>

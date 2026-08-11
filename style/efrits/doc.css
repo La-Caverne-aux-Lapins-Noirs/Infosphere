@@ -22,3 +22,23 @@
 {
     border: 1px solid rgba(0, 255, 0, 1.0);
 }
+
+.doc_source_title
+{
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+.doc_chain_box
+{
+    background-color: rgba(0, 0, 0, 0.20);
+    border-radius: 10px;
+}
+
+.doc_generation_error
+{
+    background-color: rgba(255, 0, 0, 0.16);
+    border: 1px solid rgba(255, 0, 0, 0.45);
+    border-radius: 10px;
+}

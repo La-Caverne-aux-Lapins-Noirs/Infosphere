@@ -119,12 +119,14 @@ function intercom_school_row($id_school)
 
     $id_school = (int)$id_school;
     return (db_select_one("
-        id,
-        codename,
-        $Language"."_name as name
+        school.id,
+        school.codename,
+        COALESCE(NULLIF(organization.".$Language."_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name
         FROM school
-        WHERE id = $id_school
-          AND (deleted IS NULL OR deleted = 0)
+        LEFT JOIN organization
+          ON organization.id = school.id_organization
+        WHERE school.id = $id_school
+          AND (school.deleted IS NULL OR school.deleted = 0)
     "));
 }
 
@@ -448,7 +450,7 @@ function intercom_school_staff_access($id_school)
         id FROM user_school
         WHERE id_user = $uid
           AND id_school = $id_school
-          AND authority > 0
+          AND authority <> 'STUDENT'
     ") != NULL)
         return (true);
     if (db_select_one("

@@ -1,0 +1,36 @@
+<?php
+$relation_definitions = user_relation_definitions();
+$posted_relations = isset($_POST["relation"]) ? user_relation_values($_POST["relation"]) : [];
+?>
+<input type="hidden" name="relation_target" value="<?=$relation_target; ?>" />
+
+<fieldset class="subscription_relation_fieldset">
+    <legend>Relation avec <?=htmlspecialchars($relation_target_name); ?></legend>
+    <?php foreach ($relation_definitions as $relation_name => $relation_definition) { ?>
+        <label class="subscription_relation_option">
+            <input
+                type="checkbox"
+                name="relation[]"
+                value="<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
+                <?=in_array($relation_name, $posted_relations, true) ? "checked" : ""; ?>
+            />
+            <span><?=htmlspecialchars($relation_definition["label"]); ?></span>
+        </label>
+    <?php } ?>
+</fieldset>
+
+<textarea readonly
+    style="resize: none; height: 100px; font-size: small; line-height: 1em; text-align: justify;"
+><?php require ("privacy.txt"); ?></textarea>
+<br />
+<input
+    id="accept_privacy_relation"
+    name="accept_privacy"
+    type="checkbox"
+    <?=isset($_POST["accept_privacy"]) ? "checked" : ""; ?>
+    required
+/>
+<label for="accept_privacy_relation"><?=$Dictionnary["AcceptPrivacy"]; ?>*</label>
+<br />
+
+<input type="submit" value="Ajouter la relation" />

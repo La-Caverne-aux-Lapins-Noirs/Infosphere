@@ -176,6 +176,56 @@ function add_default_user_todolist($id_user)
     return (new Response);
 }
 
+function transform_prospect_school_context($id)
+{
+    $id = (int)$id;
+    $links = db_select_all("
+        DISTINCT user_school.id_school as id_school
+        FROM user_school
+        LEFT JOIN school ON school.id = user_school.id_school
+        WHERE user_school.id_user = $id
+          AND school.id IS NOT NULL
+          AND school.deleted IS NULL
+        ORDER BY user_school.id_school ASC
+    ");
+    if (count($links))
+        return (new ValueResponse([
+            "school_ids" => array_map(
+                fn($school) => (int)$school["id_school"],
+                $links
+            ),
+            "inferred" => false,
+        ]));
+
+    // Plusieurs anciennes fiches prospect n'ont jamais reçu leur lien user_school :
+    // le formulaire passait jadis deux chaînes vides à handle_linksf(). Dans une
+    // installation ne contenant qu'une école, le rattachement attendu est sans
+    // ambiguïté et peut être réparé lors de la transformation.
+    $schools = db_select_all("
+        id
+        FROM school
+        WHERE deleted IS NULL
+        ORDER BY id ASC
+    ");
+    if (!count($schools))
+        return (new ErrorResponse("NoSchool"));
+    if (count($schools) != 1)
+        return (new ErrorResponse("MissingField", "school"));
+
+    return (new ValueResponse([
+        "school_ids" => [(int)$schools[0]["id"]],
+        "inferred" => true,
+    ]));
+}
+
+function transform_prospect_legacy_assignments()
+{
+    $assignments = [];
+    if (in_array("prospect", db_select_rows("user"), true))
+        $assignments[] = "`prospect` = 0";
+    return ($assignments);
+}
+
 function transform_prospect($id)
 {
     global $Database;
@@ -189,6 +239,7 @@ function transform_prospect($id)
 	FROM user
 	WHERE id = $id
 	AND password = ''
+	AND profile_status = 'prospect'
     ");
     if ($user == NULL)
 	return (new ErrorResponse("UserNotFound"));
@@ -199,24 +250,109 @@ function transform_prospect($id)
 	return ($material);
     $material = $material->value;
 
+    if (($school_context = transform_prospect_school_context($id))->is_error())
+	return ($school_context);
+    $school_context = $school_context->value;
+
     if (($request = create_distrans_user($user, $password, $bddpassword, true))->is_error())
 	return ($request);
 
     $hash = $Database->real_escape_string($material["hash"]);
     $salt = $Database->real_escape_string($material["salt"]);
     $local_salt = $Database->real_escape_string($material["local_salt"]);
+    if ($Database->query("START TRANSACTION") === NULL)
+	return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+    $assignments = [
+        "password = '$hash'",
+        "salt = '$salt'",
+        "local_salt = '$local_salt'",
+        "profile_status = 'member'",
+        "deleted = NULL",
+        "cache = '{}'",
+    ];
+    $assignments = array_merge($assignments, transform_prospect_legacy_assignments());
     if ($Database->query("
 	UPDATE user
-	SET password = '$hash',
-	    salt = '$salt',
-	    local_salt = '$local_salt',
-	    deleted = NULL
+	SET ".implode(",\n            ", $assignments)."
 	WHERE id = $id
 	AND password = ''
-    ") == false)
+	AND profile_status = 'prospect'
+    ") === NULL)
+    {
+	$Database->query("ROLLBACK");
 	return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+    }
     if ($Database->affected_rows != 1)
+    {
+	$Database->query("ROLLBACK");
 	return (new ErrorResponse("UserNotFound"));
+    }
+
+    // Un prospect rattaché à une école devient un élève lors de son activation.
+    // Les anciennes valeurs NULL ou les rôles provisoires ne doivent pas le laisser
+    // absent des listes d'élèves après la transformation.
+    $student_authority = user_school_student_authority_sql();
+    if ($school_context["inferred"])
+    {
+        $id_school = (int)$school_context["school_ids"][0];
+        if ($Database->query("
+            INSERT INTO user_school (id_user, id_school, authority)
+            VALUES ($id, $id_school, $student_authority)
+        ") === NULL)
+        {
+            $Database->query("ROLLBACK");
+            return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+        }
+    }
+    else if ($Database->query("
+	UPDATE user_school
+	SET authority = $student_authority
+	WHERE id_user = $id
+    ") === NULL)
+    {
+	$Database->query("ROLLBACK");
+	return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+    }
+
+    // Les invitations d'inscription encore actives n'ont plus de sens une fois
+    // le compte activé. Le mécanisme user_form est désormais générique : les
+    // formulaires administratifs ou documentaires ne doivent pas être révoqués.
+    if (in_array("user_form", db_get_tables(), true)
+        && $Database->query("
+            UPDATE user_form
+            SET revoked_at = NOW()
+            WHERE id_user = $id
+              AND kind IN ('ECL', 'OF', 'OFA', 'CFA')
+              AND completed_at IS NULL
+              AND revoked_at IS NULL
+        ") === NULL)
+    {
+        $Database->query("ROLLBACK");
+        return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+    }
+
+    $converted = db_select_one("
+        user.id
+        FROM user
+        LEFT JOIN user_school ON user_school.id_user = user.id
+        WHERE user.id = $id
+          AND user.password != ''
+          AND user.profile_status = 'member'
+          AND user.deleted IS NULL
+          AND user_school.id IS NOT NULL
+          AND user_school.authority = $student_authority
+    ");
+    if ($converted == NULL)
+    {
+        $Database->query("ROLLBACK");
+        return (new ErrorResponse("CannotUpdate"));
+    }
+
+    if ($Database->query("COMMIT") === NULL)
+    {
+	$Database->query("ROLLBACK");
+	return (new ErrorResponse("CannotUpdate")); // @codeCoverageIgnore
+    }
 
     if (($request = add_default_user_todolist($id))->is_error())
 	return ($request);
@@ -229,10 +365,15 @@ function transform_prospect($id)
     ]));
 }
 
-function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = false)
+function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = false, $profile_status = NULL)
 {
     global $Database;
 
+    if ($profile_status === NULL)
+	$profile_status = $fake ? "prospect" : "member";
+    $profile_status = user_profile_status($profile_status);
+    if (user_profile_status_is_fake($profile_status))
+	$fake = true;
     if ($password == NULL && $fake == false)
 	$password = generate_password();
     $bddpassword = generate_password();
@@ -277,10 +418,10 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	return (new ErrorResponse("MailUsed", $mail));
     }
 
-    $prospect = $fake ? 1 : 0;
+    $profile_status_sql = $Database->real_escape_string($profile_status);
     if (($Database->query("
-      INSERT INTO user (codename, password, registration_date, salt, local_salt, mail, prospect)
-      VALUES ('$login', '$hash', NOW(), '$salt', '$local_salt', '$mail', $prospect)
+      INSERT INTO user (codename, password, registration_date, salt, local_salt, mail, profile_status)
+      VALUES ('$login', '$hash', NOW(), '$salt', '$local_salt', '$mail', '$profile_status_sql')
     ")) == false)
     {
 	if (!INSTALLATION)

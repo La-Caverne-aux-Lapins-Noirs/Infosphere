@@ -53,7 +53,7 @@ function AddRoom($id, $data, $method, $output, $module)
 	    // Un directeur crée toujours la salle dans son école, et ne choisit pas
 	    // une école arbitraire. Les changements de rattachement restent admin.
 	    foreach ($User["school"] as $school)
-		if ($school["authority"] != "STUDENT")
+		if ($school["authority"] !== "STUDENT")
 		    if (($ret = handle_links($school["id_school"], $room["codename"], "school", "room"))->is_error())
 			return ($ret);
 	}

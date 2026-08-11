@@ -1,0 +1,12 @@
+<style><?php require (__DIR__."/style.css"); ?></style>
+
+<h2 class="alignable_blocks"><?=$Dictionnary["CertificationMenuLabel"] ?? "Certifications"; ?></h2>
+
+<div id="jury_panel">
+    <?php
+    $juries = fetch_juries();
+    $jury_titles = fetch_jury_titles();
+    $certification_skills = fetch_certification_skills();
+    require ("list.phtml");
+    ?>
+</div>

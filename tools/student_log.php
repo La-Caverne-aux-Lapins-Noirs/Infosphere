@@ -1,4 +1,5 @@
 <?php
+require_once (__DIR__."/halfday_presence.php");
 
 const USER_LOG_SSH_IDLE = -2;
 const USER_LOG_LOCK = -1;
@@ -8,7 +9,7 @@ const USER_LOG_DISTANT = 2;
 
 function user_log_valid_activity_types()
 {
-    return ([USER_LOG_INTRA, USER_LOG_WORK, USER_LOG_DISTANT]);
+    return ([USER_LOG_WORK, USER_LOG_DISTANT]);
 }
 
 function user_log_sql_type_list($types)
@@ -65,9 +66,17 @@ function compute_student_log($user = NULL, $type = USER_LOG_INTRA, $date = NULL,
 	return ;
     }
     if ($date < $last_log)
+    {
+	$increment = 0;
 	$acc = $today["duration"];
+    }
     else
-	$acc = $today["duration"] + $date - $last_log;
+    {
+	$increment = $date - $last_log;
+	$acc = $today["duration"] + $increment;
+    }
+    if ($increment > 0)
+	halfday_presence_add_interval($user, $type, $last_log, $date);
     $Database->query("
        UPDATE user_log
        SET last_log = NOW(), duration = $acc
@@ -106,31 +115,36 @@ function get_student_log($user = NULL, $date = NULL, $types = NULL)
 
 function get_week_average($user, $since = 60 * 60 * 24 * 14)
 {
-    // Cette fonction ne devrait pas accumuler intra et travail mais établir
-    // un ensemble basé sur le temps seulement passé.
+    // Nom historique trompeur: cette valeur est utilisée par la home comme
+    // total horaire des derniers jours, pas comme moyenne journalière.
+    // On somme donc les heures valides sur les N derniers jours calendaires,
+    // en incluant explicitement aujourd'hui.
 
     if (is_array($user))
 	$user = $user["id"];
     else if (is_object($user))
 	$user = $user->id;
     else if (!is_number($user))
-	return ;
+	return (0);
 
-    $end = now();
-    $start = $end - $since;
-    $end = db_form_date($end);
-    $start = db_form_date($start);
+    $days = max(1, (int)ceil($since / (60 * 60 * 24)));
+    $today = now();
+    $start = db_form_date($today - ($days - 1) * 60 * 60 * 24, true);
+    $end = db_form_date($today + 60 * 60 * 24, true);
     $types = user_log_sql_type_list(user_log_valid_activity_types());
 
-    $query = db_select_all("
-  log_date, duration FROM user_log WHERE type IN ($types) AND id_user = $user
-  AND log_date >= '$start' AND log_date <= '$end'
+    $fetch = db_select_one("
+      COALESCE(SUM(duration), 0) as duration
+      FROM user_log
+      WHERE id_user = ".(int)$user."
+      AND type IN ($types)
+      AND log_date >= '$start'
+      AND log_date < '$end'
     ");
 
-    $total = 0;
-    foreach ($query as $vv)
-	$total += $vv["duration"] / (60 * 60);
-    return ($total);
+    if ($fetch == NULL)
+	return (0);
+    return ($fetch["duration"] / (60 * 60));
 }
 
 function get_last_activities_report($user, $since = 60 * 60 * 24 * 14)

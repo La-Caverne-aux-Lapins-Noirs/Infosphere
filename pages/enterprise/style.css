@@ -1,0 +1,652 @@
+.enterprise_page
+{
+    width: 100%;
+}
+
+.enterprise_page h1,
+.enterprise_page h2,
+.enterprise_page h3,
+.enterprise_page h4
+{
+    margin-top: 6px;
+    margin-bottom: 8px;
+}
+
+.enterprise_layout
+{
+    display: grid;
+    grid-template-columns: minmax(350px, 1fr) 360px;
+    gap: 18px;
+    align-items: start;
+}
+
+.enterprise_list
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+}
+
+.enterprise_card,
+.enterprise_panel
+{
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.enterprise_card_header
+{
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.enterprise_logo
+{
+    width: 64px;
+    height: 64px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.enterprise_meta
+{
+    font-size: 0.9em;
+    opacity: 0.85;
+    line-height: 1.25em;
+}
+
+.enterprise_form_grid
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+}
+
+.enterprise_form_grid label,
+.enterprise_contact_form label,
+.enterprise_full
+{
+    display: block;
+}
+
+.enterprise_form_grid input,
+.enterprise_form_grid textarea,
+.enterprise_contact_form input,
+.enterprise_contact_form textarea,
+.enterprise_contact_form select,
+.enterprise_panel input,
+.enterprise_panel textarea
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.enterprise_form_grid textarea,
+.enterprise_contact_form textarea
+{
+    min-height: 70px;
+    resize: vertical;
+}
+
+.enterprise_full
+{
+    grid-column: 1 / -1;
+}
+
+.enterprise_actions
+{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.enterprise_contacts
+{
+    margin-top: 16px;
+}
+
+.enterprise_contact
+{
+    display: grid;
+    grid-template-columns: 1fr 210px 36px;
+    gap: 8px;
+    align-items: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.enterprise_contact form
+{
+    margin: 0;
+}
+
+.enterprise_contact_role
+{
+    font-weight: bold;
+}
+
+.enterprise_add_notice
+{
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 900px)
+{
+    .enterprise_layout
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+.enterprise_main_info textarea[readonly]
+{
+    opacity: 0.85;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.enterprise_panel,
+.enterprise_card
+{
+    color: #111111;
+}
+
+.enterprise_panel input,
+.enterprise_panel textarea,
+.enterprise_panel select
+{
+    color: #111111;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.20);
+}
+
+.enterprise_panel a,
+.enterprise_card a
+{
+    color: #0b4f8a;
+}
+
+.enterprise_admin_page
+{
+    box-sizing: border-box;
+    display: grid;
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+}
+
+.enterprise_admin_page *,
+.enterprise_page *
+{
+    box-sizing: border-box;
+}
+
+.enterprise_admin_header,
+.enterprise_admin_card
+{
+    background: rgba(0, 0, 0, 0.82);
+    border: 1px solid rgba(0, 220, 0, 0.30);
+    border-radius: 12px;
+    color: #f7fff7;
+    padding: 14px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.34);
+}
+
+.enterprise_admin_header
+{
+    align-items: center;
+    display: flex;
+    gap: 14px;
+}
+
+.enterprise_admin_logo,
+.enterprise_table_logo
+{
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.enterprise_admin_logo
+{
+    height: 80px;
+    width: 80px;
+}
+
+.enterprise_table_logo
+{
+    height: 64px;
+    width: 96px;
+}
+
+.enterprise_admin_title h2,
+.enterprise_admin_title p,
+.enterprise_admin_card h3
+{
+    margin: 0;
+}
+
+.enterprise_admin_title p
+{
+    margin-top: 5px;
+}
+
+.enterprise_admin_page .tabpanel
+{
+    height: auto;
+    position: static;
+    width: 100%;
+}
+
+.enterprise_admin_page .tablist
+{
+    align-items: stretch;
+    display: flex;
+    gap: 8px;
+    height: auto;
+    left: auto;
+    padding: 0;
+    position: static;
+    top: auto;
+    width: 100%;
+}
+
+.enterprise_admin_page .tablist a
+{
+    flex: 1 1 0;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.enterprise-tab-button
+{
+    background: rgba(0, 0, 0, 0.78);
+    border: 1px solid rgba(0, 220, 0, 0.32);
+    border-radius: 10px;
+    color: #f7fff7;
+    cursor: pointer;
+    min-height: 38px;
+    padding: 10px 12px;
+    text-align: center;
+    width: 100% !important;
+}
+
+.enterprise-tab-button.selected
+{
+    background: rgba(0, 120, 0, 0.82);
+    border-color: rgba(0, 255, 0, 0.70);
+    font-weight: bold;
+}
+
+.enterprise_admin_page .tabcontent
+{
+    background: none;
+    border: 0;
+    height: auto;
+    left: auto;
+    margin-top: 12px;
+    overflow: visible;
+    position: static;
+    top: auto;
+    width: 100%;
+}
+
+.enterprise_admin_page .tabcontent > div
+{
+    height: auto;
+    left: auto;
+    position: static;
+    top: auto;
+    width: 100%;
+}
+
+.enterprise_admin_block
+{
+    max-width: 1100px;
+}
+
+.enterprise_admin_narrow_block
+{
+    margin-top: 12px;
+    max-width: 520px;
+}
+
+.enterprise_reasonable_grid
+{
+    grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
+    justify-content: start;
+}
+
+.enterprise_admin_form label,
+.enterprise_contact_form label
+{
+    color: inherit;
+    font-weight: bold;
+}
+
+.enterprise_admin_form input,
+.enterprise_admin_form textarea,
+.enterprise_admin_form select,
+.enterprise_contact_inline_form input,
+.enterprise_contact_inline_form select,
+.enterprise_contact_form input,
+.enterprise_contact_form textarea,
+.enterprise_contact_form select
+{
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.36);
+    border-radius: 6px;
+    color: #111111;
+    padding: 6px;
+}
+
+.enterprise_contacts_layout
+{
+    display: grid;
+    gap: 12px;
+}
+
+.enterprise_contact_add_block
+{
+    max-width: 900px;
+}
+
+.enterprise_contacts_list_block
+{
+    max-width: 1300px;
+}
+
+.enterprise_contact_inline_form
+{
+    display: grid;
+    gap: 4px;
+    grid-template-columns: minmax(120px, 180px) minmax(160px, 1fr) 42px;
+}
+
+.enterprise_table td,
+.enterprise_table th,
+.enterprise_contacts_table td,
+.enterprise_contacts_table th
+{
+    vertical-align: middle;
+}
+
+/* Passe GUI : panneaux sombres et boutons lisibles sur les pages organisations. */
+.enterprise_panel
+{
+    background: rgba(0, 0, 0, 0.68);
+    border: 1px solid rgba(0, 220, 0, 0.38);
+    color: rgba(255, 255, 255, 0.93);
+}
+
+.enterprise_panel h2,
+.enterprise_panel h3,
+.enterprise_panel p,
+.enterprise_panel label,
+.enterprise_panel .enterprise_add_notice
+{
+    color: rgba(255, 255, 255, 0.93);
+}
+
+.enterprise_panel input,
+.enterprise_panel textarea,
+.enterprise_panel select
+{
+    background: rgba(255, 255, 255, 0.96);
+    color: #111111;
+}
+
+.enterprise_panel input[type="button"],
+.enterprise_admin_page input[type="button"],
+.enterprise_admin_page button
+{
+    background: rgba(0, 120, 0, 0.92) !important;
+    border: 1px solid rgba(115, 255, 115, 0.95) !important;
+    border-radius: 7px;
+    color: #ffffff !important;
+    cursor: pointer;
+    font-weight: bold;
+    min-height: 30px;
+    padding: 5px 10px;
+    text-shadow: 0 1px 2px #000000;
+}
+
+.enterprise_panel input[type="button"]:hover,
+.enterprise_admin_page input[type="button"]:hover,
+.enterprise_admin_page button:hover
+{
+    background: rgba(0, 170, 0, 0.96) !important;
+}
+
+.enterprise_admin_full_block
+{
+    max-width: none;
+    width: 100%;
+}
+
+.enterprise_config_columns
+{
+    align-items: start;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1fr) minmax(360px, 1.1fr);
+}
+
+.enterprise_config_section
+{
+    align-content: start;
+    display: grid;
+    gap: 8px;
+}
+
+.enterprise_config_section label
+{
+    display: block;
+}
+
+.enterprise_config_section textarea
+{
+    min-height: 70px;
+}
+
+.enterprise_config_section .enterprise_main_info textarea[readonly]
+{
+    min-height: 92px;
+}
+
+.enterprise_small_line
+{
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.enterprise_contacts_layout
+{
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.7fr);
+}
+
+.enterprise_contact_add_block,
+.enterprise_contacts_list_block
+{
+    max-width: none;
+}
+
+.enterprise_contact_add_grid
+{
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.enterprise_contact_position
+{
+    grid-column: 1 / -1;
+}
+
+.enterprise_contact_cards
+{
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+}
+
+.enterprise_contact_card
+{
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(0, 255, 0, 0.22);
+    border-radius: 10px;
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+}
+
+.enterprise_contact_identity
+{
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 72px 1fr;
+}
+
+.enterprise_contact_identity img
+{
+    object-fit: cover;
+}
+
+.enterprise_contact_inline_form
+{
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(110px, 145px) minmax(120px, 1fr) 42px;
+}
+
+.enterprise_contact_delete_form input[type="button"]
+{
+    background: rgba(110, 0, 0, 0.90) !important;
+    border-color: rgba(255, 120, 120, 0.95) !important;
+}
+
+@media (max-width: 1300px)
+{
+    .enterprise_config_columns,
+    .enterprise_contacts_layout
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .enterprise_config_section:nth-child(3)
+    {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 850px)
+{
+    .enterprise_config_columns,
+    .enterprise_contacts_layout,
+    .enterprise_contact_add_grid,
+    .enterprise_small_line
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .enterprise_config_section:nth-child(3)
+    {
+        grid-column: auto;
+    }
+}
+
+/* Passe GUI : formulaires organisation plus réguliers et compacts. */
+.enterprise_admin_card
+{
+    overflow: hidden;
+}
+
+.enterprise_config_columns
+{
+    align-items: start;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.15fr) minmax(420px, 1.15fr);
+}
+
+.enterprise_config_section
+{
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(0, 220, 0, 0.22);
+    border-radius: 10px;
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+}
+
+.enterprise_config_section h3
+{
+    border-bottom: 1px solid rgba(0, 255, 0, 0.22);
+    margin-bottom: 2px;
+    padding-bottom: 5px;
+}
+
+.enterprise_config_section label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.enterprise_config_section input,
+.enterprise_config_section textarea,
+.enterprise_config_section select
+{
+    min-height: 30px;
+    width: 100%;
+}
+
+.enterprise_config_section textarea
+{
+    min-height: 58px;
+    resize: vertical;
+}
+
+.enterprise_config_section .enterprise_main_info textarea[readonly]
+{
+    min-height: 68px;
+}
+
+.enterprise_small_line
+{
+    align-items: start;
+}
+
+.enterprise_actions
+{
+    margin-top: 10px;
+}
+
+.enterprise_admin_danger
+{
+    margin-top: 10px;
+}
+
+@media (max-width: 1400px)
+{
+    .enterprise_config_columns
+    {
+        grid-template-columns: repeat(2, minmax(320px, 1fr));
+    }
+}

@@ -1,0 +1,103 @@
+<?php
+$libraries = correction_libraries();
+$correction_categories = correction_categories();
+?>
+<div class="correction-panel correction-library-panel">
+    <?php if (!count($libraries)) { ?><p class="correction-empty">Aucune bibliothèque de correction.</p><?php } ?>
+    <?php if (count($libraries)) { ?>
+        <div class="correction-library-toolbar">
+            <button type="button" onclick="correctionLibrariesSetExpanded(true);">Tout dérouler</button>
+            <button type="button" onclick="correctionLibrariesSetExpanded(false);">Tout replier</button>
+        </div>
+    <?php } ?>
+    <?php foreach ($libraries as $library) {
+        $library_complete = count($library['symbols']) > 0;
+        $library_missing = 0;
+        $library_symbols = [];
+
+        foreach ($library['symbols'] as $symbol)
+        {
+            $prefix = correction_category_path($library['id_category']).'/'.$symbol['function_name'];
+            $definition = correction_asset_by_path($prefix.'.dab');
+            $exercise = correction_asset_by_path($prefix.'_exercise.dab');
+            if (!$definition || !$exercise)
+            {
+                $library_complete = false;
+                $library_missing++;
+            }
+            $library_symbols[] = [
+                'symbol' => $symbol,
+                'definition' => $definition,
+                'exercise' => $exercise
+            ];
+        }
+        $body_id = 'correction-library-body-'.(int)$library['id'];
+    ?>
+        <article class="correction-card correction-library-card" data-library-card>
+            <header class="correction-library-header">
+                <button
+                    type="button"
+                    class="correction-library-toggle"
+                    aria-expanded="true"
+                    aria-controls="<?=$body_id; ?>"
+                    onclick="return correctionToggleLibrary(this);"
+                    title="Enrouler ou dérouler cette bibliothèque"
+                ><span aria-hidden="true">▾</span></button>
+                <div class="correction-library-title">
+                    <div class="correction-library-title-line">
+                        <h3><?=htmlspecialchars($library['filename']); ?></h3>
+                        <span class="status <?=$library_complete ? 'complete' : 'incomplete'; ?>">
+                            <?=$library_complete ? 'Complète' : 'Incomplète'; ?>
+                            <?php if (!$library_complete && $library_missing) { ?>(<?=$library_missing; ?>)<?php } ?>
+                        </span>
+                    </div>
+                    <code><?=htmlspecialchars($library['relative_path']); ?></code>
+                </div>
+                <div class="correction-card-actions">
+                    <form class="correction-move-form" method="put" action="/api/correction/<?=$library['id']; ?>">
+                        <input type="hidden" name="action" value="move" />
+                        <label>
+                            <span class="correction-visually-hidden">Changer de catégorie</span>
+                            <select name="id_category" title="Changer de catégorie" aria-label="Changer de catégorie">
+                            <?php foreach ($correction_categories as $category) { ?>
+                                <option value="<?=$category['id']; ?>" <?=$category['id'] == $library['id_category'] ? 'selected' : ''; ?>>
+                                    <?=htmlspecialchars($category['name'].' — '.correction_category_path($category['id'])); ?>
+                                </option>
+                            <?php } ?>
+                            </select>
+                        </label>
+                        <button type="button" title="Déplacer dans cette catégorie" onclick="return correctionMoveAsset(this);">Déplacer</button>
+                    </form>
+                    <form method="delete" action="/api/correction/<?=$library['id']; ?>" onsubmit="if (!confirm('Supprimer cette bibliothèque de correction ?')) return false; return silent_submit(this, 'correction-catalog');">
+                        <button type="submit" class="danger">Supprimer</button>
+                    </form>
+                </div>
+            </header>
+            <div id="<?=$body_id; ?>" class="correction-library-body">
+                <dl class="correction-metadata">
+                    <div><dt>SHA-256</dt><dd><code><?=htmlspecialchars($library['sha256']); ?></code></dd></div>
+                    <div><dt>Format</dt><dd><?=htmlspecialchars(trim(($library['elf_class'] ?? '').' '.($library['elf_machine'] ?? ''))); ?></dd></div>
+                    <div><dt>Taille</dt><dd><?=number_format((int)$library['size'], 0, ',', ' '); ?> octets</dd></div>
+                </dl>
+                <table class="content_table correction-table">
+                    <thead><tr><th>Évaluateur de fonction</th><th>Définition</th><th>Étapes</th><th>État</th></tr></thead>
+                    <tbody>
+                    <?php if (!count($library_symbols)) { ?><tr><td colspan="4">Aucun symbole <code>evaluate_*</code> exporté.</td></tr><?php } ?>
+                    <?php foreach ($library_symbols as $entry) {
+                        $symbol = $entry['symbol'];
+                        $definition = $entry['definition'];
+                        $exercise = $entry['exercise'];
+                    ?>
+                        <tr>
+                            <td><strong><?=htmlspecialchars($symbol['function_name']); ?></strong><br /><small><?=htmlspecialchars($symbol['symbol']); ?></small></td>
+                            <td class="<?=$definition ? 'ok' : 'missing'; ?>"><?=$definition ? htmlspecialchars($definition['filename']) : 'Manquante'; ?></td>
+                            <td class="<?=$exercise ? 'ok' : 'missing'; ?>"><?=$exercise ? htmlspecialchars($exercise['filename']) : 'Manquantes'; ?></td>
+                            <td><span class="status <?=$definition && $exercise ? 'complete' : 'incomplete'; ?>"><?=$definition && $exercise ? 'Complète' : 'Incomplète'; ?></span></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    <?php } ?>
+</div>

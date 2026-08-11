@@ -1,0 +1,28 @@
+<?php $functions = correction_functions(); ?>
+<div class="correction-panel">
+    <input class="correction-search" type="search" placeholder="Rechercher une fonction vérifiable…" oninput="correctionFilterFunctions(this.value)" />
+    <table class="content_table correction-table" id="correction-function-table">
+        <thead><tr><th>Fonction</th><th>Bibliothèque</th><th>Catégorie</th><th>Définition</th><th>Évaluation</th><th>État</th></tr></thead>
+        <tbody>
+        <?php if (!count($functions)) { ?><tr><td colspan="6">Aucune fonction détectée.</td></tr><?php } ?>
+        <?php foreach ($functions as $function) { ?>
+            <tr data-correction-function="<?=htmlspecialchars(strtolower($function['function_name'].' '.$function['library_path'].' '.$function['category_name'])); ?>">
+                <td><strong><?=htmlspecialchars($function['function_name']); ?></strong><br /><small><?=htmlspecialchars($function['symbol']); ?></small></td>
+                <td><code><?=htmlspecialchars($function['library_path']); ?></code></td>
+                <td><?=htmlspecialchars($function['category_name']); ?></td>
+                <td class="<?=$function['definition'] ? 'ok' : 'missing'; ?>"><?=$function['definition'] ? htmlspecialchars($function['definition']['filename']) : 'Manquante'; ?></td>
+                <td class="<?=$function['exercise'] ? 'ok' : 'missing'; ?>"><?=$function['exercise'] ? htmlspecialchars($function['exercise']['filename']) : 'Manquante'; ?></td>
+                <td><span class="status <?=$function['complete'] ? 'complete' : 'incomplete'; ?>"><?=$function['complete'] ? 'Complète' : 'Incomplète'; ?></span></td>
+            </tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</div>
+<script>
+function correctionFilterFunctions(value) {
+    value = value.toLowerCase().trim();
+    document.querySelectorAll('#correction-function-table [data-correction-function]').forEach(function (row) {
+        row.style.display = row.getAttribute('data-correction-function').indexOf(value) >= 0 ? '' : 'none';
+    });
+}
+</script>

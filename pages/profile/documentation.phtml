@@ -1,0 +1,377 @@
+<?php if (!is_director_for_student($user->id)) return ; ?>
+<?php
+require_once (__DIR__."/../../tools/document_sources.php");
+require_once (__DIR__."/../../tools/document_signatures.php");
+
+$documentation_models = [];
+foreach (get_document_sources() as $source => $docs)
+{
+    foreach ($docs["documents"] as $doc)
+    {
+        $reference = document_reference_from_source_path($source, $doc);
+        $editor_path = document_source_editor_path($source, $doc);
+        if ($editor_path === NULL)
+            continue ;
+        $documentation_models[] = [
+            "reference" => $reference,
+            "editor_path" => $editor_path,
+            "label" => document_reference_label($reference),
+            "hash" => md5($reference),
+            "signatures" => document_signature_model_slots($editor_path),
+        ];
+    }
+}
+usort($documentation_models, function ($a, $b) {
+    return (strnatcasecmp($a["label"], $b["label"]));
+});
+
+$documentation_school = NULL;
+$documentation_school_ref = document_context_first_school_for_user((int)$user->id);
+if (is_array($documentation_school_ref) && isset($documentation_school_ref["id_school"]))
+    $documentation_school = fetch_school((int)$documentation_school_ref["id_school"]);
+$documentation_school_codename = is_array($documentation_school) ? ($documentation_school["codename"] ?? "") : "";
+$documentation_generator_id = isset($OriginalUser["id"]) ? (int)$OriginalUser["id"] : (int)$User["id"];
+
+$documentation_root = document_builder_documentation_file_root();
+$documentation_dir = $Configuration->UsersDir($user->codename).$documentation_root."/";
+new_directory($documentation_dir."index.php");
+
+$letter_models = document_builder_letter_models($Language);
+$letter_root = document_builder_letter_file_root();
+$letter_dir = $Configuration->UsersDir($user->codename).$letter_root."/";
+if (count($letter_models))
+    new_directory($letter_dir."index.php");
+?>
+<script>
+var profileDocumentationSignatureSources = {
+    Student: {type: 'student', id: <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Student'},
+    Director: {type: 'director', id: <?=json_encode($documentation_school_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Director'},
+    Legal1: {type: 'legal1', id: <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Legal1'},
+    Legal2: {type: 'legal2', id: <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Legal2'},
+    Finance: {type: 'finance', id: <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Finance'},
+    Generator: {type: 'user', id: <?=json_encode($documentation_generator_id); ?>, label: 'Generator'}
+};
+
+function profile_documentation_selected_model(form)
+{
+    return form.querySelector('[name="document_model"] option:checked');
+}
+
+function profile_documentation_signature_schema(form)
+{
+    var option = profile_documentation_selected_model(form);
+    if (!option)
+        return {};
+    try { return JSON.parse(option.getAttribute('data-signatures') || '{}'); }
+    catch (e) { return {}; }
+}
+
+function profile_documentation_signature_bindings(form)
+{
+    var out = {};
+    form.querySelectorAll('[data-signature-slot]').forEach(function (select) {
+        if (select.value)
+            out[select.getAttribute('data-signature-slot')] = select.value;
+    });
+    return out;
+}
+
+function profile_documentation_refresh_signatures(form)
+{
+    var target = form.querySelector('[data-document-signatures]');
+    if (!target)
+        return;
+    target.innerHTML = '';
+    var schema = profile_documentation_signature_schema(form);
+    var slots = Object.keys(schema);
+    if (!slots.length)
+    {
+        target.style.display = 'none';
+        return;
+    }
+    target.style.display = '';
+    slots.forEach(function (slot) {
+        var row = document.createElement('div');
+        row.style.display = 'grid';
+        row.style.gridTemplateColumns = 'minmax(110px, 1fr) minmax(180px, 2fr)';
+        row.style.gap = '6px';
+        row.style.margin = '4px 0';
+        var label = document.createElement('label');
+        label.textContent = slot + (schema[slot].required ? ' *' : '');
+        var select = document.createElement('select');
+        select.setAttribute('data-signature-slot', slot);
+        select.style.width = '100%';
+        var empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '—';
+        select.appendChild(empty);
+        Object.keys(profileDocumentationSignatureSources).forEach(function (key) {
+            var source = profileDocumentationSignatureSources[key];
+            if (!source.id)
+                return;
+            var option = document.createElement('option');
+            option.value = key;
+            option.textContent = source.label;
+            if (key === slot)
+                option.selected = true;
+            select.appendChild(option);
+        });
+        row.appendChild(label);
+        row.appendChild(select);
+        target.appendChild(row);
+    });
+}
+
+function profile_documentation_validate_signatures(form)
+{
+    var schema = profile_documentation_signature_schema(form);
+    var bindings = profile_documentation_signature_bindings(form);
+    var missing = Object.keys(schema).filter(function (slot) {
+        return schema[slot].required && !bindings[slot];
+    });
+    if (!missing.length)
+        return true;
+    alert(<?=json_encode($Dictionnary["DocumentRequiredSignatories"] ?? "Veuillez définir tous les signataires obligatoires : ", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> + missing.join(', '));
+    return false;
+}
+
+function profile_documentation_signature_chain(form)
+{
+    var bindings = profile_documentation_signature_bindings(form);
+    var chain = [];
+    Object.keys(bindings).forEach(function (slot) {
+        var source = profileDocumentationSignatureSources[bindings[slot]];
+        if (!source || !source.id)
+            return;
+        chain.push({type: source.type, prefix: 'SignatureSources.' + slot, id: source.id, signatory: slot});
+    });
+    return chain;
+}
+
+function profile_documentation_chain(form)
+{
+    var student = <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+    var school = <?=json_encode($documentation_school_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+    var year = parseInt(form.querySelector('[name="target_year"]').value, 10);
+    var chain = [];
+
+    if (school)
+        chain.push({type: 'school', prefix: 'School', id: school});
+    chain.push({type: 'student', prefix: 'Student', id: student});
+    chain = chain.concat(profile_documentation_signature_chain(form));
+
+    if (Number.isInteger(year) && year >= 1 && year <= 5)
+    {
+        chain.push(
+            {type: 'field', key: 'Student.ChosenClass', value: 'EF' + year},
+            {type: 'field', key: 'Student.CurrentYear', value: String(year)}
+        );
+        var bindings = profile_documentation_signature_bindings(form);
+        Object.keys(bindings).forEach(function (slot) {
+            if (bindings[slot] === 'Student')
+            {
+                chain.push(
+                    {type: 'field', key: 'SignatureSources.' + slot + '.ChosenClass', value: 'EF' + year},
+                    {type: 'field', key: 'SignatureSources.' + slot + '.CurrentYear', value: String(year)}
+                );
+            }
+        });
+    }
+    return chain;
+}
+
+function profile_documentation_prepare(form)
+{
+    var option = form.querySelector('[name="document_model"] option:checked');
+    if (!option || !option.value)
+        return false;
+    if (!profile_documentation_validate_signatures(form))
+        return false;
+    form.querySelector('[name="docref_profile_document"]').value = option.value;
+    form.querySelector('[name="chain"]').value = JSON.stringify(profile_documentation_chain(form));
+    form.querySelector('[name="form_output"]').value = 'user-document:<?=((int)$user->id); ?>:' + option.getAttribute('data-form-hash') + ':' + (form.querySelector('[name="target_year"]').value || '0');
+    form.querySelector('[name="signature_bindings"]').value = JSON.stringify(profile_documentation_signature_bindings(form));
+    return true;
+}
+
+function profile_documentation_complete(form)
+{
+    var option = form.querySelector('[name="document_model"] option:checked');
+    if (!option || !option.value)
+        return false;
+    if (!profile_documentation_validate_signatures(form))
+        return false;
+    var output = 'user-document:<?=((int)$user->id); ?>:' + option.getAttribute('data-form-hash') + ':' + (form.querySelector('[name="target_year"]').value || '0');
+    var url = 'index.php?p=DabsicFormMenu' +
+        '&file=' + encodeURIComponent(option.getAttribute('data-form-file')) +
+        '&output=' + encodeURIComponent(output) +
+        '&mode=docbuilder' +
+        '&chain=' + encodeURIComponent(JSON.stringify(profile_documentation_chain(form)));
+    window.open(url, '_blank', 'noopener');
+    return false;
+}
+
+function profile_documentation_send(form)
+{
+    var option = form.querySelector('[name="document_model"] option:checked');
+    if (!option || !option.value)
+        return false;
+    if (!profile_documentation_validate_signatures(form))
+        return false;
+    var send = document.getElementById('profile-documentation-send-form');
+    if (!send)
+        return false;
+    send.querySelector('[name="document_file"]').value = option.getAttribute('data-form-file') || '';
+    send.querySelector('[name="model_hash"]').value = option.getAttribute('data-form-hash') || '';
+    send.querySelector('[name="document_label"]').value = option.textContent.trim();
+    send.querySelector('[name="target_year"]').value = form.querySelector('[name="target_year"]').value || '0';
+    send.querySelector('[name="signature_bindings"]').value = JSON.stringify(profile_documentation_signature_bindings(form));
+    return silent_submitf(send, {after_success: profile_documentation_form_sent});
+}
+
+function profile_documentation_form_sent(result, msg, content, parameter)
+{
+    if (content && content.length)
+        console.log('Formulaire documentaire : ' + content);
+}
+
+function profile_documentation_refresh(result, msg, content, parameter)
+{
+    if (content && content.length)
+        window.open(content, '_blank').focus();
+    var browser = document.getElementById(parameter);
+    if (browser)
+    {
+        var refresh = browser.previousElementSibling;
+        if (refresh)
+            silent_submit(refresh, parameter);
+    }
+}
+
+function profile_open_generated_letter(result, msg, content, parameter)
+{
+    if (content && content.length)
+        window.open(content, '_blank').focus();
+    var browser = document.getElementById(parameter);
+    if (browser)
+    {
+        var refresh = browser.previousElementSibling;
+        if (refresh)
+            silent_submit(refresh, parameter);
+    }
+}
+</script>
+
+<div class="profile_documentation">
+    <h3><?=$Dictionnary["Documentation"]; ?></h3>
+
+    <h4><?=$Dictionnary["GenerateDocument"]; ?></h4>
+    <?php if (!count($documentation_models)) { ?>
+        <p><?=$Dictionnary["NoDocumentModel"]; ?></p>
+    <?php } else { ?>
+        <form method="post" action="/api/doc/0/generate" target="_blank" onsubmit="return profile_documentation_prepare(this);">
+            <input type="hidden" name="doc_profile_document" value="1" />
+            <input type="hidden" name="docref_profile_document" value="" />
+            <input type="hidden" name="chain" value="[]" />
+            <input type="hidden" name="form_output" value="" />
+            <input type="hidden" name="save_user_document" value="<?=$user->id; ?>" />
+            <input type="hidden" name="finalize_document" value="1" />
+            <input type="hidden" name="signature_bindings" value="{}" />
+
+            <label><?=$Dictionnary["DocumentModel"]; ?></label><br />
+            <select name="document_model" style="width: 100%;" required onchange="profile_documentation_refresh_signatures(this.form);">
+                <option value=""><?=$Dictionnary["ChooseDocumentModel"]; ?></option>
+                <?php foreach ($documentation_models as $model) { ?>
+                    <option
+                        value="<?=htmlspecialchars($model["reference"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                        data-form-hash="<?=htmlspecialchars($model["hash"], ENT_QUOTES); ?>"
+                        data-form-file="<?=htmlspecialchars($model["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                        data-signatures="<?=htmlspecialchars(json_encode($model["signatures"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                    ><?=htmlspecialchars($model["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                <?php } ?>
+            </select><br />
+
+            <label><?=$Dictionnary["TargetTrainingYear"]; ?></label><br />
+            <select name="target_year" style="width: 100%;">
+                <option value="0"><?=$Dictionnary["KeepCurrentContext"]; ?></option>
+                <?php for ($year = 1; $year <= 5; ++$year) { ?>
+                    <option value="<?=$year; ?>">EF<?=$year; ?></option>
+                <?php } ?>
+            </select><br />
+
+            <fieldset data-document-signatures style="display: none; margin-top: 8px;">
+                <legend><?=$Dictionnary["DocumentSignatories"] ?? "Signataires"; ?></legend>
+            </fieldset>
+
+            <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                <input type="button" value="<?=$Dictionnary["CompleteDocument"]; ?>" onclick="profile_documentation_complete(this.form);" />
+                <input type="button" value="<?=$Dictionnary["SendDocumentForm"] ?? "Envoyer le formulaire"; ?>" onclick="profile_documentation_send(this.form);" />
+                <input type="submit" value="<?=$Dictionnary["FinalizeDocument"] ?? "Finaliser le document"; ?>" />
+            </div>
+        </form>
+        <form id="profile-documentation-send-form" method="put" action="/api/user/<?=$user->id; ?>/document_form" style="display: none;">
+            <input type="hidden" name="document_file" value="" />
+            <input type="hidden" name="model_hash" value="" />
+            <input type="hidden" name="document_label" value="" />
+            <input type="hidden" name="target_year" value="0" />
+            <input type="hidden" name="signature_bindings" value="{}" />
+        </form>
+    <?php } ?>
+
+    <p style="font-size: x-small; opacity: .8;">
+        <?=$Dictionnary["DocumentationFormHelp"]; ?>
+    </p>
+
+    <h4><?=$Dictionnary["GeneratedDocuments"]; ?></h4>
+    <?php
+    $type = "documentation_file";
+    $page = "user";
+    $id = $user->id;
+    $path = $documentation_root;
+    $target = $documentation_dir;
+    $fbid = "documentation_file_browser";
+    $locked_path = $documentation_root;
+    $path_browser_can_cd = true;
+    $nocd = false;
+    $file_browser_height = "260px";
+    require ("./tools/template/path_browser.phtml");
+    ?>
+
+    <?php if (count($letter_models)) { ?>
+        <br />
+        <details>
+            <summary><?=$Dictionnary["LegacyLetters"]; ?></summary>
+            <form
+                method="put"
+                action="/api/user/<?=$user->id; ?>/new_letter"
+                onsubmit="return silent_submitf(this, {after_success: profile_open_generated_letter, after_success_parameter: 'letter_file_browser'});"
+            >
+                <label><?=$Dictionnary["DocumentModel"]; ?></label><br />
+                <select name="model" style="width: 100%;">
+                    <?php foreach ($letter_models as $name => $file) { ?>
+                        <option value="<?=$name; ?>"><?=$name; ?></option>
+                    <?php } ?>
+                </select><br />
+                <label><?=$Dictionnary["DocumentFields"]; ?></label><br />
+                <input type="text" name="fields" placeholder="Cle=Valeur AutreCle=AutreValeur" style="width: 100%;" /><br />
+                <label><?=$Dictionnary["OutputFile"]; ?></label><br />
+                <input type="text" name="output" placeholder="optionnel.pdf" style="width: 100%;" /><br />
+                <input type="button" value="<?=$Dictionnary["GenerateLetter"]; ?>" onclick="silent_submitf(this.form, {after_success: profile_open_generated_letter, after_success_parameter: 'letter_file_browser'});" />
+            </form>
+            <br />
+            <?php
+            $type = "letter_file";
+            $page = "user";
+            $id = $user->id;
+            $path = $letter_root;
+            $target = $letter_dir;
+            $fbid = "letter_file_browser";
+            $locked_path = $letter_root;
+            $path_browser_can_cd = true;
+            $nocd = false;
+            $file_browser_height = "180px";
+            require ("./tools/template/path_browser.phtml");
+            ?>
+        </details>
+    <?php } ?>
+</div>

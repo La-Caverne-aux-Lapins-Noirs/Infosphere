@@ -115,6 +115,7 @@ function billing_open_pending_invoice_menu(button, event)
 {
     if (event)
         event.stopPropagation();
+    billing_hide_tooltip();
     billing_clear_selected_delete_event();
 
     let form = button.closest("form");
@@ -305,6 +306,12 @@ function billing_show_tooltip(target, x, y, override_content)
 
     if (!content)
         return;
+    if (currently_open_pending_invoice_menu)
+    {
+        let form = currently_open_pending_invoice_menu.closest("form");
+        if (form && form.contains(target))
+            return;
+    }
     if (!billing_tooltip_div)
     {
         billing_tooltip_div = document.createElement("div");
@@ -340,6 +347,12 @@ function billing_hide_tooltip()
         billing_tooltip_div.classList.remove("visible");
     billing_tooltip_target = null;
 }
+
+document.addEventListener("click", function(e)
+{
+    if (e.target.closest("#billing_panel [data-tooltip]"))
+        billing_hide_tooltip();
+});
 
 document.addEventListener("mouseover", function(e)
 {

@@ -121,14 +121,17 @@ class ModuleLayer extends Layer
 	    ]) == false)
 	        return (false);
 	    
-	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "is_teacher"], $sub, $activity);
+	    transfert(["id", "codename", "name", "description", "registered", "subscription", "maximum_subscription", "hidden", "subject_appeir_date", "pickup_date", "type", "reference_activity", "is_teacher"], $sub, $activity);
 	    $sub->credit = 0;
 	    $sub->acquired_credit = 0;
-	    $sub->commentaries = "";
-	    if ($activity->commentaries)
-		$sub->commentaries .= $activity->commentaries["content"]."\n";
-	    if ($activity->user_commentaries)
-		$sub->commentaries .= $activity->user_commentaries["content"];
+	    $commentaries = [];
+	    // Toujours présenter le commentaire de l'équipe avant le
+	    // commentaire individuel porté par user_team.
+	    if ($activity->commentaries && trim($activity->commentaries["content"]) != "")
+		$commentaries[] = $activity->commentaries["content"];
+	    if ($activity->user_commentaries && trim($activity->user_commentaries["content"]) != "")
+		$commentaries[] = $activity->user_commentaries["content"];
+	    $sub->commentaries = implode("\n\n", $commentaries);
 	    $sub->manual_grade = $act["manual_grade"];
 	    $sub->manual_credit = $act["manual_credit"];
 	    transfert(["begin_date", "end_date"], $sub, $activity->unique_session);

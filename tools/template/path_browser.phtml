@@ -25,9 +25,21 @@ if (!isset($path_browser_can_cd))
     $path_browser_can_cd = !$nocd;
 else
     $path_browser_can_cd = !!$path_browser_can_cd;
+if (!isset($show_hidden_entries))
+    $show_hidden_entries = false;
+else
+    $show_hidden_entries = !!$show_hidden_entries;
+if (!isset($path_browser_dabsic_editor))
+    $path_browser_dabsic_editor = false;
+else
+    $path_browser_dabsic_editor = !!$path_browser_dabsic_editor;
 
 if (!@strlen($fbid))
     $fbid = "file_browser";
+if (!isset($path_browser_root) || !@strlen($path_browser_root))
+    $path_browser_root = isset($root) && @strlen($root)
+        ? $root
+        : path_browser_transfer_root_from_target($target, $path);
 $js = "silent_submit(this, '$fbid$language');";
 ?>
 <form
@@ -41,6 +53,8 @@ $js = "silent_submit(this, '$fbid$language');";
     <input type="hidden" name="nocd" value="<?=$nocd ? 1 : 0; ?>" />
     <input type="hidden" name="locked_path" value="<?=isset($locked_path) ? $locked_path : ""; ?>" />
     <input type="hidden" name="path_browser_can_cd" value="<?=$path_browser_can_cd ? 1 : 0; ?>" />
+    <input type="hidden" name="show_hidden_entries" value="<?=$show_hidden_entries ? 1 : 0; ?>" />
+    <input type="hidden" name="path_browser_dabsic_editor" value="<?=$path_browser_dabsic_editor ? 1 : 0; ?>" />
     <input
 	id="path<?=$fbid.$language; ?>"
 	class="path_browser"
@@ -61,6 +75,10 @@ $js = "silent_submit(this, '$fbid$language');";
 <div
     class="file_browser"
     id="<?=$fbid.$language; ?>"
+    data-path-browser-page="<?=htmlspecialchars((string)$page, ENT_QUOTES); ?>"
+    data-path-browser-id="<?=htmlspecialchars((string)$id, ENT_QUOTES); ?>"
+    data-path-browser-type="<?=htmlspecialchars((string)$type, ENT_QUOTES); ?>"
+    data-path-browser-language="<?=htmlspecialchars((string)$language, ENT_QUOTES); ?>"
     <?php if (isset($file_browser_height)) { ?>
 	   style="height: <?=$file_browser_height; ?>; overflow: auto;"
            <?php unset($file_browser_height); ?>

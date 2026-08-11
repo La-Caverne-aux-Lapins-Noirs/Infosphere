@@ -16,7 +16,7 @@
         </button>
 
         <div class="action_menu hidden">
-	    <?php $js = "return silent_submitf(this.parentNode, {tofill: 'actions{$p["id"]}', toclear: 'actions{$p["id"]}', clear_form: true});"; ?>
+	    <?php $js = "return silent_submitf(this.parentNode, {tofill: 'actions{$p["id"]}', toclear: 'actions{$p["id"]}', clear_form: true, after_success: prospecting_after_action_update, after_success_parameter: {$p["id"]}});"; ?>
             <form method="post" action="/api/prospect/<?=$p["id"]; ?>/paction" onsubmit="<?=$js; ?>">
 		<input type="hidden" name="id_user" value="<?=$p["id"]; ?>" />
 		<select name="id_action" class="bigselect" data-column="3" data-popup-width="900">

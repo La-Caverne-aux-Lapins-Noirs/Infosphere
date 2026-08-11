@@ -1,0 +1,67 @@
+<?php
+$workflow_status = (string)($tab_data["status"] ?? "");
+$workflow_instances = $tab_data["instances"] ?? [];
+$workflow_status_labels = [
+    "AwaitingSignature" => "En attente de signature",
+    "Signed" => "Signatures recueillies",
+    "Sealed" => "Scellé",
+    "Error" => "Erreur",
+    "Completed" => "Terminé",
+];
+$workflow_filtered = [];
+foreach ($workflow_instances as $workflow_entry)
+    if (($workflow_entry["instance"]["Status"] ?? "") === $workflow_status)
+        $workflow_filtered[] = $workflow_entry;
+?>
+<div class="document_workflow_state">
+    <?php if (!count($workflow_filtered)) { ?>
+        <div class="document_workflow_empty">Aucun document dans cet état.</div>
+    <?php } else { ?>
+        <table class="document_workflow_table">
+            <thead><tr>
+                <th>Document</th><th>Personne</th><th>École</th><th>Créé le</th><th>Signatures</th><th>État</th><th></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($workflow_filtered as $workflow_entry) {
+                $workflow_instance = $workflow_entry["instance"];
+                $workflow_owner = $workflow_entry["owner"];
+                $workflow_name = trim((string)($workflow_owner["first_name"] ?? "")." ".(string)($workflow_owner["family_name"] ?? ""));
+                if ($workflow_name == "")
+                    $workflow_name = (string)($workflow_owner["codename"] ?? ("#".$workflow_entry["owner_user_id"]));
+                $workflow_model = basename((string)($workflow_instance["Model"] ?? "Document"));
+                $workflow_model = preg_replace('/\.dab$/i', '', $workflow_model);
+                $workflow_year = (int)($workflow_instance["TargetYear"] ?? 0);
+                $workflow_progress = (int)$workflow_entry["signature_signed"]."/".(int)$workflow_entry["signature_total"];
+                if ((int)$workflow_entry["signature_total"] == 0)
+                    $workflow_progress = "—";
+                $workflow_signature_details = [];
+                foreach (($workflow_instance["Signatures"] ?? []) as $workflow_role => $workflow_signature)
+                {
+                    if (!is_array($workflow_signature) || empty($workflow_signature["Required"]))
+                        continue ;
+                    $workflow_signature_details[] = $workflow_role.": ".(($workflow_signature["Status"] ?? "") === "Signed" ? "signé" : "en attente");
+                }
+                $workflow_schools = document_workflow_instance_school_codenames($workflow_instance);
+                $workflow_school = count($workflow_schools) ? implode(", ", $workflow_schools) : "—";
+                $workflow_id = (string)($workflow_instance["Id"] ?? "");
+                $workflow_pdf = "/?p=DocumentWorkflowPdf&silent=1&owner=".(int)$workflow_entry["owner_user_id"]."&instance=".rawurlencode($workflow_id);
+            ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars($workflow_model, ENT_QUOTES); ?></strong><?php if ($workflow_year > 0) { ?><br /><small>EF<?=$workflow_year; ?></small><?php } ?></td>
+                    <td><?=htmlspecialchars($workflow_name, ENT_QUOTES); ?><br /><small><?=htmlspecialchars((string)($workflow_owner["codename"] ?? ""), ENT_QUOTES); ?></small></td>
+                    <td><?=htmlspecialchars($workflow_school, ENT_QUOTES); ?></td>
+                    <td><?=htmlspecialchars((string)($workflow_instance["CreatedAt"] ?? ""), ENT_QUOTES); ?></td>
+                    <td><?=$workflow_progress; ?><?php if (count($workflow_signature_details)) { ?><br /><small><?=htmlspecialchars(implode(" · ", $workflow_signature_details), ENT_QUOTES); ?></small><?php } ?></td>
+                    <td><span class="document_workflow_badge document_workflow_<?=htmlspecialchars(strtolower($workflow_status), ENT_QUOTES); ?>"><?=htmlspecialchars($workflow_status_labels[$workflow_status] ?? $workflow_status, ENT_QUOTES); ?></span>
+                        <?php if (($workflow_instance["Error"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["Error"], ENT_QUOTES); ?></small><?php } ?>
+                        <?php if (($workflow_instance["SealError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["SealError"], ENT_QUOTES); ?></small><?php } ?>
+                        <?php if ($workflow_status === "Completed" && !empty($workflow_instance["DeliveredAt"])) { ?><br /><small>Envoyé le <?=htmlspecialchars((string)$workflow_instance["DeliveredAt"], ENT_QUOTES); ?></small><?php } ?>
+                        <?php if (($workflow_instance["DeliveryError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["DeliveryError"], ENT_QUOTES); ?></small><?php } ?>
+                    </td>
+                    <td><a href="<?=htmlspecialchars($workflow_pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le PDF</a></td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+    <?php } ?>
+</div>

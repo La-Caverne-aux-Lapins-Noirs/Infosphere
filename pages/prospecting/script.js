@@ -2,6 +2,185 @@ let currently_open_action_div = null;
 
 let currently_selected_action = null;
 
+
+let prospecting_tooltip_div = null;
+let prospecting_tooltip_target = null;
+
+function prospecting_tooltip_ensure()
+{
+    if (!prospecting_tooltip_div)
+    {
+        prospecting_tooltip_div = document.createElement("div");
+        prospecting_tooltip_div.className = "prospecting_global_tooltip";
+        document.body.appendChild(prospecting_tooltip_div);
+    }
+    return (prospecting_tooltip_div);
+}
+
+function prospecting_tooltip_move(x, y)
+{
+    if (!prospecting_tooltip_div || !prospecting_tooltip_div.classList.contains("visible"))
+        return;
+
+    let left = x + 12;
+    let top = y + 12;
+
+    prospecting_tooltip_div.style.left = left + "px";
+    prospecting_tooltip_div.style.top = top + "px";
+
+    let rect = prospecting_tooltip_div.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 10)
+        prospecting_tooltip_div.style.left = Math.max(10, x - rect.width - 12) + "px";
+    if (rect.bottom > window.innerHeight - 10)
+        prospecting_tooltip_div.style.top = Math.max(10, y - rect.height - 12) + "px";
+}
+
+function prospecting_tooltip_show(target, x, y)
+{
+    let content = target.getAttribute("data-tooltip");
+
+    if (!content)
+        return;
+
+    let tooltip = prospecting_tooltip_ensure();
+    prospecting_tooltip_target = target;
+    tooltip.textContent = content;
+    tooltip.classList.add("visible");
+    prospecting_tooltip_move(x, y);
+}
+
+function prospecting_tooltip_hide()
+{
+    if (prospecting_tooltip_div)
+        prospecting_tooltip_div.classList.remove("visible");
+    prospecting_tooltip_target = null;
+}
+
+document.addEventListener("mouseover", function(e)
+{
+    let target = e.target.closest(".action_div [data-tooltip]");
+
+    if (!target)
+        return;
+    prospecting_tooltip_show(target, e.clientX, e.clientY);
+});
+
+document.addEventListener("mousemove", function(e)
+{
+    if (!prospecting_tooltip_target)
+        return;
+    prospecting_tooltip_move(e.clientX, e.clientY);
+});
+
+document.addEventListener("mouseout", function(e)
+{
+    if (!prospecting_tooltip_target)
+        return;
+    if (e.target === prospecting_tooltip_target || prospecting_tooltip_target.contains(e.target))
+        prospecting_tooltip_hide();
+});
+
+document.addEventListener("scroll", prospecting_tooltip_hide, true);
+
+
+
+var prospecting_action_height_observer = null;
+
+function prospecting_sync_action_height(file_browser)
+{
+    let row = file_browser.closest("tr");
+    let action_div;
+    let height;
+
+    if (!row)
+        return;
+    action_div = row.querySelector(".prospect_action_history_cell .action_div");
+    if (!action_div)
+        return;
+
+    // La hauteur du navigateur de fichiers ne doit être répercutée que
+    // lorsque le détail des actions est effectivement déplié. Au repos,
+    // on laisse les règles historiques rendre la barre compacte.
+    if (!file_browser.classList.contains("open"))
+    {
+        action_div.style.removeProperty("min-height");
+        return;
+    }
+
+    height = Math.ceil(file_browser.getBoundingClientRect().height);
+    if (height > 0)
+        action_div.style.minHeight = height + "px";
+}
+
+function prospecting_observe_action_heights(root)
+{
+    if (!root)
+        root = document;
+
+    if (typeof ResizeObserver == "function" && !prospecting_action_height_observer)
+    {
+        prospecting_action_height_observer = new ResizeObserver(function(entries) {
+            entries.forEach(function(entry) {
+                prospecting_sync_action_height(entry.target);
+            });
+        });
+    }
+
+    root.querySelectorAll(".prospect_file_browser").forEach(function(file_browser) {
+        if (file_browser.dataset.actionHeightObserved == "1")
+        {
+            prospecting_sync_action_height(file_browser);
+            return;
+        }
+        file_browser.dataset.actionHeightObserved = "1";
+        if (prospecting_action_height_observer)
+            prospecting_action_height_observer.observe(file_browser);
+        prospecting_sync_action_height(file_browser);
+    });
+}
+
+function prospecting_update_hidden_action_indicator(items)
+{
+    let actions = items.closest(".actions");
+
+    if (!actions)
+        return;
+
+    actions.classList.toggle(
+        "has_hidden_actions",
+        items.scrollWidth > items.clientWidth + 1
+    );
+}
+
+function prospecting_align_collapsed_actions(root)
+{
+    if (!root)
+        root = document;
+
+    root.querySelectorAll(".action_items").forEach(function(items) {
+        let action_div = items.closest(".action_div");
+        let actions = items.closest(".actions");
+
+        if (!action_div || !actions)
+            return;
+        if (action_div.classList.contains("open"))
+        {
+            actions.classList.remove("has_hidden_actions");
+            return;
+        }
+        items.scrollLeft = items.scrollWidth;
+        prospecting_update_hidden_action_indicator(items);
+    });
+}
+
+function prospecting_after_action_update(result, msg, content, prospect_id)
+{
+    setTimeout(function() {
+        let root = document.getElementById("actionbar" + prospect_id);
+        prospecting_align_collapsed_actions(root);
+    }, 0);
+}
+
 function xconfirm(select)
 {
     if (currently_selected_action != select)
@@ -35,9 +214,12 @@ function expand_file_browser_for_action_div(action_div)
 
     file_browser.style.setProperty(
         "--prospect-file-browser-open-height",
-        Math.max(75, action_div.scrollHeight) + "px"
+        Math.max(150, action_div.scrollHeight * 2) + "px"
     );
     file_browser.classList.add("open");
+    window.requestAnimationFrame(function() {
+        prospecting_sync_action_height(file_browser);
+    });
 }
 
 function close_file_browser_for_action_div(action_div)
@@ -49,6 +231,7 @@ function close_file_browser_for_action_div(action_div)
 
     file_browser.classList.remove("open");
     file_browser.style.removeProperty("--prospect-file-browser-open-height");
+    prospecting_sync_action_height(file_browser);
 }
 
 function open_action_div(div)
@@ -73,6 +256,7 @@ function close_action_div(div)
     div.classList.remove("open");
     div.style.maxHeight = "20px";
     close_file_browser_for_action_div(div);
+    setTimeout(function() { prospecting_align_collapsed_actions(div); }, 0);
 }
 
 function toggle_action_menu(btn)
@@ -122,6 +306,30 @@ document.addEventListener("keydown", function(e)
 
 document.addEventListener('click', async function (event) {
 
+    const target = event.target.closest('[data-prospect-copy-value]');
+
+    if (!target)
+        return;
+
+    const text = target.getAttribute('data-prospect-copy-value') || '';
+
+    if (text === '')
+        return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+        await navigator.clipboard.writeText(text);
+        target.classList.add('copied');
+        setTimeout(() => target.classList.remove('copied'), 300);
+    } catch (e) {
+
+    }
+});
+
+document.addEventListener('click', async function (event) {
+
     const td = event.target.closest('td.copyable');
 
     if (!td)
@@ -141,10 +349,15 @@ document.addEventListener('click', async function (event) {
     }
 });
 
-function open_generated_contract(result, msg, content, parameter)
+function open_generated_document(result, msg, content, parameter)
 {
     if (content)
-	window.open(content);
+        window.open(content);
+}
+
+function open_generated_contract(result, msg, content, parameter)
+{
+    open_generated_document(result, msg, content, parameter);
 }
 
 
@@ -219,15 +432,21 @@ function prospecting_campaign_load(id)
         null,
         null,
         function(success) {
-            let table = document.getElementById("prospecting_campaign_table");
 
             if (!success)
                 return ;
-            prospecting_campaign_execute_scripts(table);
-            if (typeof init_bigselects == "function")
-                init_bigselects(table);
-        }
-    );
+	    setTimeout(function() {
+		
+		let table = document.getElementById("prospecting_campaign_table");
+		
+		prospecting_campaign_execute_scripts(table);
+		
+		if (typeof init_bigselects == "function")
+                    init_bigselects(table);
+                prospecting_align_collapsed_actions(table);
+                prospecting_observe_action_heights(table);
+            }, 0);
+	});
 }
 
 function prospecting_campaign_select(id)
@@ -266,4 +485,56 @@ function prospecting_campaign_init()
     if (prospecting_campaign_index_by_id(stored) < 0)
         stored = window.prospecting_campaigns[0].id;
     prospecting_campaign_select(stored);
+}
+
+function open_registration_form(result, msg, content, parameter)
+{
+    if (content)
+        window.open(content);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    prospecting_align_collapsed_actions(document);
+    prospecting_observe_action_heights(document);
+});
+
+window.addEventListener("resize", function() {
+    prospecting_align_collapsed_actions(document);
+    prospecting_observe_action_heights(document);
+});
+
+function prospect_document_action(button, id, codename, school, analyst, target_training, target_level, target_entry, analysis_date)
+{
+    var form = button && button.form ? button.form : null;
+    var select = form ? form.querySelector('[name="document"]') : null;
+
+    if (!form || !select)
+        return (false);
+    if (select.value != 'needs-analysis')
+        return (silent_submitf(button, {after_success: open_generated_document}));
+
+    var chain = [];
+    if (school)
+        chain.push({type: 'school', prefix: 'School', id: school});
+    chain.push({type: 'user', prefix: 'Student', id: codename});
+    if (analyst > 0)
+        chain.push({type: 'user', prefix: 'Analyst', id: analyst});
+    if (target_training)
+        chain.push({type: 'field', key: 'NeedsAnalysis.TargetTraining', value: target_training});
+    if (target_level)
+        chain.push({type: 'field', key: 'NeedsAnalysis.TargetLevel', value: target_level});
+    if (target_entry)
+        chain.push({type: 'field', key: 'NeedsAnalysis.TargetEntry', value: target_entry});
+    chain.push({type: 'field', key: 'NeedsAnalysis.AnalysisDate', value: analysis_date || ''});
+
+    window.open(
+        'index.php?p=DabsicFormMenu' +
+        '&file=' + encodeURIComponent('res/docs/fr/analyse_besoin.dab') +
+        '&output=' + encodeURIComponent('needs-analysis:' + id) +
+        '&mode=docbuilder' +
+        '&chain=' + encodeURIComponent(JSON.stringify(chain)),
+        '_blank',
+        'noopener'
+    );
+    return (false);
 }

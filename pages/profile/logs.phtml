@@ -1,0 +1,96 @@
+<?php
+if (!is_director_for_student($user->id))
+    return ;
+require_once (__DIR__."/../../tools/log.php");
+
+$profile_log_limit = 300;
+$profile_user_id = (int)$user->id;
+$profile_logs = db_select_all("
+    log.id, log.id_user, log.log_date, log.type, log.message, log.url,
+    author.codename as codename,
+    GROUP_CONCAT(DISTINCT CONCAT(log_context.misc_type, '#', log_context.id_misc) ORDER BY log_context.misc_type, log_context.id_misc SEPARATOR ', ') as contexts
+    FROM log
+    LEFT JOIN user as author ON author.id = log.id_user
+    LEFT JOIN log_context ON log_context.id_log = log.id
+    WHERE log.id_user = $profile_user_id
+       OR EXISTS (
+           SELECT 1 FROM log_context lc_user
+           WHERE lc_user.id_log = log.id
+             AND lc_user.misc_type = 'user'
+             AND lc_user.id_misc = $profile_user_id
+       )
+       OR log.url = 'user$profile_user_id'
+       OR log.url LIKE '%user$profile_user_id%'
+    GROUP BY log.id
+    ORDER BY log.log_date DESC, log.id DESC
+    LIMIT $profile_log_limit
+");
+?>
+<style>
+.profile_log_table,
+.profile_log_table td,
+.profile_log_table th
+{
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.profile_log_table
+{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: x-small;
+}
+.profile_log_table td,
+.profile_log_table th
+{
+    padding: 3px 5px;
+    vertical-align: top;
+}
+.profile_log_message
+{
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.profile_log_context
+{
+    font-size: xx-small;
+    opacity: 0.9;
+}
+.profile_log_context span
+{
+    display: inline-block;
+    margin: 1px;
+    padding: 1px 4px;
+    border-radius: 999px;
+    background: rgba(0, 128, 0, 0.32);
+    border: 1px solid rgba(0, 255, 0, 0.24);
+}
+</style>
+<table class="profile_log_table">
+    <tr>
+        <th style="width: 12%;">#</th>
+        <th style="width: 18%;"><?=$Dictionnary["Date"]; ?></th>
+        <th style="width: 14%;"><?=$Dictionnary["User"]; ?></th>
+        <th style="width: 8%;">Type</th>
+        <th><?=$Dictionnary["Message"]; ?></th>
+        <th style="width: 18%;">Contextes</th>
+    </tr>
+<?php foreach ($profile_logs as $log) { ?>
+    <tr>
+        <td>#<?=htmlentities($log["id"]); ?></td>
+        <td><?=human_date($log["log_date"]); ?></td>
+        <td><?=htmlentities($log["codename"] ?? $log["id_user"]); ?></td>
+        <td><?=htmlentities($log["type"]); ?></td>
+        <td class="profile_log_message"><?=htmlentities($log["message"]); ?></td>
+        <td class="profile_log_context">
+            <?php if (@strlen($log["contexts"])) { ?>
+                <?php foreach (array_map("trim", explode(",", $log["contexts"])) as $context) { ?>
+                    <?php if ($context != "") { ?><span><?=htmlentities($context); ?></span><?php } ?>
+                <?php } ?>
+            <?php } else { ?>
+                <?=htmlentities($log["url"] ?? ""); ?>
+            <?php } ?>
+        </td>
+    </tr>
+<?php } ?>
+</table>

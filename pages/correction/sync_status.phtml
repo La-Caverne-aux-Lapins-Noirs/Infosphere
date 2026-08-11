@@ -1,0 +1,61 @@
+<?php
+$status = $CorrectionSyncStatus;
+if (!($status["ok"] ?? false)) {
+?>
+<div class="correction-sync-status error">
+    <strong>Opération avec Distrans impossible.</strong>
+    <div><?=htmlspecialchars((string)($status["error"] ?? "Erreur inconnue")); ?></div>
+</div>
+<?php } else {
+    $upload_count = count($status["upload"] ?? []);
+    $replace_count = count($status["replace"] ?? []);
+    $delete_count = count($status["delete"] ?? []);
+    $same_count = count($status["same"] ?? []);
+?>
+<div class="correction-sync-status">
+    <?php if (!empty($status["up_to_date"])) { ?>
+        <strong>Le catalogue Distrans est déjà synchronisé.</strong>
+    <?php } else if (!empty($status["synchronized"])) { ?>
+        <strong>Synchronisation terminée.</strong>
+        <div><?=count($status["sent"] ?? []); ?> fichier(s) transféré(s), <?=intval($status["reused"] ?? 0); ?> réutilisé(s) depuis la génération active.</div>
+        <?php if (!empty($status["validation"])) { ?>
+        <div>Validation distante : <?=intval($status["validation"]["files"] ?? 0); ?> fichier(s), <?=intval($status["validation"]["libraries"] ?? 0); ?> bibliothèque(s), <?=intval($status["validation"]["symbols"] ?? 0); ?> évaluateur(s).</div>
+        <?php } ?>
+    <?php } else if (!empty($status["rolled_back"])) { ?>
+        <strong>La génération précédente a été restaurée.</strong>
+    <?php } else { ?>
+        <strong>État du serveur de correction</strong>
+    <?php } ?>
+    <?php if (!empty($status["root"])) { ?>
+        <div>Répertoire distant : <code><?=htmlspecialchars($status["root"]); ?></code></div>
+    <?php } ?>
+    <div class="correction-sync-summary">
+        <span>Identiques : <strong><?=$same_count; ?></strong></span>
+        <span>À envoyer : <strong><?=$upload_count; ?></strong></span>
+        <span>À remplacer : <strong><?=$replace_count; ?></strong></span>
+        <span>À supprimer : <strong><?=$delete_count; ?></strong></span>
+    </div>
+    <?php foreach (($status["warnings"] ?? []) as $warning) { ?>
+        <div class="warning"><?=htmlspecialchars($warning); ?></div>
+    <?php } ?>
+    <?php if ($upload_count || $replace_count || $delete_count) { ?>
+    <details class="correction-sync-details">
+        <summary>Afficher les différences</summary>
+        <?php if ($upload_count) { ?>
+            <strong>À envoyer</strong>
+            <ul><?php foreach ($status["upload"] as $file) { ?><li><code><?=htmlspecialchars($file["relative_path"]); ?></code></li><?php } ?></ul>
+        <?php } ?>
+        <?php if ($replace_count) { ?>
+            <strong>À remplacer</strong>
+            <ul><?php foreach ($status["replace"] as $file) { ?><li><code><?=htmlspecialchars($file["local"]["relative_path"]); ?></code></li><?php } ?></ul>
+        <?php } ?>
+        <?php if ($delete_count) { ?>
+            <strong>À supprimer du serveur</strong>
+            <ul><?php foreach ($status["delete"] as $file) { ?><li><code><?=htmlspecialchars($file["path"]); ?></code></li><?php } ?></ul>
+        <?php } ?>
+    </details>
+    <?php } else { ?>
+        <div>Infosphere et Distrans sont synchronisés.</div>
+    <?php } ?>
+</div>
+<?php } ?>

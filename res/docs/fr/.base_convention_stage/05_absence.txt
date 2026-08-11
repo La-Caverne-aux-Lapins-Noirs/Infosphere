@@ -1,0 +1,49 @@
+
+# Article 5 - Absence et interruption du stage
+
+En France (sauf en cas de règles particulières applicables dans certaines
+collectivités d'outre-mer françaises ou dans les organismes de droit public), en
+cas de grossesse, de paternité ou d'adoption, le/la stagiaire bénéficie de congés
+et d'autorisations d'absence d'une durée équivalente à celle prévues pour les
+salariés aux articles L.1225-16 à L.1225-28, L.1225-35, L.1225-37, L.1225-46 du
+code du travail. 
+
+Pour les stages dont la durée est supérieure à deux mois et dans la limite de la
+durée maximale de 6 mois, des congés ou autorisations d'absence sont possibles. 
+
+[#IfC;Internship.Leaves;
+Nombre de jours de congés autorisés / ou modalités des congés et autorisations d'absence durant le stage : [#FLine;[@Variable;Internship.Leaves]]
+;]
+
+Pour toute autre interruption temporaire du stage (maladie, absence injustifiée...)
+l'organisme d'accueil avertit l’EFRITS par courriel à l’adresse
+administration@efrits.fr. 
+
+Toute interruption du stage, est signalée aux autres parties à la convention et
+référent du stagiaire. Une modalité de validation est mise en place le cas échéant
+par l’EFRITS. En cas d'accord des parties à la convention, un report de la fin du
+stage est possible afin de permettre la réalisation de la durée totale du stage
+prévue initialement. Ce report fera l'objet d'un avenant à la convention de stage. 
+
+Un avenant à la convention pourra être établi en cas de prolongation du stage sur
+demande conjointe de l'organisme d'accueil et du (de la) stagiaire, dans le respect
+de la durée maximale du stage fixée par la loi (924 heures). 
+
+Au cours du stage le stagiaire pourra bénéficier de congés sous réserve que la
+durée minimale du stage soit respectée.  
+
+Pour toute interruption temporaire du stage (maladie, maternité, absence
+injustifiée…), l’organisme d’accueil avertira le responsable par courrier ou
+courriel. 
+
+En cas de volonté de l’une des trois parties de à la présente convention
+d’interrompre définitivement le stage, celui-ci devra immédiatement informer les
+deux autres parties par écrit.  
+
+Les raisons invoquées seront examinées en concertation au terme de laquelle la
+décision définitive d’interruption pourra être prise.  
+
+Toutefois, en cas de difficultés particulières signalées par le stagiaire
+(inadéquation des tâches, harcèlement), l’EFRITS se réserve le droit d’interrompre
+sans délai le stage afin de préserver le bien-être du stagiaire.
+

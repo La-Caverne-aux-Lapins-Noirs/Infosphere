@@ -1,0 +1,37 @@
+
+Document = "Contract"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] $([].Title)
+  Left]
+  Right = [Text($,Right)
+    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+{Content
+  @insert txt ($) "00_identification.txt",
+  @insert txt ($) "01_objet_convention.txt",
+  @insert txt ($) "02_conditions.txt",
+  @insert txt ($) "03_gratification.txt",
+  @insert txt ($) "04_statut.txt",
+  @insert txt ($) "05_absence.txt",
+  @insert txt ($) "06_fin.txt",
+  @insert txt ($) "07_reserve.txt",
+  @insert txt ($) "08_protection_sociale.txt",
+  @insert txt ($) "09_assurance.txt",
+  @insert txt ($) "10_discipline.txt",
+  @insert txt ($) "11_propriete.txt",
+  @insert txt ($) "12_droit.txt"
+}
+

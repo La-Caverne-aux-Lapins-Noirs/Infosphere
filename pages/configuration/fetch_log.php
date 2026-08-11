@@ -28,6 +28,7 @@ function configuration_log_filters($source = NULL)
         "user" => trim((string)($source["log_user"] ?? "")),
         "ip" => trim((string)($source["log_ip"] ?? "")),
         "url" => trim((string)($source["log_url"] ?? "")),
+        "context" => trim((string)($source["log_context"] ?? "")),
         "id_min" => trim((string)($source["log_id_min"] ?? "")),
         "id_max" => trim((string)($source["log_id_max"] ?? "")),
         "from" => trim((string)($source["log_from"] ?? "")),
@@ -56,6 +57,37 @@ function configuration_log_ip_hash($value)
     if (is_number($value))
         return ((int)$value);
     return (crc32($value) & 0x7FFFFFFF);
+}
+
+function configuration_log_context_parts($value)
+{
+    $value = trim((string)$value);
+    if ($value == "")
+        return (NULL);
+    if (preg_match('/^([a-zA-Z0-9_:-]+)\s*[#:= ]\s*([0-9]+)$/', $value, $m))
+        return (["type" => $m[1], "id" => (int)$m[2]]);
+    if (preg_match('/^([a-zA-Z0-9_:-]+)$/', $value, $m))
+        return (["type" => $m[1], "id" => NULL]);
+    if (preg_match('/^#?([0-9]+)$/', $value, $m))
+        return (["type" => NULL, "id" => (int)$m[1]]);
+    return (NULL);
+}
+
+function configuration_log_context_where($value)
+{
+    global $Database;
+
+    $ctx = configuration_log_context_parts($value);
+    if ($ctx == NULL)
+        return (NULL);
+    $where = [];
+    if ($ctx["type"] !== NULL)
+        $where[] = "lc_filter.misc_type = '".$Database->real_escape_string($ctx["type"])."'";
+    if ($ctx["id"] !== NULL)
+        $where[] = "lc_filter.id_misc = ".((int)$ctx["id"]);
+    if (!count($where))
+        return (NULL);
+    return ("EXISTS (SELECT 1 FROM log_context lc_filter WHERE lc_filter.id_log = log.id AND ".implode(" AND ", $where).")");
 }
 
 function configuration_log_where($filters)
@@ -96,6 +128,9 @@ function configuration_log_where($filters)
             $where[] = "log.url LIKE '$url'";
         }
     }
+    if (isset($filters["context"]) && $filters["context"] !== ""
+        && ($context_where = configuration_log_context_where($filters["context"])) !== NULL)
+        $where[] = $context_where;
     if (isset($filters["from"]) && ($from = configuration_log_datetime($filters["from"])) !== NULL)
         $where[] = "log.log_date >= '".$Database->real_escape_string($from)."'";
     if (isset($filters["to"]) && ($to = configuration_log_datetime($filters["to"], true)) !== NULL)
@@ -129,10 +164,13 @@ function fetch_log($page = 0, $filters = NULL, $size = NULL)
              log.ip as ip,
              log.url as url,
              log.urlhash as urlhash,
-             log.id as id
+             log.id as id,
+             GROUP_CONCAT(DISTINCT CONCAT(log_context.misc_type, '#', log_context.id_misc) ORDER BY log_context.misc_type, log_context.id_misc SEPARATOR ', ') as contexts
       FROM log
       LEFT OUTER JOIN user ON log.id_user = user.id
+      LEFT OUTER JOIN log_context ON log_context.id_log = log.id
       WHERE $where
+      GROUP BY log.id
       ORDER BY log.id DESC
       LIMIT $offset, $size
     "));
@@ -144,7 +182,7 @@ function fetch_log_count($filters = NULL)
         $filters = configuration_log_filters();
     $where = configuration_log_where($filters);
     $count = db_select_one("
-        COUNT(*) as cnt
+        COUNT(DISTINCT log.id) as cnt
         FROM log
         LEFT OUTER JOIN user ON log.id_user = user.id
         WHERE $where
@@ -161,6 +199,7 @@ function configuration_log_hidden_inputs($filters, $extra = [])
         "log_user" => $filters["user"] ?? "",
         "log_ip" => $filters["ip"] ?? "",
         "log_url" => $filters["url"] ?? "",
+        "log_context" => $filters["context"] ?? "",
         "log_from" => $filters["from"] ?? "",
         "log_to" => $filters["to"] ?? "",
         "log_size" => $filters["size"] ?? 100,

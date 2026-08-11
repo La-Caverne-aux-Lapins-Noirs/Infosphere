@@ -56,11 +56,12 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
 	    school.id as id_school,
             school.id as id,
             school.codename as codename,
-            school.{$Language}_name as name
+            COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name
             FROM school_cycle
             LEFT JOIN school ON school_cycle.id_school = school.id
+            LEFT JOIN organization ON organization.id = school.id_organization
             WHERE school_cycle.id_cycle = ".$v["id"]."
-            AND deleted IS NULL
+            AND school.deleted IS NULL
 	", $by_name ? "codename" : "");
 	$v["teacher"] = [];
 	foreach ($teacher as $t)

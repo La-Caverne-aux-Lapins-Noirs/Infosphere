@@ -1,0 +1,149 @@
+<?php
+require_once (__DIR__."/../../tools/document_sources.php");
+
+$directors = $school["director"] ?? [];
+$contracts = get_contract_document_sources();
+?>
+
+<style>
+.school_contracts_table {
+    width: 100%;
+    table-layout: fixed;
+}
+.school_contracts_table th:last-child,
+.school_contracts_table td:last-child {
+    width: 300px;
+}
+.school_contracts_table select {
+    width: 100%;
+    min-width: 0;
+}
+.school_contract_actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.school_contract_action {
+    flex: 1 1 130px;
+    max-width: 145px;
+    min-width: 0;
+    padding: 6px 8px;
+    white-space: nowrap;
+}
+@media (max-width: 1000px) {
+    .school_contracts_table th:last-child,
+    .school_contracts_table td:last-child {
+        width: 160px;
+    }
+    .school_contract_action {
+        max-width: none;
+    }
+}
+</style>
+
+<section class="school_admin_card school_contracts_tab">
+    <h4>Contrats vierges</h4>
+    <p>
+        Ces documents sont générés pour l’école
+        <b><?=htmlspecialchars($school["name"] ?? $school["codename"], ENT_QUOTES); ?></b>,
+        sans élève, parent, responsable financier ni entreprise.
+    </p>
+
+    <?php if (!count($contracts)) { ?>
+        <p>Aucun modèle de contrat n’a été trouvé dans les sources documentaires.</p>
+    <?php } else { ?>
+        <table class="school_contracts_table">
+            <thead>
+                <tr>
+                    <th>Modèle</th>
+                    <th>Directeur signataire</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($contracts as $contract) { ?>
+                <?php
+                $hash = md5($contract["reference"]);
+                $form_id = "school_contract_".$school["id"]."_".$hash;
+                ?>
+                <tr>
+                    <td><?=htmlspecialchars($contract["path"], ENT_QUOTES); ?></td>
+                    <td>
+                        <form
+                            id="<?=$form_id; ?>"
+                            method="post"
+                            action="/api/doc/0/generate"
+                            target="_blank"
+                            onsubmit="return school_contract_prepare(this);"
+                        >
+                            <input type="hidden" name="doc_<?=$hash; ?>" value="1" />
+                            <input type="hidden" name="docref_<?=$hash; ?>" value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>" />
+                            <input type="hidden" name="form_file" value="<?=htmlspecialchars($contract["editor_path"], ENT_QUOTES); ?>" />
+                            <input type="hidden" name="chain" value="[]" />
+                            <select name="director_id">
+                                <option value="">Aucun signataire</option>
+                                <?php foreach ($directors as $director) { ?>
+                                    <?php
+                                    $id_director = (int)($director["id_director"] ?? $director["id_user"] ?? $director["id"] ?? -1);
+                                    ?>
+                                    <?php if ($id_director > 0) { ?>
+                                        <option value="<?=$id_director; ?>">
+                                            <?=htmlspecialchars($director["identity"] ?? $director["codename"] ?? (string)$id_director, ENT_QUOTES); ?>
+                                        </option>
+                                    <?php } ?>
+                                <?php } ?>
+                            </select>
+                        </form>
+                    </td>
+                    <td class="school_contract_actions">
+                        <input class="school_contract_action" type="submit" form="<?=$form_id; ?>" value="Générer vierge" />
+                        <input class="school_contract_action" type="button" value="Remplir maintenant" onclick="school_contract_open_form(document.getElementById('<?=$form_id; ?>'), '<?=$hash; ?>');" />
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+    <?php } ?>
+</section>
+
+<script>
+function school_contract_chain(form)
+{
+    var chain = [
+        {type: 'school', prefix: 'School', id: '<?=addslashes($school["codename"]); ?>'}
+    ];
+    var director = form.querySelector('[name="director_id"]').value;
+    if (director != '')
+        chain.push({type: 'user', prefix: 'SignatureSources.Director', id: director, signatory: 'Director'});
+    return chain;
+}
+
+function school_contract_open_form(form, hash)
+{
+    var nonce = '';
+    if (window.crypto && window.crypto.getRandomValues) {
+        var bytes = new Uint8Array(8);
+        window.crypto.getRandomValues(bytes);
+        nonce = Array.prototype.map.call(bytes, function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+    } else
+        nonce = Date.now().toString(16).padStart(16, '0').slice(-16);
+    var output = 'school-contract:<?=$school["id"]; ?>:' + hash + ':' + nonce;
+    var url = 'index.php?p=DabsicFormMenu' +
+        '&file=' + encodeURIComponent(form.querySelector('[name="form_file"]').value) +
+        '&output=' + encodeURIComponent(output) +
+        '&mode=docbuilder' +
+        '&chain=' + encodeURIComponent(JSON.stringify(school_contract_chain(form)));
+    window.open(url, '_blank', 'noopener');
+}
+
+function school_contract_prepare(form)
+{
+    var chain = school_contract_chain(form);
+    form.querySelector('[name="chain"]').value = JSON.stringify(chain);
+    form.querySelector('[name="director_id"]').disabled = true;
+    setTimeout(function() { form.querySelector('[name="director_id"]').disabled = false; }, 0);
+    return true;
+}
+</script>

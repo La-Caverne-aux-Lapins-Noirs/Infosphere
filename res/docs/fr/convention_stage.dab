@@ -1,0 +1,25 @@
+@include ".base_convention_stage/main.dab"
+
+Title = "Convention de stage"
+
+'School
+'Signatories.SchoolTutor
+'Signatories.Student
+
+'Company
+'Signatories.CompanyTutor
+ 
+[Signatures
+  [SchoolTutor
+    Required = 1
+    Role = "Enseignant(e) référent(e)"
+  ]
+  [CompanyTutor
+    Required = 1
+    Role = "Tuteur(trice) de stage"
+  ]
+  [Student
+    Required = 1
+    Role = "Stagiaire"
+  ]
+]

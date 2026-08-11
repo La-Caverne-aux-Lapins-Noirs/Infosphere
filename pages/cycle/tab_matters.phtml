@@ -1,0 +1,18 @@
+<section class="cycle_admin_card cycle_admin_activities">
+    <h2><?=isset($Dictionnary["Matters"]) ? $Dictionnary["Matters"] : $Dictionnary["Activity"]; ?></h2>
+
+    <div class="cycle_admin_scrollbox">
+	<?php
+	$cycle_activity_link = ($page == "cycle") ? "modules" : "instances";
+	list_of_links([
+	    "hook_name" => $page,
+	    "method" => "post",
+	    "hook_id" => $cycle["id"],
+	    "linked_name" => "activity",
+	    "link" => $cycle_activity_link,
+	    "linked_elems" => $cycle["activity"],
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => $cycle_activity_extra_properties,
+	]); ?>
+    </div>
+</section>

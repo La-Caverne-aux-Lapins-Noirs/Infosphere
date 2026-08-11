@@ -33,10 +33,14 @@
     /><br />
 
     <br />
-    <div>
-	<input type="checkbox" id="prospect" name="prospect" style="width: 30px;" />
-	<label for="prospect"><?=$Dictionnary["Prospect"]; ?></label>
-    </div>
+    <select name="profile_status">
+	<?php foreach (user_profile_statuses() as $status) { ?>
+	    <option value="<?=$status; ?>">
+		<?=htmlspecialchars(user_profile_status_label($status)); ?>
+	    </option>
+	<?php } ?>
+    </select>
+    <br />
     <br />
 
     <input

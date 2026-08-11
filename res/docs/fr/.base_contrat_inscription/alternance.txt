@@ -1,0 +1,146 @@
+[#IfC;OF;==;1;
+
+[#IfC;NoPaiement;==;0;
+
+[#IfC;CANCEL;==;1;
+[@NewPage]
+# Passage ultérieur à un autre dispositif de formation ou de financement
+
+[@Columns;2;
+
+Le présent contrat organise exclusivement la formation suivie et financée en dehors
+de tout contrat d’apprentissage ou de professionnalisation.
+
+La conclusion ultérieure, par l’Apprenant, d’un contrat d’apprentissage, d’un contrat
+de professionnalisation ou de tout autre dispositif modifiant les conditions juridiques ou
+financières de sa formation ne transforme pas le présent contrat et ne produit aucun
+effet rétroactif sur les périodes de formation déjà accomplies sous son régime.
+
+Lorsque l’Apprenant intègre ultérieurement un tel dispositif pour la poursuite de
+sa formation, les parties mettent fin au présent contrat par un écrit précisant sa date de cessation.
+
+La période antérieure à cette date demeure exclusivement régie par le présent contrat.
+La période postérieure relève exclusivement du nouveau contrat, de la nouvelle convention ou du nouveau dispositif applicable.
+
+La formation accomplie avant la date de cessation du présent contrat ne constitue
+pas une période d’apprentissage ou de professionnalisation et ne peut être présentée,
+facturée ou comptabilisée comme telle, sauf disposition légale expresse imposant un traitement différent.
+
+À compter de la date de cessation du présent contrat, aucune nouvelle somme
+correspondant à une prestation de formation postérieure à cette date ne peut
+être réclamée à l’Apprenant ou à son responsable financier sur le fondement du présent contrat.
+
+L’Établissement établit, à cette date, un décompte définitif distinguant :
+
+les prestations de formation effectivement dispensées avant la cessation du contrat ;
+les sommes déjà versées par l’Apprenant ou son responsable financier ;
+les sommes restant éventuellement dues au titre des seules prestations dispensées avant cette cessation ;
+et les sommes versées d’avance au titre de prestations qui ne seront pas dispensées dans le cadre du présent contrat.
+
+Toute somme versée d’avance au titre d’une prestation qui ne sera pas dispensée
+dans le cadre du présent contrat est remboursée à la personne qui l’a effectivement
+acquittée, ou, avec son accord écrit, imputée sur une autre somme dont elle serait redevable envers l’Établissement.
+
+Le remboursement intervient dans un délai maximal de trente jours à compter
+de la date de cessation du présent contrat.
+
+Lorsqu’un tiers financeur verse ultérieurement à l’Établissement une somme couvrant
+également une prestation déjà réglée par l’Apprenant ou son responsable financier, l’Établissement
+rembourse à la personne ayant effectué le paiement le montant correspondant, dans la limite
+de la somme effectivement reçue pour cette même prestation.
+
+Ce remboursement complémentaire intervient dans un délai maximal de trente jours à
+compter de l’encaissement du financement correspondant par l’Établissement.
+
+Une même prestation de formation ne peut en aucun cas faire l’objet d’un paiement définitif
+cumulé par l’Apprenant ou son responsable financier et par un tiers financeur.
+
+Lorsque la poursuite de la formation s’effectue dans le cadre d’un contrat d’apprentissage,
+aucune somme relative à la formation accomplie sous ce statut ne peut être mise à la charge de l’Apprenti ou de son représentant légal.
+
+Le passage à un nouveau dispositif fait l’objet des contrats, conventions et documents
+administratifs propres à ce dispositif. Ces documents sont juridiquement et financièrement distincts du présent contrat.
+
+]
+
+]
+
+;
+
+# Clause concernant l'alternance
+
+La présente convention est conclue dans le cadre d’une action de formation
+réalisée en alternance.
+
+## Contrat de professionnalisation
+
+[@Columns;2;
+Lorsque la formation est suivie dans le cadre d’un contrat de professionnalisation,
+elle s’exécute conformément aux dispositions légales et conventionnelles
+applicables à ce contrat, ainsi qu’aux stipulations particulières figurant dans
+la présente convention.
+
+La présente convention a vocation à s’appliquer pendant toute la durée de la
+formation suivie par l’Apprenant dans le cadre de l’alternance.
+
+Si, à la date de signature de la présente convention, le contrat de
+professionnalisation n’est pas encore conclu, l’entrée en formation demeure
+subordonnée à la régularisation dudit contrat dans les conditions et délais
+compatibles avec la réglementation applicable.
+
+Dès la conclusion du contrat de professionnalisation, la formation est réputée
+réalisée dans ce cadre, sans novation de la présente convention, sauf stipulation
+contraire expresse ou signature d’un avenant destiné à préciser les modalités
+administratives, pédagogiques ou financières propres à l’alternance.
+
+En l’absence de conclusion d’un contrat de professionnalisation dans les
+conditions permettant la poursuite de la formation dans ce cadre, la présente
+convention ne pourra produire effet au titre de l’alternance. La situation de
+l’Apprenant devra alors, le cas échéant, être régularisée par la conclusion d’un
+nouveau cadre contractuel approprié à son régime de formation.
+]
+]
+]
+
+[#IfC;CFA;==;1;
+
+## Apprentissage
+
+[@Columns;2;
+La présente convention de formation en apprentissage encadre les conditions de
+réalisation de la formation dispensée par le CFA EFRITS. Elle est distincte du
+contrat d’apprentissage conclu entre l’employeur et l’Apprenant.
+
+La présente convention a vocation à s’appliquer pendant toute la durée du parcours
+de formation de l’Apprenant au sein du CFA, y compris lorsque le contrat
+d’apprentissage est signé postérieurement à l’entrée en formation.
+
+Lorsque l’Apprenant entre en formation avant la conclusion d’un contrat
+d’apprentissage, cette entrée s’effectue dans les conditions prévues par les
+dispositions légales applicables au démarrage d’un cycle de formation en
+apprentissage sans contrat conclu avec un employeur.
+
+Dans cette situation, l’Apprenant bénéficie du statut de stagiaire de la formation
+professionnelle jusqu’à la signature du contrat d’apprentissage ou, à défaut,
+jusqu’au terme de la période légalement autorisée.
+
+A tout moment pendant cette période, l’Apprenant peut conclure un contrat
+d’apprentissage avec un employeur. Dans ce cas, la présente convention demeure
+applicable pour l’exécution de la formation au sein du CFA, sans interruption,
+sous réserve des adaptations éventuellement rendues nécessaires par le contrat
+d’apprentissage, sa durée ou son calendrier.
+
+En cas de conclusion d’un contrat d’apprentissage après le début du cycle de
+formation, la durée du contrat ou de la période d’apprentissage est, le cas
+échéant, ajustée conformément aux dispositions légales applicables.
+
+A défaut de conclusion d’un contrat d’apprentissage dans le délai légalement
+autorisé, la poursuite de la formation au sein du CFA au titre de l’apprentissage
+ne pourra avoir lieu. La situation de l’Apprenant devra alors être régularisée,
+selon le cas, par la conclusion d’un nouveau cadre contractuel relevant d’un autre
+régime de formation ou par la cessation de la formation.
+]
+
+]
+
+

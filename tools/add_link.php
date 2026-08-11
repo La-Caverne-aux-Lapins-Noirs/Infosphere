@@ -59,7 +59,7 @@ function add_link(
 		if ($v != $check[$k])
 		{
 		    $edited = true;
-		    $new_fields[] = " `$k` = '$v' ";
+		    $new_fields[] = " `$k` = '".$Database->real_escape_string($v)."' ";
 		}
 	    }
 	    if ($edited)

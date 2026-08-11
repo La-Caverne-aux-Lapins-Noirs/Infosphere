@@ -1,0 +1,75 @@
+<?php
+$cycle_log_size = 100;
+$cycle_log_search = trim((string)try_get($_GET, "cycle_log_search", ""));
+$cycle_log_url = $Database->real_escape_string($page.$cycle["id"]);
+$cycle_log_where = ["log.url = '$cycle_log_url'"];
+if ($cycle_log_search != "")
+{
+    $cycle_log_search_sql = "%".$Database->real_escape_string($cycle_log_search)."%";
+    $cycle_log_where[] = "(log.message LIKE '$cycle_log_search_sql' OR user.codename LIKE '$cycle_log_search_sql')";
+}
+$cycle_log_where = implode(" AND ", $cycle_log_where);
+$cycle_logs = db_select_all("
+    log.id as id,
+    log.log_date as date,
+    log.type as type,
+    log.message as message,
+    log.ip as ip,
+    log.url as url,
+    user.codename as user
+    FROM log
+    LEFT JOIN user ON user.id = log.id_user
+    WHERE $cycle_log_where
+    ORDER BY log.id DESC
+    LIMIT $cycle_log_size
+");
+?>
+<section class="cycle_admin_card cycle_admin_logs">
+    <h2><?=$Dictionnary["Logs"] ?? "Logs"; ?></h2>
+
+    <form class="cycle_admin_log_filters" method="get" action="index.php">
+	<input type="hidden" name="p" value="<?=($page == "cycle" ? "CycleMenu" : "CycleTemplateMenu"); ?>" />
+	<input type="hidden" name="a" value="<?=$cycle["id"]; ?>" />
+	<label>
+	    Recherche
+	    <input type="text" name="cycle_log_search" value="<?=htmlspecialchars($cycle_log_search, ENT_QUOTES); ?>" />
+	</label>
+	<input type="submit" value="<?=$Dictionnary["Search"]; ?>" />
+    </form>
+
+    <div class="cycle_admin_log_count">
+	<?=count($cycle_logs); ?> entrée<?=count($cycle_logs) > 1 ? "s" : ""; ?> affichée<?=count($cycle_logs) > 1 ? "s" : ""; ?>
+    </div>
+
+    <div class="cycle_admin_log_table">
+	<table>
+	    <thead>
+		<tr>
+		    <th>#</th>
+		    <th>Date</th>
+		    <th>Type</th>
+		    <th>Utilisateur</th>
+		    <th>Message</th>
+		    <th>URL</th>
+		</tr>
+	    </thead>
+	    <tbody>
+		<?php foreach ($cycle_logs as $log) { ?>
+		    <tr>
+			<td><?=htmlspecialchars($log["id"], ENT_QUOTES); ?></td>
+			<td><?=htmlspecialchars($log["date"], ENT_QUOTES); ?></td>
+			<td><?=htmlspecialchars($log["type"], ENT_QUOTES); ?></td>
+			<td><?=htmlspecialchars($log["user"], ENT_QUOTES); ?></td>
+			<td><?=htmlspecialchars($log["message"], ENT_QUOTES); ?></td>
+			<td><?=htmlspecialchars($log["url"], ENT_QUOTES); ?></td>
+		    </tr>
+		<?php } ?>
+		<?php if (!count($cycle_logs)) { ?>
+		    <tr>
+			<td colspan="6">Aucun log associé à ce cycle.</td>
+		    </tr>
+		<?php } ?>
+	    </tbody>
+	</table>
+    </div>
+</section>

@@ -57,7 +57,13 @@ class Database
 			 string		$dbfile = "./database.sql")
     {
 	if (!UNIT_TEST)
+	{
+	    // Since PHP 8.1 mysqli throws exceptions by default. Infosphere's
+	    // database wrapper historically handles query failures itself and
+	    // expects mysqli methods to return false instead of throwing.
+	    mysqli_report(MYSQLI_REPORT_OFF);
 	    $this->db = new mysqli($url, $user, $pass, $dbname);
+	}
 	else
 	    $this->db = new SQLite3($dbfile);
 	if ($this->db == NULL)

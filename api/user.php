@@ -31,11 +31,10 @@ function SubscribeUser($id, $data, $method, $output, $module)
     $subs = [];
     foreach ($data["users"] as $usr)
     {
-	$fake = false;
-	if (isset($usr["prospect"]) && !!$usr["prospect"])
-	    $fake = true;
+	$profile_status = user_profile_status($usr["profile_status"] ?? ((isset($usr["prospect"]) && !!$usr["prospect"]) ? "prospect" : "member"));
+	$fake = user_profile_status_is_fake($profile_status);
 	
-	if (($request = @subscribe($usr["login"], @$usr["mail"], NULL, false, $fake))->is_error())
+	if (($request = @subscribe($usr["login"], @$usr["mail"], NULL, false, $fake, $profile_status))->is_error())
 	{
 	    ob_end_clean();
 	    return ($request);
@@ -128,53 +127,204 @@ function GenerateUserLetter($id, $data, $method, $output, $module)
     ]));
 }
 
+function SendUserDocumentForm($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id = (int)$id;
+    if (!is_director_for_student($id))
+        forbidden();
+    $target = db_select_one("* FROM user WHERE id = $id AND authority != -1");
+    if ($target == NULL)
+        return (new ErrorResponse("UserNotFound"));
+
+    $result = registration_form_create_document_invitation(
+        $id,
+        $data["document_file"] ?? "",
+        $data["model_hash"] ?? "",
+        $data["target_year"] ?? 0,
+        $data["document_label"] ?? "",
+        (int)$User["id"],
+        $data["signature_bindings"] ?? []
+    );
+    if (!$result["ok"])
+        return (new ErrorResponse($result["error"], $result["details"] ?? ""));
+
+    $name = trim(($target["first_name"] ?? "")." ".($target["family_name"] ?? ""));
+    $label = trim((string)($data["document_label"] ?? ""));
+    $title = sprintf(
+        $Dictionnary["DocumentFormMailTitle"] ?? "Document à compléter : %s",
+        $label != "" ? $label : ($Dictionnary["DocumentFormTitle"] ?? "document")
+    );
+    $body = sprintf(
+        $Dictionnary["DocumentFormMailContent"] ?? "Bonjour %s,\n\nL'établissement vous demande de compléter le formulaire suivant :\n%s\n\nLe lien est valable quatorze jours. Vous pouvez sauvegarder un brouillon avant la validation définitive.",
+        $name,
+        $result["url"]
+    );
+    $sent = send_mail($target["mail"], $title, $body);
+    if ($sent->is_error())
+    {
+        registration_form_revoke_token($result["token"]);
+        return ($sent);
+    }
+    add_log(EDITING_OPERATION,
+        "Document form sent to user $id for ".($label != "" ? $label : ($data["document_file"] ?? "document")),
+        $id
+    );
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentFormSent"] ?? "Formulaire documentaire envoyé.",
+        "content" => $result["url"]
+    ]));
+}
+
+function SendUserAdministrativeForm($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id = (int)$id;
+    $target = db_select_one("* FROM user WHERE id = $id AND authority != -1");
+    if ($target == NULL)
+        return (new ErrorResponse("UserNotFound"));
+    if (!can_send_user_administrative_form($id))
+        forbidden();
+
+    $status = $target["profile_status"] ?? "";
+    $is_relation_profile = user_relation_is_administrative_contact($id);
+    // Une relation légal/finance est prioritaire sur un ancien profile_status
+    // éventuellement resté à "prospect".
+    if ($is_relation_profile)
+        $result = registration_form_create_profile_invitation($id, (int)$User["id"]);
+    else if ($status == "prospect")
+        $result = registration_form_create_invitation($id, $data["kind"] ?? "", (int)$User["id"]);
+    else
+        return (new ErrorResponse("InvalidParameter", "profile_status"));
+    if (!$result["ok"])
+        return (new ErrorResponse($result["error"], $result["details"] ?? ""));
+
+    $name = trim(($target["first_name"] ?? "")." ".($target["family_name"] ?? ""));
+    if ($is_relation_profile)
+    {
+        $title = $Dictionnary["AdministrativeFormMailTitle"] ?? "Vos informations administratives";
+        $body = sprintf(
+            $Dictionnary["AdministrativeFormMailContent"] ?? "Bonjour %s,\n\nVous pouvez compléter ou vérifier vos informations administratives avec le lien suivant, valable quatorze jours :\n%s\n\nVous pouvez sauvegarder un brouillon avant la validation définitive.",
+            $name,
+            $result["url"]
+        );
+        $message = $Dictionnary["AdministrativeFormSent"] ?? "Formulaire administratif envoyé.";
+    }
+    else
+    {
+        $title = $Dictionnary["RegistrationFormMailTitle"] ?? "Votre dossier d'inscription";
+        $body = sprintf(
+            $Dictionnary["RegistrationFormMailContent"] ?? "Bonjour %s,\n\nVous pouvez compléter votre dossier d'inscription avec le lien suivant, valable quatorze jours :\n%s\n\nVous pouvez sauvegarder un brouillon avant la validation définitive.",
+            $name,
+            $result["url"]
+        );
+        $message = $Dictionnary["RegistrationFormSent"] ?? "Formulaire d'inscription envoyé.";
+    }
+
+    $sent = send_mail($target["mail"], $title, $body);
+    if ($sent->is_error())
+    {
+        registration_form_revoke_token($result["token"]);
+        return ($sent);
+    }
+    add_log(EDITING_OPERATION,
+        "Administrative form sent to user $id".(!$is_relation_profile && $status == "prospect" ? " for ".strtoupper((string)($data["kind"] ?? "")) : ""),
+        $id
+    );
+    return (new ValueResponse(["msg" => $message, "content" => $result["url"]]));
+}
+
 function SetUserProperties($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
     global $Configuration;
 
     if ($id == -1)
-	bad_request();
+        bad_request();
     $id = (int)$id;
-
     $usr = db_select_one("codename, mail FROM user WHERE id = $id");
     if ($usr == NULL)
-	bad_request();
+        bad_request();
+
+    $is_self = is_me($id);
+    $identity_authority = is_identity_authority_for_user($id);
+    $action = isset($data["action"]) ? (string)$data["action"] : "";
+    $administrative_authority = function_exists("can_manage_user_administrative_profile")
+        && can_manage_user_administrative_profile($id);
+    if (!$is_self && !$identity_authority
+        && !($action == "administrative_data" && $administrative_authority))
+        forbidden();
+
     $codename = $usr["codename"];
     $mail = $usr["mail"];
-    if (isset($data["mail"]) && $data["mail"] == $mail)
-	unset($data["mail"]);
     unset($data["action"]);
-    if (isset($data["birth_date"]))
-	$data["birth_date"] = db_form_date($data["birth_date"]);
+
+    if ($action == "administrative_data")
+    {
+        if (!$administrative_authority)
+            forbidden();
+        $request = user_identity_update_contract_administrative_fields($id, $data);
+        if ($request->is_error())
+            return ($request);
+        refresh_user($id);
+        $identity = user_identity_write_identity_dabsic($id);
+        if ($identity->is_error())
+            return ($identity);
+        return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+    }
+
     if (isset($data["avatar"]))
     {
-	if (!isset($data["type"]))
-	    $data["type"] = "set_avatar";
-	if (!is_admin() && $data["type"] != "set_avatar")
-	    $data["type"] = "set_avatar";
-	
-	$target = $Configuration->UsersDir($codename);
-	if ($data["type"] == "set_avatar")
-	    $target .= "public/avatar.png";
-	else
-	    $target .= "admin/photo.png";
+        if (!isset($data["type"]))
+            $data["type"] = "set_avatar";
+        if (!is_admin() || $is_self)
+            $data["type"] = "set_avatar";
+        $target = $Configuration->UsersDir($codename).
+            ($data["type"] == "set_photo" ? "admin/photo.png" : "public/avatar.png");
+        $data["avatar"] = base64_decode($data["avatar"][0]["content"]);
+        if (file_put_contents($target, $data["avatar"]) === false)
+            return (new ErrorResponse("CannotWritePngFile"));
+        unset($data["type"], $data["avatar"]);
+    }
+    else
+        unset($data["type"]);
 
-	$data["avatar"] = base64_decode($data["avatar"][0]["content"]);
-	if (file_put_contents($target, $data["avatar"]) === false)
-	    return (new ErrorResponse("CannotWritePngFile"));
-	unset($data["type"]);
-	unset($data["avatar"]);
-    }
-    if (count($data))
+    $allowed = ["nickname", "visibility"];
+    if ($identity_authority)
+        $allowed = array_merge($allowed, [
+            "mail", "first_name", "use_name", "family_name", "gender",
+            "birth_date", "nationality", "phone", "street_name",
+            "postal_code", "city", "country"
+        ]);
+    foreach (array_keys($data) as $field)
+        if (!in_array($field, $allowed, true))
+            return (new ErrorResponse("InvalidParameter", $field));
+
+    if (isset($data["mail"]) && $data["mail"] == $mail)
+        unset($data["mail"]);
+    if (isset($data["birth_date"]))
+        $data["birth_date"] = trim((string)$data["birth_date"]) == "" ? NULL : db_form_date($data["birth_date"]);
+    if (isset($data["mail"]) && trim((string)$data["mail"]) == "")
+        return (new ErrorResponse("InvalidParameter", "mail"));
+    if (isset($data["mail"]))
     {
-	if (($request = set_user_data($id, $data))->is_error())
-	    return ($request);
+        global $Database;
+        $new_mail = $Database->real_escape_string($data["mail"]);
+        if (db_select_one("id FROM user WHERE mail = '$new_mail' AND id != $id AND authority != -1"))
+            return (new ErrorResponse("MailUsed"));
     }
+
+    if (count($data) && ($request = set_user_data($id, $data))->is_error())
+        return ($request);
     refresh_user($id);
-    return (new ValueResponse([
-	"msg" => $Dictionnary["Edited"]
-    ]));
+    $identity = user_identity_write_identity_dabsic($id);
+    if ($identity->is_error())
+        return ($identity);
+    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
 }
 
 function SetUserLink($id, $data, $method, $output, $module)
@@ -361,6 +511,31 @@ function subscription_file_access($id, $file, $public = false, $read = false)
     return ($file);
 }
 
+function user_documentation_file_root()
+{
+    return (document_builder_documentation_file_root());
+}
+
+function documentation_file_access($id, $file, $public = false, $read = false)
+{
+    $base = user_documentation_file_root();
+
+    $file = resolve_path($file);
+    if ($file == "")
+        $file = $base;
+    else if (!user_file_path_is_under($file, $base))
+    {
+        $filex = explode("/", $file);
+        if (isset($filex[0]) && $filex[0] == "admin")
+            forbidden();
+        $file = resolve_path($base."/".$file);
+    }
+    $file = file_access($id, $file, $public, $read);
+    if (!user_file_path_is_under($file, $base))
+        forbidden();
+    return ($file);
+}
+
 function user_letter_file_root()
 {
     return (document_builder_letter_file_root());
@@ -441,6 +616,23 @@ function GetSubscriptionFileDir($id, $data, $method, $output, $module, $msg = ""
 	"subscription_file",
 	"subscription_file_access",
 	user_subscription_file_root()
+    ));
+}
+
+function GetDocumentationFileDir($id, $data, $method, $output, $module, $msg = "")
+{
+    $data["nocd"] = 0;
+    $data["path_browser_can_cd"] = 1;
+    return (GetUserFileDir(
+        $id,
+        $data,
+        $method,
+        $output,
+        $module,
+        $msg,
+        "documentation_file",
+        "documentation_file_access",
+        user_documentation_file_root()
     ));
 }
 
@@ -540,6 +732,11 @@ function AddSubscriptionFile($id, $data, $method, $output, $module)
     return (AddUserFile($id, $data, $method, $output, $module, "subscription_file_access", "GetSubscriptionFileDir"));
 }
 
+function AddDocumentationFile($id, $data, $method, $output, $module)
+{
+    return (AddUserFile($id, $data, $method, $output, $module, "documentation_file_access", "GetDocumentationFileDir"));
+}
+
 function RemoveUserFile($id, $data, $method, $output, $module, $url_key, $access_function, $return_function)
 {
     global $Configuration;
@@ -571,6 +768,9 @@ function RemoveUserFile($id, $data, $method, $output, $module, $url_key, $access
     if ($access_function == "subscription_file_access" &&
 	resolve_path($file) == user_subscription_file_root())
 	forbidden();
+    if ($access_function == "documentation_file_access" &&
+        resolve_path($file) == user_documentation_file_root())
+        forbidden();
     if ($access_function == "letter_file_access" &&
 	resolve_path($file) == user_letter_file_root())
 	forbidden();
@@ -587,6 +787,11 @@ function RemoveFile($id, $data, $method, $output, $module)
 function RemoveSubscriptionFile($id, $data, $method, $output, $module)
 {
     return (RemoveUserFile($id, $data, $method, $output, $module, "subscription_file", "subscription_file_access", "GetSubscriptionFileDir"));
+}
+
+function RemoveDocumentationFile($id, $data, $method, $output, $module)
+{
+    return (RemoveUserFile($id, $data, $method, $output, $module, "documentation_file", "documentation_file_access", "GetDocumentationFileDir"));
 }
 
 function RemoveLetterFile($id, $data, $method, $output, $module)
@@ -609,6 +814,10 @@ $Tab = [
 	    "is_director_for_student",
 	    "GetSubscriptionFileDir",
 	],
+        "documentation_file" => [
+            "is_director_for_student",
+            "GetDocumentationFileDir",
+        ],
 	"letter_file" => [
 	    "is_director_for_student",
 	    "GetLetterFileDir",
@@ -633,6 +842,10 @@ $Tab = [
 	    "is_director_for_student",
 	    "AddSubscriptionFile",
 	],
+        "documentation_file" => [
+            "is_director_for_student",
+            "AddDocumentationFile",
+        ],
     ],
     "PUT" => [
 	"set_status" => [
@@ -652,11 +865,23 @@ $Tab = [
 	    "GenerateUserLetter",
 	],
 	"properties" => [
-	    "is_me_or_my_director",
+	    "can_edit_user_profile",
+	    "SetUserProperties",
+	],
+	"registration" => [
+	    "can_send_user_administrative_form",
+	    "SendUserAdministrativeForm",
+	],
+        "document_form" => [
+            "is_director_for_student",
+            "SendUserDocumentForm",
+        ],
+	"administrative_data" => [
+	    "can_manage_user_administrative_profile",
 	    "SetUserProperties",
 	],
 	"set_avatar" => [
-	    "is_me_or_my_director",
+	    "can_edit_user_profile",
 	    "SetUserProperties",
 	],
 	"user" => [
@@ -681,6 +906,10 @@ $Tab = [
 	    "is_director_for_student",
 	    "GetSubscriptionFileDir",
 	],
+        "documentation_file" => [
+            "is_director_for_student",
+            "GetDocumentationFileDir",
+        ],
 	"letter_file" => [
 	    "is_director_for_student",
 	    "GetLetterFileDir",
@@ -721,6 +950,10 @@ $Tab = [
 	    "is_director_for_student",
 	    "RemoveSubscriptionFile",
 	],
+        "documentation_file" => [
+            "is_director_for_student",
+            "RemoveDocumentationFile",
+        ],
 	"letter_file" => [
 	    "is_director_for_student",
 	    "RemoveLetterFile",

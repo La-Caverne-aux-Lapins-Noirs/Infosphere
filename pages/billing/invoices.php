@@ -115,6 +115,14 @@ function billing_invoice_page_render_copy($invoice)
         billing_invoice_page_e($invoice["codename"]."/".$path)."</span>");
 }
 
+function billing_invoice_page_render_actions($invoice)
+{
+    global $Dictionnary;
+
+    return ("<a class='billing_invoice_view_link' target='_blank' href='/api/billing/".
+        ((int)$invoice["id"])."/invoice'>".billing_invoice_page_e($Dictionnary["ViewInvoice"])."</a>");
+}
+
 $fields = [
     [
         "name" => "id",
@@ -150,6 +158,15 @@ $fields = [
         "width" => "75px",
         "raw" => fn($i) => $i["school_name"] ?: $i["school_codename"],
         "render" => fn($i) => billing_invoice_page_e($i["school_name"] ?: $i["school_codename"]),
+    ],
+    [
+        "name" => "invoice_type",
+        "label" => $Dictionnary["BillingInvoiceType"],
+        "type" => "select",
+        "width" => "85px",
+        "options" => billing_invoice_types(),
+        "raw" => fn($i) => billing_normalize_invoice_type($i["invoice_type"] ?? "school"),
+        "render" => fn($i) => billing_invoice_page_e(billing_invoice_type_label($i["invoice_type"] ?? "school")),
     ],
     [
         "name" => "label",
@@ -204,11 +221,19 @@ $fields = [
         "name" => "copy",
         "label" => $Dictionnary["InvoiceCopySavedIn"],
         "type" => "text",
-        "width" => "310px",
+        "width" => "280px",
         "raw" => fn($i) => $i["codename"]."/".billing_invoice_relative_path($i),
         "render" => fn($i) => billing_invoice_page_render_copy($i),
         "copyable" => true,
         "cell_class" => "billing_invoice_copy",
+    ],
+    [
+        "name" => "actions",
+        "label" => $Dictionnary["Actions"],
+        "type" => "misc",
+        "width" => "90px",
+        "render" => fn($i) => billing_invoice_page_render_actions($i),
+        "cell_class" => "billing_invoice_actions",
     ],
 ];
 ?>

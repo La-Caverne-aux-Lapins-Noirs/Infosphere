@@ -1,28 +1,31 @@
-@include "base_contrat_inscription/main.dab"
+@include ".base_contrat_inscription/main.dab"
 
 Title = "Contrat de scolarisation"
 Ecole=1
 NoPaiement=0
 
-[Signatories
+[Signatures
   [Director
+    Required = 1
     Role = "Directeur(trice)"
   ]
   [Student
+    Required = 1
     Role = "Etudiant(e)"
   ]
   [Finance
+    Required = 1
     Role = "Responsable financier"
   ]
 ]
 
 Identification = [Text($,Identification)
-  $(Company.MainInfo)
-  $(Company.SchoolInfo)
+  $(School.MainInfo)
+
+  $(School.SchoolInfo)
   
-  Tél: $(Company.Phone). E-Mail: $(Company.Mail)
+  Tél: $(School.Phone). E-Mail: $(School.Mail)
   
   Ci-dessous dénommé individuellement « L’ÉTABLISSEMENT » ou « l’EFRITS »
   et l'étudiant(e) souhaitant intégrer le cursus :  
 Identification]
-

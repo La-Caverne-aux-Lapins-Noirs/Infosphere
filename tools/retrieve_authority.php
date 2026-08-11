@@ -4,6 +4,8 @@ function retrieve_authority($teacher)
 {
     global $User;
 
+    if (isset($User["profile_status"]) && $User["profile_status"] != "member")
+	return (-1);
     if (is_admin())
 	return (2);
     foreach ($teacher as $t)

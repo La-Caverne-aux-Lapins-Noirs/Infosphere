@@ -86,6 +86,71 @@ table input
     padding-right: 5px;
 }
 
+.action_div:not(.open) .actions
+{
+    position: absolute;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
+    clip-path: none;
+}
+
+.action_div:not(.open) .actions.has_hidden_actions::before
+{
+    content: "←";
+    position: absolute;
+    left: 4px;
+    bottom: 2px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.70);
+    color: #00ff00;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 18px;
+    pointer-events: none;
+}
+
+.action_div:not(.open) .action_items
+{
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: visible;
+    white-space: nowrap;
+}
+
+.action_div:not(.open) .action_alert
+{
+    display: inline-flex;
+    align-items: flex-start;
+    flex: 0 0 auto;
+}
+
+.action_div.open .actions
+{
+    display: block;
+    overflow: visible;
+    white-space: normal;
+    text-align: left;
+    clip-path: none;
+}
+
+.action_div.open .action_items,
+.action_div.open .action_alert
+{
+    display: inline;
+    overflow: visible;
+    white-space: normal;
+}
+
 .action_edit
 {
     display: flex;
@@ -126,32 +191,48 @@ table input
     float: right;
 }
 
-.action::after
+.action_div:not(.open) .alert
 {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #222;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease-in-out;
-  font-size: 14px;
+    float: none;
+    flex: 0 0 auto;
+    vertical-align: top;
 }
 
+/*
+ * Les actions repliées vivent dans un conteneur overflow:hidden pour ne
+ * garder visibles que les évènements récents. Les pseudo-tooltips CSS sont
+ * donc coupés par ce conteneur. On utilise à la place une infobulle globale
+ * pilotée par pages/prospecting/script.js.
+ */
+.action::after,
 button[data-tooltip]::after
 {
-    content: attr(data-tooltip);
-    white-space: pre-line;
-    width: 200px;
+    display: none;
 }
 
-.action:hover::after
+.prospecting_global_tooltip
+{
+    position: fixed;
+    z-index: 10000;
+
+    max-width: 420px;
+    padding: 6px 10px;
+
+    border: 1px solid #00aa00;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.92);
+    color: white;
+
+    white-space: pre-line;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease-in-out;
+
+    font-size: 14px;
+    line-height: 1.25em;
+}
+
+.prospecting_global_tooltip.visible
 {
     opacity: 1;
 }
@@ -515,4 +596,182 @@ td
 .prospecting_campaign_table
 {
     width: 100%;
+}
+
+
+/* Présentation compacte des informations regroupées dans la table. */
+.prospect_identity_cell > a
+{
+    display: block;
+}
+
+.prospect_registration_date,
+.prospect_current_class
+{
+    display: block;
+    margin-top: 3px;
+    font-size: 0.82em;
+    line-height: 1.15em;
+    opacity: 0.78;
+}
+
+.prospect_contact
+{
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.prospect_contact_copy
+{
+    appearance: none;
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin: 0;
+    max-width: 100%;
+    padding: 1px 0 !important;
+    text-align: left;
+}
+
+.prospect_contact_mail
+{
+    overflow-wrap: anywhere;
+}
+
+.prospect_contact_phone
+{
+    white-space: nowrap;
+}
+
+.prospect_contact_copy:hover,
+.prospect_contact_copy:focus
+{
+    color: #00ff00;
+    outline: none;
+    text-decoration: underline;
+}
+
+.prospect_contact_copy.copied
+{
+    color: #00ff00;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.65);
+}
+
+.prospect_contact_empty
+{
+    opacity: 0.55;
+}
+
+.prospect_target_class_cell
+{
+    text-align: center;
+}
+
+.prospect_target_class
+{
+    display: block;
+}
+
+
+/* Dimensionnement de la table compacte et actions documentaires. */
+.prospect_contact_cell,
+.prospect_target_class_cell
+{
+    text-align: center;
+}
+
+.prospect_contact
+{
+    align-items: center;
+    text-align: center;
+}
+
+.prospect_contact_copy
+{
+    text-align: center;
+}
+
+.prospect_decision_toolbar
+{
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.prospect_registration_form,
+.prospect_document_form
+{
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    margin: 4px 0;
+    width: 100%;
+}
+
+.prospect_registration_form select,
+.prospect_document_form select
+{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.prospect_registration_form input[type="button"],
+.prospect_document_form input[type="button"]
+{
+    flex: 0 0 auto;
+    height: 22px;
+    width: auto;
+}
+
+.prospect_registration_send
+{
+    color: #8bd58f;
+    font-weight: bold;
+}
+
+.prospect_document_generate
+{
+    color: lightgreen;
+    font-weight: bold;
+}
+
+
+/* La colonne historique est large : le sélecteur « + Ajouter » ne doit pas
+ * conserver les 200 px historiques au détriment de la barre d’icônes. */
+.prospect_action_history_cell .action_div
+{
+    width: 100%;
+}
+
+.prospect_action_history_cell .actions
+{
+    width: calc(100% - 145px);
+}
+
+.prospect_action_history_cell .action_edit,
+.prospect_action_history_cell .action_edit > button,
+.prospect_action_history_cell .action_menu
+{
+    width: 135px;
+}
+
+.prospect_document_actions_cell .prospect_registration_form,
+.prospect_document_actions_cell .prospect_document_form
+{
+    width: 100%;
+}
+
+.prospect_add_relation
+{
+    color: #b8e6ff;
+    font-weight: bold;
+    width: auto !important;
 }

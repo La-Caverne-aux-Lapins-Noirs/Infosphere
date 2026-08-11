@@ -1,76 +1,115 @@
-<h2><?=$Dictionnary["AddASchool"]; ?></h2><br />
-<form onsubmit="return false;" method="POST" action="/api/school" style="text-align: center;">
+<div class="school_create_panel">
+    <h2><?=$Dictionnary["AddASchool"]; ?></h2><br />
+    <form onsubmit="return false;" method="POST" action="/api/school" style="text-align: center;">
 
-    <input
-	type="text"
-	name="codename"
-	placeholder="<?=$Dictionnary["CodeName"]; ?>"
-    /><br />
-    
-    <input
-	type="text"
-	name="legal_name"
-	placeholder="<?=$Dictionnary["LegalName"]; ?>"
-    /><br />
+        <input
+            type="text"
+            name="codename"
+            placeholder="<?=$Dictionnary["CodeName"]; ?>"
+        /><br />
 
-    <input
-	type="phone"
-	name="phone"
-	placeholder="<?=$Dictionnary["Phone"]; ?>"
-    /><br />
+        <input
+            type="text"
+            name="organization_codename"
+            placeholder="Codename société / organisation existante"
+        /><br />
+        <input
+            type="url"
+            name="base_url"
+            placeholder="URL de base de l'intranet, ex: https://intra.ecole.example"
+        /><br />
+        <p class="school_create_notice">
+            L'organisation doit déjà exister et se configure depuis la page Entreprises. Cette page ne configure que la partie établissement.
+        </p>
 
-    <input
-	type="mail"
-	name="mail"
-	placeholder="<?=$Dictionnary["Mail"]; ?>"
-    /><br />
+        <h3>Établissement</h3>
+        <textarea
+            name="address"
+            placeholder="Lieu de formation / adresse de l'établissement (pas le siège social)"
+        ></textarea><br />
+        <input
+            type="text"
+            name="uai"
+            placeholder="UAI de l'établissement / UFA"
+        /><br />
+        <input
+            type="text"
+            name="cfa_name"
+            placeholder="Dénomination du CFA"
+        /><br />
+        <input
+            type="text"
+            name="executing_establishment_name"
+            placeholder="Nom de l'UFA / établissement exécutant"
+        /><br />
+        <input
+            type="phone"
+            name="phone"
+            placeholder="Téléphone établissement si différent"
+        /><br />
+        <input
+            type="mail"
+            name="mail"
+            placeholder="Mail établissement si différent"
+        /><br />
+        <input
+            type="text"
+            name="school_registration_number"
+            placeholder="Numéro rectorat établissement privé"
+        /><br />
+        <input
+            type="text"
+            name="school_registration_academy"
+            placeholder="Académie rectorat, ex: Créteil"
+        /><br />
+        <input
+            type="text"
+            name="formation_activity_number"
+            placeholder="Numéro de déclaration d'activité formation"
+        /><br />
+        <input
+            type="text"
+            name="formation_activity_region"
+            placeholder="Région de déclaration formation, ex: Île-de-France"
+        /><br />
+        <input
+            type="text"
+            name="alternation_registration_number"
+            placeholder="Numéro CFA"
+        /><br />
+        <input
+            type="text"
+            name="alternation_registration_academy"
+            placeholder="Académie CFA, ex: Créteil"
+        /><br />
+        <br />
 
-    <input
-	type="text"
-	name="main_info"
-	placeholder="<?=$Dictionnary["Name. Address. Company Immatriculation."]; ?>"
-    /><br />
+        <label for="icon"><?=$Dictionnary["SchoolSiteLogo"]; ?></label>
+        <input
+            type="file"
+            name="icon"
+            accept="image/png,image/jpeg"
+            placeholder="<?=$Dictionnary["SchoolSiteLogo"]; ?>"
+        /><br />
+        <label for="document_logo"><?=$Dictionnary["SchoolDocumentLogo"]; ?></label>
+        <input
+            type="file"
+            name="document_logo"
+            accept="image/png,image/jpeg"
+            placeholder="<?=$Dictionnary["SchoolDocumentLogo"]; ?>"
+        /><br />
+        <label for="favicon">Favicon de l'intranet (PNG)</label>
+        <input
+            type="file"
+            name="favicon"
+            accept="image/png"
+        /><br />
+        <br />
 
-    <input
-	type="text"
-	name="school_info"
-	placeholder="<?=$Dictionnary["School Type. School Immatriculation."]; ?>"
-    /><br />
-
-    <input
-	type="text"
-	name="formation_info"
-	placeholder="<?=$Dictionnary["Training Organization Immatriculation."]; ?>"
-    /><br />
-
-    <input
-	type="text"
-	name="alternation_info"
-	placeholder="<?=$Dictionnary["Apprenticeship Training Center Immatriculation."]; ?>"
-    /><br />
-    <br />
-
-    <label for="icon"><?=$Dictionnary["SchoolSiteLogo"]; ?></label>
-    <input
-	type="file"
-	name="icon"
-	accept="image/png,image/jpeg"
-	placeholder="<?=$Dictionnary["SchoolSiteLogo"]; ?>"
-    /><br />
-    <label for="document_logo"><?=$Dictionnary["SchoolDocumentLogo"]; ?></label>
-    <input
-	type="file"
-	name="document_logo"
-	accept="image/png,image/jpeg"
-	placeholder="<?=$Dictionnary["SchoolDocumentLogo"]; ?>"
-    /><br />
-    <br />
-
-    <?php forge_language_formular(["name" => "text"], $_POST); ?>
-
-    <input
-	type="button"
-	onclick="silent_submitf(this.parentNode, {tofill: 'schoollist', toclear: 'schoollist', wrapper: 'schools', clear_form: true});"
-	value="<?=$Dictionnary["AddASchool"]; ?>"
-    />
-</form>
+        <input
+            type="button"
+            onclick="silent_submitf(this.parentNode, {tofill: 'schoollist', toclear: 'schoollist', wrapper: 'schools', clear_form: true});"
+            value="<?=$Dictionnary["AddASchool"]; ?>"
+        />
+    </form>
+</div>

@@ -307,26 +307,31 @@ function intercom_page_fetch_schools()
 
     $uid = (int)$User["id"];
     $field = $GLOBALS["Language"]."_name";
+    $school_name = "COALESCE(NULLIF(organization.$field, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename)";
     $deleted = intercom_page_deleted_condition("school");
     if (is_admin())
         return (db_select_all("
             DISTINCT
                 school.id,
                 school.codename,
-                school.$field as name,
+                $school_name as name,
                 1 as staff
             FROM school
+            LEFT JOIN organization
+              ON organization.id = school.id_organization
             WHERE $deleted
-            ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+            ORDER BY $school_name
         "));
 
     $rows = db_select_all("
         DISTINCT
             school.id,
             school.codename,
-            school.$field as name,
-            MAX(CASE WHEN user_school.authority > 0 THEN 1 ELSE 0 END) as school_staff
+            $school_name as name,
+            MAX(CASE WHEN user_school.authority <> 'STUDENT' THEN 1 ELSE 0 END) as school_staff
         FROM school
+        LEFT JOIN organization
+          ON organization.id = school.id_organization
         LEFT JOIN user_school
           ON user_school.id_school = school.id
          AND user_school.id_user = $uid
@@ -338,7 +343,7 @@ function intercom_page_fetch_schools()
         WHERE $deleted
           AND (user_school.id_user = $uid OR user_cycle.id_user = $uid)
         GROUP BY school.id
-        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+        ORDER BY $school_name
     ");
     $out = [];
     foreach ($rows as $row)
@@ -351,9 +356,11 @@ function intercom_page_fetch_schools()
         DISTINCT
             school.id,
             school.codename,
-            school.$field as name,
+            $school_name as name,
             1 as staff
         FROM school
+        LEFT JOIN organization
+          ON organization.id = school.id_organization
         LEFT JOIN school_cycle ON school_cycle.id_school = school.id
         LEFT JOIN cycle_teacher ON cycle_teacher.id_cycle = school_cycle.id_cycle
         LEFT JOIN user_laboratory as cycle_laboratory
@@ -371,7 +378,7 @@ function intercom_page_fetch_schools()
               OR cycle_laboratory.id_user = $uid
               OR school_lab_member.id_user = $uid
           )
-        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+        ORDER BY $school_name
     ");
     foreach ($staff_rows as $row)
         $out[(int)$row["id"]] = $row;
@@ -380,12 +387,14 @@ function intercom_page_fetch_schools()
         DISTINCT
             school.id,
             school.codename,
-            school.$field as name,
+            $school_name as name,
             1 as staff
         FROM activity_teacher
         LEFT JOIN activity_cycle ON activity_cycle.id_activity = activity_teacher.id_activity
         LEFT JOIN school_cycle ON school_cycle.id_cycle = activity_cycle.id_cycle
         LEFT JOIN school ON school.id = school_cycle.id_school
+        LEFT JOIN organization
+          ON organization.id = school.id_organization
         LEFT JOIN user_laboratory as activity_laboratory
           ON activity_laboratory.id_laboratory = activity_teacher.id_laboratory
          AND activity_laboratory.id_user = $uid
@@ -393,7 +402,7 @@ function intercom_page_fetch_schools()
         WHERE school.id IS NOT NULL
           AND $deleted
           AND (activity_teacher.id_user = $uid OR activity_laboratory.id_user = $uid)
-        ORDER BY COALESCE(NULLIF(school.$field, ''), school.codename)
+        ORDER BY $school_name
     ");
     foreach ($activity_staff_rows as $row)
         $out[(int)$row["id"]] = $row;

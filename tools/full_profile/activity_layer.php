@@ -5,6 +5,7 @@ class ActivityLayer extends Layer
     public $LAYER = "ACTIVITY";
 
     public $id_session = -1;
+    public $reference_activity = -1;
     public $begin_date = NULL;
     public $end_date = NULL;
     public $subject_appeir_date = NULL;

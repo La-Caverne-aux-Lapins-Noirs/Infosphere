@@ -9,6 +9,7 @@ class CConfiguration
     public $_tmpFileDir;
     public $_ActivitiesDir;
     public $_SchoolsDir;
+    public $_OrganizationsDir;
     public $_RoomsDir;
     public $_ConfigurationDir;
     public $_RobotDir;
@@ -113,6 +114,12 @@ class CConfiguration
 	    return ($this->_SchoolsDir);
 	return ($this->_SchoolsDir.$school."/");
     }
+    function OrganizationsDir($organization = NULL)
+    {
+	if ($organization == NULL)
+	    return ($this->_OrganizationsDir);
+	return ($this->_OrganizationsDir.$organization."/");
+    }
     function RoomsDir($room = NULL)
     {
 	if ($room == NULL)
@@ -151,6 +158,8 @@ class CConfiguration
 	// Les fichiers associés aux écoles, c'est à dire principalement
 	// leurs logos et documents administratifs
 	$this->_SchoolsDir = "$DIR/school/";
+	// Les fichiers associés aux organisations mutualisées
+	$this->_OrganizationsDir = "$DIR/organization/";
 	// Les fichiers associés aux salles, c'est à dire leur images
 	$this->_RoomsDir = "$DIR/room/";
 	// Les fichiers associés aux activités

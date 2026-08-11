@@ -1,0 +1,27 @@
+<section class="school_admin_card school_admin_block school_admin_mail_block">
+    <h4>Envoyer un mail</h4>
+    <p class="school_admin_notice">
+        Le message est envoyé en copie cachée aux destinataires ayant une adresse mail renseignée.
+    </p>
+    <form method="post" action="/api/school/<?=$school["id"]; ?>/mail" onsubmit="return false;" class="school_admin_form">
+        <label>
+            Destinataires
+            <select name="target">
+                <option value="all">Tout le monde</option>
+                <option value="staff">Personnel</option>
+                <option value="students">Élèves</option>
+            </select>
+        </label>
+        <label>
+            Sujet
+            <input type="text" name="subject" />
+        </label>
+        <label>
+            Message
+            <textarea name="content"></textarea>
+        </label>
+        <div class="school_admin_actions">
+            <input type="button" onclick="silent_submitf(this.form, {after_success: refresh});" value="Envoyer" />
+        </div>
+    </form>
+</section>

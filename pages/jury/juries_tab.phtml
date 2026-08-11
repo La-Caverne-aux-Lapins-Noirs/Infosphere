@@ -1,0 +1,197 @@
+<?php
+if (!isset($juries))
+    $juries = fetch_juries();
+if (!isset($jury_titles))
+    $jury_titles = fetch_jury_titles();
+?>
+<script>
+function jury_filter_list()
+{
+    var cert = document.getElementById('jury_certification_filter');
+    var mode = document.getElementById('jury_certification_filter_mode');
+    var search = document.getElementById('jury_text_filter');
+    var selected = cert ? cert.value : '';
+    var m = mode ? mode.value : 'has';
+    var needle = search ? search.value.toLowerCase().trim() : '';
+    var rows = document.querySelectorAll('.jury_row');
+
+    rows.forEach(function(row) {
+        var titles = row.getAttribute('data-jury-titles') || '';
+        var text = (row.textContent || '').toLowerCase();
+        var ok = true;
+
+        if (selected != '')
+        {
+            var has = titles.indexOf(';' + selected + ';') != -1;
+            ok = (m == 'missing') ? !has : has;
+        }
+        if (needle != '' && text.indexOf(needle) == -1)
+            ok = false;
+        row.style.display = ok ? '' : 'none';
+    });
+}
+</script>
+
+<div class="jury_page jury_juries_page">
+    <section class="jury_card jury_add_card">
+        <h3><?=$Dictionnary["AddAJury"] ?? "Ajouter un jury"; ?></h3>
+        <form method="post" action="/api/certification" onsubmit="return certification_submit(this, {clear_form: true});">
+            <div class="jury_form_grid jury_new_jury_grid">
+                <div class="jury_field">
+                    <label><?=$Dictionnary["Mail"] ?? "Adresse email"; ?></label>
+                    <input type="text" name="mail" />
+                </div>
+                <div class="jury_field">
+                    <label><?=$Dictionnary["FirstName"] ?? "Prénom"; ?></label>
+                    <input type="text" name="first_name" />
+                </div>
+                <div class="jury_field">
+                    <label><?=$Dictionnary["FamilyName"] ?? "Nom de famille"; ?></label>
+                    <input type="text" name="family_name" />
+                </div>
+                <div class="jury_field">
+                    <label><?=$Dictionnary["Phone"] ?? "Téléphone"; ?></label>
+                    <input type="text" name="phone" />
+                </div>
+            </div>
+            <div class="jury_field jury_note_field">
+                <label><?=$Dictionnary["JuryInternalNote"] ?? "Note interne sur le jury"; ?></label>
+                <textarea name="note"></textarea>
+            </div>
+            <?php if (count($jury_titles)) { ?>
+                <div class="jury_form_block">
+                    <div class="jury_form_block_title"><?=$Dictionnary["Certifications"] ?? ($Dictionnary["JuryTitles"] ?? "Certifications / titres"); ?></div>
+                    <div class="jury_title_checkbox_list jury_add_title_list">
+                        <?php foreach ($jury_titles as $title) { ?>
+                            <label>
+                                <input type="checkbox" name="title_<?=$title["id"]; ?>" value="1" />
+                                <?=htmlentities(jury_title_name($title)); ?>
+                            </label>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
+            <div class="jury_form_actions">
+                <input type="submit" value="<?=$Dictionnary["AddAJury"] ?? "Ajouter un jury"; ?>" />
+            </div>
+        </form>
+    </section>
+
+    <section class="jury_card jury_filter_card">
+        <h3><?=$Dictionnary["Filter"] ?? "Filtrer"; ?></h3>
+        <div class="jury_filter_row">
+            <div class="jury_field">
+                <label><?=$Dictionnary["Search"] ?? "Recherche"; ?></label>
+                <input id="jury_text_filter" type="text" oninput="jury_filter_list();" />
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["Certification"] ?? "Certification / titre"; ?></label>
+                <select id="jury_certification_filter" onchange="jury_filter_list();">
+                    <option value=""><?=$Dictionnary["AllCertifications"] ?? "Toutes les certifications"; ?></option>
+                    <?php foreach ($jury_titles as $title) { ?>
+                        <option value="<?=htmlentities($title["codename"]); ?>"><?=htmlentities(jury_title_name($title)); ?></option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="jury_field">
+                <label><?=$Dictionnary["Criterion"] ?? "Critère"; ?></label>
+                <select id="jury_certification_filter_mode" onchange="jury_filter_list();">
+                    <option value="has"><?=$Dictionnary["JuryHasCertification"] ?? "possède"; ?></option>
+                    <option value="missing"><?=$Dictionnary["JuryMissingCertification"] ?? "ne possède pas"; ?></option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="jury_card jury_list_card">
+        <h3><?=$Dictionnary["Juries"] ?? "Jurys"; ?></h3>
+        <?php if (!count($juries)) { ?>
+            <p><?=$Dictionnary["NoJury"] ?? "Aucun jury n'est encore enregistré."; ?></p>
+        <?php } else { ?>
+            <div class="jury_list">
+                <?php foreach ($juries as $jury) { ?>
+                    <?php
+                    $title_codenames = [];
+                    foreach ($jury["titles"] as $title)
+                        $title_codenames[] = $title["codename"];
+                    $title_marker = ";".implode(";", $title_codenames).";";
+                    ?>
+                    <div class="jury_row <?=$jury["deleted"] != NULL ? "jury_archived" : ""; ?>" data-jury-titles="<?=htmlentities($title_marker); ?>">
+                        <div class="jury_row_avatar">
+                            <?php display_avatar($jury, 56, true); ?>
+                        </div>
+                        <form class="jury_row_form" method="put" action="/api/certification/<?=$jury["id"]; ?>" onsubmit="return certification_submit(this);">
+                            <div class="jury_row_main">
+                                <div class="jury_identity_line">
+                                    <a href="<?=profile($jury["id"]); ?>" class="jury_identity_link">
+                                        <?=htmlentities(jury_person_name($jury)); ?>
+                                    </a>
+                                    <span class="smalltext">#<?=$jury["id"]; ?> <?=htmlentities($jury["codename"]); ?></span>
+                                    <?php if ($jury["deleted"] != NULL) { ?><span class="jury_badge jury_archived_badge"><?=$Dictionnary["Archived"] ?? "Archivé"; ?></span><?php } ?>
+                                </div>
+                                <div class="jury_form_grid jury_edit_jury_grid">
+                                    <div class="jury_field">
+                                        <label><?=$Dictionnary["FirstName"] ?? "Prénom"; ?></label>
+                                        <input type="text" name="first_name" value="<?=htmlentities($jury["first_name"] ?? ""); ?>" />
+                                    </div>
+                                    <div class="jury_field">
+                                        <label><?=$Dictionnary["FamilyName"] ?? "Nom"; ?></label>
+                                        <input type="text" name="family_name" value="<?=htmlentities($jury["family_name"] ?? ""); ?>" />
+                                    </div>
+                                    <div class="jury_field">
+                                        <label><?=$Dictionnary["Nickname"] ?? "Surnom"; ?></label>
+                                        <input type="text" name="nickname" value="<?=htmlentities($jury["nickname"] ?? ""); ?>" />
+                                    </div>
+                                    <div class="jury_field">
+                                        <label><?=$Dictionnary["Mail"] ?? "Mail"; ?></label>
+                                        <input type="text" name="mail" value="<?=htmlentities($jury["mail"] ?? ""); ?>" />
+                                    </div>
+                                    <div class="jury_field">
+                                        <label><?=$Dictionnary["Phone"] ?? "Téléphone"; ?></label>
+                                        <input type="text" name="phone" value="<?=htmlentities($jury["phone"] ?? ""); ?>" />
+                                    </div>
+                                </div>
+                                <div class="jury_field jury_note_field">
+                                    <label><?=$Dictionnary["JuryInternalNote"] ?? "Note interne sur le jury"; ?></label>
+                                    <textarea name="note"><?=htmlentities($jury["jury_note"] ?? ""); ?></textarea>
+                                </div>
+                                <?php if (count($jury_titles)) { ?>
+                                    <div class="jury_form_block">
+                                        <div class="jury_form_block_title"><?=$Dictionnary["Certifications"] ?? ($Dictionnary["JuryTitles"] ?? "Certifications / titres"); ?></div>
+                                        <div class="jury_title_checkbox_list">
+                                            <?php foreach ($jury_titles as $title) { ?>
+                                                <?php $checked = in_array($title["codename"], $title_codenames, true); ?>
+                                                <label>
+                                                    <input type="checkbox" name="title_<?=$title["id"]; ?>" value="1" <?=$checked ? "checked" : ""; ?> />
+                                                    <?=htmlentities(jury_title_name($title)); ?>
+                                                </label>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                                <details class="jury_sessions_details">
+                                    <summary><?=$Dictionnary["JurySessions"] ?? "Sessions"; ?></summary>
+                                    <?php require (__DIR__."/sessions_fragment.phtml"); ?>
+                                </details>
+                            </div>
+                            <div class="jury_row_save">
+                                <input type="submit" value="<?=$Dictionnary["Save"] ?? "Enregistrer"; ?>" />
+                            </div>
+                        </form>
+                        <div class="jury_row_archive">
+                            <?php if ($jury["deleted"] == NULL) { ?>
+                                <form method="delete" action="/api/certification/<?=$jury["id"]; ?>" onsubmit="return window.confirm('<?=$Dictionnary["ConfirmDeletion"] ?? "Confirmer la suppression ?"; ?>') && certification_submit(this);">
+                                    <input type="submit" value="<?=$Dictionnary["Archive"] ?? "Archiver"; ?>" />
+                                </form>
+                            <?php } else { ?>
+                                <form method="put" action="/api/certification/<?=$jury["id"]; ?>/restore" onsubmit="return certification_submit(this);">
+                                    <input type="submit" value="<?=$Dictionnary["Restore"] ?? "Restaurer"; ?>" />
+                                </form>
+                            <?php } ?>
+                        </div>
+                    </div>
+                <?php } ?>
+            </div>
+        <?php } ?>
+    </section>
+</div>

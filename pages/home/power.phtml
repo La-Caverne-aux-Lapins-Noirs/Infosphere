@@ -3,7 +3,7 @@
     <form action="index.php?<?=unrollget(); ?>" method="post">
 	<select name="children" style="width: 49%;">
 	    <?php foreach ($User["children"] as $children) { ?>
-		<option value="<?=$children["id"]; ?>"><?=$children["codename"]; ?></option>
+		<option value="<?=isset($children["id_user"]) ? $children["id_user"] : $children["id"]; ?>"><?=$children["codename"]; ?></option>
 	    <?php } ?>
 	</select>
 	<input type="submit" value="<?=$Dictionnary["Impersonate"]; ?>" style="width: 49%;" />
@@ -18,7 +18,7 @@
     ?>
     <form action="index.php?<?=unrollget(); ?>" method="post">
 	<?=$Dictionnary["CancelImpersonate"].":"; ?>
-	<input type="hidden" name="children" value="<?=$OriginalUser["codename"]; ?>" />
+	<input type="hidden" name="children" value="" />
 	<input type="submit" value="X" />
     </form>
     <br />
@@ -37,7 +37,7 @@
 	    ?>
 	    <form action="index.php?<?=unrollget(); ?>" method="post">
 		<?=$Dictionnary["CancelImpersonate"].":"; ?>
-		<input type="hidden" name="log_as" value="<?=$OriginalUser["codename"]; ?>" />
+		<input type="hidden" name="log_as" value="" />
 		<input type="submit" value="X" />
 	    </form>
 	<?php } ?>

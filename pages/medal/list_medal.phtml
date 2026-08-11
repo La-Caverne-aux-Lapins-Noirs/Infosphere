@@ -23,7 +23,12 @@
 		<h4><?=$medal["name"]; ?><?=is_teacher() ? " (".$medal["codename"].")" : ""; ?></h4>
 		<h5><?=$Dictionnary["Tags"]; ?>: <?=$medal["tags"]; ?></h5>
 		<p style="font-size: small;">
-		    <?=$Dictionnary[["PositiveMedal", "NegativeMedal", "CriticalNegativeMedal"][$medal["type"]]]; ?><br />
+		    <?php
+			    $medal_type = isset($medal["type"]) ? (int)$medal["type"] : 0;
+			    if (!is_between($medal_type, 0, 2))
+				$medal_type = 0;
+			    ?>
+			    <?=$Dictionnary[["PositiveMedal", "NegativeMedal", "CriticalNegativeMedal"][$medal_type]]; ?><br />
 		    <?=$medal["description"]; ?>
 		</p>
 	    </div>
@@ -31,40 +36,44 @@
 	<?php if (is_teacher()) { ?>
 	    <script>
 	     <?php
-	     $mcli = explode(" ", $medal["command"]);
-	     array_shift($mcli); // ./genicon
-	     $medal["shape"] = $mcli[0] == "pins" ? "0" : "1";
-	     array_shift($mcli); // [sband, band, pins]
-	     array_shift($mcli); // medal_name
+	     $medal["shape"] = "1";
 	     $medal["specificator"] = "";
 	     $medal["picture"] = "";
+	     $medal["configuration"] = "";
+	     $command = trim((string)try_get($medal, "command", ""));
+	     $mcli = $command == "" ? [] : preg_split('/\s+/', $command);
+	     if (count($mcli) >= 3)
+	     {
+		 array_shift($mcli); // genicon
+		 $shape = array_shift($mcli); // [sband, band, pins]
+		 $medal["shape"] = $shape == "pins" ? "0" : "1";
+		 array_shift($mcli); // medal_name
+	     }
+	     else
+		 $mcli = [];
 	     for ($imcli = 0; $imcli < count($mcli); ++$imcli)
 	     {
-		 if ($mcli[$imcli] == "-p")
+		 if ($mcli[$imcli] == "-p" && isset($mcli[$imcli + 1]))
 		 {
 		     $imcli += 1;
 		     $medal["picture"] = $mcli[$imcli];
 		     $medal["picture"] = str_replace("dres/medals/.ressources/", "", $medal["picture"]);
 		 }
-		 else if ($mcli[$imcli] == "-s")
+		 else if ($mcli[$imcli] == "-s" && isset($mcli[$imcli + 1]))
 		 {
 		     $imcli += 1;
 		     $medal["specificator"] = $mcli[$imcli];
 		 }
-		 else if ($mcli[$imcli] == "-c")
+		 else if ($mcli[$imcli] == "-c" && isset($mcli[$imcli + 1]))
 		 {
 		     $imcli += 1;
 		     if (!strstr($mcli[$imcli], ".default_style.dab"))
 		     {
 			 $medal["configuration"] = $mcli[$imcli];
 			 $path = "dres/medals/.ressources/";
-			 if (strncmp($path, $medal["configuration"], strlen($path))
-			     == 0)
-			     $medal["configuration"] =
-				 substr($medal["configuration"], strlen($path));
+			 if (strncmp($path, $medal["configuration"], strlen($path)) == 0)
+			     $medal["configuration"] = substr($medal["configuration"], strlen($path));
 		     }
-		     else
-			 $medal["configuration"] = "";
 		 }
 	     }
 	     foreach ([
@@ -92,13 +101,6 @@
 		<form method="put" action="/api/medal/<?=$medal["id"]; ?>" onsubmit="load_form(document.getElementById('medal_formular'), _<?=$medal["codename"]; ?>);">
 		    <input type="button" value="E" onclick="load_form(document.getElementById('medal_formular'), _<?=$medal["codename"]; ?>);" style="color: #00FFFF;" />
 		</form>
-		<input type="button"
-		       <?php if (isset($srvmeds[$medal["codename"]])) { ?>
-		       style="background-color: green;"
-		       <?php } else { ?>
-		       style="background-color: red;"
-		       <?php } ?>
-		/>
 	    </td>
 	<?php } ?>
 	</tr>

@@ -5,3 +5,169 @@
     border: 1px solid rgba(0, 0, 0, 0.20);
 }
 
+
+
+.school_create_panel
+{
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(0, 255, 0, 0.35);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.92);
+    padding: 12px;
+}
+
+.school_create_panel h2,
+.school_create_panel h3,
+.school_create_panel p,
+.school_create_panel label
+{
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.school_create_panel textarea
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.school_create_notice,
+.school_admin_notice
+{
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95em;
+    line-height: 1.35em;
+}
+
+.school_admin_notice a
+{
+    color: #9fd6ff;
+}
+
+.school-tab-button
+{
+    background: rgba(0, 0, 0, 0.78);
+    border: 1px solid rgba(0, 220, 0, 0.32);
+    border-radius: 10px;
+    color: #f7fff7;
+    cursor: pointer;
+    text-align: center;
+}
+
+.school-tab-button.selected
+{
+    background: rgba(0, 120, 0, 0.82);
+    border-color: rgba(0, 255, 0, 0.70);
+    font-weight: bold;
+}
+
+.school_admin_page input[type="button"],
+.school_admin_page button,
+.school_create_panel input[type="button"]
+{
+    background: rgba(0, 120, 0, 0.92) !important;
+    border: 1px solid rgba(115, 255, 115, 0.95) !important;
+    border-radius: 7px;
+    color: #ffffff !important;
+    cursor: pointer;
+    font-weight: bold;
+    min-height: 30px;
+    padding: 5px 10px;
+    text-shadow: 0 1px 2px #000000;
+}
+
+.school_admin_page input[type="button"]:hover,
+.school_admin_page button:hover,
+.school_create_panel input[type="button"]:hover
+{
+    background: rgba(0, 170, 0, 0.96) !important;
+}
+
+.school_member_card input[type="button"],
+.school_admin_danger input[type="button"]
+{
+    background: rgba(110, 0, 0, 0.90) !important;
+    border-color: rgba(255, 120, 120, 0.95) !important;
+}
+
+
+.school_member_card input.school_member_document_button
+{
+    background: rgba(0, 105, 145, 0.94) !important;
+    border-color: rgba(120, 220, 255, 0.95) !important;
+}
+
+.school_member_card input.school_member_document_button:hover
+{
+    background: rgba(0, 145, 195, 0.98) !important;
+}
+
+.school_student_document_overlay
+{
+    background: rgba(0, 0, 0, 0.50);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+}
+
+.school_student_document_dialog
+{
+    background:
+        linear-gradient(145deg, rgba(16, 34, 18, 0.96), rgba(6, 13, 8, 0.94));
+    border-color: rgba(70, 235, 95, 0.88);
+    box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.82),
+        0 0 0 1px rgba(70, 235, 95, 0.15) inset,
+        0 0 32px rgba(0, 180, 35, 0.24);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.school_student_document_header
+{
+    border-bottom-color: rgba(90, 255, 110, 0.22);
+}
+
+.school_student_document_header p
+{
+    color: rgba(190, 235, 198, 0.86);
+}
+
+.school_student_document_fields label > span
+{
+    color: rgba(235, 255, 238, 0.94);
+}
+
+.school_student_document_dialog select
+{
+    background: rgba(0, 0, 0, 0.62);
+    border: 1px solid rgba(70, 235, 95, 0.44);
+    border-radius: 6px;
+    color: white;
+}
+
+.school_student_document_dialog select:focus
+{
+    border-color: rgba(115, 255, 130, 0.92);
+    box-shadow: 0 0 0 2px rgba(50, 210, 75, 0.18);
+    outline: none;
+}
+
+.school_student_document_close
+{
+    background: rgba(95, 24, 24, 0.94) !important;
+    border-color: rgba(255, 125, 125, 0.90) !important;
+}
+
+.school_student_document_close:hover
+{
+    background: rgba(145, 32, 32, 0.98) !important;
+}
+
+.school_student_document_submit
+{
+    background: rgba(0, 105, 145, 0.94) !important;
+    border-color: rgba(120, 220, 255, 0.95) !important;
+}
+
+.school_student_document_submit:hover
+{
+    background: rgba(0, 145, 195, 0.98) !important;
+}

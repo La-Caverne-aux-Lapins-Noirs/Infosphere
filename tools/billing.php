@@ -15,7 +15,7 @@ function is_billing_manager_for_billing_entry($id_entry)
     $id_entry = (int)$id_entry;
     if ($id_entry <= 0)
         return (is_billing_manager());
-    $entry = db_select_one("id_user FROM billing_entry WHERE id = $id_entry AND deleted IS NULL");
+    $entry = db_select_one("id_user FROM billing_entry WHERE id = $id_entry");
     if ($entry == NULL)
         return (false);
     return (billing_user_is_managed($entry["id_user"]));
@@ -227,10 +227,11 @@ function billing_fetch_students()
         user.mail,
         NULL as deleted,
         school.codename as school_codename,
-        school.{$Language}_name as school_name
+        COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name
         FROM user_school
         LEFT JOIN user ON user.id = user_school.id_user
         LEFT JOIN school ON school.id = user_school.id_school
+        LEFT JOIN organization ON organization.id = school.id_organization
         WHERE user_school.authority = 'STUDENT'
           AND user.deleted IS NULL
           AND school.deleted IS NULL
@@ -254,9 +255,10 @@ function billing_fetch_templates()
     return (db_select_all("
         billing_template.*,
         school.codename as school_codename,
-        school.{$Language}_name as school_name
+        COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name
         FROM billing_template
         LEFT JOIN school ON school.id = billing_template.id_school
+        LEFT JOIN organization ON organization.id = school.id_organization
         WHERE billing_template.deleted IS NULL
         ".billing_school_filter("billing_template")."
         ORDER BY school.codename, billing_template.tariff_year ASC, billing_template.name
@@ -298,12 +300,13 @@ function billing_fetch_issued_invoices()
         user.family_name,
         user.mail,
         school.codename as school_codename,
-        school.{$Language}_name as school_name,
+        COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name,
         billing_template.name as template_name,
         billing_template.tariff_year as template_tariff_year
         FROM billing_entry
         LEFT JOIN user ON user.id = billing_entry.id_user
         LEFT JOIN school ON school.id = billing_entry.id_school
+        LEFT JOIN organization ON organization.id = school.id_organization
         LEFT JOIN billing_template ON billing_template.id = billing_entry.id_template
         WHERE billing_entry.sent_date IS NOT NULL
         ".billing_school_filter("billing_entry")."
@@ -398,7 +401,6 @@ function billing_user_has_registration_fee($id_user, $id_school)
           AND id_school = $id_school
           AND entry_type = 'registration_fee'
           AND deleted IS NULL
-        LIMIT 1
     ") != NULL);
 }
 
@@ -426,7 +428,36 @@ function billing_schedule_short_labels()
     ]);
 }
 
-function billing_add_entry($id_user, $label, $amount, $due_date, $id_template = NULL, $entry_type = "tuition")
+
+function billing_invoice_types()
+{
+    global $Dictionnary;
+
+    return ([
+        "school" => $Dictionnary["BillingInvoiceTypeSchool"] ?? "École",
+        "of" => $Dictionnary["BillingInvoiceTypeOF"] ?? "OF",
+        "cfa" => $Dictionnary["BillingInvoiceTypeCFA"] ?? "CFA",
+    ]);
+}
+
+function billing_normalize_invoice_type($type)
+{
+    $type = strtolower(trim((string)$type));
+    if ($type == "ecole")
+        $type = "school";
+    if (!array_key_exists($type, billing_invoice_types()))
+        $type = "school";
+    return ($type);
+}
+
+function billing_invoice_type_label($type)
+{
+    $types = billing_invoice_types();
+    $type = billing_normalize_invoice_type($type);
+    return ($types[$type] ?? $type);
+}
+
+function billing_add_entry($id_user, $label, $amount, $due_date, $id_template = NULL, $entry_type = "tuition", $invoice_type = "school")
 {
     global $Database;
     global $User;
@@ -444,13 +475,14 @@ function billing_add_entry($id_user, $label, $amount, $due_date, $id_template = 
     if ($entry_type == "")
         $entry_type = "tuition";
     $entry_type = $Database->real_escape_string($entry_type);
+    $invoice_type = $Database->real_escape_string(billing_normalize_invoice_type($invoice_type));
     $id_template = $id_template === NULL ? "NULL" : (int)$id_template;
     $actor = isset($User["id"]) ? (int)$User["id"] : "NULL";
     return ($Database->query("
         INSERT INTO billing_entry
-        (id_user, id_school, id_template, label, amount, entry_type, due_date, id_actor)
+        (id_user, id_school, id_template, label, amount, entry_type, invoice_type, due_date, id_actor)
         VALUES
-        ($id_user, {$school["id_school"]}, $id_template, '$label', $amount, '$entry_type', '$due_date', $actor)
+        ($id_user, {$school["id_school"]}, $id_template, '$label', $amount, '$entry_type', '$invoice_type', '$due_date', $actor)
     ") != NULL);
 }
 
@@ -475,7 +507,8 @@ function billing_apply_template($id_user, $id_template, $first_due_date, $schedu
             $template["registration_fee"],
             $first_due_date,
             $id_template,
-            "registration_fee"
+            "registration_fee",
+            $template["invoice_type"] ?? "school"
         ))
             ++$count;
 
@@ -488,7 +521,7 @@ function billing_apply_template($id_user, $id_template, $first_due_date, $schedu
         $date = new DateTime(db_form_date($first_due_date));
         if ($offset > 0)
             $date->modify("+$offset months");
-        if (billing_add_entry($id_user, $template["name"]." - échéance ".($idx + 1)."/".count($offsets), $amount, $date->format("Y-m-d H:i:s"), $id_template))
+        if (billing_add_entry($id_user, $template["name"]." - échéance ".($idx + 1)."/".count($offsets), $amount, $date->format("Y-m-d H:i:s"), $id_template, "tuition", $template["invoice_type"] ?? "school"))
             ++$count;
     }
     return ($count);
@@ -500,15 +533,27 @@ function billing_invoice_recipients($id_user)
     $mails = [];
     foreach (db_select_all("mail FROM user WHERE id = $id_user AND mail IS NOT NULL AND mail != ''") as $m)
         $mails[] = $m["mail"];
-    foreach (db_select_all("
-        user.mail
+
+    $relations = db_select_all("
+        user.mail, parent_child.relation
         FROM parent_child
         LEFT JOIN user ON user.id = parent_child.id_parent
         WHERE parent_child.id_child = $id_user
           AND user.mail IS NOT NULL
           AND user.mail != ''
-    ") as $m)
-        $mails[] = $m["mail"];
+        ORDER BY parent_child.id ASC
+    ");
+    $financial = array_values(array_filter($relations, function($row) {
+        return (user_relation_has($row["relation"] ?? "", "financial"));
+    }));
+    // Si aucun responsable financier n'a été désigné, un responsable légal
+    // reste un repli plus raisonnable que d'envoyer la facture à tous les contacts.
+    if (!count($financial))
+        $financial = array_values(array_filter($relations, function($row) {
+            return (user_relation_has($row["relation"] ?? "", "legal"));
+        }));
+    foreach ($financial as $relation)
+        $mails[] = $relation["mail"];
     return (array_values(array_unique($mails)));
 }
 
@@ -567,12 +612,22 @@ function billing_invoice_safe_filename($reference)
     $reference = trim($reference, "_.-");
     if ($reference == "")
         $reference = "invoice";
-    return ($reference.".txt");
+    return ($reference.".pdf");
 }
 
-function billing_entry_with_user($id_entry)
+function billing_invoice_existing_pdf_filename($entry, $reference)
+{
+    $filename = trim((string)($entry["invoice_filename"] ?? ""));
+
+    if ($filename != "" && preg_match('/\.pdf$/i', $filename))
+        return ($filename);
+    return (billing_invoice_safe_filename($reference));
+}
+
+function billing_entry_with_user($id_entry, $include_deleted = false)
 {
     $id_entry = (int)$id_entry;
+    $deleted_filter = $include_deleted ? "" : "AND billing_entry.deleted IS NULL";
     return (db_select_one("
         billing_entry.*,
         user.codename,
@@ -584,7 +639,7 @@ function billing_entry_with_user($id_entry)
         LEFT JOIN user ON user.id = billing_entry.id_user
         LEFT JOIN school ON school.id = billing_entry.id_school
         WHERE billing_entry.id = $id_entry
-          AND billing_entry.deleted IS NULL
+          $deleted_filter
     "));
 }
 
@@ -612,14 +667,24 @@ function billing_invoice_text($entry, $reference)
     if ($name == "")
         $name = $entry["codename"] ?? "";
     return (
-        $Dictionnary["BillingInvoicePlaceholderBody"]."\n\n".
         $Dictionnary["BillingInvoice"]." : ".$reference."\n".
         $Dictionnary["Student"]." : ".$name."\n".
         $Dictionnary["BillingLabel"]." : ".$entry["label"]."\n".
+        $Dictionnary["BillingInvoiceType"]." : ".billing_invoice_type_label($entry["invoice_type"] ?? "school")."\n".
         $Dictionnary["Amount"]." : ".billing_euros($entry["amount"])."\n".
         $Dictionnary["DueDate"]." : ".billing_document_date_label($entry["due_date"])."\n".
         $Dictionnary["Reference"]." : ".$reference."\n"
     );
+}
+
+function billing_invoice_mail_body($entry, $reference, $relative_path = "")
+{
+    global $Dictionnary;
+
+    $body = billing_invoice_text($entry, $reference);
+    if ($relative_path != "")
+        $body .= "\n".$Dictionnary["InvoiceCopySavedIn"]." : ".$relative_path."\n";
+    return ($body);
 }
 
 function billing_invoice_directory($codename, $state = false)
@@ -656,35 +721,106 @@ function billing_invoice_relative_path($entry)
     return (billing_invoice_relative_path_for_state(false, $entry["invoice_filename"]));
 }
 
-function billing_invoice_builder_shell_command($placeholder, $output)
+function billing_invoice_model_file()
 {
-    // Later: replace this placeholder command with something like:
-    // docbuilder <options> -o <output>
-    return ("echo ".escapeshellarg($placeholder)." > ".escapeshellarg($output));
+    if (function_exists("document_builder_find_model"))
+    {
+        $model = document_builder_find_model("facture");
+        if ($model != NULL)
+            return ($model);
+    }
+    foreach (["./res/docs/facture.dab", "./res/docs/fr/facture.dab", "./dres/doc/facture.dab", "./dres/doc/fr/facture.dab"] as $candidate)
+        if (file_exists($candidate) && !is_dir($candidate))
+            return ($candidate);
+    return (NULL);
+}
+
+function billing_invoice_context_fields($entry, $reference)
+{
+    $fields = [];
+    $invoice = [
+        "id" => (int)$entry["id"],
+        "reference" => $reference,
+        "label" => $entry["label"] ?? "",
+        "type" => billing_normalize_invoice_type($entry["invoice_type"] ?? "school"),
+        "type_label" => billing_invoice_type_label($entry["invoice_type"] ?? "school"),
+        "entry_type" => $entry["entry_type"] ?? "",
+        "amount_cents" => (int)($entry["amount"] ?? 0),
+        "amount" => billing_euros($entry["amount"] ?? 0),
+        "amount_euros" => billing_euros($entry["amount"] ?? 0),
+        "due_date" => $entry["due_date"] ?? "",
+        "due_date_label" => billing_document_date_label($entry["due_date"] ?? ""),
+        "sent_date" => $entry["sent_date"] ?? "",
+        "sent_date_label" => empty($entry["sent_date"]) ? "" : billing_document_date_label($entry["sent_date"]),
+        "paid_date" => $entry["paid_date"] ?? "",
+        "paid_date_label" => empty($entry["paid_date"]) ? "" : billing_document_date_label($entry["paid_date"]),
+    ];
+    document_context_flatten($fields, "Invoice", $invoice);
+    document_context_flatten($fields, "Billing", $invoice);
+
+    $student = document_context_person((int)$entry["id_user"]);
+    if ($student != NULL)
+    {
+        document_context_flatten($fields, "Student", $student);
+        document_context_flatten($fields, "Destination", $student);
+        document_context_flatten($fields, "User", $student);
+    }
+
+    $parent = document_context_parent_for_user((int)$entry["id_user"]);
+    if ($parent != NULL)
+    {
+        document_context_flatten($fields, "Parent", $parent);
+        document_context_flatten($fields, "FinancialResponsible", $parent);
+    }
+
+    $school = document_context_school((int)$entry["id_school"]);
+    if ($school != NULL)
+    {
+        document_context_flatten($fields, "Company", $school);
+        document_context_flatten($fields, "School", $school);
+    }
+
+    $director = document_context_director_for_school((int)$entry["id_school"]);
+    if ($director != NULL)
+    {
+        document_context_flatten($fields, "Director", $director);
+    }
+    return ($fields);
 }
 
 function billing_build_invoice_document($entry, $reference, $output)
 {
-    $placeholder = billing_invoice_text($entry, $reference);
-    $command = billing_invoice_builder_shell_command($placeholder, $output);
-    $lines = [];
-    $status = 0;
-
-    exec($command, $lines, $status);
-    if ($status != 0 || !file_exists($output))
+    $model = billing_invoice_model_file();
+    if ($model == NULL)
+    {
+        add_log(TRACE, "Cannot build invoice #".((int)$entry["id"]).": missing res/docs/facture.dab", $entry["id_user"] ?? -1);
         return (NULL);
+    }
+
+    $parts = array_merge([["file" => $model]], billing_invoice_context_fields($entry, $reference));
+    $include_paths = function_exists("document_builder_model_dirs") ? document_builder_model_dirs() : ["./res/docs/", "./dres/doc/"];
+    $ret = build_document_from_parts($output, $parts, $include_paths);
+    if ($ret->is_error())
+    {
+        add_log(TRACE, "Cannot build invoice #".((int)$entry["id"]).": ".strval($ret), $entry["id_user"] ?? -1);
+        return (NULL);
+    }
+    if (!file_exists($output) || substr((string)@file_get_contents($output, false, NULL, 0, 4), 0, 4) !== "%PDF")
+    {
+        add_log(TRACE, "Cannot build invoice #".((int)$entry["id"]).": DocBuilder did not produce a PDF", $entry["id_user"] ?? -1);
+        return (NULL);
+    }
     @chmod($output, 0664);
-    return ($placeholder);
+    return (file_get_contents($output));
 }
 
-function billing_write_invoice_placeholder($entry, $reference, $state = false)
+function billing_write_invoice_placeholder(&$entry, $reference, $state = false)
 {
     $dir = billing_invoice_directory($entry["codename"], $state);
     new_directory($dir."index.php");
 
-    $filename = empty($entry["invoice_filename"])
-        ? billing_invoice_safe_filename($reference)
-        : $entry["invoice_filename"];
+    $filename = billing_invoice_existing_pdf_filename($entry, $reference);
+    $entry["invoice_filename"] = $filename;
     $path = $dir.$filename;
     $content = billing_build_invoice_document($entry, $reference, $path);
     if ($content === NULL)
@@ -694,6 +830,53 @@ function billing_write_invoice_placeholder($entry, $reference, $state = false)
         "path" => $path,
         "relative_path" => billing_invoice_relative_path_for_state($state, $filename),
         "content" => $content,
+    ]);
+}
+
+function billing_invoice_existing_file_path($entry)
+{
+    if (empty($entry["invoice_filename"]))
+        return ("");
+    $path = billing_invoice_directory($entry["codename"], !empty($entry["deleted"]) ? "deleted" : (!empty($entry["paid_date"]) ? true : false)).$entry["invoice_filename"];
+    if (!file_exists($path) || is_dir($path))
+        return ("");
+    if (substr((string)@file_get_contents($path, false, NULL, 0, 4), 0, 4) !== "%PDF")
+        return ("");
+    return ($path);
+}
+
+function billing_invoice_pdf_response($id_entry)
+{
+    $entry = billing_entry_with_user($id_entry, true);
+    if ($entry == NULL || !billing_user_is_managed($entry["id_user"]))
+        return (false);
+
+    $ref = trim((string)$entry["invoice_reference"]);
+    if ($ref == "")
+        $ref = billing_invoice_default_reference($entry);
+    $filename = billing_invoice_existing_pdf_filename($entry, $ref);
+
+    $path = billing_invoice_existing_file_path($entry);
+    if ($path != "")
+        $content = file_get_contents($path);
+    else
+    {
+        $tmp = tempnam(sys_get_temp_dir(), "infosphere_invoice_");
+        if ($tmp === false)
+            return (false);
+        @unlink($tmp);
+        $path = $tmp.".pdf";
+        $content = billing_build_invoice_document($entry, $ref, $path);
+        @unlink($path);
+        if ($content === NULL)
+            return (false);
+    }
+
+    return ([
+        "filename" => $filename,
+        "content" => $content,
+        "content_type" => "application/pdf",
+        "disposition" => "inline",
     ]);
 }
 
@@ -795,8 +978,7 @@ function billing_send_invoice_placeholder($id_entry)
     if (!count($recipients))
         return (false);
 
-    $body = $file["content"]."\n".
-        $Dictionnary["InvoiceCopySavedIn"]." : ".$file["relative_path"]."\n";
+    $body = billing_invoice_mail_body($entry, $ref, $file["relative_path"]);
     $mail = send_mail(
         $recipients,
         $Dictionnary["BillingInvoice"]." ".$ref,

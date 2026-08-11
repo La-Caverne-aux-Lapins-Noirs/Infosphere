@@ -1,0 +1,64 @@
+<?php
+$files = correction_dabsic_files();
+$correction_categories = correction_categories();
+?>
+<div class="correction-panel">
+    <table class="content_table correction-table">
+        <thead><tr><th>Fichier</th><th>Catégorie</th><th>Rôle détecté</th><th>Fonction</th><th>Dépendances</th><th>Référencé par</th><th>SHA-256</th><th></th></tr></thead>
+        <tbody>
+        <?php if (!count($files)) { ?><tr><td colspan="8">Aucun fichier Dabsic.</td></tr><?php } ?>
+        <?php foreach ($files as $file) { ?>
+            <tr>
+                <td><code><?=htmlspecialchars($file['relative_path']); ?></code></td>
+                <td><?=htmlspecialchars($file['category_name']); ?></td>
+                <td><?=htmlspecialchars([
+                    'definition' => 'Définition pédagogique',
+                    'evaluation' => 'Étapes d’évaluation',
+                    'scenario' => 'Scénario de correction',
+                    'standalone' => 'Configuration autonome'
+                ][$file['role']]); ?></td>
+                <td><?=htmlspecialchars($file['target_function'] ?? '—'); ?></td>
+                <td>
+                    <?php if (!count($file['dependencies'])) { ?>—<?php } ?>
+                    <?php foreach ($file['dependencies'] as $dependency) { ?>
+                        <div class="<?=$dependency['missing'] ? 'missing' : 'ok'; ?>">
+                            <code>@<?=htmlspecialchars($dependency['directive']); ?> <?=htmlspecialchars($dependency['requested_path']); ?></code>
+                            <?php if (!$dependency['missing'] && $dependency['resolved_path'] != $dependency['requested_path']) { ?>
+                                <small>→ <?=htmlspecialchars($dependency['resolved_path']); ?></small>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                </td>
+                <td>
+                    <?php if (!count($file['referenced_by'])) { ?>—<?php } ?>
+                    <?php foreach ($file['referenced_by'] as $reference) { ?>
+                        <div><code><?=htmlspecialchars($reference['source_path']); ?></code></div>
+                    <?php } ?>
+                </td>
+                <td><code><?=htmlspecialchars(substr($file['sha256'], 0, 16)); ?>…</code></td>
+                <td>
+                    <div class="correction-card-actions correction-table-actions">
+                        <form class="correction-move-form correction-move-form-compact" method="put" action="/api/correction/<?=$file['id']; ?>">
+                            <input type="hidden" name="action" value="move" />
+                            <label>
+                                <span class="correction-visually-hidden">Changer de catégorie</span>
+                                <select name="id_category" title="Changer de catégorie" aria-label="Changer de catégorie">
+                                <?php foreach ($correction_categories as $category) { ?>
+                                    <option value="<?=$category['id']; ?>" <?=$category['id'] == $file['id_category'] ? 'selected' : ''; ?>>
+                                        <?=htmlspecialchars($category['name'].' — '.correction_category_path($category['id'])); ?>
+                                    </option>
+                                <?php } ?>
+                                </select>
+                            </label>
+                            <button type="button" title="Déplacer dans cette catégorie" onclick="return correctionMoveAsset(this);">Déplacer</button>
+                        </form>
+                        <form method="delete" action="/api/correction/<?=$file['id']; ?>" onsubmit="if (!confirm('Supprimer ce fichier Dabsic ?')) return false; return silent_submit(this, 'correction-catalog');">
+                            <button type="submit" class="danger">Supprimer</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</div>

@@ -1,3 +1,10 @@
+<?php if (is_teacher_for_activity($module->id)) { ?>
+    <a class="button_link" href="/api/<?=$page; ?>/<?=$module->id; ?>/export">
+	<?=$Dictionnary["ExportDabsic"]; ?>
+    </a>
+    <br />
+<?php } ?>
+
 <?php if ($page != "template") { ?>
 
     <?php if ($module->type == MODULE) { ?>
@@ -68,24 +75,44 @@
 	<br />
 	<form
 	    method="post"
-	    action="/api/<?=$page; ?>/<?=$module->id; ?>"
-	    onsubmit="return <?=$js; ?>"
+	    action="/api/<?=$page; ?>/<?=$module->id; ?>/duplicate"
+	    onsubmit="return silent_submitf(this, {tofill: 'module_list', clear_form: true});"
 	>
-	    <input type="text" name="codename" value="" />
-	    <input type="hidden" name="action" value="duplicate" />
+	    <h4 style="text-align: center;">Dupliquer la matière</h4>
+	    <input type="text" name="codename" value="" placeholder="<?=$Dictionnary["CodeName"]; ?>" style="width: 49%;" />
 	    <input
 		type="button"
-		onclick="return <?=$js; ?>"
+		onclick="return silent_submitf(this.form, {tofill: 'module_list', clear_form: true});"
 		value="<?=$Dictionnary["CopyWithCodeName"]; ?>"
-		style="width: 50%; color: lightgray; border-radius: 3px;"
+		style="width: 49%; color: lightgray; border-radius: 3px;"
 	    />
 	</form>
     <?php } ?>
 
 <?php } ?>
 
+<?php if ($page == "template" && $module->parent_activity != -1) { ?>
+
+    <br />
+    <form
+	method="post"
+	action="/api/<?=$page; ?>/<?=$module->id; ?>/duplicate"
+	onsubmit="return silent_submitf(this, {tofill: 'activity_list', clear_form: true});"
+    >
+	<h4 style="text-align: center;">Dupliquer l'activité</h4>
+	<input type="text" name="codename" value="" placeholder="<?=$Dictionnary["CodeName"]; ?>" style="width: 49%;" />
+	<input
+	    type="button"
+	    onclick="return silent_submitf(this.form, {tofill: 'activity_list', clear_form: true});"
+	    value="<?=$Dictionnary["CopyWithCodeName"]; ?>"
+	    style="width: 49%; color: lightgray; border-radius: 3px;"
+	/>
+    </form>
+
+<?php } ?>
+
 <?php if ($module->parent_activity != -1) { ?>
-   
+
     <br />
     <?php single_field_with_ok_form($page, ["id" => $module->id, "codename" => ""], "new_father", "NewParentModule", "move", NULL, "", "put", "silent_submit(this);"); ?>
 <?php } else { ?>

@@ -3,14 +3,10 @@
 **
 ** Layout:
 **
-**   A B C
-**   D E E
+**   Header
+**   Tabpanel
 **
-** A = edit cycle
-** B = group mail / instantiate
-** C = activities
-** D = management: teachers, school, export, delete
-** E = students
+** Default tab: students. Other tabs: matters, configuration, logs.
 */
 
 .cycle_admin_page
@@ -98,6 +94,58 @@
 }
 
 /*
+** Tabs
+*/
+
+.cycle_admin_tabs
+{
+    height: calc(100vh - 220px);
+    min-height: 640px;
+    width: 100%;
+}
+
+.cycle_admin_tabs .tablist
+{
+    height: 34px;
+}
+
+.cycle_admin_tabs .tablist div
+{
+    box-sizing: border-box;
+    height: 34px;
+    line-height: 34px;
+}
+
+.cycle_admin_tab_button
+{
+    border-radius: 8px 8px 0px 0px;
+    font-weight: bold;
+}
+
+.cycle_admin_tab_content
+{
+    box-sizing: border-box;
+    min-height: 0;
+    overflow: auto;
+    padding: 0px;
+}
+
+.cycle_admin_tab_content > .cycle_admin_card,
+.cycle_admin_tab_content > .cycle_admin_grid
+{
+    min-height: calc(100% - 8px);
+}
+
+.cycle_admin_tab_content > section.cycle_admin_card
+{
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100% - 8px);
+    overflow: hidden !important;
+}
+
+/*
 ** Main grid
 */
 
@@ -107,12 +155,10 @@
     display: grid !important;
     gap: 12px !important;
     grid-template-columns:
-	minmax(360px, 1fr)
+	minmax(320px, 1fr)
 	minmax(420px, 1.15fr)
-	minmax(440px, 1.20fr) !important;
-    grid-template-rows:
-	var(--cycle_top_row_height)
-	var(--cycle_bottom_row_height) !important;
+	minmax(320px, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
     width: 100% !important;
 }
 
@@ -146,8 +192,8 @@
 
 .cycle_admin_management
 {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
     overflow-y: auto !important;
 }
 
@@ -511,6 +557,76 @@
 }
 
 /*
+** Logs
+*/
+
+.cycle_admin_logs
+{
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.cycle_admin_log_filters
+{
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    margin-bottom: 8px;
+}
+
+.cycle_admin_log_filters label
+{
+    font-weight: bold;
+}
+
+.cycle_admin_log_filters input[type="text"]
+{
+    box-sizing: border-box;
+    display: block;
+    margin-top: 3px;
+    width: 100%;
+}
+
+.cycle_admin_log_count
+{
+    font-size: small;
+    margin-bottom: 8px;
+    opacity: 0.85;
+}
+
+.cycle_admin_log_table
+{
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+.cycle_admin_log_table table
+{
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.cycle_admin_log_table th,
+.cycle_admin_log_table td
+{
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 4px 6px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.cycle_admin_log_table th
+{
+    position: sticky;
+    top: 0px;
+    z-index: 10;
+}
+
+/*
 ** Template instances
 */
 
@@ -542,10 +658,7 @@
 	grid-template-columns:
 	    minmax(320px, 1fr)
 	    minmax(420px, 1fr) !important;
-	grid-template-rows:
-	    var(--cycle_top_row_height)
-	    var(--cycle_top_row_height)
-	    var(--cycle_bottom_row_height) !important;
+	grid-template-rows: auto auto !important;
     }
 
     .cycle_admin_edit
@@ -562,20 +675,8 @@
 
     .cycle_admin_management
     {
-	grid-column: 1 !important;
-	grid-row: 2 !important;
-    }
-
-    .cycle_admin_activities
-    {
-	grid-column: 2 !important;
-	grid-row: 2 !important;
-    }
-
-    .cycle_admin_students
-    {
 	grid-column: 1 / 3 !important;
-	grid-row: 3 !important;
+	grid-row: 2 !important;
     }
 }
 
@@ -598,10 +699,16 @@
 	gap: 8px;
     }
 
+    .cycle_admin_tabs
+    {
+	height: auto;
+	min-height: 70vh;
+    }
+
     .cycle_admin_grid
     {
 	grid-template-columns: 1fr !important;
-	grid-template-rows: auto auto auto auto auto !important;
+	grid-template-rows: auto auto auto !important;
     }
 
     .cycle_admin_identity_grid,
@@ -626,25 +733,17 @@
 	max-height: none !important;
     }
 
-    .cycle_admin_activities
-    {
-	grid-column: 1 !important;
-	grid-row: 3 !important;
-	max-height: 50vh !important;
-    }
-
     .cycle_admin_management
     {
 	grid-column: 1 !important;
-	grid-row: 4 !important;
-	max-height: 50vh !important;
+	grid-row: 3 !important;
+	max-height: none !important;
     }
 
+    .cycle_admin_activities,
     .cycle_admin_students
     {
-	grid-column: 1 !important;
-	grid-row: 5 !important;
-	max-height: 60vh !important;
+	max-height: 70vh !important;
     }
 
     .cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="button"]
@@ -655,3 +754,201 @@
 }
 
 
+
+/*
+** Cycle student half-day metrics
+*/
+
+.cycle_student_metrics_notice
+{
+    flex: 0 0 auto;
+    font-size: small;
+    margin-bottom: 8px;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.cycle_student_metrics_table
+{
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    flex: 1 1 auto;
+    min-height: 220px;
+    overflow: auto;
+}
+
+.cycle_student_metrics_table table
+{
+    border-collapse: collapse;
+    min-width: max-content;
+    width: 100%;
+}
+
+.cycle_student_metrics_table th,
+.cycle_student_metrics_table td
+{
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.cycle_student_metrics_table thead th
+{
+    background: rgba(0, 0, 0, 0.78);
+    font-size: 9px;
+    height: 24px;
+    position: sticky;
+    top: 0px;
+    z-index: 20;
+}
+
+.cycle_student_identity_col
+{
+    background: rgba(0, 0, 0, 0.78);
+    left: 0px;
+    min-width: 150px;
+    position: sticky;
+    width: 150px;
+    z-index: 30;
+}
+
+.cycle_student_small_col
+{
+    background: rgba(0, 0, 0, 0.72);
+    font-size: x-small;
+    min-width: 50px;
+    position: sticky;
+    width: 50px;
+    z-index: 25;
+}
+
+.cycle_student_metrics_table .cycle_student_small_col:nth-child(2)
+{
+    left: 154px;
+}
+
+.cycle_student_metrics_table .cycle_student_small_col:nth-child(3)
+{
+    left: 208px;
+}
+
+.cycle_student_day_col
+{
+    min-width: 12px;
+    width: 12px;
+}
+
+.cycle_student_identity
+{
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    text-align: left !important;
+}
+
+.cycle_student_identity a
+{
+    display: block;
+    font-size: small;
+    line-height: 1.1;
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cycle_student_identity .avatar,
+.cycle_student_identity img
+{
+    flex: 0 0 auto;
+    max-height: 24px;
+    max-width: 24px;
+}
+
+.cycle_student_metrics_table th.cycle_student_small_col,
+.cycle_student_metrics_table td.cycle_student_small_col
+{
+    font-size: x-small;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+.cycle_halfday_cell
+{
+    display: grid;
+    gap: 1px;
+    grid-template-rows: 1fr 1fr;
+    height: 18px;
+    width: 10px;
+}
+
+.cycle_halfday
+{
+    border-radius: 2px;
+    display: block;
+    min-height: 7px;
+    min-width: 10px;
+}
+
+.cycle_halfday_present
+{
+    background: rgba(0, 230, 0, 0.92);
+}
+
+.cycle_halfday_absent
+{
+    background: rgba(230, 0, 0, 0.92);
+}
+
+.cycle_halfday_activity_absent
+{
+    background: rgba(255, 145, 0, 0.95);
+}
+
+.cycle_halfday_pending
+{
+    background: rgba(150, 150, 150, 0.55);
+}
+
+.cycle_halfday_future
+{
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.cycle_halfday_unknown
+{
+    background: rgba(90, 90, 90, 0.45);
+}
+
+.cycle_halfday_legend
+{
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 8px 0px;
+}
+
+.cycle_halfday_legend_item
+{
+    align-items: center;
+    display: inline-flex;
+    font-size: x-small;
+    gap: 4px;
+}
+
+.cycle_students_management_title
+{
+    flex: 0 0 auto;
+    font-size: 15px !important;
+    margin: 4px 0px 6px 0px !important;
+    text-align: left !important;
+}
+
+.cycle_admin_students > .list_of_link
+{
+    flex: 0 0 260px !important;
+    max-height: 260px;
+}

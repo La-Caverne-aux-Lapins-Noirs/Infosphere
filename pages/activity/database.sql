@@ -193,6 +193,19 @@ CREATE TABLE `session_room` (
   KEY `id_room` (`id_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `session_teacher` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_session` int(11) NOT NULL,
+  KEY `id_session` (`id_session`),
+  `id_user` int(11) DEFAULT NULL,
+  KEY `id_user` (`id_user`),
+  `id_laboratory` int(11) DEFAULT NULL,
+  KEY `id_laboratory` (`id_laboratory`),
+  UNIQUE KEY `session_user` (`id_session`, `id_user`),
+  UNIQUE KEY `session_laboratory` (`id_session`, `id_laboratory`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 CREATE TABLE `activity_skill` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),

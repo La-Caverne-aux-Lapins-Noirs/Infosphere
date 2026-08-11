@@ -26,7 +26,7 @@ function fetch_prospects($attr = [], $id = -1)
 	    $id = [$id];
     }
 
-    $select = " WHERE prospect = 1 ";
+    $select = " WHERE profile_status = 'prospect' ";
     $select .= is_admin() ? "" : " AND authority != ".BANISHED." ";
     $select .= $id == -1  ? "" : " AND id IN (".implode(", ", $id).") ";
 

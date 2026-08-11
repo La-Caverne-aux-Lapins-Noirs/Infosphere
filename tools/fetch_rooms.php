@@ -57,10 +57,17 @@ function fetch_rooms($id = -1, $by_name = false)
     ");
 
     $lab["school"] = db_select_all("
-      school.*, school.id as id_school, school.{$Language}_name as name
+      school.*,
+      school.id as id_school,
+      organization.fr_name as fr_name,
+      organization.en_name as en_name,
+      organization.legal_name as legal_name,
+      COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name
       FROM school_room
       LEFT JOIN school
         ON school.id = school_room.id_school
+      LEFT JOIN organization
+        ON organization.id = school.id_organization
       WHERE school_room.id_room = $id
     ");
     

@@ -242,7 +242,7 @@
 }
 .configuration-log-filters {
     display: grid;
-    grid-template-columns: minmax(300px, 2.4fr) minmax(130px, 0.8fr) minmax(150px, 0.9fr) minmax(110px, 0.65fr) minmax(140px, 0.9fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
+    grid-template-columns: minmax(260px, 2fr) minmax(120px, 0.75fr) minmax(135px, 0.85fr) minmax(95px, 0.6fr) minmax(120px, 0.75fr) minmax(135px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) auto;
     gap: 8px;
     align-items: end;
     margin-bottom: 10px;
@@ -299,6 +299,7 @@
 .configuration-log-col-message { width: auto; }
 .configuration-log-col-ip { width: 90px; }
 .configuration-log-col-url { width: 120px; }
+.configuration-log-col-context { width: 170px; }
 .configuration-log-table th,
 .configuration-log-table td {
     padding: 5px 7px;
@@ -338,6 +339,21 @@
 .configuration-log-url {
     max-width: 160px;
     word-break: break-word;
+}
+.configuration-log-contexts {
+    max-width: 190px;
+}
+.configuration-context-badge {
+    display: inline-block;
+    margin: 1px 2px 2px 0;
+    padding: 1px 5px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 220, 0, 0.34);
+    background: rgba(0, 80, 0, 0.70);
+    color: #f7fff7;
+    font-size: 0.82em;
+    line-height: 1.4em;
+    cursor: pointer;
 }
 .configuration-fields {
     display: grid;
@@ -611,10 +627,22 @@ function configurationResetLogs(form)
 {
     if (!form)
         return (false);
-    ["log_search", "log_user", "log_type", "log_ip", "log_url", "log_from", "log_to"].forEach(function(name) {
+    ["log_search", "log_user", "log_type", "log_ip", "log_url", "log_context", "log_from", "log_to"].forEach(function(name) {
         if (form.elements[name])
             form.elements[name].value = "";
     });
+    if (form.elements["log_page"])
+        form.elements["log_page"].value = "0";
+    return (silent_submit(form, "configuration-logs-panel"));
+}
+
+function configurationFilterLogContext(context)
+{
+    var form = document.querySelector('#configuration-logs-panel form.configuration-log-filters');
+
+    if (!form || !form.elements["log_context"])
+        return (false);
+    form.elements["log_context"].value = context;
     if (form.elements["log_page"])
         form.elements["log_page"].value = "0";
     return (silent_submit(form, "configuration-logs-panel"));

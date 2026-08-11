@@ -1,175 +1,33 @@
 <?php
-$can_edit_school = is_director_for_school($school["id"]);
-
-$school_identity_fields = [
-    "legal_name" => "LegalName",
-    "address" => "Address",
-    "phone" => "Phone",
-    "mail" => "Mail",
-];
-
-$school_legal_fields = [
-    "main_info" => "MainInfo",
-    "school_info" => "PrivateSchoolInfo",
-    "formation_info" => "TrainingOrganizationInfo",
-    "alternation_info" => "CfaInfo",
-];
-
-$school_staff_roles = [
-    ["field" => "director", "admin" => "only_admin"],
-    ["field" => "teacher", "admin" => "is_director_for_school"],
-    ["field" => "commercial", "admin" => "is_director_for_school"],
-    ["field" => "librarian", "admin" => "is_director_for_school"],
+$school_tabs = [
+    "Configuration" => __DIR__."/configuration_tab.phtml",
+    "Personnel" => __DIR__."/staff_tab.phtml",
+    "Élèves" => __DIR__."/students_tab.phtml",
+    "Cycles" => __DIR__."/cycles_tab.phtml",
+    "Contrats" => __DIR__."/contracts_tab.phtml",
+    "Mail" => __DIR__."/mail_tab.phtml",
 ];
 ?>
 
 <div class="school_admin_page" id="school<?=$school["id"]; ?>_configuration">
     <div class="school_admin_header">
-	<div class="school_admin_icon">
-	    <?php $pic = school_site_logo_path($school, false, true); ?>
-	    <?php $pic_version = file_exists($pic) ? filemtime($pic) : 0; ?>
-	    <div style="background-image: url('<?=$pic; ?>?<?=$pic_version; ?>');"></div>
-	</div>
-	<div class="school_admin_title">
-	    <h3><?=$Dictionnary["SchoolConfiguration"]; ?></h3>
-	    <p><?=$Dictionnary["CodeName"]; ?>: <b><?=$school["codename"]; ?></b></p>
-	</div>
+        <div class="school_admin_icon">
+            <?php $pic = school_site_logo_path($school, false, true); ?>
+            <?php $pic_version = file_exists($pic) ? filemtime($pic) : 0; ?>
+            <div style="background-image: url('<?=$pic; ?>?<?=$pic_version; ?>');"></div>
+        </div>
+        <div class="school_admin_title">
+            <h3><?=$Dictionnary["SchoolConfiguration"]; ?></h3>
+            <p><?=$Dictionnary["CodeName"]; ?>: <b><?=$school["codename"]; ?></b></p>
+            <p>Organisation liée : <b><?=htmlspecialchars($school["organization_codename"] ?? "", ENT_QUOTES); ?></b></p>
+        </div>
     </div>
 
-    <form
-	method="put"
-	action="/api/school/<?=$school["id"]; ?>"
-	class="school_admin_card school_admin_form"
-	onsubmit="return silent_submitf(this, {after_success: refresh});"
-    >
-	<h4><?=$Dictionnary["Identity"]; ?></h4>
-
-	<div class="school_admin_identity_grid">
-	    <label class="school_admin_codename">
-		<?=$Dictionnary["CodeName"]; ?>
-		<input type="text" value="<?=htmlspecialchars($school["codename"], ENT_QUOTES); ?>" readonly />
-	    </label>
-
-	    <div class="school_admin_languages">
-		<?php forge_language_formular(["name" => "text"], $school, "school_language_entry"); ?>
-	    </div>
-	</div>
-
-	<div class="school_admin_logo_grid">
-	    <label class="school_admin_logo_field">
-		<?=$Dictionnary["SchoolSiteLogo"]; ?>
-		<?php $site_logo = school_site_logo_path($school, false, true); ?>
-		<?php $site_logo_version = file_exists($site_logo) ? filemtime($site_logo) : 0; ?>
-		<div class="school_admin_logo_preview" style="background-image: url('<?=$site_logo; ?>?<?=$site_logo_version; ?>');"></div>
-		<input type="file" name="icon" accept="image/png,image/jpeg" />
-	    </label>
-	    <label class="school_admin_logo_field">
-		<?=$Dictionnary["SchoolDocumentLogo"]; ?>
-		<?php $document_logo = school_document_logo_path($school, false, true); ?>
-		<?php $document_logo_version = file_exists($document_logo) ? filemtime($document_logo) : 0; ?>
-		<div class="school_admin_logo_preview" style="background-image: url('<?=$document_logo; ?>?<?=$document_logo_version; ?>');"></div>
-		<input type="file" name="document_logo" accept="image/png,image/jpeg" />
-	    </label>
-	</div>
-
-	<div class="school_admin_grid_two">
-	    <?php foreach ($school_identity_fields as $field => $label) { ?>
-		<label>
-		    <?=$Dictionnary[$label]; ?>
-		    <?php if ($field == "address") { ?>
-			<textarea name="<?=$field; ?>"><?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?></textarea>
-		    <?php } else { ?>
-			<input
-			    type="text"
-			    name="<?=$field; ?>"
-			    value="<?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?>"
-			/>
-		    <?php } ?>
-		</label>
-	    <?php } ?>
-	</div>
-
-	<h4><?=$Dictionnary["LegalConfiguration"]; ?></h4>
-	<div class="school_admin_legal_grid">
-	    <?php foreach ($school_legal_fields as $field => $label) { ?>
-		<label>
-		    <?=$Dictionnary[$label]; ?>
-		    <textarea name="<?=$field; ?>"><?=htmlspecialchars(try_get($school, $field, ""), ENT_QUOTES); ?></textarea>
-		</label>
-	    <?php } ?>
-	</div>
-
-	<div class="school_admin_actions">
-	    <input
-		type="button"
-		onclick="silent_submitf(this.form, {after_success: refresh});"
-		value="<?=$Dictionnary["Save"]; ?>"
-	    />
-	</div>
-    </form>
-
-    <div class="school_admin_management_grid">
-	<section class="school_admin_card school_admin_staff">
-	    <div class="school_admin_staff_grid">
-		<?php foreach ($school_staff_roles as $role) { ?>
-		    <div class="school_admin_linkbox">
-			<?php
-			$field = $role["field"];
-			$linked_name = [
-			    "table" => "user",
-			    "name" => $field,
-			    "placeholder" => ucfirst($field),
-			    "" => $field,
-			];
-
-			list_of_links([
-			    "hook_name" => "school",
-			    "hook_id" => $school["id"],
-			    "linked_name" => $linked_name,
-			    "linked_elems" => $school[$field],
-			    "admin_func" => $role["admin"],
-			]);
-			?>
-		    </div>
-		<?php } ?>
-	    </div>
-	</section>
-
-	<section class="school_admin_card school_admin_students">
-	    <div class="school_admin_linkbox">
-		<?php list_of_links([
-		    "hook_name" => "school",
-		    "hook_id" => $school["id"],
-		    "linked_name" => "user",
-		    "linked_elems" => $school["user"],
-		    "admin_func" => "is_director_for_school",
-		]); ?>
-	    </div>
-	</section>
-
-	<section class="school_admin_card school_admin_cycles">
-	    <div class="school_admin_linkbox">
-		<?php list_of_links([
-		    "hook_name" => "school",
-		    "hook_id" => $school["id"],
-		    "linked_name" => "cycle",
-		    "linked_elems" => $school["cycle"],
-		    "admin_func" => "is_director_for_school",
-		]); ?>
-	    </div>
-	</section>
-    </div>
-
-    <?php if (is_admin()) { ?>
-	<section class="school_admin_card school_admin_danger">
-	    <?php $confirm = addslashes($Dictionnary["ConfirmDeletion"]); ?>
-	    <form method="delete" action="/api/school/<?=$school["id"]; ?>" onsubmit="return false;">
-		<input
-		    type="button"
-		    onclick="if (window.confirm('<?=$confirm; ?>')) silent_submitf(this.parentNode, {after_success: function(){document.location='index.php?p=SchoolMenu';}});"
-		    value="<?=$Dictionnary["DeleteSchool"]; ?>"
-		/>
-	    </form>
-	</section>
-    <?php } ?>
+    <?php tabpanel(
+        $school_tabs,
+        "school-admin-".$school["id"],
+        "Configuration",
+        "school-tab-button",
+        "school-tab-content"
+    ); ?>
 </div>

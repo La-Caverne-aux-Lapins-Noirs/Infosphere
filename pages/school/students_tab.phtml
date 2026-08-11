@@ -1,0 +1,250 @@
+<?php
+require_once (__DIR__."/user_cards.php");
+require_once (__DIR__."/../../tools/document_sources.php");
+
+if (!function_exists("school_student_contract_default_year"))
+{
+    function school_student_contract_default_year($id_student, $id_school)
+    {
+        $id_student = (int)$id_student;
+        $id_school = (int)$id_school;
+        $today = db_form_date(now());
+        $cycle = db_select_one("
+            cycle.cycle as cycle_level
+            FROM user_cycle
+            LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
+            LEFT JOIN school_cycle
+              ON school_cycle.id_cycle = cycle.id
+             AND school_cycle.id_school = $id_school
+            WHERE user_cycle.id_user = $id_student
+              AND cycle.id IS NOT NULL
+              AND cycle.deleted IS NULL
+              AND school_cycle.id IS NOT NULL
+              AND (cycle.first_day IS NULL OR cycle.first_day <= '$today')
+            ORDER BY
+              CASE WHEN cycle.first_day IS NULL THEN 1 ELSE 0 END ASC,
+              cycle.first_day DESC,
+              cycle.cycle DESC,
+              cycle.id DESC
+        ");
+        if ($cycle == NULL || !isset($cycle["cycle_level"]))
+            return (1);
+        return (max(1, min(5, (int)floor(((int)$cycle["cycle_level"]) / 4) + 1)));
+    }
+}
+
+$can_manage_students = is_director_for_school($school["id"]);
+$contracts = get_contract_document_sources();
+$can_generate_contracts = is_teacher() && count($contracts);
+$directors = $school["director"] ?? [];
+$default_director_id = "";
+if (count($directors) == 1)
+    $default_director_id = (int)($directors[0]["id_director"] ?? $directors[0]["id_user"] ?? $directors[0]["id"] ?? -1);
+if ((int)$default_director_id <= 0)
+    $default_director_id = "";
+?>
+
+<section class="school_admin_card school_students_panel">
+    <div class="school_students_header">
+        <h4>Élèves</h4>
+        <span><?=count($school["user"]); ?> élève(s)</span>
+    </div>
+    <?php school_admin_member_add_form($school["id"], "user", "élève", $can_manage_students); ?>
+
+    <div class="school_student_cards">
+        <?php if (!count($school["user"])) { ?>
+            <p class="school_empty_people">Aucun élève.</p>
+        <?php } else { ?>
+            <?php foreach ($school["user"] as $member) { ?>
+                <?php
+                $student_id = school_admin_member_id($member, "user");
+                $student_codename = $member["codename"] ?? (string)$student_id;
+                $actions = [];
+                if ($can_generate_contracts && $student_id > 0)
+                {
+                    $default_year = school_student_contract_default_year($student_id, $school["id"]);
+                    $actions[] = [
+                        "class" => "school_member_document_button",
+                        "label" => "Document",
+                        "title" => "Générer un document prérempli",
+                        "onclick" => "school_student_document_open(".$student_id.", ".json_encode($student_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).", ".$default_year.");",
+                    ];
+                }
+                school_admin_member_card($school["id"], "user", $member, $can_manage_students, $actions);
+                ?>
+            <?php } ?>
+        <?php } ?>
+    </div>
+</section>
+
+<?php if ($can_generate_contracts) { ?>
+<div
+    id="school_student_document_overlay"
+    class="school_student_document_overlay"
+    role="presentation"
+    hidden
+>
+    <section
+        class="school_student_document_dialog school_admin_card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="school_student_document_title"
+        aria-describedby="school_student_document_identity"
+        onclick="event.stopPropagation();"
+    >
+        <form
+            id="school_student_document_form"
+            method="post"
+            action="/api/doc/0/generate"
+            target="_blank"
+            onsubmit="return school_student_document_prepare(this);"
+        >
+            <header class="school_student_document_header">
+                <div>
+                    <h4 id="school_student_document_title">Générer un document</h4>
+                    <p id="school_student_document_identity"></p>
+                </div>
+                <button
+                    type="button"
+                    class="school_student_document_close"
+                    onclick="school_student_document_close();"
+                    title="Fermer"
+                    aria-label="Fermer la fenêtre"
+                >×</button>
+            </header>
+
+            <input type="hidden" name="doc_student_document" value="1" />
+            <input type="hidden" name="docref_student_document" value="" />
+            <input type="hidden" name="chain" value="[]" />
+            <input type="hidden" data-document-student-id value="" />
+
+            <div class="school_student_document_fields">
+                <label>
+                    <span>Document</span>
+                    <select data-document-reference required>
+                        <option value="">Choisir un modèle</option>
+                        <?php foreach ($contracts as $contract) { ?>
+                            <option value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>">
+                                <?=htmlspecialchars($contract["label"], ENT_QUOTES); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Année de formation</span>
+                    <select data-document-year>
+                        <?php for ($year = 1; $year <= 5; ++$year) { ?>
+                            <option value="<?=$year; ?>">Année <?=$year; ?> — EF<?=$year; ?></option>
+                        <?php } ?>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Directeur signataire</span>
+                    <select data-document-director data-default-director="<?=htmlspecialchars((string)$default_director_id, ENT_QUOTES); ?>">
+                        <option value="">Aucun signataire</option>
+                        <?php foreach ($directors as $director) { ?>
+                            <?php $id_director = (int)($director["id_director"] ?? $director["id_user"] ?? $director["id"] ?? -1); ?>
+                            <?php if ($id_director > 0) { ?>
+                                <option value="<?=$id_director; ?>">
+                                    <?=htmlspecialchars($director["identity"] ?? $director["codename"] ?? (string)$id_director, ENT_QUOTES); ?>
+                                </option>
+                            <?php } ?>
+                        <?php } ?>
+                    </select>
+                </label>
+            </div>
+
+            <footer class="school_student_document_actions">
+                <button type="submit" class="school_student_document_submit">
+                    Générer le document
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>
+
+<script>
+var schoolStudentDocumentLastTrigger = null;
+
+function school_student_document_open(studentId, studentCodename, defaultYear)
+{
+    var overlay = document.getElementById('school_student_document_overlay');
+    var form = document.getElementById('school_student_document_form');
+    schoolStudentDocumentLastTrigger = document.activeElement;
+
+    form.querySelector('[data-document-student-id]').value = studentId;
+    form.querySelector('[data-document-year]').value = String(defaultYear || 1);
+    form.querySelector('[data-document-reference]').value = '';
+
+    var director = form.querySelector('[data-document-director]');
+    director.value = director.getAttribute('data-default-director') || '';
+    document.getElementById('school_student_document_identity').textContent = studentCodename;
+
+    overlay.hidden = false;
+    document.body.classList.add('school_student_document_open');
+    window.setTimeout(function () {
+        form.querySelector('[data-document-reference]').focus();
+    }, 0);
+}
+
+function school_student_document_close()
+{
+    var overlay = document.getElementById('school_student_document_overlay');
+    if (overlay.hidden)
+        return ;
+    overlay.hidden = true;
+    document.body.classList.remove('school_student_document_open');
+    if (schoolStudentDocumentLastTrigger && typeof schoolStudentDocumentLastTrigger.focus == 'function')
+        schoolStudentDocumentLastTrigger.focus();
+    schoolStudentDocumentLastTrigger = null;
+}
+
+function school_student_document_prepare(form)
+{
+    var reference = form.querySelector('[data-document-reference]').value;
+    var student = form.querySelector('[data-document-student-id]').value;
+    var year = parseInt(form.querySelector('[data-document-year]').value, 10);
+    var director = form.querySelector('[data-document-director]').value;
+
+    if (reference == '' || student == '' || !Number.isInteger(year) || year < 1 || year > 5)
+        return false;
+
+    form.querySelector('[name="docref_student_document"]').value = reference;
+
+    // Les champs d'année sont ajoutés APRES les contextes élève. mergeconf
+    // applique la dernière valeur rencontrée : ils remplacent donc bien les
+    // valeurs éventuellement présentes dans identity.dab.
+    var chain = [
+        {type: 'school', prefix: 'School', id: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>},
+        {type: 'student', prefix: 'Student', id: student},
+        {type: 'student', prefix: 'SignatureSources.Student', id: student, signatory: 'Student'}
+    ];
+    if (director != '')
+        chain.push({type: 'user', prefix: 'SignatureSources.Director', id: director, signatory: 'Director'});
+    chain.push(
+        {type: 'field', key: 'Student.ChosenClass', value: 'EF' + year},
+        {type: 'field', key: 'Student.CurrentYear', value: String(year)},
+        {type: 'field', key: 'SignatureSources.Student.ChosenClass', value: 'EF' + year},
+        {type: 'field', key: 'SignatureSources.Student.CurrentYear', value: String(year)}
+    );
+    form.querySelector('[name="chain"]').value = JSON.stringify(chain);
+
+    window.setTimeout(school_student_document_close, 0);
+    return true;
+}
+
+(function () {
+    var overlay = document.getElementById('school_student_document_overlay');
+    overlay.addEventListener('click', function (event) {
+        if (event.target === overlay)
+            school_student_document_close();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !overlay.hidden)
+            school_student_document_close();
+    });
+})();
+</script>
+<?php } ?>

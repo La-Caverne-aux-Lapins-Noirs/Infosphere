@@ -1,0 +1,32 @@
+<?php
+$jury_session_groups = [
+    ($Dictionnary["UpcomingSessions"] ?? "À venir") => $jury["sessions_upcoming"] ?? [],
+    ($Dictionnary["PastSessions"] ?? "Passées") => $jury["sessions_past"] ?? []
+];
+?>
+<div class="jury_sessions">
+    <?php foreach ($jury_session_groups as $label => $sessions) { ?>
+        <div class="jury_session_group">
+            <b><?=$label; ?></b>
+            <?php if (!count($sessions)) { ?>
+                <span class="smalltext">/</span>
+            <?php } else { ?>
+                <ul>
+                    <?php foreach ($sessions as $sess) { ?>
+                        <li>
+                            <?php if ($sess["begin_date"] != NULL) { ?>
+                                <span><?=human_date($sess["begin_date"], false, false, true); ?></span>
+                            <?php } else { ?>
+                                <span><?=$Dictionnary["NewSession"] ?? "Nouvelle session"; ?></span>
+                            <?php } ?>
+                            —
+                            <a href="index.php?p=ActivityMenu&amp;a=<?=$sess["id_activity"]; ?>&amp;b=<?=$sess["id"]; ?>">
+                                <?=htmlentities($sess["activity_name"] ?: $sess["activity_codename"]); ?>
+                            </a>
+                        </li>
+                    <?php } ?>
+                </ul>
+            <?php } ?>
+        </div>
+    <?php } ?>
+</div>

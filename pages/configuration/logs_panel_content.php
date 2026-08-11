@@ -51,6 +51,10 @@ $log_type_labels = configuration_log_type_labels();
             URL / urlhash
             <input type="text" name="log_url" value="<?=configuration_html($log_filters["url"]); ?>" placeholder="fragment ou hash" />
         </label>
+        <label class="configuration-filter-context">
+            Contexte
+            <input type="text" name="log_context" value="<?=configuration_html($log_filters["context"]); ?>" placeholder="activity#12, user#4…" />
+        </label>
         <label class="configuration-filter-date">
             Depuis
             <input type="datetime-local" name="log_from" value="<?=configuration_html(str_replace(" ", "T", $log_filters["from"])); ?>" />
@@ -91,6 +95,7 @@ $log_type_labels = configuration_log_type_labels();
                 <col class="configuration-log-col-message" />
                 <col class="configuration-log-col-ip" />
                 <col class="configuration-log-col-url" />
+                <col class="configuration-log-col-context" />
             </colgroup>
             <tr>
                 <th class="configuration-log-id">#</th>
@@ -100,6 +105,7 @@ $log_type_labels = configuration_log_type_labels();
                 <th><?=configuration_html($Dictionnary["Message"] ?? "Message"); ?></th>
                 <th>IP</th>
                 <th>URL</th>
+                <th>Contextes</th>
             </tr>
             <?php foreach ($logs as $log) { ?>
                 <tr>
@@ -123,6 +129,18 @@ $log_type_labels = configuration_log_type_labels();
                             </details>
                         <?php } else { ?>
                             <code><?=configuration_html($log["urlhash"] ?? ""); ?></code>
+                        <?php } ?>
+                    </td>
+                    <td class="configuration-log-contexts">
+                        <?php if (trim((string)($log["contexts"] ?? "")) != "") { ?>
+                            <?php foreach (array_map("trim", explode(",", $log["contexts"])) as $context) { ?>
+                                <?php if ($context == "") continue ; ?>
+                                <button type="button" class="configuration-context-badge" onclick="return configurationFilterLogContext(<?=configuration_javascript($context); ?>);">
+                                    <?=configuration_html($context); ?>
+                                </button>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <span class="configuration-muted">—</span>
                         <?php } ?>
                     </td>
                 </tr>

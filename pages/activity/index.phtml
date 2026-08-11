@@ -123,6 +123,54 @@ if (isset($_GET["a"]))
 	    style="width: 90%;"
 	/>
     </form>
+</td></tr><tr id="import_formular"><td>
+    <!-- FORMULAIRE D'IMPORT DE MODULE -->
+    <?php $js = "return silent_submitf(this, {tofill: 'module_list', clear_form: true})"; ?>
+    <form
+	class="activity_dabsic_import_form"
+	onsubmit="<?=$js; ?>"
+	method="post"
+	action="/api/<?=$page; ?>/import"
+	enctype="multipart/form-data"
+	data-direct-file-upload="1"
+    >
+	<input type="file" name="description_file" accept=".dab,.dabsic" />
+	<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["ImportDabsic"]; ?>" />
+    </form>
+</td><td>
+    <!-- FORMULAIRE D'IMPORT D'ACTIVITE -->
+    <?php $js = "return silent_submitf(this, {tofill: 'activity_list', clear_form: true})"; ?>
+    <form
+	class="activity_dabsic_import_form"
+	onsubmit="<?=$js; ?>"
+	method="post"
+	action="/api/activity/import"
+	enctype="multipart/form-data"
+	data-direct-file-upload="1"
+	style="display: none;"
+	id="activity_import_form"
+    >
+	<input type="hidden" id="selected_module_import" name="module" />
+	<input type="file" name="description_file" accept=".dab,.dabsic" />
+	<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["ImportDabsic"]; ?>" />
+    </form>
+</td><td>
+    <!-- FORMULAIRE D'IMPORT DE SESSION -->
+    <?php $js = "return silent_submitf(this, {tofill: 'session_list', clear_form: true})"; ?>
+    <form
+	class="activity_dabsic_import_form"
+	onsubmit="<?=$js; ?>"
+	method="post"
+	action="/api/session/import"
+	enctype="multipart/form-data"
+	data-direct-file-upload="1"
+	style="display: none;"
+	id="session_import_form"
+    >
+	<input type="hidden" id="selected_activity_import" name="activity" />
+	<input type="file" name="description_file" accept=".dab,.dabsic" />
+	<input type="button" onclick="<?=$js; ?>" value="<?=$Dictionnary["ImportDabsic"]; ?>" />
+    </form>
 </td></tr></table>
 <!-- For script purpose -->
 <input

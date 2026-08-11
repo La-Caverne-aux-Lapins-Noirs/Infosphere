@@ -83,26 +83,101 @@ if (isset($data["intra_logs"]) && isset($data["work_logs"]))
     }
 }
 
+function profile_stats_register_value_for_scale($value)
+{
+    global $biggest;
+    global $smallest;
+
+    $value = (float)$value;
+    if ($biggest < $value)
+        $biggest = $value;
+    if ($smallest > $value)
+        $smallest = $value;
+}
+
+function profile_stats_stack_days_for_scale(array $data, array $labels)
+{
+    $days = [];
+    foreach ($labels as $label)
+    {
+        if (!isset($data[$label]) || !is_array($data[$label]))
+            continue ;
+        foreach ($data[$label] as $day => $value)
+        {
+            if (!isset($days[$day]))
+                $days[$day] = 0;
+            $days[$day] += (float)$value;
+        }
+    }
+    foreach ($days as $value)
+        profile_stats_register_value_for_scale($value);
+}
+
+function profile_stats_negative_days_for_scale(array $data, array $labels)
+{
+    foreach ($labels as $label)
+    {
+        if (!isset($data[$label]) || !is_array($data[$label]))
+            continue ;
+        foreach ($data[$label] as $value)
+            profile_stats_register_value_for_scale(-(float)abs($value));
+    }
+}
+
 $biggest = 0;
 $smallest = 0;
 foreach ($data as $k => $idx)
 {
+    if (substr($k, 0, 8) == "halfday_")
+	continue ;
     foreach ($idx as $kk => $vv)
     {
 	if (substr($k, 0, 3) == "mis" && $landmark == "m")
 	    $data[$k][$kk] = $vv = -$vv;
-	if ($biggest < $vv)
-	    $biggest = $vv;
-	if ($smallest > $vv)
-	    $smallest = $vv;
+	profile_stats_register_value_for_scale($vv);
     }
 }
 
-$bladder = $biggest + 2; // "biggest ladder", pas vessie.
+// Les histogrammes d'activité sont dessinés en barres empilées.
+// L'ancienne échelle ne prenait en compte que chaque série isolée, ou un
+// sous-total incomplet, ce qui permettait aux barres cumulées (notamment avec
+// lock_logs et ssh_idle_logs) de dépasser le cadre du graphe.
+profile_stats_stack_days_for_scale($data, [
+    "work_logs",
+    "distant_logs",
+    "ssh_idle_logs",
+    "intra_logs",
+    "lock_logs",
+]);
+profile_stats_stack_days_for_scale($data, [
+    "avg_intra_logs",
+    "avg_work_logs",
+    "avg_distant_logs",
+    "avg_ssh_idle_logs",
+    "avg_lock_logs",
+]);
+profile_stats_stack_days_for_scale($data, [
+    "presence",
+    "late",
+]);
+
+// Les absences historiques sont dessinées sous la ligne zéro quand le graphe
+// utilise un repère médian. Elles doivent donc aussi réserver de l'espace vers
+// le bas dans ce mode.
 if ($landmark == "m")
-    $sladder = $smallest - 2; // smallest ladder
+    profile_stats_negative_days_for_scale($data, ["absence_hist", "mispresence"]);
+
+if ($landmark == "m")
+{
+    $limit = max($biggest, -$smallest) + 2;
+    $bladder = $limit; // "biggest ladder", pas vessie.
+    $sladder = -$limit; // smallest ladder
+}
 else
+{
+    $bladder = $biggest + 2;
     $sladder = 0;
+}
 $laddersize = $bladder - $sladder;
 
 $img = imagecreatetruecolor(intval($w), intval($h));
@@ -147,6 +222,11 @@ $reda = imagecolorallocatealpha($img, 255, 0, 0, 90);
 $orange = imagecolorallocatealpha($img, 255, 160, 0, 0);
 $orangea = imagecolorallocatealpha($img, 255, 160, 0, 72);
 $darkorange = imagecolorallocatealpha($img, 144, 80, 0, 0);
+
+$halfgreen = imagecolorallocatealpha($img, 120, 255, 120, 105);
+$halfred = imagecolorallocatealpha($img, 255, 90, 90, 105);
+$halforange = imagecolorallocatealpha($img, 255, 170, 60, 100);
+$halfgrey = imagecolorallocatealpha($img, 190, 190, 190, 114);
 
 $yellow = imagecolorallocatealpha($img, 255, 255, 0, 0);
 $yellowa = imagecolorallocatealpha($img, 255, 255, 0, 72);
@@ -196,6 +276,33 @@ for ($i = 1; $i < $len; ++$i)
 
 // Echelle
 $hh = ($h - 100) / $laddersize;
+
+$zero_y = $landmark == "m" ? intval($h - 50 + $sladder * $hh) : intval($h - 50);
+
+// Fond indiquant la présence aux demi-journées, derrière les barres d'activité.
+if (isset($data["halfday_am"]) || isset($data["halfday_pm"]))
+{
+    $halfday_colors = [
+	1 => $halfgreen,
+	  -1 => $halfred,
+	     -2 => $halforange,
+	0 => $halfgrey,
+    ];
+    for ($index = $endday - $startday - 1; $index >= 0; --$index)
+    {
+	if ($index <= 0)
+	    continue ;
+	$day = $index + $startday;
+	$x1 = intval($w / $len / 2 + ($index + 0.05 - 1) * $w / $len);
+	$x2 = intval($w / $len / 2 + ($index + 0.95 - 1) * $w / $len);
+	$am = isset($data["halfday_am"][$day]) ? (int)$data["halfday_am"][$day] : 0;
+	$pm = isset($data["halfday_pm"][$day]) ? (int)$data["halfday_pm"][$day] : 0;
+	$am_color = isset($halfday_colors[$am]) ? $halfday_colors[$am] : $halfgrey;
+	$pm_color = isset($halfday_colors[$pm]) ? $halfday_colors[$pm] : $halfgrey;
+	imagefilledrectangle($img, $x1, 50, $x2, $zero_y, $am_color);
+	imagefilledrectangle($img, $x1, $zero_y, $x2, $h - 50, $pm_color);
+    }
+}
 
 // On affiche les valeurs. On commence par la fin.
 for ($index = $endday - $startday - 1; $index >= 0; --$index)
@@ -254,51 +361,52 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
     $coords = draw_area($data, "lock_logs", $startday, $index, $bladder, $lightgreya, $lightgrey, [$coords[8], $coords[9]]);
      */
 
-    if (isset($data["presence_hist"]) || isset($data["absence_hist"]))
+    if (isset($data["presence_hist"]) || isset($data["absence_hist"]) || isset($data["presence"]) || isset($data["late"]) || isset($data["mispresence"]))
     {
-	$day = $index + $startday;
-	$presence = isset($data["presence_hist"][$day]) ? $data["presence_hist"][$day] : 0;
-	$absence = isset($data["absence_hist"][$day]) ? $data["absence_hist"][$day] : 0;
-	if ($index > 0)
-	{
-	    if ($presence > 0)
-	    {
-		$coords = [
-		    $w / $len / 2 + ($index + 0.12 - 1) * $w / $len, $h - 50,
-		    $w / $len / 2 + ($index + 0.12 - 1) * $w / $len, $h - 50 - $presence * $hh,
-		    $w / $len / 2 + ($index + 0.44 - 1) * $w / $len, $h - 50 - $presence * $hh,
-		    $w / $len / 2 + ($index + 0.44 - 1) * $w / $len, $h - 50,
-		];
-		imagefilledpolygon($img, $coords, 4, $greena);
-		imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $green);
-		imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $green);
-		imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $green);
-		imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $green);
-	    }
-	    if ($absence > 0)
-	    {
-		$coords = [
-		    $w / $len / 2 + ($index + 0.56 - 1) * $w / $len, $h - 50,
-		    $w / $len / 2 + ($index + 0.56 - 1) * $w / $len, $h - 50 - $absence * $hh,
-		    $w / $len / 2 + ($index + 0.88 - 1) * $w / $len, $h - 50 - $absence * $hh,
-		    $w / $len / 2 + ($index + 0.88 - 1) * $w / $len, $h - 50,
-		];
-		imagefilledpolygon($img, $coords, 4, $reda);
-		imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $red);
-		imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $red);
-		imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $red);
-		imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $red);
-	    }
-	}
-    }
-    else
-    {
-	$coords = draw_area($data, "presence", $startday, $index, $bladder, $darkbluea, $darkblue);
-	draw_area($data, "late", $startday, $index, $bladder, $darkbluea, $darkblue, [$coords[8], $coords[9]]);
-	if ($landmark == "b")
-	    draw_line($data, "mispresence", $startday, $index, $bladder, $darkblue, $black, true);
-	else
-	    draw_line($data, "mispresence", $startday, $index, $sladder, $darkblue, $black, true);
+        $day = $index + $startday;
+        $presence = 0;
+        $late_value = 0;
+        $absence = 0;
+
+        if (isset($data["presence_hist"]) || isset($data["absence_hist"]))
+        {
+            $presence = isset($data["presence_hist"][$day]) ? $data["presence_hist"][$day] : 0;
+            $absence = isset($data["absence_hist"][$day]) ? $data["absence_hist"][$day] : 0;
+        }
+        else
+        {
+            $presence = isset($data["presence"][$day]) ? $data["presence"][$day] : 0;
+            $late_value = isset($data["late"][$day]) ? $data["late"][$day] : 0;
+            $absence = isset($data["mispresence"][$day]) ? abs($data["mispresence"][$day]) : 0;
+        }
+
+        if ($index > 0)
+        {
+            $bar_x1 = intval($w / $len / 2 + ($index + 0.18 - 1) * $w / $len);
+            $bar_x2 = intval($w / $len / 2 + ($index + 0.82 - 1) * $w / $len);
+            $up_y = $zero_y;
+
+            if ($presence > 0)
+            {
+                $top_y = intval($up_y - $presence * $hh);
+                imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $greena);
+                imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $green);
+                $up_y = $top_y;
+            }
+            if ($late_value > 0)
+            {
+                $top_y = intval($up_y - $late_value * $hh);
+                imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orangea);
+                imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orange);
+                $up_y = $top_y;
+            }
+            if ($absence > 0)
+            {
+                $bottom_y = intval($zero_y + $absence * $hh);
+                imagefilledrectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $reda);
+                imagerectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $red);
+            }
+        }
     }
 
     draw_line($data, "delivery", $startday, $index, $bladder, $yellow);

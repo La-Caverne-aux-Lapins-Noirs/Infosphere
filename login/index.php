@@ -4,7 +4,8 @@ require_once ("try_login.php");
 // Gestion de la capture d'un compte utilisateur par un administrateur (A PROGRAMMER: Ou un prof)
 require_once ("try_log_as.php");
 // Log as des parents
-require_once ("try_log_as_parent.php");
+if (isset($User) && $User != NULL)
+    require_once ("try_log_as_parent.php");
 // Influence de cette connexion sur les temps de log de l'utilisateur
 compute_student_log();
 // Implémentation du mode administrateur

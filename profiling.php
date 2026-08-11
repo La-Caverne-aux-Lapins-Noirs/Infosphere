@@ -1,5 +1,5 @@
 <?php
-if (!isset($OriginalUser) || $OriginalUser["id"] > 2)
+if (!isset($OriginalUser["id"]) || $OriginalUser["id"] > 2)
     return ;
 ?>
 <?php ob_start(); ?>

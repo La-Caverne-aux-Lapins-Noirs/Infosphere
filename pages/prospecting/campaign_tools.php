@@ -97,7 +97,7 @@ function campaign_fetch_prospect($campaign)
             ) last_terminal ON last_terminal.id = prospection.id
             WHERE action.consequence IN ('lost', 'transformed')
         ) terminal ON terminal.id_user = user.id
-        WHERE user.prospect = 1
+        WHERE user.profile_status = 'prospect'
         AND user.registration_date >= '$start 00:00:00'
         AND user.registration_date <= '$end 23:59:59'
         ORDER BY user.registration_date ASC, user.codename ASC

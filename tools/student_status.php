@@ -77,13 +77,12 @@ $track_glow = $to_hex(
 	style="border-color: <?=$fill_dark; ?>; box-shadow: inset 0px 0px 6px rgba(0, 0, 0, 0.7), 0px 0px 5px <?=$track_glow; ?>;"
     >
 	<div
-	    class="gauge_fill"
-	    style="width: <?=$curpos; ?>%; background: linear-gradient(to right, <?=$fill_dark; ?>, <?=$fill_light; ?>);"
-	>
-	    <span class="current_text">
+		class="gauge_fill"
+		style="width: <?=$curpos; ?>%; background: linear-gradient(to right, <?=$fill_dark; ?>, <?=$fill_light; ?>);"
+	></div>
+	<span class="current_text">
 		<?=(int)$current; ?>
-	    </span>
-	</div>
+	</span>
 	<div
 	    class="threshold_marker"
 	    style="left: <?=$refpos; ?>%;"

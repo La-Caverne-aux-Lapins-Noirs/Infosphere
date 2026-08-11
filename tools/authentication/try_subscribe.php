@@ -1,9 +1,9 @@
 <?php
 
-function try_subscribe($login, $mail, $password, $repassword, $fake = false)
+function try_subscribe($login, $mail, $password, $repassword, $fake = false, $profile_status = NULL)
 {
     if ($password != $repassword && $fake == false)
 	return (new ErrorResponse("PasswordDoesNotMatch"));
-    return (subscribe($login, $mail, $password, !$fake, $fake));
+    return (subscribe($login, $mail, $password, !$fake, $fake, $profile_status));
 }
 

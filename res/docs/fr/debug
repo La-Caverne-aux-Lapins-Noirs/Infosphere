@@ -1,0 +1,3187 @@
+
+---
+geometry: margin=0cm, paperwidth=21cm, paperheight=29.7cm
+output: pdf_document
+lang: fr-FR
+documentclass: article
+indent: 2pt
+table-caption-above: true
+pdf-engine: xelatex
+---
+\pagestyle{fancy}
+\fancyhf{}
+
+\setlength{\headheight}{3cm}
+\setlength{\headsep}{1cm}
+\setlength{\textheight}{23cm}
+\setlength{\tabcolsep}{0pt}
+\setlength{\fboxsep}{0.2cm}
+
+\fancyhead[L]{    \large Contrat de formation professionnelle hors alternance
+}
+\fancyhead[R]{    \includegraphics[width=3cm,height=2cm,keepaspectratio]{/home/damdoshi/Infosphere/dres/school/efrits/document_logo.png}
+}
+
+\fancyfoot[L]{
+\begin{minipage}[t]{10cm}
+\tiny
+EFRITS SAS. Siège social : 33 rue Delaporte, 94700 Maisons Alfort. Immatriculée au RCS de Créteil sous le numéro 909 292 773.
+Établissement d’enseignement supérieur privé, immatriculé sous le numéro 0942530P auprès du rectorat de l’académie de Créteil.
+Organisme de formation, déclaration d’activité enregistrée sous le numéro 11 94 11281 94 auprès du préfet de région Île-de-France.
+Centre de formation d'apprentis (CFA) déclaré sous le n° 0942540A auprès du rectorat de l’académie de Créteil.
+07 82 45 81 68 contact@efrits.fr
+\end{minipage}%
+\vspace*{\fill}
+}
+
+\fancyfoot[R]{
+\begin{tabular}{@{}c @{}c @{}c }
+\textit{\centering \scriptsize Paraphes} \\[0.25em]
+\fbox{\parbox[c][1.0cm][t]{2cm}{
+\tiny Directeur(trice)		    	        }}
+&
+\fbox{\parbox[c][1.0cm][t]{2cm}{
+\tiny Responsable financier		    	        }}
+&
+\fbox{\parbox[c][1.0cm][t]{2cm}{
+\tiny Stagiaire		    	        }}
+\end{tabular}
+}
+
+# \Huge \centering Contrat de formation professionnelle hors alternance
+# Parties prenantes
+
+
+Le présent contrat d'inscription est conclu entre les parties:
+
+
+## L'établissement
+
+\scriptsize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+EFRITS SAS. Siège social : 33 rue Delaporte, 94700 Maisons Alfort. Immatriculée au RCS de Créteil sous le numéro 909 292 773.
+Organisme de formation, déclaration d’activité enregistrée sous le numéro 11 94 11281 94 auprès du préfet de région Île-de-France.
+
+Tél: 07 82 45 81 68. E-Mail: contact@efrits.fr
+
+Ci-dessous dénommé individuellement « L’ÉTABLISSEMENT » ou « l’EFRITS »
+et le stagiaire souhaitant intégrer la formation :
+
+\end{minipage}
+
+## Stagiaire
+
+Désigné(e) « l’Apprenant », dans l'ensemble du présent document.
+
+\small
+\begin{multicols}{2}\sloppy
+Prénom(s): \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Nom d'usage: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Nom de famille: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Genre: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Courriel: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Téléphone: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Adresse postale: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Ville: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Code postal: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Date de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Commune de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Pays de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Nationalité: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Numéro INE: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+
+
+\end{multicols}
+
+\begin{multicols}{2}\sloppy
+
+Déclarer une situation de handicap? \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Si oui, laquelle ou lesquelles: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Réinscription depuis une formation de l'EFRITS: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Nom de la précédente formation fréquentée: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+Formation achevée avec succès: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Période de la formation demandée: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\end{multicols}
+
+Formation demandée:
+
+\begin{multicols}{4}\sloppy
+\checkbox\nobreakspace [EF1]
+
+\checkbox\nobreakspace [EF2]
+
+\checkbox\nobreakspace [EF2X]
+
+\checkbox\nobreakspace [EF3]
+
+\checkbox\nobreakspace [EF3X]
+
+\checkbox\nobreakspace [EF4]
+
+\checkbox\nobreakspace [EF5]
+
+\checkbox\nobreakspace Spé: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\end{multicols}
+
+Rentrée demandée:
+
+\begin{multicols}{4}\sloppy
+\checkbox\nobreakspace Septembre \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\checkbox\nobreakspace Janvier \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\checkbox\nobreakspace Avril \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\checkbox\nobreakspace Autre: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+\end{multicols}
+
+
+
+## Responsable légal 1
+
+Premier représentant légal de l'Apprenant mineur au moment de l'inscription.
+
+\begin{multicols}{2}\sloppy
+Prénom: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nom de famille: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Courriel: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Téléphone: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Adresse postale: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Ville: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Code postal: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Date de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Commune de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Pays de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nationalité: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+\end{multicols}
+
+Envoi d'une copie des bulletins trimestriels: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Accès à l'intranet au compte de l'Apprenant en lecture-seule: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+\clearpage
+
+## Responsable légal 2
+
+Deuxième représentant légal de l'Apprenant mineur au moment de l'inscription.
+
+\begin{multicols}{2}\sloppy
+Prénom: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nom de famille: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Courriel: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Téléphone: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Adresse postale: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Ville: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Code postal: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Date de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Commune de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Pays de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nationalité: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+\end{multicols}
+
+Envoi d'une copie des bulletins trimestriels: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Accès à l'intranet au compte de l'Apprenant en lecture-seule: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+
+
+## Responsable financier
+
+Identique à l'Apprenant: \checkbox\nobreakspace (Ne pas remplir ci-dessous si identique)
+
+Identique à responsable légal 1: \checkbox\nobreakspace (Ne pas remplir ci-dessous si identique)
+
+Identique à responsable légal 2: \checkbox\nobreakspace (Ne pas remplir ci-dessous si identique)
+
+Autre: \checkbox\nobreakspace
+
+\begin{multicols}{2}\sloppy
+Prénom: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nom de famille: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Courriel: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Téléphone: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Adresse postale: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Ville: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Code postal: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Date de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Commune de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Pays de naissance: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nationalité: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+\end{multicols}
+
+Envoi d'une copie des bulletins trimestriels: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+Accès à l'intranet au compte de l'Apprenant en lecture-seule: \checkbox\nobreakspace Oui \checkbox\nobreakspace Non
+
+
+
+## Personne à contacter en cas d'urgence
+
+Responsable légal 1: \checkbox\nobreakspace
+
+Responsable légal 2: \checkbox\nobreakspace
+
+
+Responsable financier: \checkbox\nobreakspace
+
+
+Autre: \checkbox\nobreakspace
+
+\begin{multicols}{2}\sloppy
+
+Prénom: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Nom de famille: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Courriel: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+Téléphone: \color{lightgray} \rlap{\color{black}\textbf{}}\hrulefill
+
+\color{black}
+
+
+\end{multicols}
+
+\clearpage
+
+
+
+# Règlement
+
+\scriptsize
+Des compléments d'informations sont présents dans les articles S5 et S6
+du présent document.
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Les tarifs sont fixés chaque année et sont par conséquent susceptibles de changer.
+
+L’EFRITS étant exonérée de TVA au titre
+de l'article L.6351-1 du Code du Travail,
+ils sont exprimés en euros en HT (Hors Taxes).
+
+
+Le premier versement de 990,00 €, correspondant aux frais d’ouverture de dossier, est exigible
+à l’issue du délai de rétractation prévu par le présent document, lors de l’inscription ainsi que
+lors de chaque réinscription.
+Ce versement peut être effectué en deux (2) fois, à condition que le paiement complet soit
+réalisé au plus tard deux (2) mois avant le début de la formation.
+Aucun encaissement ne sera effectué avant l’expiration du délai de rétractation.
+
+
+
+
+Les versements sont mensuels et interviennent au cours des premiers mois de la formation,
+un (1) mois à l’avance, jusqu’au complet paiement du prix.
+
+Des frais administratifs de gestion de 2\% sont appliqués, ces frais sont inclus dans
+les montants des colonnes marquées d'une étoile (*).
+
+Pour les Apprenants ne disposant pas encore de visa ou de titre de séjour les autorisant
+à poursuivre une formation en France, le versement de deux douzièmes de la scolarité
+à minima est demandée en même temps que le premier versement intégral de 990,00 €. Cela s'explique par les
+coûts liés à la gestion particulière de leur dossier.
+
+En cas d'impossibilité de suivre le cursus pour des raisons administratives (refus du visa) ces sommes sont intégralement remboursées.
+
+\end{multicols}
+
+\normalsize
+
+
+
+| Année                \ \ \ \mbox{}|\ \ \ \mbox{}Total    \ \ \ \mbox{}|\ \ \ \mbox{}             En 4 fois*\ \ \ \mbox{}|\ \ \ \mbox{}En 12 fois* |
+|:---------------------:|:---------:|:-----------------------:|:-----------:|
+| Année 1 [EF1]         | 7492,76€  |              1873,19€   | 625,43€     |
+| Année 2 [EF2], [EF2X] | 7642,28€  |              1910,57€   | 636,91      |
+| Année 3 [EF3], [EF3X] | 8037,44€  |              2009,36€   | 670,89€     |
+| Année 4 [EF4]         | 8806,36€  |              2201,59€   | 735,08€     |
+| Année 5 [EF5]         | 8806,36€  |              2201,59€   | 735,08€     |
+
+
+
+
+
+## Premier versement
+
+\begin{multicols}{2}\sloppy
+\checkbox\nobreakspace Comptant
+
+\checkbox\nobreakspace En deux fois
+
+\end{multicols}
+
+## Frais de formation
+
+
+\begin{multicols}{2}\sloppy
+
+
+\checkbox\nobreakspace En quatre fois
+
+\checkbox\nobreakspace En douze fois
+\end{multicols}
+
+
+
+
+
+# Bibliothèque
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Le programme de partage de livre a pour but d’être un outil pédagogique au
+service de l’éveil de la curiosité et de l’esprit des Apprenants. Celui-ci
+a pour vocation à être au service de l’apprentissage et un soutien à
+l’enseignement réalisé qui participe au projet global de formation de l’Apprenant.
+
+C'est un service facultatif, qui étend par son contenu, les supports
+fournis dans le cadre de la formation.
+
+Les livres mis à la disposition de l’Apprenant sont majoritairement des
+livres dédiés à la programmation et à l’informatique mais la bibliothèque
+contient également des livres de science-fiction, de space opéra, de capes
+et d'épées ou d’anglais.
+
+L’adhésion à la bibliothèque de livres est gratuite, pour une durée maximale
+de douze (12) mois ou jusqu'à la fin de la formation de l’Apprenant.
+\textbf{Un chèque de caution non encaissé à l’ordre d’EFRITS SAS d’une
+valeur de cent euros (100 €) doit être accompagné de cette adhésion.} Cette
+caution n'est encaissée qu'en cas de non-restitution ou de dégradation
+importante constatée.
+
+\end{multicols}
+
+\normalsize
+Adhésion au programme de partage de livres
+
+\begin{multicols}{2}\sloppy
+\checkbox\nobreakspace Oui
+
+\checkbox\nobreakspace Non
+
+\end{multicols}
+
+\scriptsize
+
+\begin{multicols}{2}\sloppy
+
+L'Apprenant pourra vérifier la disponibiltié du livre à emprunter sur https://intra.efrits.fr.
+
+Pour emprunter un livre l'Apprenant devra :
+
+- Formaliser une demande d’emprunt du livre auprès de l’administration de l’EFRITS.
+
+- Garder le livre emprunté au maximum trente (30) jours consécutifs.
+
+- N'emprunter le même livre que trois (3) fois consécutive au maximum.
+
+- N'emprunter qu’un livre à la fois.
+
+- Garantir et préserver dans un bon état le livre emprunté.
+
+Pour rendre un livre emprunté l'Apprenant devra :
+
+- Formaliser une demande de retour auprès de l’administration de l’EFRITS.
+
+- Faire l’état des lieux du livre retourné avec l’administration de l’EFRITS.
+
+Le chèque de caution sera rendu à l’Apprenant à la résiliation de son inscription
+au programme de partage de livres ou encaissé par l’administration de l’EFRITS.
+
+La caution sera encaissée – à des fins de remboursement – après constatation par l’administration de l’EFRITS :
+
+- D'un dommage ou d’une dégradation du livre emprunté par l'Apprenant,
+
+- D'une perte ou vol du livre emprunté par l'Apprenant,
+
+- Du non-retour du livre emprunté par l'Apprenant après que le délai
+d’emprunt ait été constaté et suite au cinquième rappel de l’administration
+de l’EFRITS.
+
+Dans le cas où le chèque de caution est encaissé, la différence entre le prix
+de rachat du livre détérioré et le montant encaissé du chèque de caution sera
+alors remboursé à l'Apprenant. L'Apprenant peut également proposer de
+remplacer le livre avant l'encaissement.
+
+Sera jugé détérioré tout livre : déchiré, stabiloté, détrempé, brulé, marqué,
+corné, plié, annoté, etc.
+
+\end{multicols}
+
+\clearpage
+
+# Droit à l'image
+
+\normalsize
+
+L'Apprenant:
+
+\vspace{\baselineskip}
+
+\checkbox\nobreakspace Autorise l'EFRITS et toute personne agissant pour son compte à
+\vspace{\baselineskip}
+
+\checkbox\nobreakspace N'autorise pas l'EFRITS et toute personne agissant pour son compte à
+
+
+- Reproduire et de représenter tout ou une partie des images, vidéos sonorisées
+ou non, prises de vue et l’intégralité de la captation des images et du son,
+sur lesquelles j’apparais ou me représentant ainsi que mes propos durant la
+formation et lors d’évènements organisés par l’EFRITS ou ses partenaires.
+
+- Utiliser, publier, distribuer, éditer, copier, reproduire, adapter, modifier,
+intégrer, diffuser, exploiter et/ou programmer les images, vidéos et sons
+prises pendant mon activité.
+
+Les images, vidéos et sons pourront être exploitées et utilisées directement
+sous toutes formes, tous moyens matériels et tous supports connus et inconnus
+à ce jour – et sans présager de la généralité de cette autorisation : la presse,
+les publications sur les réseaux sociaux, les supports de communication,
+la publicité, l’affichage, les publications sur les sites web, etc. – pour
+la durée de la formation et l'année calendaire suivante – à visé marketing ou
+non de l’EFRITS.
+
+\vspace{\baselineskip}
+
+
+Les images, vidéos et sons seront recueillies lors des Formations et lors des
+évènements organisés par l’EFRITS ou ses partenaires. Vous reconnaissez être
+entièrement en possession de vos droits et ne pourrez exiger aucune rémunération
+pour l’exploitation de ses droits d’image, de son et de vidéo.
+
+\vspace{\baselineskip}
+
+
+Je certifie ne pas être sous un contrat d’exclusivité de l’utilisation de mon image.
+
+\vspace{\baselineskip}
+
+
+En cas de refus, je comprends et accepte que la possibilité de participer à
+la communication de l'EFRITS dans le cadre du module "Communication Scolaire"
+me soit refusée.
+
+
+
+
+
+\clearpage
+# Clause relative à une éventuelle prise en charge ultérieure par un tiers financeur
+
+\begin{multicols}{2}\sloppy
+Si, postérieurement à la signature du présent contrat ou de la présente convention,
+tout ou partie de la formation de l’Apprenant fait l’objet d’une prise en charge par
+un employeur, un OPCO ou tout autre tiers financeur, notamment dans le cadre d’un
+contrat d’apprentissage, d’un contrat de professionnalisation ou de tout autre dispositif
+de financement de la formation professionnelle, la situation contractuelle, administrative
+et financière des parties fera l’objet d’une régularisation.
+
+Cette régularisation pourra prendre la forme d’un avenant, d’une convention de formation,
+d’une convention de formation par apprentissage, d’un accord de prise en charge, d’une
+nouvelle facture ou de tout autre document nécessaire au traitement administratif et
+financier du dossier.
+
+La prise en charge par un tiers financeur ne produit d’effet, à l’égard de l’Apprenant
+et de son responsable financier, qu’à compter de son entrée en vigueur effective et dans
+la limite des frais, périodes, heures, modules ou éléments de formation effectivement
+couverts par cette prise en charge.
+
+Les sommes versées par l’Apprenant ou son responsable financier au titre de frais,
+périodes, heures, modules ou éléments de formation qui ne sont pas pris en charge par
+un tiers financeur restent acquises à l’Établissement, dès lors qu’elles correspondent
+à une formation effectivement réalisée, à une période commencée, à des frais effectivement
+dus ou à des prestations effectivement engagées.
+
+En revanche, lorsque la prise en charge accordée par un employeur, un OPCO ou tout
+autre tiers financeur couvre effectivement des frais, périodes, heures, modules ou
+éléments de formation déjà réglés par l’Apprenant ou son responsable financier, les
+sommes correspondantes sont remboursées à l’Apprenant ou à son responsable financier,
+ou imputées sur les sommes restant dues.
+
+Ce remboursement ou cette imputation intervient dans la limite cumulative :
+
+- des sommes effectivement versées par l’Apprenant ou son responsable financier
+
+- des montants effectivement pris en charge et encaissés par l’Établissement auprès
+du tiers financeur
+
+- et des frais, périodes, heures, modules ou éléments de formation identiques à ceux
+déjà réglés par l’Apprenant ou son responsable financier.
+
+
+
+Aucun remboursement n’est dû au seul motif de la signature d’un contrat d’apprentissage,
+d’un contrat de professionnalisation, d’un accord de prise en charge ou de tout autre
+document de financement. Le remboursement est subordonné à la prise en charge effective
+des sommes concernées et à leur encaissement effectif par l’Établissement.
+
+Lorsque la prise en charge du tiers financeur est partielle, le remboursement ou
+l’imputation est effectué au prorata des montants effectivement couverts et encaissés
+par l’Établissement. Les sommes non couvertes par le tiers financeur demeurent dues
+par l’Apprenant ou son responsable financier, sauf stipulation contraire écrite de
+l’Établissement.
+
+Le remboursement éventuel intervient dans un délai de trente (30) jours à compter
+de l’encaissement effectif par l’Établissement des sommes versées par le tiers financeur
+au titre des frais, périodes, heures, modules ou éléments de formation déjà réglés par
+l’Apprenant ou son responsable financier.
+
+À défaut de prise en charge effective par un tiers financeur, ou en cas de refus,
+d’annulation, de réduction ou de non-paiement de cette prise en charge, le présent
+contrat ou la présente convention demeure applicable dans son régime initial, pour les
+sommes non couvertes par le tiers financeur.
+\end{multicols}
+
+
+
+
+
+
+
+\clearpage
+
+# Programme
+
+### Modules
+
+Les syllabus décrivant les formations de l'EFRITS sont disponibles en annexe.
+
+
+
+
+### Effectifs
+
+Un session de formation (promotion/groupe) comporte jusqu'à 20 Apprenants du même niveau.
+Un unique Apprenant suffit à l'ouverture d'une session de formation.
+
+
+
+### Durée
+
+Un trimestre passé à l'EFRITS - en dehors des passages en entreprise - est d'une
+durée de 12 semaines. Ces 12 semaines sont découpées de la façon suivante:
+
+L'EFRITS est ouverte du Lundi au Vendredi, de 9h15 à 18h00. La pause repas
+s'étend de 13h à 14h. Le volume horaire moyen d'un trimestre est de 420 heures.
+
+Ce volume est indicatif et peut varier selon le calendrier d’activités (évaluations,
+projets, interventions, jours fériés), tout en respectant les objectifs pédagogiques.
+
+- L'EF1, l'EF2X, l'EF3X et l'EF5 font 4 trimestres de long à l'EFRITS.
+- L'EF2 et l'EF4 font 2 trimestres de long à l'EFRITS. 2 trimestres en entreprise.
+- L'EF3 fait 3 trimestres de long à l'EFRITS. 1 trimestre en entreprise.
+
+### Hyperespace
+
+L'Hyperespace dure 2 semaines.
+- Des activités sont réalisées tous les jours pour le lendemain.
+- Il y a des travaux à réaliser sur le week-end.
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h.
+
+### Période dirigée
+
+La période dirigée dure 5 semaines.
+- Des travaux pratiques ont lieu tous les matins du lundi au vendredi de 9h15 à 13h.
+- Une évaluation en équipe peut avoir lieu le mercredi de 14h à 18h.
+- Les activités d'expression et de langue occupent une après-midi de la semaine.
+- Trois (3) à six (6) mini-projets peuvent avoir lieu sur la période dirigée.
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h.
+- L'absence d'activité sur le calendrier est du temps disponible pour la réalisation
+des projets et ce temps est encadré par l'EFRITS à la demande.
+
+### Période libre
+
+La période libre dure 5 semaines.
+
+- Une évaluation en équipe peut avoir lieu le mercredi de 14h à 18h.
+- Les activités d'expression et de langue occupent une après-midi de la semaine.
+- Deux (2) à trois (3) projets peuvent avoir lieu sur la période libre.
+- Une évaluation solo peut avoir lieu le samedi de 10h à 13h.
+- L'absence d'activité sur le calendrier est du temps disponible pour la réalisation
+des projets et ce temps est encadré par l'EFRITS à la demande.
+
+### Congés
+
+La période de congé est située entre les trimestres. Les congés durent d'une (1)
+à trois (3) semaines.
+
+### Exceptions
+
+Le premier trimestre de chaque formation est plus long d’une (1) semaine -
+la période d’Hyperespace est prolongée d’autant.
+\clearpage
+
+
+# Formation
+
+
+## Article S1 - Domaine d'application
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+Cette section du présent document a pour objet de définir les conditions dans lesquelles l’Apprenant
+sera formé par l’EFRITS ainsi que les droits et les obligations réciproques de chacune des parties.
+
+\vspace{\baselineskip}
+
+
+
+
+
+L’EFRITS est un organisme de formation professionnelle dispensant des actions de
+formation, dont le siège social est établi au 33 Rue Delaporte 94700 Maisons-Alfort.
+L’activité de formation professionnelle est déclarée auprès de l’autorité administrative
+compétente et fait l’objet d’un enregistrement au titre de la déclaration d’activité.
+
+
+
+
+\vspace{\baselineskip}
+
+
+L’EFRITS offre une grande flexibilité dans l’apprentissage grâce à la pédagogie
+de projets, une méthode de validation basée sur la preuve, le remplacement des notes
+agglomérantes par des médailles de compétence précises et la possibilité de travailler
+à distance comme en présentiel sous certaines conditions.
+
+\end{multicols}
+
+## Article S2 - Admission
+
+\scriptsize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+L’admission à l’EFRITS se fait via un système d’évaluation du
+niveau des Apprenants permettant à chacun d’entrer dans le
+Cursus le plus adapté à son niveau de connaissances et ses attentes.
+\end{minipage}
+
+| Etape 1\ \ \ \mbox{}|\ \ \ \mbox{}Etape 2\ \ \ \mbox{}|\ \ \ \mbox{}Etape 3\ \ \ \mbox{}|\ \ \ \mbox{}Etape 4 |
+|:-------:|:-------:|:-------:|:-------:|
+| Réunion d'information ou journée porte ouverte | Epreuve InnoTech | Entretien de motivation et d'orientation | Admission et envoi du dossier d'inscription |
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Si l’Apprenant est novice, sous réserve de places disponibles,
+l’EFRITS peut également organiser un atelier d’essai à la programmation
+ou une journée d’immersion permettant à l’Apprenant de s’initier à celle-ci.
+
+Si l’Apprenant a déjà été initié préalablement à la
+programmation et souhaite rejoindre un Cursus nécessitant des prérequis,
+un test de positionnement pourra lui être envoyé si nécessaire afin de
+juger de sa capacité à suivre le Cursus sollicité.
+
+Au terme de ces deux premières étapes, aura lieu un entretien de
+motivation et d’orientation. Cet entretien dont le but sera de
+déterminer le niveau de cursus permettra également à l’EFRITS
+d’évaluer la capacité du candidat à tenir le cursus choisi jusqu’au bout.
+
+À l’issue de l’entretien de motivation et d’orientation, l’Apprenant pourra soit :
+
+- Être accepté dans le cursus initialement sollicité.
+
+- Être orienté par l’EFRITS vers un cursus plus adapté au profil qu’aura révélé le test de positionnement.
+
+À l’issue de ce choix l’Apprenant recevra alors le Dossier d’inscription à l’EFRITS.
+
+Le bureau d’admission peut être contacté par courriel à l’adresse : admissions@efrits.fr.
+
+\end{multicols}
+## Article S3 - Programmes
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+L’EFRITS garantit que les programmes correspondent substantiellement aux cursus.
+
+Les programmes porteront notamment, sans que cette liste ne soit exhaustive, sur
+les méthodes et techniques de programmation, d'architecture et d'organisation
+les langages de programmation  les outils de maquettage  les outils de développement
+les systèmes d’exploitation  les méthodes de spécification et de conception  les logiciels de conception électronique  etc.
+
+L’Apprenant est inscrit aux évaluations préparées sous réserve d’avoir
+fourni à l’EFRITS les pièces nécessaires à son inscription.
+
+L'Apprenant reçoit son attestation de formation, de réalisation ou son titre
+par l’EFRITS. Dans le cas d’un arrêt des cours, une attestation précisant les matières
+validées est remise par l’Etablissement.
+
+Les contenus des programmes d’étude, tels qu’ils figurent sur les documents de présentation
+ou sur le Site sont fournis à titre indicatif. L’administration de l’EFRITS,
+les formateur(trice)s et enseignant(e)s ou le responsable pédagogique se réservent le droit
+de les modifier en fonction des évolutions, de l’actualité, du niveau des participants ou de
+la dynamique du groupe. En outre, l’EFRITS se réserve le droit de modifier le calendrier avec
+information préalable des Apprenants, sauf cas de force majeure non prévisible l’en empêchant.
+
+Dans le cadre d’un cursus à distance, l’ensemble des activités, des supports pédagogiques et
+énoncés des exercices est diffusé exclusivement en ligne. L’Apprenant accède, par Internet,
+à des outils numériques de l’EFRITS mis à sa disposition par l’EFRITS en indiquant son
+identifiant et le mot de passe qui lui sont transmis par l’EFRITS.
+
+L’accès est possible depuis un ordinateur équipé d’un navigateur de type Internet Mozilla Firefox
+et connecté à Internet. L’Apprenant s’engage à ne pas perturber, ralentir, bloquer
+ou altérer le flux normal des données échangées sur la plateforme ou les outils mis
+à sa disposition, ni en modifier, en perturber ou en altérer le fonctionnement.
+
+L’EFRITS concède à chaque Apprenant un droit d’utilisation personnel, non cessible et non
+exclusif d’utiliser les outils mis à disposition et/ou le dispositif de cursus en ligne.
+Les identifiants et les mots de passe confiés sont exclusivement limités à l’usage unique
+et personnel de l’Apprenant. Il ne doit en aucun cas en faire bénéficier un tiers.
+L’EFRITS se réserve le droit, le cas échéant, de prendre toutes les mesures nécessaires
+pour faire cesser ces agissements et obtenir réparation de son préjudice.
+
+En aucun cas l’EFRITS ne saurait être tenu responsable d’un défaut total ou partiel
+de connexion Internet qui ne lui serait pas imputable ou des pannes du matériel informatique
+de l’Apprenant. L’Apprenant sera seul responsable de l’utilisation des outils et/ou
+du dispositif de cursus en ligne mis à sa disposition.
+
+\end{multicols}
+
+## Article S4 - Modalités d'inscription
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+L’inscription à l’EFRITS n’est pas automatique et ne se fait pas directement sur le Site.
+
+Il appartient à l’Apprenant d’entrer en contact avec l’établissement
+sur le site internet via le formulaire de contact ou par e-mail à
+admission@efrits.fr, indiquant le Cursus qui l’intéresse pour obtenir
+les informations sur la procédure d’inscription correspondante.
+
+L’Apprenant reçoit un Dossier d’inscription incluant ce document.
+
+
+L’inscription est ferme et définitive par la remise du dossier incluant
+ce document signé
+
+et après l'expiration du délai de rétractation prévu à l'article S8, ou
+renonciation expresse.
+
+
+
+
+Le responsable financier reconnait avoir dûment pris connaissance du document.
+
+
+À la signature du document, l’EFRITS s’engage à garantir l’accès aux cours
+demandées sous réserve du respect des obligations de l’Apprenant.
+
+Pour les fins de ce document, les facsimiles et les signatures électroniques
+seront reconnues comme équivalentes aux signatures originales sans
+qu’il soit nécessaire de recourir à une signature manuscrite.
+
+L’Apprenant reçoit un e-mail de confirmation de son inscription. L’Apprenant
+reçoit les coordonnées d’accès aux vidéos et autres supports pédagogiques,
+
+dès que le paiement est effectivement validé par la banque ou par
+l’administration de l’EFRITS.
+
+
+L’Apprenant est seul responsable de l’exactitude des informations fournies,
+notamment d’une adresse électronique fonctionnelle lui permettant de
+recevoir la confirmation écrite de la Demande d’inscription. L’Apprenant
+ne pourra pas tenir l’EFRITS responsable d’un manquement lié à
+l’inexactitude ou la fausseté des informations fournies au moment de la
+Demande d’inscription, qui seront utilisées pour permettre à l’Apprenant
+d’accéder aux cours.
+
+Les registres informatisés, conservés sur le Site et dans les systèmes
+informatiques de l’EFRITS dans des conditions raisonnables de sécurité,
+seront considérés comme les preuves des communications, des Demandes
+d’inscription
+et des paiements intervenus entre les parties. L’archivage
+des devis et des factures ainsi que des avenants justifiant d’une passerelle
+est effectué sur un support fiable et durable pouvant être produit à
+titre de preuve pour les réinscriptions.
+
+
+\end{multicols}
+
+\clearpage
+
+
+## Article S5 - Frais
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les frais sont fixés annuellement par l’Administration de l’EFRITS.
+
+**Toute période commencée par l’Apprenant est due dans son intégralité.**
+
+Le défaut de paiement de la totalité des frais pour l’année en cours entraine
+
+la suspension de l’accès aux cours et services, et impossibilité de délivrer
+les documents de fin de formation tant que le règlement
+n’est pas complet.
+
+
+L'EFRITS s'engage à ne pas facturer à l'Apprenant
+les périodes supplémentaires qu'entraineraient
+une prolongation ou reprise de modules de
+sa part. Le mode de fonctionnement servant de base est construit
+en cinq ans.
+Le premier versement reste cependant dû et cette exonération
+ne concerne que l'Apprenant et non pas l'éventuel employeur de
+l'Apprenant en cas de contrat d'alternance.
+
+Les années non facturées sont les dernières et non les années
+redoublées elle-mêmes et celle-ci sont au tarif de l'année
+dans laquelle l'Apprenant aurait du se trouver
+sans redoublement.
+
+Exemple: L'Apprenant redouble sa troisième année. Il refait donc
+une troisième année au prix de la quatrième. Sa quatrième année
+est réalisée au prix de la cinquième année. Sa cinquième année
+ne lui coute que le premier versement.
+
+\end{multicols}
+
+
+
+
+## Article S6 - Modalités de règlement
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+L’Apprenant ou son responsable financier a la possibilité de régler les frais
+de différentes manières, sans excéder la longueur de formation – selon le cursus choisi.
+
+L’Apprenant ou son responsable financier garantit à l’EFRITS qu’il dispose des
+autorisations nécessaires pour utiliser le mode de paiement indiqué lors de la
+Demande d’inscription.
+
+
+L’acceptation de ce document d’inscription et des modalités de règlement vaut engagement
+de paiement selon les dispositions du présent article. Le premier versement exigible
+ne peut intervenir qu’à l’issue du délai de rétractation prévu à l’article S8, sauf
+renonciation expresse de l’Apprenant à ce délai dans les conditions prévues audit article.
+
+À l’issue de ce délai, il ne peut être exigé une somme supérieure à trente pour cent (30 \%) du prix convenu.
+Le solde donne lieu à échelonnement au fur et à mesure du déroulement de l’action de formation.
+
+
+\end{multicols}
+
+
+
+### Paiement comptant
+
+\scriptsize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Le paiement demandé à l’Apprenant correspond au montant total des frais
+qui pourra être réglé par chèque ou par virement bancaire sur le compte bancaire de
+l’EFRITS SAS (dont les coordonnées sont communiquées au responsable financier lors de
+l’envoi du Dossier d’inscription).
+\end{minipage}
+
+### Paiement en plusieurs fois
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Le paiement en plusieurs fois du montant de la formation est une facilité de paiement consentie par l’EFRITS à
+l’Apprenant ou son responsable financier, permettant l'étalement du règlement de
+l’inscription en  quatre (4) ou douze (12) fois, sans en excéder la durée
+maximale du cursus et sous acceptation ou à la demande de l’Établissement. Ces facilités
+de paiement ne rentrent pas dans le champ d'application de la réglementation sur le
+crédit à la consommation (cf. art. L312-4 du code de la consommation).
+
+Le paiement en  quatre (4) ou douze (12) fois - en parts égales, hors premier versement - vous permet
+de régler d’une des façons suivantes :
+
+Un premier versement obligatoire, correspondant aux frais d’ouverture de dossier d’un
+montant de 990,00 €, est exigible à l’issue du délai de rétractation prévu au présent
+document (ou, le cas échéant, dès la renonciation expresse à ce délai par l’Apprenant).
+
+Le solde du prix de la formation est ensuite facturé et payable mensuellement.
+
+Chaque versement devient exigible le cinq (5) du mois suivant le mois de formation écoulé
+(ou à la date indiquée sur la facture correspondante) et doit être réglé avant l’accès
+aux ressources / cours du mois suivant, jusqu’au complet paiement du prix de la formation.
+
+
+Sous la forme de paiement par chèque remis en main propre, paiement sécurisé par
+virement bancaire sur le compte bancaire de la société (dont les coordonnées sont
+communiquées lors de l’envoi du Dossier d’inscription), paiement sécurisé par
+prélèvement automatique à l’ordre de la société quatre (4) ou douze
+(12) versements égaux, le cinq (5) de chaque mois, jusqu'au paiement complet.
+
+Aucun escompte n’est prévu en cas de paiement anticipé.
+
+Le versement des frais d’ouverture de dossier de 990 euros intègre également le
+matériel spécifiquement prévu pour chaque Apprenant. A ce titre,
+hors exercice du droit de rétractation dans le délai légal prévu à l’article S8, et
+hors cas où la loi impose le remboursement, les frais d’ouverture de dossier de 990
+euros restent acquis à l’EFRITS.
+\end{multicols}
+
+
+
+### Pénalités de retard
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+En cas de non-paiement à l’échéance, toute somme due fera courir des pénalités de retard.
+Celles-ci courent à compter du jour suivant la date d’échéance figurant sur la facture
+et jusqu’au jour du paiement effectif et intégral de la somme. Le taux des pénalités
+de retard est fixé au taux d’intérêt légal en vigueur.
+
+Ces pénalités de retard sont exigibles de plein droit et sans qu’un rappel par l’EFRITS ne soit nécessaire,
+ni formalité ni mise en demeure.
+
+Le retard de paiement entraînera l'exigibilité immédiate, après mise en demeure restée sans effet
+de l'intégralité des sommes dues par l’Apprenant, sans préjudice de toute autre action
+que l’EFRITS serait en droit d’intenter, à ce titre, à l’encontre du responsable financier.
+
+En outre, l’EFRITS se réserve le droit, en cas de non-respect des conditions du paiement
+figurant ci-dessus, de suspendre ou résilier l’inscription dont le paiement fait l’objet du retard.
+
+L’EFRITS se réserve également le droit de suspendre ou de résilier toute Demande d’inscription,
+y compris si l’Apprenant a déjà commencé les cours, en cas de défaut de paiement ou de
+paiement partiel de toute somme qui lui serait due par l’Apprenant, en cas d’incident
+de paiement, ou en cas de fraude ou tentative de fraude relative à l’utilisation du
+Site et au paiement d’une demande d’inscription cela après une mise en demeure restée sans effet.
+
+\end{multicols}
+
+
+
+\clearpage
+
+
+
+## Article S7 - Conditions d'annulation et de résiliation
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+En cas d’annulation par l’Apprenant.
+
+A moins de quinze jours ouvrés avant le début des cours, l’indemnité
+de dédit est égale à 50\% du montant total net de taxes du prix fixé
+dans le dossier d’inscription.
+
+Moins d’une semaine avant le début des cours, l’indemnité de dédit
+est égale à 75\% du montant total du prix net de taxes visé.
+
+Moins de 48 heures avant le début des cours, l’indemnité de dédit
+est égale à 100\% du montant total du prix net de taxes fixé.
+
+Pour être prises en compte, les demandes d’annulation doivent être adressées
+au service admission de l’EFRITS par mail à admission@efrits.fr et
+accompagnées des motifs de renoncement à l’inscription. Les
+remboursements s’effectueront sous 30 jours à date de réception du mail.
+
+Toute demande d’annulation prise en compte sera considérée comme définitive.
+
+À défaut de motifs/justificatifs, la demande est traitée comme une
+annulation hors motif et relève des indemnités de dédit ci-dessus
+
+Le présent document peut être résilié en cas de manquement
+commis par l’une ou l’autre des parties, et ce, dans les conditions
+prévues par ce document. Il peut également l’être dans les cas suivants :
+
+\end{multicols}
+
+### Résiliation par l’Apprenant
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+- En cas de non-obtention du diplôme prérequis nécessaire pour
+l'inscription définitive ou du VISA et sur présentation du justificatif de
+non-obtention avant le 31 août de l'année d'inscription.
+
+- En cas d’annulation pour un motif autre que ceux mentionnés au point précédent
+(échec au BAC, refus de visa), dûment justifié et notifié dans les délais, l’intégralité
+des frais versés à l’inscription seront conservés par l’EFRITS en
+dédommagement des coûts administratifs engagés et du manque à
+gagner résultant de la réservation d’une place dans ses effectifs non honorée par l’Apprenant.
+Les motifs recevables au présent alinéa sont appréciés par l’EFRITS sur la base
+des justificatifs transmis
+
+- En cas de non-admission pédagogique en année supérieure.
+A défaut d’une dénonciation dans un délai maximum de
+3 semaines après la notification de la décision pédagogique,
+l’Apprenant sera considéré comme automatiquement candidat
+dans l’année redoublée. En cas de dénonciation dans le
+délai requis, l’intégralité des frais ne seront pas
+dû par l’Apprenant. Passé le délai requis, l’intégralité
+de ces frais seront dû à l’EFRITS en dédommagement des coûts
+administratifs engagés et du manque à gagner résultant de la
+réservation d’une place dans ses effectifs non honorée par l’Apprenant
+
+- En cas de cessation anticipée du cursus par suite de force majeure
+ou pour un motif légitime et impérieux dûment justifié. Dans ce cas,
+seules les cours effectivement dispensés seront dus au prorata temporis
+de la valeur prévue par le présent document.
+
+Lorsque la formation est interrompue par l’Apprenant signataire
+pour un autre motif que ceux visés précédemment, la totalité des
+frais sera due à l’EFRITS, y compris si l’Apprenant
+trouvait un emploi avant la fin de la prestation.
+
+\end{multicols}
+
+### Résiliation par l’EFRITS
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+- En cas de violation des dispositions relatives au règlement intérieur
+de l’EFRITS. Les frais resteront dus en totalité en cas d’exclusion.
+
+- En cas de défaut de paiement des frais aux échéances
+non motivé par un des motifs de résiliation visés par le présent article. Les
+frais resteront dus en totalité et leur recouvrement
+pourra faire l’objet d’actions en justice.
+
+\end{multicols}
+
+
+
+
+## Article S8 - Informations concernant l'exercice du droit de rétractation
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+
+L’Apprenant dispose d’un délai de dix (10) jours à compter de la
+signature du présent document pour se rétracter. En cas de signature à
+distance, ce délai est porté à quatorze (14) jours.
+
+
+Pour exercer le droit de rétractation, l’Apprenant doit notifier à l’EFRITS sa
+décision de se rétracter par une déclaration sans ambiguïté,
+la lettre avec accusé de réception, adressé à l’EFRITS - ou par courriel à
+l'adresse admissions@efrits.fr.
+
+Pour que le délai de rétractation soit respecté, il suffit que l’Apprenant
+transmette sa demande d'exercice du droit de rétractation avant l'expiration
+du délai de rétractation.
+
+
+Aucun frais ne sera encaissé avant la fin du délai de rétractation.
+Les modalités de paiement prévues à l’article S6 respectent les dispositions
+applicables du Code du travail : aucune somme ne peut être exigée
+avant l’expiration du délai de rétractation - à l’issue de ce délai,
+il ne peut être exigé une somme supérieure à 30% du prix convenu, le
+solde donnant lieu à échelonnement au fur et à mesure du déroulement de l’action de formation.
+
+
+La formation ne peut débuter avant l’issue du délai de rétractation
+sauf renonciation expresse de l’Apprenant, formulée dans le présent
+document. En cas de renonciation, l’Apprenant reconnaît demander l’exécution
+immédiate de la formation.
+
+L’Apprenant peut utiliser le modèle de formulaire de rétractation
+fourni ci-dessous mais ce n'est pas obligatoire.
+\end{multicols}
+
+\vspace{\baselineskip}
+
+\vspace{\baselineskip}
+
+\vspace{\baselineskip}
+
+
+\large
+>
+> **Formulaire de retractation**
+>
+> Prénom, Nom
+> Adresse postale
+>
+> A l'attention de Monsieur le Directeur de l'EFRITS
+> 33 rue Delaporte 94700 Maisons-Alfort
+>
+> \vspace{\baselineskip}
+
+>
+> Envoi par lettre recommandée avec accusé de réception ou
+> par courriel à l'Etablissement.
+>
+> Je vous notifie par la présente ma rétractation
+> de mon inscription en NomFormation de l'année
+> Année-Année pour laquelle nous avons signé le JJ/MM/AAAA.
+>
+> \vspace{\baselineskip}
+
+>
+> Date et signature (seulement si envoi par courrier postal)
+>
+>
+
+
+\clearpage
+
+## Article S9 - Horaires, accueil et accès aux cours
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les horaires de cours sont ceux de l’établissement d’accueil
+fixés dans les emplois du temps de chaque Apprenant.
+Les cours sont accessibles en présentiel, en visioconférence
+ou en ligne (e-learning).
+Sauf indication contraire, un calendrier sera accessible
+via le lien indiqué au début des cours.
+\end{multicols}
+
+Les Cours en présentiel se dérouleront à l’adresse suivante –
+ou tout autre lieu mis à la disposition de l’Apprenant :
+
+\vspace{\baselineskip}
+
+\small
+| EFRITS |
+| :-: |
+| 32a Avenue Pierre Sémard |
+| 94200 Ivry-sur-Seine |
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les Cours en visioconférence se dérouleront via la plateforme
+Discord de l’EFRITS où l’Apprenant pourra se connecter
+à l’heure du cours.
+
+L’Apprenant a accès aux cours pendant toute la durée
+spécifiée au moment de la Validation de l’inscription
+en fonction du Cursus choisi.
+
+Les supports sont fournis avec des documents sur le lieu
+de cursus qu’il appartient à l’Apprenant de conserver
+ou de télécharger dans leur dernière version avant
+l’expiration de ses droits d’accès.
+
+L’Apprenant est informé dans le cas où il choisit de
+recevoir ses cours en ligne (en e-learning ou en visioconférence)
+qu’il devra disposer de l’accès à un poste informatique
+équipé d’une connexion à Internet, d’un accès audio,
+d’un micro, d’un écran, d’un clavier, des logiciels et
+leurs licences et tous autres matériels lui permettant
+de suivre les cours. Même si les modules sont accessibles
+sur les téléphones mobiles type smartphone, le mode d’accès
+le plus adapté reste l’ordinateur sous GNU/Linux, préférentiellement
+celui mit à disposition par l'EFRITS.
+
+L’EFRITS ne pourrait pas être tenu pour responsable d’éventuels
+dommages (attaque de virus, pertes de données etc.)
+survenant pendant l’apprentissage au terminal de l’Apprenant.
+
+\end{multicols}
+
+## Article S10 - Assurance
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+L’Apprenant a l’obligation de souscrire une assurance
+responsabilité civile valable sur la période de formation devant
+produire une attestation d’assurance dans le dossier d’inscription
+qui sera renouvelée au besoin.
+
+
+
+\end{multicols}
+## Article S11 - Limitation de responsabilité et force majeure
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+La responsabilité de l’EFRITS est expressément limitée à l’indemnisation
+des dommages directs prouvés par l’Apprenant.
+
+En aucun cas, la responsabilité de l’EFRITS ne pourrait être engagée
+pour des dommages indirects comme la perte de données, de fichiers.
+
+L’EFRITS ne pourra être tenue responsable des dommages directs et indirects causés
+au matériel de l’utilisateur lors de l’accès à la Plateforme, et résultant
+de l’utilisation d’un matériel ne répondant pas aux conditions prévues,
+soit de l’apparition d’un bug ou d’une incompatibilité.
+
+
+Dans tous les cas, la responsabilité de l’EFRITS est plafonnée au
+montant du prix payé hors taxes par l’Apprenant. Ce montant sera le maximum considéré
+comme indemnité (dommage et intérêts) et pénalités, quels que soient
+les préjudices présentés et les fondements juridiques retenus à moins
+que la loi ou la jurisprudence ne s’y oppose.
+
+
+Dans le cadre des Cursus de l’Etablissement, l’EFRITS est tenue à une
+obligation de moyen vis-à-vis des Apprenants. L’EFRITS ne pourra être
+tenue responsable à l’égard des Apprenants en cas d’inexécution
+de ses obligations résultant d’un évènement fortuit ou de force majeure.
+Sont ici considérés comme cas fortuit ou de force majeure, outre
+ceux habituellement reconnus par la jurisprudence : la maladie ou
+l’accident d’un formateur, d’un intervenant ou du responsable
+pédagogique, les grèves ou conflits sociaux externes à l’EFRITS,
+les désastres naturels, les crises sanitaires, les incendies,
+l’interruption des télécommunications, de l’approvisionnement en
+énergie, ou des transports de tout type, ou toute autre circonstance
+échappant au contrôle raisonnable de l’EFRITS.
+
+\end{multicols}
+
+## Article S12 - Confidentialité et communication
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+L’EFRITS et l’Apprenant s’engagent à garder confidentiels les documents et les informations auxquels ils pourraient avoir accès durant les cours ou à l’occasion des échanges intervenus avant l’inscription.
+
+L’EFRITS s’engage à ne pas communiquer à des tiers autres que les partenaires avec lesquels sont organisées les cours, les informations transmises par l’Apprenant ou le concernant.
+\end{multicols}
+
+## Article S13 - Propriété intellectuelle
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+L’EFRITS est une marque déposée auprès de l’INPI appartenant à
+EFRITS SAS. Toute mention devra faire l’objet d’une demande d’autorisation.
+
+L’ensemble des documents remis ou utilisés pendant les cours
+constituent des œuvres originales et, à ce titre, sont protégées
+par la propriété intellectuelle et les droits d’auteur.
+
+Les supports de cours, quelle qu’en soit la forme, et les contenus
+de toute nature (textes, images, visuels, musiques, logos, marques,
+base de données, quiz, schéma, vidéo, son, etc.) exploités par
+l’EFRITS dans le cadre de l’action de cursus sont protégés par tous
+droits de propriété intellectuelle ou droits des producteurs de
+bases de données en vigueur.
+
+En conséquence, l’Apprenant s’interdit de désassembler, de
+décompiler, décrypter, d’extraire, de reproduire, de représenter,
+de diffuser, de réutiliser, d’utiliser, de copier, de transmettre
+et plus généralement d’exploiter tout ou partie de ces documents,
+sans l’accord préalable et écrit de l’EFRITS.
+
+Ces documents ne peuvent en aucun cas être revendus ou mis à la
+disposition du public sous quelque forme que ce soit, y compris
+électronique. Tout partage ou divulgation d’informations, sans
+l’accord écrit de l’EFRITS et de ses partenaires, expose l’Apprenant
+à d’éventuelles poursuites.
+
+Les projets développés par les Apprenants dans le cadre de leur
+cursus pourront faire l’objet de présentations et démonstration des
+activités réalisées à l’EFRITS.
+
+L’Apprenant est informé que l’EFRITS s’autorise à utiliser, publier,
+copier, reproduire, adapter, modifier, intégrer, diffuser et exploiter
+tous travaux réalisés dans le cadre de la formation par l’Apprenant et ce sous
+toutes formes, tous moyens matériels et tous supports connus et inconnus
+à ce jour – et sans présager de l’exhaustivité de cette autorisation : la
+presse, les publications sur les réseaux sociaux, les supports de
+communication, la publicité, l’affichage, les publications sur les sites
+web, etc., à visée marketing ou non de l’EFRITS, sans autres limitations
+que celles prévues par la loi et la réglementation en vigueur.
+
+L'Apprenant peut demander à l'EFRITS de renoncer à l'utilisation des
+travaux réalisés dans le cadre de la formation par l'Apprenant une fois
+la formation de l'Apprenant à l'EFRITS terminée et dans le cadre d'une exploitation
+commerciale par l'Apprenant des dits travaux.
+
+\end{multicols}
+\clearpage
+
+## Article S14 - Protection des données personnelles
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Conformément à la Loi Informatique et Libertés, mise à jour au
+1er juin 2019 et le Règlement Général pour la Protection des
+Données personnelles dit RGPD (Règlement Général sur la Protection
+des Données), l’Apprenant dispose des droits d’accès, de
+rectification, d’opposition, d’effacement, à la limitation du
+traitement et à la portabilité dans les conditions et limites
+prévues par la loi. Le cas échéant, la personne concernée
+dispose également du droit de retirer son consentement à tout
+moment. Toute demande d’exercice peut être adressée par e-mail
+à l’adresse serviceclient@efrits.fr.
+
+Les informations qui sont demandées aux Apprenants sont nécessaires
+au traitement de son inscription l’EFRITS est responsable des
+traitements des données des utilisateurs et des Apprenants,
+recueillies dans le cadre du présent document lorsque ces traitements
+ont pour finalité la gestion de la relation avec les interlocuteurs
+de l’établissement, la facturation, l’assistance ou toute autre
+finalité légitime pour laquelle l’EFRITS agit pour son propre compte.
+
+L’accès aux données personnelles sera strictement limité au personnel
+du responsable de traitement habilité à les traiter. Les informations
+recueillies pourront éventuellement être communiquées à des tiers liés
+au responsable de traitement par contrat dans le cadre de prospection
+commerciale et pour l’exécution de tâches sous-traitées, notamment la
+plateforme de mise à disposition de modules de cours en ligne. L’EFRITS
+respecte la vie privée de ses utilisateurs et Apprenants. Il s’engage
+à ce que la collecte et le traitement automatisé de leurs données soient
+conformes au Règlement Général sur la Protection des Données (RGPD)
+et à la loi Informatique et Libertés dans sa dernière version.
+
+Les données à caractère personnel des Apprenants ne seront pas
+conservées au-delà de la durée strictement nécessaire à la poursuite
+des finalités indiquées. Dans le cadre de l’exécution de leurs prestations,
+les tiers n’ont qu’un accès limité aux données et ont l’obligation de
+les utiliser en conformité avec les dispositions de la législation
+applicable en matière de protection des données personnelles. Ainsi,
+dans le cadre de mise à disposition de modules de cours en ligne et
+de mise à disposition de fichiers intégrant des données personnelles,
+les Apprenants ne pourront ni diffuser lesdits fichiers, ni les utiliser
+à des fins commerciales, conformément aux dispositions de la législation
+applicable en matière de protection des données personnelles.
+
+En dehors des cas énoncés ci-dessus, l’EFRITS s’interdit de vendre, louer,
+céder ou donner accès à des tiers aux données sans consentement
+préalable des Apprenants, à moins d’y être contraint en raison
+d’un motif légitime. Si les données sont amenées à être transférées
+en dehors de l’Union Européenne, l’Apprenant en sera informé et
+les garanties prises afin de sécuriser les données lui seront précisées.
+
+L’Apprenant est informé et accepte que les services de l'EFRITS puisse comporter
+des dispositifs techniques qui permettent d’en suivre l’utilisation
+(compte de l’utilisateur connecté, adresse IP, type d’application
+utilisées, logs divers de connexion et d’utilisation au compte utilisateur…)
+et qui sont susceptibles d’être utilisées dans le cadre de la lutte
+anti-contrefaçon, et/ou pour identifier et/ou prévenir une éventuelle
+utilisation illicite ou non-conforme.
+
+Toute personne concernée par un traitement dispose d’un droit de
+réclamation auprès de la Commission Nationale Informatique et Libertés
+(CNIL) via le lien suivant : https://www.cnil.fr/fr/plaintes.
+
+\end{multicols}
+
+## Article S15 - Litiges, médiation et clauses diverses
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+
+Ce contrat est soumis au droit français.
+
+
+\vspace{\baselineskip}
+
+
+En cas de litige, l’Apprenant ou ses responsables légaux, accepte de
+se réunir, par visioconférence ou physiquement, dans les quinze (15)
+jours à compter de la réception d’une lettre recommandée avec demande
+d’avis de réception, afin de parvenir à une solution amiable.
+
+Conformément à l'article L. 612-1 du Code de la consommation, dans
+un délai d’un an à compter de sa réclamation écrite, le Consommateur,
+sous réserve de l’article L.152-2 du code de la consommation, a la
+faculté d’introduire une demande de résolution amiable par voie de
+médiation, auprès de : ANM CONSO.
+
+Le Client peut saisir le médiateur soit en ligne sur www.anm-conso.com,
+soit par voie postale à l’adresse :
+
+\end{multicols}
+
+\vspace{\baselineskip}
+
+\small
+| Médiation de la Consommation ANM CONSO |
+| :-: |
+| 62 rue Tiquetonne |
+| 75002 Paris |
+
+\vspace{\baselineskip}
+
+
+L’Apprenant ou son responsable financier devra indiquer dans sa
+demande les informations suivantes :
+
+- Ses coordonnées complètes (nom et prénom),
+- Ses informations de contact : téléphone et/ou adresse e-mail, adresse postale,
+- La nature de la demande.
+- L’exposé et la description de son litige,
+- Toutes les pièces et documents factuels utiles à la compréhension et à l’analyse du dossier médiateur,
+- Les échanges intervenus avec l’entreprise attestant d’une tentative de résolution du litige directement auprès du professionnel concerné,
+- Ses attentes concernant l’action du médiateur et la solution qu’il envisage,
+- En cas de représentation par un tiers telle une association de consommateurs ou un avocat, la procuration délivrée à celui-ci.
+
+Le médiateur tentera, en toute indépendance et impartialité, de
+rapprocher les parties en vue d’aboutir à une solution amiable.
+Les parties restent libres d’accepter ou de refuser le recours à
+la médiation ainsi que, en cas de recours à la médiation, d’accepter
+ou de refuser la solution proposée par le médiateur.
+
+\vspace{\baselineskip}
+
+
+La nullité d’une clause n’entraîne pas la nullité de l’ensemble du document.
+
+\vspace{\baselineskip}
+
+
+Le fait pour l’EFRITS de ne pas se prévaloir d’une des clauses
+ne peut être interprété comme une renonciation à s’en prévaloir pour l’avenir.
+
+
+\clearpage
+
+# Règlement intérieur
+
+## Article I1 - Champ d'application
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les dispositions du présent règlement sont applicables à tous les établissements
+gêrés par l'EFRITS mais aussi dans tout local ou espace accessoire qui y soit lié.
+
+\end{multicols}
+## Article I2 - Conditions générales
+
+\scriptsize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Tous les Apprenants suivant une formation proposée par l’EFRITS
+doivent respecter le présent règlement durant l’intégralité
+de la formation pour toutes les questions relatives à :
+\end{minipage}
+
+- La santé
+
+- La sécurité
+
+- La discipline
+
+- La représentation des Apprenants
+
+
+Toutefois, lorsque la formation se déroule dans une entreprise
+déjà dotée d'un règlement intérieur, les mesures de santé et
+de sécurité applicables aux Apprenants sont celles de ce règlement.
+
+## Article I3 - Enregistrements
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Il est formellement interdit, sauf dérogation expresse de la
+direction de l'EFRITS, d’enregistrer ou/et de filmer les séances
+de formation.
+\end{minipage}
+
+## Article I4 - Vidéo surveillance
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+
+Les locaux de l'EFRITS ne sont pas vidéosurveillés.
+
+
+\end{minipage}
+## Article I5 - Accès aux formations et communications
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+L’accès aux formations et la communication entre l’EFRITS
+et les Apprenants se font via :
+\end{minipage}
+
+- La plateforme https://intra.efrits.fr avec les identifiants remis
+à l'Apprenant en début de formation.
+
+- La plateforme Discord via : Serveur EFRITS.
+
+- Les locaux mis à leur disposition pendant la durée de la formation.
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les Apprenants ont accès aux locaux où se déroule la formation exclusivement
+pour suivre la formation à laquelle ils ou elles sont inscrit(e)s. Ils
+ou elles ne peuvent y entrer ou y demeurer à d’autres fins, sauf autorisation.
+
+Les Apprenants n’ont accès aux lieux mis à leur disposition que pour le
+déroulement des formations. Il est interdit d’y introduire des personnes
+étrangères à la formation sans accord préalable de la direction de l'EFRITS.
+
+Sauf accord exprès de l’EFRITS, les Apprenants ne peuvent quitter la formation
+avant l’heure de fin prévue. Dans le cas où l'Apprenant serait autorisé(e) à
+quitter la formation avant l’heure, il ou elle veillera à la quitter le
+plus discrètement possible afin de ne pas perturber le bon déroulement
+de la formation.
+
+Les dispositions du présent règlement sont applicables au sein de tout
+local ou espace accessoire à l’EFRITS.
+
+Toute communication publique au nom de l’EFRITS sans l’accord préalable
+de l’administration de l’EFRITS est formellement interdite.
+\end{multicols}
+## Article I6 - Horaire des formations
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Les horaires d’accueil et de la Formation seront précisés dans
+le livret d’accueil remis à l’Apprenant.
+
+L'Apprenant pourra trouver son calendrier sur https://intra.efrits.fr
+et s'engage à assurer sa présence aux dates, lieu(x) et heure(s)
+qui y sont prévues.
+
+Les Apprenants sont tenus de respecter les horaires de formation fixés
+par la direction de l’EFRITS. Celle-ci se réserve le droit de
+modifier les horaires des cours jusqu’à 30 (trente) minutes avant
+le début de ceux-ci en fonction des nécessités de service ou la
+veille pour le lendemain pour une activité commençant la journée.
+
+Les Apprenants doivent se conformer aux modifications apportées aux
+horaires d’organisation des formations. La direction de l’EFRITS
+s’engage à communiquer au plus tôt toute modification aux Apprenants.
+\end{multicols}
+\clearpage
+
+## Article I7 - Tenue, comportement, usage des lieux de formation et du matériel
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Il est demandé à tous les Apprenants d’avoir un comportement
+garantissant le respect des règles élémentaires de savoir vivre,
+de savoir être en collectivité et le bon déroulement des formations
+– et ce dans le lieu de formation mais aussi à l’extérieur et en entreprise.
+\end{minipage}
+
+Il est demandé en autre aux Apprenants – et ce durant toute la formation
+sauf accord de la direction de l’EFRITS :
+
+- De ne pas modifier les réglages des paramètres des ordinateurs
+ou logiciels mis à sa disposition.
+
+- De pas modifier le fond d’écran des ordinateurs mis à sa disposition.
+
+- De ne pas utiliser leurs téléphones portables à des fins autres
+que celles de la formation.
+
+- De respecter un niveau sonore raisonnable dans les salles mises
+à leurs dispositions.
+
+- De ne pas utiliser du matériel extérieur à la formation.
+
+- De ne pas brancher du matériel extérieur sur le matériel mis leur disposition.
+
+- De ne pas débrancher ou déplacer le matériel mis à leur disposition.
+
+- De s’assurer de la fiabilité de la source avant de télécharger et/ou
+d’ouvrir tout contenu.
+
+- De réserver l'usage des ordinateurs aux activités de formation lors des
+heures de formation. Il est possible cependant d'utiliser les ordinateurs pour
+du divertissement en dehors de ces heures. La musique est permise.
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+L'Apprenant est tenu(e) de respecter et de conserver en bon état,
+de manière générale, l’ensemble du matériel et des lieux qui sont
+mis à sa disposition pendant la formation. Il ou elle ne doit pas
+utiliser ce matériel ni ces lieux à d’autres fins que celles
+prévues pour la formation, notamment à des fins personnelles,
+sans autorisation.
+
+À la fin de la formation, l'Apprenant est tenu de restituer tout
+matériel et document prêté par l’EFRITS encore en sa possession.
+
+Toute anomalie de fonctionnement du matériel et tout incident
+doit être immédiatement signalé au formateur ou à la formatrice
+responsable de la formation.
+
+Les Apprenants sont invités à se présenter en formation dans une
+tenue propre décente et à avoir un comportement correct à l'égard de
+toute personne présente sur le lieu de formation.
+
+Tout comportement ou attitude incompatible avec la vie de groupe
+ou les intérêts pédagogiques peut entraîner une exclusion
+immédiate de la salle de formation, sans préjuger des sanctions
+prises par la direction de l’EFRITS.
+
+La circulation de publicité à visée commerciale, de propagande
+politique, syndicale ou religieuse est interdite durant la formation.
+
+Il est également formellement interdit de diffuser les codes personnels
+nécessaires pour se connecter à l’espace intranet ou à n’importe
+quel autre système de l’EFRITS.
+
+\end{multicols}
+
+## Article I8 - Courrier, colis et envois postaux
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Il est formellement interdit aux Apprenants d'ouvrir le courrier
+et les colis destinés à l'EFRITS, à ses représentant(e)s ou
+son personnel. Cette règle vise à préserver la confidentialité
+et l'intégrité des envois postaux qui sont adressés à l’EFRITS,
+à ses représentant(e)s ou son personnel. Toute infraction
+à cette règle sera passible de sanctions disciplinaires.
+
+Chaque Apprenant est tenu de respecter la confidentialité des courriers
+et des colis spécifiquement destinés à l'EFRITS, à ses
+représentant(e)s ou son personnel. Aucun Apprenant ne doit s'adonner
+à l'ouverture, à la manipulation ou à l'accès non autorisé
+des envois qui ne lui sont pas directement adressés et
+doivent être remis à l’EFRITS en toute confidentialité.
+
+La divulgation, le partage ou l'utilisation abusive des
+informations ou du contenu des courriers et des colis destinés
+à l'EFRITS est strictement prohibé. Aucun Apprenant ne doit lire,
+copier, photographier, enregistrer ou divulguer le contenu de
+ces envois sans une autorisation explicite des responsables de l'EFRITS.
+
+Si un Apprenant entre en possession d’un colis, courrier ou
+tous envois postaux destinés à l’EFRITS, Il incombe à l’Apprenant
+de préserver l'intégrité des envois en les remettant exclusivement
+et dans les plus brefs délais à un représentant de l’EFRITS,
+sauf instructions spécifiques émanant des responsables compétents.
+En cas d'absence du destinataire, les courriers et les colis
+destinés à l'EFRITS doivent être conservés en lieu sûr et
+remis dès que possible lors de son retour.
+
+Tout manquement entraînera des conséquences graves, conformément
+aux règlements de l'établissement. Des mesures disciplinaires
+appropriées seront prises en cas de violation de ces règles,
+dans le but de préserver la confidentialité des envois et de
+maintenir un environnement de respect mutuel.
+
+\end{multicols}
+
+## Article I9 - Règles d'usage d'internet
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+L'Apprenant reconnait et accepte que l’usage qu’il ou elle fera – et ce
+tout le long de sa formation – du réseau internet et
+du matériel mis à sa disposition respectera les conditions suivantes :
+\end{minipage}
+
+- Il est strictement interdit de consulter, diffuser, télécharger ou
+stocker du contenu illégalement téléchargé – et ce quel que soit le
+contenu – sur le réseau ou sur le matériel mis à sa disposition.
+
+- Il est strictement interdit de consulter, diffuser, stocker du contenu
+protégé par un droit de propriété intellectuelle ou confidentiel
+sans en avoir l’autorité.
+
+- Les données circulant via le réseau ne doivent pas contrevenir aux
+lois, réglementations, chartes d’usage ou de déontologies, nationales,
+internationales en vigueur.
+
+- Les données diffusées ne doivent pas porter atteinte aux droits des
+tiers – propos, images, vidéos, sons constituant une diffamation, une
+injure, un dénigrement ou portant atteinte à la vie privée, aux bonnes
+mœurs ou à l’ordre public.
+
+- Il est interdit de regarder des films ou vidéos en streaming ou non
+lors des heures de formations sauf autorisation du formateur, exception
+des sites de streaming de musique qui sont autorisé – le site YouTube est
+autorisé uniquement pour l’écoute de musique.
+
+- Il est interdit d’installer ou de jouer à un jeu vidéo lors des heures
+de formations sauf accord d’un formateur.
+
+## Article I10 - Hygiène et sécurité
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+En matière d’hygiène et de sécurité, chaque Apprenant doit veiller à
+sa sécurité personnelle et à celle des autres en se conformant
+strictement tant aux prescriptions générales qu’aux consignes
+particulières qui seront portées à sa connaissance par le biais
+d’affiches, d’instructions, de notes de service ou par tout autre moyen.
+
+Lorsque la formation se déroule dans un établissement déjà doté
+d’un règlement intérieur, les mesures d’hygiène et de sécurité
+applicables aux Apprenants sont celles de ce dernier.
+
+Au titre de la sécurité, il est également formellement interdit
+aux Apprenants de faire livrer en leur nom des biens achetés à distance
+sur le lieu de formation.
+
+Les animaux de toute espèce sont interdits dans les locaux où
+se déroule la formation.
+
+Des toilettes et lavabos sont mis à la disposition des Apprenants. Ces
+installations doivent être tenues dans un état de propreté permanent.
+
+Le non-respect de ces consignes expose la personne à des sanctions disciplinaires.
+
+Les Apprenants doivent maintenir en ordre et en état de propreté
+constant les locaux où se déroule la formation. À ce titre, il
+est interdit de manger dans les salles non prévues à cet effet.
+
+\end{multicols}
+\clearpage
+
+## Article I11 - Nettoyage du poste de travail
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Afin de garantir un environnement de travail propre et
+hygiénique, il est impératif que chaque Apprenant nettoie
+son poste de travail quotidiennement, y compris la souris et le clavier.
+
+Le nettoyage du poste de travail doit être effectué à
+chaque fois que l’Apprenant quitte son poste de manière
+prolongée ou avant de quitter les locaux. Il est de
+la responsabilité de chaque Apprenant de prendre soin de
+nettoyer toute surface de travail ayant été en contact avec ses mains.
+
+L'EFRITS met à disposition les ressources nécessaires et
+les informations sur les bonnes pratiques de nettoyage.
+Il est attendu de chaque Apprenant se conforme à ces directives
+et contribue activement à maintenir un environnement de
+travail sain et agréable. Il est essentiel que chaque
+Apprenant comprenne l'importance de maintenir son poste de
+travail propre, non seulement pour sa propre hygiène, mais
+aussi pour celle de ses camarades.
+
+\end{multicols}
+
+## Article I12 - Boissons alcoolisées et drogues
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Il est interdit de pénétrer ou de demeurer dans les
+lieux dans lesquels la formation est dispensée en
+état d’ivresse ou sous l’emprise de drogues.
+
+Il est également interdit d’introduire, de consommer
+ou de distribuer dans ces lieux de la drogue ou
+des boissons alcoolisées.
+
+\end{multicols}
+
+
+## Article I13 - Consignes de sécurité, prévention des incendies
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Tout Apprenant est tenu de respecter scrupuleusement
+les consignes relatives à la prévention des incendies.
+
+Les consignes d’incendie et notamment un plan de localisation
+des extincteurs et des issues de secours sont affichés dans
+les locaux de formation de manière à être connus des Apprenants.
+
+Il est interdit de fumer ou d’utiliser une cigarette électronique
+dans les salles où se déroulent les formations ainsi que
+dans les annexes, zones de pause, toilettes, etc.
+
+Les Apprenants sont toutefois autorisés pendant leur temps
+de pause à aller fumer à l’extérieur de l’établissement.
+
+Il est interdit de déposer et de laisser séjourner des matières
+inflammables dans les escaliers, passages, couloirs, sous les
+escaliers ainsi qu’à proximité des issues des lieux de formation.
+
+Les Apprenants sont tenus d’exécuter sans délai l’ordre
+d’évacuation donné par les représentants de l’EFRITS ou par
+un ou une salarié(e) de l’entreprise où se déroule la formation.
+
+\end{multicols}
+## Article I14 - Obligation d'alerte et de droit de retrait
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Tout Apprenant ayant un motif raisonnable de penser qu’une
+situation présente un danger grave et imminent pour sa vie ou
+sa santé a le droit de quitter le lieu de la formation.
+
+Cette faculté doit être exercée de telle manière qu’elle ne
+puisse créer pour autrui une nouvelle situation de risque
+grave et imminent. L'Apprenant doit signaler immédiatement au
+formateur ou à la formatrice l’existence de la situation
+qu’il ou elle estime dangereuse.
+
+Tout Apprenant ayant constaté une défaillance ou une
+anomalie dans les installations ou le fonctionnement des matériels
+est tenu d’en informer le formateur, la formatrice ou la
+direction de l'EFRITS.
+
+Tout accident ou incident survenu à l’occasion ou en cours
+de la formation, même bénin, doit être immédiatement signalé
+à la direction de l’EFRITS par la victime, les victimes ou
+le témoin, les témoins.
+
+\end{multicols}
+
+## Article I15 - Absences, retards, maladies et accidents
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Sauf autorisation expresse, les Apprenants ne peuvent pas s’absenter
+pendant les heures de formation. L’émargement pourra être
+fait le matin et l’après-midi de chaque jour de formation.
+
+Toute absence prévisible devra être notifiée par écrit et
+transmise par l'Apprenant à la direction de l'EFRITS.
+
+En cas de retard, l'Apprenant devra prévenir le formateur ou la
+formatrice au plus tôt et s’en justifier.
+
+En cas de maladie, l'Apprenant devra prévenir la direction de l'EFRITS.
+Il ou elle devra également lui faire parvenir sous quarante-huit
+(48) heures un certificat médical justifiant son arrêt maladie
+afin que les activités pédagogiques prévues puissent être reportée
+sur une session identique à une période ultérieure si possible.
+
+En cas d’accident, l’Apprenant effectuera la déclaration. Pour
+cela, l'Apprenant devra faire connaître sans délai et par écrit,
+à la direction de l’EFRITS, tout accident dont il a été victime
+ainsi que ses circonstances. L’EFRITS ne pourra être tenue responsable
+des conséquences liées à une déclaration rendue impossible du fait
+de l’Apprenant, aucune information ne lui est parvenue ou a été
+communiquée dans les vingt-quatre (48) heures suivant l’accident.
+
+Les Apprenants peuvent déclarer leur présence à chaque activité
+de la formation via la plateforme https://intra.efrits.fr
+à partir de quinze (15) minutes avant le début de celle-ci. Cette
+déclaration sera indiquée comme réalisée en retard si elle
+est effectuée au-delà de cinq (5) minutes après le début de l’activité.
+Cette déclaration n'est possible que sur les ordinateurs de l'EFRITS
+et exclusivement sur les postes situés dans la salle où l'activité est
+prévue.
+
+En cas de pannes du service de déclaration, un émargement papier
+sera réalisé et saisi par l'EFRITS sur l'intranet une fois celui-ci
+rétabli.
+
+En cas de handicap empêchant la déclaration de présence dans
+les conditions précisées ci-dessus, la déclaration de présence
+de l'Apprenant sera réalisée par l'EFRITS.
+
+Un émargement papier supplémentaire, avec signature de l’Apprenant,
+peut être demandé par l’encadrant de la formation.
+
+Dans le cas où l’Apprenant est sous contrat d’alternance,
+l’employeur de l’Apprenant est informé par e-mail des
+absences dans les meilleurs délais qui suivent la connaissance
+par l’organisme de formation.
+
+\end{multicols}
+
+## Article I16 - Dispositions générales relatives à la discipline
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Tout Apprenant doit avoir un comportement garantissant le bon déroulement des formations et le respect des règles élémentaires de savoir-vivre, de sécurité et de savoir-être en collectivité.
+
+Tout Apprenant doit adopter une tenue, un comportement et des attitudes qui respectent la liberté et la dignité de chacun.
+
+Tout Apprenant tenant des propos inappropriés (harcèlement, propos sexistes, racistes, homophobes, injures, etc.) lors de la formation est passible d’exclusion définitive de la formation.
+
+Une charte en faveur de l’inclusion et de l’équité devra être signée par chaque Apprenant afin de montrer son engagement à respecter le cadre d’apprentissage inclusif que l’EFRITS souhaite mettre en place.
+
+\end{multicols}
+
+\clearpage
+
+## Article I17 - Nature et échelle des sanctions
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Tout manquement de l’Apprenant à l’une des prescriptions du présent
+règlement intérieur pourra faire l’objet d’une sanction prononcée
+par la direction de l’EFRITS ou son représentant.
+
+Lorsque la direction de l'EFRITS envisage de prendre une sanction
+ayant une incidence, immédiate ou non, sur la présence d'un
+Apprenant dans une formation, le processus est le suivant :
+
+- La direction de l'EFRITS ou son représentant convoque l'Apprenant
+en lui indiquant l'objet de cette convocation. Celle-ci précise
+la date, l'heure et le lieu de l'entretien. La convocation est
+écrite et adressée par lettre recommandée avec accusé de réception
+ou remise à l'intéressé contre récépissé et décharge.
+
+- Au cours de l'entretien, l'Apprenant peut se faire assister par la
+personne de son choix – Apprenant, collaborateur, collaboratrice,
+formateur, formatrice de l’EFRITS, etc. La convocation mentionnée
+précédemment fait état de cette possibilité.
+
+- La direction de l’EFRITS ou son représentant indique le motif
+de la sanction envisagée et recueille les explications de l’Apprenant.
+
+- Lorsqu’une mesure conservatoire d’exclusion temporaire à effet
+immédiat est considérée comme indispensable par l’EFRITS, aucune
+sanction définitive relative à l’agissement fautif à l’origine
+de cette exclusion ne peut être prise sans que l'Apprenant n’ai été
+au préalable informé des griefs retenus contre lui ou elle et,
+éventuellement, qu’il ou elle ait été convoqué(e) à un entretien
+et ait eu la possibilité de s’expliquer devant une commission de discipline.
+
+- La sanction ne peut intervenir moins d'un jour franc ni plus
+de quinze (15) jours après l'entretien. Elle fait l'objet d'une
+décision écrite et motivée, notifiée au ou à l’Apprenant par lettre
+recommandée ou remise à l'intéressé contre récépissé et décharge.
+
+Tout agissement considéré comme fautif pourra, en fonction de
+sa nature et de sa gravité, faire l’objet de l’une ou l’autre
+des sanctions suivantes :
+
+- Avertissement verbal
+
+- Note réduite ou perte de points ou de médaille, si la faute concerne les travaux
+à réaliser lors de la formation.
+
+- Réparation du travail triché en effectuant un nouveau rendu
+
+- Rappel à l’ordre
+
+- Avertissement écrit
+
+- Blâme
+
+- Exclusion temporaire de la formation ou d’une activité organisée par l'EFRITS
+
+- Exclusion définitive de la formation ou d’une activité organisée par l'EFRITS
+
+Lorsqu’une sanction est appliquée à l’Apprenant, la direction de
+l’EFRITS ou son représentant en informe l’employeur de
+l’Apprenant, le financeur ou la financeuse de la formation ou
+l’organisme de formation paritaire prenant à sa charge
+les frais de la formation et son contact administratif.
+
+
+L’exclusion de l’Apprenant ne pourra en aucun cas donner lieu
+au remboursement des sommes engagées pour la formation.
+
+
+\end{multicols}
+## Article I18 - Vol ou dégradation des biens personnels des Apprenants
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+L’EFRITS décline toute responsabilité en cas de perte, vol ou détérioration d'objets personnels de quelque nature que ce soit déposés par les Apprenants lors des formations.
+\end{minipage}
+
+
+## Article I19 - Représentation des Apprenants
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+Dans les formations et cursus d’une durée supérieure à cinq cents
+(500) heures, il est procédé simultanément à l’élection
+d’un délégué titulaire et d’un délégué suppléant.
+
+Tout Apprenant participant dans ces conditions est électeur et éligible.
+Pour être candidat, l’Apprenant se déclare candidat au poste de
+délégué titulaire et/ou de délégué suppléant.
+
+L’EFRITS organise le scrutin – uninominal
+à deux tours – qui a lieu pendant les heures de formation,
+au plus tôt après vingt (20) heures de formation et au plus tard
+après quarante (40) heures de formation.
+
+En cas d’impossibilité́ de désigner les représentants des Apprenants,
+l’EFRITS dresse un procès-verbal de carence
+qu’il transmet au préfet de région territorialement compétent.
+
+Les délégués sont élus pour la durée de la formation.
+Leurs fonctions prennent fin lorsqu’ils cessent, pour quelque
+cause que ce soit, de participer à la formation.
+
+Si le délégué titulaire ou suppléant a cessé ses
+fonctions avant la fin de la session de formation, il est
+procédé à une nouvelle élection.
+
+Les représentants des Apprenants font toute suggestion pour
+améliorer le déroulement des formations et les conditions
+de vie des Apprenants dans l’EFRITS. Ils
+présentent toutes les réclamations individuelles ou collectives
+relatives à ces matières, aux conditions d’hygiène et de
+sécurité et à l’application du règlement intérieur.
+
+\end{multicols}
+
+## Article I20 - Dispositions relatives aux alternants
+
+\scriptsize
+\begin{multicols}{3}\sloppy
+
+Ces dispositions sont applicables uniquement aux
+alternants, tels que
+définis par la législation en vigueur.
+
+Ils sont soumis aux dispositions générales du règlement
+intérieur de l'entreprise, ainsi qu'aux dispositions
+particulières énoncées dans le présent article.
+
+Ils doivent respecter les horaires de formation
+et de travail qui leur sont assignés. Ils sont tenus
+d'être ponctuels et d'arriver à l'heure prévue.
+
+Les heures de formation sont considérées comme du temps
+de travail effectif, et tout manquement à ces heures peut
+entraîner une perte de salaire ou des mesures disciplinaires,
+conformément à la législation en vigueur et aux dispositions
+du contrat d'apprentissage ou de professionnalisation ou
+aux dispositions de l’employeur ou à la convention
+collective de l’entreprise.
+
+Ils doivent se conformer aux règles de l'entreprise
+en matière de discipline, de confidentialité, de sécurité
+et d'éthique professionnelle, tout comme les autres salariés.
+
+Ils sont tenus de fournir tous les documents
+demandés par l'EFRITS et de participer activement aux
+activités pédagogiques prévues dans leur programme.
+
+Ils doivent informer leur tuteur ou responsable
+hiérarchique en cas d'absence, de retard ou de tout autre
+empêchement lié à leur formation, conformément aux procédures
+établies par l'entreprise et/ou par l’EFRITS.
+
+En cas de manquement grave aux obligations professionnelles,
+aux règles de l'entreprise ou aux horaires de formation, des
+mesures disciplinaires peuvent être prises à leur encontre,
+conformément aux procédures disciplinaires en
+vigueur dans l'entreprise ou à l’EFRITS.
+
+\end{multicols}
+
+\clearpage
+
+# Règlement pédagogique
+
+## Préambule
+
+\footnotesize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+L'Apprenant prend connaissance du fait que:
+\end{minipage}
+
+\vspace{\baselineskip}
+
+
+Le programme de l'EFRITS comporte des activités à réaliser pour le
+jour-même et des projets à réaliser avant des horizons plus ou moins distant
+et souvent 2 à 6 de manière simultannée.
+
+L'immense majorité des activités ont lieu en journée en semaine, cependant:
+
+- Des examens peuvent avoir lieu le samedi matin.
+- Des "rués" peuvent avoir lieu sur le week-end, jusqu'à un maximum de 6 par trimestre, généralement 4.
+- Des activités peuvent avoir lieu en début de soirée: des débats, des projections
+de films, mais aussi des examens ou des rattrapages.
+
+L'Apprenant comprend et accepte que le suivi de ce programme implique un investissement
+conséquent de sa part, principalement des façons suivantes:
+
+- Il implique un travail régulier lors des jours de formation et certains samedis.
+- Il peut impliquer un travail le soir, à son domicile, sur les projets à rendre.
+- Il peut impliquer un travail le soir de manière ponctuelle dans les locaux de l'EFRITS.
+- Il peut impliquer un travail le week-end de manière ponctuelle dans les locaux de l'EFRITS.
+
+L'EFRITS garantit cinq (5) semaines de vacances par an au minimum. En fonction
+des années, des périodes supplémentaires peuvent être ajoutés. Ces vacances
+sont situés en fin de trimestre.
+
+
+
+## Article P1 - Corps pédagogique
+
+\footnotesize
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Le corps pédagogique est composé des formateurs et formatrices,
+intervenants et intervenantes pédagogiques, enseignants et
+enseignantes, assistants et assistantes pédagogiques, des
+ingénieurs et ingénieures pédagogique, des responsables pédagogiques
+ainsi que du responsable pédagogique.
+
+\end{minipage}
+## Article P2 - Médailles
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les médailles incarnent des réalisations réussies ou au contraire
+des échecs. Les médailles sont précises en ce qu’elle qualifie un
+événement précis, ne sont pas comparable entre elles, n’ont pas
+de valeur d’échange l’une avec l’autres et ne sont pas, à l’exception
+de quelques-unes traitant de compétences très proches, hiérarchisées.
+
+Elles peuvent être distribués lors d’une correction automatique,
+d’une soutenance, d’une présentation, d’un suivi, d’un recode ou
+tout autre activité.
+
+Les médailles servent deux propos : permettre aux Apprenants eux-mêmes
+ainsi qu’au membres du corps pédagogique de connaitre l’étendue des
+capacités des Apprenants vis-à-vis de la formation, et incarner le
+moyen par lequel cette formation est validée.
+
+Les médailles peuvent être d’un certain niveau de fiabilité,
+dépendant du contexte d’acquisition. Les médailles obtenues seul
+en examen ou en recode ont une fiabilité maximale. Les autres
+types d’activités, tel que les travaux pratiques, les projets seul
+comme en équipe, les examens en équipe, permettent un niveau de
+fiabilité plus faible. Ce faible niveau de fiabilité nécessite
+l’acquisition à plusieurs reprises de la médaille afin de bénéficier
+d’un niveau de fiabilité maximale attestant définitivement de
+l’acquisition de la compétence.
+
+Les médailles ayant trait au travail en équipe ne peuvent être
+acquis que lors de travaux en équipe. Le statut faible ou fort
+d’une telle médaille dépendant alors de l’ampleur du travail à réaliser.
+
+L’ajout de nouvelles médailles est un processus trivial réalisé
+au besoin par le corps pédagogique afin de valoriser un travail
+supplémentaire ou original. En tant qu’Apprenant, il ne faut pas
+hésiter à faire valoir son droit à la représentation d’un travail
+supplémentaire.
+
+\end{multicols}
+
+\clearpage
+
+## Article P3 - Les activités
+
+### Types d'activités
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les activités peuvent être de plusieurs types différents. Chaque
+type apporte une spécificité dans son fonctionnement :
+
+Les examens sont des activités à réaliser seul, d’une longueur allant
+de deux (2) heures à huit (8) heures et consistant en une série
+d’exercices généralement indépendant fournissant des médailles
+d’un haut niveau de fiabilité.
+
+Les recodes sont des activités à réaliser seul, d’une longueur
+d’environ quinze (15) minutes, sur rendez-vous, servant à prouver
+avant une soutenance de projet en équipe sa maîtrise d’un aspect
+critique du projet. Les médailles apportées par un recode
+sont d’un haut niveau de fiabilité.
+
+Les colles sont des examens à réaliser en équipe de deux, mêlant
+technique connue et champ d’application souvent exotique. Les
+équipes de colles sont souvent aléatoires. Les médailles de colles
+sont de fiabilité moyenne. Une colle dure généralement quatre (4) heures.
+
+Les marathons sont des examens à réaliser en équipe de deux et
+traitant généralement de techniques connues à reproduire rapidement,
+dans un environnement contrôlé. Les marathons durent entre quatre (4)
+heures et huit (8) heures. Ils présentent en général un enchainement
+d’exercices le plus souvent en tiroir.
+
+Les travaux pratiques et journées d’hyper-espace sont des activités
+en salle impliquant un savoir nouveau et un devoir dont le rendu
+et la participation sont généralement optionnelles. Les médailles
+apportées par les travaux pratiques sont de fiabilité moyenne.
+
+Les mini-projets sont des travaux à réaliser sur un espace de deux
+(2) à trois (3) semaines en autonomie. Les mini-projets apportent
+de nouvelles connaissances et disposent souvent de travaux pratiques
+en appui pour aider à leur réalisation. La fiabilité des médailles
+dépend exclusivement de la taille de l’équipe de mini-projet, pouvant
+varier d'un (1) à quatre (4) personnes.
+
+Les projets sont des travaux à réaliser sur un espace de cinq (5)
+semaines à trois (3) mois, en autonomie. Les projets apportent moins
+de nouvelles connaissances mais font un usage intensif des connaissances
+déjà acquises afin de les renforcer. La fiabilité des médailles dépend
+exclusivement de la taille de l’équipe de projet, pouvant varier de
+deux (2) (fiabilité moyenne) à six (6) personnes (fiabilité faible).
+
+Les produits sont des travaux à réaliser sur un espace de cinq (5)
+semaines à six (6) mois, en autonomie. Les produits sont des projets
+dont l’évaluation dépasse le fonctionnement des travaux demandés en
+incluant des aspects de qualité commerciale ainsi que de maintien
+de production en service. La fiabilité des médailles de produit est faible.
+
+Les ruées sont des travaux à réaliser sur un espace de cinquante-trois
+(53) heures en équipe de deux (2) généralement constituée aléatoirement.
+La ruée apporte en général un défi d’envergure à des connaissances
+déjà existantes. Les médailles de ruée ont une fiabilité moyenne.
+
+Les cours, conférences et débats sont des activités en salle. Les
+cours apportent un savoir par oral, à l’aide de supports écrits, d’images
+et de démonstration. Ils sont rares à l’EFRITS. Les conférences consistent
+en des présentations par professionnels du domaine de l’informatique
+venant aborder des aspects intéressants de leurs travaux. Les débats
+consistent en la tenue de conversations et de présentation sur un sujet
+donné correspondant à un travail à rendre en cours. Les débats peuvent
+amener à l’acquisition de médailles.
+
+Les réunions peuvent être de différentes natures : planification,
+rétrospective, démonstration, journalière et présentation et consistent
+en le rassemblement des membres d’une équipe, accompagné ou non par
+un membre du corps pédagogique afin de discuter du travail en commun
+actuel. Ces réunions sont calquées sur la méthode SCRUM et correspondent
+aux rituels que cette méthode décrit.
+
+\end{multicols}
+
+### Les dates composants les activités et matières
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les activités disposent de dates clefs, dont de nombreuses sont optionnelles.
+
+Une activité ou matière peut disposer d’une date d’apparition, –  date
+avant laquelle elle devient visible aux Apprenants –, ainsi qu’une date de
+disparition – date après laquelle elle devient invisible aux Apprenants.
+
+Une activité ou matière peut disposer d’une date d’ouverture des inscriptions
+ainsi que d’une date de fermeture. La période d’inscription permettant de
+s’inscrire seul ou en équipe. Cette période d’inscription est celle également
+dans laquelle les membres des équipes doivent être confirmé.
+
+Une activité peut disposer d’une date de rendu, parfois appelé ramassage, date
+jusqu’à laquelle il est possible de rendre un travail.
+
+Une activité peut comporter du temps en salle. En ce cas, ces sessions disposent
+elles-mêmes d’une date de début et d’une date de fin.
+
+\end{multicols}
+
+### Les médailles de compétences associées
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les activités peuvent disposer de médailles de compétences associés. Ces
+médailles ne sont en générales pas exhaustives : il s’agit des médailles
+principales pouvant être apportée par l’activité. Il demeure possible aux
+Apprenants de chercher à étendre le travail demandé afin de profiter de
+médailles supplémentaires.
+
+La liste des médailles associées n’a pas pour vocation d’être exhaustive
+afin de permettre aux Apprenants de chercher par eux-mêmes comment étendre
+leurs travaux.
+
+Les médailles sont administrées par l'EFRITS au travers de ses assistants
+pédagogiques, formateurs, encadrants ainsi que par ses systèmes
+de correction automatique.
+
+\end{multicols}
+
+### Le sujet et ressources
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les activités portent en général un sujet décrivant les travaux à fournir
+ainsi que les conditions de leurs réalisations. Les activités peuvent
+également comporter des ressources, éléments supplémentaires permettant
+d’aider l’Apprenant dans la réalisation du travail demandé.
+
+Ces ressources peuvent être des logiciels, des médias utilisables comme
+des bancs de tests.
+
+\end{multicols}
+
+### Les supports associés
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les activités sont associées à des supports permettant de comprendre
+les prérequis aux travaux demandés.
+
+Les supports peuvent être des textes, des vidéos mais également d’autres
+activités. Ce renseignement est utile aux Apprenants qui souhaite réaliser un
+travail spécifique mais ne sait comment procéder : à l’aide de ces
+supports, il lui sera possible de retracer un chemin jusqu’au travail souhaité.
+
+\end{multicols}
+
+\clearpage
+
+## Article P4 - Les indicateurs
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Trois indicateurs sont générés en fonction du déroulement
+de la formation par l’Apprenant : l’indicateur d’implication,
+l’indicateur de réussite et l’indicateur de difficulté.
+L’indicateur d’implication consiste en la mesure de participation
+aux activités de formation. Cette participation est mesurée
+par la présence et par les travaux rendus, quel que soit
+le résultat des corrections. L’indicateur de réussite consiste
+en la mesure du nombre de nouvelles médailles acquises.
+L’indicateur de difficulté est la différence entre l’indicateur
+de réussite et l’indicateur d’implication.
+
+Ces indicateurs sont utilisés afin de générer des alertes
+et améliorer notre capacité à suivre les Apprenants. Cet indicateur
+est également utile aux Apprenants car ces indicateurs seront
+rapportés à la moyenne des indicateurs du groupe de l’Apprenant.
+
+Ces indicateurs peuvent être utilisés afin de permettre à
+l’Apprenant ou non de travailler à distance, de favoriser la
+construction de certains groupes au lieu d’autres dans le
+cas des activités en équipe aléatoire, etc.
+
+Ces indicateurs fournissent pour chacun d’entre eux un
+indicateur de variation : y-a-il eu une progression positive
+ou négative forte et remarquable sur l’un des indicateurs
+récemment ? Cette information peut être utilisée pour effectuer
+un suivi plus fin de l’Apprenant.
+
+Si l’indicateur d’implication est trop bas ou celui de difficulté
+trop haute, ou si une variation négative trop forte est constatée
+par le corps pédagogique, l’Apprenant pourra être convoqué afin de
+discuter de sa situation. Des médailles spécifiques de progression
+peuvent également être données en cas de progression rapide
+à la suite d’un passage à vide.
+
+\end{multicols}
+
+## Article P5 - Les Francs
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les Apprenants par la participation à des activités et le rendu de
+travaux peuvent gagner des « Francs ». Il s’agit de points permettant
+de rattraper une erreur tel qu’un rendu modérément en retard, un
+oubli d’inscription à une activité, un oubli de déclaration de présence
+à une activité où l’Apprenant peut apporter la preuve de sa présence,
+l’acceptation d’un membre d’équipe, etc.
+
+Les Francs peuvent également servir à demander des corrections
+automatiques supplémentaires, au-delà des quotas spécifiés par
+les activités. Le nombre de points requis pour chaque cas est
+précisé par une table disponible sur l’intranet associé à une activité.
+Toute modification de cette table est annoncée par le biais de l'intranet.
+
+Les Francs ne sont pas transférable d’un Apprenant à un autre. Dans
+le cadre d’un travail en équipe, seul l’administrateur est en capacité
+d’utiliser des Francs, ceux-là étant tirés de tous les membres de l’équipe.
+
+La perte de Francs, jusqu’à leur mise à zéro, est une sanction
+envisageable en cas de fraude ou de non-respect du règlement
+intérieur ou pédagogique.
+
+Les Francs sont des points bonus et ne sont pas néccessaire
+à la réussite de la formation.
+
+\end{multicols}
+
+## Article P6 - La déclaration de présence
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Les Apprenants peuvent déclarer leurs présences aux activités
+de type travaux pratiques, cours magistraux et autres
+activités non-examen n’impliquant pas de rendez-vous avec
+un membre du corps pédagogique via l’intranet https://intra.efrits.fr.
+
+Cette déclaration est possible de quinze (15) minutes avant
+le début de l’activité jusqu’à cinq (5) minutes après le
+début de celle-ci. Un retard est notifié si la présence est déclarée
+plus tard dans l'activité. Dans le cadre des activités impliquant
+un rendez-vous avec un membre du corps pédagogique (tel
+qu’un suivi ou une soutenance), c’est le dit-membre qui
+procèdera à la déclaration de présence. Dans le cadre des
+activités d'évaluation (examen, colle), le délai de déclaration de présence
+après le début de l’activité est ramené à zéro (0) minutes
+et zéro (0) secondes.
+
+La déclaration de présence par l'Apprenant n'est fonctionnelle
+que si elle est réalisé sur un ordinateur de l'EFRITS se situant
+dans la salle où l'activité est réalisée.
+Dans le cas d'une panne ou d'un handicap l'empechant, l'EFRITS
+réalisera l'émargement sur papier et s'occupera de la saisie
+à postérieurie.
+
+\end{multicols}
+
+### Absence
+
+\begin{minipage}{\dimexpr\linewidth-2\columnsep}\vspace{\baselineskip}
+
+Certaine matière requière la présence obligatoire de l’Apprenant.
+Les absences répétées ou non et/ou non justifiées – au
+préalable lorsque c’est possible – aux activités obligatoires
+pourraient être sanctionnées entre autres de la ou les
+manière(s) suivante(s) :
+\end{minipage}
+
+- Échec à la matière porteuse de l’activité.
+
+- Échec à l’activité en question.
+
+- Obligation de réaliser le travail qui était exigé durant l’activité.
+
+- Tout autre mesure prévue par la matière porteuse de l’activité.
+
+Dans le cadre d’une activité en équipe, l’absence d’un membre
+de l’équipe pénalisera toute l’équipe - même si l'absence est justifiée -
+si cette absence n'est pas déclarée au moins 8h avant l'activité
+ou la soutenance.
+
+### Retard
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+En cas de retard, l’Apprenant devra de lui-même se présenter au
+formateur, à la formatrice ou l’administration de l’EFRITS pour
+en expliquer les motifs. Les retards répétés et/ou non justifiés
+pourraient avoir comme conséquence d’être considéré comme une
+absence non justifiée.
+
+Les retards en soutenances et en examens sont interdits. Les
+Apprenants sont invité(e)s à se présenter cinq (5) mins avant
+l’heure du début de celui-ci. Tout retard sera considéré comme
+une absence.
+
+\end{multicols}
+
+\clearpage
+
+## Article P7 - L'équipe
+
+### Administrateur de l'équipe
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+L’administrateur de l’équipe est le membre créateur de l’équipe.
+Le rôle d’administrateur peut être transmis à un autre membre
+d’équipe par l’administrateur. L’administrateur est le seul membre
+en capacité d’accepter d’autres membres parmi les postulants à
+l’équipe. Un membre non accepté est considéré comme ne faisant
+pas partie de l’équipe.
+
+\end{multicols}
+
+### Taille de l'équipe
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une équipe dispose d’une taille minimale et d’une taille maximale.
+Si la taille minimale n’est pas atteinte, l’équipe n’est pas validée
+et ne peut participer au projet en l’état. Les membres de toutes
+les équipes incomplètes seront mélangés afin de former des équipes
+complètes. S'il demeure une équipe incomplète après ce mélange,
+ceux composant cette équipe seront déplacés dans d’autres équipes
+parmi celles formées pour l’occasion, quitte à former des équipes
+dépassant la taille maximale.
+
+\end{multicols}
+
+### Forum de l'équipe
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une équipe dispose d’un forum de discussion sur l’intranet
+https://intra.efrits.fr. Ce forum est tenu aux mêmes règles que
+le forum général de l’intranet. Le forum de l’équipe est accessible
+à l’ensemble de l’équipe ainsi qu’aux formateurs et formatrices
+de l’activité à laquelle est rattachée l’équipe.
+
+\end{multicols}
+
+### Gestionnaire de tâches
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une équipé dispose d'un gestionnaire de tâches conçu pour
+pour gérer une équipe de travail agile utilisant SCRUM. Chaque équipier
+peut y créer des tâches, les associer à des membres de l'équipe,
+annoncer le temps estimé, passé et placer des commentaire.
+
+\end{multicols}
+
+### Réservation de l'équipe
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une équipe peut réserver des emplacements sur le calendrier. Ces
+réservations sont publiques sur le planning des salles. Elles sont
+également visibles par les formateurs et formatrices de l’activité
+à laquelle est rattachée l’équipe. Des réservations sont susceptibles
+d’être obligatoire dans le cas où les suivis de type journalier
+sont obligatoires, afin de permettre aux membres du corps pédagogique
+d’inspecter que celle-ci ont lieu.
+
+\end{multicols}
+## Article P8 - Réunions d'équipe
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Les réunions sont en général obligatoires et toute les
+équipes devront s’organiser autour d’elles qu’elle soit
+constituée d’un ou plusieurs membres. Parmi elles il y
+a : la planification, la journalière, la démonstration,
+la rétrospective et la présentation. Elles sont là pour
+permettre de cadrer le rythme de travail des équipes.
+
+Les réunions d’équipes ont pour objectif l’organisation
+des membres au sein de l’équipe ainsi que l’évaluation
+de ce processus d’organisation. Les réunions peuvent
+également servir à fournir une assistance technique aux
+membres de l’équipe, cette assistance étant néanmoins
+limitée en longueur. Tous les membres de l’équipe doivent être présents lors
+des événements de suivi. L’absence d’un membre de l’équipe
+entraîne l’acquisition par l’équipe d’une pénalité sous
+forme de médaille négative. Les membres absents écopent
+en supplément d’une pénalité signifiant leur responsabilité.
+
+Les réunions n’ont lieu que lors des activités de type
+« Projet » et « Produit » qui disposent d’une envergure
+justifiant leur existence.
+
+\end{multicols}
+
+### La planification
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Un membre du corps pédagogique est toujours présent lors
+de la planification. Durant ce suivi, l’équipe planifie
+le travail à accomplir jusqu’à la démonstration. Ce travail
+ne doit pas excéder la capacité de l’équipe, ni placer
+celle-ci en état de sous-charge. Une planification devrait
+durer entre vingt (20) minutes à soixante (60) minutes.
+Les planifications sont organisées par les membres du
+corps pédagogique. L’administrateur de l’équipe est seul
+en capacité de réserver un créneau.
+
+\end{multicols}
+
+### La journalière
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Un membre du corps pédagogique est susceptible de rendre
+visite à l’équipe. L’équipe, via son administrateur, est
+chargée de prendre une réservation par elle-même dans une
+salle dédiée aux réunions afin de permettre le contrôle
+de la tenue de celle-ci. Durant ce suivi, les membres de
+l’équipe doivent échanger sur les problèmes de la veille
+et sur les problèmes qu’ils anticipent aujourd’hui.
+
+Une journalière devrait durer entre cinq (5) et dix (10)
+minutes au maximum.
+
+\end{multicols}
+
+\clearpage
+
+### La démonstration
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Un membre du corps pédagogique est toujours présent lors
+de la démonstration. Durant ce suivi, chaque membre de
+l’équipe fait la démonstration du travail qu’il a
+personnellement accompli.
+Une démonstration devrait durer de vingt (20) minutes à
+soixante (60) minutes.
+Les démonstrations sont organisées par les membres du corps
+pédagogique. L’administrateur de l’équipe est le seul en
+capacité de réserver un créneau.
+
+\end{multicols}
+
+### La rétrospéctive
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+Un membre du corps pédagogique est toujours présent lors
+de la rétrospective. Durant ce suivi, chaque membre de
+l’équipe peut aborder les aspects qui lui ont posé problème
+dans l’organisation même de l’équipe. L’objectif est
+d’améliorer la façon dont l’équipe fonctionne.
+
+Une rétrospective devrait durer entre vingt minutes et une heure.
+
+La rétrospective est optionnelle. Celle-ci peut être décidée
+par n’importe quel membre de l’équipe, contrairement aux
+autres types de suivi. Une fois l’engagement pris, l’ensemble
+de l’équipe est tenu d’y participer. Néanmoins, le corps
+pédagogique peut décider de la rendre obligatoire.
+
+\end{multicols}
+
+### La présentation
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une présentation des travaux réalisés peut avoir lieu
+dans le cadre de l’activité.
+Durant la présentation, le maintien général de l’équipe
+est vérifié : tous les membres de l’équipe doivent contribuer
+d’une façon ou d’une autre à cette présentation. La qualité
+du discours, qu’il soit de nature scientifique ou commerciale,
+est évaluée. Les Apprenants doivent mettre en valeur leurs travaux,
+leurs réussites et indiquer de quelle manière ils ont déjoué
+les difficultés qui doivent également être présentées.
+
+\end{multicols}
+
+## Article P9 - L'évaluation
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Tous les membres de l’équipe doivent être présents lors des événements
+d’évaluation. L’absence d’un membre de l’équipe équivaut à l’absence du
+groupe entier. Un retard, même d’une minute, est assimilé à une absence,
+sauf cas de force majeure apprécié par le responsable pédagogique.
+
+Tous les types d’évaluation peuvent donner suite à l’acquisition de médailles.
+
+Les résultats de l’évaluation sont publics : commentaires et médailles
+sont visibles par l’ensemble des participants de l’activité et du corps
+pédagogique. Les commentaires doivent rester factuels et pédagogiques. Tout apprenant
+peut demander la modération d’un propos qu’il estime inapproprié auprès
+du responsable pédagogique. Tout contenu manifestement inapproprié pourra
+être modéré par l’EFRITS.
+
+\end{multicols}
+
+### Le rendu
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+L’administrateur d’équipe est responsable du rendu. Il est le seul en
+capacité de signaler à l’intranet que le travail peut être enregistré en l’état.
+
+Un rendu – programme, travaux pratique, devoir, dossier, projets,
+etc. – effectué en retard ne sera pas considéré lors de l’acquisition
+des médailles de compétence, mais sera tout de même étudié en soutenance.
+
+En cas d’absence de rendu, la présentation n’aura pas lieu. Soutenance,
+recodes et rétrospective finale auront tout de même lieu s'ils étaient prévus.
+
+\end{multicols}
+
+### Le recode
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Un recode consiste en la séparation de chaque membre de l’équipe dans
+des unités d’évaluation afin de leur faire passer un bref examen sur les
+fondations techniques du travail qui était demandé par l’activité. Il
+peut avoir lieu dans le cadre d’une activité dont les médailles
+constituent des enjeux majeurs pour la formation.
+
+\end{multicols}
+
+### La correction automatique
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Une correction peut être déroulée automatiquement à la suite de la
+fermeture de la période de ramassage. Le résultat de la correction
+automatique est appliqué à l’ensemble des membres de l’équipe. Cette
+correction peut donner suite à l’acquisition de médailles. Les traces
+de la correction automatique seront accessibles à tous les membres
+de l’équipe.
+
+\end{multicols}
+
+### La réservation de la soutenance
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+L’administrateur d’équipe est responsable de la prise du rendez-vous
+de soutenance. Il est en général impossible de se désinscrire d’une
+soutenance, ainsi, l'Apprenant devra prendre garde à organiser correctement
+son calendrier avant de s’inscrire.
+
+\end{multicols}
+
+\clearpage
+
+### La soutenance
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Durant la soutenance, la cohérence de l’équipe et du travail fourni
+est vérifiée : tous les membres de l’équipe doivent être en capacité
+de discuter du projet et du travail rendu. Les notions abordées par
+ce travail doivent être maîtrisées par l’ensemble des membres de l’équipe.
+
+Le travail rendu par l’équipe est étudié par un membre du corps
+pédagogique chargée de la correction. Le déroulement d’un barème
+ouvert est effectué. L’ensemble des remarques, critiques et commentaires
+du ou des correcteurs est consigné dans l’intranet et associé à
+l’équipe et/ou à ses membres.
+
+\end{multicols}
+
+## Article P10 - Examens
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Lors des examens, le silence est de rigueur, ainsi que l’absence
+totale d’utilisation d’un autre système que celui fourni par l’EFRITS
+pour l’examen. Les affaires personnelles doivent être placée hors
+d’atteinte, les téléphones portables placés en silencieux et dedans. La
+communication est possible entre membres d’une même équipe si
+l’examen est à réaliser en équipe. L’accès à l’internet est régulé
+en fonction du sujet de l’examen et peut-être totalement interdit.
+
+Une infraction à l’examen entraine l’expulsion des concernés de
+celui-ci et de toute son équipe comprise, et l’adjonction d’une
+médaille éliminatoire sur l'épreuve.
+
+\end{multicols}
+
+## Article P11 - Fraudes
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Toute fraude ou tentative de fraude entrainera un échec
+à une portion de l’activité concernée ou à sa totalité.
+En fonction de la gravité de la fraude ou d’une récidive,
+la matière porteuse de l’activité pourra être placée en
+échec. L’appréciation de la gravité de la fraude est à
+la charge du responsable de l’activité et du responsable
+de matière.
+
+Est considéré comme une fraude – sans que cette liste
+ne soit considérée comme limitative :
+
+L’utilisation de tous matériels, supports ou documents
+non autorisés au cours de l’examen ou l’activité quand
+celui-ci ne les autorise pas expressément.
+
+L’échange d’information avec un autre Apprenant quel que soit
+la forme ou support lors d’un examen.
+
+Le non-respect des règles d’interdiction d’utilisation de
+fonctions ou d’outils logiciels précisé par le support
+d’activité.
+
+L’utilisation de code, de texte ou d’un quelconque travail
+dont l’Apprenant n’est pas auteur ou dont l’utilisation n’est
+pas autorisée dans le contexte de l’activité – tel qu’en
+examen ou seul le travail produit durant l’examen est
+utilisable au-delà d’éventuelles autorisations spécifiques.
+
+\end{multicols}
+
+## Article P12 - Travail à distance
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Cet article aborde le travail à distance effectué sur les heures de présentiel.
+Celui-ci est admis sous certaines conditions.
+
+La possibilité de travail à distance se gagne par la tenue d’un indicateur
+d’implication élevée et d’un indicateur de difficulté inférieur bas. Le travail
+à distance sur les heures de présentiel consomme des "Francs", la valeur d'une
+heure de travail à distance est librement définie par l'EFRITS. Les indicateurs
+d'implication et de difficulté sont librement établis par l'EFRITS.
+
+Le travail à distance est mesuré par la connexion de l'Apprenant aux services
+de l'EFRITS (intranet et serveurs). L'information de la longueur du
+travail supposé constaté est disponible sur l'intranet. Le système mesure
+également la présence physique sur une machine de l'EFRITS.
+
+\end{multicols}
+
+## Article P13 - La validation des matières
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+La validation ou non validation d’une matière se modélise par
+un grade. Ce grade peut prendre cinq (5) valeurs : A, B, C,
+D et E. E signifie que la matière n’a pas été réussie. Les
+autres grades indiquent une réussite, D étant le grade le plus
+faible et A le plus fort.
+
+Chaque matière apporte un nombre de points de formation nommé
+« Flamme », variable en fonction du grade et de la matière.
+Le montant du grade E étant toujours zéro (0).
+
+Le processus de validation fonctionne ainsi : pour chaque grade,
+à l’exception du grade D, le grade inférieur doit être acquis,
+ainsi qu’un pourcentage donné des médailles attachés au grade
+courant. Pour le grade D, un pourcentage des médailles associés
+au grade D doit être acquis. Les pourcentages varient en fonction
+des matières.
+
+De nombreuses médailles ne sont associés à aucun grade mais
+demeure accessible à l’aide des activités de la matière. Ces
+médailles entrent dans une catégorie « Bonus ». Si un certain
+pourcentage, variant d’une matière à l’autre, de médailles
+bonus est atteint et qu’au moins le grade D est atteint, alors
+le grade de l’Apprenant est augmenté d’un (1). Le grade A ne
+peut pas être dépassé.
+
+Une matière non validée peut-être rétro validée par l’acquisition
+de médailles dans la suite de la formation si le corps pédagogique
+estime que cet échec n’est pas bloquant. En cas d’échec bloquant,
+la matière devra être reprise lors du trimestre suivant.
+
+Une accumulation de médaille ou éliminatoire négative dans les
+travaux d'une matière peut entrainer l'échec à la matière.
+
+\end{multicols}
+
+## Article P14 - La validation de la formation
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+La formation nécessite un nombre de points de formation nommé
+« Flamme » afin d’être réussie. Le montant à atteindre pour
+un trimestre de formation est en moyenne de cent onze (111)
+flammes. D’un trimestre à l’autre, entre quatre-vingts (80)
+et cent trente (130) flammes sont accessibles en moyenne,
+en comptant les options.
+
+\end{multicols}
+
+\clearpage
+
+## Article P15 - Réamorce
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+Un Apprenant en difficulté pour se voir proposer une réamorce.
+Le principe de la réamorce est le suivant :
+
+- L'Apprenant cesse de suivre le trimestre en cours.
+- L'Apprenant entame un parcours spécifique de renforcement.
+- L'Apprenant recommencera de zéro au prochain trimestre, le trimestre où
+il était en difficulté.
+- Les activités qui seront proposés par la suite à l'Apprenant seront filtrées
+de sorte à se concentrer sur l'essentiel et permettre à l'Apprenant de
+rattraper son retard.
+
+
+
+L'objectif de la réamorce est de ne pas attendre un échec global en fin
+de formation pour proposer une reprise et de permettre à l'Apprenant de continuer
+sa formation.
+
+
+La réamorce est proposée par l’EFRITS après échange avec l’Apprenant,
+son responsable financier et optionnellement ses responsables légaux.
+
+\end{multicols}
+
+## Article P16 - Triches
+
+Le présent article complète l'article P11.
+
+\footnotesize
+\begin{multicols}{2}\sloppy
+
+La triche est une pratique contraire à l'éthique et aux valeurs
+fondamentales de l'apprentissage et de l'éducation. Elle compromet
+l'intégrité du processus éducatif, en faussant les résultats et
+en créant une inégalité entre les Apprenants. En trichant, un individu
+obtient un avantage indu qui n'est pas mérité, ce qui fausse la
+reconnaissance du travail, des compétences et des connaissances
+réelles. La triche peut également avoir des conséquences néfastes
+sur la formation des Apprenants, en faussant leur niveau de compétence
+et en créant une inégalité entre les Apprenants.
+
+\end{multicols}
+
+La triche peut prendre différentes formes, telles que :
+
+- La copie non autorisée ou autorisée du code source d'un autre
+Apprenant, d’un proche ou venant d’internet, ou généré par une
+Intelligence Artificielle,
+
+- L'utilisation de ressources ou de solutions préexistantes,
+
+- La communication non autorisée avec d'autres Apprenants pendant les évaluations,
+ou encore l'utilisation de logiciels ou d'outils automatisés pour contourner
+les exigences, l’utilisation de bibliothèque, code, fonction explicitement
+interdite,
+
+- L'accès sans autorisation aux comptes, rendu ou dossier sur la NFS d’un
+autre Apprenant ou tout autre personne tiers.
+
+Les sanctions pour la triche pourront varier en fonction de la gravité de
+l'infraction. Une médaille éliminatoire étant systématiquement adjointe.
+# Signatures
+
+\normalsize
+
+\vspace{\baselineskip}
+
+
+Fait à: \color{lightgray} \hrulefill
+
+\color{black}
+
+
+\vspace{\baselineskip}
+
+
+Le: \color{lightgray} \hrulefill
+
+\color{black}
+
+
+\vspace{\baselineskip}
+
+
+En deux exemplaires.
+
+\vspace{\baselineskip}
+
+
+\begin{multicols}{2}\sloppy
+Pour l'établissement:
+
+Directeur(trice)
+
+
+
+
+
+Pour l'apprenant:
+
+Stagiaire
+
+Signature:
+\end{multicols}
+
+\vspace{\baselineskip}
+
+
+\noindent
+\begin{center}
+\begin{tabular}{@{}c @{}c @{}c @{}}
+\textit{\centering Signatures} \\[0.5em]
+\fbox{\parbox[c][3.5cm][c]{5.4cm}{
+Directeur(trice)                        \vspace*{\fill}
+}
+}
+&
+\fbox{\parbox[c][3.5cm][c]{5.4cm}{
+Responsable financier                        \vspace*{\fill}
+}
+}
+&
+\fbox{\parbox[c][3.5cm][c]{5.4cm}{
+Stagiaire                        \vspace*{\fill}
+}
+}
+\end{tabular}
+\end{center}
+
+

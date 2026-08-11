@@ -1,5 +1,39 @@
 <?php
 
+function user_school_authority_is_numeric()
+{
+    global $Database;
+
+    static $numeric = NULL;
+    if ($numeric !== NULL)
+        return ($numeric);
+
+    $dbname = $Database->real_escape_string($Database->dbname);
+    $column = db_select_one("
+        DATA_TYPE as data_type
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '$dbname'
+          AND TABLE_NAME = 'user_school'
+          AND COLUMN_NAME = 'authority'
+    ");
+    $type = strtolower((string)($column["data_type"] ?? ""));
+    $numeric = in_array($type, [
+        "tinyint", "smallint", "mediumint", "int", "integer", "bigint",
+        "decimal", "numeric"
+    ], true);
+    return ($numeric);
+}
+
+function user_school_student_authority_value()
+{
+    return (user_school_authority_is_numeric() ? 0 : "STUDENT");
+}
+
+function user_school_student_authority_sql()
+{
+    return (user_school_authority_is_numeric() ? "0" : "'STUDENT'");
+}
+
 function get_user_school(array &$usr, $by_name = false)
 {
     global $Database;
@@ -12,10 +46,17 @@ function get_user_school(array &$usr, $by_name = false)
     $forge = "
         school.id as id_school,
 	school.codename as codename,
-	school.{$Language}_name as name,
+	COALESCE(
+	    NULLIF(organization.{$Language}_name, ''),
+	    NULLIF(organization.name, ''),
+	    NULLIF(organization.legal_name, ''),
+	    school.codename
+	) as name,
         user_school.authority as authority,
         user_school.id as id
         FROM school
+        LEFT JOIN organization
+        ON organization.id = school.id_organization
         LEFT JOIN user_school
         ON user_school.id_school = school.id
         WHERE user_school.id_user = ".$usr["id"]." AND school.deleted IS NULL
@@ -25,19 +66,34 @@ function get_user_school(array &$usr, $by_name = false)
 	    $usr["school"][array_key_first($usr["school"])]["codename"];
     else
 	$usr["last_school"] = NULL;
+    $constants = [
+	"STUDENT",
+	"DIRECTOR",
+	"SECRETARIAT",
+	"COMMERCIAL",
+	"TEACHER",
+	"LIBRARIAN",
+    ];
 
-    $usr["school_authority"] = 0;
+    $usr["school_authority"] = $constants[0];
     foreach ($usr["school"] as $school)
-	if ($school["authority"] != "STUDENT")
-	    $usr["school_authority"] = $school["authority"];
-
+    {
+	if ($school["authority"] !== "STUDENT")
+	{
+	    if (is_number($school["authority"]))
+		$usr["school_authority"] = $constants[$school["authority"]];
+	    else
+		$usr["school_authority"] = $school["authority"];
+	}
+    }
+    
     // TEMPORAIRE
     if (!count($usr["school"]))
     {
 	$usr["school"]["efrits"]["id"] = -1;
 	$usr["school"]["efrits"]["id_school"] = -1;
 	$usr["school"]["efrits"]["codename"] = "efrits";
-	$usr["school"]["efrits"]["fr_name"] = "efrits";
+	$usr["school"]["efrits"]["name"] = "efrits";
 	$usr["school"]["efrits"]["authority"] = "DIRECTOR";
 	$usr["last_school"] = "efrits";
     }

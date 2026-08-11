@@ -1,0 +1,148 @@
+<?php if ($page == "cycle") { ?>
+    <?php
+    require_once (__DIR__."/../../tools/student_log.php");
+    require_once (__DIR__."/../../tools/halfday_presence.php");
+
+    $cycle_metric_users = [];
+    foreach ($cycle["user"] as $usr)
+        if (isset($usr["id_user"]) || isset($usr["id"]))
+            $cycle_metric_users[(int)try_get($usr, "id_user", $usr["id"])] = $usr;
+
+    $cycle_metric_days = 100;
+    $cycle_metric_start = @strlen($cycle["first_day"]) ? remove_hour($cycle["first_day"]) : remove_hour(now());
+    $cycle_metric_data = halfday_presence_build(
+        array_keys($cycle_metric_users),
+        $cycle_metric_start,
+        $cycle_metric_days,
+        $cycle["id"]
+    );
+
+    $cycle_metric_stats = [];
+    if (count($cycle_metric_users))
+    {
+        $cycle_metric_id_list = implode(", ", array_map("intval", array_keys($cycle_metric_users)));
+        $cycle_metric_query = db_select_all("\n            id_user,\n            COUNT(*) as matter_count,\n            COALESCE(SUM(credit_d), 0) as credit_d,\n            COALESCE(SUM(credit_a), 0) as credit_a\n            FROM (\n                SELECT\n                    user_team.id_user as id_user,\n                    activity.id as id_activity,\n                    COALESCE(activity.credit_d, template.credit_d, 0) as credit_d,\n                    COALESCE(activity.credit_a, template.credit_a, 0) as credit_a\n                FROM activity_cycle\n                LEFT JOIN activity ON activity.id = activity_cycle.id_activity\n                LEFT JOIN activity as template ON template.id = activity.id_template\n                LEFT JOIN team ON team.id_activity = activity.id\n                LEFT JOIN user_team ON user_team.id_team = team.id\n                WHERE activity_cycle.id_cycle = {$cycle["id"]}\n                  AND user_team.id_user IN ($cycle_metric_id_list)\n                  AND (activity.parent_activity IS NULL OR activity.parent_activity = -1)\n                  AND activity.is_template = 0\n                  AND activity.deleted IS NULL\n                  AND activity.disabled IS NULL\n                GROUP BY user_team.id_user, activity.id\n            ) registered_cycle_activity\n            GROUP BY id_user\n        ");
+        foreach ($cycle_metric_query as $row)
+            $cycle_metric_stats[(int)$row["id_user"]] = $row;
+    }
+
+    $cycle_metric_status_label = [
+        "present" => "Présent",
+        "absent" => "Absent logs",
+        "activity_absent" => "Absent activité",
+        "pending" => "En cours",
+        "future" => "À venir",
+        "unknown" => "Inconnu",
+    ];
+    ?>
+    <section class="cycle_admin_card cycle_admin_students">
+	<h2><?=$Dictionnary["Students"]; ?></h2>
+
+	<div class="cycle_student_metrics_notice">
+	    Présence demi-journée : matin validé à partir de 3h entre 8h et 13h, après-midi validé à partir de 2h entre 13h et 19h.
+	    Les présences/absences d'activité priment sur les logs.
+	    <?php if (!halfday_presence_table_available()) { ?>
+		<br /><b>La table user_log_halfday n'existe pas encore : applique la migration SQL pour alimenter les demi-journées à partir des prochains logs.</b>
+	    <?php } ?>
+	</div>
+
+	<?php if ($can_edit_cycle && count($cycle_metric_users)) { ?>
+	    <div class="cycle_attendance_register_header">
+		<div>
+		    <h3><?=$Dictionnary["AttendanceRegisters"]; ?></h3>
+		    <p><?=$Dictionnary["AttendanceRegisterHelp"]; ?></p>
+		</div>
+		<form method="post" action="/api/cycle/<?=$cycle["id"]; ?>/attendance-register" target="_blank">
+		    <input type="hidden" name="all" value="1" />
+		    <input type="submit" value="<?=$Dictionnary["GenerateAllAttendanceRegisters"]; ?>" />
+		</form>
+	    </div>
+	<?php } ?>
+
+	<div class="cycle_student_metrics_table">
+	    <table>
+		<thead>
+		    <tr>
+			<th class="cycle_student_identity_col">Élève</th>
+			<?php if ($can_edit_cycle) { ?>
+			    <th class="cycle_student_register_col"><?=$Dictionnary["AttendanceRegister"]; ?></th>
+			<?php } ?>
+			<th class="cycle_student_small_col">Matières</th>
+			<th class="cycle_student_small_col">Flammes</th>
+			<?php for ($i = 0; $i < $cycle_metric_days; ++$i) { ?>
+			    <?php $day = $cycle_metric_start + $i * 24 * 60 * 60; ?>
+			    <th class="cycle_student_day_col" title="<?=european_date($day, true); ?>">
+				<?php if ($i % 7 == 0 || $i == 0) { ?>
+				    <?=datex("d/m", $day); ?>
+				<?php } ?>
+			    </th>
+			<?php } ?>
+		    </tr>
+		</thead>
+		<tbody>
+		    <?php foreach ($cycle_metric_users as $uid => $usr) { ?>
+			<?php
+			$stat = try_get($cycle_metric_stats, $uid, ["matter_count" => 0, "credit_d" => 0, "credit_a" => 0]);
+			?>
+			<tr>
+			    <th class="cycle_student_identity_col cycle_student_identity">
+				<?=display_avatar($usr, 28, true); ?>
+				<a href="index.php?p=ProfileMenu&amp;a=<?=$uid; ?>">
+				    <?=htmlspecialchars($usr["codename"], ENT_QUOTES); ?>
+				</a>
+			    </th>
+			    <?php if ($can_edit_cycle) { ?>
+				<td class="cycle_student_register_col">
+				    <form method="post" action="/api/cycle/<?=$cycle["id"]; ?>/attendance-register" target="_blank">
+					<input type="hidden" name="student" value="<?=$uid; ?>" />
+					<input type="submit" value="<?=$Dictionnary["GenerateAttendanceRegister"]; ?>" />
+				    </form>
+				</td>
+			    <?php } ?>
+			    <td class="cycle_student_small_col"><?=(int)$stat["matter_count"]; ?></td>
+			    <td class="cycle_student_small_col"><?=(int)$stat["credit_d"]; ?>–<?=(int)$stat["credit_a"]; ?></td>
+			    <?php for ($i = 0; $i < $cycle_metric_days; ++$i) { ?>
+				<?php
+				$day = $cycle_metric_start + $i * 24 * 60 * 60;
+				$day_key = (int)($day / (24 * 60 * 60));
+				$periods = try_get(try_get($cycle_metric_data, $uid, []), $day_key, []);
+				?>
+				<td class="cycle_student_day_col">
+				    <div class="cycle_halfday_cell">
+					<?php foreach ([0, 1] as $period) { ?>
+					    <?php
+					    $h = try_get($periods, $period, ["status" => "future", "duration" => 0, "threshold" => 0, "period" => $period == 0 ? "AM" : "PM"]);
+					    $hours = sprintf("%02d:%02d", (int)($h["duration"] / 3600), (int)(($h["duration"] / 60) % 60));
+					    $title = european_date($day, true)." ".$h["period"]." - ".try_get($cycle_metric_status_label, $h["status"], $h["status"])." - logs $hours";
+					    ?>
+					    <span class="cycle_halfday cycle_halfday_<?=$h["status"]; ?>" title="<?=htmlspecialchars($title, ENT_QUOTES); ?>"></span>
+					<?php } ?>
+				    </div>
+				</td>
+			    <?php } ?>
+			</tr>
+		    <?php } ?>
+		</tbody>
+	    </table>
+	</div>
+
+	<div class="cycle_halfday_legend">
+	    <span class="cycle_halfday_legend_item"><span class="cycle_halfday cycle_halfday_present"></span> Présence</span>
+	    <span class="cycle_halfday_legend_item"><span class="cycle_halfday cycle_halfday_absent"></span> Absence logs</span>
+	    <span class="cycle_halfday_legend_item"><span class="cycle_halfday cycle_halfday_activity_absent"></span> Absence activité</span>
+	    <span class="cycle_halfday_legend_item"><span class="cycle_halfday cycle_halfday_pending"></span> En cours</span>
+	    <span class="cycle_halfday_legend_item"><span class="cycle_halfday cycle_halfday_unknown"></span> Non mesuré</span>
+	</div>
+
+	<h3 class="cycle_students_management_title">Gestion des étudiants</h3>
+	<?php list_of_links([
+	    "method" => "post",
+	    "hook_name" => "cycle",
+	    "hook_id" => $cycle["id"],
+	    "linked_name" => "user",
+	    "linked_elems" => $cycle["user"],
+	    "admin_func" => "is_director_for_cycle",
+	    "extra_properties" => $cycle_user_extra_properties,
+	]); ?>
+    </section>
+<?php } ?>

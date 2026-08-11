@@ -1,0 +1,42 @@
+Document = "Report"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5]
+    Facture
+  Left]
+  Right = [Text($,Right)
+    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+BillingInformation = [].School.RIB
+
+'Ce qu'il y a en dessous doit etre completé dynamiquement
+
+[Student
+
+]
+
+[Parent
+
+]
+
+{Products
+  [
+    Content = "Placeholder"
+    Quantity = 1
+    Price = 1
+    VAT = 0
+  ]
+}
+

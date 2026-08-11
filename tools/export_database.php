@@ -14,6 +14,9 @@ Export_Database($mysqlHostName,$mysqlUserName,$mysqlPassword,$DbName,  $tables=f
 
 function Export_Database($host,$user,$pass,$name,  $tables=false, $backup_name=false )
 {
+    // Preserve the historical non-throwing mysqli behaviour used by this
+    // helper. PHP 8.1+ enables MYSQLI_REPORT_STRICT by default.
+    mysqli_report(MYSQLI_REPORT_OFF);
     $mysqli = new mysqli($host,$user,$pass,$name);
     $mysqli->select_db($name);
     $mysqli->query("SET NAMES 'utf8'");

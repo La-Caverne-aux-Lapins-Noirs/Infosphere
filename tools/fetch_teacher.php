@@ -37,7 +37,7 @@ function fetch_teacher($id, $by_name = false, $table = "activity", $gather = fal
        laboratory.id as id_laboratory,
        laboratory.codename as codename_laboratory
        FROM {$table}_teacher
-       LEFT JOIN user ON user.id = {$table}_teacher.id_user AND user.authority >= 0
+       LEFT JOIN user ON user.id = {$table}_teacher.id_user AND user.authority >= 0 AND user.profile_status = 'member'
        LEFT JOIN laboratory ON laboratory.id = {$table}_teacher.id_laboratory AND laboratory.deleted IS NULL
        WHERE {$table}_teacher.id_{$table} = $id
     ");
@@ -63,6 +63,8 @@ function fetch_teacher($id, $by_name = false, $table = "activity", $gather = fal
 	    $n["prefix"] = "#";
 	}
 
+	if ($name == "")
+	    continue ;
 	if ($by_name)
 	    $new[$name] = $n;
 	else
