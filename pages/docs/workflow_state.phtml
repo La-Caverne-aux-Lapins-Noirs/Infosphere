@@ -7,6 +7,7 @@ $workflow_status_labels = [
     "Sealed" => "Scellé",
     "Error" => "Erreur",
     "Completed" => "Terminé",
+    "Expired" => "Périmé",
 ];
 $workflow_filtered = [];
 foreach ($workflow_instances as $workflow_entry)
@@ -28,19 +29,43 @@ foreach ($workflow_instances as $workflow_entry)
                 $workflow_name = trim((string)($workflow_owner["first_name"] ?? "")." ".(string)($workflow_owner["family_name"] ?? ""));
                 if ($workflow_name == "")
                     $workflow_name = (string)($workflow_owner["codename"] ?? ("#".$workflow_entry["owner_user_id"]));
-                $workflow_model = basename((string)($workflow_instance["Model"] ?? "Document"));
-                $workflow_model = preg_replace('/\.dab$/i', '', $workflow_model);
+                $workflow_model = document_workflow_instance_label($workflow_instance);
                 $workflow_year = (int)($workflow_instance["TargetYear"] ?? 0);
                 $workflow_progress = (int)$workflow_entry["signature_signed"]."/".(int)$workflow_entry["signature_total"];
                 if ((int)$workflow_entry["signature_total"] == 0)
                     $workflow_progress = "—";
                 $workflow_signature_details = [];
-                foreach (($workflow_instance["Signatures"] ?? []) as $workflow_role => $workflow_signature)
+                $workflow_tasks_by_slot = [];
+                foreach (($workflow_entry["document_tasks"] ?? []) as $workflow_task)
+                {
+                    if (($workflow_task["task_action"] ?? "") !== "sign" || empty($workflow_task["required"])
+                        || ($workflow_task["status"] ?? "") === "expired")
+                        continue ;
+                    $workflow_task_metadata = document_task_metadata($workflow_task);
+                    $workflow_task_slot = (string)($workflow_task_metadata["slot"] ?? "");
+                    if ($workflow_task_slot != "")
+                        $workflow_tasks_by_slot[$workflow_task_slot] = $workflow_task;
+                }
+                foreach (($workflow_instance["Signatures"] ?? []) as $workflow_slot => $workflow_signature)
                 {
                     if (!is_array($workflow_signature) || empty($workflow_signature["Required"]))
                         continue ;
-                    $workflow_signature_details[] = $workflow_role.": ".(($workflow_signature["Status"] ?? "") === "Signed" ? "signé" : "en attente");
+                    $workflow_role_label = document_workflow_signature_role_label($workflow_slot, $workflow_signature);
+                    $workflow_task = $workflow_tasks_by_slot[$workflow_slot] ?? [];
+                    $workflow_task_metadata = is_array($workflow_task) ? document_task_metadata($workflow_task) : [];
+                    $workflow_assignee_label = trim((string)($workflow_task_metadata["assignee_label"] ?? ""));
+                    if ($workflow_assignee_label != "")
+                        $workflow_role_label .= " — ".$workflow_assignee_label;
+                    if (document_workflow_signature_is_external_campaign($workflow_signature))
+                        $workflow_role_label .= " (campagne)";
+                    $workflow_signature_details[] = $workflow_role_label.": ".(($workflow_signature["Status"] ?? "") === "Signed" ? "signé" : "en attente");
                 }
+                $workflow_pending_slots = [];
+                foreach (($workflow_instance["Signatures"] ?? []) as $workflow_slot => $workflow_signature)
+                    if (is_array($workflow_signature) && !empty($workflow_signature["Required"])
+                        && ($workflow_signature["Status"] ?? "Pending") !== "Signed"
+                        && !document_workflow_signature_is_external_campaign($workflow_signature))
+                        $workflow_pending_slots[$workflow_slot] = $workflow_signature;
                 $workflow_schools = document_workflow_instance_school_codenames($workflow_instance);
                 $workflow_school = count($workflow_schools) ? implode(", ", $workflow_schools) : "—";
                 $workflow_id = (string)($workflow_instance["Id"] ?? "");
@@ -53,12 +78,44 @@ foreach ($workflow_instances as $workflow_entry)
                     <td><?=htmlspecialchars((string)($workflow_instance["CreatedAt"] ?? ""), ENT_QUOTES); ?></td>
                     <td><?=$workflow_progress; ?><?php if (count($workflow_signature_details)) { ?><br /><small><?=htmlspecialchars(implode(" · ", $workflow_signature_details), ENT_QUOTES); ?></small><?php } ?></td>
                     <td><span class="document_workflow_badge document_workflow_<?=htmlspecialchars(strtolower($workflow_status), ENT_QUOTES); ?>"><?=htmlspecialchars($workflow_status_labels[$workflow_status] ?? $workflow_status, ENT_QUOTES); ?></span>
+                        <?php if ($workflow_status === "Expired" && !empty($workflow_instance["ExpiredAt"])) { ?><br /><small>Périmé le <?=htmlspecialchars((string)$workflow_instance["ExpiredAt"], ENT_QUOTES); ?><?php if (($workflow_instance["PreviousStatus"] ?? "") != "") { ?> · ancien état : <?=htmlspecialchars((string)$workflow_instance["PreviousStatus"], ENT_QUOTES); ?><?php } ?></small><?php } ?>
                         <?php if (($workflow_instance["Error"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["Error"], ENT_QUOTES); ?></small><?php } ?>
                         <?php if (($workflow_instance["SealError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["SealError"], ENT_QUOTES); ?></small><?php } ?>
                         <?php if ($workflow_status === "Completed" && !empty($workflow_instance["DeliveredAt"])) { ?><br /><small>Envoyé le <?=htmlspecialchars((string)$workflow_instance["DeliveredAt"], ENT_QUOTES); ?></small><?php } ?>
                         <?php if (($workflow_instance["DeliveryError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["DeliveryError"], ENT_QUOTES); ?></small><?php } ?>
                     </td>
-                    <td><a href="<?=htmlspecialchars($workflow_pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le PDF</a></td>
+                    <td class="document_workflow_actions">
+                        <a href="<?=htmlspecialchars($workflow_pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le PDF</a>
+                        <?php if ($workflow_status === "AwaitingSignature" && count($workflow_pending_slots)) { ?>
+                            <form method="post" action="/api/doc/0/remind" onsubmit="return document_workflow_remind(this);">
+                                <input type="hidden" name="owner_user_id" value="<?=(int)$workflow_entry["owner_user_id"]; ?>" />
+                                <input type="hidden" name="instance_id" value="<?=htmlspecialchars($workflow_id, ENT_QUOTES); ?>" />
+                                <input type="button" value="Relancer tous les manquants" onclick="return document_workflow_remind(this.form);" />
+                            </form>
+                            <?php foreach ($workflow_pending_slots as $workflow_slot => $workflow_signature) {
+                                $workflow_role_label = document_workflow_signature_role_label($workflow_slot, $workflow_signature);
+                                $workflow_task = $workflow_tasks_by_slot[$workflow_slot] ?? [];
+                                $workflow_meta = is_array($workflow_task) ? document_task_metadata($workflow_task) : [];
+                                $workflow_assignee = trim((string)($workflow_meta["assignee_label"] ?? ""));
+                                $workflow_button_label = !empty($workflow_signature["InvitedAt"]) ? "Relancer" : "Envoyer";
+                            ?>
+                                <form method="post" action="/api/doc/0/remind" onsubmit="return document_workflow_remind(this);">
+                                    <input type="hidden" name="owner_user_id" value="<?=(int)$workflow_entry["owner_user_id"]; ?>" />
+                                    <input type="hidden" name="instance_id" value="<?=htmlspecialchars($workflow_id, ENT_QUOTES); ?>" />
+                                    <input type="hidden" name="slot" value="<?=htmlspecialchars($workflow_slot, ENT_QUOTES); ?>" />
+                                    <input type="button" value="<?=htmlspecialchars($workflow_button_label." : ".$workflow_role_label.($workflow_assignee != "" ? " — ".$workflow_assignee : ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" onclick="return document_workflow_remind(this.form);" />
+                                </form>
+                            <?php } ?>
+                        <?php } ?>
+                        <?php if ($workflow_status !== "Expired") { ?>
+                            <form method="post" action="/api/doc/0/expire" onsubmit="return document_workflow_expire(this);">
+                                <input type="hidden" name="kind" value="instance" />
+                                <input type="hidden" name="owner_user_id" value="<?=(int)$workflow_entry["owner_user_id"]; ?>" />
+                                <input type="hidden" name="instance_id" value="<?=htmlspecialchars($workflow_id, ENT_QUOTES); ?>" />
+                                <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return document_workflow_expire(this.form);" />
+                            </form>
+                        <?php } ?>
+                    </td>
                 </tr>
             <?php } ?>
             </tbody>

@@ -101,6 +101,30 @@ $school_registration_fields = [
             </section>
 
             <section class="school_config_section school_config_section_wide">
+                <h4>Boîtes fonctionnelles</h4>
+                <p class="school_admin_notice">
+                    Ces adresses reçoivent les notifications liées aux tâches de l'établissement.
+                    Si une boîte n'est pas renseignée, le mail général de l'établissement est utilisé.
+                </p>
+                <?php if (!school_mailbox_table_available()) { ?>
+                    <p class="school_admin_notice"><strong>Migration SQL requise :</strong> la table <code>school_mailbox</code> n'existe pas encore.</p>
+                <?php } ?>
+                <div class="school_admin_legal_grid school_admin_legal_grid_compact">
+                    <?php foreach (school_mailbox_purposes() as $purpose => $label) { ?>
+                        <label>
+                            <?=$label; ?>
+                            <input
+                                type="email"
+                                name="mailbox_<?=htmlspecialchars($purpose, ENT_QUOTES); ?>"
+                                placeholder="<?=htmlspecialchars(try_get($school, "mail", ""), ENT_QUOTES); ?>"
+                                value="<?=htmlspecialchars($school["mailboxes"][$purpose] ?? "", ENT_QUOTES); ?>"
+                            />
+                        </label>
+                    <?php } ?>
+                </div>
+            </section>
+
+            <section class="school_config_section school_config_section_wide">
                 <h4>Numéros administratifs école</h4>
                 <div class="school_admin_legal_grid school_admin_legal_grid_compact">
                     <?php foreach ($school_registration_fields as $field => $label) { ?>

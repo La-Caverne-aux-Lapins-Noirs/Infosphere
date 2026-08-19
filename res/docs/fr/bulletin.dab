@@ -93,3 +93,10 @@ Footer]
   }
 ]
 
+[FormGroup
+  @insert "res/docs/fr/.forms/report_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/report_roles.dab"
+]

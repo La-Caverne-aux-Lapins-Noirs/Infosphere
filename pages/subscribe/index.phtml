@@ -126,7 +126,7 @@ if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$rela
     <?php if (!$prospect && !$relation_mode) { ?>
         action="index.php?p=<?=$PreviousPosition; ?>"
     <?php } else { ?>
-        action="<?=htmlspecialchars(unrollurl(), ENT_QUOTES); ?>"
+        action="<?=unrollurl(); ?>"
     <?php } ?>
     <?=$relation_mode ? 'onsubmit="return check_relation_selection(this);"' : ''; ?>
 >

@@ -1,8 +1,8 @@
 
 ## Article P13 - La validation des matières
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 La validation ou non validation d’une matière se modélise par
 un grade. Ce grade peut prendre cinq (5) valeurs : A, B, C,

@@ -7,6 +7,8 @@ if ($Position == "CampaignMenu")
     return ;
 }
 
+require_once (__DIR__."/campaign_registration.php");
+
 $class_level = [
     "Autre", "CM1", "CM2", "6ème",
     "5ème", "4ème", "3ème",
@@ -80,7 +82,7 @@ $fields = [
         "label" => $Dictionnary["RegisterDate"],
         "type"  => "number",
         "raw"   => fn($p) => $p["registration_date"] ?? 0,
-        "render"=> fn($p) => datex("d/m/Y", $p["registration_date"]),
+        "render"=> fn($p) => prospecting_campaign_registration_editor($p, ""),
     ],
     [
         "name"  => "mail",

@@ -1,0 +1,39 @@
+<?php
+$workflow_expired_forms = $tab_data["forms"] ?? [];
+$workflow_expired_instances = $tab_data["instances"] ?? [];
+?>
+<div class="document_workflow_state">
+    <?php if (count($workflow_expired_forms)) { ?>
+        <h4>Formulaires / demandes périmés</h4>
+        <table class="document_workflow_table">
+            <thead><tr><th>Document</th><th>Personne</th><th>École</th><th>Périmé le</th><th>Ancien état</th></tr></thead>
+            <tbody>
+            <?php foreach ($workflow_expired_forms as $workflow_form) {
+                $workflow_name = trim((string)($workflow_form["recipient_name"] ?? ""));
+                if ($workflow_name == "")
+                    $workflow_name = trim((string)($workflow_form["first_name"] ?? "")." ".(string)($workflow_form["family_name"] ?? ""));
+                if ($workflow_name == "")
+                    $workflow_name = (string)($workflow_form["codename"] ?? ("#".(int)($workflow_form["id_user"] ?? 0)));
+                $workflow_reference = trim((string)($workflow_form["document_reference"] ?? ""));
+                $workflow_model = $workflow_reference != "" ? document_reference_label($workflow_reference) : trim((string)($workflow_form["document_label"] ?? "Document"));
+                $workflow_school = count($workflow_form["school_codenames"] ?? []) ? implode(", ", $workflow_form["school_codenames"]) : "—";
+                $workflow_was_completed = !empty($workflow_form["completed_at"]);
+                $workflow_expired_at = (string)($workflow_form["document_expired_at"] ?: ($workflow_form["revoked_at"] ?: $workflow_form["expires_at"] ?? ""));
+            ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars($workflow_model, ENT_QUOTES); ?></strong></td>
+                    <td><?=htmlspecialchars($workflow_name, ENT_QUOTES); ?></td>
+                    <td><?=htmlspecialchars($workflow_school, ENT_QUOTES); ?></td>
+                    <td><?=htmlspecialchars($workflow_expired_at, ENT_QUOTES); ?></td>
+                    <td><?=$workflow_was_completed ? "Complété — à finaliser" : "En attente de complétion"; ?></td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        <?php if (count($workflow_expired_instances)) { ?><hr /><?php } ?>
+    <?php } ?>
+</div>
+<?php
+$tab_data = ["status" => "Expired", "instances" => $workflow_expired_instances];
+require (__DIR__."/workflow_state.phtml");
+?>

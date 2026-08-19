@@ -3,8 +3,8 @@
 
 ## Article P4 - Les indicateurs
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Trois indicateurs sont générés en fonction du déroulement
 de la formation par l’Apprenant : l’indicateur d’implication,

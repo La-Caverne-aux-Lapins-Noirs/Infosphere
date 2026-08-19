@@ -11,6 +11,7 @@ if ($BaseDir == "")
     function debug_response() {}
 }
 
+require_once ("debug.php");
 require_once ("require.php");
 require_once ("trace.php");
 require_once ("distrans_status.php");
@@ -34,7 +35,6 @@ require_once ("get_user_school.php");
 require_once ("apicall.php");
 require_once ("list_of_links.php");
 require_once ("inside_link.php");
-require_once ("debug.php");
 require_once ("same_day.php");
 require_once ("response.php");
 require_once ("utils.php");
@@ -143,6 +143,7 @@ require_once ("fetch_activity_cycle.php"); // A retirer
 require_once ("fetch_activity_skill.php"); // A retirer
 require_once ("fetch_link.php");
 require_once ("fetch_session.php");
+require_once ("school_mailbox.php");
 require_once ("fetch_school.php");
 require_once ("fetch_cycle_activity.php");
 require_once ("fetch_teacher.php");
@@ -180,6 +181,7 @@ require_once ("break_template_link.php");
 require_once ("edit_codename.php");
 require_once ("copy_template.php");
 require_once ("is_admin.php");
+require_once ("user_storage.php");
 require_once ("is_group_admin.php");
 require_once ("set_desk_data.php");
 require_once ("subscribe_to_instance.php");

@@ -11,6 +11,24 @@ function edit_school($id, $data)
         return ($school);
 
     $school_fields = [];
+    $mailbox_updates = [];
+    if (function_exists("school_mailbox_purposes"))
+        foreach (school_mailbox_purposes() as $purpose => $label)
+        {
+            $key = "mailbox_".$purpose;
+            if (!array_key_exists($key, $data))
+                continue ;
+            $mailbox_updates[$purpose] = trim((string)$data[$key]);
+            if ($mailbox_updates[$purpose] != "" && filter_var($mailbox_updates[$purpose], FILTER_VALIDATE_EMAIL) === false)
+                return (new ErrorResponse("BadMail"));
+        }
+    if (count($mailbox_updates) && function_exists("school_mailbox_table_available") && !school_mailbox_table_available())
+    {
+        foreach ($mailbox_updates as $mail)
+            if ($mail != "")
+                return (new ErrorResponse("CannotEdit", "school_mailbox table is missing"));
+        $mailbox_updates = [];
+    }
     if (isset($data["base_url"]))
     {
         $base_url = school_base_url_normalize($data["base_url"]);
@@ -60,7 +78,7 @@ function edit_school($id, $data)
         return ($logo_update);
     $logo_changed = $logo_update->value;
 
-    if (count($school_fields) == 0 && !$logo_changed)
+    if (count($school_fields) == 0 && !$logo_changed && count($mailbox_updates) == 0)
         bad_request();
 
     if (count($school_fields) > 0)
@@ -71,6 +89,13 @@ function edit_school($id, $data)
 
     if ($organization_link_changed && isset($school_fields["id_organization"]))
         $Database->query("UPDATE organization SET type = 'school' WHERE id = ".(int)$school_fields["id_organization"]);
+
+    foreach ($mailbox_updates as $purpose => $mail)
+    {
+        $mailbox = school_mailbox_set((int)$school["id"], $purpose, $mail);
+        if ($mailbox->is_error())
+            return ($mailbox);
+    }
 
     if (($ret = refresh_school($id))->is_error())
         return ($ret);

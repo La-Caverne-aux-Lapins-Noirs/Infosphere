@@ -90,14 +90,6 @@
     margin: 0 auto;
 }
 
-.dabsic-form-introduction
-{
-    margin: 0 0 16px 0;
-    padding: 10px 13px;
-    border-left: 4px solid #16811b;
-    background: rgba(0, 0, 0, 0.42);
-}
-
 .dabsic-form-group
 {
     margin: 0 0 16px 0;
@@ -289,4 +281,43 @@
     {
         grid-template-columns: 1fr;
     }
+}
+
+.dabsic-form-required
+{
+    color: #ffb23c;
+}
+
+.dabsic-form-field.is-readonly
+{
+    opacity: 0.92;
+}
+
+.dabsic-form-readonly-value
+{
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 1px solid rgba(130, 130, 130, 0.45);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d6d6d6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.dabsic-form-readonly-groups
+{
+    margin: 18px 0;
+    padding: 10px 12px 0 12px;
+    border: 1px solid rgba(95, 190, 100, 0.28);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.32);
+}
+
+.dabsic-form-readonly-groups > summary
+{
+    cursor: pointer;
+    padding: 2px 0 10px 0;
+    color: #8bd58f;
+    font-weight: bold;
 }

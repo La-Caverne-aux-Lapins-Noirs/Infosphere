@@ -1,0 +1,15 @@
+[Etablissement
+  Label = "Établissement"
+  {Read
+    "Etablissement",
+    "Cycle"
+  }
+  {Edit
+    "Etablissement",
+    "Cycle"
+  }
+  {Validate
+    "Etablissement",
+    "Cycle"
+  }
+]

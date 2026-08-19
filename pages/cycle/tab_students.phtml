@@ -56,6 +56,10 @@
 		    <input type="hidden" name="all" value="1" />
 		    <input type="submit" value="<?=$Dictionnary["GenerateAllAttendanceRegisters"]; ?>" />
 		</form>
+                <form method="post" action="/api/cycle/<?=$cycle["id"]; ?>/attendance-register-workflow" onsubmit="return silent_submitf(this, {after_success: function () { window.location.reload(); }});">
+                    <input type="hidden" name="all" value="1" />
+                    <input type="submit" value="<?=$Dictionnary["SendAllAttendanceRegistersForSignature"]; ?>" />
+                </form>
 	    </div>
 	<?php } ?>
 

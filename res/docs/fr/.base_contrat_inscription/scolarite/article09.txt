@@ -16,12 +16,12 @@ via le lien indiqué au début des cours.
 Les Cours en présentiel se dérouleront à l’adresse suivante –
 ou tout autre lieu mis à la disposition de l’Apprenant :
 
-[@ELine]
-[@Size;3]
-| EFRITS |
-| :-: |
-| 32a Avenue Pierre Sémard |
-| 94200 Ivry-sur-Seine |
+[@Table;3;
+| |EFRITS| |
+|:---:|:---:|:---:|
+| |32a Avenue Pierre Sémard| |
+| |94200 Ivry-sur-Seine| |
+]
 
 [@Size;1]
 [@Columns;3;

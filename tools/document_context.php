@@ -301,6 +301,10 @@ function document_context_user_identity_file($id)
         return (NULL);
     if (function_exists("refresh_user"))
         refresh_user($id);
+    // identity.dab is a portable cache of the live profile. Refresh it on
+    // demand so a document never depends on an old identity file.
+    if (function_exists("user_identity_write_identity_dabsic"))
+        user_identity_write_identity_dabsic($id);
     $user = db_select_one("codename FROM user WHERE id = ".((int)$id)." AND authority != -1");
     if ($user == NULL || trim((string)($user["codename"] ?? "")) == "")
         return (NULL);
@@ -438,6 +442,24 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
             }
             document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $id, $data);
             document_context_add_signatory_metadata($fields, $entry, $prefix);
+            continue ;
+        }
+        if ($type == "title_session")
+        {
+            $id = isset($entry["id"]) ? (int)$entry["id"] : 0;
+            if ($id <= 0 || !function_exists("title_session_document_context"))
+                continue ;
+            $data = title_session_document_context($id);
+            if ($data == NULL)
+                continue ;
+            $session = function_exists("fetch_title_session_basic") ? fetch_title_session_basic($id) : (function_exists("fetch_title_session") ? fetch_title_session($id) : NULL);
+            if (is_array($session) && isset($session["id_school"]))
+            {
+                $last_school = (int)$session["id_school"];
+                if (($full_school = fetch_school($last_school)) != NULL && is_array($full_school) && isset($full_school["id_organization"]))
+                    $last_organization = (int)$full_school["id_organization"];
+            }
+            document_context_flatten($fields, $prefix, $data);
             continue ;
         }
         if ($type == "parent")

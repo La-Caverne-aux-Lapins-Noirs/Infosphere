@@ -1,0 +1,60 @@
+<?php
+$workflow_forms = $tab_data["forms"] ?? [];
+?>
+<div class="document_workflow_state">
+    <?php if (!count($workflow_forms)) { ?>
+        <div class="document_workflow_empty">Aucun document à finaliser.</div>
+    <?php } else { ?>
+        <table class="document_workflow_table">
+            <thead><tr>
+                <th>Document</th><th>Personne</th><th>École</th><th>Complété le</th><th>État</th><th></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($workflow_forms as $workflow_form) {
+                $workflow_name = trim((string)($workflow_form["recipient_name"] ?? ""));
+                if ($workflow_name == "")
+                    $workflow_name = trim((string)($workflow_form["first_name"] ?? "")." ".(string)($workflow_form["family_name"] ?? ""));
+                if ($workflow_name == "")
+                    $workflow_name = (string)($workflow_form["codename"] ?? ("#".(int)($workflow_form["id_user"] ?? 0)));
+                $workflow_reference = trim((string)($workflow_form["document_reference"] ?? ""));
+                $workflow_model = $workflow_reference != ""
+                    ? document_reference_label($workflow_reference)
+                    : trim((string)($workflow_form["document_label"] ?? ""));
+                if ($workflow_model == "")
+                    $workflow_model = "Document";
+                $workflow_year = (int)($workflow_form["document_target_year"] ?? 0);
+                $workflow_school = count($workflow_form["school_codenames"] ?? []) ? implode(", ", $workflow_form["school_codenames"]) : "—";
+                $workflow_task_progress = is_array($workflow_form["document_task_progress"] ?? NULL)
+                    ? $workflow_form["document_task_progress"] : ["completed" => 0, "total" => 0, "pending" => []];
+                $workflow_pending_tasks = $workflow_task_progress["pending"] ?? [];
+            ?>
+                <tr class="document_workflow_attention">
+                    <td><strong><?=htmlspecialchars($workflow_model, ENT_QUOTES); ?></strong><?php if ($workflow_year > 0) { ?><br /><small>EF<?=$workflow_year; ?></small><?php } ?></td>
+                    <td><?=htmlspecialchars($workflow_name, ENT_QUOTES); ?><br /><small><?=htmlspecialchars((string)($workflow_form["recipient_mail"] ?? ""), ENT_QUOTES); ?></small></td>
+                    <td><?=htmlspecialchars($workflow_school, ENT_QUOTES); ?></td>
+                    <td><?=htmlspecialchars((string)($workflow_form["completed_at"] ?? ""), ENT_QUOTES); ?></td>
+                    <td>
+                        <?php if (count($workflow_pending_tasks)) { ?>
+                            <span class="document_workflow_badge document_workflow_tofinalize"><?=$Dictionnary["DocumentRolesPending"] ?? "Parties encore à valider"; ?></span><br />
+                            <small><?=(int)$workflow_task_progress["completed"]; ?>/<?=(int)$workflow_task_progress["total"]; ?> <?=$Dictionnary["DocumentRolesCompleted"] ?? "parties obligatoires validées"; ?> :
+                            <?php $workflow_pending_labels = []; foreach ($workflow_pending_tasks as $workflow_task) $workflow_pending_labels[] = (string)($workflow_task["role_label"] ?: $workflow_task["role"] ?? ""); ?>
+                            <?=htmlspecialchars(implode(", ", $workflow_pending_labels), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small>
+                        <?php } else { ?>
+                            <span class="document_workflow_badge document_workflow_tofinalize"><?=$Dictionnary["DocumentReadyForFinalization"] ?? "Prêt à finaliser"; ?></span><br />
+                            <small><?=$Dictionnary["DocumentReadyForFinalizationHint"] ?? "Toutes les parties obligatoires ont été validées. Le PDF peut être figé."; ?></small>
+                        <?php } ?>
+                    </td>
+                    <td class="document_workflow_actions">
+                        <a href="index.php?p=ProfileMenu&amp;a=<?=(int)($workflow_form["id_user"] ?? 0); ?>" target="_blank" rel="noopener">Ouvrir le profil</a>
+                        <form method="post" action="/api/doc/0/expire" onsubmit="return document_workflow_expire(this);">
+                            <input type="hidden" name="kind" value="form" />
+                            <input type="hidden" name="form_id" value="<?=(int)($workflow_form["id"] ?? 0); ?>" />
+                            <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return document_workflow_expire(this.form);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+    <?php } ?>
+</div>

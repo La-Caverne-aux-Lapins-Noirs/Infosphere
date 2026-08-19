@@ -1,0 +1,59 @@
+[Apprenant
+  Label = "Apprenant"
+  [Fields
+    [People
+      [Student
+        [Identity
+          Label = "Nom et prénom de l'élève"
+        ]
+        [INE
+          Label = "INE"
+        ]
+        [BirthDate
+          Label = "Date de naissance"
+        ]
+        [PreviousFlames
+          Label = "Flammes précédentes"
+        ]
+      ]
+      [Tutor
+        [Identity
+          Label = "Responsable légal"
+        ]
+        [Address
+          Label = "Adresse du responsable légal"
+        ]
+      ]
+      [Director
+        [Identity
+          Label = "Direction"
+        ]
+      ]
+    ]
+  ]
+]
+[Cycle
+  Label = "Cycle"
+  [Fields
+    [Cycle
+      [Code
+        Label = "Code du cycle"
+      ]
+      [Year
+        Label = "Année du cycle"
+      ]
+      [Trimester
+        Label = "Trimestre"
+      ]
+      [Start
+        Label = "Début de période"
+      ]
+      [End
+        Label = "Fin de période"
+      ]
+      [Comment
+        Label = "Commentaire général du cycle"
+      ]
+    ]
+  ]
+]

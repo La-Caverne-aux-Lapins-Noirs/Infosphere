@@ -1,5 +1,25 @@
 <?php
 
+function dabsic_editor_register_access_resolver($resolver)
+{
+    if (!is_string($resolver) || $resolver == "")
+        return ;
+    if (!isset($GLOBALS["DabsicEditorAccessResolvers"]) || !is_array($GLOBALS["DabsicEditorAccessResolvers"]))
+        $GLOBALS["DabsicEditorAccessResolvers"] = [];
+    if (!in_array($resolver, $GLOBALS["DabsicEditorAccessResolvers"], true))
+        $GLOBALS["DabsicEditorAccessResolvers"][] = $resolver;
+}
+
+function dabsic_editor_user_can_access($requested, $for_write = false)
+{
+    if (is_admin())
+        return (true);
+    foreach ((array)($GLOBALS["DabsicEditorAccessResolvers"] ?? []) as $resolver)
+        if (is_callable($resolver) && $resolver($requested, (bool)$for_write))
+            return (true);
+    return (false);
+}
+
 function dabsic_editor_project_root()
 {
     static $root = NULL;
@@ -55,7 +75,8 @@ function dabsic_editor_allowed_roots()
             "_SupportDir",
             "_UsersDir",
             "_ConfigurationDir",
-            "_RobotDir"
+            "_RobotDir",
+            "_QuizDir"
         ] as $property)
             if (isset($configuration->$property))
                 dabsic_editor_add_allowed_root($roots, $configuration->$property, $project_root);
@@ -86,12 +107,58 @@ function dabsic_editor_normalize_requested_path($requested)
     return ($requested);
 }
 
-function dabsic_editor_resolve_file($requested, $for_write = false)
+function dabsic_editor_editable_extensions()
+{
+    return (["dab", "json", "xml", "txt"]);
+}
+
+function dabsic_editor_reference_from_path($path)
+{
+    if (!is_string($path) && !is_numeric($path))
+        return (NULL);
+
+    $path = str_replace("\\", "/", trim((string)$path));
+    $project_root = dabsic_editor_project_root();
+    if ($project_root === false)
+        return (NULL);
+
+    // Prefer the path as it is exposed by Infosphere. This is important when
+    // dres (or one of its children) is a symlink/mount outside the project:
+    // realpath() would otherwise lose the project-visible alias.
+    if ($path !== "" && substr($path, 0, 1) !== "/")
+    {
+        $candidate = dabsic_editor_normalize_requested_path($path);
+        if ($candidate !== NULL)
+        {
+            $absolute = realpath($project_root.DIRECTORY_SEPARATOR.$candidate);
+            if ($absolute !== false && is_file($absolute))
+            {
+                foreach (dabsic_editor_allowed_roots() as $root)
+                    if (dabsic_editor_path_is_inside($absolute, $root))
+                        return ($candidate);
+            }
+        }
+    }
+
+    // Also accept an absolute filesystem path when it really points inside
+    // Infosphere itself. Never expose or accept an arbitrary absolute path.
+    $absolute = realpath($path);
+    if ($absolute === false || !is_file($absolute) ||
+        !dabsic_editor_path_is_inside($absolute, $project_root))
+        return (NULL);
+
+    $relative = substr($absolute, strlen(rtrim($project_root, DIRECTORY_SEPARATOR)) + 1);
+    return (dabsic_editor_normalize_requested_path($relative));
+}
+
+function dabsic_editor_resolve_file($requested, $for_write = false, $extensions = ["dab"])
 {
     $relative = dabsic_editor_normalize_requested_path($requested);
     if ($relative === NULL)
         return (["ok" => false, "error" => "DabsicEditorInvalidPath"]);
-    if (strtolower(pathinfo($relative, PATHINFO_EXTENSION)) !== "dab")
+
+    $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
+    if (!in_array($extension, $extensions, true))
         return (["ok" => false, "error" => "DabsicEditorInvalidPath"]);
 
     $project_root = dabsic_editor_project_root();
@@ -108,6 +175,9 @@ function dabsic_editor_resolve_file($requested, $for_write = false)
         }
     if (!$authorized)
         return (["ok" => false, "error" => "DabsicEditorInvalidPath"]);
+    if (function_exists("user_storage_can_access_absolute")
+        && !user_storage_can_access_absolute($absolute, $for_write))
+        return (["ok" => false, "error" => "DabsicEditorInvalidPath"]);
     if (!is_readable($absolute))
         return (["ok" => false, "error" => "DabsicEditorCannotRead"]);
     if ($for_write && (!is_writable($absolute) || !is_writable(dirname($absolute))))
@@ -116,13 +186,17 @@ function dabsic_editor_resolve_file($requested, $for_write = false)
     return ([
         "ok" => true,
         "relative" => $relative,
-        "absolute" => $absolute
+        "absolute" => $absolute,
+        "extension" => $extension
     ]);
 }
 
 function dabsic_editor_url($file)
 {
-    return ("index.php?p=DabsicEditorMenu&file=".rawurlencode((string)$file));
+    $reference = dabsic_editor_reference_from_path($file);
+    if ($reference === NULL)
+        return ("");
+    return ("index.php?p=DabsicEditorMenu&file=".rawurlencode($reference));
 }
 
 function dabsic_editor_clean_validation_error($stderr, $status)
@@ -219,9 +293,80 @@ function dabsic_editor_validate_content($content)
     return (["ok" => true]);
 }
 
+function dabsic_editor_validate_json_content($content)
+{
+    json_decode((string)$content, true);
+    if (json_last_error() === JSON_ERROR_NONE)
+        return (["ok" => true]);
+    return ([
+        "ok" => false,
+        "error" => "DabsicEditorJsonSyntaxError",
+        "details" => function_exists("json_last_error_msg")
+            ? json_last_error_msg()
+            : "Erreur JSON ".json_last_error()
+    ]);
+}
+
+function dabsic_editor_validate_xml_content($content)
+{
+    // DOM fait partie de php-xml. Si le module n'est pas installé, l'éditeur
+    // reste utilisable : on ne transforme pas une capacité d'édition texte
+    // en dépendance système supplémentaire.
+    if (!class_exists("DOMDocument"))
+        return (["ok" => true]);
+
+    $previous = libxml_use_internal_errors(true);
+    libxml_clear_errors();
+    $document = new DOMDocument();
+    $flags = defined("LIBXML_NONET") ? LIBXML_NONET : 0;
+    $valid = $document->loadXML((string)$content, $flags);
+    $errors = libxml_get_errors();
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous);
+
+    if ($valid)
+        return (["ok" => true]);
+
+    $details = [];
+    foreach ($errors as $error)
+    {
+        $message = trim((string)$error->message);
+        if ($message === "")
+            continue ;
+        $details[] = "Ligne ".(int)$error->line.", colonne ".(int)$error->column." : ".$message;
+        if (count($details) >= 20)
+            break ;
+    }
+    return ([
+        "ok" => false,
+        "error" => "DabsicEditorXmlSyntaxError",
+        "details" => implode("\n", $details)
+    ]);
+}
+
+function dabsic_editor_validate_editable_content($content, $extension)
+{
+    switch (strtolower((string)$extension))
+    {
+    case "dab":
+        return (dabsic_editor_validate_content($content));
+    case "json":
+        return (dabsic_editor_validate_json_content($content));
+    case "xml":
+        return (dabsic_editor_validate_xml_content($content));
+    case "txt":
+        return (["ok" => true]);
+    }
+    return (["ok" => false, "error" => "DabsicEditorInvalidPath"]);
+}
+
 function dabsic_editor_save_file($requested, $content, $expected_hash)
 {
-    $resolved = dabsic_editor_resolve_file($requested, true);
+    $resolved = dabsic_editor_resolve_file(
+        $requested,
+        true,
+        dabsic_editor_editable_extensions()
+    );
     if (!$resolved["ok"])
         return ($resolved);
     if (!is_string($content))
@@ -254,8 +399,10 @@ function dabsic_editor_save_file($requested, $content, $expected_hash)
         return (["ok" => false, "error" => "DabsicEditorConflict"]);
     }
 
-    // No --resolve here: only Dabsic syntax is checked, as requested.
-    $validation = dabsic_editor_validate_content($content);
+    $validation = dabsic_editor_validate_editable_content(
+        $content,
+        $resolved["extension"]
+    );
     if (!$validation["ok"])
     {
         flock($lock, LOCK_UN);
@@ -304,6 +451,7 @@ function dabsic_editor_save_file($requested, $content, $expected_hash)
     return ([
         "ok" => true,
         "relative" => $resolved["relative"],
+        "extension" => $resolved["extension"],
         "hash" => $hash,
         "size" => strlen($content),
         "mtime" => @filemtime($path)

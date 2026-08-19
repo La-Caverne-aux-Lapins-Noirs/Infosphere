@@ -9,7 +9,9 @@ function configuration_log_type_labels()
         "3" => "CREATIVE_OPERATION",
         "4" => "EDITING_OPERATION",
         "5" => "DESTRUCTIVE_OPERATION",
-        "6" => "REPORT"
+        "6" => "REPORT",
+        "7" => "WARNING",
+        "8" => "ERROR"
     ]);
 }
 

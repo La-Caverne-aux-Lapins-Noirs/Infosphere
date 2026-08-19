@@ -7,6 +7,8 @@ function DisplayCampaign($id, $data, $method, $output, $module)
     if ($output == "json")
         return (new ValueResponse(["content" => json_encode(campaign_fetch_all(), JSON_UNESCAPED_SLASHES)]));
 
+    $campaign_selected_id = isset($data["_campaign_selected_id"]) ? (int)$data["_campaign_selected_id"] : 0;
+
     ob_start();
     require ("./pages/prospecting/campaign_list.php");
     return (new ValueResponse(["content" => ob_get_clean()]));
@@ -100,6 +102,7 @@ function AddCampaign($id, $data, $method, $output, $module)
     ") == NULL)
         return (new ErrorResponse("CannotRegister"));
 
+    $data["_campaign_selected_id"] = (int)$Database->insert_id;
     $ret = DisplayCampaign($id, $data, "GET", $output, $module);
     $ret->value["msg"] = $Dictionnary["Added"];
     return ($ret);
@@ -122,6 +125,7 @@ function EditCampaign($id, $data, $method, $output, $module)
     if (count($payload) && db_update_one("campaign", $id, $payload) == NULL)
         return (new ErrorResponse("CannotUpdate"));
 
+    $data["_campaign_selected_id"] = (int)$id;
     $ret = DisplayCampaign(-1, $data, "GET", $output, $module);
     $ret->value["msg"] = $Dictionnary["Edited"];
     return ($ret);

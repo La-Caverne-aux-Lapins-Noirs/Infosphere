@@ -3,10 +3,15 @@
 require_once ("./tools/dabsic_editor.php");
 require_once ("./tools/dabsic_form.php");
 require_once ("./tools/registration_form.php");
+require_once ("./tools/questionnaire.php");
+require_once ("./tools/correction_catalog.php");
 
 function SaveDabsicFile($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+
+    if (!dabsic_editor_user_can_access($data["file"] ?? "", true))
+        forbidden();
 
     $result = dabsic_editor_save_file(
         $data["file"] ?? "",
@@ -19,7 +24,7 @@ function SaveDabsicFile($id, $data, $method, $output, $module)
             $result["details"] ?? ""
         ));
 
-    add_log(EDITING_OPERATION, "Dabsic file ".$result["relative"]." edited");
+    add_log(EDITING_OPERATION, strtoupper($result["extension"] ?? "dab")." file ".$result["relative"]." edited");
     return (new ValueResponse([
         "msg" => $Dictionnary["DabsicEditorSaved"],
         "hash" => $result["hash"],
@@ -31,6 +36,9 @@ function SaveDabsicFile($id, $data, $method, $output, $module)
 function SaveDabsicForm($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+
+    if (!dabsic_form_user_can_access_output($data["output"] ?? ""))
+        forbidden();
 
     $values = $data["values"] ?? NULL;
     if (is_string($values))
@@ -47,7 +55,10 @@ function SaveDabsicForm($id, $data, $method, $output, $module)
         $data["overrides_hash"] ?? hash("sha256", ""),
         $data["overrides_exists"] ?? "0",
         $data["mode"] ?? "dabsic",
-        $data["chain"] ?? ""
+        $data["chain"] ?? "",
+        NULL,
+        false,
+        $data["form_role"] ?? ""
     );
     if (!$result["ok"])
         return (new ErrorResponse(
@@ -105,11 +116,11 @@ function FinalizeRegistrationForm($id, $data, $method, $output, $module)
 $Tab = [
     "POST" => [
         "save" => [
-            "only_admin",
+            "logged_in",
             "SaveDabsicFile"
         ],
         "form" => [
-            "only_admin",
+            "logged_in",
             "SaveDabsicForm"
         ],
         "registration" => [

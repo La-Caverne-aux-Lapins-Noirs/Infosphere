@@ -2,6 +2,10 @@
 <?php
 require_once (__DIR__."/../../tools/document_sources.php");
 require_once (__DIR__."/../../tools/document_signatures.php");
+require_once (__DIR__."/../../tools/document_workflow.php");
+
+// path_browser.phtml expects this legacy context variable to always exist.
+$language = "";
 
 $documentation_models = [];
 foreach (get_document_sources() as $source => $docs)
@@ -12,12 +16,14 @@ foreach (get_document_sources() as $source => $docs)
         $editor_path = document_source_editor_path($source, $doc);
         if ($editor_path === NULL)
             continue ;
+        $form_metadata = dabsic_form_form_metadata($editor_path);
         $documentation_models[] = [
             "reference" => $reference,
             "editor_path" => $editor_path,
             "label" => document_reference_label($reference),
             "hash" => md5($reference),
             "signatures" => document_signature_model_slots($editor_path),
+            "form_roles" => $form_metadata["roles"] ?? [],
         ];
     }
 }
@@ -41,7 +47,226 @@ $letter_root = document_builder_letter_file_root();
 $letter_dir = $Configuration->UsersDir($user->codename).$letter_root."/";
 if (count($letter_models))
     new_directory($letter_dir."index.php");
+
+$documentation_pending_forms = [];
+$documentation_pending_keys = [];
+foreach (document_workflow_visible_pending_document_forms(1000) as $documentation_form)
+{
+    if ((int)($documentation_form["id_user"] ?? 0) !== (int)$user->id)
+        continue ;
+    $documentation_reference = trim((string)($documentation_form["document_reference"] ?? ""));
+    $documentation_year = (int)($documentation_form["document_target_year"] ?? 0);
+    $documentation_schema = json_decode((string)($documentation_form["fields"] ?? ""), true);
+    $documentation_meta = is_array($documentation_schema)
+        ? ($documentation_schema["document"] ?? []) : [];
+    $documentation_model_hash = strtolower(trim((string)($documentation_meta["model_hash"] ?? "")));
+    if (!preg_match('/^[a-f0-9]{32}$/D', $documentation_model_hash))
+        $documentation_model_hash = md5($documentation_reference);
+    $documentation_key = $documentation_model_hash.":".$documentation_year;
+    $documentation_form["display_label"] = $documentation_reference != ""
+        ? document_reference_label($documentation_reference)
+        : trim((string)($documentation_form["document_label"] ?? "Document"));
+    $documentation_pending_forms[] = $documentation_form;
+    $documentation_pending_keys[$documentation_key] = true;
+}
+
+$documentation_finalize_forms = [];
+$documentation_finalize_keys = [];
+foreach (document_workflow_visible_completed_document_forms(1000) as $documentation_form)
+{
+    if ((int)($documentation_form["id_user"] ?? 0) !== (int)$user->id)
+        continue ;
+    $documentation_reference = trim((string)($documentation_form["document_reference"] ?? ""));
+    $documentation_year = (int)($documentation_form["document_target_year"] ?? 0);
+    $documentation_schema = document_workflow_document_form_schema($documentation_form);
+    $documentation_meta = $documentation_schema["document"] ?? [];
+    $documentation_model_hash = strtolower(trim((string)($documentation_meta["model_hash"] ?? "")));
+    if (!preg_match('/^[a-f0-9]{32}$/D', $documentation_model_hash))
+        $documentation_model_hash = md5($documentation_reference);
+    $documentation_key = $documentation_model_hash.":".$documentation_year;
+    $documentation_form["display_label"] = $documentation_reference != ""
+        ? document_reference_label($documentation_reference)
+        : trim((string)($documentation_form["document_label"] ?? "Document"));
+    $documentation_finalize_forms[] = $documentation_form;
+    $documentation_finalize_keys[$documentation_key] = true;
+}
+
+$documentation_expired_forms = [];
+$documentation_expired_keys = [];
+foreach (document_workflow_visible_expired_document_forms(1000) as $documentation_form)
+{
+    if ((int)($documentation_form["id_user"] ?? 0) !== (int)$user->id)
+        continue ;
+    $documentation_reference = trim((string)($documentation_form["document_reference"] ?? ""));
+    $documentation_year = (int)($documentation_form["document_target_year"] ?? 0);
+    $documentation_schema = document_workflow_document_form_schema($documentation_form);
+    $documentation_meta = $documentation_schema["document"] ?? [];
+    $documentation_model_hash = strtolower(trim((string)($documentation_meta["model_hash"] ?? "")));
+    if (!preg_match('/^[a-f0-9]{32}$/D', $documentation_model_hash))
+        $documentation_model_hash = md5($documentation_reference);
+    $documentation_key = $documentation_model_hash.":".$documentation_year;
+    $documentation_form["display_label"] = $documentation_reference != ""
+        ? document_reference_label($documentation_reference)
+        : trim((string)($documentation_form["document_label"] ?? "Document"));
+    $documentation_expired_forms[] = $documentation_form;
+    $documentation_expired_keys[$documentation_key] = true;
+}
+
+$documentation_active_instances = [];
+$documentation_active_keys = [];
+foreach (document_workflow_visible_instances(1000) as $documentation_entry)
+{
+    if ((int)($documentation_entry["owner_user_id"] ?? 0) !== (int)$user->id)
+        continue ;
+    $documentation_instance = $documentation_entry["instance"] ?? [];
+    $documentation_source = $documentation_instance["SourceContext"] ?? [];
+    if (is_array($documentation_source)
+        && (string)($documentation_source["Type"] ?? "") === "AttendanceRegisterCampaign")
+        continue ;
+    $documentation_status = (string)($documentation_instance["Status"] ?? "");
+    if (in_array($documentation_status, ["Completed", "Expired"], true))
+        continue ;
+    $documentation_reference = (string)($documentation_instance["Model"] ?? "");
+    $documentation_year = (int)($documentation_instance["TargetYear"] ?? 0);
+    $documentation_active_keys[md5($documentation_reference).":".$documentation_year] = true;
+    $documentation_entry["display_label"] = document_workflow_instance_label($documentation_entry["instance"]);
+    $documentation_active_instances[] = $documentation_entry;
+}
+
+$documentation_workspaces = [];
+foreach ($documentation_models as $documentation_model)
+    for ($documentation_year = 0; $documentation_year <= 5; ++$documentation_year)
+    {
+        $documentation_key = $documentation_model["hash"].":".$documentation_year;
+        if (isset($documentation_pending_keys[$documentation_key])
+            || isset($documentation_finalize_keys[$documentation_key])
+            || isset($documentation_active_keys[$documentation_key]))
+            continue ;
+        $documentation_output = "user-document:".(int)$user->id.":".$documentation_model["hash"].":".$documentation_year;
+        $documentation_output_ref = dabsic_form_resolve_output($documentation_output, false, (int)$user->id);
+        if (!$documentation_output_ref["ok"])
+            continue ;
+        $documentation_workspace = dabsic_form_load_workspace($documentation_output_ref);
+        if (!$documentation_workspace["ok"] || !$documentation_workspace["exists"])
+            continue ;
+        $documentation_workspace_data = $documentation_workspace["data"];
+        if (($documentation_workspace_data["model_hash"] ?? "") !== $documentation_model["hash"]
+            || (int)($documentation_workspace_data["target_year"] ?? -1) !== $documentation_year)
+            continue ;
+        $documentation_chain = (string)($documentation_workspace_data["chain"] ?? "[]");
+        $documentation_bindings = $documentation_workspace_data["signature_bindings"] ?? [];
+        if (!is_array($documentation_bindings))
+            $documentation_bindings = [];
+        $documentation_roles = is_array($documentation_model["form_roles"] ?? NULL)
+            ? $documentation_model["form_roles"] : [];
+        $documentation_required_roles = [];
+        foreach ($documentation_roles as $documentation_role => $documentation_role_definition)
+            if (!empty($documentation_role_definition["required"]))
+                $documentation_required_roles[] = (string)$documentation_role;
+        $documentation_review_url = "index.php?p=DabsicFormMenu".
+            "&file=".rawurlencode($documentation_model["editor_path"]).
+            "&output=".rawurlencode($documentation_output).
+            "&mode=docbuilder".
+            "&form_role=Etablissement".
+            "&chain=".rawurlencode($documentation_chain);
+        $documentation_workspaces[] = [
+            "label" => $documentation_model["label"],
+            "reference" => $documentation_model["reference"],
+            "editor_path" => $documentation_model["editor_path"],
+            "hash" => $documentation_model["hash"],
+            "year" => $documentation_year,
+            "output" => $documentation_output,
+            "chain" => $documentation_chain,
+            "signature_bindings" => $documentation_bindings,
+            "roles" => $documentation_roles,
+            "required_roles" => $documentation_required_roles,
+            "review_url" => $documentation_review_url,
+            "has_output" => !empty($documentation_output_ref["exists"]),
+            "mtime" => !empty($documentation_output_ref["exists"])
+                ? (@filemtime($documentation_output_ref["absolute"]) ?: $documentation_workspace["mtime"])
+                : $documentation_workspace["mtime"],
+            "created_by" => (int)($documentation_workspace_data["created_by"] ?? 0),
+        ];
+    }
+
+$documentation_actor_ids = [];
+foreach ($documentation_pending_forms as $documentation_form)
+    if ((int)($documentation_form["id_creator"] ?? 0) > 0)
+        $documentation_actor_ids[(int)$documentation_form["id_creator"]] = true;
+foreach ($documentation_finalize_forms as $documentation_form)
+    if ((int)($documentation_form["id_creator"] ?? 0) > 0)
+        $documentation_actor_ids[(int)$documentation_form["id_creator"]] = true;
+foreach ($documentation_expired_forms as $documentation_form)
+    if ((int)($documentation_form["id_creator"] ?? 0) > 0)
+        $documentation_actor_ids[(int)$documentation_form["id_creator"]] = true;
+foreach ($documentation_active_instances as $documentation_entry)
+    if ((int)($documentation_entry["instance"]["CreatedBy"] ?? 0) > 0)
+        $documentation_actor_ids[(int)$documentation_entry["instance"]["CreatedBy"]] = true;
+foreach ($documentation_workspaces as $documentation_workspace)
+    if ((int)($documentation_workspace["created_by"] ?? 0) > 0)
+        $documentation_actor_ids[(int)$documentation_workspace["created_by"]] = true;
+$documentation_actors = [];
+if (count($documentation_actor_ids))
+{
+    $documentation_actor_rows = db_select_all("id, codename, first_name, family_name FROM user WHERE id IN (".
+        implode(",", array_map("intval", array_keys($documentation_actor_ids))).")");
+    foreach ($documentation_actor_rows as $documentation_actor)
+        $documentation_actors[(int)$documentation_actor["id"]] = $documentation_actor;
+}
 ?>
+<style>
+.profile_documentation .document-role-validation-button,
+.profile_documentation .document-review-button {
+    background: #000 !important;
+    color: #00ff00 !important;
+    border: 1px solid #00ff00 !important;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
+    font-weight: bold;
+}
+.profile_documentation .document-role-validation-button:hover,
+.profile_documentation .document-role-validation-button:focus,
+.profile_documentation .document-review-button:hover,
+.profile_documentation .document-review-button:focus {
+    background: #151515 !important;
+    color: #00ff00 !important;
+}
+.profile_documentation .document-role-validation-button.is-disabled,
+.profile_documentation .document-role-validation-button:disabled {
+    background: #555 !important;
+    border-color: #777 !important;
+    color: #ddd !important;
+    cursor: not-allowed;
+    opacity: .8;
+}
+.profile_documentation .document-expire-button {
+    background: #000 !important;
+    color: darkred !important;
+    border: 1px solid darkred !important;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
+    font-weight: bold;
+}
+.profile_documentation .document-expire-button:hover,
+.profile_documentation .document-expire-button:focus {
+    background: #151515 !important;
+    color: darkred !important;
+}
+
+.profile_documentation .document-action-busy {
+    opacity: .72;
+}
+.profile_documentation .document-action-busy .document_workflow_actions {
+    cursor: progress;
+}
+.profile_documentation .document-action-busy .document_workflow_actions a {
+    pointer-events: none;
+}
+.profile_documentation .document-action-status {
+    display: block;
+    margin-top: 4px;
+    font-size: .82em;
+    font-style: italic;
+}
+</style>
 <script>
 var profileDocumentationSignatureSources = {
     Student: {type: 'student', id: <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, label: 'Student'},
@@ -135,105 +360,259 @@ function profile_documentation_validate_signatures(form)
     return false;
 }
 
-function profile_documentation_signature_chain(form)
+
+function profile_documentation_set_action_busy(form, button, busy)
 {
-    var bindings = profile_documentation_signature_bindings(form);
-    var chain = [];
-    Object.keys(bindings).forEach(function (slot) {
-        var source = profileDocumentationSignatureSources[bindings[slot]];
-        if (!source || !source.id)
-            return;
-        chain.push({type: source.type, prefix: 'SignatureSources.' + slot, id: source.id, signatory: slot});
-    });
-    return chain;
-}
+    var row = form && form.closest ? form.closest('tr') : null;
+    var scope = row || form;
+    if (!scope)
+        return true;
 
-function profile_documentation_chain(form)
-{
-    var student = <?=json_encode($user->codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-    var school = <?=json_encode($documentation_school_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-    var year = parseInt(form.querySelector('[name="target_year"]').value, 10);
-    var chain = [];
-
-    if (school)
-        chain.push({type: 'school', prefix: 'School', id: school});
-    chain.push({type: 'student', prefix: 'Student', id: student});
-    chain = chain.concat(profile_documentation_signature_chain(form));
-
-    if (Number.isInteger(year) && year >= 1 && year <= 5)
+    if (busy)
     {
-        chain.push(
-            {type: 'field', key: 'Student.ChosenClass', value: 'EF' + year},
-            {type: 'field', key: 'Student.CurrentYear', value: String(year)}
-        );
-        var bindings = profile_documentation_signature_bindings(form);
-        Object.keys(bindings).forEach(function (slot) {
-            if (bindings[slot] === 'Student')
-            {
-                chain.push(
-                    {type: 'field', key: 'SignatureSources.' + slot + '.ChosenClass', value: 'EF' + year},
-                    {type: 'field', key: 'SignatureSources.' + slot + '.CurrentYear', value: String(year)}
-                );
-            }
+        if (scope.getAttribute('data-document-action-busy') === '1')
+            return false;
+        scope.setAttribute('data-document-action-busy', '1');
+        scope.classList.add('document-action-busy');
+        scope.querySelectorAll('input[type="button"], button').forEach(function (control) {
+            control.setAttribute('data-document-was-disabled', control.disabled ? '1' : '0');
+            control.disabled = true;
         });
+        if (button && typeof button.value !== 'undefined')
+        {
+            button.setAttribute('data-document-old-value', button.value);
+            button.value = <?=json_encode($Dictionnary["DocumentActionInProgress"] ?? "Traitement…", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+        }
+        var actions = row ? row.querySelector('.document_workflow_actions') : null;
+        if (actions && !actions.querySelector('.document-action-status'))
+        {
+            var status = document.createElement('span');
+            status.className = 'document-action-status';
+            status.textContent = <?=json_encode($Dictionnary["DocumentActionInProgress"] ?? "Traitement…", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+            actions.appendChild(status);
+        }
+        return true;
     }
-    return chain;
-}
 
-function profile_documentation_prepare(form)
-{
-    var option = form.querySelector('[name="document_model"] option:checked');
-    if (!option || !option.value)
-        return false;
-    if (!profile_documentation_validate_signatures(form))
-        return false;
-    form.querySelector('[name="docref_profile_document"]').value = option.value;
-    form.querySelector('[name="chain"]').value = JSON.stringify(profile_documentation_chain(form));
-    form.querySelector('[name="form_output"]').value = 'user-document:<?=((int)$user->id); ?>:' + option.getAttribute('data-form-hash') + ':' + (form.querySelector('[name="target_year"]').value || '0');
-    form.querySelector('[name="signature_bindings"]').value = JSON.stringify(profile_documentation_signature_bindings(form));
+    scope.removeAttribute('data-document-action-busy');
+    scope.classList.remove('document-action-busy');
+    scope.querySelectorAll('input[type="button"], button').forEach(function (control) {
+        var wasDisabled = control.getAttribute('data-document-was-disabled');
+        if (wasDisabled !== null)
+        {
+            control.disabled = wasDisabled === '1';
+            control.removeAttribute('data-document-was-disabled');
+        }
+    });
+    if (button && button.getAttribute)
+    {
+        var oldValue = button.getAttribute('data-document-old-value');
+        if (oldValue !== null)
+        {
+            button.value = oldValue;
+            button.removeAttribute('data-document-old-value');
+        }
+    }
+    var status = row ? row.querySelector('.document-action-status') : null;
+    if (status)
+        status.remove();
     return true;
 }
 
-function profile_documentation_complete(form)
+function profile_documentation_submit_action(form, button, afterSuccess)
 {
-    var option = form.querySelector('[name="document_model"] option:checked');
-    if (!option || !option.value)
+    if (!profile_documentation_set_action_busy(form, button, true))
         return false;
-    if (!profile_documentation_validate_signatures(form))
-        return false;
-    var output = 'user-document:<?=((int)$user->id); ?>:' + option.getAttribute('data-form-hash') + ':' + (form.querySelector('[name="target_year"]').value || '0');
-    var url = 'index.php?p=DabsicFormMenu' +
-        '&file=' + encodeURIComponent(option.getAttribute('data-form-file')) +
-        '&output=' + encodeURIComponent(output) +
-        '&mode=docbuilder' +
-        '&chain=' + encodeURIComponent(JSON.stringify(profile_documentation_chain(form)));
-    window.open(url, '_blank', 'noopener');
-    return false;
+    return silent_submitf(form, {
+        after_success: function (result, msg, content, parameter) {
+            var refresh = afterSuccess
+                ? afterSuccess(result, msg, content, parameter)
+                : profile_documentation_refresh_workflow(true);
+            if (refresh && typeof refresh.finally === 'function')
+                refresh.finally(function () { profile_documentation_set_action_busy(form, button, false); });
+            else
+                profile_documentation_set_action_busy(form, button, false);
+        },
+        after_complete: function (success) {
+            if (!success)
+                profile_documentation_set_action_busy(form, button, false);
+        }
+    });
 }
 
-function profile_documentation_send(form)
+function profile_documentation_start(form, button)
 {
-    var option = form.querySelector('[name="document_model"] option:checked');
+    var option = profile_documentation_selected_model(form);
     if (!option || !option.value)
         return false;
     if (!profile_documentation_validate_signatures(form))
         return false;
-    var send = document.getElementById('profile-documentation-send-form');
-    if (!send)
+    form.querySelector('[name="document_file"]').value = option.getAttribute('data-form-file') || '';
+    form.querySelector('[name="model_hash"]').value = option.getAttribute('data-form-hash') || '';
+    form.querySelector('[name="signature_bindings"]').value = JSON.stringify(profile_documentation_signature_bindings(form));
+    return profile_documentation_submit_action(form, button);
+}
+
+function profile_documentation_reset_workspace(form, button)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentWorkspaceResetConfirm"] ?? "Remettre à zéro les informations enregistrées pour ce document ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
         return false;
-    send.querySelector('[name="document_file"]').value = option.getAttribute('data-form-file') || '';
-    send.querySelector('[name="model_hash"]').value = option.getAttribute('data-form-hash') || '';
-    send.querySelector('[name="document_label"]').value = option.textContent.trim();
-    send.querySelector('[name="target_year"]').value = form.querySelector('[name="target_year"]').value || '0';
-    send.querySelector('[name="signature_bindings"]').value = JSON.stringify(profile_documentation_signature_bindings(form));
-    return silent_submitf(send, {after_success: profile_documentation_form_sent});
+    return profile_documentation_submit_action(form, button);
+}
+
+function profile_documentation_abandon_workspace(form, button)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentWorkspaceAbandonConfirm"] ?? "Abandonner ce document démarré ? Le brouillon local sera supprimé.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return false;
+    return profile_documentation_submit_action(form, button);
+}
+
+function profile_documentation_send_workspace(form, button)
+{
+    return profile_documentation_submit_action(form, button, profile_documentation_form_sent);
+}
+
+var profileDocumentationWorkflowRefreshTimer = null;
+var profileDocumentationWorkflowRefreshDelay = 10000;
+
+function profile_documentation_schedule_workflow_refresh(delay)
+{
+    if (profileDocumentationWorkflowRefreshTimer)
+        window.clearTimeout(profileDocumentationWorkflowRefreshTimer);
+    profileDocumentationWorkflowRefreshTimer = window.setTimeout(function () {
+        profile_documentation_refresh_workflow(false);
+    }, typeof delay === 'number' ? delay : profileDocumentationWorkflowRefreshDelay);
+}
+
+function profile_documentation_refresh_workflow(force)
+{
+    var host = document.getElementById('profile-documentation-workflow-state');
+    if (!host)
+        return Promise.resolve(false);
+    if (!force && (document.hidden || host.offsetParent === null))
+    {
+        profile_documentation_schedule_workflow_refresh();
+        return Promise.resolve(false);
+    }
+
+    return fetch(window.location.href, {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    }).then(function (response) {
+        if (!response.ok)
+            throw new Error(response.statusText || 'Erreur de rafraîchissement.');
+        return response.text();
+    }).then(function (html) {
+        var documentCopy = new DOMParser().parseFromString(html, 'text/html');
+        var fresh = documentCopy.getElementById('profile-documentation-workflow-state');
+        if (fresh && host.innerHTML !== fresh.innerHTML)
+            host.innerHTML = fresh.innerHTML;
+    }).catch(function (error) {
+        console.warn('Actualisation du suivi documentaire impossible :', error);
+    }).finally(function () {
+        profile_documentation_schedule_workflow_refresh();
+    });
+}
+
+function profile_documentation_refresh_generated_files()
+{
+    var browser = document.getElementById('documentation_file_browser');
+    if (!browser)
+        return;
+    var refresh = browser.previousElementSibling;
+    if (refresh)
+        silent_submit(refresh, 'documentation_file_browser');
 }
 
 function profile_documentation_form_sent(result, msg, content, parameter)
 {
     if (content && content.length)
         console.log('Formulaire documentaire : ' + content);
+    return profile_documentation_refresh_workflow(true);
 }
+
+function profile_documentation_remind(form, button)
+{
+    return profile_documentation_submit_action(form, button);
+}
+
+function profile_documentation_expire(form, button)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentExpireConfirm"] ?? "Faire périmer cette demande de document ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return false;
+    return profile_documentation_submit_action(form, button, function () {
+        var row = form.closest ? form.closest('tr') : null;
+        if (row)
+            row.remove();
+        return profile_documentation_refresh_workflow(true);
+    });
+}
+
+function profile_documentation_complete_task(form, button)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentTaskCompleteConfirm"] ?? "Valider cette partie du document ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return false;
+    return profile_documentation_submit_action(form, button);
+}
+
+function profile_documentation_finalize(form, button)
+{
+    if (!profile_documentation_set_action_busy(form, button, true))
+        return false;
+    var refreshPromise = null;
+    var target = window.open('about:blank', '_blank');
+    if (button)
+        button.value = <?=json_encode($Dictionnary["Generating"] ?? "Génération…", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+
+    fetch(form.getAttribute('action'), {
+        method: (form.getAttribute('method') || 'POST').toUpperCase(),
+        credentials: 'same-origin',
+        body: new FormData(form)
+    }).then(function (response) {
+        var type = (response.headers.get('Content-Type') || '').toLowerCase();
+        if (type.indexOf('application/json') !== -1)
+            return response.json().then(function (packet) {
+                if (!packet || packet.result !== 'ok')
+                    throw new Error(packet && packet.msg ? packet.msg : (response.statusText || 'Erreur de génération.'));
+                throw new Error('La génération n\'a renvoyé aucun PDF.');
+            });
+        if (!response.ok)
+            throw new Error(response.statusText || 'Erreur de génération.');
+        return response.blob();
+    }).then(function (blob) {
+        var pdf = new Blob([blob], {type: 'application/pdf'});
+        var url = URL.createObjectURL(pdf);
+        if (target)
+            target.location.href = url;
+        else
+            window.open(url, '_blank', 'noopener');
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        refreshPromise = profile_documentation_refresh_workflow(true);
+        window.setTimeout(profile_documentation_refresh_generated_files, 1200);
+    }).catch(function (error) {
+        if (target)
+            target.close();
+        var message = error && error.message ? error.message : 'Erreur de génération.';
+        if (typeof set_error_div === 'function')
+            set_error_div(message, false);
+        else
+            window.alert(message);
+    }).finally(function () {
+        if (refreshPromise && typeof refreshPromise.finally === 'function')
+            refreshPromise.finally(function () { profile_documentation_set_action_busy(form, button, false); });
+        else
+            profile_documentation_set_action_busy(form, button, false);
+    });
+    return false;
+}
+
+document.addEventListener('visibilitychange', function () {
+    if (!document.hidden)
+        profile_documentation_schedule_workflow_refresh(0);
+});
+profile_documentation_schedule_workflow_refresh();
 
 function profile_documentation_refresh(result, msg, content, parameter)
 {
@@ -264,18 +643,354 @@ function profile_open_generated_letter(result, msg, content, parameter)
 
 <div class="profile_documentation">
     <h3><?=$Dictionnary["Documentation"]; ?></h3>
+    <div id="profile-documentation-workflow-state">
+    <h4><?=$Dictionnary["DocumentsInProgress"] ?? "Documents en cours"; ?></h4>
+    <?php if (!count($documentation_pending_forms) && !count($documentation_finalize_forms) && !count($documentation_active_instances) && !count($documentation_workspaces)) { ?>
+        <p><?=$Dictionnary["NoDocumentsInProgress"] ?? "Aucun document en cours pour cette personne."; ?></p>
+    <?php } else { ?>
+        <div class="profile_documentation_workflow_wrap">
+        <table class="content_table profile_documentation_workflow">
+            <colgroup>
+                <col class="profile_documentation_col_document" />
+                <col class="profile_documentation_col_state" />
+                <col class="profile_documentation_col_author" />
+                <col class="profile_documentation_col_date" />
+                <col class="profile_documentation_col_expiration" />
+                <col class="profile_documentation_col_actions" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th><?=$Dictionnary["Document"] ?? "Document"; ?></th>
+                    <th><?=$Dictionnary["State"] ?? "État"; ?></th>
+                    <th><?=$Dictionnary["Author"] ?? "Auteur"; ?></th>
+                    <th><?=$Dictionnary["LastUpdate"] ?? "Dernière mise à jour"; ?></th>
+                    <th><?=$Dictionnary["Expiration"] ?? "Expiration"; ?></th>
+                    <th><?=$Dictionnary["Actions"] ?? "Actions"; ?></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($documentation_pending_forms as $documentation_form) {
+                $documentation_creator = $documentation_actors[(int)($documentation_form["id_creator"] ?? 0)] ?? [];
+                $documentation_creator_name = trim((string)($documentation_creator["first_name"] ?? "")." ".(string)($documentation_creator["family_name"] ?? ""));
+                if ($documentation_creator_name == "")
+                    $documentation_creator_name = (string)($documentation_creator["codename"] ?? "—");
+                $documentation_year = (int)($documentation_form["document_target_year"] ?? 0);
+            ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars($documentation_form["display_label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ($documentation_year > 0) { ?><br /><small>EF<?=$documentation_year; ?></small><?php } ?></td>
+                    <td><?=$Dictionnary["DocumentFormAwaitingRecipient"] ?? "Formulaire envoyé — en attente du destinataire"; ?><?php if (!empty($documentation_form["last_saved_at"])) { ?><br /><small><?=$Dictionnary["DraftStarted"] ?? "Brouillon commencé"; ?></small><?php } ?></td>
+                    <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars((string)($documentation_form["last_saved_at"] ?: $documentation_form["created_at"] ?? "—"), ENT_QUOTES); ?></td>
+                    <td><?=htmlspecialchars((string)($documentation_form["expires_at"] ?? "—"), ENT_QUOTES); ?></td>
+                    <td class="document_workflow_actions">
+                        <form method="post" action="/api/doc/0/expire" onsubmit="return false;">
+                            <input type="hidden" name="kind" value="form" />
+                            <input type="hidden" name="form_id" value="<?=(int)($documentation_form["id"] ?? 0); ?>" />
+                            <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            <?php foreach ($documentation_finalize_forms as $documentation_form) {
+                $documentation_creator = $documentation_actors[(int)($documentation_form["id_creator"] ?? 0)] ?? [];
+                $documentation_creator_name = trim((string)($documentation_creator["first_name"] ?? "")." ".(string)($documentation_creator["family_name"] ?? ""));
+                if ($documentation_creator_name == "")
+                    $documentation_creator_name = (string)($documentation_creator["codename"] ?? "—");
+                $documentation_year = (int)($documentation_form["document_target_year"] ?? 0);
+                $documentation_chain = $documentation_form["document_chain"] ?? "[]";
+                if (is_array($documentation_chain))
+                    $documentation_chain = json_encode($documentation_chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $documentation_bindings = $documentation_form["document_signature_bindings"] ?? [];
+                if (!is_string($documentation_bindings))
+                    $documentation_bindings = json_encode($documentation_bindings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $documentation_reference = (string)($documentation_form["document_reference"] ?? "");
+                $documentation_source_reference = (string)($documentation_form["document_source_reference"] ?? "");
+                $documentation_output = (string)($documentation_form["document_output"] ?? "");
+                $documentation_tasks = is_array($documentation_form["document_tasks"] ?? NULL) ? $documentation_form["document_tasks"] : [];
+                $documentation_task_progress = is_array($documentation_form["document_task_progress"] ?? NULL)
+                    ? $documentation_form["document_task_progress"] : ["completed" => 0, "total" => 0, "pending" => []];
+                $documentation_pending_tasks = $documentation_task_progress["pending"] ?? [];
+                $documentation_ready_to_finalize = count($documentation_pending_tasks) == 0;
+                $documentation_model_metadata = document_workflow_document_form_model_metadata($documentation_form);
+                $documentation_current_values = document_workflow_document_form_current_values($documentation_form);
+                $documentation_review_url = "index.php?p=DabsicFormMenu".
+                    "&file=".rawurlencode($documentation_reference).
+                    "&output=".rawurlencode($documentation_output).
+                    "&mode=docbuilder".
+                    "&form_role=Etablissement".
+                    "&chain=".rawurlencode((string)$documentation_chain);
+                $documentation_finalize_hash = "completed_".(int)$documentation_form["id"];
+            ?>
+                <tr class="document_workflow_attention">
+                    <td><strong><?=htmlspecialchars($documentation_form["display_label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ($documentation_year > 0) { ?><br /><small>EF<?=$documentation_year; ?></small><?php } ?></td>
+                    <td>
+                        <?php if ($documentation_ready_to_finalize) { ?>
+                            <strong><?=$Dictionnary["DocumentReadyForFinalization"] ?? "Prêt à finaliser"; ?></strong><br />
+                            <small><?=$Dictionnary["DocumentReadyForFinalizationHint"] ?? "Toutes les parties obligatoires ont été validées. Le PDF peut être figé."; ?></small>
+                        <?php } else { ?>
+                            <strong><?=$Dictionnary["DocumentRolesPending"] ?? "Parties encore à valider"; ?></strong><br />
+                            <small><?=(int)$documentation_task_progress["completed"]; ?>/<?=(int)$documentation_task_progress["total"]; ?> <?=$Dictionnary["DocumentRolesCompleted"] ?? "parties obligatoires validées"; ?></small>
+                        <?php } ?>
+                        <?php if (count($documentation_tasks)) { ?>
+                            <ul class="document_task_list">
+                            <?php foreach ($documentation_tasks as $documentation_task) { if (($documentation_task["task_action"] ?? "") !== "fill" || empty($documentation_task["required"])) continue; ?>
+                                <li class="<?=($documentation_task["status"] ?? "") === "completed" ? "is-complete" : "is-pending"; ?>">
+                                    <?=($documentation_task["status"] ?? "") === "completed" ? "✓" : "⚠"; ?>
+                                    <?=htmlspecialchars((string)($documentation_task["role_label"] ?: $documentation_task["role"] ?? ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
+                                </li>
+                            <?php } ?>
+                            </ul>
+                        <?php } ?>
+                    </td>
+                    <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars((string)($documentation_form["completed_at"] ?? "—"), ENT_QUOTES); ?></td>
+                    <td>—</td>
+                    <td class="document_workflow_actions">
+                        <?php if ($documentation_reference != "" && $documentation_output != "") { ?>
+                            <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_review_url, ENT_QUOTES); ?>" target="_blank" rel="noopener"><?=$Dictionnary["ReviewDocument"] ?? "Vérifier et compléter"; ?></a>
+                        <?php } ?>
+                        <?php foreach ($documentation_pending_tasks as $documentation_task) {
+                            $documentation_task_role = (string)($documentation_task["role"] ?? "");
+                            if ($documentation_task_role == "" || (int)($documentation_task["id_assignee_user"] ?? 0) > 0)
+                                continue ;
+                            $documentation_missing_for_role = dabsic_form_missing_required_fields(
+                                $documentation_model_metadata,
+                                $documentation_current_values,
+                                $documentation_task_role
+                            );
+                            $documentation_can_validate_role = count($documentation_missing_for_role) == 0;
+                            $documentation_validation_title = $documentation_can_validate_role
+                                ? ""
+                                : implode("\n", array_values($documentation_missing_for_role));
+                        ?>
+                            <form method="post" action="/api/doc/0/task" onsubmit="return false;">
+                                <input type="hidden" name="form_id" value="<?=(int)$documentation_form["id"]; ?>" />
+                                <input type="hidden" name="role" value="<?=htmlspecialchars($documentation_task_role, ENT_QUOTES); ?>" />
+                                <input
+                                    class="document-role-validation-button<?=$documentation_can_validate_role ? "" : " is-disabled"; ?>"
+                                    type="button"
+                                    value="<?=htmlspecialchars($documentation_can_validate_role
+                                        ? ($Dictionnary["DocumentValidateRole"] ?? "Valider le document")
+                                        : ($Dictionnary["DocumentValidationImpossible"] ?? "Validation impossible : document incomplet"), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                    <?php if (!$documentation_can_validate_role) { ?>disabled<?php } ?>
+                                    <?php if ($documentation_validation_title != "") { ?>title="<?=htmlspecialchars($documentation_validation_title, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"<?php } ?>
+                                    onclick="return profile_documentation_complete_task(this.form, this);"
+                                />
+                            </form>
+                        <?php } ?>
+                        <?php if ($documentation_ready_to_finalize && $documentation_source_reference != "" && $documentation_output != "") { ?>
+                            <form method="post" action="/api/doc/0/generate" onsubmit="return false;">
+                                <input type="hidden" name="doc_<?=$documentation_finalize_hash; ?>" value="1" />
+                                <input type="hidden" name="docref_<?=$documentation_finalize_hash; ?>" value="<?=htmlspecialchars($documentation_source_reference, ENT_QUOTES); ?>" />
+                                <input type="hidden" name="chain" value="<?=htmlspecialchars((string)$documentation_chain, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="form_output" value="<?=htmlspecialchars($documentation_output, ENT_QUOTES); ?>" />
+                                <input type="hidden" name="save_user_document" value="<?=(int)$user->id; ?>" />
+                                <input type="hidden" name="finalize_document" value="1" />
+                                <input type="hidden" name="target_year" value="<?=$documentation_year; ?>" />
+                                <input type="hidden" name="signature_bindings" value="<?=htmlspecialchars((string)$documentation_bindings, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="button" value="<?=htmlspecialchars($Dictionnary["FinalizeDocument"] ?? "Finaliser le document", ENT_QUOTES); ?>" onclick="return profile_documentation_finalize(this.form, this);" />
+                            </form>
+                        <?php } ?>
+                        <form method="post" action="/api/doc/0/expire" onsubmit="return false;">
+                            <input type="hidden" name="kind" value="form" />
+                            <input type="hidden" name="form_id" value="<?=(int)($documentation_form["id"] ?? 0); ?>" />
+                            <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            <?php foreach ($documentation_active_instances as $documentation_entry) {
+                $documentation_instance = $documentation_entry["instance"];
+                $documentation_creator = $documentation_actors[(int)($documentation_instance["CreatedBy"] ?? 0)] ?? [];
+                $documentation_creator_name = trim((string)($documentation_creator["first_name"] ?? "")." ".(string)($documentation_creator["family_name"] ?? ""));
+                if ($documentation_creator_name == "")
+                    $documentation_creator_name = (string)($documentation_creator["codename"] ?? "—");
+                $documentation_year = (int)($documentation_instance["TargetYear"] ?? 0);
+                $documentation_status = (string)($documentation_instance["Status"] ?? "");
+                $documentation_status_labels = [
+                    "AwaitingSignature" => ($Dictionnary["DocumentAwaitingSignature"] ?? "En attente de signature"),
+                    "Signed" => ($Dictionnary["DocumentSigned"] ?? "Signatures recueillies"),
+                    "Sealed" => ($Dictionnary["DocumentSealed"] ?? "Scellé"),
+                    "Error" => ($Dictionnary["Error"] ?? "Erreur"),
+                ];
+                $documentation_signature_tasks = [];
+                foreach (($documentation_entry["document_tasks"] ?? []) as $documentation_task)
+                    if (($documentation_task["task_action"] ?? "") === "sign" && !empty($documentation_task["required"])
+                        && ($documentation_task["status"] ?? "") !== "expired")
+                        $documentation_signature_tasks[] = $documentation_task;
+                $documentation_signature_task_progress = document_task_progress($documentation_signature_tasks, "sign");
+                $documentation_signature_progress = document_workflow_signature_progress($documentation_instance);
+            ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars($documentation_entry["display_label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ($documentation_year > 0) { ?><br /><small>EF<?=$documentation_year; ?></small><?php } ?></td>
+                    <td>
+                        <?=htmlspecialchars($documentation_status_labels[$documentation_status] ?? $documentation_status, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
+                        <?php if ((int)$documentation_signature_progress["total"] > 0) { ?>
+                            <br /><small><?=(int)$documentation_signature_progress["signed"]; ?>/<?=(int)$documentation_signature_progress["total"]; ?> signatures obligatoires recueillies</small>
+                            <?php if (count($documentation_signature_task_progress["pending"] ?? [])) { ?>
+                                <ul class="document_task_list">
+                                <?php foreach ($documentation_signature_task_progress["pending"] as $documentation_signature_task) {
+                                    $documentation_signature_metadata = document_task_metadata($documentation_signature_task);
+                                    $documentation_signature_label = trim((string)($documentation_signature_task["role_label"] ?? ""));
+                                    if ($documentation_signature_label == "")
+                                        $documentation_signature_label = (string)($documentation_signature_task["role"] ?? "Signature");
+                                    $documentation_signature_assignee = trim((string)($documentation_signature_metadata["assignee_label"] ?? ""));
+                                ?>
+                                    <li class="is-pending">⚠ <?=htmlspecialchars($documentation_signature_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if ($documentation_signature_assignee != "") { ?> — <?=htmlspecialchars($documentation_signature_assignee, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php } ?></li>
+                                <?php } ?>
+                                </ul>
+                            <?php } ?>
+                        <?php } ?>
+                    </td>
+                    <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars((string)($documentation_instance["CreatedAt"] ?? "—"), ENT_QUOTES); ?></td>
+                    <td>—</td>
+                    <td class="document_workflow_actions">
+                        <?php if ($documentation_status === "AwaitingSignature" && count($documentation_signature_task_progress["pending"] ?? [])) { ?>
+                            <form method="post" action="/api/doc/0/remind" onsubmit="return false;">
+                                <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                                <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
+                                <input type="button" value="Relancer tous les manquants" onclick="return profile_documentation_remind(this.form, this);" />
+                            </form>
+                            <?php foreach (($documentation_instance["Signatures"] ?? []) as $documentation_slot => $documentation_signature) {
+                                if (!is_array($documentation_signature) || empty($documentation_signature["Required"])
+                                    || ($documentation_signature["Status"] ?? "Pending") === "Signed"
+                                    || document_workflow_signature_is_external_campaign($documentation_signature))
+                                    continue ;
+                                $documentation_role_label = document_workflow_signature_role_label($documentation_slot, $documentation_signature);
+                                $documentation_assignee = "";
+                                foreach ($documentation_signature_tasks as $documentation_signature_task)
+                                {
+                                    $meta = document_task_metadata($documentation_signature_task);
+                                    if (($meta["slot"] ?? "") === $documentation_slot)
+                                    {
+                                        $documentation_assignee = trim((string)($meta["assignee_label"] ?? ""));
+                                        break ;
+                                    }
+                                }
+                                $documentation_remind_label = !empty($documentation_signature["InvitedAt"]) ? "Relancer" : "Envoyer";
+                            ?>
+                                <form method="post" action="/api/doc/0/remind" onsubmit="return false;">
+                                    <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                                    <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
+                                    <input type="hidden" name="slot" value="<?=htmlspecialchars($documentation_slot, ENT_QUOTES); ?>" />
+                                    <input type="button" value="<?=htmlspecialchars($documentation_remind_label." : ".$documentation_role_label.($documentation_assignee != "" ? " — ".$documentation_assignee : ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" onclick="return profile_documentation_remind(this.form, this);" />
+                                </form>
+                            <?php } ?>
+                        <?php } ?>
+                        <form method="post" action="/api/doc/0/expire" onsubmit="return false;">
+                            <input type="hidden" name="kind" value="instance" />
+                            <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                            <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
+                            <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            <?php foreach ($documentation_workspaces as $documentation_workspace) {
+                $documentation_workspace_creator = $documentation_actors[(int)($documentation_workspace["created_by"] ?? 0)] ?? [];
+                $documentation_workspace_creator_name = trim((string)($documentation_workspace_creator["first_name"] ?? "")." ".(string)($documentation_workspace_creator["family_name"] ?? ""));
+                if ($documentation_workspace_creator_name == "")
+                    $documentation_workspace_creator_name = (string)($documentation_workspace_creator["codename"] ?? "—");
+                $documentation_workspace_bindings = json_encode($documentation_workspace["signature_bindings"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $documentation_workspace_has_recipient = isset($documentation_workspace["roles"]["Beneficiaire"]);
+                $documentation_workspace_has_staff = isset($documentation_workspace["roles"]["Etablissement"]);
+                $documentation_workspace_can_finalize = count($documentation_workspace["required_roles"]) == 0;
+                $documentation_workspace_hash = "workspace_".$documentation_workspace["hash"]."_".(int)$documentation_workspace["year"];
+            ?>
+                <tr class="document_workflow_workspace">
+                    <td><strong><?=htmlspecialchars($documentation_workspace["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ((int)$documentation_workspace["year"] > 0) { ?><br /><small>EF<?=(int)$documentation_workspace["year"]; ?></small><?php } ?></td>
+                    <td>
+                        <strong><?=$documentation_workspace["has_output"]
+                            ? ($Dictionnary["DocumentWorkspaceDraft"] ?? "Brouillon interne enregistré")
+                            : ($Dictionnary["DocumentWorkspaceStarted"] ?? "Document démarré"); ?></strong>
+                        <?php if (count($documentation_workspace["required_roles"])) { ?>
+                            <br /><small><?=$Dictionnary["DocumentWorkspaceRequiredRolesHint"] ?? "Des validations de rôle sont requises avant la finalisation."; ?></small>
+                        <?php } ?>
+                    </td>
+                    <td><?=htmlspecialchars($documentation_workspace_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=$documentation_workspace["mtime"] ? date("Y-m-d H:i:s", $documentation_workspace["mtime"]) : "—"; ?></td>
+                    <td>—</td>
+                    <td class="document_workflow_actions">
+                        <?php if ($documentation_workspace_has_staff) { ?>
+                            <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_workspace["review_url"], ENT_QUOTES); ?>" target="_blank" rel="noopener"><?=$Dictionnary["ReviewDocument"] ?? "Vérifier et compléter"; ?></a>
+                        <?php } ?>
+                        <?php if ($documentation_workspace_has_recipient) { ?>
+                            <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_form" onsubmit="return false;">
+                                <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                                <input type="hidden" name="document_label" value="<?=htmlspecialchars($documentation_workspace["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                                <input type="hidden" name="signature_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="form_role" value="Beneficiaire" />
+                                <input type="button" value="<?=htmlspecialchars($Dictionnary["SendDocumentForm"] ?? "Envoyer le formulaire", ENT_QUOTES); ?>" onclick="return profile_documentation_send_workspace(this.form, this);" />
+                            </form>
+                        <?php } ?>
+                        <?php if ($documentation_workspace_can_finalize) { ?>
+                            <form method="post" action="/api/doc/0/generate" onsubmit="return false;">
+                                <input type="hidden" name="doc_<?=$documentation_workspace_hash; ?>" value="1" />
+                                <input type="hidden" name="docref_<?=$documentation_workspace_hash; ?>" value="<?=htmlspecialchars($documentation_workspace["reference"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="chain" value="<?=htmlspecialchars($documentation_workspace["chain"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="hidden" name="form_output" value="<?=htmlspecialchars($documentation_workspace["output"], ENT_QUOTES); ?>" />
+                                <input type="hidden" name="save_user_document" value="<?=(int)$user->id; ?>" />
+                                <input type="hidden" name="finalize_document" value="1" />
+                                <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                                <input type="hidden" name="signature_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                <input type="button" value="<?=htmlspecialchars($Dictionnary["FinalizeDocument"] ?? "Finaliser le document", ENT_QUOTES); ?>" onclick="return profile_documentation_finalize(this.form, this);" />
+                            </form>
+                        <?php } else { ?>
+                            <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentFinalizationRequiresValidation"] ?? "Finalisation impossible : validations requises", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" disabled />
+                        <?php } ?>
+                        <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_workspace" onsubmit="return false;">
+                            <input type="hidden" name="operation" value="reset" />
+                            <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                            <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                            <input type="hidden" name="signature_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentWorkspaceReset"] ?? "Remettre à zéro", ENT_QUOTES); ?>" onclick="return profile_documentation_reset_workspace(this.form, this);" />
+                        </form>
+                        <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_workspace" onsubmit="return false;">
+                            <input type="hidden" name="operation" value="abandon" />
+                            <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                            <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                            <input type="hidden" name="signature_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentWorkspaceAbandon"] ?? "Abandonner", ENT_QUOTES); ?>" onclick="return profile_documentation_abandon_workspace(this.form, this);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        </div>
+    <?php } ?>
 
-    <h4><?=$Dictionnary["GenerateDocument"]; ?></h4>
+    <?php if (count($documentation_expired_forms)) { ?>
+        <h4><?=$Dictionnary["ExpiredDocuments"] ?? "Demandes périmées"; ?></h4>
+        <table class="content_table" style="width: 100%; margin-bottom: 14px;">
+            <thead><tr><th><?=$Dictionnary["Document"] ?? "Document"; ?></th><th><?=$Dictionnary["State"] ?? "État"; ?></th><th><?=$Dictionnary["LastUpdate"] ?? "Dernière mise à jour"; ?></th></tr></thead>
+            <tbody>
+            <?php foreach ($documentation_expired_forms as $documentation_form) { ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars($documentation_form["display_label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ((int)$documentation_form["document_target_year"] > 0) { ?><br /><small>EF<?=(int)$documentation_form["document_target_year"]; ?></small><?php } ?></td>
+                    <td><?=$Dictionnary["DocumentExpired"] ?? "Périmé"; ?><?php if (!empty($documentation_form["completed_at"])) { ?><br /><small><?=$Dictionnary["DocumentExpiredAfterCompletion"] ?? "Le bénéficiaire avait déjà complété le formulaire."; ?></small><?php } ?></td>
+                    <td><?=htmlspecialchars((string)($documentation_form["revoked_at"] ?: $documentation_form["expires_at"] ?? "—"), ENT_QUOTES); ?></td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+    <?php } ?>
+    </div>
+
+    <section class="profile_documentation_section">
+    <h4><?=$Dictionnary["NewDocument"] ?? "Nouveau document"; ?></h4>
     <?php if (!count($documentation_models)) { ?>
         <p><?=$Dictionnary["NoDocumentModel"]; ?></p>
     <?php } else { ?>
-        <form method="post" action="/api/doc/0/generate" target="_blank" onsubmit="return profile_documentation_prepare(this);">
-            <input type="hidden" name="doc_profile_document" value="1" />
-            <input type="hidden" name="docref_profile_document" value="" />
-            <input type="hidden" name="chain" value="[]" />
-            <input type="hidden" name="form_output" value="" />
-            <input type="hidden" name="save_user_document" value="<?=$user->id; ?>" />
-            <input type="hidden" name="finalize_document" value="1" />
+        <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_workspace" onsubmit="return false;">
+            <input type="hidden" name="operation" value="start" />
+            <input type="hidden" name="document_file" value="" />
+            <input type="hidden" name="model_hash" value="" />
             <input type="hidden" name="signature_bindings" value="{}" />
 
             <label><?=$Dictionnary["DocumentModel"]; ?></label><br />
@@ -304,24 +1019,17 @@ function profile_open_generated_letter(result, msg, content, parameter)
             </fieldset>
 
             <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-                <input type="button" value="<?=$Dictionnary["CompleteDocument"]; ?>" onclick="profile_documentation_complete(this.form);" />
-                <input type="button" value="<?=$Dictionnary["SendDocumentForm"] ?? "Envoyer le formulaire"; ?>" onclick="profile_documentation_send(this.form);" />
-                <input type="submit" value="<?=$Dictionnary["FinalizeDocument"] ?? "Finaliser le document"; ?>" />
+                <input type="button" value="<?=$Dictionnary["StartDocument"] ?? "Démarrer un document"; ?>" onclick="return profile_documentation_start(this.form, this);" />
             </div>
-        </form>
-        <form id="profile-documentation-send-form" method="put" action="/api/user/<?=$user->id; ?>/document_form" style="display: none;">
-            <input type="hidden" name="document_file" value="" />
-            <input type="hidden" name="model_hash" value="" />
-            <input type="hidden" name="document_label" value="" />
-            <input type="hidden" name="target_year" value="0" />
-            <input type="hidden" name="signature_bindings" value="{}" />
         </form>
     <?php } ?>
 
-    <p style="font-size: x-small; opacity: .8;">
+    <p class="profile_documentation_help">
         <?=$Dictionnary["DocumentationFormHelp"]; ?>
     </p>
+    </section>
 
+    <section class="profile_documentation_section">
     <h4><?=$Dictionnary["GeneratedDocuments"]; ?></h4>
     <?php
     $type = "documentation_file";
@@ -336,6 +1044,8 @@ function profile_open_generated_letter(result, msg, content, parameter)
     $file_browser_height = "260px";
     require ("./tools/template/path_browser.phtml");
     ?>
+
+    </section>
 
     <?php if (count($letter_models)) { ?>
         <br />

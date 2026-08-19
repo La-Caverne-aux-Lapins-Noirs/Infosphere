@@ -2,7 +2,7 @@
 ## Article I6 - Horaire des formations
 
 [@Size;1]
-[@Columns;3;
+[@Columns;1;
 Les horaires d’accueil et de la Formation seront précisés dans
 le livret d’accueil remis à l’Apprenant.
 

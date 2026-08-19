@@ -627,6 +627,384 @@
         return /^([\]}]|EndIf\b|ElseIf\b|Else\b|EndWhile\b|WEnd\b|EndFor\b|Next\b|AgainIf\b|Until\b|EndSelect\b|Case\b|EndWith\b|<\/)/.test(line);
     }
 
+    function editorSpan(className, value) {
+        return "<span class=\"" + className + "\">" + escapeHtml(value) + "</span>";
+    }
+
+    function jsonHighlight(text) {
+        var value = String(text);
+        var html = "";
+        var i = 0;
+        var start;
+        var ch;
+        var escaped;
+        var match;
+        var rest;
+        var lookahead;
+        var className;
+
+        while (i < value.length) {
+            ch = value.charAt(i);
+            if (ch === "\"") {
+                start = i++;
+                escaped = false;
+                while (i < value.length) {
+                    ch = value.charAt(i++);
+                    if (escaped)
+                        escaped = false;
+                    else if (ch === "\\")
+                        escaped = true;
+                    else if (ch === "\"")
+                        break;
+                }
+                lookahead = i;
+                while (lookahead < value.length && /[ \t\r\n]/.test(value.charAt(lookahead)))
+                    ++lookahead;
+                className = value.charAt(lookahead) === ":"
+                    ? "dabsic-editor-token-variable"
+                    : "dabsic-editor-token-string";
+                html += editorSpan(className, value.substring(start, i));
+                continue;
+            }
+
+            rest = value.substring(i);
+            match = rest.match(/^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/);
+            if (match) {
+                html += editorSpan("dabsic-editor-token-constant", match[0]);
+                i += match[0].length;
+                continue;
+            }
+            match = rest.match(/^(?:true|false|null)\b/);
+            if (match) {
+                html += editorSpan("dabsic-editor-token-keyword", match[0]);
+                i += match[0].length;
+                continue;
+            }
+            html += escapeHtml(ch);
+            ++i;
+        }
+        return html + (/\n$/.test(value) ? " " : "");
+    }
+
+    function jsonStack(text) {
+        var stack = [];
+        var inString = false;
+        var escaped = false;
+        var i;
+        var ch;
+        var top;
+
+        for (i = 0; i < text.length; ++i) {
+            ch = text.charAt(i);
+            if (inString) {
+                if (escaped)
+                    escaped = false;
+                else if (ch === "\\")
+                    escaped = true;
+                else if (ch === "\"")
+                    inString = false;
+                continue;
+            }
+            if (ch === "\"") {
+                inString = true;
+                continue;
+            }
+            if (ch === "{" || ch === "[") {
+                stack.push(ch);
+                continue;
+            }
+            if (ch !== "}" && ch !== "]")
+                continue;
+            top = stack.length ? stack[stack.length - 1] : "";
+            if ((ch === "}" && top === "{") || (ch === "]" && top === "["))
+                stack.pop();
+        }
+        return stack;
+    }
+
+    function xmlNameChar(ch) {
+        return /[A-Za-z0-9_.:-]/.test(ch);
+    }
+
+    function scanXmlTokens(text) {
+        var tokens = [];
+        var i = 0;
+        var end;
+        var j;
+        var startName;
+        var name;
+        var quote;
+        var ch;
+        var closing;
+        var raw;
+
+        while (i < text.length) {
+            if (text.substr(i, 4) === "<!--") {
+                end = text.indexOf("-->", i + 4);
+                end = end < 0 ? text.length : end + 3;
+                tokens.push({kind: "comment", start: i, end: end});
+                i = end;
+                continue;
+            }
+            if (text.substr(i, 9) === "<![CDATA[") {
+                end = text.indexOf("]]>", i + 9);
+                end = end < 0 ? text.length : end + 3;
+                tokens.push({kind: "cdata", start: i, end: end});
+                i = end;
+                continue;
+            }
+            if (text.substr(i, 2) === "<?") {
+                end = text.indexOf("?>", i + 2);
+                end = end < 0 ? text.length : end + 2;
+                tokens.push({kind: "meta", start: i, end: end});
+                i = end;
+                continue;
+            }
+            if (text.charAt(i) !== "<") {
+                ++i;
+                continue;
+            }
+
+            j = i + 1;
+            while (j < text.length && /[ \t\r\n]/.test(text.charAt(j)))
+                ++j;
+            if (text.charAt(j) === "!") {
+                quote = "";
+                ++j;
+                while (j < text.length) {
+                    ch = text.charAt(j);
+                    if (quote) {
+                        if (ch === quote)
+                            quote = "";
+                    } else if (ch === "\"" || ch === "'") {
+                        quote = ch;
+                    } else if (ch === ">") {
+                        ++j;
+                        break;
+                    }
+                    ++j;
+                }
+                tokens.push({kind: "meta", start: i, end: j});
+                i = j;
+                continue;
+            }
+
+            closing = false;
+            if (text.charAt(j) === "/") {
+                closing = true;
+                ++j;
+                while (j < text.length && /[ \t\r\n]/.test(text.charAt(j)))
+                    ++j;
+            }
+            startName = j;
+            while (j < text.length && xmlNameChar(text.charAt(j)))
+                ++j;
+            if (j === startName) {
+                ++i;
+                continue;
+            }
+            name = text.substring(startName, j);
+            quote = "";
+            while (j < text.length) {
+                ch = text.charAt(j);
+                if (quote) {
+                    if (ch === quote)
+                        quote = "";
+                } else if (ch === "\"" || ch === "'") {
+                    quote = ch;
+                } else if (ch === ">") {
+                    ++j;
+                    break;
+                }
+                ++j;
+            }
+            raw = text.substring(i, j);
+            tokens.push({
+                kind: "tag",
+                start: i,
+                end: j,
+                name: name,
+                closing: closing,
+                selfClosing: !closing && /\/[ \t\r\n]*>$/.test(raw)
+            });
+            i = j;
+        }
+        return tokens;
+    }
+
+    function xmlHighlight(text) {
+        var value = String(text);
+        var tokens = scanXmlTokens(value);
+        var html = "";
+        var cursor = 0;
+        var i;
+        var token;
+        var className;
+
+        for (i = 0; i < tokens.length; ++i) {
+            token = tokens[i];
+            if (token.start < cursor)
+                continue;
+            html += escapeHtml(value.substring(cursor, token.start));
+            if (token.kind === "comment")
+                className = "dabsic-editor-token-comment";
+            else if (token.kind === "cdata")
+                className = "dabsic-editor-token-string";
+            else
+                className = "dabsic-editor-token-preprocessor";
+            html += editorSpan(className, value.substring(token.start, token.end));
+            cursor = token.end;
+        }
+        html += escapeHtml(value.substring(cursor));
+        return html + (/\n$/.test(value) ? " " : "");
+    }
+
+    function xmlDepth(text) {
+        var tokens = scanXmlTokens(text);
+        var depth = 0;
+        var i;
+        var token;
+
+        for (i = 0; i < tokens.length; ++i) {
+            token = tokens[i];
+            if (token.kind !== "tag")
+                continue;
+            if (token.closing)
+                depth = Math.max(0, depth - 1);
+            else if (!token.selfClosing)
+                ++depth;
+        }
+        return depth;
+    }
+
+    function replaceCurrentIndent(input, indent, forceBlank) {
+        var value = input.value;
+        var selectionStart = input.selectionStart;
+        var selectionEnd = input.selectionEnd;
+        var info = lineInformation(value, selectionStart);
+        var line = value.substring(info.start, info.end);
+        var leading = (line.match(/^[ \t]*/) || [""])[0];
+        var body = line.substring(leading.length);
+        var replacement;
+        var delta;
+
+        if (!forceBlank && body === "")
+            return false;
+        replacement = new Array(Math.max(0, indent) + 1).join(" ");
+        if (leading === replacement)
+            return false;
+
+        input.value = value.substring(0, info.start) + replacement + body + value.substring(info.end);
+        delta = replacement.length - leading.length;
+
+        function mapPosition(position) {
+            if (position <= info.start)
+                return position;
+            if (position <= info.start + leading.length)
+                return info.start + replacement.length;
+            return position + delta;
+        }
+
+        input.setSelectionRange(mapPosition(selectionStart), mapPosition(selectionEnd));
+        return true;
+    }
+
+    function insertNewlineAtDepth(input, depth) {
+        var value = input.value;
+        var start = input.selectionStart;
+        var end = input.selectionEnd;
+        var insertion = "\n" + new Array(Math.max(0, depth) * INDENT_WIDTH + 1).join(" ");
+        var position;
+
+        input.value = value.substring(0, start) + insertion + value.substring(end);
+        position = start + insertion.length;
+        input.setSelectionRange(position, position);
+    }
+
+    function insertSpaces(input) {
+        var value = input.value;
+        var start = input.selectionStart;
+        var end = input.selectionEnd;
+        var insertion = new Array(INDENT_WIDTH + 1).join(" ");
+
+        input.value = value.substring(0, start) + insertion + value.substring(end);
+        input.setSelectionRange(start + insertion.length, start + insertion.length);
+    }
+
+    function jsonReindentCurrentLine(input, forceBlank) {
+        var info = lineInformation(input.value, input.selectionStart);
+        var line = input.value.substring(info.start, info.end);
+        var depth = jsonStack(input.value.substring(0, info.start)).length;
+        if (/^[ \t]*[}\]]/.test(line))
+            depth = Math.max(0, depth - 1);
+        return replaceCurrentIndent(input, depth * INDENT_WIDTH, forceBlank);
+    }
+
+    function jsonInsertElectricNewline(input) {
+        insertNewlineAtDepth(input, jsonStack(input.value.substring(0, input.selectionStart)).length);
+    }
+
+    function jsonCurrentLineNeedsElectricIndent(input) {
+        var info = lineInformation(input.value, input.selectionStart);
+        return /^[ \t]*[}\]]/.test(input.value.substring(info.start, info.end));
+    }
+
+    function xmlReindentCurrentLine(input, forceBlank) {
+        var info = lineInformation(input.value, input.selectionStart);
+        var line = input.value.substring(info.start, info.end);
+        var depth = xmlDepth(input.value.substring(0, info.start));
+        if (/^[ \t]*<\//.test(line))
+            depth = Math.max(0, depth - 1);
+        return replaceCurrentIndent(input, depth * INDENT_WIDTH, forceBlank);
+    }
+
+    function xmlInsertElectricNewline(input) {
+        insertNewlineAtDepth(input, xmlDepth(input.value.substring(0, input.selectionStart)));
+    }
+
+    function xmlCurrentLineNeedsElectricIndent(input) {
+        var info = lineInformation(input.value, input.selectionStart);
+        return /^[ \t]*<\//.test(input.value.substring(info.start, info.end));
+    }
+
+    function editorMode(name) {
+        name = String(name || "dab").toLowerCase();
+        if (name === "json")
+            return {
+                highlight: jsonHighlight,
+                reindent: jsonReindentCurrentLine,
+                insertNewline: jsonInsertElectricNewline,
+                needsElectricIndent: jsonCurrentLineNeedsElectricIndent,
+                textTab: false
+            };
+        if (name === "xml")
+            return {
+                highlight: xmlHighlight,
+                reindent: xmlReindentCurrentLine,
+                insertNewline: xmlInsertElectricNewline,
+                needsElectricIndent: xmlCurrentLineNeedsElectricIndent,
+                textTab: false
+            };
+        if (name === "txt")
+            return {
+                highlight: function (text) {
+                    text = String(text);
+                    return escapeHtml(text) + (/\n$/.test(text) ? " " : "");
+                },
+                reindent: null,
+                insertNewline: null,
+                needsElectricIndent: null,
+                textTab: true
+            };
+        return {
+            highlight: highlight,
+            reindent: reindentCurrentLine,
+            insertNewline: insertElectricNewline,
+            needsElectricIndent: currentLineNeedsElectricIndent,
+            textTab: false
+        };
+    }
+
     function htmlToText(value) {
         var node = document.createElement("div");
         var hidden;
@@ -639,12 +1017,13 @@
     }
 
     function attachEditor(root) {
-        var input = document.getElementById("dabsic-editor-input");
-        var highlightLayer = document.getElementById("dabsic-editor-highlight");
+        var input = root.querySelector(".dabsic-editor-input");
+        var highlightLayer = root.querySelector(".dabsic-editor-highlight");
         var highlightCode = highlightLayer ? highlightLayer.querySelector("code") : null;
-        var saveButton = document.getElementById("dabsic-editor-save");
-        var stateBox = document.getElementById("dabsic-editor-state");
-        var messageBox = document.getElementById("dabsic-editor-message");
+        var saveButton = root.querySelector(".dabsic-editor-save");
+        var stateBox = root.querySelector(".dabsic-editor-state");
+        var messageBox = root.querySelector(".dabsic-editor-message");
+        var mode = editorMode(root.getAttribute("data-editor-mode") || "dab");
         var baselineContent;
         var baselineHash;
         var saving = false;
@@ -661,7 +1040,7 @@
         }
 
         function render() {
-            highlightCode.innerHTML = highlight(input.value);
+            highlightCode.innerHTML = mode.highlight(input.value);
             highlightLayer.scrollTop = input.scrollTop;
             highlightLayer.scrollLeft = input.scrollLeft;
         }
@@ -716,6 +1095,15 @@
             body.append("file", root.getAttribute("data-file") || "");
             body.append("content", contentToSave);
             body.append("hash", baselineHash);
+            try {
+                var extra = JSON.parse(root.getAttribute("data-extra-fields") || "{}");
+                Object.keys(extra).forEach(function (key) {
+                    body.append(key, extra[key]);
+                });
+            } catch (error) {
+                setMessage(label("context-error", "Contexte d’édition invalide."), "error");
+                return;
+            }
 
             saving = true;
             setMessage("", "error");
@@ -751,6 +1139,10 @@
                         window.clearTimeout(savedTimer);
                     savedTimer = window.setTimeout(updateDirtyState, 1800);
                 }
+                root.dispatchEvent(new CustomEvent("dabsic-editor-saved", {
+                    bubbles: true,
+                    detail: packet
+                }));
             }).catch(function (error) {
                 saving = false;
                 setMessage(error && error.message ? error.message :
@@ -765,19 +1157,22 @@
         });
 
         input.addEventListener("input", function () {
-            if (currentLineNeedsElectricIndent(input))
-                reindentCurrentLine(input, false);
+            if (mode.needsElectricIndent && mode.needsElectricIndent(input) && mode.reindent)
+                mode.reindent(input, false);
             afterEdit();
         });
 
         input.addEventListener("keydown", function (event) {
             if (event.key === "Tab") {
                 event.preventDefault();
-                reindentCurrentLine(input, true);
+                if (mode.textTab)
+                    insertSpaces(input);
+                else if (mode.reindent)
+                    mode.reindent(input, true);
                 afterEdit();
-            } else if (event.key === "Enter") {
+            } else if (event.key === "Enter" && mode.insertNewline) {
                 event.preventDefault();
-                insertElectricNewline(input);
+                mode.insertNewline(input);
                 afterEdit();
             } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
                 event.preventDefault();
@@ -797,7 +1192,9 @@
 
         render();
         updateDirtyState();
-        input.focus();
+        if (root.getAttribute("data-autofocus") !== "0")
+            input.focus();
+        root.setAttribute("data-dabsic-editor-attached", "1");
     }
 
     window.DabsicLanguage = {
@@ -809,7 +1206,15 @@
         indentWidth: INDENT_WIDTH
     };
 
-    var root = document.getElementById("dabsic-editor-root");
-    if (root)
+    window.DabsicEditor = window.DabsicEditor || {};
+    window.DabsicEditor.attach = function (root) {
+        if (!root || root.getAttribute("data-dabsic-editor-attached") === "1")
+            return;
         attachEditor(root);
+    };
+    window.DabsicEditor.attachAll = function (scope) {
+        var roots = (scope || document).querySelectorAll(".dabsic-editor-root[data-dabsic-editor]");
+        Array.prototype.forEach.call(roots, window.DabsicEditor.attach);
+    };
+    window.DabsicEditor.attachAll(document);
 }());

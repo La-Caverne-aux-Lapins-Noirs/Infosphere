@@ -32,9 +32,91 @@ function is_intranet_member_profile($usr = NULL)
     return (true);
 }
 
+function normalize_school_authority($authority)
+{
+    static $numeric = [
+        0 => "STUDENT",
+        1 => "DIRECTOR",
+        2 => "SECRETARIAT",
+        3 => "COMMERCIAL",
+        4 => "TEACHER",
+        5 => "LIBRARIAN",
+    ];
+
+    if (is_int($authority)
+        || (is_string($authority) && preg_match('/^-?[0-9]+$/', trim($authority))))
+        return ($numeric[(int)$authority] ?? "");
+    return (strtoupper(trim((string)$authority)));
+}
+
+function user_school_authorities($id_user, $id_school = -1)
+{
+    $id_user = (int)$id_user;
+    $id_school = (int)$id_school;
+    if ($id_user <= 0)
+        return ([]);
+
+    $school_filter = $id_school == -1
+        ? ""
+        : " AND user_school.id_school = $id_school ";
+    $rows = db_select_all("
+        user_school.id_school AS id_school,
+        user_school.authority AS authority
+        FROM user_school
+        LEFT JOIN school ON school.id = user_school.id_school
+        WHERE user_school.id_user = $id_user
+          AND school.id IS NOT NULL
+          AND school.deleted IS NULL
+          $school_filter
+    ");
+    $out = [];
+    foreach ($rows as $row)
+    {
+        $authority = normalize_school_authority($row["authority"] ?? "");
+        if ($authority == "")
+            continue ;
+        $school = (int)$row["id_school"];
+        if (!isset($out[$school]))
+            $out[$school] = [];
+        $out[$school][$authority] = true;
+    }
+    return ($out);
+}
+
+function user_has_school_authority($id_user, $authority, $id_school = -1)
+{
+    $authority = normalize_school_authority($authority);
+    if ($authority == "")
+        return (false);
+
+    foreach (user_school_authorities($id_user, $id_school) as $authorities)
+        if (isset($authorities[$authority]))
+            return (true);
+    return (false);
+}
+
+function user_school_ids($id_user, $authority = NULL)
+{
+    $authorities = user_school_authorities($id_user);
+    if ($authority === NULL)
+        return (array_keys($authorities));
+
+    $authority = normalize_school_authority($authority);
+    $out = [];
+    foreach ($authorities as $id_school => $roles)
+        if (isset($roles[$authority]))
+            $out[] = (int)$id_school;
+    return ($out);
+}
+
 function is_assistant($usr = NULL)
 {
     return (is_teacher(NULL, $usr, 1));
+}
+
+function can_manage_corrections()
+{
+    return (is_assistant() || am_i_director() || am_i_cycle_director());
 }
 
 function is_teacher($id = NULL, $usr = NULL, $lvl = 2)
@@ -331,24 +413,18 @@ function am_i_cycle_director()
 
 function is_director_for_student($id, $big_admin = true)
 {
-    if ($big_admin && is_admin())
-	return (true);
     global $User;
 
+    if ($big_admin && is_admin())
+	return (true);
+    if (!$User)
+        return (false);
     if (($user = resolve_codename("user", $id))->is_error())
 	return (false);
-    $user = ["id" => $user->value];
-    get_user_school($User, true);
-    get_user_school($user, true);
-    foreach ($user["school"] as $school)
-    {
-	if ($school["authority"] !== "STUDENT")
-	    continue ;
-	if (isset($User["school"][$school["codename"]]["authority"])
-	    && $User["school"][$school["codename"]]["authority"] === "DIRECTOR"
-	)
-	    return (true);
-    }
+
+    foreach (user_school_ids($user->value, "STUDENT") as $id_school)
+        if (user_has_school_authority($User["id"], "DIRECTOR", $id_school))
+            return (true);
     return (false);
 }
 
@@ -368,9 +444,8 @@ function is_identity_authority_for_user($id)
     if (is_director_for_student($id, false))
         return (true);
 
-    $id = (int)$id;
-    foreach (db_select_all("id_school FROM user_school WHERE id_user = $id") as $school)
-        if (is_secretariat_for_school((int)$school["id_school"]))
+    foreach (user_school_ids((int)$id) as $id_school)
+        if (is_secretariat_for_school($id_school))
             return (true);
     return (false);
 }
@@ -417,31 +492,29 @@ function is_director_for_school($id)
 	return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = $id ";
-    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'DIRECTOR' $id");
-    return ($match != NULL);
+    return (user_has_school_authority($User["id"], "DIRECTOR", $id));
 }
 
 function is_secretariat_for_school($id)
 {
     global $User;
 
+    if (!$User)
+        return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = $id ";
-    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'SECRETARIAT' $id");
-    return ($match != NULL);
+    return (user_has_school_authority($User["id"], "SECRETARIAT", $id));
 }
 
 function is_commercial_for_school($id)
 {
     global $User;
 
+    if (!$User)
+        return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = $id ";
-    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'COMMERCIAL' $id");
-    return ($match != NULL);
+    return (user_has_school_authority($User["id"], "COMMERCIAL", $id));
 }
 
 function is_teacher_for_school($id)
@@ -452,35 +525,91 @@ function is_teacher_for_school($id)
 	return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = $id ";
-    $match = db_select_one("authority FROM user_school WHERE id_user = {$User["id"]} AND authority = 'TEACHER' $id");
-    return ($match != NULL);
+    return (user_has_school_authority($User["id"], "TEACHER", $id));
+}
+
+function is_assistant_for_school($id)
+{
+    global $User;
+
+    if (!is_intranet_member_profile())
+        return (false);
+    if (is_admin())
+        return (true);
+
+    $id = (int)$id;
+    if ($id <= 0)
+        return (false);
+    $uid = (int)$User["id"];
+
+    // Direct school responsibilities. Administrative roles such as
+    // secretariat/commercial are deliberately not pedagogical authorities.
+    if (user_has_school_authority($uid, "DIRECTOR", $id)
+        || user_has_school_authority($uid, "TEACHER", $id))
+        return (true);
+
+    // Direct cycle responsibility, or responsibility inherited through a
+    // laboratory attached to the cycle (assistant/professor/chief).
+    if (db_select_one("
+        cycle_teacher.id
+        FROM cycle_teacher
+        LEFT JOIN school_cycle
+          ON school_cycle.id_cycle = cycle_teacher.id_cycle
+        LEFT JOIN user_laboratory
+          ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
+         AND user_laboratory.id_user = $uid
+         AND user_laboratory.authority >= " . ASSISTANT . "
+        WHERE school_cycle.id_school = $id
+          AND (cycle_teacher.id_user = $uid OR user_laboratory.id_user = $uid)
+    ") != NULL)
+        return (true);
+
+    // Same inheritance for activities linked to a cycle of the school.
+    if (db_select_one("
+        activity_teacher.id
+        FROM activity_teacher
+        LEFT JOIN activity_cycle
+          ON activity_cycle.id_activity = activity_teacher.id_activity
+        LEFT JOIN school_cycle
+          ON school_cycle.id_cycle = activity_cycle.id_cycle
+        LEFT JOIN user_laboratory
+          ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND user_laboratory.id_user = $uid
+         AND user_laboratory.authority >= " . ASSISTANT . "
+        WHERE school_cycle.id_school = $id
+          AND (activity_teacher.id_user = $uid OR user_laboratory.id_user = $uid)
+    ") != NULL)
+        return (true);
+
+    // A laboratory can also be attached directly to an establishment.
+    return (db_select_one("
+        user_laboratory.id
+        FROM user_laboratory
+        LEFT JOIN school_laboratory
+          ON school_laboratory.id_laboratory = user_laboratory.id_laboratory
+        WHERE user_laboratory.id_user = $uid
+          AND user_laboratory.authority >= " . ASSISTANT . "
+          AND school_laboratory.id_school = $id
+    ") != NULL);
 }
 
 function can_edit_supports($id = -1)
 {
-    return (is_teacher_for_school(-1));
+    return (is_teacher_for_school($id));
 }
 
 function is_director_for_room($id)
 {
     global $User;
 
+    if (!$User)
+        return (false);
     if (is_admin())
 	return (true);
-    get_user_school($User);
-    foreach ($User["school"] as $school)
-    {
-	if ($school["authority"] !== "DIRECTOR")
-	    continue ;
-	$ret = db_select_one("
-	    id FROM school_room
-	    WHERE id_school = {$school["id_school"]}
-	    AND id_room = $id
-	    ");
-	if ($ret)
-	    return (true);
-    }
+    $id = (int)$id;
+    foreach (db_select_all("id_school FROM school_room WHERE id_room = $id") as $school)
+        if (user_has_school_authority($User["id"], "DIRECTOR", $school["id_school"]))
+            return (true);
     return (false);
 }
 
@@ -494,22 +623,9 @@ function is_director($id = -1)
 	return (true);
     if ($id == -1)
 	$id = $User["id"];
-    if ($User["id"] == $id)
-    {
-	if (!isset($User["school_authority"]))
-	    return (false);
-	return ($User["school_authority"] == "DIRECTOR");
-    }
-    return (false);
-    // Normalement devenu inutile
-    return (db_select_one("
-        cycle_teacher.id
-        FROM cycle_teacher
-	LEFT JOIN user_laboratory
-          ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
-	WHERE cycle_teacher.id_user = {$User["id"]}
-	OR user_laboratory.id_user = {$User["id"]}
-	"));
+    if ((int)$User["id"] != (int)$id)
+        return (false);
+    return (user_has_school_authority($User["id"], "DIRECTOR"));
 }
 
 function am_i_director()
@@ -523,34 +639,18 @@ function am_i_director()
 
 function am_i_director_of($id_school)
 {
-    global $User;
-    
     if (is_array($id_school))
     {
 	foreach ($id_school as $sc)
 	{
-	    if (is_array($sc))
-	    {
-		if (am_i_director_of($sc["id"]))
-		    return (true);
-	    }
-	    else
-	    {
-		if (am_i_director_of($sc))
-		    return (true);
-	    }
+            if (is_array($sc))
+                $sc = $sc["id_school"] ?? ($sc["id"] ?? -1);
+            if (am_i_director_of($sc))
+                return (true);
 	}
 	return (false);
     }
-    get_user_school($User);
-    foreach ($User["school"] as $sc)
-    {
-	if ($sc["id_school"] != $id_school)
-	    continue ;
-	if ($sc["authority"] === "DIRECTOR")
-	    return (true);
-    }
-    return (false);
+    return (is_director_for_school((int)$id_school));
 }
 
 function am_i_dir_or_cdir()
@@ -566,20 +666,18 @@ function is_my_director($id)
 {
     global $User;
 
+    if (!$User)
+        return (false);
     if (is_admin())
 	return (true);
-    $usr = ["id" => $id];
-    get_user_school($usr);
-    foreach ($usr["school"] as $school)
-    {
-	foreach ($User["school"] as $ms)
-	{
-	    if (abs($ms["id_school"]) != abs($school["id_school"]))
-		continue ;
-	    if ($ms["authority"] === "DIRECTOR" && $school["authority"] !== "DIRECTOR")
-		return (true);
-	}
-    }
+    $id = (int)$id;
+    if ($id <= 0)
+        return (false);
+
+    foreach (user_school_ids($id) as $id_school)
+        if (user_has_school_authority($User["id"], "DIRECTOR", $id_school)
+            && !user_has_school_authority($id, "DIRECTOR", $id_school))
+            return (true);
     return (false);
 }
 
@@ -624,13 +722,7 @@ function is_librarian($id = -1)
 	return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
-    return (db_select_one("
-        id FROM user_school
-        WHERE id_user = {$User["id"]}
-        AND authority = 'LIBRARIAN'
-        $id
-	") != NULL);
+    return (user_has_school_authority($User["id"], "LIBRARIAN", $id));
 }
 
 // L'adm au sens des étudiants
@@ -642,13 +734,7 @@ function is_secretariat($id = -1)
 	return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
-    return (db_select_one("
-        id FROM user_school
-        WHERE id_user = {$User["id"]}
-        AND authority = 'SECRETARIAT'
-        $id
-	") != NULL);
+    return (user_has_school_authority($User["id"], "SECRETARIAT", $id));
 }
 
 function is_commercial($id = -1)
@@ -659,12 +745,6 @@ function is_commercial($id = -1)
 	return (false);
     if (is_admin())
 	return (true);
-    $id = $id == -1 ? "" : " AND id_school = ".(int)$id." ";
-    return (db_select_one("
-        id FROM user_school
-        WHERE id_user = {$User["id"]}
-        AND authority = 'COMMERCIAL'
-        $id
-	") != NULL);
+    return (user_has_school_authority($User["id"], "COMMERCIAL", $id));
 }
 

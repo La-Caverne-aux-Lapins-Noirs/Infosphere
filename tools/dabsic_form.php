@@ -21,6 +21,16 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
 {
     global $Configuration;
 
+    // Temporary/manual completion created from the generic Documents page.
+    // The symbolic key is the only value exposed to the browser; the actual
+    // path remains constrained to Infosphere's document data directory.
+    if (preg_match('/^document-page:([a-f0-9]{32}):([a-f0-9]{16})$/', (string)$key, $m))
+        return ([
+            "file" => "dres/doc/data/manual/".$m[1]."-".$m[2].".dab",
+            "label" => "Complément manuel de document",
+            "create_parent" => true
+        ]);
+
     if (preg_match('/^needs-analysis:([0-9]+)$/', (string)$key, $m))
     {
         $prospect = document_context_user((int)$m[1]);
@@ -76,6 +86,29 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
         "label" => "Données de contrat pour ".($school["name"] ?? $codename),
         "create_parent" => true
     ]);
+}
+
+function dabsic_form_user_can_access_output($key)
+{
+    if (is_admin())
+        return (true);
+
+    // Manual completion from the Documents page follows the access rules of
+    // that page. The output path itself is still resolved server-side.
+    if (preg_match('/^document-page:[a-f0-9]{32}:[a-f0-9]{16}$/', (string)$key))
+        return (
+            am_i_cycle_director() ||
+            is_director_for_school(-1) ||
+            is_secretariat() ||
+            is_commercial()
+        );
+
+    // Profile documentation already exposes completion to staff allowed to
+    // manage the target learner.
+    if (preg_match('/^user-document:([0-9]+):[a-f0-9]{32}:[0-5]$/', (string)$key, $m))
+        return (is_director_for_student((int)$m[1]));
+
+    return (false);
 }
 
 function dabsic_form_allowed_outputs()
@@ -468,6 +501,327 @@ function dabsic_form_docbuilder_fields($reference, $chain = "")
     return ($fields);
 }
 
+
+function dabsic_form_extract_root_scope($content, $scope)
+{
+    if (!is_string($content) || !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', (string)$scope))
+        return (NULL);
+    $needle = '['.$scope;
+    $start = strpos($content, $needle);
+    if ($start === false)
+        return (NULL);
+
+    $depth = 0;
+    $quoted = false;
+    $escape = false;
+    $length = strlen($content);
+    for ($i = $start; $i < $length; ++$i)
+    {
+        $c = $content[$i];
+        if ($quoted)
+        {
+            if ($escape)
+                $escape = false;
+            else if ($c === "\\")
+                $escape = true;
+            else if ($c === '"')
+                $quoted = false;
+            continue ;
+        }
+        if ($c === '"')
+        {
+            $quoted = true;
+            continue ;
+        }
+        if ($c === '[')
+            ++$depth;
+        else if ($c === ']')
+        {
+            --$depth;
+            if ($depth === 0)
+                return (substr($content, $start, $i - $start + 1));
+        }
+    }
+    return (NULL);
+}
+
+function dabsic_form_empty_form_metadata()
+{
+    return ([
+        "fields" => [],
+        "labels" => [],
+        "groups" => [],
+        "group_order" => [],
+        "roles" => [],
+    ]);
+}
+
+function dabsic_form_metadata_string_list($value)
+{
+    if (!is_array($value))
+        $value = $value === NULL || $value === "" ? [] : [$value];
+    $out = [];
+    foreach ($value as $entry)
+    {
+        if (is_array($entry) || is_object($entry))
+            continue ;
+        $entry = trim((string)$entry);
+        if ($entry != "" && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $entry))
+            $out[$entry] = true;
+    }
+    return (array_keys($out));
+}
+
+function dabsic_form_metadata_scalar_list($value)
+{
+    if ($value === NULL || $value === "")
+        return ([]);
+    if (!is_array($value))
+        $value = [$value];
+    $out = [];
+    foreach ($value as $entry)
+    {
+        if (is_array($entry) || is_object($entry))
+            continue ;
+        $entry = trim((string)$entry);
+        if ($entry !== "" && !in_array($entry, $out, true))
+            $out[] = $entry;
+    }
+    return ($out);
+}
+
+function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$metadata)
+{
+    foreach ($tree as $key => $child)
+    {
+        $key = (string)$key;
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $key) || !is_array($child))
+            continue ;
+        $path = $prefix == "" ? $key : $prefix.".".$key;
+        $is_field = array_key_exists("Label", $child)
+            || array_key_exists("Required", $child)
+            || array_key_exists("Default", $child);
+        if ($is_field)
+        {
+            $field = dabsic_form_normalize_field($path);
+            if ($field === NULL)
+                continue ;
+            $label = trim((string)($child["Label"] ?? $field));
+            if ($label == "")
+                $label = $field;
+            $metadata["fields"][$field] = [
+                "label" => $label,
+                "group" => (string)$group,
+                "required" => !empty($child["Required"]),
+                "default" => trim((string)($child["Default"] ?? "")),
+                // Optional questionnaire/form semantics.  Existing document
+                // forms simply ignore them, while questionnaire-aware users
+                // can consume the same FormGroup metadata.
+                "type" => strtolower(trim((string)($child["Type"] ?? "text"))),
+                "points" => is_numeric($child["Points"] ?? NULL) ? (float)$child["Points"] : NULL,
+                "policy" => trim((string)($child["Policy"] ?? "")),
+                "penalty" => is_numeric($child["Penalty"] ?? NULL) ? (float)$child["Penalty"] : NULL,
+                "choices" => dabsic_form_metadata_scalar_list($child["Choices"] ?? []),
+                "correct" => dabsic_form_metadata_scalar_list($child["Correct"] ?? []),
+                "medals" => dabsic_form_metadata_scalar_list($child["Medals"] ?? []),
+            ];
+            $metadata["labels"][$field] = $label;
+            $metadata["groups"][$group]["fields"][] = $field;
+            continue ;
+        }
+        dabsic_form_parse_group_fields($child, $path, $group, $metadata);
+    }
+}
+
+function dabsic_form_form_metadata($reference)
+{
+    $content = @file_get_contents($reference);
+    if ($content === false)
+        return (dabsic_form_empty_form_metadata());
+
+    $metadata = dabsic_form_empty_form_metadata();
+    $group_scope = dabsic_form_extract_root_scope($content, "FormGroup");
+    if ($group_scope !== NULL)
+    {
+        $command = "mergeconf";
+        foreach (dabsic_form_include_paths($reference) as $path)
+            $command .= " -I ".escapeshellarg($path);
+        $command .= " -if .dabsic -of .json";
+        $process = dabsic_form_process($command, $group_scope."\n");
+        if ($process["status"] === 0)
+        {
+            $data = json_decode($process["stdout"], true);
+            $root = is_array($data) && isset($data["FormGroup"]) && is_array($data["FormGroup"])
+                ? $data["FormGroup"] : [];
+            foreach ($root as $group => $tree)
+            {
+                $group = (string)$group;
+                if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $group) || !is_array($tree))
+                    continue ;
+                $label = trim((string)($tree["Label"] ?? $group));
+                if ($label == "")
+                    $label = $group;
+                $metadata["groups"][$group] = [
+                    "label" => $label,
+                    "fields" => [],
+                    "minimum_percent" => is_numeric($tree["MinimumPercent"] ?? NULL)
+                        ? (float)$tree["MinimumPercent"] : NULL,
+                    "medals" => dabsic_form_metadata_scalar_list($tree["Medals"] ?? []),
+                ];
+                $metadata["group_order"][] = $group;
+                $fields = isset($tree["Fields"]) && is_array($tree["Fields"])
+                    ? $tree["Fields"] : [];
+                dabsic_form_parse_group_fields($fields, "", $group, $metadata);
+            }
+        }
+    }
+
+    $role_scope = dabsic_form_extract_root_scope($content, "FormRole");
+    if ($role_scope !== NULL)
+    {
+        $command = "mergeconf";
+        foreach (dabsic_form_include_paths($reference) as $path)
+            $command .= " -I ".escapeshellarg($path);
+        $command .= " -if .dabsic -of .json";
+        $process = dabsic_form_process($command, $role_scope."\n");
+        if ($process["status"] === 0)
+        {
+            $data = json_decode($process["stdout"], true);
+            $root = is_array($data) && isset($data["FormRole"]) && is_array($data["FormRole"])
+                ? $data["FormRole"] : [];
+            foreach ($root as $role => $tree)
+            {
+                $role = (string)$role;
+                if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $role) || !is_array($tree))
+                    continue ;
+                $label = trim((string)($tree["Label"] ?? $role));
+                if ($label == "")
+                    $label = $role;
+                $definition = [
+                    "label" => $label,
+                    "required" => !empty($tree["Required"]),
+                    "read" => dabsic_form_metadata_string_list($tree["Read"] ?? []),
+                    "edit" => dabsic_form_metadata_string_list($tree["Edit"] ?? []),
+                    "validate" => dabsic_form_metadata_string_list($tree["Validate"] ?? []),
+                ];
+                // Edit and Validate always imply Read. Unknown group names are
+                // ignored so a typo in ACL metadata cannot expose fields.
+                $read = [];
+                foreach (array_merge($definition["read"], $definition["edit"], $definition["validate"]) as $group)
+                    if (isset($metadata["groups"][$group]))
+                        $read[$group] = true;
+                $definition["read"] = array_keys($read);
+                $definition["edit"] = array_values(array_filter($definition["edit"], function($group) use ($metadata) {
+                    return (isset($metadata["groups"][$group]));
+                }));
+                $definition["validate"] = array_values(array_filter($definition["validate"], function($group) use ($metadata) {
+                    return (isset($metadata["groups"][$group]));
+                }));
+                $metadata["roles"][$role] = $definition;
+            }
+        }
+    }
+    return ($metadata);
+}
+
+function dabsic_form_role_definition(array $metadata, $role)
+{
+    $role = trim((string)$role);
+    return (isset($metadata["roles"][$role]) && is_array($metadata["roles"][$role])
+        ? $metadata["roles"][$role] : NULL);
+}
+
+function dabsic_form_role_groups(array $metadata, $role, $access = "read")
+{
+    $definition = dabsic_form_role_definition($metadata, $role);
+    if ($definition == NULL)
+        return ([]);
+    $access = strtolower(trim((string)$access));
+    if (!in_array($access, ["read", "edit", "validate"], true))
+        return ([]);
+    return (isset($definition[$access]) && is_array($definition[$access])
+        ? $definition[$access] : []);
+}
+
+function dabsic_form_role_fields(array $metadata, $role, $access = "read")
+{
+    $groups = array_flip(dabsic_form_role_groups($metadata, $role, $access));
+    $out = [];
+    foreach (($metadata["fields"] ?? []) as $field => $definition)
+        if (isset($groups[$definition["group"] ?? ""]))
+            $out[] = (string)$field;
+    return ($out);
+}
+
+function dabsic_form_missing_required_fields(array $metadata, array $values, $role = "")
+{
+    $groups = NULL;
+    $role = trim((string)$role);
+    if ($role != "")
+        $groups = array_flip(dabsic_form_role_groups($metadata, $role, "validate"));
+    $out = [];
+    foreach (($metadata["fields"] ?? []) as $field => $definition)
+    {
+        if (empty($definition["required"]))
+            continue ;
+        if ($groups !== NULL && !isset($groups[$definition["group"] ?? ""]))
+            continue ;
+        $value = array_key_exists($field, $values) ? $values[$field] : "";
+        if (trim((string)$value) === "")
+            $out[$field] = (string)($definition["label"] ?? $field);
+    }
+    return ($out);
+}
+
+function dabsic_form_default_current_user_value($property)
+{
+    global $User;
+
+    $id_user = isset($User["id"]) ? (int)$User["id"] : 0;
+    if ($id_user <= 0 || !function_exists("document_context_person"))
+        return (NULL);
+    $person = document_context_person($id_user);
+    if (!is_array($person))
+        return (NULL);
+
+    $property = strtolower(trim((string)$property));
+    foreach ($person as $key => $value)
+        if (strtolower((string)$key) === $property && !is_array($value) && !is_object($value))
+            return ((string)$value);
+    return (NULL);
+}
+
+/** Resolve field-level defaults for the authenticated staff-side editor. */
+function dabsic_form_default_values($reference, $role = "")
+{
+    $metadata = dabsic_form_form_metadata($reference);
+    $editable = trim((string)$role) != ""
+        ? array_flip(dabsic_form_role_fields($metadata, $role, "edit")) : NULL;
+    $out = [];
+    foreach (($metadata["fields"] ?? []) as $field => $definition)
+    {
+        if ($editable !== NULL && !isset($editable[$field]))
+            continue ;
+        $marker = trim((string)($definition["default"] ?? ""));
+        if ($marker == "")
+            continue ;
+        $value = NULL;
+        if ($marker === "@Today")
+            $value = date("d/m/Y");
+        else if (preg_match('/^@CurrentUser\.([A-Za-z_][A-Za-z0-9_]*)$/D', $marker, $match))
+            $value = dabsic_form_default_current_user_value($match[1]);
+        if ($value !== NULL)
+            $out[$field] = (string)$value;
+    }
+    return ($out);
+}
+
+function dabsic_form_form_labels($reference)
+{
+    $metadata = dabsic_form_form_metadata($reference);
+    return ($metadata["labels"]);
+}
+
 function dabsic_form_discover_fields($requested_reference, $mode = "dabsic", $chain = "")
 {
     $reference = dabsic_editor_resolve_file($requested_reference, false);
@@ -508,10 +862,13 @@ function dabsic_form_discover_fields($requested_reference, $mode = "dabsic", $ch
             "details" => dabsic_form_clean_diagnostic($process["stderr"])
         ]);
 
+    $form_metadata = dabsic_form_form_metadata($reference["absolute"]);
     return ([
         "ok" => true,
         "reference" => $reference,
         "fields" => $fields,
+        "labels" => $form_metadata["labels"],
+        "form_metadata" => $form_metadata,
         "warnings" => dabsic_form_clean_diagnostic($process["stderr"])
     ]);
 }
@@ -635,6 +992,106 @@ function dabsic_form_load_output_values($output)
         "values" => $flat,
         "content" => $content,
         "hash" => hash("sha256", $content)
+    ]);
+}
+
+
+function dabsic_form_workspace_file(array $output)
+{
+    $absolute = trim((string)($output["absolute"] ?? ""));
+    if ($absolute == "")
+        return ("");
+    return (
+        dirname($absolute).DIRECTORY_SEPARATOR.
+        ".workspace-".pathinfo($absolute, PATHINFO_FILENAME).".json"
+    );
+}
+
+function dabsic_form_load_workspace(array $output)
+{
+    $file = dabsic_form_workspace_file($output);
+    if ($file == "" || !is_file($file))
+        return (["ok" => true, "exists" => false, "data" => [], "mtime" => 0]);
+    $content = @file_get_contents($file);
+    if ($content === false)
+        return (["ok" => false, "error" => "DabsicFormCannotReadOutput"]);
+    $data = json_decode($content, true);
+    if (!is_array($data))
+        return (["ok" => false, "error" => "DabsicFormInvalidOutputFile"]);
+    return ([
+        "ok" => true,
+        "exists" => true,
+        "data" => $data,
+        "mtime" => @filemtime($file) ?: 0,
+    ]);
+}
+
+function dabsic_form_save_workspace(array $output, array $data)
+{
+    $file = dabsic_form_workspace_file($output);
+    if ($file == "")
+        return (["ok" => false, "error" => "DabsicFormInvalidOutput"]);
+    $data["updated_at"] = date("Y-m-d H:i:s");
+    if (!isset($data["created_at"]) || trim((string)$data["created_at"]) == "")
+        $data["created_at"] = $data["updated_at"];
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false)
+        return (["ok" => false, "error" => "DabsicFormCannotSave"]);
+    $json .= "\n";
+    if (file_put_contents($file, $json, LOCK_EX) !== strlen($json))
+        return (["ok" => false, "error" => "DabsicFormCannotSave"]);
+    @chmod($file, 0640);
+    return (["ok" => true, "file" => $file, "mtime" => @filemtime($file) ?: time(), "data" => $data]);
+}
+
+function dabsic_form_delete_workspace(array $output)
+{
+    $file = dabsic_form_workspace_file($output);
+    if ($file != "" && is_file($file) && !@unlink($file))
+        return (false);
+    return (true);
+}
+
+function dabsic_form_reset_output_values(array $output)
+{
+    $files = [(string)($output["absolute"] ?? ""), dabsic_form_override_file($output)];
+    foreach ($files as $file)
+        if ($file != "" && is_file($file) && !@unlink($file))
+            return (["ok" => false, "error" => "DabsicFormCannotSave", "details" => $file]);
+    return (["ok" => true]);
+}
+
+function dabsic_form_write_output_values(array $output, array $values)
+{
+    if (!count($values))
+        return (dabsic_form_reset_output_values($output));
+    ksort($values, SORT_NATURAL | SORT_FLAG_CASE);
+    $built = dabsic_form_build_dabsic(array_keys($values), $values);
+    if (!$built["ok"])
+        return ($built);
+    $absolute = (string)($output["absolute"] ?? "");
+    if ($absolute == "")
+        return (["ok" => false, "error" => "DabsicFormInvalidOutput"]);
+    $parent = dirname($absolute);
+    if (!is_dir($parent))
+        @mkdir($parent, 0770, true);
+    if (!is_dir($parent) || !is_writable($parent))
+        return (["ok" => false, "error" => "DabsicFormOutputReadOnly"]);
+    $temporary = tempnam($parent, ".infosphere-form-");
+    if ($temporary === false)
+        return (["ok" => false, "error" => "DabsicFormCannotSave"]);
+    $content = $built["content"];
+    if (file_put_contents($temporary, $content, LOCK_EX) !== strlen($content) || !@rename($temporary, $absolute))
+    {
+        @unlink($temporary);
+        return (["ok" => false, "error" => "DabsicFormCannotSave"]);
+    }
+    @chmod($absolute, 0640);
+    clearstatcache(true, $absolute);
+    return ([
+        "ok" => true,
+        "hash" => hash("sha256", $content),
+        "mtime" => @filemtime($absolute) ?: time(),
     ]);
 }
 
@@ -774,9 +1231,15 @@ function dabsic_form_validate_resolution($reference, $data_file, array $override
             $built = dabsic_form_build_dabsic(array_keys($prefilled), $prefilled);
             if (!$built["ok"])
                 return ($built);
-            $temporary_context = tempnam(sys_get_temp_dir(), "infosphere_dabsic_form_context_");
-            if ($temporary_context === false || file_put_contents($temporary_context, $built["content"], LOCK_EX) !== strlen($built["content"]))
+            // mergeconf infers the input format from the file extension. tempnam()
+            // creates an extension-less path, which mergeconf cannot load as Dabsic.
+            $temporary_base = tempnam(sys_get_temp_dir(), "infosphere_dabsic_form_context_");
+            $temporary_context = $temporary_base === false ? false : $temporary_base.".dab";
+            if ($temporary_base === false || !@rename($temporary_base, $temporary_context) ||
+                file_put_contents($temporary_context, $built["content"], LOCK_EX) !== strlen($built["content"]))
             {
+                if ($temporary_base !== false)
+                    @unlink($temporary_base);
                 if ($temporary_context !== false)
                     @unlink($temporary_context);
                 return (["ok" => false, "error" => "DabsicFormCannotSave"]);
@@ -813,7 +1276,7 @@ function dabsic_form_validate_resolution($reference, $data_file, array $override
     return (["ok" => true]);
 }
 
-function dabsic_form_save($requested_reference, $output_key, $values, $overrides, $reference_hash, $output_hash, $output_exists, $overrides_hash, $overrides_exists, $mode = "dabsic", $chain = "", $trusted_user_document_id = NULL)
+function dabsic_form_save($requested_reference, $output_key, $values, $overrides, $reference_hash, $output_hash, $output_exists, $overrides_hash, $overrides_exists, $mode = "dabsic", $chain = "", $trusted_user_document_id = NULL, $allow_partial = false, $form_role = "")
 {
     $discovery = dabsic_form_discover_fields($requested_reference, $mode, $chain);
     if (!$discovery["ok"])
@@ -837,17 +1300,44 @@ function dabsic_form_save($requested_reference, $output_key, $values, $overrides
         return ($override_validation);
     $overrides = $override_validation["values"];
 
+    $form_role = trim((string)$form_role);
+    $metadata = $discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
+    $submitted_values = $values;
+    $submitted_fields = array_keys($submitted_values);
     $required = $discovery["fields"];
-    $submitted_fields = array_keys($values);
-    natcasesort($submitted_fields);
-    $submitted_fields = array_values($submitted_fields);
-    $expected_fields = $required;
-    natcasesort($expected_fields);
-    $expected_fields = array_values($expected_fields);
-    if ($submitted_fields !== $expected_fields)
-        return (["ok" => false, "error" => "DabsicFormChanged"]);
 
-    $built = dabsic_form_build_dabsic($required, $values);
+    if ($form_role != "")
+    {
+        if (dabsic_form_role_definition($metadata, $form_role) == NULL)
+            return (["ok" => false, "error" => "PermissionDenied", "details" => $form_role]);
+        $allowed_fields = array_flip(dabsic_form_role_fields($metadata, $form_role, "edit"));
+        foreach ($submitted_fields as $field)
+            if (!isset($allowed_fields[$field]))
+                return (["ok" => false, "error" => "PermissionDenied", "details" => $field]);
+        $loaded_values = dabsic_form_load_output_values($output);
+        if (!$loaded_values["ok"])
+            return ($loaded_values);
+        $values = array_merge($loaded_values["values"], $submitted_values);
+        $build_fields = array_keys($values);
+        $allow_partial = true;
+    }
+    else
+    {
+        natcasesort($submitted_fields);
+        $submitted_fields = array_values($submitted_fields);
+        $expected_fields = $required;
+        natcasesort($expected_fields);
+        $expected_fields = array_values($expected_fields);
+        if (!$allow_partial && $submitted_fields !== $expected_fields)
+            return (["ok" => false, "error" => "DabsicFormChanged"]);
+        if ($allow_partial)
+            foreach ($submitted_fields as $field)
+                if (!in_array($field, $expected_fields, true))
+                    return (["ok" => false, "error" => "DabsicFormChanged", "details" => $field]);
+        $build_fields = $allow_partial ? $submitted_fields : $required;
+    }
+
+    $built = dabsic_form_build_dabsic($build_fields, $values);
     if (!$built["ok"])
         return ($built);
 
@@ -903,7 +1393,10 @@ function dabsic_form_save($requested_reference, $output_key, $values, $overrides
     }
 
     $validation = dabsic_editor_validate_content($built["content"]);
-    if ($validation["ok"])
+    // Role-scoped document forms are intentionally partial: each actor only
+    // writes the groups granted by FormRole. Full resolution is deferred until
+    // the document is finalized.
+    if ($validation["ok"] && !$allow_partial)
         $validation = dabsic_form_validate_resolution(
             $reference["absolute"],
             $temporary,

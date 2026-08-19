@@ -1,0 +1,64 @@
+[Beneficiaire
+  Label = "Bénéficiaire"
+  [Fields
+    [Student
+      [Identity
+        Label = "Bénéficiaire"
+      ]
+      [FirstName
+        Label = "Prénom du bénéficiaire"
+      ]
+      [FamilyName
+        Label = "Nom du bénéficiaire"
+      ]
+      [Address
+        Label = "Adresse du bénéficiaire"
+      ]
+      [PostalCode
+        Label = "Code postal du bénéficiaire"
+      ]
+      [City
+        Label = "Ville du bénéficiaire"
+      ]
+      [Mail
+        Label = "Courriel du bénéficiaire"
+      ]
+    ]
+  ]
+]
+[Payeur
+  Label = "Payeur / responsable financier"
+  [Fields
+    [Parent
+      [Identity
+        Label = "Payeur / responsable financier"
+      ]
+      [FirstName
+        Label = "Prénom du payeur"
+      ]
+      [FamilyName
+        Label = "Nom du payeur"
+      ]
+      [Address
+        Label = "Adresse du payeur"
+      ]
+      [PostalCode
+        Label = "Code postal du payeur"
+      ]
+      [City
+        Label = "Ville du payeur"
+      ]
+      [Mail
+        Label = "Courriel du payeur"
+      ]
+    ]
+  ]
+]
+[Facturation
+  Label = "Facturation"
+  [Fields
+    [BillingInformation
+      Label = "Informations bancaires / de facturation"
+    ]
+  ]
+]

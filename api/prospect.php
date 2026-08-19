@@ -1,5 +1,41 @@
 <?php
 
+function MoveProspectToCampaign($id, $data, $method, $output, $module)
+{
+    require_once ("./pages/prospecting/campaign_tools.php");
+
+    $id = (int)$id;
+    $campaign_id = (int)($data["campaign_id"] ?? 0);
+    $registration_date = trim((string)($data["registration_date"] ?? ""));
+
+    if ($id <= 0 || $campaign_id <= 0 || !campaign_date_is_valid($registration_date))
+        bad_request();
+
+    $campaign = campaign_fetch_one($campaign_id);
+    if ($campaign == NULL || $campaign["deleted"] != NULL)
+        return (new ErrorResponse("NotFound"));
+    if ($registration_date < $campaign["start_date"] || $registration_date > $campaign["end_date"])
+        bad_request();
+
+    $prospect = db_select_one("id, registration_date
+        FROM user
+        WHERE id = $id AND profile_status = 'prospect'
+    ");
+    if ($prospect == NULL)
+        return (new ErrorResponse("NotFound"));
+
+    $time = "00:00:00";
+    if (preg_match('/ ([0-9]{2}:[0-9]{2}:[0-9]{2})$/', (string)($prospect["registration_date"] ?? ""), $match))
+        $time = $match[1];
+
+    if (db_update_one("user", $id, ["registration_date" => $registration_date." ".$time]) === NULL)
+        return (new ErrorResponse("CannotUpdate"));
+    return (new ValueResponse([
+        "msg" => "Prospect rattaché à la campagne ".($campaign["name"] ?? ""),
+        "content" => datex("d/m/Y", $registration_date." ".$time),
+    ]));
+}
+
 function TransformProspect($id, $data, $method, $output, $module)
 {
     return (transform_prospect($id));
@@ -186,6 +222,10 @@ $Tab = [
 	"transform" => [
 	    "is_commercial",
 	    "TransformProspect",
+	],
+	"campaign" => [
+	    "is_commercial,is_secretariat",
+	    "MoveProspectToCampaign",
 	],
 	"registration" => [
 	    "is_commercial",

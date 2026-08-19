@@ -1,5 +1,5 @@
 <?php $language = ""; ?>
-<?php if (is_director_for_student($user->id, false) || is_me($user->id)) { ?>
+<?php if (user_storage_can_write_something($user->id)) { ?>
     <?php $js = "silent_submit(this, 'file_browser');"; ?>
     <form
 	method="post"
@@ -21,7 +21,7 @@
 $type = "file";
 $page = "user";
 $id = $user->id;
-$path = "";
-$target = $Configuration->UsersDir($user->codename);
+$path = user_storage_default_browse_space((int)$user->id);
+$target = $Configuration->UsersDir($user->codename).$path."/";
 require ("./tools/template/path_browser.phtml");
 

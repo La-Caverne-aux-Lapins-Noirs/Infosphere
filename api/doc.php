@@ -211,9 +211,100 @@ function document_generation_mergeconf_command($files, $fields, $output)
     return ($cmd);
 }
 
-function document_generation_docbuilder_command($input, $output)
+function document_generation_docbuilder_command($input, $output, $blank = false)
 {
-    return ("docbuilder -i ".escapeshellarg($input)." -o ".escapeshellarg($output));
+    return (
+        "docbuilder".($blank ? " --blank" : "").
+        " -i ".escapeshellarg($input)." -o ".escapeshellarg($output)
+    );
+}
+
+/**
+ * Resolve the school whose institutional data must remain available when a
+ * document is generated as a blank template. Blank means "no beneficiary /
+ * workflow values", not "remove the organisation branding".
+ */
+function document_generation_blank_school_id(array $chain)
+{
+    global $User;
+
+    // Prefer an explicitly selected school. If the chain only contains a
+    // person/session, it may still tell us which school the document belongs
+    // to without exposing that person's values to the blank document.
+    foreach ($chain as $entry)
+    {
+        if (!is_array($entry) || !isset($entry["type"]))
+            continue ;
+        $type = strtolower(trim((string)$entry["type"]));
+        if ($type === "school" && isset($entry["id"]) && trim((string)$entry["id"]) !== "")
+        {
+            $id = document_context_school_id($entry["id"]);
+            if ($id != NULL)
+                return ((int)$id);
+        }
+        if (in_array($type, ["user", "student", "eleve", "staff", "jury"], true)
+            && isset($entry["id"]) && trim((string)$entry["id"]) !== "")
+        {
+            $id_user = document_context_user_id($entry["id"]);
+            if ($id_user != NULL && ($school = document_context_first_school_for_user($id_user)) != NULL)
+                return ((int)$school["id_school"]);
+        }
+        if ($type === "title_session" && !empty($entry["id"])
+            && function_exists("fetch_title_session_basic"))
+        {
+            $session = fetch_title_session_basic((int)$entry["id"]);
+            if (is_array($session) && !empty($session["id_school"]))
+                return ((int)$session["id_school"]);
+        }
+    }
+
+    if (function_exists("get_school_from_url"))
+    {
+        $school = get_school_from_url();
+        if (is_array($school) && !empty($school["id"]))
+            return ((int)$school["id"]);
+    }
+
+    if (is_array($User ?? NULL))
+    {
+        if (!empty($User["last_school"]))
+        {
+            $id = document_context_school_id($User["last_school"]);
+            if ($id != NULL)
+                return ((int)$id);
+        }
+        if (!empty($User["id"]) && ($school = document_context_first_school_for_user((int)$User["id"])) != NULL)
+            return ((int)$school["id_school"]);
+    }
+    return (NULL);
+}
+
+function document_generation_apply_blank_context(&$fields, &$files, &$temporary_files, array $chain)
+{
+    $id_school = document_generation_blank_school_id($chain);
+    if ($id_school == NULL)
+        return (false);
+
+    // Reuse the normal context builder, but inject only School. Student,
+    // staff, custom fields and saved form values deliberately stay absent.
+    document_context_apply_chain(
+        $fields,
+        [["type" => "school", "prefix" => "School", "id" => (string)$id_school]],
+        $files,
+        $temporary_files
+    );
+    return (true);
+}
+
+function document_generation_task_plan($merged)
+{
+    if (!is_file($merged))
+        return ([]);
+    $loaded = load_configuration($merged, [], false);
+    if ($loaded->is_error() || !is_array($loaded->value))
+        return ([]);
+    $plan = $loaded->value["TaskPlan"] ?? [];
+    return (is_array($plan) ? document_task_plan_normalize($plan) : []);
 }
 
 
@@ -279,13 +370,15 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $form_output_key = isset($data["form_output"]) ? (string)$data["form_output"] : "";
     $save_user_document = isset($data["save_user_document"]) ? (int)$data["save_user_document"] : 0;
     $finalize_document = !empty($data["finalize_document"]);
+    $blank_document = !empty($data["blank_document"]);
     $target_year = isset($data["target_year"]) ? (int)$data["target_year"] : 0;
     $signature_bindings = $data["signature_bindings"] ?? [];
     $selected_document_reference = "";
     $selected_document_file = "";
     unset(
         $data["action"], $data["form_output"], $data["save_user_document"],
-        $data["finalize_document"], $data["target_year"], $data["signature_bindings"]
+        $data["finalize_document"], $data["blank_document"], $data["target_year"],
+        $data["signature_bindings"]
     );
 
     if (isset($data["fields"]))
@@ -303,16 +396,29 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         unset($data["fields"]);
     }
 
-    if (isset($data["chain"]))
+    $document_chain = isset($data["chain"])
+        ? document_context_parse_chain($data["chain"]) : [];
+    if ($blank_document)
     {
+        if (!document_generation_apply_blank_context(
+            $fields,
+            $context_files,
+            $temporary_files,
+            $document_chain
+        ))
+            return (new ErrorResponse(
+                "MissingField",
+                "School"
+            ));
+    }
+    else if (count($document_chain))
         document_context_apply_chain(
             $fields,
-            document_context_parse_chain($data["chain"]),
+            $document_chain,
             $context_files,
             $temporary_files
         );
-        unset($data["chain"]);
-    }
+    unset($data["chain"]);
 
     // Nouveau format robuste: doc_<hash>=0|1 + docref_<hash>=source:path.
     foreach ($data as $key => $val)
@@ -369,6 +475,37 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             $files[] = $form_output["absolute"];
     }
 
+    if ($finalize_document && $save_user_document > 0 && $form_output_key != "")
+    {
+        if ($selected_document_file != "")
+        {
+            $required_roles = document_workflow_required_model_roles($selected_document_file);
+            if (count($required_roles) && document_workflow_completed_form_for_output($save_user_document, $form_output_key) == NULL)
+                return (new ErrorResponse(
+                    "DocumentRequiredTasks",
+                    implode(", ", array_values($required_roles))
+                ));
+        }
+        $pending_tasks = document_workflow_pending_required_form_tasks($save_user_document, $form_output_key);
+        if (count($pending_tasks))
+        {
+            $labels = [];
+            foreach ($pending_tasks as $task)
+                $labels[] = trim((string)($task["role_label"] ?? "")) != ""
+                    ? trim((string)$task["role_label"]) : (string)($task["role"] ?? "");
+            return (new ErrorResponse(
+                "DocumentRequiredTasks",
+                implode(", ", array_values(array_filter($labels, function($label) { return $label !== ""; })))
+            ));
+        }
+        $missing_fields = document_workflow_missing_required_form_fields($save_user_document, $form_output_key);
+        if (count($missing_fields))
+            return (new ErrorResponse(
+                "DocumentRequiredFields",
+                implode("\n", array_values($missing_fields))
+            ));
+    }
+
     // A Dabsic form may carry explicit mergeconf overrides in a protected
     // sidecar file. Append them last so -m keeps its intended priority over
     // defaults and values loaded from Dabsic files.
@@ -378,6 +515,12 @@ function _GenerateDoc($id, $data, $method, $output, $module)
 
     if (!count($files))
         bad_request();
+
+    // The first Dabsic input is the document model. Keep its name for the
+    // downloaded PDF instead of exposing the temporary merged filename.
+    $output_filename = pathinfo((string)$files[0], PATHINFO_FILENAME).".pdf";
+    if ($output_filename === ".pdf")
+        $output_filename = "document.pdf";
 
     $tmp = tempnam(sys_get_temp_dir(), "infosphere_doc_");
     if ($tmp === false)
@@ -392,7 +535,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     // La page Documents doit afficher les erreurs Dabsic sans jamais exposer
     // la sortie de travail stdout.
     $merge_command = document_generation_mergeconf_command($files, $fields, $merged);
-    $docbuilder_command = document_generation_docbuilder_command($merged, $pdf);
+    $docbuilder_command = document_generation_docbuilder_command($merged, $pdf, $blank_document);
     $merge_process = document_generation_run_command($merge_command);
     $kept_dab = document_generation_keep_dab($merged);
     if ($merge_process["status"] != 0 || !file_exists($merged))
@@ -444,6 +587,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
 
     $saved_document = "";
     $document_instance = NULL;
+    $task_plan = document_generation_task_plan($merged);
     if ($finalize_document && $save_user_document > 0)
     {
         if (!is_director_for_student($save_user_document))
@@ -456,10 +600,24 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             $selected_document_file,
             $target_year,
             $signature_bindings,
-            $content
+            $content,
+            $task_plan
         );
         if ($document_instance->is_error())
             return ($document_instance);
+        if ($form_output_key != "")
+        {
+            $instance_id = (string)($document_instance->value["id"] ?? "");
+            if ($instance_id != "" && !document_workflow_mark_document_form_processed(
+                $save_user_document,
+                $form_output_key,
+                $instance_id
+            ))
+                add_log(REPORT, "Cannot mark completed document form as processed for instance ".$instance_id, $save_user_document);
+            $workspace_output = dabsic_form_resolve_output($form_output_key, false, $save_user_document);
+            if ($workspace_output["ok"] && !dabsic_form_delete_workspace($workspace_output))
+                add_log(REPORT, "Cannot remove completed document workspace for instance ".$instance_id, $save_user_document);
+        }
     }
 
     // Backward-compatible generated-file storage remains available for callers
@@ -507,7 +665,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         document_generation_log_raw_output("docbuilder stderr", $build_process["stderr"]);
 
     return (new ValueResponse([
-        "filename" => "generated.pdf",
+        "filename" => $output_filename,
         "content" => $content,
         "saved_document" => $saved_document,
         "document_instance" => ($document_instance instanceof ValueResponse) ? $document_instance->value : NULL
@@ -620,6 +778,59 @@ function AddDoc($id, $data, $method, $output, $module)
     return ($ret);
 }
 
+function ExpireDocRequest($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $kind = trim((string)($data["kind"] ?? ""));
+    if ($kind === "form")
+        $ret = document_workflow_expire_document_form($data["form_id"] ?? 0);
+    else if ($kind === "instance")
+        $ret = document_workflow_expire_instance(
+            $data["owner_user_id"] ?? 0,
+            $data["instance_id"] ?? ""
+        );
+    else
+        return (new ErrorResponse("InvalidParameter", "kind"));
+
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentRequestExpired"] ?? "Demande de document périmée."
+    ]));
+}
+
+function CompleteDocTask($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $ret = document_workflow_complete_form_role_as_staff(
+        $data["form_id"] ?? 0,
+        $data["role"] ?? ""
+    );
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentTaskCompleted"] ?? "Partie documentaire validée."
+    ]));
+}
+
+function RemindDocSignatures($id, $data, $method, $output, $module)
+{
+    $ret = document_workflow_remind_pending_signatures(
+        $data["owner_user_id"] ?? 0,
+        $data["instance_id"] ?? "",
+        $data["slot"] ?? ""
+    );
+    if ($ret->is_error())
+        return ($ret);
+    $sent = (int)($ret->value["sent"] ?? 0);
+    return (new ValueResponse([
+        "msg" => $sent > 1 ? "$sent demandes de signature envoyées." : ($sent == 1 ? "Demande de signature envoyée." : "Aucune signature en attente."),
+        "sent" => $sent,
+    ]));
+}
+
 function DeleteDoc($id, $data, $method, $output, $module)
 {
     global $Configuration;
@@ -667,7 +878,19 @@ $Tab = [
 	"generate" => [
 	    "is_teacher",
 	    "GenerateDoc",
-	]
+	],
+	"expire" => [
+	    "is_teacher",
+	    "ExpireDocRequest",
+	],
+	"task" => [
+	    "is_teacher",
+	    "CompleteDocTask",
+	],
+        "remind" => [
+            "logged_in",
+            "RemindDocSignatures",
+        ]
     ],
     "DELETE" => [
 	"file" => [

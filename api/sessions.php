@@ -99,7 +99,12 @@ function SetSessionRoom($id, $data, $method, $output, $module)
 
 function SessionJuryPanelResponse($id, $msg = "")
 {
+    $title_session = fetch_title_session_for_session((int)$id);
+    if ($title_session == NULL)
+        return (new ErrorResponse("SessionHasNoTitleSession"));
+
     ($session = new FullSession)->build_session($id);
+    ensure_session_juries($session);
     $value = ["content" => list_of_linksb(session_jury_link_params($session))];
     if ($msg != "")
         $value["msg"] = $msg;
@@ -109,10 +114,15 @@ function SessionJuryPanelResponse($id, $msg = "")
 function SetSessionJury($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
+    global $Database;
 
     if ($id == -1 || !isset($data["jury"]) || trim((string)$data["jury"]) == "")
         bad_request();
     $id = (int)$id;
+    $title_session = fetch_title_session_for_session($id);
+    if ($title_session == NULL)
+        return (new ErrorResponse("SessionHasNoTitleSession"));
+
     $jury = trim((string)$data["jury"]);
     $jury_value = $jury;
     if (substr($jury_value, 0, 1) == "-")
@@ -123,25 +133,27 @@ function SetSessionJury($id, $data, $method, $output, $module)
     if (($jury_user["profile_status"] ?? "") != "jury")
         return (new ErrorResponse("UserNotFound"));
     $id_user = (int)$jury_user["id"];
+    $id_title_session = (int)$title_session["id"];
 
-    if (($ret = handle_linksf([
-        "left_field_name" => "session",
-        "left_value" => $id,
-        "right_field_name" => "user",
-        "right_value" => $jury,
-        "link_table_name" => "session_teacher",
-        "right_table_name" => "user"
-    ]))->is_error())
-        return ($ret);
+    if (!jury_can_certify_title($id_user, (int)$title_session["id_title"]))
+        return (new ErrorResponse("JuryNotQualifiedForTitle"));
 
-    if ($method == "DELETE" || substr(trim((string)$data["jury"]), 0, 1) == "-")
+    if ($method == "DELETE" || substr($jury, 0, 1) == "-")
     {
-        add_log(DESTRUCTIVE_OPERATION, "Session #$id jury #$id_user removed", $id_user);
-        return (SessionJuryPanelResponse($id, $Dictionnary["JuryRemovedFromSession"] ?? "Jury retiré de la session"));
+        if ($Database->query("DELETE FROM title_session_jury WHERE id_title_session = $id_title_session AND id_user = $id_user") == false)
+            return (new ErrorResponse("CannotEdit"));
+        add_log(DESTRUCTIVE_OPERATION, "Title session #$id_title_session jury #$id_user removed", $id_user);
+        return (SessionJuryPanelResponse($id, $Dictionnary["JuryRemovedFromTitleSession"] ?? "Jury retiré de la session de titre"));
     }
 
-    add_log(CREATIVE_OPERATION, "Session #$id jury #$id_user added", $id_user);
-    return (SessionJuryPanelResponse($id, $Dictionnary["JuryAddedToSession"] ?? "Jury ajouté à la session"));
+    if ($Database->query("
+        INSERT IGNORE INTO title_session_jury (id_title_session, id_user)
+        VALUES ($id_title_session, $id_user)
+    ") == false)
+        return (new ErrorResponse("CannotEdit"));
+
+    add_log(CREATIVE_OPERATION, "Title session #$id_title_session jury #$id_user added", $id_user);
+    return (SessionJuryPanelResponse($id, $Dictionnary["JuryAddedToTitleSession"] ?? "Jury ajouté à la session de titre"));
 }
 
 function AddSession($id, $data, $method, $output, $module)

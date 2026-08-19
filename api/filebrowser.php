@@ -22,11 +22,31 @@ function ExportFileBrowserSelection($id, $data, $method, $output, $module)
     return (path_browser_transfer_export($page, $context_id, $type, $language, $selection));
 }
 
+function RenameFileBrowserEntry($id, $data, $method, $output, $module)
+{
+    if (!is_array($data))
+        bad_request();
+    return (path_browser_transfer_rename(
+        $data["page"] ?? "",
+        $data["id"] ?? -1,
+        $data["type"] ?? "",
+        $data["language"] ?? "",
+        $data["entry"] ?? "",
+        $data["name"] ?? ""
+    ));
+}
+
 $Tab = [
     "GET" => [
         "export" => [
             "logged_in",
             "ExportFileBrowserSelection"
+        ]
+    ],
+    "POST" => [
+        "rename" => [
+            "logged_in",
+            "RenameFileBrowserEntry"
         ]
     ]
 ];

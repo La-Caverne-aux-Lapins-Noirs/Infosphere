@@ -1,12 +1,13 @@
 <?php
 
-if (!is_admin())
+require_once (__DIR__."/../../tools/dabsic_form.php");
+require_once (__DIR__."/../../tools/document_sources.php");
+
+if (!dabsic_form_user_can_access_output($_GET["output"] ?? ""))
 {
     http_response_code(404);
     die();
 }
-
-require_once (__DIR__."/../../tools/dabsic_form.php");
 
 $dabsic_form_reference_key = $_GET["file"] ?? "";
 $dabsic_form_output_key = $_GET["output"] ?? "";
@@ -24,6 +25,17 @@ $dabsic_form_reference_hash = "";
 $dabsic_form_overrides = [];
 $dabsic_form_overrides_hash = hash("sha256", "");
 $dabsic_form_overrides_exists = false;
+$dabsic_form_metadata = $dabsic_form_discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
+$dabsic_form_role = trim((string)($_GET["form_role"] ?? ""));
+if ($dabsic_form_role == "" && isset($dabsic_form_metadata["roles"]["Etablissement"]))
+    $dabsic_form_role = "Etablissement";
+if ($dabsic_form_role == "" && count($dabsic_form_metadata["roles"] ?? []) === 1)
+    $dabsic_form_role = (string)array_key_first($dabsic_form_metadata["roles"]);
+if ($dabsic_form_role != "" && dabsic_form_role_definition($dabsic_form_metadata, $dabsic_form_role) == NULL)
+{
+    $dabsic_form_error = $Dictionnary["PermissionDenied"] ?? "Accès refusé";
+    $dabsic_form_details = $dabsic_form_role;
+}
 
 if (!$dabsic_form_discovery["ok"])
 {
@@ -60,32 +72,54 @@ else
             $dabsic_form_overrides = $dabsic_form_override_loaded["values"] ?? [];
             $dabsic_form_overrides_hash = $dabsic_form_override_loaded["hash"] ?? hash("sha256", "");
             $dabsic_form_overrides_exists = $dabsic_form_override_loaded["exists"] ?? false;
-            $dabsic_form_values = $dabsic_form_loaded["values"];
-            if (!$dabsic_form_output["exists"] && $dabsic_form_chain !== "")
-                $dabsic_form_values = array_merge(dabsic_form_prefill_from_chain($dabsic_form_chain), $dabsic_form_values);
+            // Automatic context (Student, School, etc.) remains visible even
+            // when it is not stored in forms/*.dab. Explicit form values win.
+            $dabsic_form_values = array_merge(
+                dabsic_form_prefill_from_chain($dabsic_form_chain),
+                $dabsic_form_loaded["values"]
+            );
+            $dabsic_form_defaults_added = false;
+            foreach (dabsic_form_default_values($dabsic_form_discovery["reference"]["absolute"], $dabsic_form_role) as $field => $value)
+                if (!array_key_exists($field, $dabsic_form_values) || trim((string)$dabsic_form_values[$field]) === "")
+                {
+                    $dabsic_form_values[$field] = $value;
+                    $dabsic_form_defaults_added = true;
+                }
             $dabsic_form_output_hash = $dabsic_form_loaded["hash"];
             $dabsic_form_output_exists = $dabsic_form_output["exists"];
-            $dabsic_form_existing_fields = array_keys($dabsic_form_values);
-            $dabsic_form_required_fields = $dabsic_form_discovery["fields"];
-            natcasesort($dabsic_form_existing_fields);
-            natcasesort($dabsic_form_required_fields);
-            $dabsic_form_output_complete =
-                $dabsic_form_output_exists &&
-                array_values($dabsic_form_existing_fields) === array_values($dabsic_form_required_fields);
+            $dabsic_form_output_complete = $dabsic_form_output_exists && !$dabsic_form_defaults_added;
         }
     }
 }
 
+$dabsic_form_document_title = "";
+if ($dabsic_form_discovery["ok"])
+    $dabsic_form_document_title = document_title_from_file(
+        $dabsic_form_discovery["reference"]["absolute"],
+        document_title_fallback($dabsic_form_discovery["reference"]["relative"])
+    );
+
 $dabsic_form_groups = [];
+$dabsic_form_readonly_groups = [];
 if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
-    foreach ($dabsic_form_discovery["fields"] as $field)
+{
+    $read = array_flip(dabsic_form_role_groups($dabsic_form_metadata, $dabsic_form_role, "read"));
+    $edit = array_flip(dabsic_form_role_groups($dabsic_form_metadata, $dabsic_form_role, "edit"));
+    $validate = array_flip(dabsic_form_role_groups($dabsic_form_metadata, $dabsic_form_role, "validate"));
+    foreach (($dabsic_form_metadata["group_order"] ?? []) as $group)
     {
-        $parts = explode(".", $field);
-        $group = count($parts) > 1 ? $parts[0] : $Dictionnary["DabsicFormRootFields"];
-        if (!isset($dabsic_form_groups[$group]))
-            $dabsic_form_groups[$group] = [];
-        $dabsic_form_groups[$group][] = $field;
+        if (!isset($read[$group]))
+            continue ;
+        $entry = $dabsic_form_metadata["groups"][$group] ?? ["label" => $group, "fields" => []];
+        $entry["key"] = $group;
+        $entry["editable"] = isset($edit[$group]);
+        $entry["validatable"] = isset($validate[$group]);
+        if ($entry["editable"] || $entry["validatable"])
+            $dabsic_form_groups[] = $entry;
+        else
+            $dabsic_form_readonly_groups[] = $entry;
     }
+}
 ?>
 
 <style>
@@ -97,16 +131,15 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
         <div>
             <h2><?=$Dictionnary["DabsicFormTitle"]; ?></h2>
             <?php if ($dabsic_form_discovery["ok"]) { ?>
-                <div class="dabsic-form-path-line">
+                <div class="dabsic-form-path-line" title="<?=htmlspecialchars($dabsic_form_discovery["reference"]["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
                     <span><?=$Dictionnary["DabsicFormReference"]; ?></span>
-                    <code><?=htmlspecialchars($dabsic_form_discovery["reference"]["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code>
+                    <strong><?=htmlspecialchars($dabsic_form_document_title, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong>
                 </div>
             <?php } ?>
             <?php if ($dabsic_form_output["ok"]) { ?>
-                <div class="dabsic-form-path-line">
+                <div class="dabsic-form-path-line" title="<?=htmlspecialchars($dabsic_form_output["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
                     <span><?=$Dictionnary["OutputFile"]; ?></span>
-                    <code><?=htmlspecialchars($dabsic_form_output["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code>
-                    <small><?=htmlspecialchars($dabsic_form_output["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small>
+                    <strong><?=htmlspecialchars($dabsic_form_output["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong>
                 </div>
             <?php } ?>
         </div>
@@ -127,6 +160,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-reference="<?=htmlspecialchars($dabsic_form_discovery["reference"]["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-mode="<?=htmlspecialchars($dabsic_form_mode, ENT_QUOTES, "UTF-8"); ?>"
             data-chain="<?=htmlspecialchars($dabsic_form_chain, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+            data-form-role="<?=htmlspecialchars($dabsic_form_role, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-reference-hash="<?=htmlspecialchars($dabsic_form_reference_hash, ENT_QUOTES, "UTF-8"); ?>"
             data-output="<?=htmlspecialchars($dabsic_form_output["key"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-output-hash="<?=htmlspecialchars($dabsic_form_output_hash, ENT_QUOTES, "UTF-8"); ?>"
@@ -146,32 +180,53 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-override-value-placeholder="<?=htmlspecialchars($Dictionnary["DabsicFormOverrideValue"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-remove-label="<?=htmlspecialchars($Dictionnary["Delete"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
         >
-            <p class="dabsic-form-introduction">
-                <?=$Dictionnary["DabsicFormIntroduction"]; ?>
-            </p>
-
-            <?php if (!count($dabsic_form_discovery["fields"])) { ?>
+            <?php if (!count($dabsic_form_groups) && !count($dabsic_form_readonly_groups)) { ?>
                 <div class="dabsic-form-message is-success"><?=$Dictionnary["DabsicFormNothingMissing"]; ?></div>
             <?php } ?>
 
-            <?php foreach ($dabsic_form_groups as $group => $fields) { ?>
-                <fieldset class="dabsic-form-group">
-                    <legend><?=htmlspecialchars($group, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></legend>
-                    <?php foreach ($fields as $field) {
+            <?php foreach ($dabsic_form_groups as $group) { ?>
+                <fieldset class="dabsic-form-group<?=$group["editable"] ? " is-editable" : " is-readonly"; ?>">
+                    <legend><?=htmlspecialchars((string)$group["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></legend>
+                    <?php foreach (($group["fields"] ?? []) as $field) {
+                        $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
                         $value = $dabsic_form_values[$field] ?? "";
                     ?>
-                        <label class="dabsic-form-field">
-                            <code><?=htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code>
-                            <input
-                                type="text"
-                                data-dabsic-field="<?=htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                                value="<?=htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
+                        <label class="dabsic-form-field<?=$group["editable"] ? "" : " is-readonly"; ?>">
+                            <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if (!empty($definition["required"])) { ?><strong class="dabsic-form-required"> *</strong><?php } ?></span>
+                            <?php if ($group["editable"]) { ?>
+                                <input
+                                    type="text"
+                                    data-dabsic-field="<?=htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                    value="<?=htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                    autocomplete="off"
+                                    spellcheck="false"
+                                />
+                            <?php } else { ?>
+                                <div class="dabsic-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
+                            <?php } ?>
                         </label>
                     <?php } ?>
                 </fieldset>
+            <?php } ?>
+
+            <?php if (count($dabsic_form_readonly_groups)) { ?>
+                <details class="dabsic-form-readonly-groups">
+                    <summary><?=$Dictionnary["DocumentOtherInformation"] ?? "Autres informations du document"; ?></summary>
+                    <?php foreach ($dabsic_form_readonly_groups as $group) { ?>
+                        <fieldset class="dabsic-form-group is-readonly">
+                            <legend><?=htmlspecialchars((string)$group["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></legend>
+                            <?php foreach (($group["fields"] ?? []) as $field) {
+                                $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
+                                $value = $dabsic_form_values[$field] ?? "";
+                            ?>
+                                <div class="dabsic-form-field is-readonly">
+                                    <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
+                                    <div class="dabsic-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
+                                </div>
+                            <?php } ?>
+                        </fieldset>
+                    <?php } ?>
+                </details>
             <?php } ?>
 
             <fieldset class="dabsic-form-group dabsic-form-overrides">
@@ -192,7 +247,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             <div id="dabsic-form-message" class="dabsic-form-message" aria-live="assertive"></div>
 
             <div class="dabsic-form-actions">
-                <span><?=$Dictionnary["DabsicFormFieldCount"]; ?>: <?=count($dabsic_form_discovery["fields"]); ?></span>
+                <span><?=$Dictionnary["DabsicFormFieldCount"]; ?>: <?=count(dabsic_form_role_fields($dabsic_form_metadata, $dabsic_form_role, "edit")); ?></span>
                 <input id="dabsic-form-save" class="dabsic-form-save" type="submit" value="<?=$Dictionnary["Save"]; ?>" disabled />
             </div>
         </form>

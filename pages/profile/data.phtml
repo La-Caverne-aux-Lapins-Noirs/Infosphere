@@ -3,6 +3,10 @@ $can_edit_identity = is_identity_authority_for_user($user->id);
 $can_manage_administrative_profile = can_manage_user_administrative_profile((int)$user->id);
 $can_edit_nickname = is_me($user->id) || $can_edit_identity;
 $can_edit_visibility = $can_edit_nickname;
+$can_manage_profile_relations = can_manage_user_relations((int)$user->id);
+$profile_relation_candidates = $can_manage_profile_relations
+    ? user_relation_candidate_parents((int)$user->id)
+    : [];
 $can_view_identity = can_view_user_identity($user->id) || $can_manage_administrative_profile;
 if ($user->visibility == HIDDEN && !$can_view_identity)
     return ;
@@ -43,6 +47,16 @@ $fields = [
 .profile_user_relations h4 { margin: 0.45em 0 0.25em; }
 .profile_user_relations ul { margin: 0.2em 0 0.6em; padding-left: 1.5em; }
 .profile_user_relation_tags { display: block; font-size: x-small; opacity: 0.8; }
+.profile_user_relation_item { display: flex; align-items: center; gap: 0.45em; }
+.profile_user_relation_item > span { flex: 1; min-width: 0; }
+.profile_user_relation_remove { display: inline-block; margin: 0; }
+.profile_user_relation_remove input { color: darkred; font-weight: bold; }
+.profile_user_relation_editor { margin-top: 0.8em; padding-top: 0.7em; border-top: 1px solid rgba(160, 160, 160, 0.45); }
+.profile_user_relation_editor form { display: flex; flex-direction: column; gap: 0.55em; }
+.profile_user_relation_editor select { width: 100%; }
+.profile_user_relation_types { display: flex; flex-wrap: wrap; gap: 0.35em 1em; font-size: x-small; }
+.profile_user_relation_types label { white-space: nowrap; }
+.profile_user_relation_editor_notice { margin: 0.25em 0; font-size: x-small; opacity: 0.8; }
 </style>
 <form method="put" onsubmit="return <?=$js; ?>" action="/api/user/<?=$user->id; ?>/properties">
     <table>
@@ -217,7 +231,9 @@ if ($can_view_administrative)
 
 <?php
 $profile_relations = fetch_user_relation_summary((int)$user->id);
-if (count($profile_relations["responsible_by"]) || count($profile_relations["responsible_for"]))
+if (count($profile_relations["responsible_by"])
+    || count($profile_relations["responsible_for"])
+    || $can_manage_profile_relations)
 {
 ?>
     <br />
@@ -228,14 +244,53 @@ if (count($profile_relations["responsible_by"]) || count($profile_relations["res
             <ul>
                 <?php foreach ($profile_relations["responsible_by"] as $relation_user) { ?>
                     <li>
-                        <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
-                            <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
-                        </a>
-                        <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
-                        <?php if (count($relation_labels)) { ?>
-                            <span class="profile_user_relation_tags">
-                                <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                        <div class="profile_user_relation_item">
+                            <span>
+                                <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
+                                    <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
+                                </a>
+                                <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
+                                <?php if (count($relation_labels)) { ?>
+                                    <span class="profile_user_relation_tags">
+                                        <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                                    </span>
+                                <?php } ?>
                             </span>
+                            <?php if ($can_manage_profile_relations) { ?>
+                                <form
+                                    class="profile_user_relation_remove"
+                                    method="delete"
+                                    action="/api/user/<?=$user->id; ?>/relation/<?=(int)$relation_user["id"]; ?>"
+                                    onsubmit="return false;"
+                                >
+                                    <input
+                                        type="button"
+                                        value="×"
+                                        title="Supprimer cette relation"
+                                        onclick="if (confirm('Supprimer cette relation ?')) silent_submitf(this.parentNode, {after_success: refresh});"
+                                    />
+                                </form>
+                            <?php } ?>
+                        </div>
+                        <?php if ($can_manage_profile_relations) { ?>
+                            <form method="put" action="/api/user/<?=$user->id; ?>/relation" onsubmit="return false;" style="margin: 0.35em 0 0.8em;">
+                                <input type="hidden" name="parent" value="<?=(int)$relation_user["id"]; ?>" />
+                                <div class="profile_user_relation_types">
+                                    <?php $current_relation_values = user_relation_values($relation_user["relation"] ?? ""); ?>
+                                    <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
+                                                value="1"
+                                                <?=in_array($relation_name, $current_relation_values, true) ? "checked" : ""; ?>
+                                            />
+                                            <?=htmlspecialchars($definition["label"]); ?>
+                                        </label>
+                                    <?php } ?>
+                                </div>
+                                <input type="button" value="Mettre à jour" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
+                            </form>
                         <?php } ?>
                     </li>
                 <?php } ?>
@@ -258,6 +313,43 @@ if (count($profile_relations["responsible_by"]) || count($profile_relations["res
                     </li>
                 <?php } ?>
             </ul>
+        <?php } ?>
+        <?php if ($can_manage_profile_relations) { ?>
+            <div class="profile_user_relation_editor">
+                <h4>Ajouter un responsable / contact</h4>
+                <?php if (count($profile_relation_candidates)) { ?>
+                    <form method="put" action="/api/user/<?=$user->id; ?>/relation" onsubmit="return false;">
+                        <select name="parent">
+                            <?php foreach ($profile_relation_candidates as $candidate) { ?>
+                                <option value="<?=htmlspecialchars($candidate["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
+                                    <?=htmlspecialchars(user_relation_display_name($candidate)); ?>
+                                    (<?=htmlspecialchars($candidate["codename"]); ?>)
+                                </option>
+                            <?php } ?>
+                        </select>
+                        <div class="profile_user_relation_types">
+                            <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
+                                        value="1"
+                                    />
+                                    <?=htmlspecialchars($definition["label"]); ?>
+                                </label>
+                            <?php } ?>
+                        </div>
+                        <p class="profile_user_relation_editor_notice">
+                            La relation définit sa destination dans Infosphere et peut cumuler plusieurs rôles.
+                        </p>
+                        <input type="button" value="Ajouter" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
+                    </form>
+                <?php } else { ?>
+                    <p class="profile_user_relation_editor_notice">
+                        Aucun autre compte actif de cette école n'est disponible.
+                    </p>
+                <?php } ?>
+            </div>
         <?php } ?>
     </fieldset>
 <?php } ?>

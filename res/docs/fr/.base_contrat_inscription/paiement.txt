@@ -43,7 +43,8 @@ Pour les Apprenants ne disposant pas encore de visa ou de titre de séjour les a
 à minima est demandée en même temps que le premier versement intégral de 990,00 €. Cela s'explique par les
 coûts liés à la gestion particulière de leur dossier.
 
-En cas d'impossibilité de suivre le cursus pour des raisons administratives ([#IfC;Ecole;==;1;échec au BAC, ]refus du visa) ces sommes sont intégralement remboursées.
+En cas d'impossibilité de suivre le cursus pour des raisons administratives ([#IfC;Ecole;==;1;échec au BAC, ]refus du visa)
+et sous présentation de la preuve de ce refus, ces sommes sont intégralement remboursées.
 ]
 ]
 
@@ -52,23 +53,23 @@ En cas d'impossibilité de suivre le cursus pour des raisons administratives ([#
 [#IfC;PriceReduction;==;0;
 [#IfC;Ecole;==;1;
 [@Table;4;
-| Année                 | En 1 fois | En 2 fois* | En 4 fois* | En 12 fois* |
-|:---------------------:|:---------:|:----------:|:----------:|:-----------:|
-| Année 1 [EF1]         | 7437,00€  | 3737,09€   | 1873,19€   | 625,43€     |
-| Année 2 [EF2], [EF2X] | 7585,40€  | 3811,66€   | 1910,57€   | 636,91      |
-| Année 3 [EF3], [EF3X] | 7977,60€  | 4008,74€   | 2009,36€   | 670,89€     |
-| Année 4 [EF4]         | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
-| Année 5 [EF5]         | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
+| Année                 |   | En 1 fois | En 2 fois* | En 4 fois* | En 12 fois* |
+|:---------------------:|:-:|---------:|:----------:|:----------:|:-----------:|
+| Année 1 [EF1]         |   | 7437,00€  | 3737,09€   | 1873,19€   | 625,43€     |
+| Année 2 [EF2], [EF2X] |   | 7585,40€  | 3811,66€   | 1910,57€   | 636,91      |
+| Année 3 [EF3], [EF3X] |   | 7977,60€  | 4008,74€   | 2009,36€   | 670,89€     |
+| Année 4 [EF4]         |   | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
+| Année 5 [EF5]         |   | 8740,80€  | 4392,25€   | 2201,59€   | 735,08€     |
 ]
 ;
 [@Table;4;
-| Année                 | Total     |              En 4 fois  | En 12 fois  |
-|:---------------------:|:---------:|:-----------------------:|:-----------:|
-| Année 1 [EF1]         | 7492,76€  |              1873,19€   | 625,43€     |
-| Année 2 [EF2], [EF2X] | 7642,28€  |              1910,57€   | 636,91      |
-| Année 3 [EF3], [EF3X] | 8037,44€  |              2009,36€   | 670,89€     |
-| Année 4 [EF4]         | 8806,36€  |              2201,59€   | 735,08€     |
-| Année 5 [EF5]         | 8806,36€  |              2201,59€   | 735,08€     |
+| Année                 |   | Total     |              En 4 fois  | En 12 fois  |
+|:---------------------:|:-:|:---------:|:-----------------------:|:-----------:|
+| Année 1 [EF1]         |   | 7492,76€  |              1873,19€   | 625,43€     |
+| Année 2 [EF2], [EF2X] |   | 7642,28€  |              1910,57€   | 636,91      |
+| Année 3 [EF3], [EF3X] |   | 8037,44€  |              2009,36€   | 670,89€     |
+| Année 4 [EF4]         |   | 8806,36€  |              2201,59€   | 735,08€     |
+| Année 5 [EF5]         |   | 8806,36€  |              2201,59€   | 735,08€     |
 ]
 ]
 ]

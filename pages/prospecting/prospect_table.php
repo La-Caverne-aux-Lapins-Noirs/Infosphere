@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/campaign_registration.php");
+
 function prospecting_class_levels()
 {
     return ([
@@ -60,14 +62,11 @@ function prospecting_table_fields()
                 $b = htmlspecialchars($p["family_name"] ?? "");
                 $id = (int)$p["id"];
                 $registration = isset($p["registration_date"])
-                    ? datex("d/m/Y", $p["registration_date"])
+                    ? prospecting_campaign_registration_editor($p)
                     : "";
-                $registration = htmlspecialchars($registration);
                 return (
                     "<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>".
-                    ($registration != ""
-                        ? "<span class='prospect_registration_date'>Inscrit le $registration</span>"
-                        : "")
+                    ($registration != "" ? "<div class='prospect_registration_date'>$registration</div>" : "")
                 );
             },
             "cell_class" => "dynamic_table_name prospect_identity_cell"

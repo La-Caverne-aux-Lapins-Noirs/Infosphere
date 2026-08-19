@@ -442,13 +442,95 @@ td
     background-color: rgba(255, 255, 255, 0.65);
 }
 
-.campaign_add form,
+.campaign_panel_header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.campaign_panel_header h2
+{
+    min-width: 0;
+    margin: 0;
+}
+
+.campaign_panel_actions
+{
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.campaign_panel_actions input
+{
+    height: 32px;
+    box-sizing: border-box;
+}
+
+.campaign_update_button,
+.campaign_add_button
+{
+    width: 145px !important;
+}
+
+.campaign_delete
+{
+    display: block;
+    margin: 0;
+}
+
+.campaign_delete_button
+{
+    width: 40px !important;
+    padding: 0;
+    border: 1px solid #600;
+    background: black !important;
+    color: red !important;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 28px;
+    cursor: pointer;
+}
+
+.campaign_delete_button:hover
+{
+    border-color: red;
+}
+
+.campaign_overview
+{
+    display: grid;
+    grid-template-columns: minmax(460px, 1.2fr) minmax(300px, 0.8fr) minmax(420px, 1fr);
+    gap: 15px;
+    align-items: start;
+}
+
+.campaign_form_block,
+.campaign_stats_panel,
+.campaign_origins_panel
+{
+    min-width: 0;
+}
+
+.campaign_add_form,
 .campaign_edit
 {
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) 150px 150px 160px;
-    gap: 10px;
+    grid-template-columns: minmax(180px, 1.6fr) minmax(125px, 1fr) minmax(125px, 1fr);
+    gap: 8px;
     align-items: end;
+    width: 100%;
+}
+
+.campaign_add_form
+{
+    max-width: 760px;
 }
 
 .campaign_add textarea,
@@ -461,61 +543,61 @@ td
 }
 
 .campaign_add input,
-.campaign_edit input,
-.campaign_delete input
+.campaign_edit input
 {
     width: 100%;
     box-sizing: border-box;
 }
 
-.campaign_edit h2
-{
-    grid-column: 1 / -1;
-    margin: 0;
-}
-
-.campaign_edit label
+.campaign_edit label,
+.campaign_add_form label
 {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
     font-size: small;
     font-weight: bold;
 }
 
 .campaign_description
 {
-    grid-column: 1 / -2;
+    grid-column: 1 / -1;
 }
 
-.campaign_delete
+.campaign_form_summary
 {
-    float: right;
-    width: 160px;
-    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 7px;
+    font-size: small;
+    opacity: 0.88;
 }
 
-.campaign_period,
-.campaign_text
+.campaign_stats_panel h3,
+.campaign_origins_panel h3
 {
-    clear: both;
+    margin: 0 0 8px 0;
 }
 
 .campaign_stat_grid
 {
     display: grid;
-    grid-template-columns: repeat(4, minmax(120px, 1fr));
-    gap: 10px;
-    margin: 15px 0;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 8px;
+    margin: 0;
 }
 
 .campaign_stat_grid div
 {
+    min-height: 74px;
     padding: 10px;
     border: 1px solid black;
     border-radius: 8px;
     background-color: rgba(0, 0, 0, 0.80);
     text-align: center;
+    box-sizing: border-box;
 }
 
 .campaign_stat_grid strong
@@ -528,6 +610,68 @@ td
 {
     display: block;
     font-size: small;
+}
+
+.campaign_origin_grid
+{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.campaign_origin_card
+{
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid black;
+    background-color: rgba(192, 192, 192, 0.56);
+    box-sizing: border-box;
+}
+
+.campaign_origin_name
+{
+    display: block;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.campaign_origin_card dl
+{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 8px;
+    margin: 0;
+}
+
+.campaign_origin_card dl div
+{
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+}
+
+.campaign_origin_card dt,
+.campaign_origin_card dd
+{
+    margin: 0;
+    font-size: small;
+}
+
+.campaign_origin_card dt
+{
+    opacity: 0.82;
+}
+
+.campaign_origin_card dd
+{
+    font-weight: bold;
+    text-align: right;
+}
+
+.campaign_prospects
+{
+    margin-top: 12px;
 }
 
 .campaign_table
@@ -591,6 +735,57 @@ td
     min-width: 130px;
     text-align: center;
     font-weight: bold;
+}
+
+.prospecting_status_filters
+{
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.prospecting_status_filter
+{
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 5px;
+    min-height: 28px;
+    padding: 0 8px;
+    user-select: none;
+}
+
+.prospecting_status_filter input[type="checkbox"]
+{
+    cursor: pointer;
+    margin: 0;
+    width: auto;
+}
+
+.prospecting_status_filter_completed
+{
+    border-bottom-color: #7d60ff;
+}
+
+.prospecting_status_filter_lost
+{
+    border-bottom-color: red;
+}
+
+.prospect_status_marker
+{
+    display: none !important;
+}
+
+.dynamic_table tr.prospecting_status_hidden
+{
+    display: none !important;
 }
 
 .prospecting_campaign_table
@@ -774,4 +969,276 @@ td
     color: #b8e6ff;
     font-weight: bold;
     width: auto !important;
+}
+
+/*
+ * Campagnes : le tabpanel suit l'ordre chronologique de gauche à droite.
+ * On neutralise ici la hauteur fixe du tabpanel générique car le contenu
+ * d'une campagne est une vraie page et non une petite zone scrollable.
+ */
+.campaign_tabs
+{
+    margin-top: 20px;
+}
+
+.campaign_tabs .tabpanel
+{
+    height: auto;
+    min-height: 0;
+}
+
+.campaign_tabs .tablist
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 38px;
+    padding-bottom: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    box-sizing: border-box;
+}
+
+.campaign_tabs .tablist > a
+{
+    display: block;
+    flex: 0 0 auto;
+    text-decoration: none;
+}
+
+.campaign_tabs .tablist > a:last-child
+{
+    margin-left: auto;
+}
+
+.campaign_tabs .tablist div.campaign_tab_button
+{
+    float: none;
+    width: auto !important;
+    min-width: 140px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.campaign_tabs .tablist > a:last-child div.campaign_tab_button
+{
+    min-width: 190px;
+    font-weight: bold;
+}
+
+.campaign_tab_identity
+{
+    display: none;
+}
+
+.campaign_tabs .tabcontent
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.campaign_tabs .tabcontent > div.campaign_tab_content
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.campaign_tabs .campaign_card,
+.campaign_tabs .campaign_add
+{
+    margin-top: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+
+@media (max-width: 1350px)
+{
+    .campaign_overview
+    {
+        grid-template-columns: minmax(440px, 1.2fr) minmax(280px, 0.8fr);
+    }
+
+    .campaign_origins_panel
+    {
+        grid-column: 1 / -1;
+    }
+
+    .campaign_origin_grid
+    {
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 900px)
+{
+    .campaign_overview
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .campaign_origins_panel
+    {
+        grid-column: auto;
+    }
+
+    .campaign_origin_grid
+    {
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+    }
+
+    .campaign_add_form,
+    .campaign_edit
+    {
+        grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr);
+    }
+
+    .campaign_edit label:first-of-type,
+    .campaign_add_form label:first-of-type,
+    .campaign_description
+    {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 560px)
+{
+    .campaign_panel_header
+    {
+        align-items: flex-start;
+    }
+
+    .campaign_panel_actions
+    {
+        gap: 4px;
+    }
+
+    .campaign_update_button,
+    .campaign_add_button
+    {
+        width: 120px !important;
+    }
+
+    .campaign_add_form,
+    .campaign_edit,
+    .campaign_stat_grid,
+    .campaign_origin_grid
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .campaign_edit label,
+    .campaign_add_form label,
+    .campaign_description
+    {
+        grid-column: 1;
+    }
+}
+
+/* Changement inline de campagne depuis la date d'inscription d'un prospect. */
+.prospect_registration_widget
+{
+    display: inline-block;
+    max-width: 100%;
+}
+
+.prospect_registration_toggle
+{
+    appearance: none;
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin: 0;
+    padding: 0 !important;
+    text-align: left;
+}
+
+.prospect_registration_toggle:hover
+{
+    text-decoration: underline;
+}
+
+.prospect_registration_form
+{
+    align-items: center;
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    max-width: 100%;
+}
+
+.prospect_registration_widget.editing .prospect_registration_toggle
+{
+    display: none;
+}
+
+.prospect_registration_widget.editing .prospect_registration_form
+{
+    display: inline-flex;
+}
+
+.prospect_registration_form select
+{
+    height: 24px;
+    max-width: 170px;
+    min-width: 105px;
+    width: auto;
+}
+
+.prospect_registration_form input[type="date"]
+{
+    height: 24px;
+    max-width: 130px;
+    min-width: 118px;
+    width: 130px;
+}
+
+.prospect_registration_form button
+{
+    border: 1px solid #080 !important;
+    cursor: pointer;
+    height: 24px;
+    line-height: 20px;
+    margin: 0;
+    min-width: 26px;
+    padding: 0 5px !important;
+    width: auto;
+}
+
+.prospect_registration_confirm
+{
+    background: #080 !important;
+    color: white !important;
+}
+
+.prospect_registration_cancel
+{
+    background: black !important;
+    border-color: #400 !important;
+    color: red !important;
+}
+
+.prospect_registration_date .prospect_registration_toggle
+{
+    font-size: inherit;
+    line-height: inherit;
+    opacity: inherit;
 }

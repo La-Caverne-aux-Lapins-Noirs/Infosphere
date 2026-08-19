@@ -2,6 +2,7 @@
 require_once ("get_docs.php");
 require_once (__DIR__."/../../tools/document_workflow.php");
 ?>
+<div class="documents_page">
 <h2 class="alignable_blocks"><?=$Dictionnary["Documents"]; ?></h2>
 
 <script>
@@ -10,6 +11,9 @@ function doc_toggle(id, elem)
     var input = document.getElementById(id);
     input.value = input.value == '0' ? '1' : '0';
     elem.classList.toggle('selected');
+    var completion = document.querySelector('.documents_generate_panel [name="form_output"]');
+    if (completion)
+        completion.value = '';
 }
 
 function doc_chain_add(type, prefix_value, signatory_value)
@@ -30,6 +34,7 @@ function doc_chain_add(type, prefix_value, signatory_value)
         '<option value="parent">Parent</option>' +
         '<option value="tutor">Tuteur entreprise</option>' +
         '<option value="jury">Jury</option>' +
+        '<option value="title_session">Session de titre</option>' +
         '<option value="user">Utilisateur exact</option>' +
         '<option value="field">Champ libre</option>' +
         '</select>' +
@@ -73,6 +78,8 @@ function doc_chain_refresh(row)
         id.placeholder = 'entreprise / organisation';
     else if (type == 'jury')
         id.placeholder = 'jury: id ou codename';
+    else if (type == 'title_session')
+        id.placeholder = 'id de la session de titre';
     else
         id.placeholder = 'id ou codename';
     doc_chain_serialize();
@@ -194,13 +201,66 @@ function doc_generation_display_json_error(blob, status_text)
     reader.readAsText(blob);
 }
 
-function doc_generate_submit(form)
+function doc_completion_nonce()
 {
-    var button = form.querySelector('.documents_generate_button');
+    if (window.crypto && window.crypto.getRandomValues)
+    {
+        var bytes = new Uint8Array(8);
+        window.crypto.getRandomValues(bytes);
+        return Array.prototype.map.call(bytes, function(v) {
+            return v.toString(16).padStart(2, '0');
+        }).join('');
+    }
+    return Date.now().toString(16).padStart(16, '0').slice(-16);
+}
+
+function doc_complete_selected(form)
+{
+    doc_chain_serialize();
+    var selected = Array.prototype.slice.call(form.querySelectorAll('.doc_document_choice.selected'));
+    if (selected.length != 1)
+    {
+        doc_generation_set_error(selected.length == 0
+            ? 'Sélectionnez un document à compléter.'
+            : 'La complétion champ par champ nécessite de sélectionner un seul document.');
+        return false;
+    }
+
+    var item = selected[0];
+    var reference = item.getAttribute('data-reference') || '';
+    var formFile = item.getAttribute('data-form-file') || '';
+    var formHash = item.getAttribute('data-form-hash') || '';
+    if (!formFile || !formHash)
+    {
+        doc_generation_set_error('Ce document ne peut pas être ouvert dans le formulaire de complétion.');
+        return false;
+    }
+
+    var output = 'document-page:' + formHash + ':' + doc_completion_nonce();
+    form.querySelector('[name="form_output"]').value = output;
+    var url = 'index.php?p=DabsicFormMenu' +
+        '&file=' + encodeURIComponent(formFile) +
+        '&output=' + encodeURIComponent(output) +
+        '&mode=docbuilder' +
+        '&form_role=Etablissement' +
+        '&chain=' + encodeURIComponent(document.getElementById('doc_chain').value || '[]');
+    window.open(url, '_blank', 'noopener');
+    doc_generation_set_error('');
+    return false;
+}
+
+function doc_generate_submit(form, blank, trigger)
+{
+    var button = trigger || form.querySelector('.documents_generate_button');
     var old_value = button ? button.value : '';
     var xhr = new XMLHttpRequest();
 
     doc_chain_serialize();
+    var chain_input = document.getElementById('doc_chain');
+    var completion_input = form.querySelector('[name="form_output"]');
+    var saved_completion = completion_input ? completion_input.value : '';
+    if (blank && completion_input)
+        completion_input.value = '';
     doc_generation_set_error('');
     if (button)
     {
@@ -241,8 +301,31 @@ function doc_generate_submit(form)
         }
         doc_generation_set_error('La génération du document a échoué: impossible de contacter le serveur.');
     };
-    xhr.send(new FormData(form));
+    var form_data = new FormData(form);
+    if (blank)
+        form_data.set('blank_document', '1');
+    xhr.send(form_data);
+    if (blank && completion_input)
+        completion_input.value = saved_completion;
     return (false);
+}
+
+function document_workflow_remind(form)
+{
+    return silent_submitf(form, {
+        after_success: function () { window.location.reload(); }
+    });
+}
+
+function document_workflow_expire(form)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentExpireConfirm"] ?? "Faire périmer cette demande de document ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return (false);
+    return (silent_submit(form, null, null, null, null, null, "", false, false, function () {
+        var row = form.closest ? form.closest('tr') : null;
+        if (row)
+            row.remove();
+    }));
 }
 
 window.addEventListener('input', function(ev) {
@@ -251,104 +334,40 @@ window.addEventListener('input', function(ev) {
 });
 </script>
 
-<div class="documents_page_layout">
-    <div class="documents_upload_panel">
-	<?php $js = "silent_submit(this, 'file_browser');"; ?>
-	<form
-	    method="post"
-	    onsubmit="return <?=$js; ?>;"
-	    action="/api/doc"
-	>
-	    <label for="file"><?=$Dictionnary["File"]; ?></label><br />
-	    <input id="path2" type="hidden" name="path" value="" />
-	    <input type="hidden" name="show_hidden_entries" value="1" />
-            <input type="hidden" name="path_browser_dabsic_editor" value="<?=is_admin() ? 1 : 0; ?>" />
-	    <input
-		type="file"
-		name="file"
-		multiple="true"
-		onchange="document.getElementById('path2').value = document.getElementById('pathfile_browser').value; <?=$js; ?>"
-	    />
-	</form>
-
-	<?php
-	$language = "";
-	$type = "file";
-	$page = "doc";
-	$id = 0;
-	$path = "";
-	$target = $Configuration->DocDir();
-	$show_hidden_entries = true;
-        $path_browser_dabsic_editor = is_admin();
-	require ("./tools/template/path_browser.phtml");
-	?>
-    </div>
-
-    <form method="post" action="/api/doc/0/generate" class="documents_generate_panel" onsubmit="return doc_generate_submit(this);">
-	<div class="documents_generate_toolbar">
-	    <input type="submit" value="<?=$Dictionnary["GenerateDocument"]; ?>" class="documents_generate_button" />
-	</div>
-	<div id="doc_generation_error" class="doc_generation_error" style="display: none;"></div>
-	<input type="hidden" id="doc_chain" name="chain" value="[]" />
-
-	<div class="doc_chain_box">
-	    <div style="font-weight: bold;">Paramètres Dabsic composés</div>
-	    <div id="doc_chain_list"></div>
-	    <div class="doc_chain_buttons">
-		<input type="button" value="+ Élève" onclick="doc_chain_add('student', 'Student');" />
-		<input type="button" value="+ Enseignant" onclick="doc_chain_add('teacher', 'Teacher');" />
-		<input type="button" value="+ Directeur" onclick="doc_chain_add('director', 'SignatureSources.Director', 'Director');" />
-		<input type="button" value="+ Commercial" onclick="doc_chain_add('commercial', 'Commercial');" />
-		<input type="button" value="+ Bibliothécaire" onclick="doc_chain_add('librarian', 'Librarian');" />
-		<input type="button" value="+ Secrétariat" onclick="doc_chain_add('secretariat', 'Secretariat');" />
-		<input type="button" value="+ École" onclick="doc_chain_add('school', 'School');" />
-		<input type="button" value="+ Entreprise" onclick="doc_chain_add('organization', 'Company');" />
-		<input type="button" value="+ Parent" onclick="doc_chain_add('parent', 'Parent');" />
-		<input type="button" value="+ Tuteur" onclick="doc_chain_add('tutor', 'Company.Tutor');" />
-		<input type="button" value="+ Jury" onclick="doc_chain_add('jury', 'Jury');" />
-		<input type="button" value="+ Destinataire" onclick="doc_chain_add('user', 'Destination');" />
-		<input type="button" value="+ Champ" onclick="doc_chain_add('field');" />
-	    </div>
-	</div>
-
-	<div class="doclist">
-	    <?php foreach (get_doc_sources() as $source => $docs) { ?>
-		<div class="doc_source_title"><?=htmlentities($docs["label"]); ?></div>
-		<?php foreach ($docs["documents"] as $doc) { ?>
-		    <?php
-		    $ref = document_reference_from_source_path($source, $doc);
-		    $hash = md5($ref);
-		    ?>
-		    <input type="hidden" id="doc_<?=$hash; ?>" name="doc_<?=$hash; ?>" value="0" />
-		    <input type="hidden" name="docref_<?=$hash; ?>" value="<?=htmlentities($ref); ?>" />
-		    <div onclick="doc_toggle('doc_<?=$hash; ?>', this);" title="<?=htmlentities($ref); ?>">
-			<?=htmlentities($doc); ?>
-		    </div>
-		<?php } ?>
-	    <?php } ?>
-	</div>
-    </form>
-</div>
-
-<?php if (document_workflow_can_monitor()) {
+<?php
+$documents_panel = [
+    "Génération" => __DIR__."/generation_state.phtml",
+];
+$documents_panel_data = [[]];
+if (document_workflow_can_monitor())
+{
     $workflow_instances = document_workflow_visible_instances();
-    $workflow_panel = [
+    $workflow_pending_forms = document_workflow_visible_pending_document_forms();
+    $workflow_finalize_forms = document_workflow_visible_completed_document_forms();
+    $workflow_expired_forms = document_workflow_visible_expired_document_forms();
+    $documents_panel += [
+        "En attente de complétion" => __DIR__."/completion_state.phtml",
+        "À compléter / finaliser" => __DIR__."/finalize_state.phtml",
         "En attente de signature" => __DIR__."/workflow_state.phtml",
         "Signés" => __DIR__."/workflow_state.phtml",
         "Scellés" => __DIR__."/workflow_state.phtml",
         "Erreurs" => __DIR__."/workflow_state.phtml",
         "Terminés" => __DIR__."/workflow_state.phtml",
+        "Périmés" => __DIR__."/expired_state.phtml",
     ];
-    $workflow_panel_data = [
+    $documents_panel_data = array_merge($documents_panel_data, [
+        ["forms" => $workflow_pending_forms],
+        ["forms" => $workflow_finalize_forms],
         ["status" => "AwaitingSignature", "instances" => $workflow_instances],
         ["status" => "Signed", "instances" => $workflow_instances],
         ["status" => "Sealed", "instances" => $workflow_instances],
         ["status" => "Error", "instances" => $workflow_instances],
         ["status" => "Completed", "instances" => $workflow_instances],
-    ];
+        ["forms" => $workflow_expired_forms, "instances" => $workflow_instances],
+    ]);
+}
 ?>
 <div class="documents_workflow_panel">
-    <h3>Suivi des documents</h3>
-    <?php tabpanel($workflow_panel, "documents-workflow", "En attente de signature", "", "", $workflow_panel_data); ?>
+    <?php tabpanel($documents_panel, "documents-main", "Génération", "", "", $documents_panel_data); ?>
 </div>
-<?php } ?>
+</div>

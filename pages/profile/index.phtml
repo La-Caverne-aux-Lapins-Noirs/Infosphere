@@ -45,6 +45,18 @@ $cache = json_decode($user->cache);
 	    </p>
 	    <div class="main_data_profile scrollable" style="height: 40%">
 		<b><?=$user->codename; ?></b><br />
+		<?php if (is_admin() && ((int)$user->authority === BANISHED || $user->deleted !== NULL)) { ?>
+		    <span style="font-size: x-small; font-weight: bold; color: #b00020;">
+			<?php if ((int)$user->authority === BANISHED) { ?>
+			    <?=htmlentities($Dictionnary["Banished"] ?? "Banni"); ?>
+			<?php } ?>
+			<?php if ((int)$user->authority === BANISHED && $user->deleted !== NULL) { ?> - <?php } ?>
+			<?php if ($user->deleted !== NULL) { ?>
+			    <?=htmlentities($Dictionnary["Deleted"] ?? "Supprimé"); ?>
+			    (<?=htmlentities((string)$user->deleted); ?>)
+			<?php } ?>
+		    </span><br />
+		<?php } ?>
 		<?php if ($user->nickname != "") { ?>
 		    <i>- <?=$user->nickname; ?> -</i><br />
 		<?php } ?>
@@ -118,8 +130,6 @@ $cache = json_decode($user->cache);
 		$Dictionnary["Files"] => __DIR__."/files.phtml"
 	    ];
 	    if (is_director_for_student($user->id))
-		$panel[$Dictionnary["Documentation"]] = __DIR__."/documentation.phtml";
-	    if (is_director_for_student($user->id))
 		$panel[$Dictionnary["Logs"]] = __DIR__."/logs.phtml";
 	    tabpanel($panel, $Position.$user->id."datafiles", $Dictionnary["PersonnalInformations"]);
 	    ?>
@@ -144,6 +154,15 @@ $cache = json_decode($user->cache);
 	    $Dictionnary["Intercom"].
 	    "</span>"
 	] = __DIR__."/intercom.phtml";
+	// La documentation est un espace de travail complet (formulaires en cours,
+	// génération, signatures, fichiers produits) : elle appartient au grand
+	// panneau de droite et reste volontairement le dernier onglet.
+	if (is_director_for_student($user->id))
+	    $panel[
+		"<span class='very_small_tab'>".
+		$Dictionnary["Documentation"].
+		"</span>"
+	    ] = __DIR__."/documentation.phtml";
 	tabpanel($panel, $Position.$user->id."cursus", "#", "", "profile_data");
 	?>
     </td></tr><tr>

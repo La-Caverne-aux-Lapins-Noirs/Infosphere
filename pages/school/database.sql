@@ -52,3 +52,15 @@ CREATE TABLE `school_room` (
   `id_room` int(11) NOT NULL,
   KEY `id_room` (`id_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+CREATE TABLE `school_mailbox` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_school` int(11) NOT NULL,
+  KEY `id_school` (`id_school`),
+  `purpose` varchar(64) NOT NULL,
+  `mail` varchar(255) NOT NULL,
+  `deleted` datetime DEFAULT NULL,
+  UNIQUE KEY `school_mailbox_purpose` (`id_school`, `purpose`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -2,7 +2,7 @@
 # Bibliothèque
 
 [@Size;1]
-[@Columns;3;
+[@Columns;2;
 Le programme de partage de livre a pour but d’être un outil pédagogique au
 service de l’éveil de la curiosité et de l’esprit des Apprenants. Celui-ci
 a pour vocation à être au service de l’apprentissage et un soutien à

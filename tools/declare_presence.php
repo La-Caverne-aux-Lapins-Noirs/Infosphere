@@ -37,7 +37,6 @@ function presence_declaration_session_disables_locality($session)
         FROM session_room
         WHERE id_session = ".((int)$session->id)."
           AND (id_room = 0 OR id_room = -1)
-        LIMIT 1
 	");
     return ($wildcard != NULL);
 }
@@ -114,7 +113,6 @@ function presence_declaration_user_is_remote($user)
         remote
         FROM user
         WHERE id = ".$id."
-        LIMIT 1
         ");
     return ((int)$remote != 0);
 }

@@ -44,6 +44,7 @@ $cycle_tab_students = $Dictionnary["Students"];
 $cycle_tab_matters = isset($Dictionnary["Matters"]) ? $Dictionnary["Matters"] : "Matières";
 $cycle_tab_configuration = isset($Dictionnary["Configuration"]) ? $Dictionnary["Configuration"] : "Configuration";
 $cycle_tab_logs = isset($Dictionnary["Logs"]) ? $Dictionnary["Logs"] : "Logs";
+$cycle_tab_documents = isset($Dictionnary["Documents"]) ? $Dictionnary["Documents"] : "Documents";
 
 $cycle_tabs = [];
 if ($page == "cycle")
@@ -51,6 +52,8 @@ if ($page == "cycle")
 $cycle_tabs[$cycle_tab_matters] = __DIR__."/tab_matters.phtml";
 $cycle_tabs[$cycle_tab_configuration] = __DIR__."/tab_configuration.phtml";
 $cycle_tabs[$cycle_tab_logs] = __DIR__."/tab_logs.phtml";
+if ($page == "cycle" && $can_edit_cycle)
+    $cycle_tabs[$cycle_tab_documents] = __DIR__."/tab_documents.phtml";
 
 $cycle_default_tab = ($page == "cycle") ? $cycle_tab_students : $cycle_tab_matters;
 ?>

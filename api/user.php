@@ -127,6 +127,181 @@ function GenerateUserLetter($id, $data, $method, $output, $module)
     ]));
 }
 
+
+function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    require_once (__DIR__."/../tools/registration_form.php");
+    require_once (__DIR__."/../tools/document_workflow.php");
+
+    $id = (int)$id;
+    if (!is_director_for_student($id))
+        forbidden();
+    $target = db_select_one("* FROM user WHERE id = $id AND authority != -1");
+    if ($target == NULL)
+        return (new ErrorResponse("UserNotFound"));
+
+    $operation = strtolower(trim((string)($data["operation"] ?? "start")));
+    if (!in_array($operation, ["start", "reset", "abandon"], true))
+        return (new ErrorResponse("InvalidParameter", "operation"));
+    $reference = trim((string)($data["document_file"] ?? ""));
+    $model_hash = strtolower(trim((string)($data["model_hash"] ?? "")));
+    $target_year = (int)($data["target_year"] ?? 0);
+    if (!preg_match('/^[a-f0-9]{32}$/D', $model_hash) || $target_year < 0 || $target_year > 5)
+        return (new ErrorResponse("InvalidParameter", "document workspace"));
+
+    $resolved = dabsic_editor_resolve_file($reference, false);
+    if (!$resolved["ok"])
+        return (new ErrorResponse($resolved["error"], $resolved["details"] ?? ""));
+    $source_reference = function_exists("document_reference_from_editor_path")
+        ? (string)(document_reference_from_editor_path($resolved["relative"]) ?? "") : "";
+    if ($source_reference == "" || !hash_equals(md5($source_reference), $model_hash))
+        return (new ErrorResponse("InvalidParameter", "model_hash"));
+
+    $signature_bindings = $data["signature_bindings"] ?? [];
+    if (is_string($signature_bindings))
+        $signature_bindings = json_decode($signature_bindings, true);
+    if (!is_array($signature_bindings))
+        $signature_bindings = [];
+    $signature_schema = document_signature_model_slots($resolved["absolute"]);
+    $signature_bindings = document_signature_normalize_bindings($signature_bindings, array_keys($signature_schema));
+    $missing_signatures = document_signature_missing_required_bindings($signature_schema, $signature_bindings);
+    if (count($missing_signatures))
+        return (new ErrorResponse("MissingField", "Signatures.".implode(", Signatures.", $missing_signatures)));
+
+    $chain = registration_form_document_chain(
+        $target,
+        isset($User["id"]) ? (int)$User["id"] : 0,
+        $target_year,
+        $signature_bindings
+    );
+    $chain_json = json_encode($chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($chain_json === false)
+        return (new ErrorResponse("CannotEdit"));
+
+    $output_key = "user-document:".$id.":".$model_hash.":".$target_year;
+    $form_output = dabsic_form_resolve_output($output_key, true, $id);
+    if (!$form_output["ok"])
+        return (new ErrorResponse($form_output["error"], $form_output["details"] ?? ""));
+    $form_metadata = dabsic_form_form_metadata($resolved["absolute"]);
+    $staff_role = dabsic_form_role_definition($form_metadata, "Etablissement") != NULL
+        ? "Etablissement" : "";
+
+    if ($operation === "start")
+    {
+        foreach (db_select_all("* FROM user_form WHERE id_user = $id AND kind LIKE 'DOC-%' AND revoked_at IS NULL
+            AND (completed_at IS NOT NULL OR expires_at >= NOW())") as $form)
+        {
+            $document = document_workflow_document_form_metadata($form);
+            if (trim((string)($document["output"] ?? "")) === $output_key
+                && trim((string)($document["processed_at"] ?? "")) === "")
+                return (new ErrorResponse("DocumentWorkspaceAlreadyActive"));
+        }
+        foreach (document_workflow_visible_instances(1000) as $entry)
+        {
+            if ((int)($entry["owner_user_id"] ?? 0) !== $id)
+                continue ;
+            $instance = $entry["instance"] ?? [];
+            if (in_array((string)($instance["Status"] ?? ""), ["Completed", "Expired"], true))
+                continue ;
+            if ((string)($instance["Model"] ?? "") === $source_reference
+                && (int)($instance["TargetYear"] ?? 0) === $target_year)
+                return (new ErrorResponse("DocumentWorkspaceAlreadyActive"));
+        }
+        $existing_workspace = dabsic_form_load_workspace($form_output);
+        if (!$existing_workspace["ok"])
+            return (new ErrorResponse($existing_workspace["error"], $existing_workspace["details"] ?? ""));
+        if ($existing_workspace["exists"])
+            return (new ErrorResponse("DocumentWorkspaceAlreadyActive"));
+        $reset = dabsic_form_reset_output_values($form_output);
+        if (!$reset["ok"])
+            return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+        $workspace = [
+            "version" => 1,
+            "reference" => $resolved["relative"],
+            "source_reference" => $source_reference,
+            "model_hash" => $model_hash,
+            "target_year" => $target_year,
+            "signature_bindings" => $signature_bindings,
+            "chain" => $chain_json,
+            "staff_role" => $staff_role,
+            "created_by" => isset($User["id"]) ? (int)$User["id"] : 0,
+        ];
+        $saved = dabsic_form_save_workspace($form_output, $workspace);
+        if (!$saved["ok"])
+            return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
+        add_log(EDITING_OPERATION, "Document workspace started for user $id: $source_reference", $id);
+        return (new ValueResponse([
+            "msg" => $Dictionnary["DocumentWorkspaceStarted"] ?? "Document démarré."
+        ]));
+    }
+
+    $workspace = dabsic_form_load_workspace($form_output);
+    if (!$workspace["ok"])
+        return (new ErrorResponse($workspace["error"], $workspace["details"] ?? ""));
+    if (!$workspace["exists"])
+        return (new ErrorResponse("DocumentWorkspaceNotFound"));
+    $workspace_data = $workspace["data"];
+    if (($workspace_data["model_hash"] ?? "") !== $model_hash
+        || (int)($workspace_data["target_year"] ?? -1) !== $target_year
+        || ($workspace_data["reference"] ?? "") !== $resolved["relative"])
+        return (new ErrorResponse("DabsicFormChanged"));
+
+    if ($operation === "reset")
+    {
+        $reset = dabsic_form_reset_output_values($form_output);
+        if (!$reset["ok"])
+            return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+        $saved = dabsic_form_save_workspace($form_output, $workspace_data);
+        if (!$saved["ok"])
+            return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
+        add_log(EDITING_OPERATION, "Document workspace reset for user $id: $source_reference", $id);
+        return (new ValueResponse([
+            "msg" => $Dictionnary["DocumentWorkspaceResetDone"] ?? "Les informations enregistrées ont été remises à zéro."
+        ]));
+    }
+
+    if ($operation === "abandon")
+    {
+        // Un brouillon purement local peut être supprimé. Dès qu'une demande a été
+        // envoyée ou qu'une instance existe, l'historique doit être conservé et le
+        // workflow doit être périmé via les actions dédiées.
+        foreach (db_select_all("* FROM user_form WHERE id_user = $id AND kind LIKE 'DOC-%' AND revoked_at IS NULL
+            AND (completed_at IS NOT NULL OR expires_at >= NOW())") as $form)
+        {
+            $document = document_workflow_document_form_metadata($form);
+            if (trim((string)($document["output"] ?? "")) === $output_key
+                && trim((string)($document["processed_at"] ?? "")) === "")
+                return (new ErrorResponse("DocumentWorkspaceCannotAbandon"));
+        }
+        foreach (document_workflow_visible_instances(1000) as $entry)
+        {
+            if ((int)($entry["owner_user_id"] ?? 0) !== $id)
+                continue ;
+            $instance = $entry["instance"] ?? [];
+            if (in_array((string)($instance["Status"] ?? ""), ["Completed", "Expired"], true))
+                continue ;
+            if ((string)($instance["Model"] ?? "") === $source_reference
+                && (int)($instance["TargetYear"] ?? 0) === $target_year)
+                return (new ErrorResponse("DocumentWorkspaceCannotAbandon"));
+        }
+
+        $reset = dabsic_form_reset_output_values($form_output);
+        if (!$reset["ok"])
+            return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+        if (!dabsic_form_delete_workspace($form_output))
+            return (new ErrorResponse("DabsicFormCannotSave"));
+
+        add_log(EDITING_OPERATION, "Document workspace abandoned for user $id: $source_reference", $id);
+        return (new ValueResponse([
+            "msg" => $Dictionnary["DocumentWorkspaceAbandoned"] ?? "Le document démarré a été abandonné."
+        ]));
+    }
+
+}
+
 function SendUserDocumentForm($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -146,13 +321,14 @@ function SendUserDocumentForm($id, $data, $method, $output, $module)
         $data["target_year"] ?? 0,
         $data["document_label"] ?? "",
         (int)$User["id"],
-        $data["signature_bindings"] ?? []
+        $data["signature_bindings"] ?? [],
+        $data["form_role"] ?? "Beneficiaire"
     );
     if (!$result["ok"])
         return (new ErrorResponse($result["error"], $result["details"] ?? ""));
 
     $name = trim(($target["first_name"] ?? "")." ".($target["family_name"] ?? ""));
-    $label = trim((string)($data["document_label"] ?? ""));
+    $label = trim((string)($result["schema"]["document"]["label"] ?? ""));
     $title = sprintf(
         $Dictionnary["DocumentFormMailTitle"] ?? "Document à compléter : %s",
         $label != "" ? $label : ($Dictionnary["DocumentFormTitle"] ?? "document")
@@ -397,6 +573,45 @@ function SetUserLink($id, $data, $method, $output, $module)
     bad_request();
 }
 
+function SetUserRelation($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id = (int)$id;
+    if ($id <= 0 || !can_manage_user_relations($id))
+        forbidden();
+    if (!isset($data["parent"]))
+        return (new ErrorResponse("MissingField", "parent"));
+
+    if (($parent = resolve_codename("user", $data["parent"], "codename", true))->is_error())
+        return ($parent);
+    $id_parent = (int)($parent->value["id"] ?? 0);
+    if (!can_assign_user_relation_parent($id, $id_parent))
+        forbidden();
+
+    $relations = user_relation_request_values($data);
+    if (!count($relations))
+        return (new ErrorResponse("MissingField", "relation"));
+    if (($request = user_relation_set_existing_parent($id, $id_parent, $relations))->is_error())
+        return ($request);
+
+    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+}
+
+function DeleteUserRelation($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $SUBID;
+
+    $id = (int)$id;
+    $id_parent = abs((int)$SUBID);
+    if ($id <= 0 || $id_parent <= 0 || !can_manage_user_relations($id))
+        forbidden();
+    if (($request = user_relation_remove_parent($id, $id_parent))->is_error())
+        return ($request);
+    return (new ValueResponse(["msg" => $Dictionnary["Deleted"]]));
+}
+
 function DeleteUser($id, $data, $method, $output, $module)
 {
     if ($id == 1)
@@ -444,36 +659,25 @@ function SetTodoEntry($id, $data, $method, $output, $module)
 }
 
 /*
-** Politique d'accès aux fichiers:
-** => admin: seule la direction peut accéder à ces informations,
-**           ainsi que les super administrateurs  
-** => public: tout le monde a accès en lecture
-** => autre: seul l'élève et les super administrateurs ont accès
+** Politique d'accès aux fichiers utilisateurs.
+** La lecture HTTP est contrôlée par dres/bouncer.php ; les opérations de
+** l'API et du path_browser utilisent exactement les mêmes règles.
 */
 
 function file_access($id, $file, $public = false, $read = false)
 {
-    $file = resolve_path($file);
-    if (strlen($file) && $file[0] == "/")
-	$file = substr($file, 1);
-    $filex = explode("/", $file);
-    // On demande une modif "admin"
-    if (!isset($filex[0]) || $filex[0] == "")
+    $file = user_storage_normalize_path($file);
+    if ($file === NULL)
+        forbidden();
+
+    if ($read)
     {
-	if (!is_me($id) && !is_admin() && $read == false)
-	    forbidden();
-	return ($file);
+        if (!user_storage_can_read_path((int)$id, $file))
+            forbidden();
     }
-    if ($filex[0] == "public")
-	return ($file);
-    if ($filex[0] == "admin")
-    {
-	if (!is_director_for_student($id))
-	    forbidden();
-	return ($file);
-    }
-    if (!is_me($id) && !is_admin())
-	forbidden();
+    else if (!user_storage_can_write_path((int)$id, $file))
+        forbidden();
+
     return ($file);
 }
 
@@ -761,9 +965,7 @@ function RemoveUserFile($id, $data, $method, $output, $module, $url_key, $access
     if (strstr($file, "["))
 	forbidden();
     
-    if (basename($file) == "admin")
-	forbidden();
-    if (basename($file) == "public")
+    if (user_storage_is_root_space(resolve_path($file)))
 	forbidden();
     if ($access_function == "subscription_file_access" &&
 	resolve_path($file) == user_subscription_file_root())
@@ -872,6 +1074,10 @@ $Tab = [
 	    "can_send_user_administrative_form",
 	    "SendUserAdministrativeForm",
 	],
+        "document_workspace" => [
+            "is_director_for_student",
+            "ManageUserDocumentWorkspace",
+        ],
         "document_form" => [
             "is_director_for_student",
             "SendUserDocumentForm",
@@ -887,6 +1093,10 @@ $Tab = [
 	"user" => [
 	    "is_my_director",
 	    "SetUserLink",
+	],
+	"relation" => [
+	    "can_manage_user_relations",
+	    "SetUserRelation",
 	],
 	"school" => [
 	    "am_i_director", // On est pas directeur avant de s'ajouter directeur
@@ -927,6 +1137,10 @@ $Tab = [
 	"user" => [
 	    "is_my_director",
 	    "SetUserLink",
+	],
+	"relation" => [
+	    "can_manage_user_relations",
+	    "DeleteUserRelation",
 	],
 	"school" => [
 	    "is_my_director",

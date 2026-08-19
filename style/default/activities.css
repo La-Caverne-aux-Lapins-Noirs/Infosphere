@@ -205,7 +205,7 @@ b
     color: red;
 }
 
-.file_browser > .icon .dabsic_editor_link
+.file_browser > .icon .path_browser_entry_menu_button
 {
     color: white;
     font-weight: bold;
@@ -215,8 +215,8 @@ b
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
-.file_browser > .icon .dabsic_editor_link:hover,
-.file_browser > .icon .dabsic_editor_link:focus
+.file_browser > .icon .path_browser_entry_menu_button:hover,
+.file_browser > .icon .path_browser_entry_menu_button:focus
 {
     color: white;
     background-color: rgba(0, 145, 55, 1);
@@ -224,9 +224,27 @@ b
     outline: none;
 }
 
-.file_browser > .icon .dabsic_editor_link:active
+.file_browser > .icon .path_browser_entry_menu_popup
 {
-    background-color: rgba(0, 70, 28, 1);
+    background-color: rgba(20, 20, 20, 0.98);
+    border: 1px solid #54D76F;
+    border-radius: 4px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.85);
+    overflow: hidden;
+}
+
+.file_browser > .icon .path_browser_entry_menu_item
+{
+    color: white;
+    background: transparent;
+}
+
+.file_browser > .icon .path_browser_entry_menu_item:hover,
+.file_browser > .icon .path_browser_entry_menu_item:focus
+{
+    color: white;
+    background-color: rgba(0, 145, 55, 1);
+    outline: none;
 }
 
 .button_link

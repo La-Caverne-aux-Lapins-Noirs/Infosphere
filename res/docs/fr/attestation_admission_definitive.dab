@@ -1,10 +1,21 @@
 Document = "AdmissionCertificate"
 TitleQualifier = "DÉFINITIVE"
-Admission.AutomaticSignature = 0
+
+[Admission
+  AutomaticSignature = 0
+]
 
 [Signatures
   [Director
     Required = 1
     Role = "Directeur(trice)"
   ]
+]
+
+[FormGroup
+  @insert "res/docs/fr/.forms/admission_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/admission_roles.dab"
 ]

@@ -9,12 +9,14 @@ class CConfiguration
     public $_tmpFileDir;
     public $_ActivitiesDir;
     public $_SchoolsDir;
+    public $_CyclesDir;
     public $_OrganizationsDir;
     public $_RoomsDir;
     public $_ConfigurationDir;
     public $_RobotDir;
     public $_DocDir;
     public $_BookDir;
+    public $_QuizDir;
     public $Properties = [];
 
     function _ConfigurationDir($cnf = NULL)
@@ -43,6 +45,31 @@ class CConfiguration
 	if ($cnf == NULL)
 	    return ($this->_BookDir);
 	return ($this->_BookDir.$cnf.".pdf");
+    }
+
+    function QuizDir($school = NULL, $relative = NULL)
+    {
+        if ($school === NULL)
+            return ($this->_QuizDir);
+        $school = trim((string)$school);
+        if (!preg_match('/^[A-Za-z0-9_-]+$/D', $school))
+            return (NULL);
+        $dir = $this->_QuizDir.$school."/";
+        $new_school_tree = !is_dir($dir);
+        if ($new_school_tree)
+            @mkdir($dir, 0750, true);
+        // Conventional starting points only: seed them when the school's tree
+        // is first created, then leave the user free to reorganize it.
+        if ($new_school_tree)
+            foreach (["quiz", "rubrics"] as $subdir)
+                if (!is_dir($dir.$subdir))
+                    @mkdir($dir.$subdir, 0750, true);
+        if ($relative === NULL || trim((string)$relative, "/") === "")
+            return ($dir);
+        $relative = trim(str_replace("\\", "/", (string)$relative), "/");
+        if (strpos($relative, "../") !== false || substr($relative, 0, 3) === "../" || strpos($relative, "/..") !== false)
+            return (NULL);
+        return ($dir.$relative."/");
     }
 
     function GroupsDir($grp = NULL)
@@ -80,20 +107,24 @@ class CConfiguration
 	if ($usr == NULL)
 	    return ($this->_UsersDir);
 	$dir = $this->_UsersDir.$usr."/";
-	if (!is_dir($dir))
-	{
-	    new_directory($dir."public/index.php");
-	    new_directory($dir."admin/index.php");
-	    new_directory($dir."admin/subscription/index.php");
-	    new_directory($dir."admin/subscription/diplomas/index.php");
-	    new_directory($dir."admin/subscription/school_reports/index.php");
-	    new_directory($dir."admin/subscription/identity/index.php");
-	    new_directory($dir."admin/subscription/residence/index.php");
-	    new_directory($dir."admin/paid_invoices/index.php");
-	    new_directory($dir."admin/invoices_to_pay/index.php");
-	    new_directory($dir."admin/deleted_invoices/index.php");
-	    new_directory($dir."admin/school_reports/index.php");
-	}
+	// La racine utilisateur n'est qu'un conteneur. Garantir les trois
+	// espaces explicites même pour les comptes créés avant cette organisation.
+	foreach ([
+	    "public",
+	    "perso",
+	    "admin",
+	    "admin/subscription",
+	    "admin/subscription/diplomas",
+	    "admin/subscription/school_reports",
+	    "admin/subscription/identity",
+	    "admin/subscription/residence",
+	    "admin/paid_invoices",
+	    "admin/invoices_to_pay",
+	    "admin/deleted_invoices",
+	    "admin/school_reports"
+	] as $subdir)
+	    if (!is_dir($dir.$subdir))
+		new_directory($dir.$subdir."/index.php");
 	return ($dir);
     }
     
@@ -113,6 +144,15 @@ class CConfiguration
 	if ($school == NULL)
 	    return ($this->_SchoolsDir);
 	return ($this->_SchoolsDir.$school."/");
+    }
+    function CyclesDir($cycle = NULL)
+    {
+        if ($cycle == NULL)
+            return ($this->_CyclesDir);
+        $dir = $this->_CyclesDir.$cycle."/";
+        if (!is_dir($dir))
+            new_directory($dir."index.php");
+        return ($dir);
     }
     function OrganizationsDir($organization = NULL)
     {
@@ -158,6 +198,8 @@ class CConfiguration
 	// Les fichiers associés aux écoles, c'est à dire principalement
 	// leurs logos et documents administratifs
 	$this->_SchoolsDir = "$DIR/school/";
+	// Les fichiers propres à un cycle (documents collectifs, exports, etc.).
+	$this->_CyclesDir = "$DIR/cycle/";
 	// Les fichiers associés aux organisations mutualisées
 	$this->_OrganizationsDir = "$DIR/organization/";
 	// Les fichiers associés aux salles, c'est à dire leur images
@@ -175,6 +217,8 @@ class CConfiguration
 	$this->_RobotDir = "$DIR/robot/";
 	$this->_DocDir = "$DIR/doc/";
 	$this->_BookDir = "$DIR/book/";
+        // Reusable Dabsic questionnaires, rubrics and their auxiliary assets.
+        $this->_QuizDir = "$DIR/quiz/";
 
 	foreach ($this as $k => $v)
 	{
@@ -201,3 +245,4 @@ class CConfiguration
 }
 
 $Configuration = new CConfiguration;
+

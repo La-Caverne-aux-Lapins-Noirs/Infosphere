@@ -589,3 +589,47 @@
         grid-template-columns: 1fr;
     }
 }
+
+.title_session_list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.title_session_row {
+    border: 1px solid rgba(128, 128, 128, .35);
+    border-radius: 6px;
+    padding: 12px;
+}
+.title_session_heading {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+.title_session_grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.title_session_columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+.title_session_link,
+.title_session_person {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.title_session_person > form {
+    margin: 0;
+}
+.title_session_candidates {
+    margin-top: 12px;
+}
+.title_session_archive {
+    margin-top: 12px;
+    text-align: right;
+}

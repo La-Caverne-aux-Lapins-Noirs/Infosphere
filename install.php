@@ -316,6 +316,7 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
         INSERT INTO configuration (codename, value) VALUES 
         ('subscription_possible', 1),
         ('self_signing', 1),
+        ('admin_personal_storage_access', 1),
         ('mailgun_sender', '{$_POST["admin_mail"]}'),
         ('welcome_note', NULL),
         ('mail_password', NULL),

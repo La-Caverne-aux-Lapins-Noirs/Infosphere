@@ -1,163 +1,85 @@
 <?php $Authorities = ["User", "Administrator"]; ?>
 <div
     id="<?=$user["codename"]; ?>"
-    class="alignable_blocks userdiv"
+    class="alignable_blocks userdiv<?=is_admin() && $user["id"] != 1 ? " userdiv_admin" : ""; ?>"
     <?php if ($user["deleted"] != NULL) { ?>
-	style="opacity: 0.8; background-color: darkgray;";
+        style="opacity: 0.8; background-color: darkgray;"
     <?php } ?>
 >
     <h3 class="topleft">
-	<a href="<?=profile($user["id"]); ?>">
-	    #<?=$user["id"]; ?> <?=$user["codename"]; ?>
-	</a>
-	<span class="smalltext">
-
-	    <?php if ($user["id"] != 1) { ?>
-		<?=@strlen($user["nickname"]) ? "<br /><i>{$user["nickname"]}</i>" : ""; ?>
-		<?php if (strlen($user["first_name"]) || strlen($user["family_name"])) { ?>
-		    <br /><?=$user["first_name"]; ?> <?=$user["family_name"]; ?>
-		<?php } ?>
-	    <?php } ?>
-	
-	    <?php if ($user["authority"] != 0) { ?>
-		<br /><i><?=$Dictionnary[$Authorities[$user["authority"]]]; ?></i>
-	    <?php } ?>
-	    <br />
-	
-	    <?php if ($user["id"] != 1) { ?>
-		<?=$Dictionnary["DateOfRegistration"]; ?>:<br /><?=human_date($user["registration_date"]); ?>
-	    <?php } ?>
-	</span>
+        <a href="<?=profile($user["id"]); ?>">
+            #<?=$user["id"]; ?> <?=$user["codename"]; ?>
+        </a>
+        <span class="smalltext">
+            <?php if ($user["id"] != 1) { ?>
+                <?=@strlen($user["nickname"]) ? "<br /><i>{$user["nickname"]}</i>" : ""; ?>
+                <?php if (strlen($user["first_name"]) || strlen($user["family_name"])) { ?>
+                    <br /><?=$user["first_name"]; ?> <?=$user["family_name"]; ?>
+                <?php } ?>
+            <?php } ?>
+            <?php if ($user["authority"] != 0) { ?>
+                <br /><i><?=$Dictionnary[$Authorities[$user["authority"]]]; ?></i>
+            <?php } ?>
+            <br />
+            <?php if ($user["id"] != 1) { ?>
+                <?=$Dictionnary["DateOfRegistration"]; ?>:<br /><?=human_date($user["registration_date"]); ?>
+            <?php } ?>
+        </span>
     </h3>
 
     <div class="_200wpx _100hpx topright">
-	<div class="right">
-	    <?php display_avatar($user, 100); ?>
-	</div>
-    </div>
-    
-    <?php if (is_admin()) { ?>
-	<div class="band _50hpx smalltext _100top">
-
-	<?php if ($user["id"] != 1) { ?>
-	
-	    <form
-		onsubmit="return false;"
-		method="<?=$user["deleted"] == NULL ? "delete" : "put"; ?>"
-		action="api/user/<?=$user["id"]; ?>"
-		class="left"
-		style="position: absolute; top: -10px;"
-	    >
-		<?=$Dictionnary["Status"]; ?>:
-		<select name="deleted" onchange="silent_submit(this.parentNode);">
-	            <option value="0" <?=$user["deleted"] == NULL ? "selected" : ""; ?>>
-			<?=$Dictionnary["ActiveAccount"]; ?>
-		    </option>
-	            <option value="1" <?=$user["deleted"] != NULL ? "selected" : ""; ?>>
-			<?=$Dictionnary["BannedAccount"]; ?>
-		    </option>
-		</select>
-	    </form>
-	    
-	    <form
-		onsubmit="return false;"
-		method="put"
-		action="api/user/<?=$user["id"]; ?>"
-		class="left"
-		style="position: absolute; top: 10px;"
-	    >
-		<?=$Dictionnary["Authority"]; ?>:
-		<input type="hidden" name="action" value="set_status" />
-		<select name="authority" onchange="silent_submit(this.parentNode);">
-		    <?php foreach ($Authorities as $i => $s) { ?>
-			<option value="<?=$i; ?>" <?=$i == $user["authority"] ? "selected" : ""; ?>>
-			    <?=$Dictionnary[$s]; ?>
-			</option>
-		    <?php } ?>
-		</select>
-	    </form>
-
-	    <form onsubmit="return false;" method="put" action="api/user/<?=$user["id"]; ?>" class="right">
-		<input type="hidden" name="action" value="new_password" />
-		<input
-		    type="button"
-			  onclick="silent_submit(this.parentNode);"
-			  style="width: 100%;"
-			  value="<?=$Dictionnary["RegeneratePassword"]; ?>"
-		/>
-	    </form>
-	<?php } ?>
-	    
+        <div class="right">
+            <?php display_avatar($user, 100); ?>
+        </div>
     </div>
 
+    <?php if (is_admin() && $user["id"] != 1) { ?>
+        <div class="band _50hpx smalltext _100top">
+            <form
+                onsubmit="return false;"
+                method="<?=$user["deleted"] == NULL ? "delete" : "put"; ?>"
+                action="api/user/<?=$user["id"]; ?>"
+                class="left"
+                style="position: absolute; top: -10px;"
+            >
+                <?=$Dictionnary["Status"]; ?>:
+                <select name="deleted" onchange="silent_submit(this.parentNode);">
+                    <option value="0" <?=$user["deleted"] == NULL ? "selected" : ""; ?>>
+                        <?=$Dictionnary["ActiveAccount"]; ?>
+                    </option>
+                    <option value="1" <?=$user["deleted"] != NULL ? "selected" : ""; ?>>
+                        <?=$Dictionnary["BannedAccount"]; ?>
+                    </option>
+                </select>
+            </form>
+
+            <form
+                onsubmit="return false;"
+                method="put"
+                action="api/user/<?=$user["id"]; ?>"
+                class="left"
+                style="position: absolute; top: 10px;"
+            >
+                <?=$Dictionnary["Authority"]; ?>:
+                <input type="hidden" name="action" value="set_status" />
+                <select name="authority" onchange="silent_submit(this.parentNode);">
+                    <?php foreach ($Authorities as $i => $s) { ?>
+                        <option value="<?=$i; ?>" <?=$i == $user["authority"] ? "selected" : ""; ?>>
+                            <?=$Dictionnary[$s]; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </form>
+
+            <form onsubmit="return false;" method="put" action="api/user/<?=$user["id"]; ?>" class="right">
+                <input type="hidden" name="action" value="new_password" />
+                <input
+                    type="button"
+                    onclick="silent_submit(this.parentNode);"
+                    style="width: 100%;"
+                    value="<?=$Dictionnary["RegeneratePassword"]; ?>"
+                />
+            </form>
+        </div>
     <?php } ?>
-
-    <?php if ($user["id"] != 1) { ?>    
-	<div class="band _130top" style="height: <?=300-100-30; ?>px;">
-	    <div class="left column scrollable">
-		<?php if (is_my_director($user["id"]) || count($user["cycle"])) { ?>
-		    <?php if (@$user["have_password"]) { ?>
-			<?php list_of_links([
-			    "hook_name" => "user",
-			    "hook_id" => $user["id"],
-			    "linked_name" => "cycle",
-			    "linked_elems" => $user["cycle"],
-			    "admin_func" => "is_my_director"
-			]); ?>
-		    <?php } else { ?>
-			<form
-			    onsubmit="return false;"
-			    method="put"
-			    action="/api/user/<?=$user["id"]; ?>"
-			>
-			    <b><?=$Dictionnary["Prospect"]; ?></b><br />
-			    <?=$Dictionnary["ProspectSource"]; ?>:<br />
-			    <input type="text" name="source" value="<?=$user["source"]; ?>" /><br />
-			    <?=$Dictionnary["Step"]; ?>:<br />
-			    <input type="text" name="step" value="<?=$user["step"]; ?>" /><br />
-			    <?=$Dictionnary["LastContact"]; ?>:<br />
-			    <input type="datetime" name="last_contact" value="<?=$user["last_contact"]; ?>" /><br />
-			    <?=$Dictionnary["LastTry"]; ?>:<br />
-			    <input type="datetime" name="last_try" value="<?=$user["last_try"]; ?>" />
-			</form>
-		    <?php } ?>
-		<?php } ?>
-	    </div>
-	    <div class="right column scrollable">
-		<?php if (is_admin()) { ?>
-		    <form onsubmit="return false;" method="put" action="api/user/<?=$user["id"]; ?>">
-			<input type="hidden" name="action" value="new_contract" />
-			<input
-			    type="button"
-				  onclick="silent_submit(this.parentNode);"
-				  style="width: 100%;"
-				  value="<?=$Dictionnary["GenerateContract"]; ?>"
-			/>
-		    </form>
-		<?php } ?>
-		<?php if (is_director() || count($user["school"])) { ?>
-		    <?php list_of_links([
-			"hook_name" => "user",
-			"hook_id" => $user["id"],
-			"linked_name" => "school",
-			"linked_elems" => $user["school"],
-			"admin_func" => "am_i_director"
-		    ]); ?>
-		<?php } ?>
-		<?php if (is_my_director($user["id"]) || count($user["user"])) { ?>
-		    <?php list_of_links([
-			"hook_name" => "user",
-			"hook_id" => $user["id"],
-			"linked_name" => "user",
-			"linked_elems" => $user["user"],
-			"link" => "Profile",
-			"admin_func" => "is_my_director"
-		    ]); ?>
-		<?php } ?>
-	    </div>
-	</div>
-
-    <?php } ?>
-
 </div>
-

@@ -68,6 +68,17 @@ function PrintR($v, $ret = false)
     return ($v);
 }
 
+function AdminEcho($v, $admin = true)
+{
+    global $OriginalUser;
+
+    if ($admin && (!isset($OriginalUser) || $OriginalUser["authority"] < ADMINISTRATOR))
+	return ;
+    echo PrintR($v, true);
+    return (true);
+}
+
+
 function AddDebugLogR($v, $admin = true)
 {
     AddDebugLog(PrintR($v, true), $admin);

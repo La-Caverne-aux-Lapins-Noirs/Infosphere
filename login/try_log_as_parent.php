@@ -15,11 +15,11 @@ else
     if (is_number($x))
     {
 	$child_link = db_select_one("
-               id_child FROM parent_child
+               id_child, relation FROM parent_child
                WHERE id_parent = ".$OriginalUser["id"]."
                AND (id_child = ".((int)$x)." OR id = ".((int)$x).")
 	");
-	if ($child_link)
+	if ($child_link && user_relation_has($child_link["relation"] ?? "", "log_as"))
 	    $x = $child_link["id_child"];
     }
     if (($usr = resolve_codename("user", $x, "codename", true))->is_error())
@@ -28,10 +28,11 @@ else
     {
 	$usr = $usr->value;
 	$check = db_select_one("
-               * FROM parent_child
+               relation FROM parent_child
                WHERE id_parent = ".$OriginalUser["id"]." AND id_child = ".$usr["id"]
 	);
-	if (!$check && $usr["id"] != $OriginalUser["id"])
+	if ((!$check || !user_relation_has($check["relation"] ?? "", "log_as"))
+	    && $usr["id"] != $OriginalUser["id"])
 	{
 	    $ErrorMsg = strval(new ErrorResponse("NotYourChildren", $usr["codename"]));
 	    setcookie("children", "", time() - 1);

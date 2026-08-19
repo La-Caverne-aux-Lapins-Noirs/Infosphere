@@ -28,12 +28,12 @@ soit par voie postale à l’adresse :
 
 ]
 
-[@ELine]
-[@Size;3]
-| Médiation de la Consommation ANM CONSO |
-| :-: |
-| 62 rue Tiquetonne |
-| 75002 Paris |
+[@Table;3;
+| | Médiation de la Consommation ANM CONSO | |
+|:---:|:---:|:---:|
+| | 62 rue Tiquetonne | |
+| | 75002 Paris | |
+]
 
 [@ELine]
 

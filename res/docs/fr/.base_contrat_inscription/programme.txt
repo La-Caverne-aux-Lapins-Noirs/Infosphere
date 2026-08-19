@@ -26,7 +26,6 @@ Un unique Apprenant suffit à l'ouverture d'une session de formation.
 ### Durée
 
 [@Size;2]
-[@Columns;2;
 Un trimestre de formation suivi à l’EFRITS, hors période en entreprise, s’étend sur douze (12) semaines.
 Ces douze semaines sont réparties selon les périodes pédagogiques décrites ci-après. L’EFRITS est ouverte
 du lundi au vendredi, de 9 h 15 à 18 h, avec une pause déjeuner de 13 h à 14 h. Les horaires de formation sont
@@ -34,11 +33,13 @@ fixés par le calendrier d’activités de chaque Apprenant. Le volume horaire m
 cent vingt (420) heures. Ce volume est donné à titre indicatif et peut varier en fonction du calendrier des
 activités, notamment des évaluations, des projets, des interventions et des jours fériés, dans le respect
 des objectifs pédagogiques de la formation. Les cursus sont organisés de la manière suivante :
-]
 
-[@Size;4]
+[@Size;2]
+
 - Les formations EF1, EF2X, EF3X et EF5 comportent quatre (4) trimestres suivis à l’EFRITS.
+
 - Les formations EF2 et EF4 comportent quatre (4) trimestres, dont deux (2) suivis à l’EFRITS et deux (2) pouvant être consacrés à un passage en entreprise.
+
 - La formation EF3 comporte quatre (4) trimestres, dont trois (3) suivis à l’EFRITS et un (1) pouvant être consacré à un passage en entreprise.
 
 

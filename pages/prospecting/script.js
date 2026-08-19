@@ -178,6 +178,7 @@ function prospecting_after_action_update(result, msg, content, prospect_id)
     setTimeout(function() {
         let root = document.getElementById("actionbar" + prospect_id);
         prospecting_align_collapsed_actions(root);
+        prospecting_status_filter_apply();
     }, 0);
 }
 
@@ -361,6 +362,71 @@ function open_generated_contract(result, msg, content, parameter)
 }
 
 
+function prospecting_status_filter_storage_key(status)
+{
+    return "prospecting_show_" + status;
+}
+
+function prospecting_status_filter_read(status)
+{
+    let stored = localStorage.getItem(prospecting_status_filter_storage_key(status));
+
+    // Aucune préférence enregistrée : on conserve le comportement historique
+    // et on affiche toutes les lignes.
+    return (stored !== "0");
+}
+
+function prospecting_status_filter_init()
+{
+    let completed = document.getElementById("prospecting_show_completed");
+    let lost = document.getElementById("prospecting_show_lost");
+
+    if (completed)
+        completed.checked = prospecting_status_filter_read("completed");
+    if (lost)
+        lost.checked = prospecting_status_filter_read("lost");
+    prospecting_status_filter_apply();
+}
+
+function prospecting_status_filter_change()
+{
+    let completed = document.getElementById("prospecting_show_completed");
+    let lost = document.getElementById("prospecting_show_lost");
+
+    if (completed)
+        localStorage.setItem(
+            prospecting_status_filter_storage_key("completed"),
+            completed.checked ? "1" : "0"
+        );
+    if (lost)
+        localStorage.setItem(
+            prospecting_status_filter_storage_key("lost"),
+            lost.checked ? "1" : "0"
+        );
+    prospecting_status_filter_apply();
+}
+
+function prospecting_status_filter_apply(root)
+{
+    let completed = document.getElementById("prospecting_show_completed");
+    let lost = document.getElementById("prospecting_show_lost");
+    let show_completed = completed ? completed.checked : true;
+    let show_lost = lost ? lost.checked : true;
+
+    if (!root)
+        root = document.getElementById("prospecting_campaign_table");
+    if (!root)
+        return;
+
+    root.querySelectorAll(".dynamic_table tr").forEach(function(row) {
+        let is_completed = row.querySelector(".prospect_status_completed") !== null;
+        let is_lost = row.querySelector(".prospect_status_lost") !== null;
+        let hidden = (is_completed && !show_completed) || (is_lost && !show_lost);
+
+        row.classList.toggle("prospecting_status_hidden", hidden);
+    });
+}
+
 function prospecting_campaign_storage_key()
 {
     return "prospecting_current_campaign";
@@ -445,6 +511,7 @@ function prospecting_campaign_load(id)
                     init_bigselects(table);
                 prospecting_align_collapsed_actions(table);
                 prospecting_observe_action_heights(table);
+                prospecting_status_filter_apply(table);
             }, 0);
 	});
 }
@@ -532,9 +599,148 @@ function prospect_document_action(button, id, codename, school, analyst, target_
         '&file=' + encodeURIComponent('res/docs/fr/analyse_besoin.dab') +
         '&output=' + encodeURIComponent('needs-analysis:' + id) +
         '&mode=docbuilder' +
+        '&form_role=Etablissement' +
         '&chain=' + encodeURIComponent(JSON.stringify(chain)),
         '_blank',
         'noopener'
     );
     return (false);
 }
+
+
+function prospecting_campaign_tabs_reveal_selected()
+{
+    let tablist = document.querySelector("#campaign_list .campaign_tabs .tablist");
+    let selected;
+    let item;
+    let left;
+    let right;
+
+    if (!tablist)
+        return;
+
+    selected = tablist.querySelector("[data-tabpanel-button].selected");
+    if (!selected)
+        return;
+
+    item = selected.parentElement;
+    if (!item)
+        item = selected;
+
+    left = item.offsetLeft;
+    right = left + item.offsetWidth;
+
+    if (left < tablist.scrollLeft)
+        tablist.scrollLeft = left;
+    else if (right > tablist.scrollLeft + tablist.clientWidth)
+        tablist.scrollLeft = right - tablist.clientWidth;
+}
+
+function prospecting_campaign_tabs_sync_storage()
+{
+    let selected = document.querySelector("#campaign_list .campaign_tabs [data-tabpanel-button].selected");
+
+    if (!selected)
+        return;
+
+    localStorage.setItem("prospecting-campaigns", selected.getAttribute("data-tabpanel-tab"));
+    prospecting_campaign_tabs_reveal_selected();
+}
+
+function prospecting_campaign_tabs_after_update()
+{
+    // silent_submit appelle after_success juste avant de remplacer tofill.
+    // On attend donc le tour de boucle suivant pour travailler sur le nouveau
+    // tabpanel renvoyé par /api/campaign.
+    setTimeout(prospecting_campaign_tabs_sync_storage, 0);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(prospecting_campaign_tabs_reveal_selected, 0);
+});
+
+function prospecting_campaign_registration_close(widget)
+{
+    if (widget)
+        widget.classList.remove("editing");
+}
+
+function prospecting_campaign_registration_sync(form)
+{
+    let select = form.querySelector('select[name="campaign_id"]');
+    let date = form.querySelector('input[name="registration_date"]');
+    let option;
+    let start;
+    let end;
+
+    if (!select || !date)
+        return;
+    option = select.options[select.selectedIndex];
+    start = option ? option.getAttribute("data-start") : "";
+    end = option ? option.getAttribute("data-end") : "";
+
+    date.min = start || "";
+    date.max = end || "";
+    if (!start || !end)
+        return;
+    if (!date.value || date.value < start)
+        date.value = start;
+    else if (date.value > end)
+        date.value = end;
+}
+
+function prospecting_campaign_registration_submit(form)
+{
+    prospecting_campaign_registration_sync(form);
+    return (silent_submitf(form, {
+        after_success: function() {
+            // La campagne est déduite de registration_date à plusieurs endroits
+            // (table, statistiques, niveau courant...). Un rafraîchissement
+            // immédiat garantit que tous ces affichages restent cohérents.
+            refresh();
+        }
+    }));
+}
+
+document.addEventListener("click", function(event) {
+    let toggle = event.target.closest(".prospect_registration_toggle");
+    let cancel = event.target.closest(".prospect_registration_cancel");
+    let widget;
+
+    if (toggle)
+    {
+        event.preventDefault();
+        widget = toggle.closest(".prospect_registration_widget");
+        document.querySelectorAll(".prospect_registration_widget.editing").forEach(function(open_widget) {
+            if (open_widget !== widget)
+                prospecting_campaign_registration_close(open_widget);
+        });
+        if (widget)
+        {
+            widget.classList.add("editing");
+            prospecting_campaign_registration_sync(widget.querySelector("form"));
+        }
+        return;
+    }
+
+    if (cancel)
+    {
+        event.preventDefault();
+        prospecting_campaign_registration_close(cancel.closest(".prospect_registration_widget"));
+    }
+});
+
+document.addEventListener("change", function(event) {
+    let select = event.target.closest('.prospect_registration_form select[name="campaign_id"]');
+
+    if (select)
+        prospecting_campaign_registration_sync(select.form);
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.key != "Escape")
+        return;
+    document.querySelectorAll(".prospect_registration_widget.editing").forEach(function(widget) {
+        prospecting_campaign_registration_close(widget);
+    });
+});

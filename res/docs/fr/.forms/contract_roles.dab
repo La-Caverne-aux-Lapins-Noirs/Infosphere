@@ -1,0 +1,37 @@
+[Beneficiaire
+  Label = "Bénéficiaire"
+  {Read
+    "Apprenant",
+    "ResponsableFinancier",
+    "ResponsablesLegaux",
+    "ContactUrgence",
+    "ParametresContrat"
+  }
+  {Edit
+    "Apprenant",
+    "ResponsableFinancier",
+    "ResponsablesLegaux",
+    "ContactUrgence",
+    "ParametresContrat"
+  }
+  {Validate
+    "Apprenant",
+    "ResponsableFinancier",
+    "ResponsablesLegaux",
+    "ContactUrgence",
+    "ParametresContrat"
+  }
+]
+
+[Etablissement
+  Label = "Établissement"
+  {Read
+    "Etablissement"
+  }
+  {Edit
+    "Etablissement"
+  }
+  {Validate
+    "Etablissement"
+  }
+]

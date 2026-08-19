@@ -1,9 +1,9 @@
 <?php
 require_once ("tools/correction_catalog.php");
 
-function correction_is_admin($resource_id = -1)
+function correction_can_manage_api($resource_id = -1)
 {
-    return (is_admin());
+    return (can_manage_corrections());
 }
 
 function CorrectionErrorResponse($error)
@@ -264,27 +264,27 @@ function CorrectionDownload($id, $data, $method, $output, $module)
 
 $Tab = [
     "GET" => [
-        "" => ["correction_is_admin", "CorrectionDisplay"],
-        "download_asset" => ["correction_is_admin", "CorrectionDownload"],
-        "download_category" => ["correction_is_admin", "CorrectionDownload"]
+        "" => ["correction_can_manage_api", "CorrectionDisplay"],
+        "download_asset" => ["correction_can_manage_api", "CorrectionDownload"],
+        "download_category" => ["correction_can_manage_api", "CorrectionDownload"]
     ],
     "POST" => [
-        "upload" => ["correction_is_admin", "CorrectionCreate"],
-        "category" => ["correction_is_admin", "CorrectionCreate"],
-        "create_file" => ["correction_is_admin", "CorrectionCreate"],
-        "upload_tree" => ["correction_is_admin", "CorrectionCreate"],
-        "download_selection" => ["correction_is_admin", "CorrectionDownload"],
-        "inventory" => ["correction_is_admin", "CorrectionCreate"],
-        "synchronize" => ["correction_is_admin", "CorrectionCreate"],
-        "rollback" => ["correction_is_admin", "CorrectionCreate"]
+        "upload" => ["correction_can_manage_api", "CorrectionCreate"],
+        "category" => ["correction_can_manage_api", "CorrectionCreate"],
+        "create_file" => ["correction_can_manage_api", "CorrectionCreate"],
+        "upload_tree" => ["correction_can_manage_api", "CorrectionCreate"],
+        "download_selection" => ["correction_can_manage_api", "CorrectionDownload"],
+        "inventory" => ["correction_can_manage_api", "CorrectionCreate"],
+        "synchronize" => ["correction_can_manage_api", "CorrectionCreate"],
+        "rollback" => ["correction_can_manage_api", "CorrectionCreate"]
     ],
     "PUT" => [
-        "move" => ["correction_is_admin", "CorrectionUpdate"],
-        "move_node" => ["correction_is_admin", "CorrectionUpdate"]
+        "move" => ["correction_can_manage_api", "CorrectionUpdate"],
+        "move_node" => ["correction_can_manage_api", "CorrectionUpdate"]
     ],
     "DELETE" => [
-        "asset" => ["correction_is_admin", "CorrectionDelete"],
-        "category" => ["correction_is_admin", "CorrectionDelete"],
-        "" => ["correction_is_admin", "CorrectionDelete"]
+        "asset" => ["correction_can_manage_api", "CorrectionDelete"],
+        "category" => ["correction_can_manage_api", "CorrectionDelete"],
+        "" => ["correction_can_manage_api", "CorrectionDelete"]
     ]
 ];

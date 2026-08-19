@@ -1,5 +1,5 @@
 <?php
-if (!is_admin())
+if (!can_manage_corrections())
 {
     http_response_code(404);
     die();

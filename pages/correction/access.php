@@ -1,4 +1,4 @@
 <?php
 
-$access = is_teacher() || am_i_director() || am_i_cycle_director();
+$access = can_manage_corrections();
 

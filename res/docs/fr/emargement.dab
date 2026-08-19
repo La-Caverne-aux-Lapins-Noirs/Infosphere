@@ -57,3 +57,10 @@ Footer]
   ]
 }
 
+[FormGroup
+  @insert "res/docs/fr/.forms/attendance_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/attendance_roles.dab"
+]

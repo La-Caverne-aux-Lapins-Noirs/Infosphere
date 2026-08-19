@@ -351,78 +351,72 @@ h1
     width: 30px !important;
 }
 
-.file_browser > .icon .dabsic_editor_link
+.file_browser > .icon .path_browser_entry_menu
 {
     position: absolute;
     right: 31px;
-    top: 1px;
-    z-index: 5;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 86px;
-    height: 28px;
-    line-height: 26px;
-    text-align: center;
-    text-decoration: none;
-    overflow: hidden;
+    top: 0px;
+    z-index: 12;
+    height: 30px;
+}
+
+.file_browser > .icon .path_browser_entry_menu_button
+{
+    position: relative;
+    right: auto;
+    top: auto;
+    width: 32px !important;
+    height: 30px !important;
+    z-index: 13;
     cursor: pointer;
-    pointer-events: auto;
 }
 
-.file_browser > .icon .dabsic_editor_link_icon
+.file_browser > .icon .path_browser_entry_menu_popup
 {
-    flex: 0 0 auto;
-    font-size: 17px;
-    line-height: 1;
+    display: none;
+    position: absolute;
+    right: 0px;
+    top: 29px;
+    z-index: 30;
+    min-width: 130px;
+    box-sizing: border-box;
 }
 
-.file_browser > .icon .dabsic_editor_link_label
+.file_browser > .icon .path_browser_entry_menu.path_browser_menu_open .path_browser_entry_menu_popup
 {
-    flex: 0 1 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: block;
+}
+
+.file_browser > .icon.path_browser_menu_host_open
+{
+    z-index: 25;
+}
+
+.file_browser > .icon .path_browser_entry_menu_item
+{
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 100% !important;
+    height: 30px !important;
+    padding: 4px 10px;
+    border: 0;
+    text-align: left;
     white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .file_browser .filename
 {
     display: block;
-    width: calc(100% - 30px);
+    width: calc(100% - 62px);
     height: 30px;
     text-align: center;
     position: absolute;
     top: 2px;
     line-height: 28px;
     pointer-events: none;
-}
-
-.file_browser > .has_dabsic_editor .filename
-{
-    width: calc(100% - 118px);
-}
-
-@media (max-width: 700px)
-{
-    .file_browser > .icon .dabsic_editor_link
-    {
-        right: 30px;
-        top: 0px;
-        width: 30px;
-        height: 30px;
-    }
-
-    .file_browser > .icon .dabsic_editor_link_label
-    {
-        display: none;
-    }
-
-    .file_browser > .has_dabsic_editor .filename
-    {
-        width: calc(100% - 60px);
-    }
 }
 
 .file_browser video

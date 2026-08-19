@@ -1,4 +1,6 @@
 <?php
+require_once (__DIR__."/gd_compat.php");
+
 
 function get(array $arr, $index, $def = NULL)
 {
@@ -97,18 +99,18 @@ function draw_area($data, $label, $startday, $index, $ladder, $ca, $c, $yoffset 
 	$data[$label], $startday, $index, $ladder, $yoffset
     );
     /* $tmp_coords = [ $coords[0], $coords[1], $coords[2], $coords[3] ];
-    imagefilledpolygon($img, $tmp_coords, $ca); # Enlever 4 casse les stats */
-    imagefilledpolygon($img, $coords, 4, $ca);
+    infosphere_imagefilledpolygon($img, $tmp_coords, $ca); */
+    infosphere_imagefilledpolygon($img, $coords, $ca);
     if ($coords[8] != 0 || $coords[9] != 0)
     {
 	imagesetthickness($img, 2);
-	imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $c);
+	infosphere_imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $c);
 	imagesetthickness($img, 0);
 
-	imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 6, 6, $c);
-	imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 3, 3, $black);
-	imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 6, 6, $c);
-	imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 3, 3, $black);
+	infosphere_imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 6, 6, $c);
+	infosphere_imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 3, 3, $black);
+	infosphere_imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 6, 6, $c);
+	infosphere_imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 3, 3, $black);
     }
     return ($coords);
 }
@@ -134,18 +136,18 @@ function draw_line($data, $label, $startday, $index, $ladder, $c, $ac = NULL, $b
 	if ($bad)
 	{
 	    imagesetthickness($img, 6);
-	    imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $ac);
+	    infosphere_imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $ac);
 	    imagesetthickness($img, 0);
 	}
 
 	imagesetthickness($img, 2);
-	imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $c);
+	infosphere_imageline($img, intval($coords[2]), intval($coords[3]), intval($coords[4]), intval($coords[5]), $c);
 	imagesetthickness($img, 0);
 
-	imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 6, 6, $c);
-	imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 3, 3, $black);
-	imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 6, 6, $c);
-	imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 3, 3, $black);
+	infosphere_imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 6, 6, $c);
+	infosphere_imagefilledellipse($img, intval($coords[2]), intval($coords[3]), 3, 3, $black);
+	infosphere_imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 6, 6, $c);
+	infosphere_imagefilledellipse($img, intval($coords[4]), intval($coords[5]), 3, 3, $black);
     }
     return ($coords);
 }

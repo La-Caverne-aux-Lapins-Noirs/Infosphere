@@ -1,8 +1,8 @@
 
 ## Article P8 - Réunions d'équipe
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 Les réunions sont en général obligatoires et toute les
 équipes devront s’organiser autour d’elles qu’elle soit
 constituée d’un ou plusieurs membres. Parmi elles il y
@@ -29,8 +29,8 @@ justifiant leur existence.
 
 ### La planification
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 Un membre du corps pédagogique est toujours présent lors
 de la planification. Durant ce suivi, l’équipe planifie
 le travail à accomplir jusqu’à la démonstration. Ce travail
@@ -45,8 +45,8 @@ en capacité de réserver un créneau.
 
 ### La journalière
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 Un membre du corps pédagogique est susceptible de rendre
 visite à l’équipe. L’équipe, via son administrateur, est
 chargée de prendre une réservation par elle-même dans une
@@ -60,12 +60,10 @@ minutes au maximum.
 
 ]
 
-[@NewPage]
-
 ### La démonstration
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 Un membre du corps pédagogique est toujours présent lors
 de la démonstration. Durant ce suivi, chaque membre de
 l’équipe fait la démonstration du travail qu’il a
@@ -80,8 +78,8 @@ capacité de réserver un créneau.
 
 ### La rétrospéctive
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 Un membre du corps pédagogique est toujours présent lors
 de la rétrospective. Durant ce suivi, chaque membre de
 l’équipe peut aborder les aspects qui lui ont posé problème
@@ -100,8 +98,8 @@ pédagogique peut décider de la rendre obligatoire.
 
 ### La présentation
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une présentation des travaux réalisés peut avoir lieu
 dans le cadre de l’activité. 

@@ -1,0 +1,27 @@
+[Beneficiaire
+  Label = "Bénéficiaire"
+  {Read
+    "Beneficiaire",
+    "Payeur"
+  }
+  {Edit
+    "Beneficiaire",
+    "Payeur"
+  }
+  {Validate
+    "Beneficiaire",
+    "Payeur"
+  }
+]
+[Etablissement
+  Label = "Établissement"
+  {Read
+    "Facturation"
+  }
+  {Edit
+    "Facturation"
+  }
+  {Validate
+    "Facturation"
+  }
+]

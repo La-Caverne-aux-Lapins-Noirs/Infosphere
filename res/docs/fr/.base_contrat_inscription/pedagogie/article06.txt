@@ -1,8 +1,8 @@
 
 ## Article P6 - La déclaration de présence
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Les Apprenants peuvent déclarer leurs présences aux activités
 de type travaux pratiques, cours magistraux et autres
@@ -54,8 +54,8 @@ ou la soutenance.
 
 ### Retard 
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 En cas de retard, l’Apprenant devra de lui-même se présenter au
 formateur, à la formatrice ou l’administration de l’EFRITS pour

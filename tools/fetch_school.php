@@ -92,6 +92,7 @@ function fetch_school($id = -1)
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
+	$v["mailboxes"] = function_exists("school_mailbox_list") ? school_mailbox_list((int)$v["id"]) : [];
 	$v["teacher"] = db_select_all("
            user.id as id, user.id as id_teacher, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id

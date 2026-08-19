@@ -175,7 +175,6 @@ function has_automatic_appointment_subscription($activity_id)
        FROM activity_cycle
        WHERE activity_cycle.id_activity = $activity_id
        AND activity_cycle.replacement_subscription = 2
-       LIMIT 1
     ");
     return ($cycle != NULL);
 }

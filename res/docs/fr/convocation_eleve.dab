@@ -1,0 +1,114 @@
+Document = "Generic"
+Title = "Convocation candidat"
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  Address = ""
+  PostalCity = ""
+]
+
+[Candidate
+  Number = ""
+  ArrivalDate = ""
+  ArrivalTime = ""
+  VAENotice = ""
+  AuthorizationNotice = ""
+]
+
+[TitleSession
+  StartDate = ""
+  EndDate = ""
+  IssueDate = ""
+  VenueAddress = ""
+  EquipmentNotice = ""
+  [Title
+    Name = ""
+    FrName = ""
+    Code = ""
+  ]
+]
+
+[Signatures
+  [SessionManager
+    Required = 1
+    Role = "Responsable de session"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Convocation candidat
+  Left]
+  Right = [Text($,Right)
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+[FormLabel
+  [Destinataire
+    Label = "Candidat"
+    [Student
+      Identity = "Nom et prénom"
+      Address = "Adresse"
+      PostalCity = "Code postal et ville"
+    ]
+    [Candidate
+      Number = "Numéro de candidat"
+      ArrivalDate = "Date de convocation individuelle"
+      ArrivalTime = "Heure de convocation individuelle"
+      VAENotice = "Mention VAE, le cas échéant"
+      AuthorizationNotice = "Habilitation ou autre justificatif, le cas échéant"
+    ]
+  ]
+  [SessionTitre
+    Label = "Session de titre"
+    [TitleSession
+      StartDate = "Date de début"
+      EndDate = "Date de fin"
+      IssueDate = "Date d'émission"
+      VenueAddress = "Adresse du centre d'examen"
+      EquipmentNotice = "Équipements de protection individuelle, le cas échéant"
+      [Title
+        FrName = "Titre professionnel"
+        Code = "Code du titre"
+      ]
+    ]
+  ]
+]
+
+{Content
+  "\\noindent\\begin{minipage}[t]{0.47\\textwidth}[@Size;1][#Variable;School.Name]\\\\[#Variable;School.LegalAddress]\\\\[#Variable;School.Phone]\\\\[#Variable;School.Mail]\\end{minipage}\\hfill\\begin{minipage}[t]{0.47\\textwidth}\\raggedleft [#Variable;Student.Identity]\\\\[@IfC;Candidate.Number;!=;;Candidat n° [#Variable;Candidate.Number]\\\\][#Variable;Student.Address]\\\\[#Variable;Student.PostalCity]\\end{minipage}\\par\\vspace{0.7cm}\n",
+  "[@Right;Le [#Variable;TitleSession.IssueDate]]\n\n",
+  "**Objet : Convocation à la session d'examen du [#Variable;TitleSession.StartDate] au [#Variable;TitleSession.EndDate] pour le titre professionnel [#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]**\n\n",
+  "Madame, Monsieur,\n\n",
+  "Vous voudrez bien vous présenter à la session d'examen visant l'obtention du titre professionnel [#Variable;TitleSession.Title.FrName] le **[#Variable;Candidate.ArrivalDate] à [#Variable;Candidate.ArrivalTime]** à l'adresse suivante :\n\n",
+  "[@Center;**[#Variable;TitleSession.VenueAddress]**]\n\n",
+  "**NB :** si le certificat de compétences professionnelles que vous présentez ce jour est le dernier élément constitutif du titre professionnel [#Variable;TitleSession.Title.FrName], ou si vous avez déjà passé l'entretien final mais pas satisfait aux attentes du jury, il vous sera demandé de passer un entretien final afin de valider l'obtention du titre professionnel susmentionné.\n\n",
+  "Vous devrez être muni(e) :\n\n- de l'original de votre pièce d'identité ;\n- de la présente convocation ;\n[@IfC;Candidate.VAENotice;!=;;- [#Variable;Candidate.VAENotice] ;\n][@IfC;TitleSession.EquipmentNotice;!=;;- [#Variable;TitleSession.EquipmentNotice] ;\n][@IfC;Candidate.AuthorizationNotice;!=;;- [#Variable;Candidate.AuthorizationNotice] ;\n]\n",
+  "Je vous prie d'agréer, Madame, Monsieur, l'expression de ma considération distinguée.\n\n\n",
+  "[@Right;Le responsable de session\n[#Variable;Signatories.SessionManager.Identity]\n[@IfC;Signatories.SessionManager.Signature;!=;;[@Image;[#Variable;Signatories.SessionManager.Signature];width=4cm;height=2cm]]]\n"
+}

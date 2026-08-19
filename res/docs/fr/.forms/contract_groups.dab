@@ -1,0 +1,284 @@
+[Apprenant
+  Label = "Apprenant"
+  [Fields
+    [Signatories
+      [Student
+        [FirstName
+          Label = "Prénom de l'apprenant"
+        ]
+        [FamilyName
+          Label = "Nom de famille de l'apprenant"
+        ]
+        [UseName
+          Label = "Nom d'usage"
+        ]
+        [Gender
+          Label = "Genre"
+        ]
+        [BirthDate
+          Label = "Date de naissance"
+        ]
+        [BirthCity
+          Label = "Ville de naissance"
+        ]
+        [BirthCountry
+          Label = "Pays de naissance"
+        ]
+        [Nationality
+          Label = "Nationalité"
+        ]
+        [Address
+          Label = "Adresse"
+        ]
+        [PostalCode
+          Label = "Code postal"
+        ]
+        [City
+          Label = "Ville"
+        ]
+        [Mail
+          Label = "Courriel"
+        ]
+        [Phone
+          Label = "Téléphone"
+        ]
+        [INE
+          Label = "INE"
+        ]
+        [NIR
+          Label = "Numéro de sécurité sociale"
+        ]
+        [LastClass
+          Label = "Dernière classe / dernier niveau suivi"
+        ]
+        [LastClassSuccess
+          Label = "Dernière classe / dernier niveau validé"
+        ]
+        [ChosenSpecialty
+          Label = "Spécialité choisie"
+        ]
+        [SchoolPeriod
+          Label = "Période de scolarité"
+        ]
+        [Day
+          Label = "Jour de rentrée"
+        ]
+        [OtherMonthDay
+          Label = "Autre date de rentrée"
+        ]
+        [Resubscribe
+          Label = "Réinscription"
+        ]
+        [Handicap
+          Label = "Situation de handicap"
+        ]
+        [HandicapKind
+          Label = "Nature du handicap, le cas échéant"
+        ]
+        [Role
+          Label = "Qualité de l'apprenant"
+        ]
+      ]
+    ]
+  ]
+]
+
+[ResponsableFinancier
+  Label = "Responsable financier"
+  [Fields
+    [Signatories
+      [Finance
+        [Identity
+          Label = "Responsable financier"
+        ]
+        [FirstName
+          Label = "Prénom du responsable financier"
+        ]
+        [FamilyName
+          Label = "Nom du responsable financier"
+        ]
+        [BirthDate
+          Label = "Date de naissance du responsable financier"
+        ]
+        [BirthCity
+          Label = "Ville de naissance du responsable financier"
+        ]
+        [BirthCountry
+          Label = "Pays de naissance du responsable financier"
+        ]
+        [Nationality
+          Label = "Nationalité du responsable financier"
+        ]
+        [Address
+          Label = "Adresse du responsable financier"
+        ]
+        [PostalCode
+          Label = "Code postal du responsable financier"
+        ]
+        [City
+          Label = "Ville du responsable financier"
+        ]
+        [Mail
+          Label = "Courriel du responsable financier"
+        ]
+        [Phone
+          Label = "Téléphone du responsable financier"
+        ]
+        [IntranetAccess
+          Label = "Créer un accès à l'intranet pour le responsable financier"
+        ]
+        [SendSchoolReport
+          Label = "Envoyer les bulletins au responsable financier"
+        ]
+        [Role
+          Label = "Qualité du responsable financier"
+        ]
+      ]
+    ]
+  ]
+]
+
+[ResponsablesLegaux
+  Label = "Responsables légaux"
+  [Fields
+    [Legal1
+      [FirstName
+        Label = "Prénom du premier responsable légal"
+      ]
+      [FamilyName
+        Label = "Nom du premier responsable légal"
+      ]
+      [BirthDate
+        Label = "Date de naissance du premier responsable légal"
+      ]
+      [BirthCity
+        Label = "Ville de naissance du premier responsable légal"
+      ]
+      [BirthCountry
+        Label = "Pays de naissance du premier responsable légal"
+      ]
+      [Nationality
+        Label = "Nationalité du premier responsable légal"
+      ]
+      [Address
+        Label = "Adresse du premier responsable légal"
+      ]
+      [PostalCode
+        Label = "Code postal du premier responsable légal"
+      ]
+      [City
+        Label = "Ville du premier responsable légal"
+      ]
+      [Mail
+        Label = "Courriel du premier responsable légal"
+      ]
+      [Phone
+        Label = "Téléphone du premier responsable légal"
+      ]
+      [IntranetAccess
+        Label = "Créer un accès à l'intranet pour le premier responsable légal"
+      ]
+      [SendSchoolReport
+        Label = "Envoyer les bulletins au premier responsable légal"
+      ]
+    ]
+    [Legal2
+      [FirstName
+        Label = "Prénom du second responsable légal"
+      ]
+      [FamilyName
+        Label = "Nom du second responsable légal"
+      ]
+      [BirthDate
+        Label = "Date de naissance du second responsable légal"
+      ]
+      [BirthCity
+        Label = "Ville de naissance du second responsable légal"
+      ]
+      [BirthCountry
+        Label = "Pays de naissance du second responsable légal"
+      ]
+      [Nationality
+        Label = "Nationalité du second responsable légal"
+      ]
+      [Address
+        Label = "Adresse du second responsable légal"
+      ]
+      [PostalCode
+        Label = "Code postal du second responsable légal"
+      ]
+      [City
+        Label = "Ville du second responsable légal"
+      ]
+      [Mail
+        Label = "Courriel du second responsable légal"
+      ]
+      [Phone
+        Label = "Téléphone du second responsable légal"
+      ]
+      [IntranetAccess
+        Label = "Créer un accès à l'intranet pour le second responsable légal"
+      ]
+      [SendSchoolReport
+        Label = "Envoyer les bulletins au second responsable légal"
+      ]
+    ]
+  ]
+]
+
+[ContactUrgence
+  Label = "Contact d'urgence"
+  [Fields
+    [Emergency
+      [FirstName
+        Label = "Prénom du contact d'urgence"
+      ]
+      [FamilyName
+        Label = "Nom du contact d'urgence"
+      ]
+      [Mail
+        Label = "Courriel du contact d'urgence"
+      ]
+      [Phone
+        Label = "Téléphone du contact d'urgence"
+      ]
+    ]
+  ]
+]
+
+[ParametresContrat
+  Label = "Paramètres du contrat"
+  [Fields
+    [Certification
+      Label = "Certification préparée"
+    ]
+    [Delay
+      Label = "Délai d'accès à la formation"
+    ]
+    [PriceReduction
+      Label = "Réduction tarifaire"
+    ]
+  ]
+]
+
+[Etablissement
+  Label = "Établissement"
+  [Fields
+    [Signatories
+      [Director
+        [Identity
+          Label = "Direction / représentant de l'établissement"
+        ]
+        [Role
+          Label = "Qualité du représentant de l'établissement"
+        ]
+        [Signature
+          Label = "Signature du représentant de l'établissement"
+        ]
+      ]
+    ]
+    [Identification
+      Label = "Identification de l'établissement"
+    ]
+  ]
+]

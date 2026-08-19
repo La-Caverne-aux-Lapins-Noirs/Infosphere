@@ -70,7 +70,7 @@ trouvait un emploi avant la fin de la prestation.
 ### Résiliation par l’EFRITS
 
 [@Size;1]
-[@Columns;3;
+[@Columns;1;
 
 - En cas de violation des dispositions relatives au règlement intérieur
 de l’EFRITS.

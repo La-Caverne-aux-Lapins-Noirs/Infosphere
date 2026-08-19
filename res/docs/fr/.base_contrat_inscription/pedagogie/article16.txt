@@ -1,9 +1,10 @@
 
 ## Article P16 - Triches
 
+[@Size;1]
+
 Le présent article complète l'article P11.
 
-[@Size;2]
 [@Columns;2;
 
 La triche est une pratique contraire à l'éthique et aux valeurs

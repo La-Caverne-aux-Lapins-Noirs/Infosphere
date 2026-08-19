@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/dabsic_dependencies.php");
+
 function correction_root_dir()
 {
     // $BaseDir is an URL/include prefix ("../" from /api), not a
@@ -8,24 +10,38 @@ function correction_root_dir()
     $root = dirname(__DIR__)."/dres/corrections";
     if (!is_dir($root))
         @mkdir($root, 0750, true);
-    // Uploaded resources may contain PHP or other source files for exercises.
-    // They must remain data, never web-executable content.
-    $protection = $root."/.htaccess";
-    if (is_dir($root) && !file_exists($protection))
-        @file_put_contents($protection,
-            "Options -ExecCGI\n".
-            "RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .cgi .pl .py .sh .bash\n".
-            "RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .cgi .pl .py .sh .bash\n".
-            "<FilesMatch \"(?i)^(?:\.htaccess|\.user\.ini)$|\.(?:php[0-9]*|phtml|phar|cgi|pl|py|sh|bash)$\">\n".
-            "  Require all denied\n".
-            "  Deny from all\n".
-            "</FilesMatch>\n",
-            LOCK_EX
-        );
-    if (file_exists($protection))
-        @chmod($protection, 0640);
+
+    // Resource access under dres is centralized in dres/bouncer.php. Remove
+    // the legacy per-directory protection if an older Infosphere generated it.
+    if (is_file($root."/.htaccess"))
+        @unlink($root."/.htaccess");
     return ($root);
 }
+
+function correction_reference_can_manage($reference, $for_write = false)
+{
+    if (!can_manage_corrections()
+        || !function_exists("dabsic_editor_normalize_requested_path")
+        || !function_exists("dabsic_editor_project_root"))
+        return (false);
+
+    $reference = dabsic_editor_normalize_requested_path($reference);
+    if ($reference === NULL
+        || strncmp($reference, "dres/corrections/", strlen("dres/corrections/")) !== 0)
+        return (false);
+
+    $project_root = dabsic_editor_project_root();
+    $correction_root = realpath(correction_root_dir());
+    $target = $project_root === false ? false : realpath($project_root."/".$reference);
+    if ($correction_root === false || $target === false)
+        return (false);
+    $prefix = rtrim($correction_root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+    return ($target === $correction_root
+        || strncmp($target, $prefix, strlen($prefix)) === 0);
+}
+
+if (function_exists("dabsic_editor_register_access_resolver"))
+    dabsic_editor_register_access_resolver("correction_reference_can_manage");
 
 function correction_safe_codename($value)
 {
@@ -430,14 +446,11 @@ function correction_normalize_relative_path($path)
 function correction_parse_dabsic_references($content)
 {
     $references = [];
-    if (!is_string($content) || $content == '')
-        return ($references);
-    if (preg_match_all('/@(insert|push)\\s+(["\'])([^"\']+\\.dab)\\2/i', $content, $matches, PREG_SET_ORDER))
-        foreach ($matches as $match)
-            $references[] = [
-                'directive' => strtolower($match[1]),
-                'requested_path' => str_replace('\\', '/', trim($match[3]))
-            ];
+    foreach (dabsic_dependency_static_references($content, ["dab", "dabsic"]) as $reference)
+        $references[] = [
+            "directive" => $reference["directive"],
+            "requested_path" => $reference["requested_path"],
+        ];
     return ($references);
 }
 

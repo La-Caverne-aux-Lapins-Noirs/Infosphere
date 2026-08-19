@@ -130,10 +130,24 @@ function path_browser_transfer_context($page, $id, $type, $language)
     }
     if ($page === "user")
         return (path_browser_transfer_user_context((int)$id, $type));
+    if ($page === "cycle" && $type === "file")
+    {
+        $id = (int)$id;
+        if (!is_director_for_cycle($id))
+            forbidden();
+        $cycle = db_select_one("codename FROM cycle WHERE id = $id AND deleted IS NULL");
+        if ($cycle == NULL || trim((string)($cycle["codename"] ?? "")) == "")
+            not_found();
+        return ([
+            "root" => $Configuration->CyclesDir($cycle["codename"]),
+            "prefix" => "",
+            "kind" => "cycle"
+        ]);
+    }
     bad_request();
 }
 
-function path_browser_transfer_authorize_user_path($id, $relative, $kind, $prefix)
+function path_browser_transfer_authorize_user_path($id, $relative, $kind, $prefix, $write = false)
 {
     $relative = path_browser_transfer_normalize_relative($relative);
     if ($relative === NULL)
@@ -146,16 +160,12 @@ function path_browser_transfer_authorize_user_path($id, $relative, $kind, $prefi
         return ;
     }
 
-    $first = explode("/", $relative, 2)[0] ?? "";
-    if ($first === "admin")
+    if ($write)
     {
-        if (!is_director_for_student((int)$id))
+        if (!user_storage_can_write_path((int)$id, $relative))
             forbidden();
-        return ;
     }
-    if ($first === "public")
-        return ;
-    if (!is_me((int)$id) && !is_admin())
+    else if (!user_storage_can_read_path((int)$id, $relative))
         forbidden();
 }
 
@@ -187,6 +197,70 @@ function path_browser_transfer_resolve_entry($context, $page, $id, $relative)
     if (!is_readable($target))
         forbidden();
     return (["absolute" => $target, "relative" => $relative]);
+}
+
+function path_browser_transfer_validate_new_name($name)
+{
+    if (!is_string($name) && !is_numeric($name))
+        return (NULL);
+    $name = trim((string)$name);
+    if ($name === "" || $name === "." || $name === ".." || $name === "index.php")
+        return (NULL);
+    if (strpos($name, "\0") !== false || strpos($name, "/") !== false || strpos($name, "\\") !== false)
+        return (NULL);
+    return ($name);
+}
+
+function path_browser_transfer_rename($page, $id, $type, $language, $relative, $new_name)
+{
+    $context = path_browser_transfer_context($page, $id, $type, $language);
+    $relative = path_browser_transfer_normalize_relative($relative);
+    $new_name = path_browser_transfer_validate_new_name($new_name);
+    if ($relative === NULL || $relative === "" || $new_name === NULL)
+        return (new ErrorResponse("InvalidParameter", "name"));
+    if (basename($relative) === "index.php")
+        forbidden();
+    if ($page === "user")
+    {
+        $prefix = trim((string)($context["prefix"] ?? ""), "/");
+        if ($prefix !== "" && $relative === $prefix)
+            forbidden();
+        path_browser_transfer_authorize_user_path(
+            $id,
+            $relative,
+            $context["kind"],
+            $context["prefix"],
+            true
+        );
+        if ($context["kind"] === "user" && user_storage_is_root_space($relative))
+            forbidden();
+    }
+
+    $resolved = path_browser_transfer_resolve_entry($context, $page, $id, $relative);
+    $root = path_browser_transfer_real_root($context["root"]);
+    $source = $root.DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relative);
+    if (is_link($source) || realpath($source) !== $resolved["absolute"])
+        forbidden();
+
+    $parent = dirname($source);
+    $real_parent = realpath($parent);
+    if ($real_parent === false || ($real_parent !== $root && strncmp($real_parent, $root.DIRECTORY_SEPARATOR, strlen($root) + 1) !== 0))
+        forbidden();
+    if (!is_writable($real_parent))
+        forbidden();
+
+    $destination = $real_parent.DIRECTORY_SEPARATOR.$new_name;
+    if (file_exists($destination) || is_link($destination))
+        return (new ErrorResponse("PathBrowserNameAlreadyExists"));
+    if (!@rename($source, $destination))
+        return (new ErrorResponse("PathBrowserRenameFailed"));
+
+    $parent_relative = dirname($relative);
+    $new_relative = ($parent_relative === "." ? "" : $parent_relative."/").$new_name;
+    return (new ValueResponse([
+        "name" => $new_name,
+        "relative" => $new_relative
+    ]));
 }
 
 function path_browser_transfer_add_directory_to_zip($zip, $absolute, $archive)

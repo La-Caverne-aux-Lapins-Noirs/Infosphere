@@ -5,17 +5,18 @@ if (!isset($albedo) || $albedo != 1)
 require_once ("tools/document_workflow.php");
 require_once ("tools/registration_form.php");
 require_once ("tools/pdfsign.php");
+require_once ("tools/attendance_register.php");
 
-function document_workflow_albedo_mail($invitation, $instance, $role, $reminder = false)
+function document_workflow_albedo_mail($invitation, $instance, $role_label, $reminder = false)
 {
     $user = $invitation["user"] ?? [];
     $mail = trim((string)($user["mail"] ?? ""));
     if ($mail == "")
         return (new ErrorResponse("MissingField", "mail"));
-    $model = basename((string)($instance["Model"] ?? "document"));
+    $model = document_workflow_instance_label($instance);
     $subject = ($reminder ? "Rappel - " : "")."Document à signer : ".$model;
     $content = "Bonjour".(trim((string)($user["first_name"] ?? "")) != "" ? " ".$user["first_name"] : "").",\n\n".
-        "Un document attend votre signature en qualité de ".$role.".\n".
+        "Un document attend votre signature en qualité de ".$role_label.".\n".
         "Le lien ci-dessous permet de consulter exactement le PDF concerné puis de le signer :\n\n".
         $invitation["url"]."\n\n".
         "Ce lien est personnel et valable 14 jours.\n";
@@ -41,13 +42,20 @@ function document_workflow_albedo_process_instance($file)
     }
 
     $changed = false;
-    foreach (($instance["Signatures"] ?? []) as $role => &$signature)
+    foreach (($instance["Signatures"] ?? []) as $slot => &$signature)
     {
         if (!is_array($signature) || ($signature["Status"] ?? "Pending") == "Signed")
             continue ;
-        $source = (string)($signature["Source"] ?? "");
-        $signatory = document_workflow_source_user_id((int)($instance["OwnerUserId"] ?? 0), $source, (int)($instance["CreatedBy"] ?? 0));
-        if ($signatory == NULL)
+        if (document_workflow_signature_is_external_campaign($signature))
+            continue ;
+        $semantic_role = document_workflow_signature_semantic_role($slot, $signature);
+        $role_label = document_workflow_signature_role_label($slot, $signature);
+        $signatory = document_workflow_signature_assignee_user_id(
+            (int)($instance["OwnerUserId"] ?? 0),
+            $signature,
+            (int)($instance["CreatedBy"] ?? 0)
+        );
+        if ($signatory <= 0)
         {
             $signature["Error"] = "CannotResolveSignatory";
             $changed = true;
@@ -60,7 +68,7 @@ function document_workflow_albedo_process_instance($file)
             continue ;
 
         $invitation = registration_form_create_document_signature_invitation(
-            (int)$instance["OwnerUserId"], (string)$instance["Id"], $role, $signatory, 1
+            (int)$instance["OwnerUserId"], (string)$instance["Id"], $slot, $signatory, 1
         );
         if (!$invitation["ok"])
         {
@@ -70,7 +78,7 @@ function document_workflow_albedo_process_instance($file)
         }
         try
         {
-            $sent = document_workflow_albedo_mail($invitation, $instance, $role, $reminder);
+            $sent = document_workflow_albedo_mail($invitation, $instance, $role_label, $reminder);
         }
         catch (Throwable $e)
         {
@@ -93,7 +101,7 @@ function document_workflow_albedo_process_instance($file)
         $signature["InvitationId"] = (int)$invitation["id"];
         $signature["SignatoryUserId"] = (int)$signatory;
         $changed = true;
-        add_log(TRACE, "Document workflow ".$instance["Id"]." signature request sent for $role to user $signatory.", 1, true);
+        add_log(TRACE, "Document workflow ".$instance["Id"]." signature request sent for slot $slot ($semantic_role) to user $signatory.", 1, true);
     }
     unset($signature);
     if ($changed)
@@ -339,6 +347,37 @@ function document_workflow_albedo_complete_sealed_instance($file)
 }
 
 
+function document_workflow_albedo_recover_unsigned_completed_instance($file)
+{
+    $loaded = document_workflow_load_instance(dirname((string)$file));
+    if ($loaded->is_error())
+        return ;
+    $instance = $loaded->value["data"];
+    if (count($instance["Signatures"] ?? []))
+        return ;
+
+    $status = (string)($instance["Status"] ?? "");
+    $error = (string)($instance["Error"] ?? "");
+    if ($status !== "Completed" && !($status === "Error" && $error === "FinalHashMismatch"))
+        return ;
+
+    $directory = $loaded->value["directory"];
+    $frozen_name = basename((string)($instance["FrozenFile"] ?? "frozen.pdf"));
+    $frozen = $directory.$frozen_name;
+    $hash = trim((string)($instance["FrozenHash"] ?? ""));
+    if (!is_file($frozen) || $hash == "" || hash_file("sha256", $frozen) !== $hash)
+        return ;
+
+    $instance["Status"] = "Completed";
+    if (empty($instance["CompletedAt"]))
+        $instance["CompletedAt"] = (string)($instance["CreatedAt"] ?? date("Y-m-d H:i:s"));
+    $instance["FinalFile"] = $frozen_name;
+    $instance["FinalHash"] = $hash;
+    $instance["CompletionMode"] = "NoSignature";
+    unset($instance["Error"], $instance["ErrorAt"]);
+    document_workflow_write_instance($loaded->value["file"], $instance);
+}
+
 function document_workflow_albedo_delivery_retry_due(array $instance)
 {
     $last = trim((string)($instance["DeliveryLastAttemptAt"] ?? ""));
@@ -356,7 +395,7 @@ function document_workflow_albedo_delivery_recipients(array $instance)
         $ids[$owner] = true;
     foreach (($instance["Signatures"] ?? []) as $signature)
     {
-        if (!is_array($signature))
+        if (!is_array($signature) || document_workflow_signature_is_external_campaign($signature))
             continue ;
         $id = (int)($signature["SignatoryUserId"] ?? 0);
         if ($id > 0)
@@ -367,8 +406,10 @@ function document_workflow_albedo_delivery_recipients(array $instance)
 
 function document_workflow_albedo_delivery_filename(array $instance)
 {
-    $model = basename((string)($instance["Model"] ?? "document.dab"));
-    $model = preg_replace('/\.dab$/i', '', $model);
+    $model = document_workflow_instance_label($instance);
+    $ascii_model = function_exists("iconv") ? @iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $model) : false;
+    if (is_string($ascii_model) && $ascii_model != "")
+        $model = $ascii_model;
     $model = preg_replace('/[^A-Za-z0-9._-]+/', '_', $model);
     if ($model == "")
         $model = "document";
@@ -450,7 +491,7 @@ function document_workflow_albedo_deliver_completed_instance($file)
                 $failed[] = (int)$id_user;
                 continue ;
             }
-            $subject = "Document finalisé : ".basename((string)($instance["Model"] ?? "document"));
+            $subject = "Document finalisé : ".document_workflow_instance_label($instance);
             $content = "Bonjour".(trim((string)($user["first_name"] ?? "")) != "" ? " ".$user["first_name"] : "").",\n\n".
                 "Le document est désormais finalisé. Vous trouverez en pièce jointe la version définitive qui a été conservée par Infosphere.\n\n".
                 "Référence : ".(string)($instance["Id"] ?? "")."\n".
@@ -495,9 +536,16 @@ foreach (db_select_all("id, codename FROM user WHERE authority != -1") as $docum
     $root = $Configuration->UsersDir($document_user["codename"]).document_workflow_root();
     foreach (glob($root."/*/instance.dab") ?: [] as $document_instance_file)
     {
+        document_workflow_albedo_recover_unsigned_completed_instance($document_instance_file);
         document_workflow_albedo_process_instance($document_instance_file);
         document_workflow_albedo_seal_instance($document_instance_file);
         document_workflow_albedo_complete_sealed_instance($document_instance_file);
+        $sync = attendance_register_sync_campaign_instance($document_instance_file);
+        if ($sync->is_error())
+            add_log(REPORT, "Cannot synchronize attendance-register campaign ".$document_instance_file.": ".strval($sync), 1, true);
+        $archive = document_workflow_archive_completed_instance($document_instance_file);
+        if ($archive->is_error())
+            add_log(REPORT, "Cannot archive completed document workflow ".$document_instance_file.": ".strval($archive), 1, true);
         document_workflow_albedo_deliver_completed_instance($document_instance_file);
     }
 }

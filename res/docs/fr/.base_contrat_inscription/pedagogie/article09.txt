@@ -1,8 +1,8 @@
 
 ## Article P9 - L'évaluation
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Tous les membres de l’équipe doivent être présents lors des événements
 d’évaluation. L’absence d’un membre de l’équipe équivaut à l’absence du
@@ -22,8 +22,8 @@ du responsable pédagogique. Tout contenu manifestement inapproprié pourra
 
 ### Le rendu 
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 L’administrateur d’équipe est responsable du rendu. Il est le seul en
 capacité de signaler à l’intranet que le travail peut être enregistré en l’état.  
@@ -39,8 +39,8 @@ recodes et rétrospective finale auront tout de même lieu s'ils étaient prévu
 
 ### Le recode
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Un recode consiste en la séparation de chaque membre de l’équipe dans
 des unités d’évaluation afin de leur faire passer un bref examen sur les
@@ -52,8 +52,8 @@ constituent des enjeux majeurs pour la formation.
 
 ### La correction automatique
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une correction peut être déroulée automatiquement à la suite de la
 fermeture de la période de ramassage. Le résultat de la correction
@@ -66,8 +66,8 @@ de l’équipe.
 
 ### La réservation de la soutenance
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 L’administrateur d’équipe est responsable de la prise du rendez-vous
 de soutenance. Il est en général impossible de se désinscrire d’une
@@ -76,12 +76,10 @@ son calendrier avant de s’inscrire.
 
 ]
 
-[@NewPage]
-
 ### La soutenance
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Durant la soutenance, la cohérence de l’équipe et du travail fourni
 est vérifiée : tous les membres de l’équipe doivent être en capacité

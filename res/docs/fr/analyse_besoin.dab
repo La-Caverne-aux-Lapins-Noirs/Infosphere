@@ -1,80 +1,354 @@
-Document = "Report"
+Document = "Generic"
 Title = "Analyse du besoin"
+
+[Workflow
+  Mailbox = "admission"
+]
 
 [Header
   Left = [Text($,Left)
     [@Size;5] Analyse du besoin
   Left]
   Right = [Text($,Right)
-    [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
   Right]
 ]
 
-[Footer = [Text($,Footer)
+Footer = [Text($,Footer)
   [@Size;0]
-  [#Variable;School.MainInfo]
-  [#Variable;School.SchoolInfo]
-  [#Variable;School.FormationInfo]
-  [#Variable;School.AlternationInfo]
-  [#Variable;School.Phone] - [#Variable;School.Mail]
-Footer]]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+[FormGroup
+  [Identity
+    Label = "Identité"
+    [Fields
+      [Student
+        [Identity
+          Label = "Nom et prénom"
+          Required = 1
+        ]
+        [Mail
+          Label = "Courriel"
+          Required = 1
+        ]
+        [Phone
+          Label = "Téléphone"
+        ]
+      ]
+    ]
+  ]
+
+  [Project
+    Label = "Situation, projet et objectifs"
+    [Fields
+      [NeedsAnalysis
+        [TargetTraining
+          Label = "Formation / parcours envisagé"
+          Required = 1
+        ]
+        [TargetLevel
+          Label = "Niveau d'entrée"
+        ]
+        [TargetEntry
+          Label = "Rentrée envisagée"
+        ]
+        [CurrentSituation
+          Label = "Situation actuelle"
+          Required = 1
+        ]
+        [LastDiploma
+          Label = "Dernier diplôme / niveau atteint"
+        ]
+        [PreviousExperience
+          Label = "Formation(s) ou expérience(s) antérieure(s) pertinente(s)"
+        ]
+        [ProfessionalProject
+          Label = "Projet professionnel / métier ou domaine visé"
+          Required = 1
+        ]
+        [Motivations
+          Label = "Motivations exprimées"
+          Required = 1
+        ]
+        [Constraints
+          Label = "Contraintes particulières connues"
+        ]
+      ]
+    ]
+  ]
+
+  [TrainingNeeds
+    Label = "Besoin de formation identifié"
+    [Fields
+      [NeedsAnalysis
+        [AcquiredSkills
+          Label = "Compétences / connaissances déjà acquises"
+        ]
+        [SkillsToAcquire
+          Label = "Compétences / connaissances à acquérir ou renforcer"
+        ]
+        [MainObjective
+          Label = "Objectif principal de la formation"
+          Required = 1
+        ]
+        [Expectations
+          Label = "Attentes particulières du bénéficiaire"
+        ]
+      ]
+    ]
+  ]
+
+  [AccessibilityNeeds
+    Label = "Besoins spécifiques et accessibilité"
+    [Fields
+      [Student
+        [Handicap
+          Label = "Situation de handicap déjà déclarée"
+        ]
+        [HandicapKind
+          Label = "Nature déclarée, le cas échéant"
+        ]
+      ]
+      [NeedsAnalysis
+        [AccessibilityNeed
+          Label = "Besoin particulier d'accessibilité ou d'aménagement"
+        ]
+      ]
+    ]
+  ]
+
+  [Funding
+    Label = "Financement et tiers éventuel"
+    [Fields
+      [NeedsAnalysis
+        [Funding
+          Label = "Financement envisagé"
+        ]
+        [ThirdParty
+          Label = "Entreprise / financeur / prescripteur"
+        ]
+        [ThirdPartyNeeds
+          Label = "Attentes exprimées par le tiers"
+        ]
+      ]
+    ]
+  ]
+
+  [AnalysisContext
+    Label = "Cadre de l'analyse"
+    [Fields
+      [Analyst
+        [Identity
+          Label = "Analyse réalisée par"
+          Required = 1
+          Default = "@CurrentUser.Identity"
+        ]
+      ]
+      [NeedsAnalysis
+        [AnalysisDate
+          Label = "Date de l'analyse"
+          Required = 1
+          Default = "@Today"
+        ]
+      ]
+    ]
+  ]
+
+  [CoherenceAnalysis
+    Label = "Adéquation avec la formation"
+    [Fields
+      [NeedsAnalysis
+        [Individualization
+          Label = "Besoin d'individualisation ou d'adaptation du parcours"
+        ]
+        [ProjectConsistency
+          Label = "Cohérence du projet avec les objectifs de la formation"
+          Required = 1
+        ]
+        [Prerequisites
+          Label = "Prérequis satisfaits"
+          Required = 1
+        ]
+        [EntryLevelConsistency
+          Label = "Niveau d'entrée adapté aux acquis"
+          Required = 1
+        ]
+        [ModalitiesConsistency
+          Label = "Rythme, durée et modalités compatibles avec la situation"
+          Required = 1
+        ]
+        [OutcomesConsistency
+          Label = "Débouchés / poursuites cohérents avec le projet"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+
+  [AccessibilityResponse
+    Label = "Réponse aux besoins d'accessibilité"
+    [Fields
+      [NeedsAnalysis
+        [AccessibilityAdaptation
+          Label = "Adaptation fonctionnelle envisagée"
+        ]
+        [AccessibilityAction
+          Label = "Action prévue"
+        ]
+      ]
+    ]
+  ]
+
+  [ProposedPath
+    Label = "Parcours proposé"
+    [Fields
+      [NeedsAnalysis
+        [TrainingMode
+          Label = "Modalité envisagée"
+          Required = 1
+        ]
+        [ProposedPath
+          Label = "Parcours retenu / proposition formulée"
+          Required = 1
+        ]
+        [ActionsBeforeEntry
+          Label = "Adaptations / actions à réaliser avant l'entrée"
+        ]
+        [NextStep
+          Label = "Prochaine étape"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+
+  [Conclusion
+    Label = "Conclusion de l'analyse"
+    [Fields
+      [NeedsAnalysis
+        [Notes
+          Label = "Observations complémentaires"
+        ]
+        [Conclusion
+          Label = "Conclusion"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Beneficiaire
+    Label = "Bénéficiaire"
+    Required = 1
+    {Read
+      "Identity",
+      "Project",
+      "TrainingNeeds",
+      "AccessibilityNeeds",
+      "Funding",
+      "AnalysisContext",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "Conclusion"
+    }
+    {Edit
+      "Project",
+      "TrainingNeeds",
+      "AccessibilityNeeds",
+      "Funding"
+    }
+    {Validate
+      "Project",
+      "TrainingNeeds",
+      "AccessibilityNeeds",
+      "Funding"
+    }
+  ]
+
+  [Etablissement
+    Label = "Établissement / analyste"
+    Required = 1
+    {Read
+      "Identity",
+      "Project",
+      "TrainingNeeds",
+      "AccessibilityNeeds",
+      "Funding",
+      "AnalysisContext",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "Conclusion"
+    }
+    {Edit
+      "AnalysisContext",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "Conclusion"
+    }
+    {Validate
+      "AnalysisContext",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "Conclusion"
+    }
+  ]
+]
 
 {Content
-  "# Fiche d'analyse du besoin\n\n",
+  "\\noindent\\makebox[0pt][l]{\\hspace{\\dimexpr\\textwidth-5.6cm\\relax}\\begin{minipage}[t]{5.6cm}[@Size;1]Analyse réalisée par: [#FLine;[#Variable;Analyst.Identity]]Date: [#FLine;[#Variable;NeedsAnalysis.AnalysisDate]]\\end{minipage}}\\par\\vspace{0.75cm}\n",
+  "[@Center;[@Size;8] Fiche d'analyse du besoin]\n\n",
   "[@Size;1]\n",
   "Cette fiche formalise l'analyse du besoin réalisée avant l'entrée en formation et permet de vérifier l'adéquation entre le projet du bénéficiaire et la prestation proposée.\n\n",
 
   "## Identification\n\n",
-  "**Bénéficiaire :** [#Variable;Student.Identity]\n\n",
-  "**Courriel :** [#Variable;Student.Mail]\n\n",
-  "**Téléphone :** [#Variable;Student.Phone]\n\n",
-  "**Formation / parcours envisagé :** [#Variable;NeedsAnalysis.TargetTraining]\n\n",
-  "**Niveau d'entrée :** [#Variable;NeedsAnalysis.TargetLevel]\n\n",
-  "**Rentrée envisagée :** [#Variable;NeedsAnalysis.TargetEntry]\n\n",
+  "[@Columns;2;\nBénéficiaire: [#FLine;[#Variable;Student.Identity]]\n\nCourriel: [#FLine;[#Variable;Student.Mail]]\n\nTéléphone: [#FLine;[#Variable;Student.Phone]]\n\nFormation / parcours envisagé: [#FLine;[#Variable;NeedsAnalysis.TargetTraining]]\n\nNiveau d'entrée: [#FLine;[#Variable;NeedsAnalysis.TargetLevel]]\n\nRentrée envisagée: [#FLine;[#Variable;NeedsAnalysis.TargetEntry]]\n]\n\n",
 
   "## Situation et projet du bénéficiaire\n\n",
-  "**Situation actuelle :** [#Variable;NeedsAnalysis.CurrentSituation]\n\n",
-  "**Dernier diplôme / niveau atteint :** [#Variable;NeedsAnalysis.LastDiploma]\n\n",
-  "**Formation(s) ou expérience(s) antérieure(s) pertinente(s) :** [#Variable;NeedsAnalysis.PreviousExperience]\n\n",
-  "**Projet professionnel / métier ou domaine visé :** [#Variable;NeedsAnalysis.ProfessionalProject]\n\n",
-  "**Motivations exprimées :** [#Variable;NeedsAnalysis.Motivations]\n\n",
-  "**Contraintes particulières connues :** [#Variable;NeedsAnalysis.Constraints]\n\n",
+  "[@Columns;2;\nSituation actuelle: [#FLine;[#Variable;NeedsAnalysis.CurrentSituation]]\n\nDernier diplôme / niveau atteint: [#FLine;[#Variable;NeedsAnalysis.LastDiploma]]\n\nFormation(s) ou expérience(s) antérieure(s) pertinente(s): [#FLine;[#Variable;NeedsAnalysis.PreviousExperience]]\n\nProjet professionnel / métier ou domaine visé: [#FLine;[#Variable;NeedsAnalysis.ProfessionalProject]]\n\nContraintes particulières connues: [#FLine;[#Variable;NeedsAnalysis.Constraints]]\n]\n\n",
+  "[@TextBox;2.0;[#Variable;NeedsAnalysis.Motivations];Motivations exprimées]\n\n",
 
   "## Besoin de formation identifié\n\n",
-  "**Compétences / connaissances déjà acquises :** [#Variable;NeedsAnalysis.AcquiredSkills]\n\n",
-  "**Compétences / connaissances à acquérir ou renforcer :** [#Variable;NeedsAnalysis.SkillsToAcquire]\n\n",
-  "**Objectif principal de la formation :** [#Variable;NeedsAnalysis.MainObjective]\n\n",
-  "**Attentes particulières du bénéficiaire :** [#Variable;NeedsAnalysis.Expectations]\n\n",
-  "**Besoin d'individualisation ou d'adaptation du parcours :** [#Variable;NeedsAnalysis.Individualization]\n\n",
+  "Compétences / connaissances déjà acquises: [#FLine;[#Variable;NeedsAnalysis.AcquiredSkills]]\n\n",
+  "Compétences / connaissances à acquérir ou renforcer: [#FLine;[#Variable;NeedsAnalysis.SkillsToAcquire]]\n\n",
+  "Objectif principal de la formation: [#FLine;[#Variable;NeedsAnalysis.MainObjective]]\n\n",
+  "Attentes particulières du bénéficiaire: [#FLine;[#Variable;NeedsAnalysis.Expectations]]\n\n",
+  "Besoin d'individualisation ou d'adaptation du parcours: [#FLine;[#Variable;NeedsAnalysis.Individualization]]\n\n",
 
   "## Adéquation avec la formation\n\n",
-  "**Cohérence du projet avec les objectifs de la formation :** [#Variable;NeedsAnalysis.ProjectConsistency]\n\n",
-  "**Prérequis satisfaits :** [#Variable;NeedsAnalysis.Prerequisites]\n\n",
-  "**Niveau d'entrée adapté aux acquis :** [#Variable;NeedsAnalysis.EntryLevelConsistency]\n\n",
-  "**Rythme, durée et modalités compatibles avec la situation :** [#Variable;NeedsAnalysis.ModalitiesConsistency]\n\n",
-  "**Débouchés / poursuites cohérents avec le projet :** [#Variable;NeedsAnalysis.OutcomesConsistency]\n\n",
+  "Cohérence du projet avec les objectifs de la formation: [#FLine;[#Variable;NeedsAnalysis.ProjectConsistency]]\n\n",
+  "Prérequis satisfaits: [#FLine;[#Variable;NeedsAnalysis.Prerequisites]]\n\n",
+  "Niveau d'entrée adapté aux acquis: [#FLine;[#Variable;NeedsAnalysis.EntryLevelConsistency]]\n\n",
+  "Rythme, durée et modalités compatibles avec la situation: [#FLine;[#Variable;NeedsAnalysis.ModalitiesConsistency]]\n\n",
+  "Débouchés / poursuites cohérents avec le projet: [#FLine;[#Variable;NeedsAnalysis.OutcomesConsistency]]\n\n",
 
   "## Besoins spécifiques et accessibilité\n\n",
-  "**Situation de handicap déjà déclarée :** [#Variable;Student.Handicap]\n\n",
-  "**Nature déclarée, le cas échéant :** [#Variable;Student.HandicapKind]\n\n",
-  "**Besoin particulier d'accessibilité ou d'aménagement :** [#Variable;NeedsAnalysis.AccessibilityNeed]\n\n",
-  "**Adaptation fonctionnelle envisagée :** [#Variable;NeedsAnalysis.AccessibilityAdaptation]\n\n",
-  "**Action prévue :** [#Variable;NeedsAnalysis.AccessibilityAction]\n\n",
+  "Situation de handicap déjà déclarée: [#FLine;[#Variable;Student.Handicap]]\n\n",
+  "Nature déclarée, le cas échéant: [#FLine;[#Variable;Student.HandicapKind]]\n\n",
+  "Besoin particulier d'accessibilité ou d'aménagement: [#FLine;[#Variable;NeedsAnalysis.AccessibilityNeed]]\n\n",
+  "Adaptation fonctionnelle envisagée: [#FLine;[#Variable;NeedsAnalysis.AccessibilityAdaptation]]\n\n",
+  "Action prévue: [#FLine;[#Variable;NeedsAnalysis.AccessibilityAction]]\n\n",
 
   "## Financement et tiers éventuel\n\n",
-  "**Modalité envisagée :** [#Variable;NeedsAnalysis.TrainingMode]\n\n",
-  "**Financement envisagé :** [#Variable;NeedsAnalysis.Funding]\n\n",
-  "**Entreprise / financeur / prescripteur :** [#Variable;NeedsAnalysis.ThirdParty]\n\n",
-  "**Attentes exprimées par le tiers :** [#Variable;NeedsAnalysis.ThirdPartyNeeds]\n\n",
+  "[@Columns;2;\nModalité envisagée: [#FLine;[#Variable;NeedsAnalysis.TrainingMode]]\n\nFinancement envisagé: [#FLine;[#Variable;NeedsAnalysis.Funding]]\n\nEntreprise / financeur / prescripteur: [#FLine;[#Variable;NeedsAnalysis.ThirdParty]]\n]\n\n",
+  "[@TextBox;2.0;[#Variable;NeedsAnalysis.ThirdPartyNeeds];Attentes exprimées par le tiers]\n\n",
 
   "## Conclusion de l'analyse\n\n",
-  "**Conclusion :** [#Variable;NeedsAnalysis.Conclusion]\n\n",
-  "**Parcours retenu / proposition formulée :** [#Variable;NeedsAnalysis.ProposedPath]\n\n",
-  "**Adaptations / actions à réaliser avant l'entrée :** [#Variable;NeedsAnalysis.ActionsBeforeEntry]\n\n",
-  "**Prochaine étape :** [#Variable;NeedsAnalysis.NextStep]\n\n",
-  "**Observations complémentaires :** [#Variable;NeedsAnalysis.Notes]\n\n",
-
-  "## Traçabilité\n\n",
-  "**Analyse réalisée par :** [#Variable;Analyst.Identity]\n\n",
-  "**Date de l'analyse :** [#Variable;NeedsAnalysis.AnalysisDate]\n\n"
+  "Parcours retenu / proposition formulée: [#FLine;[#Variable;NeedsAnalysis.ProposedPath]]\n\n",
+  "Adaptations / actions à réaliser avant l'entrée: [#FLine;[#Variable;NeedsAnalysis.ActionsBeforeEntry]]\n\n",
+  "Prochaine étape: [#FLine;[#Variable;NeedsAnalysis.NextStep]]\n\n",
+  "[@TextBox;2.5;[#Variable;NeedsAnalysis.Notes];Observations complémentaires]\n\n",
+  "[@TextBox;2.5;[#Variable;NeedsAnalysis.Conclusion];Conclusion]\n"
 }

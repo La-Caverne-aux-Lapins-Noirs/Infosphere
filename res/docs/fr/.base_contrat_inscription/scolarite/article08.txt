@@ -58,28 +58,26 @@ fourni ci-dessous mais ce n'est pas obligatoire.
 [@ELine]
 
 [@Size;5]
->
-> **Formulaire de retractation**
->
-> Prénom, Nom
-> Adresse postale
->
-> A l'attention de Monsieur le Directeur de l'EFRITS
-> 33 rue Delaporte 94700 Maisons-Alfort
->
-> [@ELine]
->
-> Envoi par lettre recommandée avec accusé de réception ou
-> par courriel à l'Etablissement.
->
-> Je vous notifie par la présente ma rétractation
-> de mon inscription en NomFormation de l'année
-> Année-Année pour laquelle nous avons signé le JJ/MM/AAAA.
->
-> [@ELine]
->
-> Date et signature (seulement si envoi par courrier postal)
->
->
+
+**Formulaire de retractation**
+
+Prénom, Nom
+Adresse postale
+
+A l'attention de Monsieur le Directeur de l'EFRITS
+33 rue Delaporte 94700 Maisons-Alfort
+
+[@ELine]
+
+Envoi par lettre recommandée avec accusé de réception ou
+par courriel à l'Etablissement.
+
+Je vous notifie par la présente ma rétractation
+de mon inscription en NomFormation de l'année
+Année-Année pour laquelle nous avons signé le JJ/MM/AAAA.
+
+[@ELine]
+
+Date et signature (seulement si envoi par courrier postal)
 
 ]

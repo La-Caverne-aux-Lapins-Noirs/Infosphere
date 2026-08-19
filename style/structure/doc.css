@@ -60,8 +60,8 @@
 {
     width: 96%;
     margin-left: 2%;
-    height: 82%;
-    margin-top: 1%;
+    height: 100%;
+    margin-top: 0;
     display: grid;
     grid-template-columns: minmax(240px, 28%) minmax(0, 1fr);
     gap: 1.2em;
@@ -168,11 +168,32 @@
     flex: 0 0 auto;
 }
 
+.documents_page
+{
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.documents_page > h2
+{
+    flex: 0 0 auto;
+    margin-top: 0.35em;
+    margin-bottom: 0.35em;
+}
+
 .documents_workflow_panel
 {
+    box-sizing: border-box;
     width: 96%;
-    margin: 1.4em 2% 3em 2%;
+    margin: 0 2% 0.35em 2%;
     clear: both;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .documents_workflow_panel > h3
@@ -182,7 +203,20 @@
 
 .documents_workflow_panel .tabpanel
 {
-    min-height: 18em;
+    height: 100%;
+    min-height: 0;
+}
+
+.documents_workflow_panel .tabcontent
+{
+    overflow: hidden;
+}
+
+.documents_workflow_panel .document_workflow_state
+{
+    box-sizing: border-box;
+    height: 100%;
+    overflow: auto;
 }
 
 .document_workflow_state
@@ -234,6 +268,167 @@
 }
 
 .document_workflow_error
+{
+    font-weight: bold;
+}
+
+.document_workflow_actions
+{
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    white-space: nowrap;
+}
+
+.document_workflow_actions form
+{
+    display: inline;
+    margin: 0;
+}
+
+.document_workflow_attention
+{
+    font-weight: normal;
+    background: rgba(255, 170, 0, 0.10);
+}
+
+.document_workflow_tofinalize
+{
+    font-weight: bold;
+}
+
+
+/* Profile documentation is displayed in the large right-hand tab panel. */
+.profile_documentation
+{
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 0.8em 1em 1.2em 1em;
+}
+
+.profile_documentation *,
+.profile_documentation *::before,
+.profile_documentation *::after
+{
+    box-sizing: border-box;
+}
+
+.profile_documentation_workflow_wrap
+{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1em;
+}
+
+.profile_documentation_workflow
+{
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    margin-bottom: 0;
+}
+
+.profile_documentation_workflow th,
+.profile_documentation_workflow td
+{
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.profile_documentation_workflow .profile_documentation_col_document { width: 18%; }
+.profile_documentation_workflow .profile_documentation_col_state { width: 22%; }
+.profile_documentation_workflow .profile_documentation_col_author { width: 11%; }
+.profile_documentation_workflow .profile_documentation_col_date { width: 15%; }
+.profile_documentation_workflow .profile_documentation_col_expiration { width: 13%; }
+.profile_documentation_workflow .profile_documentation_col_actions { width: 21%; }
+
+.profile_documentation .document_workflow_actions
+{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35em;
+    min-width: 0;
+    white-space: normal;
+}
+
+.profile_documentation .document_workflow_actions form
+{
+    display: block;
+    width: 100%;
+    margin: 0;
+}
+
+.profile_documentation .document_workflow_actions input,
+.profile_documentation .profile_documentation_action
+{
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 2em;
+    padding: 0.3em 0.45em;
+    white-space: normal;
+    text-align: center;
+}
+
+.profile_documentation .profile_documentation_action
+{
+    border: 1px solid currentColor;
+    border-radius: 0.3em;
+    text-decoration: none;
+}
+
+.profile_documentation_section
+{
+    width: 100%;
+    margin: 1em 0;
+    padding: 0.8em;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.35em;
+}
+
+.profile_documentation_section label
+{
+    display: block;
+    margin-top: 0.55em;
+    margin-bottom: 0.2em;
+}
+
+.profile_documentation_section select,
+.profile_documentation_section input[type="text"]
+{
+    max-width: 100%;
+}
+
+.profile_documentation_help
+{
+    margin: 0.65em 0 0 0;
+    font-size: x-small;
+    opacity: 0.8;
+}
+
+.document_task_list
+{
+    margin: 0.45em 0 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.document_task_list li
+{
+    margin: 0.15em 0;
+}
+
+.document_task_list li.is-complete
+{
+    opacity: 0.72;
+}
+
+.document_task_list li.is-pending
 {
     font-weight: bold;
 }

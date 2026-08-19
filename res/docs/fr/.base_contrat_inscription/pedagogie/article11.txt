@@ -1,8 +1,8 @@
 
 ## Article P11 - Fraudes
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Toute fraude ou tentative de fraude entrainera un échec
 à une portion de l’activité concernée ou à sa totalité.
@@ -34,3 +34,4 @@ utilisable au-delà d’éventuelles autorisations spécifiques.
 
 ]
 
+[@NewPage]

@@ -9,7 +9,10 @@ function generate_subject($cnf, $act)
     $language = strtoupper($Language);
     
     // Generer l'instance et l'écrire
-    $instance = $Configuration->UsersDir($User["codename"])."/{$act->codename}/instance.dab";
+    $personal_activity_dir =
+        $Configuration->UsersDir($User["codename"])."perso/{$act->codename}/";
+    new_directory($personal_activity_dir);
+    $instance = $personal_activity_dir."instance.dab";
     $team = [];
     $team[] = $act->user_team["leader"]["codename"];
     foreach ($act->user_team as $ut)
@@ -32,7 +35,7 @@ function generate_subject($cnf, $act)
     ];
 
     // Fichier de sorti
-    $outfile = $Configuration->UsersDir($User["codename"])."/{$act->codename}/subject.pdf";
+    $outfile = $personal_activity_dir."subject.pdf";
     $out = shell_exec(
 	"docbuilder ".
 	"-c ".$Configuration->SchoolsDir()." ".

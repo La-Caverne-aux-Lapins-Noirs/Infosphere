@@ -136,6 +136,7 @@
             body.append("reference", root.getAttribute("data-reference") || "");
             body.append("mode", root.getAttribute("data-mode") || "dabsic");
             body.append("chain", root.getAttribute("data-chain") || "");
+            body.append("form_role", root.getAttribute("data-form-role") || "");
             body.append("reference_hash", root.getAttribute("data-reference-hash") || "");
             body.append("output", root.getAttribute("data-output") || "");
             body.append("output_hash", root.getAttribute("data-output-hash") || "");

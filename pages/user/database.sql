@@ -112,7 +112,7 @@ CREATE TABLE `parent_child` (
   KEY `id_parent` (`id_parent`),
   `id_child` int(11) NOT NULL,
   KEY `id_child` (`id_child`),
-  `relation` set('financial','legal','emergency','internship') NOT NULL DEFAULT ''
+  `relation` set('financial','legal','emergency','internship','log_as') NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `comment` (
@@ -148,6 +148,36 @@ CREATE TABLE `user_form` (
   `last_saved_at` datetime DEFAULT NULL,
   `completed_at` datetime DEFAULT NULL,
   `revoked_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+CREATE TABLE `document_task` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `task_key` char(64) NOT NULL,
+  UNIQUE KEY `task_key` (`task_key`),
+  `id_owner_user` int(11) NOT NULL,
+  KEY `id_owner_user` (`id_owner_user`),
+  `id_form` int(11) DEFAULT NULL,
+  KEY `id_form` (`id_form`),
+  `instance_id` varchar(96) NOT NULL DEFAULT '',
+  KEY `instance_id` (`instance_id`),
+  `task_action` varchar(16) NOT NULL,
+  KEY `task_action` (`task_action`),
+  `role` varchar(128) NOT NULL,
+  KEY `role` (`role`),
+  `role_label` varchar(255) NOT NULL DEFAULT '',
+  `id_assignee_user` int(11) DEFAULT NULL,
+  KEY `id_assignee_user` (`id_assignee_user`),
+  `required` tinyint(1) NOT NULL DEFAULT 1,
+  `status` varchar(16) NOT NULL DEFAULT 'pending',
+  KEY `status` (`status`),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `completed_at` datetime DEFAULT NULL,
+  `completed_by_user` int(11) DEFAULT NULL,
+  KEY `completed_by_user` (`completed_by_user`),
+  `expired_at` datetime DEFAULT NULL,
+  `metadata` longtext NOT NULL DEFAULT '{}'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 

@@ -31,6 +31,11 @@ function campaign_fetch_all($with_deleted = false)
     "));
 }
 
+function campaign_fetch_all_chronological($with_deleted = false)
+{
+    return (array_reverse(campaign_fetch_all($with_deleted)));
+}
+
 function campaign_fetch_one($id)
 {
     $id = (int)$id;

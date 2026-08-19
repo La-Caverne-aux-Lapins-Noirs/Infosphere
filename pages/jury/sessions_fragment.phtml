@@ -14,15 +14,10 @@ $jury_session_groups = [
                 <ul>
                     <?php foreach ($sessions as $sess) { ?>
                         <li>
-                            <?php if ($sess["begin_date"] != NULL) { ?>
-                                <span><?=human_date($sess["begin_date"], false, false, true); ?></span>
-                            <?php } else { ?>
-                                <span><?=$Dictionnary["NewSession"] ?? "Nouvelle session"; ?></span>
-                            <?php } ?>
+                            <span><?=htmlentities(title_session_date_value($sess["start_date"])); ?> → <?=htmlentities(title_session_date_value($sess["end_date"])); ?></span>
                             —
-                            <a href="index.php?p=ActivityMenu&amp;a=<?=$sess["id_activity"]; ?>&amp;b=<?=$sess["id"]; ?>">
-                                <?=htmlentities($sess["activity_name"] ?: $sess["activity_codename"]); ?>
-                            </a>
+                            <span><?=htmlentities($sess["title_name"] ?: $sess["title_codename"]); ?></span>
+                            <span class="smalltext">#<?=$sess["id_title_session"]; ?></span>
                         </li>
                     <?php } ?>
                 </ul>

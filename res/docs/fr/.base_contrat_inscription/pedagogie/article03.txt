@@ -5,8 +5,8 @@
 
 ### Types d'activités
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Les activités peuvent être de plusieurs types différents. Chaque
 type apporte une spécificité dans son fonctionnement :  
@@ -83,8 +83,8 @@ aux rituels que cette méthode décrit.
 
 ### Les dates composants les activités et matières
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Les activités disposent de dates clefs, dont de nombreuses sont optionnelles. 
 
@@ -107,8 +107,8 @@ elles-mêmes d’une date de début et d’une date de fin.
 
 ### Les médailles de compétences associées
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Les activités peuvent disposer de médailles de compétences associés. Ces
 médailles ne sont en générales pas exhaustives : il s’agit des médailles
@@ -128,8 +128,8 @@ de correction automatique.
 
 ### Le sujet et ressources
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Les activités portent en général un sujet décrivant les travaux à fournir
 ainsi que les conditions de leurs réalisations. Les activités peuvent
@@ -143,8 +143,8 @@ des bancs de tests.
 
 ### Les supports associés
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Les activités sont associées à des supports permettant de comprendre
 les prérequis aux travaux demandés.  

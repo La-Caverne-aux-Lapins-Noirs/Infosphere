@@ -81,6 +81,7 @@ $contracts = get_contract_document_sources();
                             <input type="hidden" name="doc_<?=$hash; ?>" value="1" />
                             <input type="hidden" name="docref_<?=$hash; ?>" value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>" />
                             <input type="hidden" name="form_file" value="<?=htmlspecialchars($contract["editor_path"], ENT_QUOTES); ?>" />
+                            <input type="hidden" name="blank_document" value="1" />
                             <input type="hidden" name="chain" value="[]" />
                             <select name="director_id">
                                 <option value="">Aucun signataire</option>
@@ -134,6 +135,7 @@ function school_contract_open_form(form, hash)
         '&file=' + encodeURIComponent(form.querySelector('[name="form_file"]').value) +
         '&output=' + encodeURIComponent(output) +
         '&mode=docbuilder' +
+        '&form_role=Etablissement' +
         '&chain=' + encodeURIComponent(JSON.stringify(school_contract_chain(form)));
     window.open(url, '_blank', 'noopener');
 }

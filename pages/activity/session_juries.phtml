@@ -1,12 +1,23 @@
 <?php
 if (!isset($session) || !is_object($session))
     return ;
+$title_session = function_exists("fetch_title_session_for_session")
+    ? fetch_title_session_for_session($session->id)
+    : NULL;
+if ($title_session == NULL)
+    return ;
 if (function_exists("ensure_session_juries"))
     ensure_session_juries($session);
 ?>
 <div class="session_jury_editor" id="session_juries_<?=$session->id; ?>">
+    <div class="smalltext">
+        <?=htmlentities($Dictionnary["TitleSession"] ?? "Session de titre"); ?> #<?=$title_session["id"]; ?> —
+        <?=htmlentities($title_session["title_name"] ?? $title_session["title_codename"] ?? ""); ?>,
+        <?=htmlentities(title_session_date_value($title_session["start_date"])); ?> →
+        <?=htmlentities(title_session_date_value($title_session["end_date"])); ?>
+    </div>
     <?php list_of_links(session_jury_link_params($session)); ?>
     <?php if (!count($session->jury)) { ?>
-        <span class="smalltext"><?=$Dictionnary["NoSessionJury"] ?? "Aucun jury associé à cette session."; ?></span>
+        <span class="smalltext"><?=$Dictionnary["NoTitleSessionJury"] ?? "Aucun jury associé à cette session de titre."; ?></span>
     <?php } ?>
 </div>

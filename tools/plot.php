@@ -1,4 +1,6 @@
 <?php
+require_once (__DIR__."/gd_compat.php");
+
 
 function base64url_decode($data)
 {
@@ -48,20 +50,20 @@ foreach ($data as $d)
 $datawidth = ($w - $labelsize) / $nbr_data;
 
 // Repère
-imageline($img, $labelsize, $h / 2, $w, $h / 2, $white);
-imageline($img, $labelsize, 0, $labelsize, $h - 1, $white);
+infosphere_imageline($img, $labelsize, $h / 2, $w, $h / 2, $white);
+infosphere_imageline($img, $labelsize, 0, $labelsize, $h - 1, $white);
 for ($i = 0; $i < $nbr_data; ++$i)
 {
     $x = $labelsize + $i * $datawidth;
-    imageline($img, $x, $h / 2 - 10, $x, $h / 2 + 10, $white);
+    infosphere_imageline($img, $x, $h / 2 - 10, $x, $h / 2 + 10, $white);
     for ($xx = -1; $xx <= 0; ++$xx)
     {
 	for ($yy = -1; $yy <= 0; ++$yy)
 	{
 	    if ($i != 0)
-		imagettftext($img, 10, 90, $xx + $x + 5, $yy + $h / 2 + 55, $white, __DIR__."/../res/futura.ttf", date("d/m", $dates + $i * 60 * 60 * 24));
+		infosphere_imagettftext($img, 10, 90, $xx + $x + 5, $yy + $h / 2 + 55, $white, __DIR__."/../res/futura.ttf", date("d/m", $dates + $i * 60 * 60 * 24));
 	    else
-		imagettftext($img, 10, 90, $xx +$x + 20, $yy + $h / 2 + 55, $white, __DIR__."/../res/futura.ttf", date("d/m", $dates + $i * 60 * 60 * 24));
+		infosphere_imagettftext($img, 10, 90, $xx +$x + 20, $yy + $h / 2 + 55, $white, __DIR__."/../res/futura.ttf", date("d/m", $dates + $i * 60 * 60 * 24));
 	}
     }
 }
@@ -87,16 +89,16 @@ foreach ($data as $ddd)
     for ($j = -$max; $j <= $max; ++$j)
     {
 	$y = $j * $dataheight + $h / 2;
-	imageline($img, $labelsize - 3, $y - 1, $labelsize + 3, $y - 1, $col);
-	imageline($img, $labelsize - 3, $y, $labelsize + 3, $y, $col);
-	imageline($img, $labelsize - 3 + 1, $y, $labelsize + 3, $y + 1, $col);
+	infosphere_imageline($img, $labelsize - 3, $y - 1, $labelsize + 3, $y - 1, $col);
+	infosphere_imageline($img, $labelsize - 3, $y, $labelsize + 3, $y, $col);
+	infosphere_imageline($img, $labelsize - 3 + 1, $y, $labelsize + 3, $y + 1, $col);
     }
     for ($xx = -1; $xx <= 0; ++$xx)
     {
 	for ($yy = -1; $yy <= 0; ++$yy)
 	{
-	    imagettftext($img, 10, 0, $labelsize - 20, $i * $dir * $dataheight + $h / 2 + 5, $col, __DIR__."/../res/futura.ttf", sprintf("%+02d", $i));
-	    imagettftext($img, 10, 0, 20, ($i + 1) * 20, $col, __DIR__."/../res/futura.ttf", $ddd["label"]);
+	    infosphere_imagettftext($img, 10, 0, $labelsize - 20, $i * $dir * $dataheight + $h / 2 + 5, $col, __DIR__."/../res/futura.ttf", sprintf("%+02d", $i));
+	    infosphere_imagettftext($img, 10, 0, 20, ($i + 1) * 20, $col, __DIR__."/../res/futura.ttf", $ddd["label"]);
 	}
     }
     $prevx = 0;
@@ -109,9 +111,9 @@ foreach ($data as $ddd)
 	if ($y != $h / 2 || $prevy != $h / 2)
 	{
 	    if ($y != $h / 2)
-		imagefilledellipse($img, $x, $y, 10, 10, $acol);
+		infosphere_imagefilledellipse($img, $x, $y, 10, 10, $acol);
 	    if ($j > 0)
-		imageline($img, $x, $y, $prevx, $prevy, $col);
+		infosphere_imageline($img, $x, $y, $prevx, $prevy, $col);
 	}
 	$prevx = $x;
 	$prevy = $y;

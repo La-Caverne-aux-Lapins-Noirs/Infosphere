@@ -7,11 +7,13 @@ define("CREATIVE_OPERATION", "3");
 define("EDITING_OPERATION", "4");
 define("DESTRUCTIVE_OPERATION", "5");
 define("REPORT", "6");
+define("WARNING", "7");
+define("ERROR", "8");
 
 $LogType = [
     TRACE, UNCRITICAL_USER_DATA, CRITICAL_USER_DATA,
     CREATIVE_OPERATION, EDITING_OPERATION, DESTRUCTIVE_OPERATION,
-    REPORT
+    REPORT, WARNING, ERROR
 ];
 
 function add_log($type, $msg, $id_author = -1, $edit = false)
@@ -168,7 +170,7 @@ function add_contextual_log($type, $msg, $contexts = [], $id_author = -1, $edit 
 
     if ($edit != false)
     {
-	$last = db_select_one("id FROM log WHERE id_user = $id AND message = '$msg' ORDER BY id DESC LIMIT 1");
+	$last = db_select_one("id FROM log WHERE id_user = $id AND message = '$msg' ORDER BY id DESC");
 	if ($last != NULL)
 	{
 	    $Database->query("UPDATE log SET log_date = NOW() WHERE id = ".((int)$last["id"]));

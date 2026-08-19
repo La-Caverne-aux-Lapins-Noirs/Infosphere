@@ -1,0 +1,207 @@
+<?php
+if ($page != "cycle" || !$can_edit_cycle)
+    return ;
+
+require_once (__DIR__."/../../tools/attendance_register.php");
+require_once (__DIR__."/../../tools/document_workflow.php");
+
+$cycle_document_campaigns = attendance_register_cycle_campaigns((int)$cycle["id"]);
+$cycle_document_workflows = attendance_register_cycle_workflows((int)$cycle["id"]);
+$cycle_document_status_labels = [
+    "AwaitingSignature" => "En attente de signature",
+    "Signed" => "Signatures recueillies",
+    "Sealed" => "Scellé",
+    "Completed" => "Terminé",
+    "Expired" => "Périmé",
+    "Error" => "Erreur",
+];
+$language = "";
+$type = "file";
+$page_browser = "cycle";
+$id = (int)$cycle["id"];
+$path = "";
+$target = $Configuration->CyclesDir($cycle["codename"]);
+$fbid = "cycle_document_file_browser_".$id;
+$path_browser_can_cd = true;
+$nocd = false;
+$file_browser_height = "420px";
+?>
+<section class="cycle_admin_card cycle_admin_documents">
+    <h2><?=$Dictionnary["Documents"] ?? "Documents"; ?></h2>
+    <p>Documents administratifs propres à ce cycle. Les feuilles d'émargement définitives signées sont archivées ici automatiquement et restent également dans le dossier documentaire de l'élève concerné.</p>
+
+    <script>
+    function cycle_document_remind(form)
+    {
+        return silent_submitf(form, {
+            after_success: function () { window.location.reload(); }
+        });
+    }
+    </script>
+
+    <?php if (count($cycle_document_campaigns)) { ?>
+        <h3>Campagnes d'émargement</h3>
+        <p>Le responsable pédagogique et chaque formateur intervenant signent ici une seule fois pour le lot figé des feuilles du trimestre. Une même personne signe séparément chacun de ses rôles.</p>
+        <div class="cycle_document_workflow_table">
+        <table>
+            <thead><tr><th>Campagne</th><th>État</th><th>Signatures équipe</th><th>Feuilles</th><th>Actions</th></tr></thead>
+            <tbody>
+            <?php foreach ($cycle_document_campaigns as $campaign_entry) {
+                $campaign = $campaign_entry["instance"];
+                $campaign_id = (string)($campaign["Id"] ?? "");
+                $campaign_status = (string)($campaign["Status"] ?? "");
+                $campaign_source = $campaign["SourceContext"] ?? [];
+                $campaign_members = is_array($campaign_source) && is_array($campaign_source["Members"] ?? NULL)
+                    ? $campaign_source["Members"] : [];
+                $campaign_pending = [];
+                foreach (($campaign["Signatures"] ?? []) as $slot => $signature)
+                    if (is_array($signature) && !empty($signature["Required"])
+                        && ($signature["Status"] ?? "Pending") !== "Signed")
+                        $campaign_pending[$slot] = $signature;
+                $campaign_tasks_by_slot = [];
+                foreach (($campaign_entry["tasks"] ?? []) as $task)
+                {
+                    $meta = document_task_metadata($task);
+                    if (($task["task_action"] ?? "") === "sign" && ($meta["slot"] ?? "") != "")
+                        $campaign_tasks_by_slot[$meta["slot"]] = $task;
+                }
+                $campaign_pdf = "/?p=DocumentWorkflowPdf&silent=1&owner=".(int)$campaign_entry["owner_user_id"]."&instance=".rawurlencode($campaign_id);
+            ?>
+                <tr>
+                    <td><strong><?=htmlspecialchars(document_workflow_instance_label($campaign), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><br /><small>Créée le <?=htmlspecialchars((string)($campaign["CreatedAt"] ?? "—"), ENT_QUOTES); ?></small></td>
+                    <td><?=htmlspecialchars($cycle_document_status_labels[$campaign_status] ?? $campaign_status, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td>
+                        <?=(int)$campaign_entry["signature_signed"]; ?>/<?=(int)$campaign_entry["signature_total"]; ?>
+                        <?php if (count($campaign_pending)) { ?><ul class="document_task_list">
+                        <?php foreach ($campaign_pending as $slot => $signature) {
+                            $label = document_workflow_signature_role_label($slot, $signature);
+                            $task = $campaign_tasks_by_slot[$slot] ?? [];
+                            $meta = is_array($task) ? document_task_metadata($task) : [];
+                            $assignee = trim((string)($meta["assignee_label"] ?? ""));
+                        ?>
+                            <li class="is-pending">⚠ <?=htmlspecialchars($label.($assignee != "" ? " — ".$assignee : ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></li>
+                        <?php } ?></ul><?php } ?>
+                    </td>
+                    <td><?=count($campaign_members); ?> feuille(s)</td>
+                    <td class="document_workflow_actions">
+                        <a href="<?=htmlspecialchars($campaign_pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le manifeste</a>
+                        <?php if ($campaign_status === "AwaitingSignature" && count($campaign_pending)) { ?>
+                            <form method="post" action="/api/doc/0/remind" onsubmit="return cycle_document_remind(this);">
+                                <input type="hidden" name="owner_user_id" value="<?=(int)$campaign_entry["owner_user_id"]; ?>" />
+                                <input type="hidden" name="instance_id" value="<?=htmlspecialchars($campaign_id, ENT_QUOTES); ?>" />
+                                <input type="button" value="Relancer toute l'équipe manquante" onclick="return cycle_document_remind(this.form);" />
+                            </form>
+                            <?php foreach ($campaign_pending as $slot => $signature) {
+                                $label = document_workflow_signature_role_label($slot, $signature);
+                                $task = $campaign_tasks_by_slot[$slot] ?? [];
+                                $meta = is_array($task) ? document_task_metadata($task) : [];
+                                $assignee = trim((string)($meta["assignee_label"] ?? ""));
+                                $verb = !empty($signature["InvitedAt"]) ? "Relancer" : "Envoyer";
+                            ?>
+                                <form method="post" action="/api/doc/0/remind" onsubmit="return cycle_document_remind(this);">
+                                    <input type="hidden" name="owner_user_id" value="<?=(int)$campaign_entry["owner_user_id"]; ?>" />
+                                    <input type="hidden" name="instance_id" value="<?=htmlspecialchars($campaign_id, ENT_QUOTES); ?>" />
+                                    <input type="hidden" name="slot" value="<?=htmlspecialchars($slot, ENT_QUOTES); ?>" />
+                                    <input type="button" value="<?=htmlspecialchars($verb." : ".$label.($assignee != "" ? " — ".$assignee : ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" onclick="return cycle_document_remind(this.form);" />
+                                </form>
+                            <?php } ?>
+                        <?php } ?>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        </div>
+    <?php } ?>
+
+    <?php if (count($cycle_document_workflows)) { ?>
+        <h3>Feuilles individuelles</h3>
+        <div class="cycle_document_workflow_table">
+        <table>
+            <thead><tr><th>Élève</th><th>État</th><th>Signatures</th><th>Créée le</th><th>Actions</th></tr></thead>
+            <tbody>
+            <?php foreach ($cycle_document_workflows as $entry) {
+                $instance = $entry["instance"];
+                $student = $entry["student"];
+                $instance_id = (string)($instance["Id"] ?? "");
+                $status = (string)($instance["Status"] ?? "");
+                $pending_slots = [];
+                $remindable_slots = [];
+                foreach (($instance["Signatures"] ?? []) as $slot => $signature)
+                    if (is_array($signature) && !empty($signature["Required"])
+                        && ($signature["Status"] ?? "Pending") !== "Signed")
+                    {
+                        $pending_slots[$slot] = $signature;
+                        if (!document_workflow_signature_is_external_campaign($signature))
+                            $remindable_slots[$slot] = $signature;
+                    }
+                $tasks_by_slot = [];
+                foreach (($entry["tasks"] ?? []) as $task)
+                {
+                    $meta = document_task_metadata($task);
+                    if (($task["task_action"] ?? "") === "sign" && ($meta["slot"] ?? "") != "")
+                        $tasks_by_slot[$meta["slot"]] = $task;
+                }
+                $pdf = "/?p=DocumentWorkflowPdf&silent=1&owner=".(int)$student["id"]."&instance=".rawurlencode($instance_id);
+            ?>
+                <tr>
+                    <td><a href="index.php?p=ProfileMenu&amp;a=<?=(int)$student["id"]; ?>"><?=htmlspecialchars((string)$student["codename"], ENT_QUOTES); ?></a></td>
+                    <td><?=htmlspecialchars($cycle_document_status_labels[$status] ?? $status, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if (($instance["ArchiveError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$instance["ArchiveError"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small><?php } ?></td>
+                    <td>
+                        <?=(int)$entry["signature_signed"]; ?>/<?=(int)$entry["signature_total"]; ?>
+                        <?php if (count($pending_slots)) { ?><ul class="document_task_list">
+                        <?php foreach ($pending_slots as $slot => $signature) {
+                            $label = document_workflow_signature_role_label($slot, $signature);
+                            $task = $tasks_by_slot[$slot] ?? [];
+                            $meta = is_array($task) ? document_task_metadata($task) : [];
+                            $assignee = trim((string)($meta["assignee_label"] ?? ""));
+                            if (document_workflow_signature_is_external_campaign($signature))
+                                $assignee = trim($assignee." (signature portée par la campagne)");
+                        ?>
+                            <li class="is-pending">⚠ <?=htmlspecialchars($label.($assignee != "" ? " — ".$assignee : ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></li>
+                        <?php } ?></ul><?php } ?>
+                    </td>
+                    <td><?=htmlspecialchars((string)($instance["CreatedAt"] ?? "—"), ENT_QUOTES); ?></td>
+                    <td class="document_workflow_actions">
+                        <a href="<?=htmlspecialchars($pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le PDF</a>
+                        <?php if ($status === "AwaitingSignature" && count($remindable_slots)) { ?>
+                            <form method="post" action="/api/doc/0/remind" onsubmit="return cycle_document_remind(this);">
+                                <input type="hidden" name="owner_user_id" value="<?=(int)$student["id"]; ?>" />
+                                <input type="hidden" name="instance_id" value="<?=htmlspecialchars($instance_id, ENT_QUOTES); ?>" />
+                                <input type="button" value="Relancer l'élève" onclick="return cycle_document_remind(this.form);" />
+                            </form>
+                        <?php } ?>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        </div>
+    <?php } ?>
+
+    <h3>Fichiers du cycle</h3>
+    <form
+        method="post"
+        action="/api/cycle/<?=$id; ?>/file"
+        onsubmit="return silent_submit(this, '<?=$fbid; ?>');"
+        class="cycle_document_upload"
+    >
+        <input id="cycle_document_path_<?=$id; ?>" type="hidden" name="path" value="" />
+        <input
+            type="file"
+            name="file"
+            multiple="true"
+            onchange="
+                document.getElementById('cycle_document_path_<?=$id; ?>').value =
+                    document.getElementById('path<?=$fbid; ?>').value;
+                silent_submit(this.form, '<?=$fbid; ?>');
+            "
+        />
+    </form>
+
+    <?php
+    $page = $page_browser;
+    require ("./tools/template/path_browser.phtml");
+    $page = "cycle";
+    ?>
+</section>

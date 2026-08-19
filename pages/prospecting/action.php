@@ -36,6 +36,11 @@
     ?>
 <?php } ?>
 </span>
+<?php if ($done && $score > 0) { ?>
+    <span class="prospect_status_marker prospect_status_completed" aria-hidden="true"></span>
+<?php } else if ($done) { ?>
+    <span class="prospect_status_marker prospect_status_lost" aria-hidden="true"></span>
+<?php } ?>
 <span class="action_alert">
 <style>
  #actionbar<?=$id; ?> {

@@ -5,8 +5,8 @@
 
 ### Administrateur de l'équipe
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 L’administrateur de l’équipe est le membre créateur de l’équipe.
 Le rôle d’administrateur peut être transmis à un autre membre
@@ -19,8 +19,8 @@ pas partie de l’équipe.
 
 ### Taille de l'équipe
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une équipe dispose d’une taille minimale et d’une taille maximale.
 Si la taille minimale n’est pas atteinte, l’équipe n’est pas validée
@@ -35,8 +35,8 @@ dépassant la taille maximale.
 
 ### Forum de l'équipe
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une équipe dispose d’un forum de discussion sur l’intranet
 https://intra.efrits.fr. Ce forum est tenu aux mêmes règles que
@@ -48,8 +48,8 @@ de l’activité à laquelle est rattachée l’équipe.
 
 ### Gestionnaire de tâches
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une équipé dispose d'un gestionnaire de tâches conçu pour
 pour gérer une équipe de travail agile utilisant SCRUM. Chaque équipier
@@ -60,8 +60,8 @@ annoncer le temps estimé, passé et placer des commentaire.
 
 ### Réservation de l'équipe
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;1;
 
 Une équipe peut réserver des emplacements sur le calendrier. Ces
 réservations sont publiques sur le planning des salles. Elles sont

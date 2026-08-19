@@ -1,10 +1,8 @@
 
-[@NewPage]
-
 ## Article P15 - Réamorce
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Un Apprenant en difficulté pour se voir proposer une réamorce.
 Le principe de la réamorce est le suivant :

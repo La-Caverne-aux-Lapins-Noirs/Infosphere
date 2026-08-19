@@ -157,6 +157,8 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
 	if (verbose)
 	    console.log(xhr.statusText); // Debug
 	set_error_div(xhr.responseText, false);
+	if (bcall)
+	    bcall();
     });
 
     xhr.open(method, url, true);

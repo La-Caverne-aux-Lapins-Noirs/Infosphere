@@ -1,0 +1,30 @@
+[Beneficiaire
+  Label = "Bénéficiaire"
+  {Read
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
+  }
+  {Edit
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
+  }
+  {Validate
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
+  }
+]
+[Etablissement
+  Label = "Établissement"
+  {Read
+    "Etablissement"
+  }
+  {Edit
+    "Etablissement"
+  }
+  {Validate
+    "Etablissement"
+  }
+]

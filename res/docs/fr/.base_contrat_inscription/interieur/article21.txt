@@ -1,6 +1,8 @@
 
 ## Article I21 - Conseil de perfectionnement et d’amélioration continue
 
+[@Size;1]
+[@Columns;3;
 Il est institué auprès de la direction de l’établissement un conseil de
 perfectionnement chargé d’examiner et de débattre des questions relatives à
 l’organisation et au fonctionnement de l’établissement et de ses formations.
@@ -22,4 +24,4 @@ jour.
 
 Le conseil rend des avis consultatifs. Un compte rendu de chaque réunion est
 établi et conservé par l’établissement.
-
+]

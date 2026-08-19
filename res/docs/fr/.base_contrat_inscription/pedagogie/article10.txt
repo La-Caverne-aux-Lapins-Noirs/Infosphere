@@ -1,8 +1,8 @@
 
 ## Article P10 - Examens
 
-[@Size;2]
-[@Columns;2;
+[@Size;1]
+[@Columns;3;
 
 Lors des examens, le silence est de rigueur, ainsi que l’absence
 totale d’utilisation d’un autre système que celui fourni par l’EFRITS

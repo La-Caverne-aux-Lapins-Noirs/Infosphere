@@ -1,0 +1,74 @@
+Document = "Generic"
+Title = "Convocation de jury"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;1]
+    [#Variable;School.Organization.LegalName]
+    [#Variable;School.Organization.Address]
+    [#Variable;School.Organization.Phone]
+  Left]
+  Right = [Text($,Right)
+    [@Size;1]
+    [#Variable;Jury.Identity]
+    [#Variable;Jury.Address]
+    [#Variable;Jury.PostalCity]
+  Right]
+]
+
+[Signatures
+  [SessionManager
+    Required = 1
+    Role = "Responsable de session"
+  ]
+]
+
+[FormLabel
+  [Destinataire
+    Label = "Membre du jury"
+    [Jury
+      Identity = "Nom et prénom du membre du jury"
+      Address = "Adresse"
+      PostalCity = "Code postal et ville"
+    ]
+  ]
+  [SessionExamen
+    Label = "Session d'examen"
+    [Exam
+      CertificationName = "Titre / certification visé(e)"
+      CertificationCode = "Code de la certification"
+      StartDate = "Premier jour de la session"
+      EndDate = "Dernier jour de la session"
+      ArrivalDate = "Date de convocation"
+      ArrivalTime = "Heure de convocation"
+      VenueName = "Nom du centre d'examen"
+      VenueAddress = "Adresse du centre d'examen"
+      EquipmentNotice = "Consigne relative aux équipements obligatoires"
+      AdditionalNotice = "Consigne complémentaire"
+    ]
+  ]
+  [Emission
+    Label = "Émission de la convocation"
+    [Convocation
+      IssueCity = "Ville d'émission"
+      IssueDate = "Date d'émission"
+    ]
+    [SessionManager
+      Identity = "Responsable de session"
+    ]
+  ]
+]
+
+{Content
+  "[@Size;1]\n",
+  "[@Right;[#Variable;Convocation.IssueCity], le [#Variable;Convocation.IssueDate]]\n\n",
+  "**Objet : Convocation à la session d'examen du [#Variable;Exam.StartDate] au [#Variable;Exam.EndDate] pour le titre professionnel [#Variable;Exam.CertificationName]**\n\n",
+  "Madame, Monsieur,\n\n",
+  "Vous avez accepté d'être désigné(e) en tant que membre de jury pour une session d'examen visant l'obtention du titre professionnel [#Variable;Exam.CertificationName][@IfC;Exam.CertificationCode;!=;; ([#Variable;Exam.CertificationCode])], qui se déroulera au centre [#Variable;Exam.VenueName] du [#Variable;Exam.StartDate] au [#Variable;Exam.EndDate].\n\n",
+  "Vous voudrez bien vous présenter muni(e) d'une pièce d'identité et de la présente convocation le **[#Variable;Exam.ArrivalDate] à [#Variable;Exam.ArrivalTime]** à l'adresse suivante :\n\n",
+  "[@Center;**[#Variable;Exam.VenueAddress]**]\n\n",
+  "[@IfC;Exam.EquipmentNotice;!=;;[#Variable;Exam.EquipmentNotice]\n\n]",
+  "[@IfC;Exam.AdditionalNotice;!=;;[#Variable;Exam.AdditionalNotice]\n\n]",
+  "Je vous prie d'agréer, Madame, Monsieur, l'expression de ma considération distinguée.\n\n\n",
+  "[@Right;Le responsable de session\n[#Variable;Signatories.SessionManager.Identity]]\n"
+}

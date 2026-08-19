@@ -2,7 +2,7 @@
 ## Article I12 - Boissons alcoolisées et drogues
 
 [@Size;1]
-[@Columns;3;
+[@Columns;1;
 Il est interdit de pénétrer ou de demeurer dans les
 lieux dans lesquels la formation est dispensée en
 état d’ivresse ou sous l’emprise de drogues. 

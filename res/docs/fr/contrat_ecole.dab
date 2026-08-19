@@ -29,3 +29,11 @@ Identification = [Text($,Identification)
   Ci-dessous dénommé individuellement « L’ÉTABLISSEMENT » ou « l’EFRITS »
   et l'étudiant(e) souhaitant intégrer le cursus :  
 Identification]
+
+[FormGroup
+  @insert "res/docs/fr/.forms/contract_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/contract_roles.dab"
+]

@@ -27,14 +27,17 @@ function get_login_info($login, $password, $clear_password=true, $refresh_cookie
     else
 	$cookiehash = $password;
 
-    $usr["children"] = db_select_all("
+    $usr["children"] = array_values(array_filter(db_select_all("
        user.codename as codename,
        parent_child.id_child as id,
        parent_child.relation as relation
        FROM parent_child
        LEFT JOIN user ON parent_child.id_child = user.id
        WHERE parent_child.id_parent = ".$usr["id"]."
-    ");
+    "), function($child) {
+        return (user_relation_has($child["relation"] ?? "", "log_as"));
+    }));
+
 
     $salt = base64_decode($usr["salt"]);
     if (($hash = hash_method($salt.$cookiehash)) == false)

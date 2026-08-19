@@ -5,6 +5,8 @@ if (!isset($jury_titles))
     $jury_titles = fetch_jury_titles();
 if (!isset($certification_skills))
     $certification_skills = fetch_certification_skills();
+if (!isset($title_sessions))
+    $title_sessions = fetch_title_sessions();
 
 
 ?>
@@ -126,6 +128,7 @@ function certification_submit(form, cnf)
 <?php
 $jury_tabs = [
     ($Dictionnary["Juries"] ?? "Jurys") => __DIR__."/juries_tab.phtml",
+    ($Dictionnary["TitleSessions"] ?? "Sessions de titre") => __DIR__."/title_sessions_tab.phtml",
     ($Dictionnary["Certifications"] ?? "Certifications") => __DIR__."/certifications_tab.phtml",
     ($Dictionnary["Skills"] ?? ($Dictionnary["Skill"] ?? "Compétences")) => __DIR__."/skills_tab.phtml"
 ];

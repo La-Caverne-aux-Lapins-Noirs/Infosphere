@@ -1,0 +1,164 @@
+[Stagiaire
+  Label = "Stagiaire"
+  [Fields
+    [Student
+      [FirstName
+        Label = "Prénom du stagiaire"
+      ]
+      [FamilyName
+        Label = "Nom du stagiaire"
+      ]
+      [BirthDate
+        Label = "Date de naissance du stagiaire"
+      ]
+      [BirthPlace
+        Label = "Lieu de naissance du stagiaire"
+      ]
+      [Address
+        Label = "Adresse du stagiaire"
+      ]
+      [Courriel
+        Label = "Courriel du stagiaire"
+      ]
+      [Phone
+        Label = "Téléphone du stagiaire"
+      ]
+      [INE
+        Label = "INE"
+      ]
+      [NIR
+        Label = "Numéro de sécurité sociale"
+      ]
+      [CurrentCurriculum
+        Label = "Formation suivie"
+      ]
+      [CurrentYear
+        Label = "Année de formation"
+      ]
+      [Codename
+        Label = "Identifiant du stagiaire"
+      ]
+      [Id
+        Label = "Identifiant interne du stagiaire"
+      ]
+    ]
+  ]
+]
+[Entreprise
+  Label = "Entreprise"
+  [Fields
+    [Company
+      [LegalName
+        Label = "Raison sociale de l'entreprise"
+      ]
+      [LegalAddress
+        Label = "Adresse du siège de l'entreprise"
+      ]
+      [Address
+        Label = "Lieu du stage"
+      ]
+      [SIRET
+        Label = "SIRET de l'entreprise"
+      ]
+      [Phone
+        Label = "Téléphone de l'entreprise"
+      ]
+      [Courriel
+        Label = "Courriel de l'entreprise"
+      ]
+      [Representative
+        Label = "Représentant légal de l'entreprise"
+      ]
+      [Role
+        Label = "Qualité du représentant de l'entreprise"
+      ]
+      [Tutor
+        [FirstName
+          Label = "Prénom du tuteur de stage"
+        ]
+        [FamilyName
+          Label = "Nom du tuteur de stage"
+        ]
+        [Mail
+          Label = "Courriel du tuteur de stage"
+        ]
+        [Phone
+          Label = "Téléphone du tuteur de stage"
+        ]
+        [Role
+          Label = "Fonction du tuteur de stage"
+        ]
+      ]
+    ]
+  ]
+]
+[Stage
+  Label = "Stage"
+  [Fields
+    [Internship
+      [StartDate
+        Label = "Date de début du stage"
+      ]
+      [EndDate
+        Label = "Date de fin du stage"
+      ]
+      [DurationInDay
+        Label = "Durée du stage en jours"
+      ]
+      [HourPerDay
+        Label = "Durée quotidienne en heures"
+      ]
+      [Purpose
+        Label = "Objectifs et missions du stage"
+      ]
+      [Paiement
+        Label = "Gratification / rémunération"
+      ]
+    ]
+  ]
+]
+[Etablissement
+  Label = "Établissement"
+  [Fields
+    [School
+      [LegalName
+        Label = "Nom de l'établissement"
+      ]
+      [LegalAddress
+        Label = "Adresse de l'établissement"
+      ]
+      [SIRET
+        Label = "SIRET de l'établissement"
+      ]
+      [Phone
+        Label = "Téléphone de l'établissement"
+      ]
+      [Courriel
+        Label = "Courriel de l'établissement"
+      ]
+      [Representative
+        Label = "Représentant de l'établissement"
+      ]
+      [Role
+        Label = "Qualité du représentant de l'établissement"
+      ]
+      [Tutor
+        [FirstName
+          Label = "Prénom de l'enseignant référent"
+        ]
+        [FamilyName
+          Label = "Nom de l'enseignant référent"
+        ]
+        [Mail
+          Label = "Courriel de l'enseignant référent"
+        ]
+        [Phone
+          Label = "Téléphone de l'enseignant référent"
+        ]
+        [Role
+          Label = "Fonction de l'enseignant référent"
+        ]
+      ]
+    ]
+  ]
+]

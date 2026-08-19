@@ -10,7 +10,7 @@ PriceReduction=0
  
 [Header
   Left = [Text($,Left)
-    [@Size;5] $([].Title)
+    [@Size;5] $([].Title) [@PageCounter]
   Left]
   Right = [Text($,Right)
     [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]

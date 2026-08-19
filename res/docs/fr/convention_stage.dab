@@ -23,3 +23,11 @@ Title = "Convention de stage"
     Role = "Stagiaire"
   ]
 ]
+
+[FormGroup
+  @insert "res/docs/fr/.forms/internship_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/internship_roles.dab"
+]

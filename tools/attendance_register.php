@@ -3,6 +3,8 @@
 require_once (__DIR__."/student_log.php");
 require_once (__DIR__."/halfday_presence.php");
 require_once (__DIR__."/document_context.php");
+require_once (__DIR__."/document_tasks.php");
+require_once (__DIR__."/document_workflow.php");
 
 function attendance_register_status_marker($value)
 {
@@ -904,6 +906,610 @@ function attendance_register_reference(array $cycle, array $student)
     return ("EMARG-".$cycle_name."-".$student_name);
 }
 
+function attendance_register_task_person_id(array $person)
+{
+    return ((int)($person["Id"] ?? ($person["id"] ?? 0)));
+}
+
+function attendance_register_task_person_identity(array $person)
+{
+    $identity = trim((string)($person["Identity"] ?? ($person["identity"] ?? "")));
+    if ($identity == "")
+        $identity = attendance_register_person_label($person);
+    return ($identity);
+}
+
+/** Per-sheet obligation: the student signs their own attendance register. */
+function attendance_register_student_signature_task_plan(array $student)
+{
+    $plan = [];
+    $student_id = attendance_register_task_person_id($student);
+    if ($student_id > 0)
+        $plan["Student"] = [
+            "Action" => "sign",
+            "Role" => "Student",
+            "RoleLabel" => "Élève",
+            "AssigneeUserId" => $student_id,
+            "AssigneeLabel" => attendance_register_task_person_identity($student),
+            "Required" => 1,
+            "Metadata" => ["Context" => "Student"],
+        ];
+    return ($plan);
+}
+
+/**
+ * Signatures carried once by the attendance-register campaign.
+ * A user who is both Director and Teacher deliberately receives two distinct
+ * obligations. A Teacher is however materialized only once regardless of the
+ * number of activities they supervised during the quarter.
+ */
+function attendance_register_campaign_signature_task_plan(array $cycle_director, array $trainers)
+{
+    $plan = [];
+    $director_id = attendance_register_task_person_id($cycle_director);
+    if ($director_id > 0)
+        $plan["Director"] = [
+            "Action" => "sign",
+            "Role" => "Director",
+            "RoleLabel" => "Responsable pédagogique",
+            "AssigneeUserId" => $director_id,
+            "AssigneeLabel" => attendance_register_task_person_identity($cycle_director),
+            "Required" => 1,
+            "Metadata" => ["Context" => "CycleDirector", "Scope" => "AttendanceCampaign"],
+        ];
+
+    $seen = [];
+    foreach ($trainers as $trainer)
+    {
+        if (!is_array($trainer))
+            continue ;
+        $id_user = attendance_register_task_person_id($trainer);
+        if ($id_user <= 0 || isset($seen[$id_user]))
+            continue ;
+        $seen[$id_user] = true;
+        $slot = "Teacher_".$id_user;
+        $plan[$slot] = [
+            "Action" => "sign",
+            "Role" => "Teacher",
+            "RoleLabel" => "Formateur intervenant",
+            "AssigneeUserId" => $id_user,
+            "AssigneeLabel" => attendance_register_task_person_identity($trainer),
+            "Required" => 1,
+            "Metadata" => [
+                "Context" => "Trainers",
+                "Scope" => "AttendanceCampaign",
+                "InterventionRole" => trim((string)($trainer["Role"] ?? ($trainer["role"] ?? ""))),
+            ],
+        ];
+    }
+    return ($plan);
+}
+
+/** Compatibility helper used by the preview configuration. */
+function attendance_register_signature_task_plan(array $student, array $cycle_director, array $trainers)
+{
+    return (array_merge(
+        attendance_register_student_signature_task_plan($student),
+        attendance_register_campaign_signature_task_plan($cycle_director, $trainers)
+    ));
+}
+
+function attendance_register_campaign_trainers(array $trainers_by_student)
+{
+    $out = [];
+    foreach ($trainers_by_student as $student_trainers)
+        foreach ((array)$student_trainers as $trainer)
+        {
+            if (!is_array($trainer))
+                continue ;
+            $id_user = attendance_register_task_person_id($trainer);
+            if ($id_user > 0 && !isset($out[$id_user]))
+                $out[$id_user] = $trainer;
+        }
+    return (array_values($out));
+}
+
+function attendance_register_campaign_period_matches(array $instance, $id_cycle, array $period)
+{
+    $source = $instance["SourceContext"] ?? [];
+    return (is_array($source)
+        && (string)($source["Type"] ?? "") === "AttendanceRegisterCampaign"
+        && (int)($source["CycleId"] ?? 0) === (int)$id_cycle
+        && (string)($source["PeriodStart"] ?? "") === $period["start"]->format("Y-m-d")
+        && (string)($source["PeriodEnd"] ?? "") === $period["end_exclusive"]->modify("-1 day")->format("Y-m-d"));
+}
+
+function attendance_register_find_campaign($id_cycle, array $period, $include_expired = false)
+{
+    global $Configuration;
+
+    $pattern = rtrim($Configuration->UsersDir(), "/")."/*/".
+        trim(document_workflow_root(), "/")."/*/instance.dab";
+    $found = [];
+    foreach (glob($pattern) ?: [] as $file)
+    {
+        $loaded = document_workflow_load_instance(dirname($file));
+        if ($loaded->is_error())
+            continue ;
+        $instance = $loaded->value["data"];
+        if (!attendance_register_campaign_period_matches($instance, $id_cycle, $period))
+            continue ;
+        if (!$include_expired && ($instance["Status"] ?? "") === "Expired")
+            continue ;
+        $found[] = [
+            "instance" => $instance,
+            "file" => $loaded->value["file"],
+            "directory" => $loaded->value["directory"],
+            "owner_user_id" => (int)($instance["OwnerUserId"] ?? 0),
+        ];
+    }
+    usort($found, function ($a, $b) {
+        return (strcmp((string)($b["instance"]["CreatedAt"] ?? ""), (string)($a["instance"]["CreatedAt"] ?? "")));
+    });
+    return (count($found) ? $found[0] : NULL);
+}
+
+function attendance_register_cycle_campaigns($id_cycle)
+{
+    global $Configuration;
+
+    $id_cycle = (int)$id_cycle;
+    if ($id_cycle <= 0)
+        return ([]);
+    $pattern = rtrim($Configuration->UsersDir(), "/")."/*/".
+        trim(document_workflow_root(), "/")."/*/instance.dab";
+    $out = [];
+    foreach (glob($pattern) ?: [] as $file)
+    {
+        $loaded = document_workflow_load_instance(dirname($file));
+        if ($loaded->is_error())
+            continue ;
+        $instance = $loaded->value["data"];
+        $source = $instance["SourceContext"] ?? [];
+        if (!is_array($source)
+            || (string)($source["Type"] ?? "") !== "AttendanceRegisterCampaign"
+            || (int)($source["CycleId"] ?? 0) !== $id_cycle)
+            continue ;
+        $progress = document_workflow_signature_progress($instance);
+        $materialized = document_workflow_materialize_instance_task_plan($instance);
+        if ($materialized->is_error())
+            add_log(REPORT, "Cannot materialize attendance campaign tasks for ".(string)($instance["Id"] ?? "?"));
+        $out[] = [
+            "instance" => $instance,
+            "directory" => $loaded->value["directory"],
+            "owner_user_id" => (int)($instance["OwnerUserId"] ?? 0),
+            "signature_signed" => $progress["signed"],
+            "signature_total" => $progress["total"],
+            "tasks" => document_task_rows_for_instance((string)($instance["Id"] ?? ""), (int)($instance["OwnerUserId"] ?? 0)),
+        ];
+    }
+    usort($out, function ($a, $b) {
+        return (strcmp((string)($b["instance"]["CreatedAt"] ?? ""), (string)($a["instance"]["CreatedAt"] ?? "")));
+    });
+    return ($out);
+}
+
+function attendance_register_cycle_workflows($id_cycle)
+{
+    global $Configuration;
+
+    $id_cycle = (int)$id_cycle;
+    if ($id_cycle <= 0)
+        return ([]);
+    $students = db_select_all("user.id, user.codename, user.first_name, user.family_name
+        FROM user_cycle
+        INNER JOIN user ON user.id = user_cycle.id_user
+        WHERE user_cycle.id_cycle = $id_cycle
+          AND user.deleted IS NULL
+        ORDER BY user.codename ASC");
+    $out = [];
+    foreach ($students as $student)
+    {
+        $root = $Configuration->UsersDir($student["codename"]).document_workflow_root()."/";
+        foreach (glob($root."*/instance.dab") ?: [] as $file)
+        {
+            $loaded = document_workflow_load_instance(dirname($file));
+            if ($loaded->is_error())
+                continue ;
+            $instance = $loaded->value["data"];
+            $source = $instance["SourceContext"] ?? [];
+            if (!is_array($source)
+                || (string)($source["Type"] ?? "") !== "AttendanceRegister"
+                || (int)($source["CycleId"] ?? 0) !== $id_cycle)
+                continue ;
+            $progress = document_workflow_signature_progress($instance);
+            $materialized = document_workflow_materialize_instance_task_plan($instance);
+            if ($materialized->is_error())
+                add_log(REPORT, "Cannot materialize attendance-register tasks for ".(string)($instance["Id"] ?? "?"));
+            $tasks = document_task_rows_for_instance((string)($instance["Id"] ?? ""), (int)$student["id"]);
+            $out[] = [
+                "student" => $student,
+                "instance" => $instance,
+                "directory" => $loaded->value["directory"],
+                "signature_signed" => $progress["signed"],
+                "signature_total" => $progress["total"],
+                "tasks" => $tasks,
+            ];
+        }
+    }
+    usort($out, function ($a, $b) {
+        return (strcmp((string)($b["instance"]["CreatedAt"] ?? ""), (string)($a["instance"]["CreatedAt"] ?? "")));
+    });
+    return ($out);
+}
+
+function attendance_register_existing_workflow(array $student, $id_cycle)
+{
+    global $Configuration;
+
+    $codename = trim((string)($student["codename"] ?? ""));
+    if ($codename == "")
+        return (NULL);
+    $root = $Configuration->UsersDir($codename).document_workflow_root()."/";
+    foreach (glob($root."*/instance.dab") ?: [] as $file)
+    {
+        $loaded = document_workflow_load_instance(dirname($file));
+        if ($loaded->is_error())
+            continue ;
+        $instance = $loaded->value["data"];
+        $source = $instance["SourceContext"] ?? [];
+        if (!is_array($source)
+            || (string)($source["Type"] ?? "") !== "AttendanceRegister"
+            || (int)($source["CycleId"] ?? 0) !== (int)$id_cycle)
+            continue ;
+        if (($instance["Status"] ?? "") !== "Expired")
+            return ($instance);
+    }
+    return (NULL);
+}
+
+function attendance_register_workflow_filename(array $cycle, array $student)
+{
+    $cycle_name = preg_replace('/[^a-zA-Z0-9_.-]+/', '-', (string)($cycle["codename"] ?? "cycle"));
+    $student_name = preg_replace('/[^a-zA-Z0-9_.-]+/', '-', (string)($student["codename"] ?? ($student["id"] ?? "student")));
+    return ("attendance-register-".$cycle_name."-".$student_name."-".date("Ymd_His").".pdf");
+}
+
+function attendance_register_campaign_filename(array $cycle, array $period)
+{
+    $cycle_name = preg_replace('/[^a-zA-Z0-9_.-]+/', '-', (string)($cycle["codename"] ?? "cycle"));
+    return ("attendance-campaign-".$cycle_name."-".$period["start"]->format("Ymd")."-".
+        $period["end_exclusive"]->modify("-1 day")->format("Ymd").".pdf");
+}
+
+function attendance_register_prepare_workflow_document(array $context, array $period, array $document_info,
+    array $cycle_director, array $student, array $days, array $totals, array $trainers)
+{
+    $student_context = attendance_register_person_context($student);
+    $configuration = [
+        "Document" => "AttendanceRegister",
+        "Title" => "Feuille d'émargement trimestrielle",
+        "Period" => $period["period"],
+        "DocumentInfo" => $document_info,
+        "Cycle" => attendance_register_cycle_context($context["cycle"]),
+        "School" => attendance_register_school_context($context["school"]),
+        "CycleDirector" => $cycle_director,
+        "Reference" => attendance_register_reference($context["cycle"], $student),
+        "Student" => $student_context,
+        "Days" => $days,
+        "Totals" => $totals,
+        "Trainers" => $trainers,
+        // The preview may display every expected role, but only Student is a
+        // per-sheet signature obligation. Director/Teacher are campaign-wide.
+        "TaskPlan" => attendance_register_signature_task_plan($student_context, $cycle_director, $trainers),
+    ];
+    $document = attendance_register_run_docbuilder($configuration);
+    if (!$document["ok"])
+        return (new ErrorResponse("AttendanceRegisterGenerationFailed", $document["error"]));
+    return (new ValueResponse([
+        "student" => $student,
+        "student_context" => $student_context,
+        "trainers" => $trainers,
+        "content" => $document["content"],
+        "hash" => hash("sha256", $document["content"]),
+    ]));
+}
+
+function attendance_register_manifest_safe($value)
+{
+    $value = preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string)$value);
+    return (str_replace(["[", "]"], ["(", ")"], trim((string)$value)));
+}
+
+function attendance_register_campaign_manifest_pdf(array $context, array $period, array $prepared, array $campaign_plan)
+{
+    $cycle = attendance_register_manifest_safe($context["cycle"]["codename"] ?? "cycle");
+    $start = $period["start"]->format("d/m/Y");
+    $end = $period["end_exclusive"]->modify("-1 day")->format("d/m/Y");
+    $content = [
+        "[@Center;[@Size;7] Campagne de signatures des feuilles d'émargement trimestrielles]\n\n",
+        "Cycle : ".$cycle."\n\n",
+        "Période : ".$start." au ".$end."\n\n",
+        "Ce manifeste fige le lot exact des feuilles individuelles couvertes par les signatures du responsable pédagogique et des formateurs. Chaque élève signe séparément sa propre feuille.\n\n",
+        "## Feuilles couvertes\n\n",
+    ];
+    foreach ($prepared as $entry)
+        $content[] = "- ".attendance_register_manifest_safe($entry["student"]["codename"] ?? ("#".$entry["student"]["id"])).
+            " — SHA-256 : ".$entry["hash"]."\n\n";
+    $content[] = "## Signatures attendues pour la campagne\n\n";
+    foreach (document_task_plan_normalize($campaign_plan) as $definition)
+        $content[] = "- ".attendance_register_manifest_safe($definition["role_label"]).
+            ($definition["assignee_label"] != "" ? " — ".attendance_register_manifest_safe($definition["assignee_label"]) : "")."\n\n";
+    return (attendance_register_run_docbuilder([
+        "Document" => "Generic",
+        "Title" => "Campagne d'émargement trimestrielle",
+        "Content" => $content,
+    ]));
+}
+
+function attendance_register_create_campaign_instance(array $context, array $period, array $prepared,
+    array $cycle_director, array $campaign_trainers)
+{
+    $campaign_plan = attendance_register_campaign_signature_task_plan($cycle_director, $campaign_trainers);
+    if (!count($campaign_plan))
+        return (new ErrorResponse("AttendanceRegisterMissingDirector"));
+    $manifest = attendance_register_campaign_manifest_pdf($context, $period, $prepared, $campaign_plan);
+    if (!$manifest["ok"])
+        return (new ErrorResponse("AttendanceRegisterGenerationFailed", $manifest["error"]));
+
+    $members = [];
+    foreach ($prepared as $entry)
+    {
+        $sid = (int)$entry["student"]["id"];
+        $members["Student_".$sid] = [
+            "StudentId" => $sid,
+            "StudentCodename" => (string)($entry["student"]["codename"] ?? ""),
+            "FrozenHash" => (string)$entry["hash"],
+            "LeafInstanceId" => "",
+        ];
+    }
+    $cycle_context = attendance_register_cycle_context($context["cycle"]);
+    $owner_user_id = attendance_register_task_person_id($cycle_director);
+    $display = "Campagne d'émargement trimestrielle — ".(string)$context["cycle"]["codename"]." — ".
+        $period["start"]->format("d/m/Y")." au ".$period["end_exclusive"]->modify("-1 day")->format("d/m/Y");
+    $instance = document_workflow_create_frozen_instance(
+        $owner_user_id,
+        "AttendanceRegisterCampaign",
+        __DIR__."/../res/docs/fr/.formlabels/attendance.dab",
+        (int)($cycle_context["CurrentYear"] ?? 0),
+        [],
+        $manifest["content"],
+        $campaign_plan,
+        [
+            "display_name" => $display,
+            "source_context" => [
+                "type" => "AttendanceRegisterCampaign",
+                "cycle_id" => (int)$context["cycle"]["id"],
+                "cycle_codename" => (string)$context["cycle"]["codename"],
+                "period_start" => $period["start"]->format("Y-m-d"),
+                "period_end" => $period["end_exclusive"]->modify("-1 day")->format("Y-m-d"),
+                "members" => $members,
+            ],
+            "archive_targets" => [
+                "CycleManifest" => [
+                    "kind" => "Cycle",
+                    "cycle_id" => (int)$context["cycle"]["id"],
+                    "relative" => "attendance/".attendance_register_campaign_filename($context["cycle"], $period),
+                ],
+            ],
+        ]
+    );
+    if ($instance->is_error())
+        return ($instance);
+    return (new ValueResponse([
+        "owner_user_id" => $owner_user_id,
+        "instance_id" => (string)$instance->value["id"],
+        "hash" => (string)$instance->value["hash"],
+        "directory" => (string)$instance->value["directory"],
+        "plan" => $campaign_plan,
+    ]));
+}
+
+function attendance_register_attach_campaign_signatures($owner_user_id, $instance_id,
+    $campaign_owner_user_id, $campaign_instance_id, $campaign_hash, array $campaign_plan)
+{
+    $loaded = document_workflow_find_instance((int)$owner_user_id, $instance_id);
+    if ($loaded->is_error())
+        return ($loaded);
+    $instance = $loaded->value["data"];
+    foreach (document_task_plan_normalize($campaign_plan) as $slot => $definition)
+    {
+        if ($definition["action"] !== "sign")
+            continue ;
+        $instance["Signatures"][$slot] = [
+            "Required" => $definition["required"] ? 1 : 0,
+            "Source" => "AttendanceRegisterCampaign",
+            "Status" => "Pending",
+            "TaskRole" => $definition["role"],
+            "RoleLabel" => $definition["role_label"],
+            "SignatoryUserId" => (int)$definition["id_assignee_user"],
+            "ExternalCampaignOwnerUserId" => (int)$campaign_owner_user_id,
+            "ExternalCampaignInstanceId" => (string)$campaign_instance_id,
+            "ExternalCampaignFrozenHash" => (string)$campaign_hash,
+        ];
+    }
+    return (document_workflow_write_instance($loaded->value["file"], $instance));
+}
+
+function attendance_register_create_workflow_instance(array $context, array $period, array $prepared,
+    $campaign_owner_user_id, $campaign_instance_id, $campaign_hash, array $campaign_plan)
+{
+    $student = $prepared["student"];
+    $existing = attendance_register_existing_workflow($student, (int)$context["cycle"]["id"]);
+    if (is_array($existing))
+        return (new ErrorResponse("AttendanceRegisterWorkflowExists", (string)($existing["Id"] ?? "")));
+
+    $filename = attendance_register_workflow_filename($context["cycle"], $student);
+    $cycle_context = attendance_register_cycle_context($context["cycle"]);
+    $task_plan = attendance_register_student_signature_task_plan($prepared["student_context"]);
+    $instance = document_workflow_create_frozen_instance(
+        (int)$student["id"],
+        "Feuille d'émargement trimestrielle",
+        __DIR__."/../res/docs/fr/.formlabels/attendance.dab",
+        (int)($cycle_context["CurrentYear"] ?? 0),
+        [],
+        $prepared["content"],
+        $task_plan,
+        [
+            "display_name" => "Feuille d'émargement trimestrielle",
+            "source_context" => [
+                "type" => "AttendanceRegister",
+                "cycle_id" => (int)$context["cycle"]["id"],
+                "cycle_codename" => (string)$context["cycle"]["codename"],
+                "student_id" => (int)$student["id"],
+                "reference" => attendance_register_reference($context["cycle"], $student),
+                "campaign_owner_user_id" => (int)$campaign_owner_user_id,
+                "campaign_instance_id" => (string)$campaign_instance_id,
+                "campaign_frozen_hash" => (string)$campaign_hash,
+            ],
+            "archive_targets" => [
+                "Student" => [
+                    "kind" => "UserDocumentation",
+                    "owner_user_id" => (int)$student["id"],
+                    "relative" => "generated/attendance/".$filename,
+                ],
+                "Cycle" => [
+                    "kind" => "Cycle",
+                    "cycle_id" => (int)$context["cycle"]["id"],
+                    "relative" => "attendance/".$filename,
+                ],
+            ],
+        ]
+    );
+    if ($instance->is_error())
+        return ($instance);
+    $external = attendance_register_attach_campaign_signatures(
+        (int)$student["id"], (string)$instance->value["id"],
+        (int)$campaign_owner_user_id, (string)$campaign_instance_id,
+        (string)$campaign_hash, $campaign_plan
+    );
+    if ($external->is_error())
+        return ($external);
+    return (new ValueResponse([
+        "student_id" => (int)$student["id"],
+        "student" => (string)($student["codename"] ?? ""),
+        "instance_id" => (string)$instance->value["id"],
+        "status" => (string)$instance->value["status"],
+        "frozen_hash" => (string)$instance->value["hash"],
+    ]));
+}
+
+function attendance_register_update_campaign_members($campaign_owner_user_id, $campaign_instance_id, array $created)
+{
+    $loaded = document_workflow_find_instance((int)$campaign_owner_user_id, $campaign_instance_id);
+    if ($loaded->is_error())
+        return ($loaded);
+    $instance = $loaded->value["data"];
+    if (!isset($instance["SourceContext"]) || !is_array($instance["SourceContext"]))
+        return (new ErrorResponse("InvalidFile", "campaign source context"));
+    $members = $instance["SourceContext"]["Members"] ?? [];
+    if (!is_array($members))
+        $members = [];
+    foreach ($created as $entry)
+    {
+        $key = "Student_".(int)$entry["student_id"];
+        if (!isset($members[$key]) || !is_array($members[$key]))
+            $members[$key] = ["StudentId" => (int)$entry["student_id"]];
+        $members[$key]["LeafInstanceId"] = (string)$entry["instance_id"];
+        $members[$key]["OwnerUserId"] = (int)$entry["student_id"];
+        $members[$key]["FrozenHash"] = (string)$entry["frozen_hash"];
+    }
+    $instance["SourceContext"]["Members"] = $members;
+    return (document_workflow_write_instance($loaded->value["file"], $instance));
+}
+
+/**
+ * Once the campaign itself is completed, its global signatures satisfy the
+ * external Director/Teacher placeholders of every child sheet. No new mail or
+ * signature action is created on the child instances.
+ */
+function attendance_register_sync_campaign_instance($campaign_file)
+{
+    $loaded = document_workflow_load_instance(dirname((string)$campaign_file));
+    if ($loaded->is_error())
+        return ($loaded);
+    $campaign = $loaded->value["data"];
+    $source = $campaign["SourceContext"] ?? [];
+    if (!is_array($source) || (string)($source["Type"] ?? "") !== "AttendanceRegisterCampaign")
+        return (new ValueResponse(["campaign" => false]));
+    if (($campaign["Status"] ?? "") !== "Completed")
+        return (new ValueResponse(["campaign" => true, "pending" => true]));
+
+    $campaign_final_hash = trim((string)($campaign["FinalHash"] ?? ($campaign["SealedHash"] ?? "")));
+    $updated = 0;
+    $synchronized = 0;
+    foreach ((array)($source["Members"] ?? []) as $member)
+    {
+        if (!is_array($member))
+            continue ;
+        $owner = (int)($member["OwnerUserId"] ?? ($member["StudentId"] ?? 0));
+        $leaf_id = trim((string)($member["LeafInstanceId"] ?? ""));
+        if ($owner <= 0 || $leaf_id == "")
+            continue ;
+        $leaf = document_workflow_find_instance($owner, $leaf_id);
+        if ($leaf->is_error())
+            return ($leaf);
+        $instance = $leaf->value["data"];
+        if (($member["FrozenHash"] ?? "") != ""
+            && (string)($instance["FrozenHash"] ?? "") !== (string)$member["FrozenHash"])
+            return (new ErrorResponse("DocumentHashMismatch", $leaf_id));
+        $changed = false;
+        foreach (($campaign["Signatures"] ?? []) as $slot => $signature)
+        {
+            if (!is_array($signature) || empty($signature["Required"]) || ($signature["Status"] ?? "") !== "Signed")
+                continue ;
+            if (!isset($instance["Signatures"][$slot]) || !is_array($instance["Signatures"][$slot]))
+                continue ;
+            $child = &$instance["Signatures"][$slot];
+            if ((string)($child["ExternalCampaignInstanceId"] ?? "") !== (string)($campaign["Id"] ?? ""))
+            {
+                unset($child);
+                continue ;
+            }
+            $already_inherited = ($child["Status"] ?? "") === "Signed"
+                && !empty($child["InheritedFromCampaign"])
+                && (string)($child["EvidenceSha256"] ?? "") === (string)($signature["EvidenceSha256"] ?? "")
+                && (string)($child["ExternalCampaignFinalHash"] ?? "") === $campaign_final_hash;
+            if (!$already_inherited)
+            {
+                $child["Status"] = "Signed";
+                $child["SignatoryUserId"] = (int)($signature["SignatoryUserId"] ?? 0);
+                $child["SignedAt"] = (string)($signature["SignedAt"] ?? "");
+                $child["SignatureSha256"] = (string)($signature["SignatureSha256"] ?? "");
+                $child["EvidenceSha256"] = (string)($signature["EvidenceSha256"] ?? "");
+                $child["InheritedFromCampaign"] = 1;
+                $child["ExternalCampaignFinalHash"] = $campaign_final_hash;
+                $changed = true;
+            }
+            unset($child);
+        }
+        ++$synchronized;
+        if ($changed && ($instance["Status"] ?? "") === "AwaitingSignature"
+            && document_workflow_all_required_signed($instance))
+        {
+            $instance["Status"] = "Signed";
+            $instance["ReadyForSealAt"] = date("Y-m-d H:i:s");
+        }
+        if ($changed)
+        {
+            $written = document_workflow_write_instance($leaf->value["file"], $instance);
+            if ($written->is_error())
+                return ($written);
+            ++$updated;
+        }
+    }
+    if (empty($campaign["ChildrenSynchronizedAt"])
+        || (int)($campaign["ChildrenSynchronizedCount"] ?? -1) !== $synchronized)
+    {
+        $campaign["ChildrenSynchronizedAt"] = date("Y-m-d H:i:s");
+        $campaign["ChildrenSynchronizedCount"] = $synchronized;
+        $written = document_workflow_write_instance($loaded->value["file"], $campaign);
+        if ($written->is_error())
+            return ($written);
+    }
+    return (new ValueResponse(["campaign" => true, "updated" => $updated, "synchronized" => $synchronized]));
+}
+
 function attendance_register_run_docbuilder(array $configuration)
 {
     $tmp = tempnam(sys_get_temp_dir(), "infosphere_attendance_");
@@ -953,6 +1559,138 @@ function attendance_register_run_docbuilder(array $configuration)
 	return (["ok" => false, "error" => $error]);
     }
     return (["ok" => true, "content" => $content]);
+}
+
+function GenerateAttendanceRegisterWorkflow($id, $data, $method, $output, $module)
+{
+    if ($id == -1 || $module != "cycle")
+        bad_request();
+
+    // Final signatures are campaign-wide. Individual sheets remain available
+    // as previews, but a definitive signature workflow always freezes the
+    // complete cohort so staff members sign one stable manifest only once.
+    if (!isset($data["all"]) || !attendance_register_truthy($data["all"]))
+        return (new ErrorResponse("AttendanceRegisterCampaignOnly"));
+
+    $context = attendance_register_cycle_data($id, NULL);
+    if ($context === NULL)
+        return (new ErrorResponse("AttendanceRegisterInvalidCycle"));
+    if (!is_array($context["school"]))
+        return (new ErrorResponse("AttendanceRegisterMissingSchool"));
+    if (!is_array($context["director"]))
+        return (new ErrorResponse("AttendanceRegisterMissingDirector"));
+    if (!count($context["students"]))
+        return (new ErrorResponse("AttendanceRegisterNoStudent"));
+
+    $period = attendance_register_period($context["cycle"]);
+    if ($period === NULL)
+        return (new ErrorResponse("AttendanceRegisterInvalidCycle", "La date de début du cycle est absente ou invalide."));
+    $issued_at = now();
+    $period_end_exclusive = date_to_timestamp($period["end_exclusive"]->format("Y-m-d H:i:s"));
+    if ($issued_at < $period_end_exclusive)
+        return (new ErrorResponse("AttendanceRegisterNotFinal", "Le trimestre est encore en cours. Utilise la prévisualisation jusqu'à sa clôture."));
+
+    $existing_campaign = attendance_register_find_campaign((int)$context["cycle"]["id"], $period);
+    if (is_array($existing_campaign))
+        return (new ErrorResponse(
+            "AttendanceRegisterCampaignExists",
+            (string)($existing_campaign["instance"]["Id"] ?? "")." (".(string)($existing_campaign["instance"]["Status"] ?? "").")"
+        ));
+
+    // Refuse to silently mix legacy per-student workflows with a new campaign.
+    foreach ($context["students"] as $student)
+        if (is_array(attendance_register_existing_workflow($student, (int)$context["cycle"]["id"])))
+            return (new ErrorResponse("AttendanceRegisterWorkflowExists", (string)($student["codename"] ?? $student["id"])));
+
+    $data_cutoff = $period_end_exclusive - 1;
+    $document_info = [
+        "IssueDate" => datex("d/m/Y H:i", $issued_at),
+        "DataCutoff" => datex("d/m/Y H:i", $data_cutoff),
+        "Status" => "Définitif",
+        "InProgress" => false,
+    ];
+    $user_ids = array_map(function ($student) { return ((int)$student["id"]); }, $context["students"]);
+    $cycle_director = array_replace(
+        attendance_register_person_context($context["director"]),
+        ["Role" => "Responsable de formation"]
+    );
+    $register_data = attendance_register_collect_days(
+        $user_ids,
+        (int)$context["cycle"]["id"],
+        $period["start"],
+        $period["end_exclusive"],
+        $data_cutoff,
+        $context["director"]
+    );
+
+    // Build every frozen leaf first. Their hashes are what the campaign
+    // manifest certifies, so no sheet can change after a staff signature.
+    $prepared = [];
+    foreach ($context["students"] as $student)
+    {
+        $uid = (int)$student["id"];
+        $ret = attendance_register_prepare_workflow_document(
+            $context,
+            $period,
+            $document_info,
+            $cycle_director,
+            $student,
+            $register_data["days"][$uid] ?? [],
+            $register_data["totals"][$uid] ?? attendance_register_empty_totals(),
+            $register_data["trainers"][$uid] ?? []
+        );
+        if ($ret->is_error())
+            return ($ret);
+        $prepared[] = $ret->value;
+    }
+
+    $campaign_trainers = attendance_register_campaign_trainers($register_data["trainers"] ?? []);
+    $campaign = attendance_register_create_campaign_instance(
+        $context, $period, $prepared, $cycle_director, $campaign_trainers
+    );
+    if ($campaign->is_error())
+        return ($campaign);
+
+    $created = [];
+    foreach ($prepared as $entry)
+    {
+        $ret = attendance_register_create_workflow_instance(
+            $context,
+            $period,
+            $entry,
+            (int)$campaign->value["owner_user_id"],
+            (string)$campaign->value["instance_id"],
+            (string)$campaign->value["hash"],
+            (array)$campaign->value["plan"]
+        );
+        if ($ret->is_error())
+        {
+            foreach ($created as $leaf)
+                document_workflow_expire_instance((int)$leaf["student_id"], (string)$leaf["instance_id"]);
+            document_workflow_expire_instance((int)$campaign->value["owner_user_id"], (string)$campaign->value["instance_id"]);
+            return ($ret);
+        }
+        $created[] = $ret->value;
+    }
+    $linked = attendance_register_update_campaign_members(
+        (int)$campaign->value["owner_user_id"],
+        (string)$campaign->value["instance_id"],
+        $created
+    );
+    if ($linked->is_error())
+        return ($linked);
+
+    add_log(TRACE, "Attendance register campaign created: cycle_id=".(int)$context["cycle"]["id"].
+        ", campaign=".(string)$campaign->value["instance_id"].", sheets=".count($created));
+    return (new ValueResponse([
+        "msg" => "Campagne d'émargement créée : ".count($created)." feuille(s) élève(s), ".
+            count(document_task_plan_normalize((array)$campaign->value["plan"]))." signature(s) globale(s) à recueillir.",
+        "campaign" => [
+            "owner_user_id" => (int)$campaign->value["owner_user_id"],
+            "instance_id" => (string)$campaign->value["instance_id"],
+        ],
+        "created" => $created,
+    ]));
 }
 
 function GenerateAttendanceRegister($id, $data, $method, $output, $module)
@@ -1022,22 +1760,30 @@ function GenerateAttendanceRegister($id, $data, $method, $output, $module)
     {
 	$configuration["Registers"] = [];
 	foreach ($context["students"] as $student)
+        {
+            $student_context = attendance_register_person_context($student);
+            $student_trainers = $trainers[(int)$student["id"]] ?? [];
 	    $configuration["Registers"][] = [
 		"Reference" => attendance_register_reference($context["cycle"], $student),
-		"Student" => attendance_register_person_context($student),
+		"Student" => $student_context,
 		"Days" => $days[(int)$student["id"]] ?? [],
 		"Totals" => $totals[(int)$student["id"]] ?? attendance_register_empty_totals(),
-                "Trainers" => $trainers[(int)$student["id"]] ?? [],
+                "Trainers" => $student_trainers,
+                "TaskPlan" => attendance_register_signature_task_plan($student_context, $cycle_director, $student_trainers),
 	    ];
+        }
     }
     else
     {
 	$student = $context["students"][0];
+        $student_context = attendance_register_person_context($student);
+        $student_trainers = $trainers[(int)$student["id"]] ?? [];
 	$configuration["Reference"] = attendance_register_reference($context["cycle"], $student);
-	$configuration["Student"] = attendance_register_person_context($student);
+	$configuration["Student"] = $student_context;
 	$configuration["Days"] = $days[(int)$student["id"]] ?? [];
 	$configuration["Totals"] = $totals[(int)$student["id"]] ?? attendance_register_empty_totals();
-        $configuration["Trainers"] = $trainers[(int)$student["id"]] ?? [];
+        $configuration["Trainers"] = $student_trainers;
+        $configuration["TaskPlan"] = attendance_register_signature_task_plan($student_context, $cycle_director, $student_trainers);
     }
 
     $document = attendance_register_run_docbuilder($configuration);

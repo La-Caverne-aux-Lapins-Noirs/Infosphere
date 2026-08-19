@@ -71,7 +71,6 @@ function run_ssh_packet_with_inline_key(
 
     if ($private_key === "" || substr($private_key, -1) !== "\n")
         $private_key .= "\n";
-
     if (file_put_contents($key_file, $private_key) === false)
     {
         @unlink($key_file);

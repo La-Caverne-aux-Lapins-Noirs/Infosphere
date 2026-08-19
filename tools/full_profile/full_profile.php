@@ -43,6 +43,7 @@ class FullProfile extends Layer
     public $country = "";
     public $administrative_data = "{}";
     public $registration_date;
+    public $deleted = NULL;
     public $visibility = 0;
     public $money = 0;
     public $credit = 0;
@@ -382,7 +383,7 @@ class FullProfile extends Layer
 	    $fields = [
 		"id", "codename", "nickname", "mail", "registration_date", "first_name", "use_name", "family_name",
 		"gender", "phone", "street_name", "postal_code", "city", "country", "birth_date", "nationality",
-		"authority", "administrative_data", "visibility"
+		"authority", "administrative_data", "visibility", "deleted"
 	    ];
 	    foreach ($fields as $label)
 		$this->$label = @$data[$label];

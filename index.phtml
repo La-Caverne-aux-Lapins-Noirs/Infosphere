@@ -24,8 +24,29 @@
 	    <link rel="icon" type="image/png" href="<?=$icon; ?>?<?=filemtime($icon); ?>" />
 	<?php } ?>
 
+	<?php
+	$page_title = strip_tags($Dictionnary[str_replace("Menu", "", $Position)]);
+	if ($Position == "ProfileMenu" && isset($_GET["a"]) && $User != NULL)
+	{
+	    $profile_title_user = fetch_user($_GET["a"]);
+	    if (!$profile_title_user->is_error())
+	    {
+		$profile_title_user = $profile_title_user->value;
+		if ((int)$profile_title_user["id"] != (int)$User["id"])
+		{
+		    $profile_title_name = trim(
+			ucfirst((string)$profile_title_user["first_name"])." ".
+			strtoupper((string)$profile_title_user["family_name"])
+		    );
+		    $page_title = $profile_title_name != ""
+			? $profile_title_name
+			: (string)$profile_title_user["codename"];
+		}
+	    }
+	}
+	?>
 	<title>
-	    <?=strip_tags($Dictionnary[str_replace("Menu", "", $Position)]); ?> - <?=$Dictionnary["Infosphere"]; ?>
+	    <?=htmlspecialchars($page_title, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> - <?=$Dictionnary["Infosphere"]; ?>
 	</title>
         <!--
         ---- Authors:

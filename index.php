@@ -141,6 +141,7 @@ $BottomMenu = [
     "CycleMenu" => "./pages/cycle/",
     "InstancesMenu" => "./pages/activity/",
     "CorrectionMenu" => "./pages/correction/",
+    "QuestionnaireMenu" => "./pages/questionnaire/",
     "ScaleMenu" => "./pages/scale/",
     
     "EnterpriseMenu" => "./pages/enterprise/",

@@ -7,6 +7,7 @@ function user_relation_definitions()
         "legal" => ["bit" => 2, "label" => "Responsable légal"],
         "emergency" => ["bit" => 4, "label" => "Contact d'urgence"],
         "internship" => ["bit" => 8, "label" => "Tuteur de stage / alternance"],
+        "log_as" => ["bit" => 16, "label" => "Autoriser le Log as"],
     ]);
 }
 
@@ -66,6 +67,110 @@ function user_relation_labels($relation)
     foreach (user_relation_values($relation) as $name)
         $out[] = $definitions[$name]["label"];
     return ($out);
+}
+
+function user_relation_management_school_ids($id_user)
+{
+    if (!logged_in())
+        return ([]);
+
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return ([]);
+
+    // Use the regular access helpers. They already implement Infosphere's
+    // administrator override, so an administrator can act as the operational
+    // fallback while non-admin users must really hold one of these roles for
+    // the school concerned.
+    $out = [];
+    foreach (user_school_ids($id_user) as $id_school)
+        if (is_director_for_school($id_school)
+            || is_secretariat_for_school($id_school)
+            || is_commercial_for_school($id_school))
+            $out[] = (int)$id_school;
+    return ($out);
+}
+
+function can_manage_user_relations($id_user)
+{
+    return (count(user_relation_management_school_ids($id_user)) != 0);
+}
+
+function user_relation_candidate_parents($id_child)
+{
+    $id_child = (int)$id_child;
+    $schools = user_relation_management_school_ids($id_child);
+    if ($id_child <= 0 || !count($schools))
+        return ([]);
+
+    $school_ids = implode(",", array_map("intval", $schools));
+    return (db_select_all("\n        DISTINCT user.id, user.codename, user.first_name, user.family_name\n        FROM user\n        INNER JOIN user_school ON user_school.id_user = user.id\n        WHERE user.id != $id_child\n          AND user.deleted IS NULL\n          AND user.authority != ".BANISHED."\n          AND user.profile_status = 'member'\n          AND user.password != ''\n          AND user_school.id_school IN ($school_ids)\n          AND NOT EXISTS (\n              SELECT parent_child.id FROM parent_child\n              WHERE parent_child.id_parent = user.id\n                AND parent_child.id_child = $id_child\n          )\n        ORDER BY user.family_name ASC, user.first_name ASC, user.codename ASC\n    "));
+}
+
+function can_assign_user_relation_parent($id_child, $id_parent)
+{
+    $id_child = (int)$id_child;
+    $id_parent = (int)$id_parent;
+    if ($id_child <= 0 || $id_parent <= 0 || $id_child == $id_parent)
+        return (false);
+
+    $schools = user_relation_management_school_ids($id_child);
+    if (!count($schools))
+        return (false);
+    $school_ids = implode(",", array_map("intval", $schools));
+    return (db_select_one("\n        user.id\n        FROM user\n        INNER JOIN user_school ON user_school.id_user = user.id\n        WHERE user.id = $id_parent\n          AND user.deleted IS NULL\n          AND user.authority != ".BANISHED."\n          AND user.profile_status = 'member'\n          AND user.password != ''\n          AND user_school.id_school IN ($school_ids)\n    ") != NULL);
+}
+
+function user_relation_request_values(array $data)
+{
+    $relations = user_relation_values($data["relation"] ?? []);
+    foreach (user_relation_definitions() as $name => $definition)
+        if (!empty($data["relation_".$name]) && !in_array($name, $relations, true))
+            $relations[] = $name;
+    return ($relations);
+}
+
+function user_relation_set_existing_parent($id_child, $id_parent, $relations)
+{
+    $id_child = (int)$id_child;
+    $id_parent = (int)$id_parent;
+    if (!can_manage_user_relations($id_child)
+        || !can_assign_user_relation_parent($id_child, $id_parent))
+        return (new ErrorResponse("CannotEdit"));
+
+    $relation = user_relation_value($relations);
+    if ($relation == "")
+        return (new ErrorResponse("MissingField", "relation"));
+    return (add_link(
+        $id_parent,
+        $id_child,
+        "user",
+        "user",
+        false,
+        ["relation" => $relation],
+        "parent_child",
+        false,
+        "parent",
+        "child"
+    ));
+}
+
+function user_relation_remove_parent($id_child, $id_parent)
+{
+    $id_child = (int)$id_child;
+    $id_parent = (int)$id_parent;
+    if (!can_manage_user_relations($id_child))
+        return (new ErrorResponse("CannotEdit"));
+    return (remove_link(
+        $id_parent,
+        $id_child,
+        "user",
+        "user",
+        false,
+        "parent_child",
+        "parent",
+        "child"
+    ));
 }
 
 function create_external_user_relation($id_child, array $data)
@@ -210,7 +315,7 @@ function can_view_user_relations($id_user)
     $id_user = (int)$id_user;
     if ($id_user <= 0)
         return (false);
-    if (is_me($id_user) || is_identity_authority_for_user($id_user) || is_commercial())
+    if (is_me($id_user) || is_admin() || can_manage_user_relations($id_user))
         return (true);
 
     $me = (int)$User["id"];
@@ -226,7 +331,7 @@ function fetch_user_relation_summary($id_user)
         return (["responsible_for" => [], "responsible_by" => []]);
 
     $viewer = (int)$User["id"];
-    $can_view_all = is_me($id_user) || is_identity_authority_for_user($id_user) || is_commercial();
+    $can_view_all = is_me($id_user) || is_admin() || can_manage_user_relations($id_user);
     $parent_filter = $can_view_all ? "" : " AND parent_child.id_child = $viewer ";
     $child_filter = $can_view_all ? "" : " AND parent_child.id_parent = $viewer ";
 

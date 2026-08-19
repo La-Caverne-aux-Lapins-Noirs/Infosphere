@@ -9,7 +9,7 @@ La présente convention est conclue entre les parties:
 
 ## L'établissement
 
-[#Size;1]
+[#Size;3]
 [@Columns;1;
   [#Variable;Identification]
 ]
@@ -155,13 +155,17 @@ Accès à l'intranet au compte de l'Apprenant en lecture-seule: [@YesNo;[#Variab
 
 ## Responsable financier
 
-Identique à l'Apprenant: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Student;1]] (Ne pas remplir ci-dessous si identique)
+Personne finançant la formation.
 
-Identique à responsable légal 1: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal1;1]] (Ne pas remplir ci-dessous si identique)
+[@Columns;2;
+Identique à l'Apprenant: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Student;1]]
 
-Identique à responsable légal 2: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal2;1]] (Ne pas remplir ci-dessous si identique)
+Identique à responsable légal 1: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal1;1]]
+
+Identique à responsable légal 2: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Legal2;1]]
 
 Autre: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Other;1]]
+]
 
 [@Columns;2;
   Prénom: [#FLine;[#Variable;Signatories.Finance.FirstName]]
@@ -185,6 +189,9 @@ Autre: [@CheckBox;[#IfC;Signatories.Finance.Is;==;Other;1]]
 
 ## Personne à contacter en cas d'urgence
 
+Pour toute urgence ne concernant pas l'école.
+
+[@Columns;2;
 Responsable légal 1: [@CheckBox;[#IfC;Emergency.Is;==;Legal1;1]]
 
 Responsable légal 2: [@CheckBox;[#IfC;Emergency.Is;==;Legal2;1]]
@@ -194,6 +201,7 @@ Responsable financier: [@CheckBox;[#IfC;Emergency.Is;==;Finance;1]]
 ]
 
 Autre: [@CheckBox;[#IfC;Emergency.Is;==;Other;1]]
+]
 
 [@Columns;2;
 

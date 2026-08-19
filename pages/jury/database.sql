@@ -69,3 +69,42 @@ CREATE TABLE IF NOT EXISTS `session_teacher` (
   UNIQUE KEY `session_user` (`id_session`, `id_user`),
   UNIQUE KEY `session_laboratory` (`id_session`, `id_laboratory`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `title_session` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_school` int(11) NOT NULL,
+  KEY `id_school` (`id_school`),
+  `id_title` int(11) NOT NULL,
+  KEY `id_title` (`id_title`),
+  `start_date` date NOT NULL,
+  KEY `start_date` (`start_date`),
+  `end_date` date NOT NULL,
+  KEY `end_date` (`end_date`),
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `jury_arrival_time` time NOT NULL DEFAULT '08:30:00',
+  `id_session_manager` int(11) DEFAULT NULL,
+  KEY `id_session_manager` (`id_session_manager`),
+  `deleted` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `title_session_session` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_title_session` int(11) NOT NULL,
+  KEY `id_title_session` (`id_title_session`),
+  `id_session` int(11) NOT NULL,
+  KEY `id_session` (`id_session`),
+  UNIQUE KEY `title_session_session_session` (`id_session`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `title_session_jury` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_title_session` int(11) NOT NULL,
+  KEY `id_title_session` (`id_title_session`),
+  `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
+  UNIQUE KEY `title_session_jury_user` (`id_title_session`, `id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -1,0 +1,88 @@
+[Beneficiaire
+  Label = "Bénéficiaire"
+  [Fields
+    [Student
+      [Identity
+        Label = "Nom et prénom du bénéficiaire"
+      ]
+      [BirthDate
+        Label = "Date de naissance"
+      ]
+      [BirthPlace
+        Label = "Lieu de naissance"
+      ]
+      [Nationality
+        Label = "Nationalité"
+      ]
+      [Gender
+        Label = "Genre"
+      ]
+    ]
+  ]
+]
+
+[Admission
+  Label = "Admission"
+  [Fields
+    [Admission
+      [TargetClass
+        Label = "Formation / classe d'admission"
+      ]
+      [TargetYearLabel
+        Label = "Année / niveau d'admission"
+      ]
+      [EntryDate
+        Label = "Date d'entrée en formation"
+      ]
+      [EntryLabel
+        Label = "Rentrée envisagée"
+      ]
+      [SchoolYear
+        Label = "Année scolaire"
+      ]
+      [ProspectRegistrationDate
+        Label = "Date d'enregistrement de la candidature"
+      ]
+      [RequiredAmount
+        Label = "Montant exigible à l'admission"
+      ]
+      [PaymentConfirmed
+        Label = "Paiement enregistré"
+      ]
+      [IssuePlace
+        Label = "Lieu d'émission"
+      ]
+      [IssueDate
+        Label = "Date d'émission"
+      ]
+      [Reference
+        Label = "Référence du document"
+      ]
+      [AutomaticSignature
+        Label = "Ajouter automatiquement la signature de la direction"
+      ]
+    ]
+  ]
+]
+
+[Direction
+  Label = "Direction"
+  [Fields
+    [Signatories
+      [Director
+        [Identity
+          Label = "Direction / représentant de l'établissement"
+        ]
+        [Role
+          Label = "Qualité du représentant de l'établissement"
+        ]
+        [Mail
+          Label = "Courriel du représentant de l'établissement"
+        ]
+        [Signature
+          Label = "Signature du représentant de l'établissement"
+        ]
+      ]
+    ]
+  ]
+]

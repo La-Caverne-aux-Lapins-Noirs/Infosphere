@@ -252,6 +252,87 @@ async function path_browser_upload_drop(browser, files, target_path)
     return (groups.size > 0);
 }
 
+function path_browser_close_entry_menus(except)
+{
+    for (let menu of document.querySelectorAll('.path_browser_entry_menu.path_browser_menu_open'))
+    {
+        if (menu === except)
+            continue ;
+        menu.classList.remove('path_browser_menu_open');
+        let icon = menu.closest('.file_browser > .icon');
+        if (icon)
+            icon.classList.remove('path_browser_menu_host_open');
+        let button = menu.querySelector('.path_browser_entry_menu_button');
+        if (button)
+            button.setAttribute('aria-expanded', 'false');
+    }
+}
+
+function path_browser_toggle_entry_menu(event, button)
+{
+    if (event)
+    {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    let menu = button && button.closest ? button.closest('.path_browser_entry_menu') : null;
+    if (!menu)
+        return (false);
+    let open = !menu.classList.contains('path_browser_menu_open');
+    path_browser_close_entry_menus(open ? menu : null);
+    menu.classList.toggle('path_browser_menu_open', open);
+    let icon = menu.closest('.file_browser > .icon');
+    if (icon)
+        icon.classList.toggle('path_browser_menu_host_open', open);
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    return (false);
+}
+
+function path_browser_rename_entry(event, button)
+{
+    if (event)
+    {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    let icon = button && button.closest ? button.closest('.file_browser > .icon') : null;
+    let browser = path_browser_get_browser(icon);
+    if (!icon || !browser || icon.classList.contains('path_browser_navigation'))
+        return (false);
+
+    let old_name = icon.getAttribute('data-path-browser-name') || '';
+    let new_name = window.prompt(browser.getAttribute('data-path-browser-rename-prompt') || 'Nouveau nom :', old_name);
+    if (new_name === null)
+        return (false);
+    new_name = new_name.trim();
+    if (new_name === '' || new_name === old_name)
+        return (false);
+
+    let data = {
+        page: browser.getAttribute('data-path-browser-page') || '',
+        id: browser.getAttribute('data-path-browser-id') || '-1',
+        type: browser.getAttribute('data-path-browser-type') || '',
+        language: browser.getAttribute('data-path-browser-language') || '',
+        entry: icon.getAttribute('data-path-browser-relative') || '',
+        name: new_name
+    };
+    path_browser_close_entry_menus(null);
+    send_ajax(
+        'POST',
+        browser.getAttribute('data-path-browser-rename-url') || '/api/filebrowser/0/rename',
+        JSON.stringify(data),
+        null, null, null, null,
+        function(success) {
+            if (!success)
+                return ;
+            let input = path_browser_get_path_input(browser);
+            if (input)
+                silent_submit(input, browser.id);
+        }
+    );
+    return (false);
+}
+
 function path_browser_selection(browser)
 {
     if (!browser)
@@ -367,10 +448,14 @@ function path_browser_clear_drop_state(browser)
 }
 
 document.addEventListener('click', function(event) {
+    let entry_menu = event.target && event.target.closest ? event.target.closest('.path_browser_entry_menu') : null;
+    if (!entry_menu)
+        path_browser_close_entry_menus(null);
+
     let icon = event.target && event.target.closest ? event.target.closest('.file_browser > .icon') : null;
     if (!icon || icon.classList.contains('path_browser_navigation'))
         return ;
-    if (event.target.closest('form, button, input, select, textarea, a, audio, video'))
+    if (event.target.closest('form, button, input, select, textarea, a, audio, video, .path_browser_entry_menu'))
         return ;
     path_browser_select_icon(icon, event.shiftKey);
 });

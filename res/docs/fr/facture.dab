@@ -40,3 +40,10 @@ BillingInformation = [].School.RIB
   ]
 }
 
+[FormGroup
+  @insert "res/docs/fr/.forms/invoice_groups.dab"
+]
+
+[FormRole
+  @insert "res/docs/fr/.forms/invoice_roles.dab"
+]

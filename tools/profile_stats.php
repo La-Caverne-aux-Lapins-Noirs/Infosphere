@@ -237,7 +237,7 @@ imagefill($img, 0, 0, $transparent);
 // Lignes verticales marquant les journées
 for ($i = 1; $i < $len; ++$i)
 {
-    imageline($img, intval($i * $w / $len), 50, intval($i * $w / $len), $h - 50, $lines);
+    infosphere_imageline($img, intval($i * $w / $len), 50, intval($i * $w / $len), $h - 50, $lines);
 
     if ($i % 2)
     {
@@ -251,12 +251,12 @@ for ($i = 1; $i < $len; ++$i)
 	    ($i + 1) * $w / $len,
 	    50,
 	];
-	imagefilledpolygon($img, $coords, count($coords) / 2, $linesa);
+	infosphere_imagefilledpolygon($img, $coords, $linesa);
     }
     
     $date = date("d/m", ($i + $startday) * 60 * 60 * 24);
     $siz = imagettfbbox(10, 0, $fnt, $date);
-    imagettftext(
+    infosphere_imagettftext(
 	$img, 10, 0,
 	intval($i * ($w / $len) - $siz[2] / 2),
 	50 + ($len > 20 && $i % 2 ? -20 : -5),
@@ -264,7 +264,7 @@ for ($i = 1; $i < $len; ++$i)
 	$fnt,
 	$date
     );
-    imagettftext(
+    infosphere_imagettftext(
 	$img, 10, 0,
 	intval($i * ($w / $len) - $siz[2] / 2),
 	$h + ($len > 20 && $i % 2 ? -15 : -30),
@@ -299,8 +299,8 @@ if (isset($data["halfday_am"]) || isset($data["halfday_pm"]))
 	$pm = isset($data["halfday_pm"][$day]) ? (int)$data["halfday_pm"][$day] : 0;
 	$am_color = isset($halfday_colors[$am]) ? $halfday_colors[$am] : $halfgrey;
 	$pm_color = isset($halfday_colors[$pm]) ? $halfday_colors[$pm] : $halfgrey;
-	imagefilledrectangle($img, $x1, 50, $x2, $zero_y, $am_color);
-	imagefilledrectangle($img, $x1, $zero_y, $x2, $h - 50, $pm_color);
+	infosphere_imagefilledrectangle($img, $x1, 50, $x2, $zero_y, $am_color);
+	infosphere_imagefilledrectangle($img, $x1, $zero_y, $x2, $h - 50, $pm_color);
     }
 }
 
@@ -332,11 +332,11 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
 		$w / $len / 2 + ($index + 0.8 - 1) * $w / $len, $y - $data[$label][$index + $startday] * $hh,
 		$w / $len / 2 + ($index + 0.8 - 1) * $w / $len, $y,
 	    ];
-	    imagefilledpolygon($img, $coords, 4, $color[1]);
-	    imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $color[0]);
-	    imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $color[0]);
-	    imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $color[0]);
-	    imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $color[0]);
+	    infosphere_imagefilledpolygon($img, $coords, $color[1]);
+	    infosphere_imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $color[0]);
+	    infosphere_imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $color[0]);
+	    infosphere_imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $color[0]);
+	    infosphere_imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $color[0]);
 	    $y -= $data[$label][$index + $startday] * $hh;
 	    if ($color[2])
 		$hours += $data[$label][$index + $startday];
@@ -346,7 +346,7 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
     {
 	$hours = sprintf("%d:%d", (int)$hours, ($hours - (int)$hours) * 60);
 	$siz = imagettfbbox(10, 0, $fnt, $hours);
-	imagettftext(
+	infosphere_imagettftext(
 	    $img, 10, 0,
 	    intval($w / $len / 2 + ($index + 0.5 - 1) * $w / $len - $siz[2] / 2),
 	    $y - 5,
@@ -389,22 +389,22 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
             if ($presence > 0)
             {
                 $top_y = intval($up_y - $presence * $hh);
-                imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $greena);
-                imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $green);
+                infosphere_imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $greena);
+                infosphere_imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $green);
                 $up_y = $top_y;
             }
             if ($late_value > 0)
             {
                 $top_y = intval($up_y - $late_value * $hh);
-                imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orangea);
-                imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orange);
+                infosphere_imagefilledrectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orangea);
+                infosphere_imagerectangle($img, $bar_x1, $top_y, $bar_x2, $up_y, $orange);
                 $up_y = $top_y;
             }
             if ($absence > 0)
             {
                 $bottom_y = intval($zero_y + $absence * $hh);
-                imagefilledrectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $reda);
-                imagerectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $red);
+                infosphere_imagefilledrectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $reda);
+                infosphere_imagerectangle($img, $bar_x1, $zero_y, $bar_x2, $bottom_y, $red);
             }
         }
     }
@@ -437,11 +437,11 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
 		$w / $len / 2 + ($index + $bar[1] - 1) * $w / $len, $zero - $value * $hh,
 		$w / $len / 2 + ($index + $bar[1] - 1) * $w / $len, $zero,
 	    ];
-	    imagefilledpolygon($img, $coords, 4, $bar[2]);
-	    imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $bar[3]);
-	    imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $bar[3]);
-	    imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $bar[3]);
-	    imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $bar[3]);
+	    infosphere_imagefilledpolygon($img, $coords, $bar[2]);
+	    infosphere_imageline($img, $coords[0], $coords[1], $coords[2], $coords[3], $bar[3]);
+	    infosphere_imageline($img, $coords[2], $coords[3], $coords[4], $coords[5], $bar[3]);
+	    infosphere_imageline($img, $coords[4], $coords[5], $coords[6], $coords[7], $bar[3]);
+	    infosphere_imageline($img, $coords[6], $coords[7], $coords[0], $coords[1], $bar[3]);
 	}
     }
     else
@@ -461,16 +461,16 @@ for ($i = $sladder; $i <= $bladder; ++$i)
 	continue ;
     
     // Gauche
-    imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w / $len / 2 + 5), intval($y), $lines);
+    infosphere_imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w / $len / 2 + 5), intval($y), $lines);
     // Droite
-    imageline($img, intval($w - $w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
+    infosphere_imageline($img, intval($w - $w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
     if ($i % 5 == 0)
-	    imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $linesa);
+	    infosphere_imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $linesa);
     if ($i == 0)
     {
 	$shift = 15;
 	imagesetthickness($img, 2);
-	imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
+	infosphere_imageline($img, intval($w / $len / 2 - 5), intval($y), intval($w - $w / $len / 2 + 5), intval($y), $lines);
 	imagesetthickness($img, 0);
     }
     else
@@ -478,7 +478,7 @@ for ($i = $sladder; $i <= $bladder; ++$i)
     if (($i % 2) && $i != 0)
 	continue ;
     $siz = imagettfbbox($shift, 0, $fnt, $i);
-    imagettftext(
+    infosphere_imagettftext(
 	$img, $shift, 0,
 	intval(($w / $len) / 2 - $siz[2] - $shift),
 	intval($y - $siz[5] / 2),
@@ -486,7 +486,7 @@ for ($i = $sladder; $i <= $bladder; ++$i)
 	$fnt,
 	$i
     );
-    imagettftext(
+    infosphere_imagettftext(
 	$img, $shift, 0,
 	intval($w - ($w / $len) / 2 + $shift),
 	intval($y - $siz[5] / 2),
@@ -497,10 +497,10 @@ for ($i = $sladder; $i <= $bladder; ++$i)
 }
 
 // Lignes du bas et de gauche
-imageline($img, intval($w / $len / 2), 50, intval($w - $w / $len / 2), 50, $lines);
-imageline($img, intval($w / $len / 2), intval($h - 50), intval($w - $w / $len / 2), intval($h - 50), $lines);
-imageline($img, intval($w / $len / 2), 50, intval($w / $len / 2), $h - 50, $lines);
-imageline($img, intval($w - $w / $len / 2), 50, intval($w - $w / $len / 2), intval($h - 50), $lines);
+infosphere_imageline($img, intval($w / $len / 2), 50, intval($w - $w / $len / 2), 50, $lines);
+infosphere_imageline($img, intval($w / $len / 2), intval($h - 50), intval($w - $w / $len / 2), intval($h - 50), $lines);
+infosphere_imageline($img, intval($w / $len / 2), 50, intval($w / $len / 2), $h - 50, $lines);
+infosphere_imageline($img, intval($w - $w / $len / 2), 50, intval($w - $w / $len / 2), intval($h - 50), $lines);
 
 $xp = $w / $len / 2;
 $col = [
@@ -537,6 +537,7 @@ $legend_labels = [
     "medal_lost_hist" => "medals lost",
     "medal_negative_hist" => "negative medals",
 ];
+
 foreach ($data as $k => $v)
 {
     if (substr($k, 0, 3) == "mis")
@@ -546,18 +547,18 @@ foreach ($data as $k => $v)
     $legend = isset($legend_labels[$k]) ? $legend_labels[$k] : $k;
     $bbox = imagettfbbox(10, 0, $fnt, $legend);
 
-    imagefilledrectangle(
+    infosphere_imagefilledrectangle(
 	$img, intval($xp + $bbox[6] - 5), 0, intval($xp + $bbox[2] + 5), 30, $col[$k]
     );
     if (substr($k, 0, 3) != "avg")
     {
-	imagettftext($img, 10, 0, intval($xp - 1), 15, $black, $fnt, $legend);
-	imagettftext($img, 10, 0, intval($xp), 15, $black, $fnt, $legend);
+	infosphere_imagettftext($img, 10, 0, intval($xp - 1), 15, $black, $fnt, $legend);
+	infosphere_imagettftext($img, 10, 0, intval($xp), 15, $black, $fnt, $legend);
     }
     else
     {
-	imagettftext($img, 10, 0, intval($xp - 1), 15, $realwhite, $fnt, $legend);
-	imagettftext($img, 10, 0, intval($xp), 15, $realwhite, $fnt, $legend);
+	infosphere_imagettftext($img, 10, 0, intval($xp - 1), 15, $realwhite, $fnt, $legend);
+	infosphere_imagettftext($img, 10, 0, intval($xp), 15, $realwhite, $fnt, $legend);
     }
 
     $xp += $bbox[2] + 20;
@@ -569,4 +570,4 @@ if (error_get_last() == NULL && $dbg == false)
 	header("Content-type: image/png");
     imagepng($img, NULL, 0, PNG_NO_FILTER);
 }
-
+print_r(error_get_last());

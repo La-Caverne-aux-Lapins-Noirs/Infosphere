@@ -14,7 +14,7 @@ et les Apprenants se font via :
 - Les locaux mis à leur disposition pendant la durée de la formation. 
 
 [@Size;1]
-[@Columns;3;
+[@Columns;1;
 Les Apprenants ont accès aux locaux où se déroule la formation exclusivement
 pour suivre la formation à laquelle ils ou elles sont inscrit(e)s. Ils
 ou elles ne peuvent y entrer ou y demeurer à d’autres fins, sauf autorisation. 

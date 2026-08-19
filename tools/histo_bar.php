@@ -1,4 +1,6 @@
 <?php
+require_once (__DIR__."/gd_compat.php");
+
 
 function base64url_decode($data)
 {
@@ -94,7 +96,7 @@ $cols = [$green, $blue, $red, $purple, $pink];
 // On passe sur chaque zone
 for ($i = 0; $i <= $nbr_cols; ++$i)
 {
-    imageline($img,
+    infosphere_imageline($img,
 	      $i * $gw / $nbr_cols + ($w - $gw) / 2,  $h * 0.1,
 	      $i * $gw / $nbr_cols + ($w - $gw) / 2,  $h * 0.7,
 	      $line_color);
@@ -102,11 +104,11 @@ for ($i = 0; $i <= $nbr_cols; ++$i)
 	break ;
     if ($i > 4)
 	break ;
-    imageline($img,
+    infosphere_imageline($img,
 	      ($i + 0.0) * $gw / $nbr_cols + ($w - $gw) / 2, $h * 0.7 - $h * 0.55 * $percents[$i],
 	      ($i + 1.0) * $gw / $nbr_cols + ($w - $gw) / 2, $h * 0.7 - $h * 0.55 * $percents[$i],
 	      $line_color);
-    imagettftext($img, 10, 0,
+    infosphere_imagettftext($img, 10, 0,
 		 $i * $gw / $nbr_cols + 5 + ($w - $gw) / 2, $h * 0.7 - $h * 0.55 * $percents[$i] - 5,
 		 $line_color, __DIR__."/../res/futura.ttf",
 		 sprintf("%d%%", $percents[$i] * 100)
@@ -119,7 +121,7 @@ for ($i = 0; $i <= $nbr_cols; ++$i)
     else
 	$ccol = $dead_stack;
 
-    imagefilledrectangle(
+    infosphere_imagefilledrectangle(
 	$img,
 	($i + 0.5 - 0.2) * $gw / $nbr_cols + ($w - $gw) / 2, $h * 0.7 - $h * 0.55 * $score[$i],
 	($i + 0.5 + 0.2) * $gw / $nbr_cols + ($w - $gw) / 2, $h * 0.7,
@@ -132,7 +134,7 @@ for ($i = 0; $i <= $nbr_cols; ++$i)
 	for ($top = 0; $top < $bonus[$i] * $h * 0.7; ++$top)
 	{
 	    if ($pix % 2 == 0)
-		imagesetpixel(
+		infosphere_imagesetpixel(
 		    $img,
 		    $left + ($i + 0.5 - 0.2) * $gw / $nbr_cols + ($w - $gw) / 2,
 		    $top + $h * 0.7 - $h * 0.55 * $score[$i],
@@ -141,20 +143,20 @@ for ($i = 0; $i <= $nbr_cols; ++$i)
 	}
     }
 
-    imagettftext($img, 15, 0,
+    infosphere_imagettftext($img, 15, 0,
 		 ($i + 0.5) * $gw / $nbr_cols - 15 + ($w - $gw) / 2, $h * 0.68,
 		 $line_color, __DIR__."/../res/futura.ttf",
 		 sprintf("% 2d%%", $score[$i] * 100)
     );
     $offset = $i == 4 ? 50 : 10;
-    imagettftext($img, 15, 0,
+    infosphere_imagettftext($img, 15, 0,
 		 $i * $gw / $nbr_cols + ($w / 6 - $offset) / 2 + ($w - $gw) / 2 + 10, $h * 0.81,
 		 $ccol, __DIR__."/../res/futura.ttf",
 		 ["D", "C", "B", "A", $percents[4] != 0 ? "Bonus" : ""][$i]
     );
 }
 
-imagefilledrectangle(
+infosphere_imagefilledrectangle(
     $img,
     ($w - $gw) / 2, $h * 0.85,
     $gw * ($final_grade) / $nbr_cols + ($w - $gw) / 2, $h * 0.95,

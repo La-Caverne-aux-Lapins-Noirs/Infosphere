@@ -1,0 +1,38 @@
+[Etablissement
+  Label = "Établissement"
+  [Fields
+    [School
+      [Name
+        Label = "Établissement"
+      ]
+      [Title
+        Label = "Type / qualité de l'établissement"
+      ]
+    ]
+  ]
+]
+[Cycle
+  Label = "Cycle"
+  [Fields
+    [Cycle
+      [Code
+        Label = "Code du cycle"
+      ]
+      [Year
+        Label = "Année de formation"
+      ]
+      [Trimester
+        Label = "Trimestre"
+      ]
+      [Start
+        Label = "Début de période"
+      ]
+      [End
+        Label = "Fin de période"
+      ]
+      [Director
+        Label = "Responsable du cycle"
+      ]
+    ]
+  ]
+]

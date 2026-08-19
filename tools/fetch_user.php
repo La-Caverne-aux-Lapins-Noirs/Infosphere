@@ -41,12 +41,14 @@ function fetch_user($id, $add_fields = [])
               user.registration_date as registration_date,
               user.birth_date as birth_date,
               user.authority as authority,
+              user.deleted as deleted,
               user.phone as phone,
               user.visibility as visibility,
               user.profile_status as profile_status
               $add_fields
         FROM  user
-        WHERE user.id IN (".implode(",", array_map("intval", $id)).") && user.authority != -1
+        WHERE user.id IN (".implode(",", array_map("intval", $id)).")
+              ".(is_admin() ? "" : " && user.authority != ".BANISHED)."
     ");
     if ($u == NULL)
         return (new ErrorResponse("UserNotFound"));

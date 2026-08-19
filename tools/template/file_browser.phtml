@@ -52,6 +52,16 @@ if (!isset($path_browser_root) || !@strlen($path_browser_root))
 	    continue ;
 	if (!$show_hidden_entries && $content != ".." && $content[0] == ".")
 	    continue ;
+        if ($page === "user" && $type === "file" && $content != "..")
+        {
+            $entry_relative = path_browser_transfer_relative_entry(
+                $path_browser_root,
+                $target.$content
+            );
+            if ($entry_relative === NULL
+                || !user_storage_can_read_path((int)$id, $entry_relative))
+                continue ;
+        }
 	if (is_dir($target.$content))
 	    $directories[] = $target.$content;
 	else
@@ -61,11 +71,18 @@ if (!isset($path_browser_root) || !@strlen($path_browser_root))
     <?php foreach (($entries = array_merge($directories, $subfiles)) as $content) { ?>
         <?php
         $content_extension = strtolower(pathinfo($content, PATHINFO_EXTENSION));
+        $content_editor_url =
+            $path_browser_dabsic_editor && !is_dir($content)
+            ? dabsic_editor_url($content)
+            : "";
         $content_is_editable_dabsic =
-            $path_browser_dabsic_editor &&
-            !is_dir($content) &&
-            $content_extension == "dab";
+            $content_editor_url !== "" &&
+            in_array($content_extension, dabsic_editor_editable_extensions(), true);
         $content_relative = path_browser_transfer_relative_entry($path_browser_root, $content);
+        $content_is_user_storage_root =
+            $page === "user" &&
+            $type === "file" &&
+            user_storage_is_root_space($content_relative);
         $content_browser_path = "";
         if (is_dir($content) && $path_browser_can_cd)
         {
@@ -76,7 +93,7 @@ if (!isset($path_browser_root) || !@strlen($path_browser_root))
         ?>
 	<div
 	    class="icon <?=is_dir($content) ? "directory" : $content_extension; ?><?=$content_is_editable_dabsic ? " has_dabsic_editor" : ""; ?><?=pathinfo($content, PATHINFO_BASENAME) == ".." ? " path_browser_navigation" : ""; ?>"
-            draggable="<?=pathinfo($content, PATHINFO_BASENAME) == ".." ? "false" : "true"; ?>"
+            draggable="<?=pathinfo($content, PATHINFO_BASENAME) == ".." || $content_is_user_storage_root ? "false" : "true"; ?>"
             data-path-browser-relative="<?=htmlspecialchars((string)$content_relative, ENT_QUOTES); ?>"
             data-path-browser-name="<?=htmlspecialchars(pathinfo($content, PATHINFO_BASENAME), ENT_QUOTES); ?>"
             data-path-browser-directory="<?=is_dir($content) ? 1 : 0; ?>"
@@ -101,19 +118,38 @@ if (!isset($path_browser_root) || !@strlen($path_browser_root))
 		<video src="<?=$content; ?>?<?=now(); ?>" controls></video>
 	    <?php } ?>
 
-	    <?php if ($content_is_editable_dabsic) { ?>
-                <a
-                    class="dabsic_editor_link"
-                    href="<?=htmlspecialchars(dabsic_editor_url($content), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                    title="<?=htmlspecialchars($Dictionnary["DabsicEditor"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                    aria-label="<?=htmlspecialchars($Dictionnary["DabsicEditorOpen"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                    draggable="false"
-                    onclick="event.stopPropagation();"
-                    ondblclick="event.stopPropagation();"
-                ><span class="dabsic_editor_link_icon" aria-hidden="true">&#9998;</span><span class="dabsic_editor_link_label"><?=htmlspecialchars($Dictionnary["DabsicEditorOpen"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span></a>
-            <?php } ?>
+	    <?php if (pathinfo($content, PATHINFO_BASENAME) != ".." && !$content_is_user_storage_root) { ?>
+                <div class="path_browser_entry_menu" draggable="false">
+                    <button
+                        type="button"
+                        class="path_browser_entry_menu_button"
+                        title="<?=htmlspecialchars($Dictionnary["PathBrowserMenu"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                        aria-label="<?=htmlspecialchars($Dictionnary["PathBrowserMenu"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                        aria-expanded="false"
+                        draggable="false"
+                        onclick="return path_browser_toggle_entry_menu(event, this);"
+                    >&#8942;</button>
+                    <div class="path_browser_entry_menu_popup" role="menu">
+                        <?php if ($content_is_editable_dabsic) { ?>
+                            <a
+                                class="path_browser_entry_menu_item"
+                                href="<?=htmlspecialchars($content_editor_url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                role="menuitem"
+                                draggable="false"
+                                onclick="event.stopPropagation();"
+                                ondblclick="event.stopPropagation();"
+                            ><?=htmlspecialchars($Dictionnary["DabsicEditorOpen"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></a>
+                        <?php } ?>
+                        <button
+                            type="button"
+                            class="path_browser_entry_menu_item"
+                            role="menuitem"
+                            draggable="false"
+                            onclick="return path_browser_rename_entry(event, this);"
+                        ><?=htmlspecialchars($Dictionnary["PathBrowserRename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></button>
+                    </div>
+                </div>
 
-	    <?php if (pathinfo($content, PATHINFO_BASENAME) != "..") { ?>
 		<form action="<?=$api; ?>/<?=str_replace("/", "@", $content); ?>" method="delete" style="z-index: 3;">
 		    <?php $this_field = "path".$fbid.$language.pathinfo($content, PATHINFO_BASENAME); ?>
 		    <input type="hidden" name="path" id="<?=$this_field; ?>" value="" />

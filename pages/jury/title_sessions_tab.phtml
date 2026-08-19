@@ -1,0 +1,226 @@
+<?php
+if (!isset($title_sessions))
+    $title_sessions = fetch_title_sessions();
+if (!isset($jury_titles))
+    $jury_titles = fetch_jury_titles();
+$schools = fetch_school();
+$title_session_managers_by_school = [];
+foreach ($schools as $title_session_school)
+    $title_session_managers_by_school[(int)$title_session_school["id"]] = fetch_title_session_managers((int)$title_session_school["id"]);
+
+function title_session_manager_label(array $user)
+{
+    $name = trim(($user["first_name"] ?? "")." ".($user["family_name"] ?? ""));
+    if ($name == "")
+        $name = trim((string)($user["nickname"] ?? ""));
+    if ($name == "")
+        $name = $user["codename"] ?? "";
+    return ($name);
+}
+
+function title_session_document_hidden($model, array $chain)
+{
+    $hash = preg_replace('/[^a-zA-Z0-9_]/', '_', $model);
+    ?>
+    <input type="hidden" name="doc_<?=$hash; ?>" value="1" />
+    <input type="hidden" name="docref_<?=$hash; ?>" value="res_docs:fr/<?=htmlspecialchars($model, ENT_QUOTES); ?>.dab" />
+    <input type="hidden" name="chain" value="<?=htmlspecialchars(json_encode($chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
+    <?php
+}
+
+function title_session_base_document_chain(array $session)
+{
+    $chain = [
+        ["type" => "school", "prefix" => "School", "id" => (string)$session["id_school"]],
+        ["type" => "title_session", "prefix" => "TitleSession", "id" => (string)$session["id"]],
+    ];
+    if ((int)($session["id_session_manager"] ?? 0) > 0)
+        $chain[] = [
+            "type" => "user",
+            "prefix" => "SessionManager",
+            "id" => (string)$session["id_session_manager"],
+            "signatory" => "SessionManager",
+        ];
+    return ($chain);
+}
+?>
+<div class="jury_page jury_title_sessions_page">
+    <section class="jury_card">
+        <h3><?=$Dictionnary["AddTitleSession"] ?? "Ajouter une session de titre"; ?></h3>
+        <form method="post" action="/api/certification/-1/title-session" onsubmit="return certification_submit(this, {clear_form: true});">
+            <div class="jury_form_grid title_session_grid">
+                <div class="jury_field">
+                    <label><?=$Dictionnary["School"] ?? "École"; ?></label>
+                    <select name="id_school" required onchange="title_session_filter_managers(this.form);">
+                        <option value=""></option>
+                        <?php foreach ($schools as $school) { ?>
+                            <option value="<?=$school["id"]; ?>"><?=htmlentities($school["name"] ?? $school["codename"]); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                <div class="jury_field">
+                    <label><?=$Dictionnary["Certification"] ?? "Certification"; ?></label>
+                    <select name="id_title" required>
+                        <option value=""></option>
+                        <?php foreach ($jury_titles as $title) { ?>
+                            <option value="<?=$title["id"]; ?>"><?=htmlentities(jury_title_name($title)); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                <div class="jury_field"><label><?=$Dictionnary["StartDate"] ?? "Date de début"; ?></label><input type="date" name="start_date" required /></div>
+                <div class="jury_field"><label><?=$Dictionnary["EndDate"] ?? "Date de fin"; ?></label><input type="date" name="end_date" required /></div>
+                <div class="jury_field"><label><?=$Dictionnary["StartTime"] ?? "Heure de début"; ?></label><input type="time" name="start_time" /></div>
+                <div class="jury_field"><label><?=$Dictionnary["EndTime"] ?? "Heure de fin"; ?></label><input type="time" name="end_time" /></div>
+                <div class="jury_field"><label><?=$Dictionnary["JuryArrivalTime"] ?? "Heure de convocation des jurys"; ?></label><input type="time" name="jury_arrival_time" value="08:30" required /></div>
+                <div class="jury_field">
+                    <label><?=$Dictionnary["SessionManager"] ?? "Responsable de session"; ?></label>
+                    <select name="id_session_manager" data-title-session-manager-select>
+                        <option value="">—</option>
+                        <?php foreach ($title_session_managers_by_school as $manager_school_id => $managers) { ?>
+                            <?php foreach ($managers as $manager) { ?>
+                                <option value="<?=$manager["id"]; ?>" data-school="<?=$manager_school_id; ?>" hidden disabled><?=htmlentities(title_session_manager_label($manager)); ?> (<?=htmlentities($manager["codename"]); ?>)</option>
+                            <?php } ?>
+                        <?php } ?>
+                    </select>
+                </div>
+            </div>
+            <div class="jury_form_actions"><input type="submit" value="<?=$Dictionnary["Add"] ?? "Ajouter"; ?>" /></div>
+        </form>
+    </section>
+
+    <section class="jury_card">
+        <h3><?=$Dictionnary["TitleSessions"] ?? "Sessions de titre"; ?></h3>
+        <?php if (!count($title_sessions)) { ?>
+            <p class="smalltext"><?=$Dictionnary["NoTitleSession"] ?? "Aucune session de titre n'est définie."; ?></p>
+        <?php } ?>
+        <div class="title_session_list">
+        <?php foreach ($title_sessions as $title_session) { ?>
+            <article class="title_session_row">
+                <div class="title_session_heading">
+                    <strong><?=htmlentities($title_session["title_name"] ?? $title_session["title_codename"]); ?></strong>
+                    <span>#<?=$title_session["id"]; ?> — <?=htmlentities($title_session["school_name"] ?? $title_session["school_codename"]); ?></span>
+                    <span><?=htmlentities(title_session_date_value($title_session["start_date"])); ?> → <?=htmlentities(title_session_date_value($title_session["end_date"])); ?></span>
+                </div>
+
+                <form method="put" action="/api/certification/<?=$title_session["id"]; ?>/title-session" onsubmit="return certification_submit(this);">
+                    <div class="jury_form_grid title_session_grid">
+                        <div class="jury_field"><label><?=$Dictionnary["StartDate"] ?? "Date de début"; ?></label><input type="date" name="start_date" value="<?=htmlentities($title_session["start_date"]); ?>" required /></div>
+                        <div class="jury_field"><label><?=$Dictionnary["EndDate"] ?? "Date de fin"; ?></label><input type="date" name="end_date" value="<?=htmlentities($title_session["end_date"]); ?>" required /></div>
+                        <div class="jury_field"><label><?=$Dictionnary["StartTime"] ?? "Heure de début"; ?></label><input type="time" name="start_time" value="<?=htmlentities(substr((string)($title_session["start_time"] ?? ""), 0, 5)); ?>" /></div>
+                        <div class="jury_field"><label><?=$Dictionnary["EndTime"] ?? "Heure de fin"; ?></label><input type="time" name="end_time" value="<?=htmlentities(substr((string)($title_session["end_time"] ?? ""), 0, 5)); ?>" /></div>
+                        <div class="jury_field"><label><?=$Dictionnary["JuryArrivalTime"] ?? "Heure de convocation des jurys"; ?></label><input type="time" name="jury_arrival_time" value="<?=htmlentities(substr((string)$title_session["jury_arrival_time"], 0, 5)); ?>" required /></div>
+                        <div class="jury_field">
+                            <label><?=$Dictionnary["SessionManager"] ?? "Responsable de session"; ?></label>
+                            <select name="id_session_manager">
+                                <option value="">—</option>
+                                <?php foreach ($title_session["managers"] as $manager) { ?>
+                                    <option value="<?=$manager["id"]; ?>" <?=(int)$manager["id"] == (int)($title_session["id_session_manager"] ?? 0) ? "selected" : ""; ?>><?=htmlentities(title_session_manager_label($manager)); ?> (<?=htmlentities($manager["codename"]); ?>)</option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="jury_form_actions"><input type="submit" value="<?=$Dictionnary["Save"] ?? "Enregistrer"; ?>" /></div>
+                </form>
+
+                <div class="title_session_columns">
+                    <div class="jury_form_block">
+                        <div class="jury_form_block_title"><?=$Dictionnary["CalendarSessions"] ?? "Sessions calendrier"; ?></div>
+                        <form method="post" action="/api/certification/<?=$title_session["id"]; ?>/title-session-session" onsubmit="return certification_submit(this);">
+                            <input type="number" min="1" name="session" placeholder="ID session" required />
+                            <input type="submit" value="+" />
+                        </form>
+                        <?php if (!count($title_session["sessions"])) { ?><div class="smalltext">/</div><?php } ?>
+                        <?php foreach ($title_session["sessions"] as $linked) { ?>
+                            <form class="title_session_link" method="delete" action="/api/certification/<?=$title_session["id"]; ?>/title-session-session" onsubmit="return certification_submit(this);">
+                                <input type="hidden" name="session" value="<?=$linked["id_session"]; ?>" />
+                                <a href="index.php?p=ActivityMenu&amp;a=<?=$linked["id_activity"]; ?>&amp;b=<?=$linked["id_session"]; ?>">
+                                    #<?=$linked["id_session"]; ?> — <?=htmlentities($linked["activity_name"] ?: $linked["activity_codename"]); ?> — <?=htmlentities($linked["begin_date"] ?? ""); ?>
+                                </a>
+                                <input type="submit" value="×" />
+                            </form>
+                        <?php } ?>
+                    </div>
+
+                    <div class="jury_form_block">
+                        <div class="jury_form_block_title"><?=$Dictionnary["Juries"] ?? "Jurys"; ?></div>
+                        <form method="post" action="/api/certification/<?=$title_session["id"]; ?>/title-session-jury" onsubmit="return certification_submit(this);">
+                            <select name="jury" required>
+                                <option value=""></option>
+                                <?php foreach ($title_session["eligible_juries"] as $jury) { ?>
+                                    <option value="<?=htmlentities($jury["codename"]); ?>"><?=htmlentities(jury_person_name($jury)); ?> (<?=htmlentities($jury["codename"]); ?>)</option>
+                                <?php } ?>
+                            </select>
+                            <input type="submit" value="+" />
+                        </form>
+                        <?php foreach ($title_session["juries"] as $jury) { ?>
+                            <div class="title_session_person">
+                                <form method="delete" action="/api/certification/<?=$title_session["id"]; ?>/title-session-jury" onsubmit="return certification_submit(this);">
+                                    <input type="hidden" name="jury" value="<?=htmlspecialchars($jury["codename"], ENT_QUOTES); ?>" />
+                                    <a href="<?=profile($jury["id"]); ?>"><?=htmlentities(jury_person_name($jury)); ?></a>
+                                    <input type="submit" value="×" />
+                                </form>
+                                <form method="post" action="/api/doc/0/generate" target="_blank">
+                                    <?php
+                                    $chain = title_session_base_document_chain($title_session);
+                                    $chain[] = ["type" => "jury", "prefix" => "Jury", "id" => (string)$jury["id"]];
+                                    title_session_document_hidden("convocation_jury", $chain);
+                                    ?>
+                                    <input type="submit" value="<?=$Dictionnary["GenerateJuryConvocation"] ?? "Convocation"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
+                                </form>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <details class="title_session_candidates">
+                    <summary><?=$Dictionnary["Candidates"] ?? "Candidats"; ?> (<?=count($title_session["candidates"]); ?>)</summary>
+                    <?php if (!count($title_session["candidates"])) { ?><div class="smalltext">/</div><?php } ?>
+                    <?php foreach ($title_session["candidates"] as $candidate) { ?>
+                        <div class="title_session_person">
+                            <a href="<?=profile($candidate["id"]); ?>"><?=htmlentities(jury_person_name($candidate)); ?></a>
+                            <span class="smalltext"><?=htmlentities($candidate["arrival_date"]); ?> <?=htmlentities($candidate["arrival_time"]); ?></span>
+                            <form method="post" action="/api/doc/0/generate" target="_blank">
+                                <?php
+                                $chain = title_session_base_document_chain($title_session);
+                                $chain[] = ["type" => "student", "prefix" => "Student", "id" => (string)$candidate["id"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.Number", "value" => $candidate["candidate_number"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.ArrivalDate", "value" => $candidate["arrival_date"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.ArrivalTime", "value" => $candidate["arrival_time"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.VAENotice", "value" => ""];
+                                $chain[] = ["type" => "field", "key" => "Candidate.AuthorizationNotice", "value" => ""];
+                                title_session_document_hidden("convocation_eleve", $chain);
+                                ?>
+                                <input type="submit" value="<?=$Dictionnary["GenerateCandidateConvocation"] ?? "Convocation"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
+                            </form>
+                        </div>
+                    <?php } ?>
+                </details>
+
+                <form class="title_session_archive" method="delete" action="/api/certification/<?=$title_session["id"]; ?>/title-session" onsubmit="return window.confirm('<?=$Dictionnary["ConfirmDeletion"] ?? "Confirmer la suppression ?"; ?>') && certification_submit(this);">
+                    <input type="submit" value="<?=$Dictionnary["Archive"] ?? "Archiver"; ?>" />
+                </form>
+            </article>
+        <?php } ?>
+        </div>
+    </section>
+</div>
+
+<script>
+function title_session_filter_managers(form)
+{
+    var school = form.querySelector('[name="id_school"]');
+    var managers = form.querySelector('[data-title-session-manager-select]');
+    var selectedSchool = school ? school.value : '';
+
+    if (!managers)
+        return ;
+    Array.prototype.forEach.call(managers.options, function(option) {
+        var optionSchool = option.getAttribute('data-school');
+        var visible = optionSchool === null || optionSchool == selectedSchool;
+        option.hidden = !visible;
+        option.disabled = !visible;
+    });
+    if (managers.selectedOptions.length && managers.selectedOptions[0].disabled)
+        managers.value = '';
+}
+</script>

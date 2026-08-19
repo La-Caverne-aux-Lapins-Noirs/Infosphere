@@ -38,10 +38,10 @@ function fetch_laboratory($id = -1, $by_name = false)
     ", $by_name ? "codename" : "");
     foreach ($lab["user"] as &$usr)
     {
-	$pic = $Configuration->UsersDir().$usr["codename"]."/avatar.png";
+	$pic = $Configuration->UsersDir().$usr["codename"]."/public/avatar.png";
 	if (file_exists($pic))
 	    $usr["avatar"] = $pic;
-	$pic = $Configuration->UsersDir().$usr["codename"]."/photo.png";
+	$pic = $Configuration->UsersDir().$usr["codename"]."/admin/photo.png";
 	if (file_exists($pic))
 	    $usr["photo"] = $pic;
     }

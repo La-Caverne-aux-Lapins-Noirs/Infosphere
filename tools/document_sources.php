@@ -134,12 +134,133 @@ function document_reference_to_path($reference)
     return ($full);
 }
 
+
+
+function document_reference_from_editor_path($path)
+{
+    $path = document_source_normalize_path($path);
+    if ($path == "" || !document_source_path_is_visible($path))
+        return (NULL);
+
+    $project_root = realpath(__DIR__."/..");
+    if ($project_root === false)
+        return (NULL);
+    $absolute = realpath($project_root.DIRECTORY_SEPARATOR.$path);
+    if ($absolute === false || !is_file($absolute))
+        return (NULL);
+
+    foreach (document_source_roots() as $source => $root)
+    {
+        $source_root = realpath($root["root"]);
+        if ($source_root === false)
+            continue ;
+        $prefix = rtrim($source_root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        if (strncmp($absolute, $prefix, strlen($prefix)) !== 0)
+            continue ;
+        $relative = str_replace(DIRECTORY_SEPARATOR, "/", substr($absolute, strlen($prefix)));
+        if ($relative != "" && document_source_path_is_visible($relative))
+            return (document_reference_from_source_path($source, $relative));
+    }
+    return (NULL);
+}
+
+function document_model_workflow_mailbox($file)
+{
+    if (!is_file($file) || !is_readable($file))
+        return ("");
+    $content = @file_get_contents($file);
+    if ($content === false)
+        return ("");
+
+    $stack = [];
+    foreach (preg_split('/\r\n|\r|\n/', $content) as $line)
+    {
+        $trim = trim($line);
+        if ($trim == "" || $trim[0] == "'")
+            continue ;
+        if (preg_match('/^\[([A-Za-z_][A-Za-z0-9_]*)\s*$/D', $trim, $match))
+        {
+            $stack[] = $match[1];
+            continue ;
+        }
+        if ($trim === "]")
+        {
+            if (count($stack))
+                array_pop($stack);
+            continue ;
+        }
+        if (count($stack) === 1 && $stack[0] === "Workflow"
+            && preg_match('/^Mailbox\s*=\s*"([^"]*)"\s*$/D', $trim, $match))
+        {
+            $mailbox = strtolower(trim(stripcslashes($match[1])));
+            if (function_exists("school_mailbox_purpose_is_valid"))
+                return (school_mailbox_purpose_is_valid($mailbox) ? $mailbox : "");
+            return (preg_match('/^[a-z][a-z0-9_-]{0,63}$/D', $mailbox) ? $mailbox : "");
+        }
+    }
+    return ("");
+}
+
+function document_title_fallback($path)
+{
+    $name = pathinfo((string)$path, PATHINFO_FILENAME);
+    $name = trim(preg_replace('/[_-]+/', ' ', $name));
+    if ($name == "")
+        return ("Document");
+    return (function_exists("mb_strtoupper")
+        ? mb_strtoupper(mb_substr($name, 0, 1)).mb_substr($name, 1)
+        : ucfirst($name));
+}
+
+function document_title_from_file($file, $fallback = "")
+{
+    static $cache = [];
+
+    $file = (string)$file;
+    if ($fallback == "")
+        $fallback = document_title_fallback($file);
+    $cache_key = $file."\0".$fallback;
+    if (isset($cache[$cache_key]))
+        return ($cache[$cache_key]);
+
+    $content = @file_get_contents($file);
+    if ($content !== false &&
+        preg_match('/^[ \\t]*Title[ \\t]*=[ \\t]*"((?:\\\\.|[^"\\\\])*)"/m', $content, $match))
+    {
+        $title = trim(stripcslashes($match[1]));
+        if ($title != "")
+            return ($cache[$cache_key] = $title);
+    }
+    return ($cache[$cache_key] = $fallback);
+}
+
 function document_reference_label($reference)
 {
+    $reference = (string)$reference;
     $split = explode(":", $reference, 2);
     if (count($split) != 2)
-        return ($reference);
-    return ($split[0]." / ".$split[1]);
+    {
+        $relative = document_source_normalize_path($reference);
+        if ($relative != "" && pathinfo($relative, PATHINFO_EXTENSION) == "dab" &&
+            document_source_path_is_visible($relative))
+        {
+            $candidate = realpath(__DIR__."/../".$relative);
+            if ($candidate !== false && is_file($candidate))
+                return (document_title_from_file($candidate, document_title_fallback($relative)));
+        }
+        return (document_title_fallback($reference));
+    }
+
+    $roots = document_source_roots();
+    $source = $split[0];
+    $path = document_source_normalize_path($split[1]);
+    if (!isset($roots[$source]) || $path == "" || !document_source_path_is_visible($path))
+        return (document_title_fallback($path != "" ? $path : $reference));
+
+    $file = rtrim($roots[$source]["root"], "/")."/".$path;
+    if (!is_file($file))
+        return (document_title_fallback($path));
+    return (document_title_from_file($file, document_title_fallback($path)));
 }
 
 function get_contract_document_sources()

@@ -55,7 +55,7 @@ function user_albedo_load_state($id_user, $condition_key)
 
     $id_user = (int)$id_user;
     $condition_key = $Database->real_escape_string($condition_key);
-    return (db_select_one("\n        * FROM user_guidance\n        WHERE id_user = $id_user\n          AND condition_key = '$condition_key'\n        LIMIT 1\n    "));
+    return (db_select_one("\n        * FROM user_guidance\n        WHERE id_user = $id_user\n          AND condition_key = '$condition_key'\n    "));
 }
 
 function user_albedo_save_state($id_user, $condition_key, $severity, $state_hash, $score, $details)
@@ -125,7 +125,7 @@ function user_albedo_ensure_medal($codename, $fr_name, $fr_description, $en_name
     $type = $positive ? 0 : 1;
     $command = user_albedo_default_medal_command($codename);
     $command_sql = $Database->real_escape_string($command);
-    $existing = db_select_one("id, tags, type, command FROM medal WHERE codename = '$codename_sql' LIMIT 1");
+    $existing = db_select_one("id, tags, type, command FROM medal WHERE codename = '$codename_sql'");
     if ($existing != NULL)
     {
         $updates = [];
@@ -176,7 +176,7 @@ function user_albedo_award_medal($id_user, $medal, $positive = true)
         return (false);
 
     $result = $positive ? 1 : -1;
-    $existing = db_select_one("\n        id FROM user_medal\n        WHERE id_user = $id_user\n          AND id_medal = $id_medal\n          AND id_activity = -1\n          AND id_team = -1\n          AND id_user_team = -1\n        LIMIT 1\n    ");
+    $existing = db_select_one("\n        id FROM user_medal\n        WHERE id_user = $id_user\n          AND id_medal = $id_medal\n          AND id_activity = -1\n          AND id_team = -1\n          AND id_user_team = -1\n    ");
     if ($existing != NULL)
         return (false);
 

@@ -164,7 +164,19 @@
     font-weight: bold;
 }
 
+#registration-save {
+    border: 1px solid #5b6875;
+    background: #2c343c;
+    color: #fff;
+}
+
+#registration-save:hover,
+#registration-save:focus {
+    background: #3b4651;
+}
+
 .registration-form-page.is-dirty #registration-save {
+    border-color: #d99425;
     background: #a76600;
     color: #fff;
 }
@@ -204,4 +216,40 @@
     width: 100%;
     height: min(70vh, 900px);
     border: 0;
+}
+
+.registration-form-required
+{
+    color: #ffb23c;
+}
+
+.registration-form-readonly-value
+{
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 1px solid rgba(120, 120, 120, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.08);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.registration-form-field.is-readonly
+{
+    opacity: 0.92;
+}
+
+.registration-form-other-information
+{
+    margin: 18px 0;
+    padding: 10px 12px 0 12px;
+    border: 1px solid rgba(80, 150, 85, 0.35);
+    border-radius: 6px;
+}
+
+.registration-form-other-information > summary
+{
+    cursor: pointer;
+    padding: 2px 0 10px 0;
+    font-weight: bold;
 }

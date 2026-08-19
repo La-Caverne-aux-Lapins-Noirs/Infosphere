@@ -79,6 +79,8 @@ $js = "silent_submit(this, '$fbid$language');";
     data-path-browser-id="<?=htmlspecialchars((string)$id, ENT_QUOTES); ?>"
     data-path-browser-type="<?=htmlspecialchars((string)$type, ENT_QUOTES); ?>"
     data-path-browser-language="<?=htmlspecialchars((string)$language, ENT_QUOTES); ?>"
+    data-path-browser-rename-url="/api/filebrowser/0/rename"
+    data-path-browser-rename-prompt="<?=htmlspecialchars($Dictionnary["PathBrowserRenamePrompt"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
     <?php if (isset($file_browser_height)) { ?>
 	   style="height: <?=$file_browser_height; ?>; overflow: auto;"
            <?php unset($file_browser_height); ?>

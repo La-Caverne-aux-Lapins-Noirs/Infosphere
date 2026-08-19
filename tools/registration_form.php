@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/document_signatures.php");
+require_once (__DIR__."/document_sources.php");
 
 function registration_form_kinds()
 {
@@ -80,37 +81,57 @@ function registration_form_document_chain(array $user, $id_creator, $target_year
     return ($chain);
 }
 
-function registration_form_build_document_schema(array $fields)
+function registration_form_build_document_schema(array $metadata, $role = "")
 {
+    $role = trim((string)$role);
+    $definition = dabsic_form_role_definition($metadata, $role);
+    if ($definition == NULL)
+        return ([
+            "requested_fields" => [],
+            "fields" => [],
+            "groups" => [],
+            "group_labels" => [],
+            "group_access" => [],
+            "signature_groups" => [],
+        ]);
+
+    $read = array_flip(dabsic_form_role_groups($metadata, $role, "read"));
+    $edit = array_flip(dabsic_form_role_groups($metadata, $role, "edit"));
+    $validate = array_flip(dabsic_form_role_groups($metadata, $role, "validate"));
     $schema = [
         "requested_fields" => [],
         "fields" => [],
         "groups" => [],
+        "group_labels" => [],
+        "group_access" => [],
         "signature_groups" => [],
     ];
-    foreach ($fields as $field)
+    foreach (($metadata["group_order"] ?? []) as $group)
     {
-        $field = dabsic_form_normalize_field($field);
-        if ($field === NULL)
+        if (!isset($read[$group]))
             continue ;
-        $schema["requested_fields"][] = $field;
-        $group = registration_form_group($field);
-        if ($group == "")
-            $group = "Document";
-        $schema["groups"][$group] = true;
-        $schema["fields"][$field] = [
-            "label" => registration_form_label($field),
-            "type" => registration_form_field_type($field),
-            "group" => $group,
+        $schema["groups"][] = $group;
+        $schema["group_labels"][$group] = (string)($metadata["groups"][$group]["label"] ?? $group);
+        $schema["group_access"][$group] = [
+            "edit" => isset($edit[$group]),
+            "validate" => isset($validate[$group]),
         ];
+        foreach (($metadata["groups"][$group]["fields"] ?? []) as $field)
+        {
+            $field_definition = $metadata["fields"][$field] ?? [];
+            $editable = isset($edit[$group]);
+            if ($editable)
+                $schema["requested_fields"][] = $field;
+            $schema["fields"][$field] = [
+                "label" => (string)($field_definition["label"] ?? registration_form_label($field)),
+                "custom_label" => true,
+                "type" => registration_form_field_type($field),
+                "group" => $group,
+                "editable" => $editable,
+                "required" => !empty($field_definition["required"]),
+            ];
+        }
     }
-    $schema["requested_fields"] = array_values(array_unique($schema["requested_fields"]));
-    natcasesort($schema["requested_fields"]);
-    $schema["requested_fields"] = array_values($schema["requested_fields"]);
-    $schema["groups"] = array_keys($schema["groups"]);
-    natcasesort($schema["groups"]);
-    $schema["groups"] = array_values($schema["groups"]);
-    ksort($schema["fields"], SORT_NATURAL | SORT_FLAG_CASE);
     return ($schema);
 }
 
@@ -536,6 +557,28 @@ function registration_form_fetch_invitation($token, $allow_completed = true)
         $row["kind"] = registration_form_profile_kind();
         $kind = registration_form_profile_kind();
     }
+    if (registration_form_is_document_kind($kind))
+    {
+        $document = isset($row["schema"]["document"]) && is_array($row["schema"]["document"])
+            ? $row["schema"]["document"] : [];
+        $known = dabsic_form_prefill_from_chain((string)($document["chain"] ?? ""));
+        $output_key = trim((string)($document["output"] ?? ""));
+        if ($output_key != "")
+        {
+            $output = dabsic_form_resolve_output($output_key, false, (int)$row["id_user"]);
+            if ($output["ok"])
+            {
+                $loaded_output = dabsic_form_load_output_values($output);
+                if ($loaded_output["ok"])
+                    $known = array_merge($known, $loaded_output["values"]);
+            }
+        }
+        foreach (($row["schema"]["fields"] ?? []) as $field => $definition)
+            if (empty($definition["editable"]))
+                $row["answers_data"][$field] = array_key_exists($field, $known)
+                    ? (string)$known[$field] : "";
+    }
+
     if (registration_form_is_profile_kind($kind))
     {
         // PROFILE a un schéma canonique. Ne jamais conserver les champs ECL/OF/
@@ -838,7 +881,7 @@ function registration_form_create_profile_invitation($id_user, $id_creator)
     ]);
 }
 
-function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $signature_bindings = [])
+function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $signature_bindings = [], $form_role = "Beneficiaire")
 {
     global $Database;
 
@@ -847,6 +890,9 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     $target_year = (int)$target_year;
     if ($target_year < 0 || $target_year > 5)
         return (["ok" => false, "error" => "InvalidParameter", "details" => "target_year"]);
+    $form_role = trim((string)$form_role);
+    if ($form_role != "" && !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $form_role))
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "form_role"]);
     if (!is_string($model_hash) || !preg_match('/^[a-f0-9]{32}$/i', $model_hash))
         return (["ok" => false, "error" => "InvalidParameter", "details" => "model_hash"]);
 
@@ -859,6 +905,15 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     $resolved_reference = dabsic_editor_resolve_file($reference, false);
     if (!$resolved_reference["ok"])
         return ($resolved_reference);
+    $label = document_title_from_file(
+        $resolved_reference["absolute"],
+        trim((string)$label) != "" ? trim((string)$label) : document_title_fallback($resolved_reference["relative"])
+    );
+
+    $source_reference = function_exists("document_reference_from_editor_path")
+        ? (string)(document_reference_from_editor_path($resolved_reference["relative"]) ?? "") : "";
+    $workflow_mailbox = function_exists("document_model_workflow_mailbox")
+        ? document_model_workflow_mailbox($resolved_reference["absolute"]) : "";
 
     $signature_schema = document_signature_model_slots($resolved_reference["absolute"]);
     $signature_slots = array_keys($signature_schema);
@@ -883,20 +938,41 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     if (!$loaded["ok"])
         return ($loaded);
 
-    $schema = registration_form_build_document_schema($discovery["fields"]);
+    $form_metadata = $discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
+    if (dabsic_form_role_definition($form_metadata, $form_role) == NULL)
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "form_role"]);
+    $schema = registration_form_build_document_schema($form_metadata, $form_role);
+    if (!count($schema["fields"] ?? []))
+        return (["ok" => false, "error" => "CannotEdit", "details" => "Aucun groupe lisible pour le rôle ".$form_role]);
+
+    $reference_content = @file_get_contents($resolved_reference["absolute"]);
+    if ($reference_content === false)
+        return (["ok" => false, "error" => "DabsicEditorCannotRead"]);
+    $form_fields = array_keys($form_metadata["fields"] ?? []);
+    natcasesort($form_fields);
+    $form_fields = array_values($form_fields);
+    $form_roles = $form_metadata["roles"] ?? [];
+
     $schema["document"] = [
         "reference" => $resolved_reference["relative"],
+        "source_reference" => $source_reference,
+        "reference_hash" => hash("sha256", $reference_content),
+        "form_fields" => $form_fields,
         "output" => $output_key,
         "chain" => $chain_json,
         "label" => trim((string)$label),
         "target_year" => $target_year,
         "model_hash" => strtolower($model_hash),
         "signature_bindings" => $signature_bindings,
+        "form_role" => $form_role,
+        "form_roles" => $form_roles,
+        "mailbox" => $workflow_mailbox,
     ];
+    $known_values = array_merge(dabsic_form_prefill_from_chain($chain_json), $loaded["values"]);
     $answers = [];
     foreach (array_keys($schema["fields"]) as $field)
-        $answers[$field] = array_key_exists($field, $loaded["values"])
-            ? (string)$loaded["values"][$field] : "";
+        $answers[$field] = array_key_exists($field, $known_values)
+            ? (string)$known_values[$field] : "";
 
     $schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $answers_json = json_encode($answers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -918,9 +994,19 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
         (id_user, id_creator, recipient_mail, recipient_name, kind, token_hash, fields, answers, expires_at)
         VALUES ($id_user, $id_creator, '$recipient_mail', '$recipient_name', '$kind_sql', '$hash', '$schema_sql', '$answers_sql', DATE_ADD(NOW(), INTERVAL 14 DAY))"))
         return (["ok" => false, "error" => "CannotEdit"]);
+    $id_form = (int)$Database->insert_id;
+    require_once (__DIR__."/document_workflow.php");
+    document_workflow_ensure_form_tasks([
+        "id" => $id_form,
+        "id_user" => $id_user,
+        "fields" => $schema_json,
+        "completed_at" => NULL,
+        "revoked_at" => NULL,
+    ]);
 
     return ([
         "ok" => true,
+        "id" => $id_form,
         "token" => $token,
         "url" => registration_form_public_url($token),
         "student" => $user,
@@ -1076,6 +1162,11 @@ function registration_form_save_document_invitation(array $invitation, array $an
     $reference_content = @file_get_contents($resolved_reference["absolute"]);
     if ($reference_content === false)
         return (["ok" => false, "error" => "DabsicEditorCannotRead"]);
+    $expected_reference_hash = strtolower(trim((string)($document["reference_hash"] ?? "")));
+    if ($expected_reference_hash != "" &&
+        (!preg_match('/^[a-f0-9]{64}$/D', $expected_reference_hash) ||
+         !hash_equals($expected_reference_hash, hash("sha256", $reference_content))))
+        return (["ok" => false, "error" => "DabsicFormChanged"]);
 
     $output = dabsic_form_resolve_output($output_key, false, $id_user);
     if (!$output["ok"])
@@ -1087,10 +1178,71 @@ function registration_form_save_document_invitation(array $invitation, array $an
     if (!$overrides["ok"])
         return ($overrides);
 
+    // Rebuild the current declarative form model. The reference hash above
+    // protects against model changes; the explicit field list gives a second,
+    // human-readable invariant for persisted invitations.
+    $discovery = dabsic_form_discover_fields($reference, "docbuilder", $chain);
+    if (!$discovery["ok"])
+        return ($discovery);
+    $form_metadata = $discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
+    $current_fields = array_keys($form_metadata["fields"] ?? []);
+    natcasesort($current_fields);
+    $current_fields = array_values($current_fields);
+    if (isset($document["form_fields"]) && is_array($document["form_fields"]))
+    {
+        $expected_fields = $document["form_fields"];
+        natcasesort($expected_fields);
+        $expected_fields = array_values($expected_fields);
+        if ($expected_fields !== $current_fields)
+            return (["ok" => false, "error" => "DabsicFormChanged"]);
+    }
+
+    // Only fields editable by the recipient participate in concurrency
+    // protection. Read-only groups are allowed to evolve on the staff side.
+    $concurrent = [];
+    $invitation_values = $invitation["answers_data"] ?? [];
+    $prefilled = dabsic_form_prefill_from_chain($chain);
+    foreach (($schema["fields"] ?? []) as $field => $definition)
+    {
+        if (empty($definition["editable"]))
+            continue ;
+        $invitation_value = array_key_exists($field, $invitation_values)
+            ? (string)$invitation_values[$field] : "";
+        $current_value = array_key_exists($field, $loaded["values"])
+            ? (string)$loaded["values"][$field]
+            : (string)($prefilled[$field] ?? "");
+        if ($invitation_value !== $current_value)
+            $concurrent[] = $field;
+    }
+    if (count($concurrent))
+        return ([
+            "ok" => false,
+            "error" => "DocumentFormConcurrentEdit",
+            "details" => implode("\n", $concurrent)
+        ]);
+
+    $recipient_role = trim((string)($schema["document"]["form_role"] ?? ""));
+    $editable_answers = [];
+    foreach (($schema["fields"] ?? []) as $field => $definition)
+        if (!empty($definition["editable"]) && array_key_exists($field, $answers))
+            $editable_answers[$field] = $answers[$field];
+
+    $effective_values = array_merge($prefilled, $loaded["values"], $editable_answers);
+    if ($finalize)
+    {
+        $missing = dabsic_form_missing_required_fields($form_metadata, $effective_values, $recipient_role);
+        if (count($missing))
+            return ([
+                "ok" => false,
+                "error" => "DocumentRequiredFields",
+                "details" => implode("\n", array_values($missing))
+            ]);
+    }
+
     $saved = dabsic_form_save(
         $reference,
         $output_key,
-        $answers,
+        $editable_answers,
         $overrides["values"],
         hash("sha256", $reference_content),
         $loaded["hash"],
@@ -1099,7 +1251,9 @@ function registration_form_save_document_invitation(array $invitation, array $an
         $overrides["exists"] ? "1" : "0",
         "docbuilder",
         $chain,
-        $id_user
+        $id_user,
+        true,
+        $recipient_role
     );
     if (!$saved["ok"])
         return ($saved);
@@ -1110,6 +1264,25 @@ function registration_form_save_document_invitation(array $invitation, array $an
     $completed = $finalize ? ", completed_at = NOW()" : "";
     if (!$Database->query("UPDATE user_form SET answers = '$answers_sql', last_saved_at = NOW()$completed WHERE id = $id"))
         return (["ok" => false, "error" => "CannotEdit"]);
+    if ($finalize)
+    {
+        require_once (__DIR__."/document_workflow.php");
+        $recipient_role = trim((string)($schema["document"]["form_role"] ?? ""));
+        if ($recipient_role != "")
+        {
+            $task = document_task_complete_form_role($id, $recipient_role, $id_user, $id_user);
+            if ($task->is_error())
+                add_log(REPORT, "Cannot complete document fill task $recipient_role for form $id: ".strval($task), $id_user);
+        }
+        $notification_form = $invitation;
+        $notification_form["schema"] = $schema;
+        $acknowledgement = document_workflow_notify_document_form_recipient_completed($notification_form);
+        if ($acknowledgement->is_error())
+            add_log(REPORT, "Cannot acknowledge document form completion to recipient: ".strval($acknowledgement), $id_user);
+        $notification = document_workflow_notify_document_form_completed($notification_form);
+        if ($notification->is_error())
+            add_log(REPORT, "Cannot notify school after document form completion: ".strval($notification), $id_user);
+    }
     add_log(EDITING_OPERATION,
         "Document form ".$reference." saved by user ".$id_user.($finalize ? " and finalized" : ""),
         $id_user
@@ -1131,8 +1304,9 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
     $invitation = $loaded["invitation"];
     $schema = $invitation["schema"];
     $allowed = $schema["fields"] ?? [];
+    $is_document_form = registration_form_is_document_kind($invitation["kind"] ?? "");
     foreach ($submitted as $field => $value)
-        if (!isset($allowed[$field]))
+        if (!isset($allowed[$field]) || ($is_document_form && empty($allowed[$field]["editable"])))
             return (["ok" => false, "error" => "DabsicFormChanged", "details" => $field]);
 
     $answers = $invitation["answers_data"];
@@ -1288,6 +1462,9 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
         return (["ok" => false, "error" => "InvalidParameter", "details" => "signature role"]);
     if (($instance["Signatures"][$role]["Status"] ?? "Pending") == "Signed")
         return (["ok" => false, "error" => "RegistrationFormCompleted"]);
+    $signature_definition = $instance["Signatures"][$role];
+    $semantic_role = document_workflow_signature_semantic_role($role, $signature_definition);
+    $role_label = document_workflow_signature_role_label($role, $signature_definition);
 
     $user = db_select_one("* FROM user WHERE id = ".(int)$signatory_user_id." AND authority != -1");
     if ($user == NULL)
@@ -1304,6 +1481,8 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
             "owner_user_id" => (int)$owner_user_id,
             "instance_id" => (string)$instance_id,
             "role" => (string)$role,
+            "semantic_role" => $semantic_role,
+            "role_label" => $role_label,
             "frozen_hash" => (string)($instance["FrozenHash"] ?? ""),
             "model" => (string)($instance["Model"] ?? ""),
         ],
@@ -1325,6 +1504,34 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
         (id_user, id_creator, recipient_mail, recipient_name, kind, token_hash, fields, answers, expires_at)
         VALUES (".(int)$signatory_user_id.", ".(int)$id_creator.", '$recipient_mail', '$recipient_name', '$kind_sql', '$hash', '$schema_sql', '{}', DATE_ADD(NOW(), INTERVAL 14 DAY))"))
         return (["ok" => false, "error" => "CannotEdit"]);
+
+    // Compatibility for instances frozen before document_task existed: the
+    // invitation itself is enough to materialize the missing signature task.
+    $task_definition = [
+        "action" => "sign",
+        "role" => $semantic_role,
+        "id_assignee_user" => (int)$signatory_user_id,
+    ];
+    $task_key = document_task_plan_key("instance", $instance_id, $role, $task_definition);
+    $task = document_task_create(
+        $task_key,
+        (int)$owner_user_id,
+        0,
+        $instance_id,
+        "sign",
+        $semantic_role,
+        $role_label,
+        (int)$signatory_user_id,
+        !empty($signature_definition["Required"]),
+        [
+            "source" => (string)($signature_definition["Source"] ?? ""),
+            "slot" => (string)$role,
+            "assignee_label" => trim((string)($user["first_name"] ?? "")." ".(string)($user["family_name"] ?? "")),
+        ]
+    );
+    if ($task->is_error())
+        add_log(REPORT, "Cannot materialize signature task $semantic_role/$role for instance $instance_id: ".strval($task), (int)$owner_user_id);
+
     return ([
         "ok" => true,
         "id" => (int)$Database->insert_id,
@@ -1378,8 +1585,10 @@ function registration_form_save_document_signature_invitation(array $invitation,
     $directory = $loaded->value["directory"];
     if (($instance["Status"] ?? "") != "AwaitingSignature")
         return (["ok" => false, "error" => "RegistrationFormCompleted"]);
-    if (!isset($instance["Signatures"][$role]))
+    if (!isset($instance["Signatures"][$role]) || !is_array($instance["Signatures"][$role]))
         return (["ok" => false, "error" => "DabsicFormChanged"]);
+    $semantic_role = document_workflow_signature_semantic_role($role, $instance["Signatures"][$role]);
+    $role_label = document_workflow_signature_role_label($role, $instance["Signatures"][$role]);
     $pdf = $directory.($instance["FrozenFile"] ?? "frozen.pdf");
     $frozen_hash = is_file($pdf) ? hash_file("sha256", $pdf) : false;
     if ($frozen_hash === false || !hash_equals((string)($instance["FrozenHash"] ?? ""), $frozen_hash)
@@ -1408,7 +1617,9 @@ function registration_form_save_document_signature_invitation(array $invitation,
         "version" => "document-signature-v1",
         "instance_id" => $instance_id,
         "owner_user_id" => $owner_user_id,
-        "role" => $role,
+        "slot" => $role,
+        "role" => $semantic_role,
+        "role_label" => $role_label,
         "frozen_sha256" => $frozen_hash,
         "signatory_user_id" => (int)$user["id"],
         "signatory_name" => trim((string)($user["first_name"] ?? "")." ".(string)($user["family_name"] ?? "")),
@@ -1442,9 +1653,15 @@ function registration_form_save_document_signature_invitation(array $invitation,
     if ($write_instance->is_error())
         return (["ok" => false, "error" => $write_instance->label ?? "CannotWriteFile", "details" => strval($write_instance)]);
 
+    $task = document_task_complete_instance_slot($instance_id, $role, (int)$user["id"], (int)$user["id"]);
+    if (!$task->is_error() && !empty($task->value["missing"]))
+        $task = document_task_complete_instance_role($instance_id, $semantic_role, (int)$user["id"], (int)$user["id"]);
+    if ($task->is_error())
+        add_log(REPORT, "Cannot complete document signature task $semantic_role/$role for instance $instance_id: ".strval($task), (int)$user["id"]);
+
     $id = (int)$invitation["id"];
     if (!$Database->query("UPDATE user_form SET completed_at = NOW(), last_saved_at = NOW() WHERE id = $id"))
         return (["ok" => false, "error" => "CannotEdit"]);
-    add_log(EDITING_OPERATION, "Document instance $instance_id signed as $role by user ".(int)$user["id"], (int)$user["id"]);
+    add_log(EDITING_OPERATION, "Document instance $instance_id signed as $semantic_role ($role) by user ".(int)$user["id"], (int)$user["id"]);
     return (["ok" => true, "completed" => true, "refresh" => false, "evidence_sha256" => $evidence_hash]);
 }
