@@ -58,7 +58,7 @@ if ((isset($_GET["c"]) || isset($_GET["d"])) && isset($left_panel[$Dictionnary["
 ob_start();
 $cnt = 0;
 $work = [];
-if (@count(@$activity->user_team["work"]))
+if (xcount(@$activity->user_team["work"]))
     $work = [$activity->user_team];
 else if (is_admin())
     $work = $activity->team;
@@ -113,6 +113,8 @@ if ($activity->evaluation != NULL)
     $right_panel[$Dictionnary["Evaluation"]] = __DIR__."/evaluation.php";
 
 $right_panel[$Dictionnary["OpinionOnActivity"]] = __DIR__."/opinion.php";
+if ($activity->is_assistant && count(activity_quiz_entrypoint_quizzes($activity, "rubric")) > 0)
+    $right_panel[$Dictionnary["QuizRubric"] ?? "Barèmes"] = __DIR__."/rubrics.php";
 if ($activity->is_teacher)
     $right_panel[$Dictionnary["Administration"]] = __DIR__."/administration.php";
 if ($activity->is_assistant)
@@ -127,6 +129,29 @@ if ($activity->is_assistant)
  }
  .content
  {
+ }
+
+ .activity-preaccess-list
+ {
+     display: grid;
+     gap: 8px;
+     margin: 16px auto;
+     max-width: 700px;
+     font-size: medium;
+ }
+ .activity-preaccess-item
+ {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     gap: 10px;
+     padding: 8px 10px;
+     border-radius: 6px;
+     background: rgba(0, 0, 0, .20);
+ }
+ .activity-preaccess-item.passed
+ {
+     background: rgba(35, 125, 70, .22);
  }
 
  .automatic_evaluation_status

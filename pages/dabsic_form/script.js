@@ -15,11 +15,14 @@
     function attachForm(root) {
         var inputs = Array.prototype.slice.call(root.querySelectorAll("[data-dabsic-field]"));
         var saveButton = document.getElementById("dabsic-form-save");
+        var finalizeButton = document.getElementById("dabsic-form-finalize");
         var stateBox = document.getElementById("dabsic-form-state");
         var messageBox = document.getElementById("dabsic-form-message");
         var baseline;
         var outputComplete = root.getAttribute("data-output-complete") === "1";
         var saving = false;
+        var savingPromise = null;
+        var finalizing = false;
         var savedTimer = null;
         var overrideList = document.getElementById("dabsic-form-overrides-list");
         var overrideAdd = document.getElementById("dabsic-form-override-add");
@@ -34,9 +37,71 @@
         function values() {
             var out = {};
             inputs.forEach(function (input) {
-                out[input.getAttribute("data-dabsic-field")] = input.value;
+                var field = input.getAttribute("data-dabsic-field");
+                if (input.type === "checkbox") {
+                    if (!Object.prototype.hasOwnProperty.call(out, field))
+                        out[field] = [];
+                    if (input.checked)
+                        out[field].push(input.value);
+                } else if (input.type === "radio") {
+                    if (input.checked)
+                        out[field] = input.value;
+                    else if (!Object.prototype.hasOwnProperty.call(out, field))
+                        out[field] = "";
+                } else
+                    out[field] = input.value;
             });
             return out;
+        }
+
+        function euros(cents) {
+            var amount = (Math.max(0, parseInt(cents, 10) || 0) / 100).toFixed(2).replace(".", ",");
+            var parts = amount.split(",");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            return parts.join(",") + " €";
+        }
+
+        function setFieldValue(field, value) {
+            var input = root.querySelector('[data-dabsic-field="' + field + '"]');
+            if (input)
+                input.value = value;
+        }
+
+        function updateBillingAmounts() {
+            var tariff = root.querySelector("[data-dabsic-billing-template]");
+            var foreign = root.querySelector('[data-dabsic-billing-foreign="1"]');
+            var option;
+            var registration;
+            var tuition;
+            var advance;
+
+            if (!tariff || !foreign)
+                return;
+            option = tariff.options[tariff.selectedIndex];
+            if (!option || tariff.value === "" || foreign.value === "" ||
+                !option.hasAttribute("data-billing-tuition")) {
+                [
+                    "InterviewReport.TariffTemplateName",
+                    "InterviewReport.TuitionPrice",
+                    "InterviewReport.TotalPrice",
+                    "InterviewReport.RegistrationFee",
+                    "InterviewReport.ForeignTuitionAdvance",
+                    "InterviewReport.AmountDueAtRegistration",
+                    "InterviewReport.TuitionBalance"
+                ].forEach(function (field) { setFieldValue(field, ""); });
+                return;
+            }
+
+            registration = parseInt(option.getAttribute("data-billing-registration"), 10) || 0;
+            tuition = parseInt(option.getAttribute("data-billing-tuition"), 10) || 0;
+            advance = foreign.value === "1" ? Math.round(tuition / 6) : 0;
+            setFieldValue("InterviewReport.TariffTemplateName", option.getAttribute("data-billing-name") || "");
+            setFieldValue("InterviewReport.TuitionPrice", euros(tuition));
+            setFieldValue("InterviewReport.TotalPrice", euros(registration + tuition));
+            setFieldValue("InterviewReport.RegistrationFee", euros(registration));
+            setFieldValue("InterviewReport.ForeignTuitionAdvance", euros(advance));
+            setFieldValue("InterviewReport.AmountDueAtRegistration", euros(registration + advance));
+            setFieldValue("InterviewReport.TuitionBalance", euros(tuition - advance));
         }
 
         function overrides() {
@@ -111,8 +176,12 @@
         function updateState() {
             var dirty = isDirty();
             root.classList.toggle("is-dirty", dirty);
-            saveButton.disabled = !dirty || saving;
-            if (saving)
+            saveButton.disabled = !dirty || saving || finalizing;
+            if (finalizeButton)
+                finalizeButton.disabled = saving || finalizing;
+            if (finalizing)
+                setState("saving", "Génération et envoi…");
+            else if (saving)
                 setState("saving", label("saving-label", "Sauvegarde…"));
             else if (dirty)
                 setState("dirty", label("dirty-label", "Modifications non sauvegardées"));
@@ -120,15 +189,17 @@
                 setState("", label("clean-label", "Aucune modification"));
         }
 
-        function save() {
+        function save(askConfirmation) {
             var sentValues;
             var sentOverrides;
             var body;
 
-            if (saving || !isDirty())
-                return;
-            if (!window.confirm(label("confirm-save", "Enregistrer ces données ?")))
-                return;
+            if (saving)
+                return savingPromise || Promise.resolve(false);
+            if (!isDirty())
+                return Promise.resolve(true);
+            if (askConfirmation !== false && !window.confirm(label("confirm-save", "Enregistrer ces données ?")))
+                return Promise.resolve(false);
 
             sentValues = values();
             sentOverrides = overrides();
@@ -150,7 +221,7 @@
             setMessage("", "error");
             updateState();
 
-            fetch(root.getAttribute("data-save-url"), {
+            savingPromise = fetch(root.getAttribute("data-save-url"), {
                 method: "POST",
                 credentials: "same-origin",
                 body: body
@@ -176,6 +247,7 @@
                 root.setAttribute("data-output-complete", "1");
                 outputComplete = true;
                 saving = false;
+                savingPromise = null;
                 setMessage(packet.msg || label("saved-label", "Données sauvegardées."), "success");
                 updateState();
                 if (!isDirty()) {
@@ -184,10 +256,77 @@
                         window.clearTimeout(savedTimer);
                     savedTimer = window.setTimeout(updateState, 1800);
                 }
+                return true;
             }).catch(function (error) {
                 saving = false;
+                savingPromise = null;
                 setMessage(error && error.message ? error.message :
                     label("network-error", "Erreur réseau."), "error");
+                updateState();
+                return false;
+            });
+            return savingPromise;
+        }
+
+        function finalizeReport() {
+            var url = root.getAttribute("data-finalize-url") || "";
+            var popup;
+
+            if (!url || finalizing)
+                return;
+            if (!window.confirm(label("confirm-finalize", "Valider, générer et envoyer ce compte rendu ?")))
+                return;
+
+            popup = window.open("", "_blank");
+            if (popup)
+                popup.document.write('<p style="font-family:sans-serif">Génération du compte rendu…</p>');
+            finalizing = true;
+            setMessage("", "error");
+            updateState();
+
+            save(false).then(function (saved) {
+                if (!saved)
+                    throw new Error("Le compte rendu n'a pas pu être sauvegardé avant sa validation.");
+                return fetch(url, {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+            }).then(function (response) {
+                var contentType = response.headers.get("Content-Type") || "";
+                if (response.ok && contentType.toLowerCase().indexOf("application/pdf") >= 0)
+                    return response.blob();
+                return response.text().then(function (text) {
+                    var packet = null;
+                    try {
+                        packet = JSON.parse(text);
+                    } catch (error) {
+                        throw new Error(text || response.statusText || "La génération du PDF a échoué.");
+                    }
+                    throw new Error(packet && packet.msg ? htmlToText(packet.msg) :
+                        response.statusText || "La génération du PDF a échoué.");
+                });
+            }).then(function (blob) {
+                var url = URL.createObjectURL(blob);
+                if (popup)
+                    popup.location = url;
+                else
+                    window.open(url, "_blank", "noopener");
+                window.setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                finalizing = false;
+                setMessage("Compte rendu finalisé, stocké et envoyé au prospect.", "success");
+                updateState();
+                try {
+                    if (window.opener && !window.opener.closed)
+                        window.opener.location.reload();
+                } catch (error) {
+                    // The PDF/report stays valid even if the opener cannot be refreshed.
+                }
+            }).catch(function (error) {
+                if (popup)
+                    popup.close();
+                finalizing = false;
+                setMessage(error && error.message ? error.message :
+                    "La génération du compte rendu a échoué.", "error");
                 updateState();
             });
         }
@@ -206,8 +345,15 @@
                 row.querySelector(".dabsic-form-override-key").focus();
                 updateState();
             });
+        if (finalizeButton)
+            finalizeButton.addEventListener("click", finalizeReport);
 
         root.addEventListener("input", updateState);
+        root.addEventListener("change", function (event) {
+            if (event.target.matches("[data-dabsic-billing-template], [data-dabsic-billing-foreign=\"1\"]"))
+                updateBillingAmounts();
+            updateState();
+        });
         root.addEventListener("submit", function (event) {
             event.preventDefault();
             save();

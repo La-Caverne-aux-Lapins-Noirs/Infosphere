@@ -70,6 +70,16 @@ $school_registration_fields = [
                         <input type="file" name="document_logo" accept="image/png,image/jpeg" />
                     </label>
                     <label class="school_admin_logo_field">
+                        Tampon / cachet de l'établissement
+                        <?php $stamp = school_stamp_path($school, false); ?>
+                        <?php $stamp_version = $stamp != "" && file_exists($stamp) ? filemtime($stamp) : 0; ?>
+                        <div
+                            class="school_admin_logo_preview"
+                            <?php if ($stamp != "") { ?>style="background-image: url('<?=$stamp; ?>?<?=$stamp_version; ?>');"<?php } ?>
+                        ></div>
+                        <input type="file" name="stamp" accept="image/png,image/jpeg" />
+                    </label>
+                    <label class="school_admin_logo_field">
                         Favicon de l'intranet (PNG)
                         <?php $favicon = school_favicon_path($school, false); ?>
                         <?php $favicon_version = $favicon != "" && file_exists($favicon) ? filemtime($favicon) : 0; ?>

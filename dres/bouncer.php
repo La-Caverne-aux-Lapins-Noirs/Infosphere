@@ -228,8 +228,18 @@ if ($type == "activity")
         && ($target[4] == "admin" || $target[4] == "private"))
         forbidden();
 
-    if ($target[2] == "configuration.dab")
+    $activity_basename = basename($_GET["target"]);
+    if (in_array($activity_basename, ["configuration.dab", "preaccess.dab", "satisfaction.dab", "rubric.dab"], true))
         not_found();
+
+    // A pre-access quiz protects the resource itself, not merely the HTML
+    // rendering of the activity page. Direct requests for the subject must
+    // therefore satisfy the same prerequisite as pages/instance/subject.php.
+    if (in_array($activity_basename, ["subject.pdf", "subject.txt", "subject.htm", "subject.html"], true)
+        && $User != NULL
+        && !$activity->is_director && !$activity->is_teacher && !$activity->is_assistant
+        && !activity_preaccess_can_read_subject($activity, (int)$User["id"]))
+        forbidden();
 
     if ($activity->registered == false || $activity->leader == 0)
         forbidden();
@@ -257,7 +267,28 @@ if ($type == "groups")
 
 if ($type == "support")
 {
-    // Il faut empêcher l'accès aux non inscrits à une activité référençant le support.
+    // Support sources are not public-by-login. A learner must both have access
+    // to the precise support asset through one of their activities and have
+    // passed the optional preaccess.dab attached to the support directory.
+    if (can_edit_supports())
+        render_file();
+    if ($User == NULL || count($target) < 4)
+        forbidden();
+    if (basename($_GET["target"]) === "preaccess.dab")
+        not_found();
+
+    $asset = support_quiz_asset_for_resource_path(
+        $_GET["target"],
+        $target[1] ?? NULL,
+        $target[2] ?? NULL
+    );
+    if (!is_array($asset))
+        forbidden();
+    // support_progress_can_current_user_access_asset() also applies the
+    // support pre-access gate, so keep one authoritative access check here.
+    if (!support_progress_can_current_user_access_asset((int)$asset["id"]))
+        forbidden();
+    render_file();
 }
 
 // Si il n'y a pas de restrictions particulières, on peut rendre le fichier.

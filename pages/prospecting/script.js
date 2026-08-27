@@ -570,44 +570,6 @@ window.addEventListener("resize", function() {
     prospecting_observe_action_heights(document);
 });
 
-function prospect_document_action(button, id, codename, school, analyst, target_training, target_level, target_entry, analysis_date)
-{
-    var form = button && button.form ? button.form : null;
-    var select = form ? form.querySelector('[name="document"]') : null;
-
-    if (!form || !select)
-        return (false);
-    if (select.value != 'needs-analysis')
-        return (silent_submitf(button, {after_success: open_generated_document}));
-
-    var chain = [];
-    if (school)
-        chain.push({type: 'school', prefix: 'School', id: school});
-    chain.push({type: 'user', prefix: 'Student', id: codename});
-    if (analyst > 0)
-        chain.push({type: 'user', prefix: 'Analyst', id: analyst});
-    if (target_training)
-        chain.push({type: 'field', key: 'NeedsAnalysis.TargetTraining', value: target_training});
-    if (target_level)
-        chain.push({type: 'field', key: 'NeedsAnalysis.TargetLevel', value: target_level});
-    if (target_entry)
-        chain.push({type: 'field', key: 'NeedsAnalysis.TargetEntry', value: target_entry});
-    chain.push({type: 'field', key: 'NeedsAnalysis.AnalysisDate', value: analysis_date || ''});
-
-    window.open(
-        'index.php?p=DabsicFormMenu' +
-        '&file=' + encodeURIComponent('res/docs/fr/analyse_besoin.dab') +
-        '&output=' + encodeURIComponent('needs-analysis:' + id) +
-        '&mode=docbuilder' +
-        '&form_role=Etablissement' +
-        '&chain=' + encodeURIComponent(JSON.stringify(chain)),
-        '_blank',
-        'noopener'
-    );
-    return (false);
-}
-
-
 function prospecting_campaign_tabs_reveal_selected()
 {
     let tablist = document.querySelector("#campaign_list .campaign_tabs .tablist");

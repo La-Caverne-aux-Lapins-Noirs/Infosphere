@@ -122,24 +122,14 @@ function official_correction_mark_missing_medals_as_failed($activity, $team_id)
 
 function official_correction_create_unknown_medal($codename)
 {
-    global $Database;
-    if (!is_symbol($codename))
-        return (new ErrorResponse("InvalidParameter", $codename));
-
-    $escaped = $Database->real_escape_string($codename);
-    $existing = db_select_one("id FROM medal WHERE codename = '$escaped'");
-    if ($existing != NULL)
-        return (new ValueResponse((int)$existing["id"]));
-
-    $command = $Database->real_escape_string(
-        "genicon sband ".$codename." -c dres/medals/.ressources/.default_style.dab"
-    );
-    $Database->query("
-        INSERT INTO medal (codename, tags, type, command, fr_name, en_name)
-        VALUES ('$escaped', 'automatic', 0, '$command', '$escaped', '$escaped')
-    ");
-    add_log(CREATIVE_OPERATION, "Automatically created medal '$codename' from correction report.", 1);
-    return (new ValueResponse((int)$Database->insert_id));
+    require_once (__DIR__."/medal.php");
+    $result = medal_resolve_or_create($codename, "correction_report");
+    if (!$result["ok"])
+        return (new ErrorResponse(
+            $result["error"] ?? "CannotCreateMedal",
+            $result["details"] ?? $codename
+        ));
+    return (new ValueResponse((int)$result["id"]));
 }
 
 function official_correction_resolve_or_create_medal($codename)

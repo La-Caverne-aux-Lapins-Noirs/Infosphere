@@ -703,6 +703,11 @@ function handle_french($body, $encode = true)
     return ($body);
 }
 
+function xcount($value)
+{
+    return (is_countable($value) ? count($value) : 0);
+}
+
 /*
 function array_to_object($arr)
 {

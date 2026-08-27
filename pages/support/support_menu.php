@@ -7,13 +7,29 @@ silent_submitf(this, {
 ";
 if (function_exists("support_enrich_assets_pedagogical_links"))
     support_enrich_assets_pedagogical_links($support);
+$support_preaccess_header_status = support_preaccess_status($support, support_progress_current_user_id());
 ?>
 <h2>
     <?php if (can_edit_supports()) { ?>
 	<?php support_pedagogical_coverage_warning_marker(support_pedagogical_support_content_coverage($support), "Chapitre contenant du contenu non couvert par une matière ou activité"); ?>
     <?php } ?>
+    <?php support_preaccess_lock_marker($support_preaccess_header_status, can_edit_supports(), "Pré-accès du chapitre"); ?>
     <?php support_compact_label($support); ?>
     <?php if (can_edit_supports()) { ?>
+        <input
+            type="button"
+            value="E"
+            class="support_admin_button"
+            title="Modifier le chapitre"
+            onclick="support_show_structure_configuration(
+                'support',
+                <?=(int)$support["id"]; ?>,
+                '<?=base64_encode(requirex(__DIR__."/config_structure.php", [
+                    "structure_type" => "support",
+                    "support" => $support
+                ])); ?>'
+            );"
+        />
 	<?php support_copy_codename_button($support["codename"]); ?>
     <?php } ?>
 </h2>
@@ -37,6 +53,17 @@ if (function_exists("support_enrich_assets_pedagogical_links"))
 <ul>
     <?php foreach ($support["asset"] as $asset) { ?>
 	<?php if ($asset["selected"] == false) continue ; ?>
+        <?php
+        $asset_preaccess_status = support_asset_preaccess_status($asset, support_progress_current_user_id());
+        $asset_preaccess_locked = !can_edit_supports() && !empty($asset_preaccess_status["configured"]) && empty($asset_preaccess_status["passed"]);
+        $asset_preaccess_payload = $asset_preaccess_locked
+            ? base64_encode(requirex(__DIR__."/asset_preaccess.php", [
+                "support" => $support,
+                "asset" => $asset,
+                "asset_preaccess_status" => $asset_preaccess_status,
+            ]))
+            : "";
+        ?>
 	<li>
 	    <?php if (can_edit_supports()) { ?>
 		<form
@@ -108,6 +135,9 @@ if (function_exists("support_enrich_assets_pedagogical_links"))
 		data-support-id="<?=$support["id"]; ?>"
 		data-support-asset-type="<?=htmlentities($asset["type"]); ?>"
 		data-support-asset-progress="<?=isset($asset["view_progress"]) ? (int)$asset["view_progress"] : 0; ?>"
+                <?php if ($asset_preaccess_locked) { ?>
+                onclick="support_show_asset_preaccess(this, 'screen_<?=$support["id"]; ?>', '<?=$asset_preaccess_payload; ?>');"
+                <?php } else { ?>
 		onclick="switch_asset(
 		       this,
 		       'screen_<?=$support["id"]; ?>',
@@ -115,12 +145,16 @@ if (function_exists("support_enrich_assets_pedagogical_links"))
 		       '<?=addslashes($asset["content"]); ?>',
 		       '<?=isset($asset["hls_content"]) ? addslashes($asset["hls_content"]) : ""; ?>'
 		       );"
+                <?php } ?>
 		style="cursor: pointer;"
 	    >
+                <?php support_preaccess_lock_marker($asset_preaccess_status, can_edit_supports(), "Pré-accès de la ressource"); ?>
 		<?php if (!can_edit_supports() && !empty($asset["unseen"])) { ?>
 		    <span class="support_unseen_asset_marker" title="Support non consulté">◆</span>
 		<?php } ?>
+                <?php if (!$asset_preaccess_locked) { ?>
 		<?php support_new_message_marker(function_exists("support_asset_intercom_unread_count") ? support_asset_intercom_unread_count($asset["id"]) : 0); ?>
+                <?php } ?>
 		<?php if (can_edit_supports()) { ?>
 		    <?php support_pedagogical_coverage_warning_marker(support_pedagogical_asset_coverage($support, $asset), "Ressource publiée non couverte par une matière ou activité"); ?>
 		<?php } ?>

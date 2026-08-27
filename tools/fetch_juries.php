@@ -534,8 +534,9 @@ function fetch_title_session_candidates($id_title_session)
     foreach ($candidates as &$candidate)
     {
         $id_user = (int)$candidate["id_user"];
-        $arrival = db_select_one("
-            MIN(COALESCE(appointment_slot.begin_date, session.begin_date)) as arrival
+        $appointments = db_select_one("
+            MIN(COALESCE(appointment_slot.begin_date, session.begin_date)) as first_arrival,
+            MAX(COALESCE(appointment_slot.begin_date, session.begin_date)) as last_arrival
             FROM title_session_session
             LEFT JOIN session ON session.id = title_session_session.id_session
             LEFT JOIN team ON team.id_session = session.id
@@ -547,9 +548,15 @@ function fetch_title_session_candidates($id_title_session)
               AND user_team.id IS NOT NULL
               AND session.id IS NOT NULL
         ");
-        $value = $arrival["arrival"] ?? NULL;
-        $candidate["arrival_date"] = $value ? date("d/m/Y", strtotime($value)) : "";
-        $candidate["arrival_time"] = $value ? date("H:i", strtotime($value)) : "";
+        $first = $appointments["first_arrival"] ?? NULL;
+        $last = $appointments["last_arrival"] ?? NULL;
+        $candidate["questionnaire_date"] = $first ? date("d/m/Y", strtotime($first)) : "";
+        $candidate["questionnaire_time"] = $first ? date("H:i", strtotime($first)) : "";
+        $candidate["jury_date"] = $last ? date("d/m/Y", strtotime($last)) : "";
+        $candidate["jury_arrival_time"] = "09:00";
+        // Compatibility with code still expecting the former single appointment.
+        $candidate["arrival_date"] = $candidate["questionnaire_date"];
+        $candidate["arrival_time"] = $candidate["questionnaire_time"];
         $candidate["candidate_number"] = trim((string)($candidate["ceres"] ?? ""));
     }
     unset($candidate);
@@ -571,7 +578,12 @@ function title_session_select_rows($id = NULL, $include_deleted = false)
         `title`.en_name as title_en_name,
         COALESCE(NULLIF(`title`.$name_field, ''), NULLIF(`title`.fr_name, ''), NULLIF(`title`.en_name, ''), `title`.codename) as title_name,
         school.codename as school_codename,
-        COALESCE(NULLIF(school.$name_field, ''), school.codename) as school_name,
+        COALESCE(
+            NULLIF(organization.$name_field, ''),
+            NULLIF(organization.name, ''),
+            NULLIF(organization.legal_name, ''),
+            school.codename
+        ) as school_name,
         manager.codename as manager_codename,
         manager.first_name as manager_first_name,
         manager.family_name as manager_family_name,
@@ -579,6 +591,7 @@ function title_session_select_rows($id = NULL, $include_deleted = false)
         FROM title_session
         LEFT JOIN `title` ON `title`.id = title_session.id_title
         LEFT JOIN school ON school.id = title_session.id_school
+        LEFT JOIN organization ON organization.id = school.id_organization
         LEFT JOIN user as manager ON manager.id = title_session.id_session_manager
         WHERE `title`.id IS NOT NULL
           AND school.id IS NOT NULL

@@ -413,8 +413,7 @@ function user_identity_write_identity_dabsic($id_user)
     $fields["street"] = $fields["address"] ?? "";
     $fields["postal_city"] = trim((string)($fields["postal_code"] ?? "")." ".(string)($fields["city"] ?? ""));
     $signature = user_identity_signature_file($user);
-    if ($signature != "" && is_file($signature))
-        $fields["signature"] = $signature;
+    $fields["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
 
     $file = $Configuration->UsersDir($user["codename"])."admin/identity.dab";
     return (generate_dabsic($fields, $file));

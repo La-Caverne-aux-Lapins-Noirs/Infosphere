@@ -2,6 +2,9 @@
 
 require_once (__DIR__."/dabsic_editor.php");
 require_once (__DIR__."/document_context.php");
+require_once (__DIR__."/billing.php");
+require_once (__DIR__."/document_hash.php");
+require_once (__DIR__."/form_field.php");
 
 /**
  * Output files accepted by the Dabsic form page.
@@ -31,7 +34,7 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
             "create_parent" => true
         ]);
 
-    if (preg_match('/^needs-analysis:([0-9]+)$/', (string)$key, $m))
+    if (preg_match('/^post-interview-report:([0-9]+)$/', (string)$key, $m))
     {
         $prospect = document_context_user((int)$m[1]);
         if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect" ||
@@ -41,10 +44,14 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
         $user_root = realpath($Configuration->UsersDir($prospect["codename"]));
         if ($user_root === false || !is_dir($user_root))
             return (NULL);
+
+        $subscription_dir = $user_root.DIRECTORY_SEPARATOR."admin/subscription";
+        $absolute_file = $subscription_dir.DIRECTORY_SEPARATOR."compte_rendu_post_entretien.dab";
+
         return ([
-            "absolute_file" => $user_root.DIRECTORY_SEPARATOR."admin/subscription/analyse_besoin.dab",
+            "absolute_file" => $absolute_file,
             "authorized_root" => $user_root,
-            "label" => "Analyse du besoin - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
+            "label" => "Compte rendu post-entretien - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
             "create_parent" => true,
             "private_user_output" => true
         ]);
@@ -102,6 +109,21 @@ function dabsic_form_user_can_access_output($key)
             is_secretariat() ||
             is_commercial()
         );
+
+    // Post-interview reports are prospect-side admission documents.
+    if (preg_match('/^post-interview-report:([0-9]+)$/', (string)$key, $m))
+    {
+        $prospect = document_context_user((int)$m[1]);
+        if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect")
+            return (false);
+        $school = document_context_first_school_for_user((int)$m[1]);
+        $id_school = is_array($school) ? (int)($school["id_school"] ?? -1) : -1;
+        return (
+            is_director_for_school($id_school) ||
+            is_secretariat($id_school) ||
+            is_commercial($id_school)
+        );
+    }
 
     // Profile documentation already exposes completion to staff allowed to
     // manage the target learner.
@@ -322,6 +344,8 @@ function dabsic_form_mergeconf_command($reference, array $extra_files = [], $res
     $cmd .= " -i ".escapeshellarg($reference);
     foreach ($extra_files as $file)
         $cmd .= " -i ".escapeshellarg($file);
+    foreach (document_builder_dabsic_hash_fields("") as $key => $value)
+        $cmd .= " -m ".escapeshellarg($key."=".$value);
     foreach ($fields as $key => $value)
         $cmd .= " -m ".escapeshellarg($key."=".$value);
     $cmd .= " -of .dabsic";
@@ -483,6 +507,8 @@ function dabsic_form_docbuilder_fields($reference, $chain = "")
 {
     $sources = dabsic_form_docbuilder_collect_sources($reference);
     $defined = dabsic_form_docbuilder_defined_fields($sources);
+    foreach (array_keys(document_builder_dabsic_hash_fields("")) as $field)
+        $defined[$field] = true;
     foreach (array_keys(dabsic_form_prefill_from_chain($chain)) as $field)
         $defined[$field] = true;
 
@@ -553,6 +579,7 @@ function dabsic_form_empty_form_metadata()
         "groups" => [],
         "group_order" => [],
         "roles" => [],
+        "field_errors" => [],
     ]);
 }
 
@@ -600,7 +627,10 @@ function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$me
         $path = $prefix == "" ? $key : $prefix.".".$key;
         $is_field = array_key_exists("Label", $child)
             || array_key_exists("Required", $child)
-            || array_key_exists("Default", $child);
+            || array_key_exists("Default", $child)
+            || array_key_exists("Type", $child)
+            || array_key_exists("Choices", $child)
+            || array_key_exists("ChoiceValues", $child);
         if ($is_field)
         {
             $field = dabsic_form_normalize_field($path);
@@ -609,22 +639,44 @@ function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$me
             $label = trim((string)($child["Label"] ?? $field));
             if ($label == "")
                 $label = $field;
-            $metadata["fields"][$field] = [
+            $field_definition = [
                 "label" => $label,
                 "group" => (string)$group,
                 "required" => !empty($child["Required"]),
                 "default" => trim((string)($child["Default"] ?? "")),
-                // Optional questionnaire/form semantics.  Existing document
-                // forms simply ignore them, while questionnaire-aware users
-                // can consume the same FormGroup metadata.
+                // Type only becomes authoritative for document forms when it
+                // was explicitly declared. Historical administrative fields
+                // without Type keep their dedicated heuristic renderer.
                 "type" => strtolower(trim((string)($child["Type"] ?? "text"))),
+                "type_explicit" => array_key_exists("Type", $child),
                 "points" => is_numeric($child["Points"] ?? NULL) ? (float)$child["Points"] : NULL,
                 "policy" => trim((string)($child["Policy"] ?? "")),
                 "penalty" => is_numeric($child["Penalty"] ?? NULL) ? (float)$child["Penalty"] : NULL,
-                "choices" => dabsic_form_metadata_scalar_list($child["Choices"] ?? []),
+                // Choices/ChoiceValues are paired sequences. Preserve their
+                // order and duplicates so malformed definitions can be rejected
+                // instead of being silently repaired during metadata parsing.
+                "choices" => form_field_sequence($child["Choices"] ?? []),
+                "choice_values" => form_field_sequence($child["ChoiceValues"] ?? []),
                 "correct" => dabsic_form_metadata_scalar_list($child["Correct"] ?? []),
                 "medals" => dabsic_form_metadata_scalar_list($child["Medals"] ?? []),
             ];
+            if ($field_definition["type_explicit"] && form_field_is_common_type($field_definition["type"]))
+            {
+                $contract = form_field_definition($field_definition);
+                $field_definition["type"] = $contract["type"];
+                $field_definition["choices"] = $contract["choices"];
+                $field_definition["choice_values"] = $contract["choice_values"];
+                $field_definition["valid"] = $contract["valid"];
+                $field_definition["errors"] = $contract["errors"];
+                if (!$contract["valid"])
+                    $metadata["field_errors"][$field] = $contract["errors"];
+            }
+            else
+            {
+                $field_definition["valid"] = true;
+                $field_definition["errors"] = [];
+            }
+            $metadata["fields"][$field] = $field_definition;
             $metadata["labels"][$field] = $label;
             $metadata["groups"][$group]["fields"][] = $field;
             continue ;
@@ -767,7 +819,7 @@ function dabsic_form_missing_required_fields(array $metadata, array $values, $ro
         if ($groups !== NULL && !isset($groups[$definition["group"] ?? ""]))
             continue ;
         $value = array_key_exists($field, $values) ? $values[$field] : "";
-        if (trim((string)$value) === "")
+        if (form_field_missing_required($definition, $value))
             $out[$field] = (string)($definition["label"] ?? $field);
     }
     return ($out);
@@ -863,6 +915,17 @@ function dabsic_form_discover_fields($requested_reference, $mode = "dabsic", $ch
         ]);
 
     $form_metadata = dabsic_form_form_metadata($reference["absolute"]);
+    if (count($form_metadata["field_errors"] ?? []))
+    {
+        $details = [];
+        foreach ($form_metadata["field_errors"] as $field => $errors)
+            $details[] = $field.": ".implode(", ", $errors);
+        return ([
+            "ok" => false,
+            "error" => "DabsicFormInvalidFieldDefinition",
+            "details" => implode("\n", $details),
+        ]);
+    }
     return ([
         "ok" => true,
         "reference" => $reference,
@@ -879,6 +942,16 @@ function dabsic_form_flatten_values($value, $prefix = "", &$out = NULL)
         $out = [];
     if (is_array($value))
     {
+        $is_list = $value === [] || array_keys($value) === range(0, count($value) - 1);
+        if ($is_list && $prefix !== "")
+        {
+            $list = [];
+            foreach ($value as $entry)
+                if (!is_array($entry) && !is_object($entry))
+                    $list[] = is_bool($entry) ? ($entry ? "true" : "false") : (string)($entry ?? "");
+            $out[$prefix] = $list;
+            return ($out);
+        }
         foreach ($value as $key => $child)
         {
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', (string)$key))
@@ -916,6 +989,8 @@ function dabsic_form_validate_overrides($overrides)
         $raw_key = (string)$key;
         $key = dabsic_form_normalize_field($raw_key);
         if ($key === NULL)
+            return (["ok" => false, "error" => "DabsicFormInvalidOverride", "details" => $raw_key]);
+        if (array_key_exists($key, document_builder_dabsic_hash_fields("")))
             return (["ok" => false, "error" => "DabsicFormInvalidOverride", "details" => $raw_key]);
         if (!is_scalar($value) && $value !== NULL)
             return (["ok" => false, "error" => "InvalidParameter", "details" => $key]);
@@ -1174,9 +1249,18 @@ function dabsic_form_assign_value(&$root, $path, $value)
     {
         if ($index === count($parts) - 1)
         {
-            if (is_array($node) && isset($node[$part]) && is_array($node[$part]))
+            if (is_array($node) && isset($node[$part]) && is_array($node[$part]) && !is_array($value))
                 return (false);
-            $node[$part] = (string)$value;
+            if (is_array($value))
+            {
+                $clean = [];
+                foreach ($value as $entry)
+                    if (!is_array($entry) && !is_object($entry))
+                        $clean[] = (string)$entry;
+                $node[$part] = $clean;
+            }
+            else
+                $node[$part] = (string)$value;
             return (true);
         }
         if (isset($node[$part]) && !is_array($node[$part]))
@@ -1195,9 +1279,10 @@ function dabsic_form_build_dabsic(array $fields, array $values)
     {
         if (!array_key_exists($field, $values))
             return (["ok" => false, "error" => "DabsicFormChanged"]);
-        if (!is_scalar($values[$field]) && $values[$field] !== NULL)
+        if (!is_scalar($values[$field]) && $values[$field] !== NULL && !is_array($values[$field]))
             return (["ok" => false, "error" => "InvalidParameter", "details" => $field]);
-        if (!dabsic_form_assign_value($tree, $field, $values[$field] === NULL ? "" : (string)$values[$field]))
+        $field_value = $values[$field] === NULL ? "" : $values[$field];
+        if (!dabsic_form_assign_value($tree, $field, $field_value))
             return (["ok" => false, "error" => "DabsicFormFieldConflict", "details" => $field]);
     }
 
@@ -1276,6 +1361,66 @@ function dabsic_form_validate_resolution($reference, $data_file, array $override
     return (["ok" => true]);
 }
 
+function dabsic_form_post_interview_financial_values($output_key, array $values)
+{
+    if (!preg_match('/^post-interview-report:([0-9]+)$/', (string)$output_key, $m))
+        return (["ok" => true, "values" => $values]);
+
+    if (!array_key_exists("InterviewReport.TariffTemplateId", $values) &&
+        !array_key_exists("InterviewReport.ForeignStudent", $values))
+        return (["ok" => true, "values" => $values]);
+
+    $financial_fields = [
+        "InterviewReport.TariffTemplateName",
+        "InterviewReport.TuitionPrice",
+        "InterviewReport.TotalPrice",
+        "InterviewReport.RegistrationFee",
+        "InterviewReport.ForeignTuitionAdvance",
+        "InterviewReport.AmountDueAtRegistration",
+        "InterviewReport.TuitionBalance",
+    ];
+    $id_template = (int)($values["InterviewReport.TariffTemplateId"] ?? 0);
+    $foreign_value = trim((string)($values["InterviewReport.ForeignStudent"] ?? ""));
+
+    if ($id_template <= 0 || $foreign_value === "")
+    {
+        foreach ($financial_fields as $field)
+            $values[$field] = "";
+        return (["ok" => true, "values" => $values]);
+    }
+    if (!in_array($foreign_value, ["0", "1"], true))
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "InterviewReport.ForeignStudent"]);
+
+    $school = document_context_first_school_for_user((int)$m[1]);
+    $id_school = is_array($school) ? (int)($school["id_school"] ?? 0) : 0;
+    if ($id_school <= 0)
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "prospect school"]);
+
+    $template = db_select_one("
+        *
+        FROM billing_template
+        WHERE id = $id_template
+          AND id_school = $id_school
+          AND invoice_type = 'school'
+          AND deleted IS NULL
+    ");
+    if ($template == NULL)
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "InterviewReport.TariffTemplateId"]);
+
+    $amounts = billing_admission_amounts($template, $foreign_value === "1");
+    if (!is_array($amounts))
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "billing tariff"]);
+
+    $values["InterviewReport.TariffTemplateName"] = (string)($template["name"] ?? "");
+    $values["InterviewReport.TuitionPrice"] = $amounts["tuition"];
+    $values["InterviewReport.TotalPrice"] = $amounts["total_price"];
+    $values["InterviewReport.RegistrationFee"] = $amounts["registration_fee"];
+    $values["InterviewReport.ForeignTuitionAdvance"] = $amounts["foreign_advance"];
+    $values["InterviewReport.AmountDueAtRegistration"] = $amounts["due_at_registration"];
+    $values["InterviewReport.TuitionBalance"] = $amounts["tuition_balance"];
+    return (["ok" => true, "values" => $values]);
+}
+
 function dabsic_form_save($requested_reference, $output_key, $values, $overrides, $reference_hash, $output_hash, $output_exists, $overrides_hash, $overrides_exists, $mode = "dabsic", $chain = "", $trusted_user_document_id = NULL, $allow_partial = false, $form_role = "")
 {
     $discovery = dabsic_form_discover_fields($requested_reference, $mode, $chain);
@@ -1302,7 +1447,16 @@ function dabsic_form_save($requested_reference, $output_key, $values, $overrides
 
     $form_role = trim((string)$form_role);
     $metadata = $discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
-    $submitted_values = $values;
+    foreach ($values as $field => $value)
+    {
+        $definition = $metadata["fields"][$field] ?? NULL;
+        if (is_array($definition) && form_field_is_common_type($definition["type"] ?? ""))
+            $values[$field] = form_field_storage_value($definition, $value);
+    }
+    $normalized_values = dabsic_form_post_interview_financial_values($output_key, $values);
+    if (!$normalized_values["ok"])
+        return ($normalized_values);
+    $submitted_values = $normalized_values["values"];
     $submitted_fields = array_keys($submitted_values);
     $required = $discovery["fields"];
 

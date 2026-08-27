@@ -106,10 +106,13 @@ else
                             $type = $definition["type"] ?? "text";
                             $editable = !empty($definition["editable"]);
                         ?>
-                            <label class="registration-form-field<?=$editable ? "" : " is-readonly"; ?>">
+                            <div class="registration-form-field<?=$editable ? "" : " is-readonly"; ?>">
                                 <span><?=htmlspecialchars($definition["label"] ?? $field); ?><?php if (!empty($definition["required"])) { ?><strong class="registration-form-required"> *</strong><?php } ?></span>
                                 <?php if (!$editable) { ?>
-                                    <div class="registration-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value) : "—"; ?></div>
+                                    <?php $display = form_field_display_values($definition, $value); ?>
+                                    <div class="registration-form-readonly-value"><?=count($display) ? htmlspecialchars(implode(", ", $display)) : "—"; ?></div>
+                                <?php } else if (form_field_is_common_type($type)) { ?>
+                                    <?=form_field_render($definition, $value, ["attributes" => ["data-registration-field" => $field]]); ?>
                                 <?php } else if ($type == "boolean") { ?>
                                     <select data-registration-field="<?=htmlspecialchars($field, ENT_QUOTES); ?>">
                                         <option value=""></option><option value="1" <?=$value === "1" || $value === 1 || $value === true ? "selected" : ""; ?>><?=$Dictionnary["Yes"] ?? "Oui"; ?></option>
@@ -136,7 +139,7 @@ else
                                 <?php } else { ?>
                                     <input type="<?=htmlspecialchars($type); ?>" data-registration-field="<?=htmlspecialchars($field, ENT_QUOTES); ?>" value="<?=htmlspecialchars((string)$value, ENT_QUOTES); ?>" />
                                 <?php } ?>
-                            </label>
+                            </div>
                         <?php } ?>
                     </fieldset>
                 <?php } ?>
@@ -152,7 +155,7 @@ else
                                 ?>
                                     <div class="registration-form-field is-readonly">
                                         <span><?=htmlspecialchars($definition["label"] ?? $field); ?></span>
-                                        <div class="registration-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value) : "—"; ?></div>
+                                        <?php $display = form_field_display_values($definition, $value); ?><div class="registration-form-readonly-value"><?=count($display) ? htmlspecialchars(implode(", ", $display)) : "—"; ?></div>
                                     </div>
                                 <?php } ?>
                             </fieldset>
@@ -169,9 +172,11 @@ else
                             $value = array_key_exists($field, $answers) ? $answers[$field] : "";
                             $type = $definition["type"] ?? "text";
                         ?>
-                            <label class="registration-form-field">
+                            <div class="registration-form-field">
                                 <span><?=htmlspecialchars($definition["label"] ?? $field); ?><?php if (!$is_profile_form && empty($definition["custom_label"])) { ?><small><?=htmlspecialchars($field); ?></small><?php } ?></span>
-                                <?php if ($type == "boolean") { ?>
+                                <?php if (form_field_is_common_type($type)) { ?>
+                                    <?=form_field_render($definition, $value, ["attributes" => ["data-registration-field" => $field]]); ?>
+                                <?php } else if ($type == "boolean") { ?>
                                     <select data-registration-field="<?=htmlspecialchars($field, ENT_QUOTES); ?>">
                                         <option value=""></option><option value="1" <?=$value === "1" || $value === 1 || $value === true ? "selected" : ""; ?>><?=$Dictionnary["Yes"] ?? "Oui"; ?></option>
                                         <option value="0" <?=$value === "0" || $value === 0 || $value === false ? "selected" : ""; ?>><?=$Dictionnary["No"] ?? "Non"; ?></option>
@@ -197,7 +202,7 @@ else
                                 <?php } else { ?>
                                     <input type="<?=htmlspecialchars($type); ?>" data-registration-field="<?=htmlspecialchars($field, ENT_QUOTES); ?>" value="<?=htmlspecialchars((string)$value, ENT_QUOTES); ?>" />
                                 <?php } ?>
-                            </label>
+                            </div>
                         <?php } ?>
                         <?php if (in_array($group, $schema["signature_groups"] ?? [], true)) {
                             if ($is_document_signature)

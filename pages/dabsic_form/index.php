@@ -80,7 +80,7 @@ else
             );
             $dabsic_form_defaults_added = false;
             foreach (dabsic_form_default_values($dabsic_form_discovery["reference"]["absolute"], $dabsic_form_role) as $field => $value)
-                if (!array_key_exists($field, $dabsic_form_values) || trim((string)$dabsic_form_values[$field]) === "")
+                if (!array_key_exists($field, $dabsic_form_values) || (!is_array($dabsic_form_values[$field]) && trim((string)$dabsic_form_values[$field]) === ""))
                 {
                     $dabsic_form_values[$field] = $value;
                     $dabsic_form_defaults_added = true;
@@ -101,6 +101,16 @@ if ($dabsic_form_discovery["ok"])
 
 $dabsic_form_groups = [];
 $dabsic_form_readonly_groups = [];
+$dabsic_form_billing_templates = [];
+$dabsic_form_post_interview_prospect_id = 0;
+if ($dabsic_form_error === "" && preg_match('/^post-interview-report:([0-9]+)$/', $dabsic_form_output_key, $m))
+{
+    $dabsic_form_post_interview_prospect_id = (int)$m[1];
+    $school = document_context_first_school_for_user($dabsic_form_post_interview_prospect_id);
+    $id_school = is_array($school) ? (int)($school["id_school"] ?? 0) : 0;
+    if ($id_school > 0)
+        $dabsic_form_billing_templates = billing_fetch_templates_for_school($id_school, "school");
+}
 if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
 {
     $read = array_flip(dabsic_form_role_groups($dabsic_form_metadata, $dabsic_form_role, "read"));
@@ -169,6 +179,8 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-overrides-hash="<?=htmlspecialchars($dabsic_form_overrides_hash, ENT_QUOTES, "UTF-8"); ?>"
             data-overrides-exists="<?=$dabsic_form_overrides_exists ? "1" : "0"; ?>"
             data-save-url="/api/dabsic/0/form"
+            data-finalize-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report" : ""; ?>"
+            data-confirm-finalize="Valider ce compte rendu, générer le PDF signé et tamponné, puis l'envoyer au prospect ?"
             data-confirm-save="<?=htmlspecialchars($Dictionnary["DabsicFormConfirmSave"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-unsaved-warning="<?=htmlspecialchars($Dictionnary["DabsicEditorUnsavedWarning"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-clean-label="<?=htmlspecialchars($Dictionnary["DabsicEditorUnmodified"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
@@ -191,20 +203,67 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                         $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
                         $value = $dabsic_form_values[$field] ?? "";
                     ?>
-                        <label class="dabsic-form-field<?=$group["editable"] ? "" : " is-readonly"; ?>">
+                        <div class="dabsic-form-field<?=$group["editable"] ? "" : " is-readonly"; ?>">
                             <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if (!empty($definition["required"])) { ?><strong class="dabsic-form-required"> *</strong><?php } ?></span>
-                            <?php if ($group["editable"]) { ?>
-                                <input
-                                    type="text"
-                                    data-dabsic-field="<?=htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                                    value="<?=htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
-                                    autocomplete="off"
-                                    spellcheck="false"
-                                />
+                            <?php if ($group["editable"]) {
+                                $field_type = strtolower((string)($definition["type"] ?? "text"));
+                                $field_key = htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+                            ?>
+                                <?php if (form_field_is_common_type($field_type)) { ?>
+                                    <?=form_field_render($definition, $value, [
+                                        "attributes" => ["data-dabsic-field" => $field],
+                                    ]); ?>
+                                <?php } else if ($field_type === "billing_template") { ?>
+                                    <select data-dabsic-field="<?=$field_key; ?>" data-dabsic-billing-template>
+                                        <option value="">— Sélectionner un tarif —</option>
+                                        <?php
+                                        $known_tariff = false;
+                                        foreach ($dabsic_form_billing_templates as $template) {
+                                            $amounts = billing_admission_amounts($template, false);
+                                            $selected = (string)$value === (string)$template["id"];
+                                            $known_tariff = $known_tariff || $selected;
+                                        ?>
+                                            <option
+                                                value="<?=(int)$template["id"]; ?>"
+                                                <?=$selected ? "selected" : ""; ?>
+                                                data-billing-name="<?=htmlspecialchars((string)$template["name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                                data-billing-registration="<?=(int)$amounts["registration_fee_cents"]; ?>"
+                                                data-billing-tuition="<?=(int)$amounts["tuition_cents"]; ?>"
+                                            ><?=htmlspecialchars((string)$template["name"]." — scolarité ".$amounts["tuition"]." + inscription ".$amounts["registration_fee"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                                        <?php } ?>
+                                        <?php if ((string)$value !== "" && !$known_tariff) { ?>
+                                            <option value="<?=htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" selected>Tarif #<?=htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> indisponible</option>
+                                        <?php } ?>
+                                    </select>
+                                <?php } else if ($field_type === "boolean") { ?>
+                                    <select data-dabsic-field="<?=$field_key; ?>" data-dabsic-billing-foreign="<?=$field === "InterviewReport.ForeignStudent" ? "1" : "0"; ?>">
+                                        <option value=""></option>
+                                        <option value="1" <?=(string)$value === "1" ? "selected" : ""; ?>><?=$Dictionnary["Yes"] ?? "Oui"; ?></option>
+                                        <option value="0" <?=(string)$value === "0" ? "selected" : ""; ?>><?=$Dictionnary["No"] ?? "Non"; ?></option>
+                                    </select>
+                                <?php } else if ($field_type === "textarea") { ?>
+                                    <textarea data-dabsic-field="<?=$field_key; ?>" autocomplete="off"><?=htmlspecialchars((string)$value, ENT_NOQUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></textarea>
+                                <?php } else if ($field_type === "computed") { ?>
+                                    <input
+                                        type="text"
+                                        data-dabsic-field="<?=$field_key; ?>"
+                                        data-dabsic-computed="1"
+                                        value="<?=htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                        readonly
+                                    />
+                                <?php } else { ?>
+                                    <input
+                                        type="<?=htmlspecialchars($field_type === "" ? "text" : $field_type, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                        data-dabsic-field="<?=$field_key; ?>"
+                                        value="<?=htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                        autocomplete="off"
+                                        spellcheck="false"
+                                    />
+                                <?php } ?>
                             <?php } else { ?>
-                                <div class="dabsic-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
+                                <div class="dabsic-form-readonly-value"><?php $display = form_field_display_values($definition, $value); ?><?=count($display) ? htmlspecialchars(implode(", ", $display), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
                             <?php } ?>
-                        </label>
+                        </div>
                     <?php } ?>
                 </fieldset>
             <?php } ?>
@@ -221,7 +280,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                             ?>
                                 <div class="dabsic-form-field is-readonly">
                                     <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
-                                    <div class="dabsic-form-readonly-value"><?=trim((string)$value) !== "" ? htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
+                                    <div class="dabsic-form-readonly-value"><?php $display = form_field_display_values($definition, $value); ?><?=count($display) ? htmlspecialchars(implode(", ", $display), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : "—"; ?></div>
                                 </div>
                             <?php } ?>
                         </fieldset>
@@ -247,8 +306,18 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             <div id="dabsic-form-message" class="dabsic-form-message" aria-live="assertive"></div>
 
             <div class="dabsic-form-actions">
-                <span><?=$Dictionnary["DabsicFormFieldCount"]; ?>: <?=count(dabsic_form_role_fields($dabsic_form_metadata, $dabsic_form_role, "edit")); ?></span>
-                <input id="dabsic-form-save" class="dabsic-form-save" type="submit" value="<?=$Dictionnary["Save"]; ?>" disabled />
+                <span>
+                    <?=$Dictionnary["DabsicFormFieldCount"]; ?>: <?=count(dabsic_form_role_fields($dabsic_form_metadata, $dabsic_form_role, "edit")); ?>
+                    <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
+                        — la validation apposera la signature de l'auteur et le tampon de l'école, puis enverra le PDF.
+                    <?php } ?>
+                </span>
+                <div class="dabsic-form-action-buttons">
+                    <input id="dabsic-form-save" class="dabsic-form-save" type="submit" value="<?=$Dictionnary["Save"]; ?>" disabled />
+                    <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
+                        <input id="dabsic-form-finalize" class="dabsic-form-finalize" type="button" value="Valider, générer et envoyer" />
+                    <?php } ?>
+                </div>
             </div>
         </form>
 

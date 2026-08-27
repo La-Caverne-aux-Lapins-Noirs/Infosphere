@@ -20,7 +20,19 @@
     function fieldValues() {
         var out = {};
         form.querySelectorAll("[data-registration-field]").forEach(function (element) {
-            out[element.getAttribute("data-registration-field")] = element.value;
+            var field = element.getAttribute("data-registration-field");
+            if (element.type === "checkbox") {
+                if (!Object.prototype.hasOwnProperty.call(out, field))
+                    out[field] = [];
+                if (element.checked)
+                    out[field].push(element.value);
+            } else if (element.type === "radio") {
+                if (element.checked)
+                    out[field] = element.value;
+                else if (!Object.prototype.hasOwnProperty.call(out, field))
+                    out[field] = "";
+            } else
+                out[field] = element.value;
         });
         return out;
     }

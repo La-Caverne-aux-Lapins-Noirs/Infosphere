@@ -46,7 +46,15 @@ function support_progress_can_current_user_access_asset($id_asset)
 		if (empty($asset["selected"]) || !isset($asset["id"]))
 		    continue ;
 		if ((int)$asset["id"] == $id_asset)
+                {
+                    if (function_exists("support_preaccess_can_read")
+                        && !support_preaccess_can_read((int)($asset["id_support"] ?? 0), $id_user))
+                        return (false);
+                    if (function_exists("support_asset_preaccess_can_read")
+                        && !support_asset_preaccess_can_read((int)$asset["id"], $id_user))
+                        return (false);
 		    return (true);
+                }
 	    }
 	}
     }

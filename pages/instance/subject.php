@@ -15,6 +15,7 @@ else
     $not_too_soon = $activity->subject_appeir_date == NULL || $activity->subject_appeir_date < now();
     $not_too_late = $activity->subject_disappeir_date == NULL || $activity->subject_disappeir_date > now();
     $display_subject = true;
+    $preaccess_status = ["configured" => false, "passed" => true, "quizzes" => [], "next" => NULL];
     if ($activity->current_subject == "")
 	$display_subject = false;
     $missing_medals = [];
@@ -27,6 +28,9 @@ else
 	if (!$not_too_soon)
 	    $display_subject = false;
 	if (!$not_too_late)
+	    $display_subject = false;
+	$preaccess_status = activity_preaccess_status($activity, (int)$User["id"]);
+	if ($preaccess_status["configured"] && !$preaccess_status["passed"])
 	    $display_subject = false;
 	foreach ($activity->medal as $medal)
 	{
@@ -82,6 +86,29 @@ else
 		<i><?=$Dictionnary["SubjectNotAvailableYet"]; ?></i>
 	    <?php } else if (!$not_too_late) { ?>
 		<i><?=$Dictionnary["SubjectNotAvailableAnymore"]; ?></i>
+	    <?php } else if ($preaccess_status["configured"] && !$preaccess_status["passed"]) { ?>
+                <div class="activity-preaccess-lock">
+                    <i><?=$Dictionnary["QuizPreaccessSubjectLocked"] ?? "Un questionnaire préalable doit être réussi avant l'accès au sujet."; ?></i>
+                    <div class="activity-preaccess-list">
+                    <?php foreach ($preaccess_status["quizzes"] as $pre_qstatus) {
+                        $pre_quiz = $pre_qstatus["quiz"];
+                        $pre_loaded = questionnaire_load_model($pre_quiz);
+                        $pre_name = $pre_loaded["ok"] ? $pre_loaded["model"]["name"] : $pre_quiz["codename"];
+                    ?>
+                        <div class="activity-preaccess-item <?=$pre_qstatus["passed"] ? "passed" : "pending"; ?>">
+                            <span><?=$pre_qstatus["passed"] ? "✓" : "○"; ?> <?=htmlspecialchars($pre_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
+                            <?php if (!$pre_qstatus["passed"] && is_array($pre_qstatus["attempt"])) { ?>
+                                <a class="button_link" href="index.php?p=QuizAttemptMenu&amp;a=<?=(int)$pre_qstatus["attempt"]["id"]; ?>"><?=$Dictionnary["QuizAttemptResume"] ?? "Reprendre"; ?></a>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                    </div>
+                    <?php if ($preaccess_status["next"] !== NULL && !is_array($preaccess_status["next"]["attempt"])) { ?>
+                        <form method="post" action="/api/activity/<?=(int)$activity->id; ?>/preaccess_attempt" onsubmit="return silent_submitf(this, {after_success: function(result, msg, content) { if (content) window.location.href = content; }});">
+                            <button type="submit"><?=$Dictionnary["QuizPreaccessStart"] ?? "Commencer le questionnaire préalable"; ?></button>
+                        </form>
+                    <?php } ?>
+                </div>
 	    <?php } else if (count($missing_medals)) { ?>
 		<i><?=$Dictionnary["YouNeedThesesMedalsToSeeSubject"]; ?>:</i>
 		<br /><br />

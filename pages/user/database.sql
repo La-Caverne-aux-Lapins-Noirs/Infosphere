@@ -82,6 +82,9 @@ CREATE TABLE `user_medal` (
   KEY `id_team` (`id_team`),
   `id_user_team` int(11) NOT NULL DEFAULT -1,
   KEY `id_user_team` (`id_user_team`),
+  `id_quiz_attempt` int(11) DEFAULT NULL,
+  KEY `id_quiz_attempt` (`id_quiz_attempt`),
+  UNIQUE KEY `user_medal_quiz_attempt_medal` (`id_quiz_attempt`, `id_medal`),
   `result` int(11) NOT NULL DEFAULT 0,
   `strength` int(11) NOT NULL DEFAULT 2,
   `insert_date` datetime NOT NULL DEFAULT current_timestamp()

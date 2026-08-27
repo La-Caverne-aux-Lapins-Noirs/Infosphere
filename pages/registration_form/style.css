@@ -253,3 +253,19 @@
     padding: 2px 0 10px 0;
     font-weight: bold;
 }
+
+/* Shared FormGroup interactive controls */
+.registration-form-field .form-field-choices {
+    display: grid;
+    gap: 6px;
+}
+
+.registration-form-field .form-field-choice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.registration-form-field .form-field-choice input {
+    width: auto;
+}

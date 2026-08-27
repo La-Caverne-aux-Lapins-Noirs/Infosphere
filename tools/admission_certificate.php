@@ -278,12 +278,15 @@ function admission_certificate_context(array $prospect, array $options = [])
         return ($ret);
     $template = $ret->value;
 
-    $registration_fee = (int)$template["registration_fee"];
-    $annual_tuition = (int)$template["amount_once"];
+    $admission_amounts = billing_admission_amounts($template, $is_foreign);
+    $registration_fee = (int)($admission_amounts["registration_fee_cents"] ?? 0);
+    $annual_tuition = (int)($admission_amounts["tuition_cents"] ?? 0);
     if ($registration_fee <= 0 || ($is_foreign && $annual_tuition <= 0))
         return (new ErrorResponse("InvalidParameter", "billing tariff amounts"));
-    $foreign_supplement = $is_foreign ? (int)round($annual_tuition / 6) : 0;
-    $required_amount = $registration_fee + $foreign_supplement;
+    // Historical context keys keep the name “foreign_supplement”, but this
+    // amount is in fact a tuition advance and does not increase total tuition.
+    $foreign_supplement = (int)($admission_amounts["foreign_advance_cents"] ?? 0);
+    $required_amount = (int)($admission_amounts["due_at_registration_cents"] ?? 0);
     $paid_amount = admission_certificate_paid_amount((int)$prospect["id"], (int)$school["id"]);
     $payment_confirmed = array_key_exists("payment_confirmed", $options)
         ? !empty($options["payment_confirmed"])

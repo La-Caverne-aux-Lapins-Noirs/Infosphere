@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/../tools/post_interview_report.php");
+
 function MoveProspectToCampaign($id, $data, $method, $output, $module)
 {
     require_once ("./pages/prospecting/campaign_tools.php");
@@ -120,13 +122,35 @@ function ConcludeProspect($id, $data, $method, $output, $module)
 
 
 
+function FinalizeProspectInterviewReport($id, $data, $method, $output, $module)
+{
+    global $User;
+
+    return (post_interview_report_finalize((int)$id, (int)($User["id"] ?? 0)));
+}
+
 function GenerateProspectDocument($id, $data, $method, $output, $module)
 {
+    global $User;
+
     $id = (int)$id;
     $document = trim((string)($data["document"] ?? ""));
 
     if ($id <= 0 || $document == "")
         bad_request();
+
+    // Le compte rendu suit le même point d'entrée que les autres documents :
+    // sélection dans la liste puis clic sur « Générer ». Sa « génération »
+    // initiale ouvre le formulaire de travail et fige son auteur/signataire.
+    if ($document == "post-interview-report")
+        return (post_interview_report_start($id, (int)($User["id"] ?? 0)));
+
+    // Les autres générations conservaient historiquement le droit commercial.
+    // La route est maintenant seulement « logged_in » afin que le compte rendu
+    // puisse aussi respecter ses propres droits (direction/secrétariat/commercial),
+    // mais cela ne doit pas élargir l'accès aux contrats et attestations.
+    if (!is_commercial())
+        return (new ErrorResponse("PermissionDenied"));
 
     if (preg_match('/^contract:(ECL|OF|OFA|CFA)$/', $document, $match))
     {
@@ -212,7 +236,11 @@ $Tab = [
 	"paction" => [
 	    "is_commercial",
 	    "AddAction",
-	]
+	],
+        "interview_report" => [
+            "logged_in",
+            "FinalizeProspectInterviewReport",
+        ],
     ],
     "PUT" => [
 	"" => [
@@ -232,7 +260,7 @@ $Tab = [
 	    "SendProspectRegistrationForm",
 	],
 	"document" => [
-	    "is_commercial",
+	    "logged_in",
 	    "GenerateProspectDocument",
 	],
     ],

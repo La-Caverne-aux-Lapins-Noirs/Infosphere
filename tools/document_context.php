@@ -94,6 +94,15 @@ function document_context_person($id)
     if (!isset($person["postal_code"]))
         $person["postal_code"] = $user["postal_code"] ?? "";
     $person["postal_city"] = trim(($person["postal_code"] ?? "")." ".($person["city"] ?? ""));
+    // Keep the document field stable even before a signature is configured.
+    // This prevents DocBuilder forms from treating Analyst.Signature as an
+    // ordinary value the operator could type manually.
+    if (!isset($person["signature"]))
+    {
+        $signature = function_exists("user_identity_signature_file")
+            ? user_identity_signature_file($user) : "";
+        $person["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
+    }
     if (function_exists("jury_user_title_context") && isset($user["id"]))
         $person = array_merge($person, jury_user_title_context($user["id"]));
     return ($person);
@@ -169,6 +178,8 @@ function document_context_school($id)
         $out["logo"] = school_document_logo_path($school, true);
         $out["document_logo"] = $out["logo"];
     }
+    if (function_exists("school_stamp_path"))
+        $out["stamp"] = school_stamp_path($school, true);
     return ($out);
 }
 

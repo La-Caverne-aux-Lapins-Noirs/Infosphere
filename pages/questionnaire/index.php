@@ -22,6 +22,7 @@ function questionnaire_page_message($error, $details = "")
         "QuestionnaireCannotDelete" => "Impossible de supprimer le questionnaire.",
         "QuestionnaireCannotRestore" => "Impossible de restaurer le questionnaire.",
         "QuestionnaireInvalidDabsic" => "La définition Dabsic du questionnaire est invalide.",
+        "QuestionnaireInvalidChoices" => "Les valeurs de choix du questionnaire sont invalides.",
         "QuestionnaireMissingDefinition" => "Le scope [Questionnaire] est absent.",
         "QuestionnaireAdvancedSource" => "La définition contient du Dabsic avancé : utilisez l’éditeur source pour éviter toute perte.",
         "QuestionnaireCodenameMismatch" => "Le Codename Dabsic ne correspond plus à l’identité du questionnaire.",
@@ -196,7 +197,7 @@ if ($questionnaire_page_row != NULL)
         </section>
 
         <?php
-        $questionnaire_page_catalog_usages = questionnaire_activity_usages();
+        $questionnaire_page_catalog_usages = questionnaire_usages();
         $questionnaire_catalog_panels = [
             $Dictionnary["QuestionnaireCatalog"] ?? "Catalogue" => __DIR__."/catalog.php",
             $Dictionnary["QuizResourceTree"] ?? "Arborescence" => __DIR__."/tree.php",
@@ -225,6 +226,8 @@ if ($questionnaire_page_row != NULL)
         <?php
         $questionnaire_panels = [
             $Dictionnary["QuestionnaireDefinition"] ?? "Définition" => __DIR__."/definition.php",
+            $Dictionnary["QuizAttempts"] ?? "Tentatives" => __DIR__."/attempts.php",
+            $Dictionnary["QuizResults"] ?? "Résultats" => __DIR__."/results.php",
             $Dictionnary["QuestionnaireUsages"] ?? "Utilisations" => __DIR__."/usage.php",
             $Dictionnary["QuestionnaireSource"] ?? "Source Dabsic" => __DIR__."/source.php",
             $Dictionnary["QuestionnairePreview"] ?? "Aperçu" => __DIR__."/preview.php",
@@ -264,7 +267,7 @@ if ($questionnaire_page_row != NULL)
 
 <?php
 $questionnaire_builder_i18n = [];
-foreach (["QuestionnaireBuilderMoveUp", "QuestionnaireBuilderMoveDown", "QuestionnaireBuilderDelete", "QuestionnaireBuilderDeleteConfirm", "QuestionnaireBuilderCorrect", "QuestionnaireBuilderChoice", "QuestionnaireBuilderQuestion", "QuestionnaireBuilderQuestionKind", "QuestionnaireBuilderGroupKind", "QuestionnaireBuilderDabsicId", "QuestionnaireBuilderLabel", "QuestionnaireBuilderType", "QuestionnaireBuilderRequired", "QuestionnaireBuilderPoints", "QuestionnaireBuilderErrorPolicy", "QuestionnaireBuilderPenalty", "QuestionnaireBuilderQuestionMedals", "QuestionnaireBuilderOneMedal", "QuestionnaireBuilderChoices", "QuestionnaireBuilderChoicesHelp", "QuestionnaireBuilderAddChoice", "QuestionnaireBuilderExpected", "QuestionnaireBuilderExpectedHelp", "QuestionnaireBuilderNewGroup", "QuestionnaireBuilderGroup", "QuestionnaireBuilderGroupName", "QuestionnaireBuilderGroupThreshold", "QuestionnaireBuilderGroupMedals", "QuestionnaireBuilderGroupMedalsHelp", "QuestionnaireBuilderAddQuestion", "QuestionnaireBuilderAddGroup", "QuestionnaireBuilderNameRequired", "QuestionnaireBuilderTypeText", "QuestionnaireBuilderTypeTextarea", "QuestionnaireBuilderTypeRadio", "QuestionnaireBuilderTypeCheckbox", "QuestionnaireBuilderPolicyExact", "QuestionnaireBuilderPolicyPenalty", "QuestionnaireBuilderNewQuestion"] as $key)
+foreach (["QuestionnaireBuilderMoveUp", "QuestionnaireBuilderMoveDown", "QuestionnaireBuilderDelete", "QuestionnaireBuilderDeleteConfirm", "QuestionnaireBuilderCorrect", "QuestionnaireBuilderChoice", "QuestionnaireBuilderChoiceValue", "QuestionnaireBuilderChoiceValueHelp", "QuestionnaireBuilderDuplicateChoiceValue", "QuestionnaireBuilderMissingChoice", "QuestionnaireBuilderIncompleteChoice", "QuestionnaireBuilderDuplicateChoiceLabel", "QuestionnaireBuilderScaleNumericValue", "QuestionnaireBuilderQuestion", "QuestionnaireBuilderQuestionKind", "QuestionnaireBuilderGroupKind", "QuestionnaireBuilderDabsicId", "QuestionnaireBuilderLabel", "QuestionnaireBuilderType", "QuestionnaireBuilderRequired", "QuestionnaireBuilderPoints", "QuestionnaireBuilderErrorPolicy", "QuestionnaireBuilderPenalty", "QuestionnaireBuilderQuestionMedals", "QuestionnaireBuilderOneMedal", "QuestionnaireBuilderChoices", "QuestionnaireBuilderChoicesHelp", "QuestionnaireBuilderAddChoice", "QuestionnaireBuilderExpected", "QuestionnaireBuilderExpectedHelp", "QuestionnaireBuilderNewGroup", "QuestionnaireBuilderGroup", "QuestionnaireBuilderGroupName", "QuestionnaireBuilderGroupThreshold", "QuestionnaireBuilderGroupMedals", "QuestionnaireBuilderGroupMedalsHelp", "QuestionnaireBuilderAddQuestion", "QuestionnaireBuilderAddGroup", "QuestionnaireBuilderNameRequired", "QuestionnaireBuilderTypeText", "QuestionnaireBuilderTypeTextarea", "QuestionnaireBuilderTypeRadio", "QuestionnaireBuilderTypeCheckbox", "QuestionnaireBuilderTypeScale", "QuestionnaireBuilderPolicyExact", "QuestionnaireBuilderPolicyPenalty", "QuestionnaireBuilderNewQuestion"] as $key)
     $questionnaire_builder_i18n[$key] = $Dictionnary[$key] ?? $key;
 ?>
 <?php

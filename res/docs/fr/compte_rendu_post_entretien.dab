@@ -1,0 +1,538 @@
+Document = "Generic"
+Title = "Compte rendu post-entretien"
+
+[Workflow
+  Mailbox = "admission"
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Compte rendu post-entretien [@PageCounter]
+  Left]
+  Right = [Text($,Right)
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+
+  $(School.SchoolInfo)
+
+  $(School.FormationInfo)
+
+  $(School.AlternationInfo)
+
+  $(School.Phone) $(School.Mail)
+
+  \par\vspace{0.20cm}
+
+  Signature du document: [#Variable;DocBuilder.DabsicHash]
+Footer]
+
+[FormGroup
+  [Identity
+    Label = "Identité"
+    [Fields
+      [Student
+        [Identity
+          Label = "Nom et prénom"
+          Required = 1
+        ]
+        [Mail
+          Label = "Courriel"
+          Required = 1
+        ]
+        [Phone
+          Label = "Téléphone"
+        ]
+      ]
+    ]
+  ]
+
+  [InterviewContext
+    Label = "Entretien"
+    [Fields
+      [Analyst
+        [Identity
+          Label = "Entretien réalisé par"
+          Required = 1
+          Default = "@CurrentUser.Identity"
+        ]
+      ]
+      [NeedsAnalysis
+        [AnalysisDate
+          Label = "Date de l'entretien"
+          Required = 1
+          Default = "@Today"
+        ]
+      ]
+      [InterviewReport
+        [InterviewTime
+          Label = "Heure de l'entretien"
+        ]
+        [InterviewMode
+          Label = "Modalité de l'entretien (présentiel, visioconférence, téléphone...)"
+        ]
+      ]
+    ]
+  ]
+
+  [Project
+    Label = "Situation, projet et objectifs du bénéficiaire"
+    [Fields
+      [NeedsAnalysis
+        [CurrentSituation
+          Label = "Situation actuelle"
+          Required = 1
+        ]
+        [LastDiploma
+          Label = "Dernier diplôme / niveau atteint"
+        ]
+        [PreviousExperience
+          Label = "Formation(s) ou expérience(s) antérieure(s) pertinente(s)"
+        ]
+        [ProfessionalProject
+          Label = "Projet professionnel / métier ou domaine visé"
+          Required = 1
+        ]
+        [Motivations
+          Label = "Motivations exprimées"
+          Required = 1
+        ]
+        [Constraints
+          Label = "Contraintes particulières connues"
+        ]
+      ]
+    ]
+  ]
+
+  [TrainingNeeds
+    Label = "Besoin de formation identifié"
+    [Fields
+      [NeedsAnalysis
+        [AcquiredSkills
+          Label = "Compétences / connaissances déjà acquises"
+        ]
+        [SkillsToAcquire
+          Label = "Compétences / connaissances à acquérir ou renforcer"
+        ]
+        [MainObjective
+          Label = "Objectif principal de la formation"
+          Required = 1
+        ]
+        [Expectations
+          Label = "Attentes particulières du bénéficiaire"
+        ]
+      ]
+    ]
+  ]
+
+  [SchoolPresentation
+    Label = "Présentation de l'établissement"
+    [Fields
+      [InterviewReport
+        [RelationshipSchool
+          Label = "Relation envisagée : établissement d'enseignement supérieur"
+          Type = "boolean_checkbox"
+        ]
+        [RelationshipTrainingOrganization
+          Label = "Relation envisagée : organisme de formation"
+          Type = "boolean_checkbox"
+        ]
+        [RelationshipCfa
+          Label = "Relation envisagée : centre de formation d'apprentis (CFA)"
+          Type = "boolean_checkbox"
+        ]
+        [SchoolPresentationNotes
+          Label = "Points spécifiques présentés ou discutés au sujet de l'établissement"
+        ]
+      ]
+    ]
+  ]
+
+  [AccessibilityNeeds
+    Label = "Besoins spécifiques et accessibilité"
+    [Fields
+      [Student
+        [Handicap
+          Label = "Situation de handicap déjà déclarée"
+        ]
+        [HandicapKind
+          Label = "Nature déclarée, le cas échéant"
+        ]
+      ]
+      [NeedsAnalysis
+        [AccessibilityNeed
+          Label = "Besoin particulier d'accessibilité ou d'aménagement"
+        ]
+      ]
+    ]
+  ]
+  [CoherenceAnalysis
+    Label = "Analyse du besoin et adéquation avec la formation"
+    [Fields
+      [NeedsAnalysis
+        [Individualization
+          Label = "Besoin d'individualisation ou d'adaptation du parcours"
+        ]
+        [ProjectConsistency
+          Label = "Cohérence du projet avec les objectifs de la formation"
+          Required = 1
+        ]
+        [Prerequisites
+          Label = "Prérequis satisfaits"
+          Required = 1
+        ]
+        [EntryLevelConsistency
+          Label = "Niveau d'entrée adapté aux acquis"
+          Required = 1
+        ]
+        [ModalitiesConsistency
+          Label = "Rythme, durée et modalités compatibles avec la situation"
+          Required = 1
+        ]
+        [OutcomesConsistency
+          Label = "Débouchés / poursuites cohérents avec le projet"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+  [AccessibilityResponse
+    Label = "Réponse aux besoins d'accessibilité"
+    [Fields
+      [NeedsAnalysis
+        [AccessibilityAdaptation
+          Label = "Adaptation fonctionnelle envisagée"
+        ]
+        [AccessibilityAction
+          Label = "Action prévue"
+        ]
+      ]
+    ]
+  ]
+
+  [TrainingProposal
+    Label = "Proposition de formation"
+    [Fields
+      [NeedsAnalysis
+        [TargetTraining
+          Label = "Formation / parcours proposé"
+          Required = 1
+        ]
+        [TargetLevel
+          Label = "Niveau d'entrée"
+        ]
+        [TargetEntry
+          Label = "Rentrée envisagée"
+        ]
+        [TrainingMode
+          Label = "Statut / mode de formation envisagé"
+          Required = 1
+        ]
+      ]
+      [InterviewReport
+        [TrainingDuration
+          Label = "Durée de la formation"
+        ]
+        [TrainingModality
+          Label = "Modalités pédagogiques (présentiel, distance, rythme...)"
+        ]
+        [Certification
+          Label = "Certification / titre préparé"
+        ]
+        [AlternationInternship
+          Label = "Informations communiquées sur l'alternance et les stages"
+        ]
+        [EntryDates
+          Label = "Informations communiquées sur les dates de rentrée"
+        ]
+        [TrainingProposalNotes
+          Label = "Précisions complémentaires sur la proposition de formation"
+        ]
+      ]
+    ]
+  ]
+
+  [Funding
+    Label = "Besoin de financement et tiers éventuel"
+    [Fields
+      [NeedsAnalysis
+        [Funding
+          Label = "Financement envisagé"
+        ]
+        [ThirdParty
+          Label = "Entreprise / financeur / prescripteur"
+        ]
+        [ThirdPartyNeeds
+          Label = "Attentes exprimées par le tiers"
+        ]
+      ]
+    ]
+  ]
+
+  [FinancialProposal
+    Label = "Modalités financières communiquées"
+    [Fields
+      [InterviewReport
+        [TariffTemplateId
+          Label = "Tarif de scolarité communiqué"
+          Type = "billing_template"
+          Required = 1
+        ]
+        [ForeignStudent
+          Label = "Étudiant étranger (avance d'1/6 de la scolarité à l'inscription)"
+          Type = "boolean"
+          Required = 1
+        ]
+        [TariffTemplateName
+          Label = "Grille tarifaire retenue"
+          Type = "computed"
+        ]
+        [TuitionPrice
+          Label = "Montant de la scolarité hors frais d'inscription"
+          Type = "computed"
+        ]
+        [TotalPrice
+          Label = "Coût total de la formation, frais d'inscription inclus"
+          Type = "computed"
+        ]
+        [RegistrationFee
+          Label = "Frais d'inscription"
+          Type = "computed"
+        ]
+        [ForeignTuitionAdvance
+          Label = "Avance sur scolarité demandée à l'étudiant étranger (1/6)"
+          Type = "computed"
+        ]
+        [AmountDueAtRegistration
+          Label = "Montant total demandé à l'inscription"
+          Type = "computed"
+        ]
+        [TuitionBalance
+          Label = "Solde de scolarité après inscription"
+          Type = "computed"
+        ]
+        [PaymentSchedule
+          Label = "Échelonnement / échéancier annoncé pour le solde"
+          Type = "textarea"
+        ]
+        [RegistrationFeeRefundPolicy
+          Label = "Conditions de remboursement des frais d'inscription communiquées"
+          Type = "textarea"
+        ]
+        [BillingResponsible
+          Label = "Identité de la personne / structure appelée à régler la formation"
+        ]
+        [BillingAddress
+          Label = "Adresse de facturation communiquée ou à obtenir"
+          Type = "textarea"
+        ]
+      ]
+    ]
+  ]
+
+  [FileConstitution
+    Label = "Constitution du dossier"
+    [Fields
+      [InterviewReport
+        [ReportCardsReceived
+          Label = "Derniers bulletins"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [DiplomasReceived
+          Label = "Derniers diplômes"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [IdentityDocumentReceived
+          Label = "Carte d'identité / passeport"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [PortraitReceived
+          Label = "Photographie portrait"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [RegistrationFeeReceived
+          Label = "Règlement des frais d'inscription lorsqu'il est requis"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [AddressProofReceived
+          Label = "Justificatif de domicile"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [HostingCertificateReceived
+          Label = "Attestation d'hébergement lorsqu'elle est nécessaire"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [CvecProofReceived
+          Label = "Justificatif de règlement de la CVEC si le type de contrat envisagé est un contrat de scolarisation"
+          Type = "radio"
+          {Choices "À fournir", "Fournie", "Non requise"}
+          {ChoiceValues "0", "1", "2"}
+        ]
+        [AdditionalDocuments
+          Label = "Pièces complémentaires demandées / observations"
+        ]
+      ]
+    ]
+  ]
+
+  [ProposedPath
+    Label = "Suite proposée"
+    [Fields
+      [NeedsAnalysis
+        [ProposedPath
+          Label = "Parcours retenu / proposition formulée"
+          Required = 1
+        ]
+        [ActionsBeforeEntry
+          Label = "Adaptations / actions à réaliser avant l'entrée"
+        ]
+        [NextStep
+          Label = "Prochaine étape"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+
+  [BeneficiaryFeedback
+    Label = "Retour du bénéficiaire"
+    [Fields
+      [InterviewReport
+        [BeneficiaryCorrections
+          Label = "Corrections / précisions demandées par le bénéficiaire"
+        ]
+      ]
+    ]
+  ]
+
+  [Conclusion
+    Label = "Conclusion du compte rendu"
+    [Fields
+      [NeedsAnalysis
+        [Notes
+          Label = "Observations complémentaires"
+        ]
+        [Conclusion
+          Label = "Conclusion"
+          Required = 1
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Beneficiaire
+    Label = "Bénéficiaire"
+    Required = 1
+    {Read
+      "Identity",
+      "InterviewContext",
+      "Project",
+      "TrainingNeeds",
+      "SchoolPresentation",
+      "TrainingProposal",
+      "Funding",
+      "FinancialProposal",
+      "FileConstitution",
+      "AccessibilityNeeds",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "BeneficiaryFeedback",
+      "Conclusion"
+    }
+    {Edit
+      "Project",
+      "TrainingNeeds",
+      "Funding",
+      "AccessibilityNeeds",
+      "BeneficiaryFeedback"
+    }
+    {Validate
+      "Project",
+      "TrainingNeeds",
+      "Funding",
+      "AccessibilityNeeds",
+      "BeneficiaryFeedback"
+    }
+  ]
+
+  [Etablissement
+    Label = "Établissement / analyste"
+    Required = 1
+    {Read
+      "Identity",
+      "InterviewContext",
+      "Project",
+      "TrainingNeeds",
+      "SchoolPresentation",
+      "TrainingProposal",
+      "Funding",
+      "FinancialProposal",
+      "FileConstitution",
+      "AccessibilityNeeds",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "BeneficiaryFeedback",
+      "Conclusion"
+    }
+    {Edit
+      "InterviewContext",
+      "Project",
+      "TrainingNeeds",
+      "SchoolPresentation",
+      "TrainingProposal",
+      "Funding",
+      "FinancialProposal",
+      "FileConstitution",
+      "AccessibilityNeeds",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "BeneficiaryFeedback",
+      "Conclusion"
+    }
+    {Validate
+      "InterviewContext",
+      "Project",
+      "TrainingNeeds",
+      "SchoolPresentation",
+      "TrainingProposal",
+      "Funding",
+      "FinancialProposal",
+      "FileConstitution",
+      "AccessibilityNeeds",
+      "CoherenceAnalysis",
+      "AccessibilityResponse",
+      "ProposedPath",
+      "BeneficiaryFeedback",
+      "Conclusion"
+    }
+  ]
+]
+
+{Content
+  @insert txt ($) "compte_rendu_post_entretien.txt"
+}

@@ -211,10 +211,11 @@ function document_generation_mergeconf_command($files, $fields, $output)
     return ($cmd);
 }
 
-function document_generation_docbuilder_command($input, $output, $blank = false)
+function document_generation_docbuilder_command($input, $output, $blank = false, $hash_file = "")
 {
     return (
         "docbuilder".($blank ? " --blank" : "").
+        ($hash_file != "" ? " --hash-file ".escapeshellarg($hash_file) : "").
         " -i ".escapeshellarg($input)." -o ".escapeshellarg($output)
     );
 }
@@ -528,20 +529,26 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     @unlink($tmp);
     $merged = $tmp.".dab";
     $pdf = $tmp.".pdf";
+    $hash_file = $tmp.".sha256";
 
     // On exécute explicitement mergeconf avant docbuilder.
     // DocBuilder sait aussi résoudre des fichiers Dabsic, mais dans ce mode
     // ses erreurs internes ne remontent pas toujours le stderr de mergeconf.
     // La page Documents doit afficher les erreurs Dabsic sans jamais exposer
     // la sortie de travail stdout.
-    $merge_command = document_generation_mergeconf_command($files, $fields, $merged);
-    $docbuilder_command = document_generation_docbuilder_command($merged, $pdf, $blank_document);
+    // Infosphere still pre-resolves the model so mergeconf diagnostics can be
+    // shown cleanly in the GUI. The hash itself is now owned by DocBuilder:
+    // this blank reservation only prevents form/model resolution from treating
+    // DocBuilder.DabsicHash as a user field.
+    $merge_fields = document_builder_append_dabsic_hash_field_strings($fields, "");
+    $merge_command = document_generation_mergeconf_command($files, $merge_fields, $merged);
+    $docbuilder_command = document_generation_docbuilder_command($merged, $pdf, $blank_document, $hash_file);
     $merge_process = document_generation_run_command($merge_command);
     $kept_dab = document_generation_keep_dab($merged);
     if ($merge_process["status"] != 0 || !file_exists($merged))
     {
         $processes = [
-            "mergeconf" => $merge_process
+            "mergeconf" => $merge_process,
         ];
         $details = document_generation_process_combined_error($processes);
         $raw_output = document_generation_full_process_output($processes);
@@ -551,9 +558,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         $details .= document_generation_debug_report($docbuilder_command, $temporary_files, $merged);
         if ($kept_dab !== NULL)
             $details .= "\nFichier Dabsic conservé : ".$kept_dab;
-        // Conserver le Dabsic fusionné afin de pouvoir reproduire et
-        // diagnostiquer manuellement l’appel à DocBuilder. Son chemin est
-        // déjà présent dans le rapport de débogage.
+        @unlink($hash_file);
         @unlink($pdf);
         foreach ($temporary_files as $temporary_file)
             @unlink($temporary_file);
@@ -582,8 +587,14 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         @unlink($pdf);
         foreach ($temporary_files as $temporary_file)
             @unlink($temporary_file);
+        @unlink($hash_file);
         return (new ErrorResponse("DocumentGenerationFailed", $details));
     }
+
+    $resolved_dabsic_hash = strtolower(trim((string)@file_get_contents($hash_file)));
+    @unlink($hash_file);
+    if (!preg_match('/^[a-f0-9]{64}$/D', $resolved_dabsic_hash))
+        return (new ErrorResponse("DocumentGenerationFailed", "DocBuilder n’a pas produit d’empreinte Dabsic valide."));
 
     $saved_document = "";
     $document_instance = NULL;
@@ -601,7 +612,8 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             $target_year,
             $signature_bindings,
             $content,
-            $task_plan
+            $task_plan,
+            ["resolved_dabsic_hash" => $resolved_dabsic_hash]
         );
         if ($document_instance->is_error())
             return ($document_instance);
@@ -651,6 +663,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
 
     // Le Dabsic fusionné est volontairement conservé dans /tmp pour
     // permettre sa vérification manuelle, même après une génération réussie.
+    @unlink($hash_file);
     @unlink($pdf);
     foreach ($temporary_files as $temporary_file)
         @unlink($temporary_file);
@@ -668,6 +681,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         "filename" => $output_filename,
         "content" => $content,
         "saved_document" => $saved_document,
+        "resolved_dabsic_hash" => $resolved_dabsic_hash,
         "document_instance" => ($document_instance instanceof ValueResponse) ? $document_instance->value : NULL
     ]));
 }

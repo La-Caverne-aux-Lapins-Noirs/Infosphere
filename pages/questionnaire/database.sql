@@ -13,3 +13,53 @@ CREATE TABLE `quiz` (
   UNIQUE KEY `quiz_school_codename` (`id_school`, `codename`),
   UNIQUE KEY `quiz_reference` (`reference`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `quiz_snapshot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_quiz` int(11) NOT NULL,
+  KEY `id_quiz` (`id_quiz`),
+  `effective_hash` char(64) NOT NULL,
+  `private_dabsic` mediumtext NOT NULL,
+  `public_dabsic` mediumtext NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `quiz_snapshot_hash` (`id_quiz`, `effective_hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `quiz_attempt` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_quiz` int(11) NOT NULL,
+  KEY `id_quiz` (`id_quiz`),
+  `id_snapshot` int(11) NOT NULL,
+  KEY `id_snapshot` (`id_snapshot`),
+  `id_respondent` int(11) DEFAULT NULL,
+  KEY `id_respondent` (`id_respondent`),
+  `id_subject` int(11) DEFAULT NULL,
+  KEY `id_subject` (`id_subject`),
+  `id_creator` int(11) DEFAULT NULL,
+  KEY `id_creator` (`id_creator`),
+  `id_activity` int(11) DEFAULT NULL,
+  KEY `id_activity` (`id_activity`),
+  `context_type` varchar(64) NOT NULL DEFAULT 'manual',
+  `context_reference` varchar(255) DEFAULT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'in_progress',
+  `answers_dabsic` mediumtext DEFAULT NULL,
+  `result_dabsic` mediumtext DEFAULT NULL,
+  `score` decimal(12,4) DEFAULT NULL,
+  `max_score` decimal(12,4) DEFAULT NULL,
+  `success_percent` decimal(8,3) DEFAULT NULL,
+  `passed` tinyint(1) DEFAULT NULL,
+  KEY `passed` (`passed`),
+  `access_token_hash` char(64) DEFAULT NULL,
+  UNIQUE KEY `access_token_hash` (`access_token_hash`),
+  `recipient_name` varchar(255) DEFAULT NULL,
+  `recipient_mail` varchar(320) DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `revoked_at` datetime DEFAULT NULL,
+  `invitation_sent_at` datetime DEFAULT NULL,
+  `started_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `submitted_at` datetime DEFAULT NULL,
+  `graded_at` datetime DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

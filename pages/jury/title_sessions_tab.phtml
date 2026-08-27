@@ -178,19 +178,21 @@ function title_session_base_document_chain(array $session)
                     <?php foreach ($title_session["candidates"] as $candidate) { ?>
                         <div class="title_session_person">
                             <a href="<?=profile($candidate["id"]); ?>"><?=htmlentities(jury_person_name($candidate)); ?></a>
-                            <span class="smalltext"><?=htmlentities($candidate["arrival_date"]); ?> <?=htmlentities($candidate["arrival_time"]); ?></span>
+                            <span class="smalltext"><?=htmlentities($Dictionnary["CandidateFirstAppointment"] ?? "Premier rendez-vous"); ?> : <?=htmlentities($candidate["questionnaire_date"]); ?> <?=htmlentities($candidate["questionnaire_time"]); ?> · <?=htmlentities($Dictionnary["CandidateJuryAppointment"] ?? "Jury"); ?> : <?=htmlentities($candidate["jury_date"]); ?> <?=htmlentities($candidate["jury_arrival_time"]); ?></span>
                             <form method="post" action="/api/doc/0/generate" target="_blank">
                                 <?php
                                 $chain = title_session_base_document_chain($title_session);
                                 $chain[] = ["type" => "student", "prefix" => "Student", "id" => (string)$candidate["id"]];
                                 $chain[] = ["type" => "field", "key" => "Candidate.Number", "value" => $candidate["candidate_number"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.ArrivalDate", "value" => $candidate["arrival_date"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.ArrivalTime", "value" => $candidate["arrival_time"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.QuestionnaireDate", "value" => $candidate["questionnaire_date"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.QuestionnaireTime", "value" => $candidate["questionnaire_time"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.JuryDate", "value" => $candidate["jury_date"]];
+                                $chain[] = ["type" => "field", "key" => "Candidate.JuryArrivalTime", "value" => $candidate["jury_arrival_time"]];
                                 $chain[] = ["type" => "field", "key" => "Candidate.VAENotice", "value" => ""];
                                 $chain[] = ["type" => "field", "key" => "Candidate.AuthorizationNotice", "value" => ""];
-                                title_session_document_hidden("convocation_eleve", $chain);
+                                title_session_document_hidden("convocation_candidat_certification", $chain);
                                 ?>
-                                <input type="submit" value="<?=$Dictionnary["GenerateCandidateConvocation"] ?? "Convocation"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
+                                <input type="submit" value="<?=$Dictionnary["GenerateCandidateCertificationConvocation"] ?? "Convocation certification"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
                             </form>
                         </div>
                     <?php } ?>

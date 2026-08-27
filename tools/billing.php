@@ -265,6 +265,60 @@ function billing_fetch_templates()
     "));
 }
 
+function billing_fetch_templates_for_school($id_school, $invoice_type = "school")
+{
+    global $Language;
+
+    $id_school = (int)$id_school;
+    $invoice_type = db_escape((string)$invoice_type);
+    if ($id_school <= 0)
+        return ([]);
+    return (db_select_all("
+        billing_template.*,
+        school.codename as school_codename,
+        COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name
+        FROM billing_template
+        LEFT JOIN school ON school.id = billing_template.id_school
+        LEFT JOIN organization ON organization.id = school.id_organization
+        WHERE billing_template.deleted IS NULL
+          AND billing_template.id_school = $id_school
+          AND billing_template.invoice_type = '$invoice_type'
+        ORDER BY billing_template.tariff_year ASC, billing_template.name, billing_template.id ASC
+    "));
+}
+
+function billing_admission_amounts($template, $is_foreign)
+{
+    if (!is_array($template))
+        return (NULL);
+
+    // amount_once is the tuition itself. registration_fee is kept separate in
+    // the billing grid, so the total price is the sum of both. For foreign
+    // students, one sixth of tuition is paid in advance together with the
+    // registration fee; it is an advance, not an additional charge.
+    $registration_fee = max(0, (int)($template["registration_fee"] ?? 0));
+    $tuition = max(0, (int)($template["amount_once"] ?? 0));
+    $foreign_advance = $is_foreign ? (int)round($tuition / 6) : 0;
+    $due_at_registration = $registration_fee + $foreign_advance;
+    $tuition_balance = max(0, $tuition - $foreign_advance);
+    $total_price = $registration_fee + $tuition;
+
+    return ([
+        "registration_fee_cents" => $registration_fee,
+        "tuition_cents" => $tuition,
+        "foreign_advance_cents" => $foreign_advance,
+        "due_at_registration_cents" => $due_at_registration,
+        "tuition_balance_cents" => $tuition_balance,
+        "total_price_cents" => $total_price,
+        "registration_fee" => billing_euros($registration_fee),
+        "tuition" => billing_euros($tuition),
+        "foreign_advance" => billing_euros($foreign_advance),
+        "due_at_registration" => billing_euros($due_at_registration),
+        "tuition_balance" => billing_euros($tuition_balance),
+        "total_price" => billing_euros($total_price),
+    ]);
+}
+
 function billing_fetch_entries($id_user)
 {
     $id_user = (int)$id_user;

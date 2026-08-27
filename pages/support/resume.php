@@ -60,6 +60,27 @@
 		<?php } ?>
 	    </select>
 	    <br />
+            <?php if ($selcat) { ?>
+                <label for="support_preaccess_quizzes_new_<?=$category["id"]; ?>">
+                    <?=$Dictionnary["QuizSupportPreaccessAdminTitle"] ?? "Pré-accès du chapitre"; ?>
+                </label><br />
+                <select
+                    id="support_preaccess_quizzes_new_<?=$category["id"]; ?>"
+                    name="preaccess_quizzes[]"
+                    multiple
+                    size="5"
+                    class="_300pxw"
+                    title="<?=$Dictionnary["QuizSupportPreaccessAdminHelp"] ?? "Tous les questionnaires sélectionnés devront être réussis avant l'accès au chapitre."; ?>"
+                >
+                    <?php foreach (questionnaire_list() as $pre_quiz) {
+                        $pre_loaded = questionnaire_load_model($pre_quiz);
+                        $pre_label = $pre_loaded["ok"] ? $pre_loaded["model"]["name"] : $pre_quiz["codename"];
+                    ?>
+                        <option value="<?=(int)$pre_quiz["id"]; ?>"><?=htmlspecialchars($pre_label." — ".($pre_quiz["school_codename"] ?? "")."/".$pre_quiz["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                    <?php } ?>
+                </select>
+                <small style="display:block; margin:4px 0 8px 0;"><?=$Dictionnary["QuizSupportPreaccessCreateHelp"] ?? "Optionnel : tous les questionnaires sélectionnés devront être réussis avant l'accès au chapitre. Laisser la sélection vide ne crée aucune directive."; ?></small>
+            <?php } ?>
 	    <input
 		type="button"
 		onclick="<?=$js; ?>"

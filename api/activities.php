@@ -145,6 +145,10 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	    // Pas de relation user_team, alors c'est une création ou une jonction
 	    if ($method != "PUT")
 		bad_request();
+            if (($activity->parent_activity == -1 || $activity->parent_activity === NULL)
+                && function_exists("matter_preaccess_can_register")
+                && !matter_preaccess_can_register($activity, (int)$User["id"]))
+                return (new ErrorResponse("QuizMatterPreaccessRequired"));
 	    $ret = subscribe_to_instance(
 		$activity, NULL, $target_team
 	    );
@@ -1522,5 +1526,152 @@ function EditTodoList($id, $data, $method, $output, $module)
     ");
     return (new ValueResponse([
 	"msg" => $Dictionnary["Edited"]
+    ]));
+}
+
+function SetActivityPreaccessQuiz($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id = (int)$id;
+    if ($id <= 0 || !isset($data["id_quiz"]))
+        bad_request();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    if ($method === "DELETE")
+        $ret = activity_quiz_remove($activity, (int)$data["id_quiz"], "preaccess");
+    else
+        $ret = activity_quiz_add($activity, (int)$data["id_quiz"], "preaccess");
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizActivityEntrypointCannotWrite", $ret["details"] ?? ""));
+
+    add_log(EDITING_OPERATION, "Activity #$id preaccess quiz #".(int)$data["id_quiz"].($method === "DELETE" ? " removed" : " linked"));
+    return (new ValueResponse([
+        "msg" => $method === "DELETE"
+            ? ($Dictionnary["QuizPreaccessRemoved"] ?? "Questionnaire de pré-accès retiré.")
+            : ($Dictionnary["QuizPreaccessAdded"] ?? "Questionnaire de pré-accès ajouté."),
+    ]));
+}
+
+function StartActivityPreaccessAttempt($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id = (int)$id;
+    if ($id <= 0 || !is_array($User) || (int)($User["id"] ?? 0) <= 0)
+        forbidden();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    if (($activity->parent_activity == -1 || $activity->parent_activity === NULL) && $module === "module")
+        $ret = matter_preaccess_start($activity, (int)$User["id"]);
+    else
+        $ret = activity_preaccess_start($activity, (int)$User["id"]);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizAttemptCannotCreate", $ret["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => !empty($ret["created"])
+            ? ($Dictionnary["QuizAttemptCreated"] ?? "Tentative créée.")
+            : ($Dictionnary["QuizAttemptResume"] ?? "Reprise de la tentative en cours."),
+        "content" => "index.php?p=QuizAttemptMenu&a=".(int)$ret["id"],
+    ]));
+}
+
+
+function SetActivitySatisfactionQuiz($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id = (int)$id;
+    if ($id <= 0 || !isset($data["id_quiz"]))
+        bad_request();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    if ($method === "DELETE")
+        $ret = activity_quiz_remove($activity, (int)$data["id_quiz"], "satisfaction");
+    else
+        $ret = activity_quiz_add($activity, (int)$data["id_quiz"], "satisfaction");
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizActivityEntrypointCannotWrite", $ret["details"] ?? ""));
+
+    add_log(EDITING_OPERATION, "Activity #$id satisfaction quiz #".(int)$data["id_quiz"].($method === "DELETE" ? " removed" : " linked"));
+    return (new ValueResponse([
+        "msg" => $method === "DELETE"
+            ? ($Dictionnary["QuizSatisfactionRemoved"] ?? "Enquête de satisfaction retirée.")
+            : ($Dictionnary["QuizSatisfactionAdded"] ?? "Enquête de satisfaction ajoutée."),
+    ]));
+}
+
+function StartActivitySatisfactionAttempt($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id = (int)$id;
+    if ($id <= 0 || !is_array($User) || (int)($User["id"] ?? 0) <= 0)
+        forbidden();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    $ret = activity_satisfaction_start($activity, (int)$User["id"]);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizAttemptCannotCreate", $ret["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => !empty($ret["created"])
+            ? ($Dictionnary["QuizAttemptCreated"] ?? "Tentative créée.")
+            : ($Dictionnary["QuizAttemptResume"] ?? "Reprise de la tentative en cours."),
+        "content" => "index.php?p=QuizAttemptMenu&a=".(int)$ret["id"],
+    ]));
+}
+
+
+function SetActivityRubricQuiz($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id = (int)$id;
+    if ($id <= 0 || !isset($data["id_quiz"]))
+        bad_request();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    if ($method === "DELETE")
+        $ret = activity_quiz_remove($activity, (int)$data["id_quiz"], "rubric");
+    else
+        $ret = activity_quiz_add($activity, (int)$data["id_quiz"], "rubric");
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizActivityEntrypointCannotWrite", $ret["details"] ?? ""));
+
+    add_log(EDITING_OPERATION, "Activity #$id rubric quiz #".(int)$data["id_quiz"].($method === "DELETE" ? " removed" : " linked"));
+    return (new ValueResponse([
+        "msg" => $method === "DELETE"
+            ? ($Dictionnary["QuizRubricRemoved"] ?? "Barème retiré.")
+            : ($Dictionnary["QuizRubricAdded"] ?? "Barème ajouté."),
+    ]));
+}
+
+function StartActivityRubricAttempt($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id = (int)$id;
+    if ($id <= 0 || !is_array($User) || (int)($User["id"] ?? 0) <= 0
+        || !isset($data["id_quiz"], $data["id_subject"]))
+        forbidden();
+    if (($activity = new FullActivity)->build($id) == false)
+        return (new ErrorResponse("ActivityNotFound"));
+
+    $ret = activity_rubric_start($activity, (int)$User["id"], (int)$data["id_subject"], (int)$data["id_quiz"]);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizAttemptCannotCreate", $ret["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => !empty($ret["created"])
+            ? ($Dictionnary["QuizAttemptCreated"] ?? "Tentative créée.")
+            : ($Dictionnary["QuizAttemptResume"] ?? "Reprise de la tentative en cours."),
+        "content" => "index.php?p=QuizAttemptMenu&a=".(int)$ret["id"],
     ]));
 }

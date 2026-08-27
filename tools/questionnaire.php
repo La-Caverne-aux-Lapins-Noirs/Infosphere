@@ -349,25 +349,45 @@ function questionnaire_activity_language_options()
     return ($options);
 }
 
-function questionnaire_activity_configuration_files(array $activity)
+function questionnaire_activity_entrypoint_files(array $activity)
 {
     global $Configuration;
 
     $root = $Configuration->ActivitiesDir($activity["codename"], "");
     $files = [];
-    $neutral = $root."configuration.dab";
-    if (is_file($neutral))
-        $files[realpath($neutral) ?: $neutral] = "NA";
     $languages = questionnaire_activity_language_options();
-    foreach ((array)glob($root."*/configuration.dab") as $file)
+    foreach (["configuration" => "configuration.dab", "preaccess" => "preaccess.dab", "satisfaction" => "satisfaction.dab", "rubric" => "rubric.dab"] as $kind => $basename)
     {
-        if (!is_file($file))
-            continue ;
-        $language = basename(dirname($file));
-        if (!isset($languages[$language]))
-            continue ;
-        $files[realpath($file) ?: $file] = $language;
+        $neutral = $root.$basename;
+        if (is_file($neutral))
+            $files[] = [
+                "file" => realpath($neutral) ?: $neutral,
+                "language" => "NA",
+                "kind" => $kind,
+            ];
+        foreach ((array)glob($root."*/".$basename) as $file)
+        {
+            if (!is_file($file))
+                continue ;
+            $language = basename(dirname($file));
+            if (!isset($languages[$language]))
+                continue ;
+            $files[] = [
+                "file" => realpath($file) ?: $file,
+                "language" => $language,
+                "kind" => $kind,
+            ];
+        }
     }
+    return ($files);
+}
+
+function questionnaire_activity_configuration_files(array $activity)
+{
+    $files = [];
+    foreach (questionnaire_activity_entrypoint_files($activity) as $entry)
+        if (($entry["kind"] ?? "") === "configuration")
+            $files[$entry["file"]] = $entry["language"];
     return ($files);
 }
 
@@ -395,8 +415,11 @@ function questionnaire_activity_usages($only_quiz_id = 0)
 
     $usages = [];
     foreach (questionnaire_activity_rows() as $activity)
-        foreach (questionnaire_activity_configuration_files($activity) as $configuration => $language)
+        foreach (questionnaire_activity_entrypoint_files($activity) as $entrypoint)
         {
+            $configuration = $entrypoint["file"];
+            $language = $entrypoint["language"];
+            $kind = $entrypoint["kind"];
             foreach (dabsic_dependency_walk($configuration) as $edge)
             {
                 $resolved = $edge["resolved_path"] ?? NULL;
@@ -418,6 +441,7 @@ function questionnaire_activity_usages($only_quiz_id = 0)
                     "activity" => $activity,
                     "language" => $language,
                     "configuration" => questionnaire_relative_project_path($configuration),
+                    "entrypoint" => $kind,
                     "depth" => (int)($edge["depth"] ?? 0),
                     "directive" => $edge["directive"] ?? "include",
                     "requested_path" => $edge["requested_path"] ?? "",
@@ -426,6 +450,169 @@ function questionnaire_activity_usages($only_quiz_id = 0)
             }
         }
     return (array_values($usages));
+}
+
+
+function questionnaire_support_usages($only_quiz_id = 0)
+{
+    global $Configuration;
+    global $Database;
+
+    $only_quiz_id = (int)$only_quiz_id;
+    $quizzes = $only_quiz_id > 0 ? [questionnaire_get($only_quiz_id)] : questionnaire_list();
+    $targets = [];
+    foreach ($quizzes as $quiz)
+        if (is_array($quiz))
+            $targets[questionnaire_source_absolute($quiz)] = $quiz;
+    if (!count($targets))
+        return ([]);
+
+    $root = rtrim((string)($Configuration->_SupportDir ?? "dres/support/"), "/")."/";
+    $usages = [];
+    foreach ((array)glob($root."*/*/preaccess.dab") as $entrypoint)
+    {
+        if (!is_file($entrypoint))
+            continue ;
+        $support_codename = basename(dirname($entrypoint));
+        $category_codename = basename(dirname(dirname($entrypoint)));
+        $support = db_select_one("
+            support.id,
+            support.codename,
+            support.id_support_category,
+            support.fr_name,
+            support.en_name,
+            support_category.codename AS category_codename
+            FROM support
+            INNER JOIN support_category ON support_category.id = support.id_support_category
+            WHERE support.codename = '".$Database->real_escape_string($support_codename)."'
+              AND support_category.codename = '".$Database->real_escape_string($category_codename)."'
+              AND support.deleted IS NULL
+              AND support_category.deleted IS NULL
+        ");
+        if (!is_array($support))
+            continue ;
+        $configuration = realpath($entrypoint) ?: $entrypoint;
+        foreach (dabsic_dependency_walk($configuration) as $edge)
+        {
+            $resolved = $edge["resolved_path"] ?? NULL;
+            if ($resolved === NULL || !isset($targets[$resolved]))
+                continue ;
+            $quiz = $targets[$resolved];
+            $key = (int)$quiz["id"].":support:".(int)$support["id"].":".$configuration.":".$resolved;
+            if (isset($usages[$key]))
+            {
+                if ((int)$edge["depth"] < (int)$usages[$key]["depth"])
+                    $usages[$key]["depth"] = (int)$edge["depth"];
+                continue ;
+            }
+            $chain = [];
+            foreach ((array)($edge["chain"] ?? []) as $chain_file)
+                $chain[] = questionnaire_relative_project_path($chain_file);
+            $usages[$key] = [
+                "quiz" => $quiz,
+                "context" => "support",
+                "support" => $support,
+                "language" => "NA",
+                "configuration" => questionnaire_relative_project_path($configuration),
+                "entrypoint" => "preaccess",
+                "depth" => (int)($edge["depth"] ?? 0),
+                "directive" => $edge["directive"] ?? "include",
+                "requested_path" => $edge["requested_path"] ?? "",
+                "chain" => $chain,
+            ];
+        }
+    }
+    return (array_values($usages));
+}
+
+function questionnaire_support_asset_usages($only_quiz_id = 0)
+{
+    global $Configuration;
+    global $Database;
+
+    $only_quiz_id = (int)$only_quiz_id;
+    $quizzes = $only_quiz_id > 0 ? [questionnaire_get($only_quiz_id)] : questionnaire_list();
+    $targets = [];
+    foreach ($quizzes as $quiz)
+        if (is_array($quiz))
+            $targets[questionnaire_source_absolute($quiz)] = $quiz;
+    if (!count($targets))
+        return ([]);
+
+    $root = rtrim((string)($Configuration->_SupportDir ?? "dres/support/"), "/")."/";
+    $usages = [];
+    foreach ((array)glob($root."*/*/.asset/*/preaccess.dab") as $entrypoint)
+    {
+        if (!is_file($entrypoint))
+            continue ;
+        $asset_codename = basename(dirname($entrypoint));
+        $support_dir = dirname(dirname(dirname($entrypoint)));
+        $support_codename = basename($support_dir);
+        $category_codename = basename(dirname($support_dir));
+        $asset = db_select_one("
+            support_asset.id,
+            support_asset.codename,
+            support_asset.id_support,
+            support_asset.fr_name,
+            support_asset.en_name,
+            support.codename AS support_codename,
+            support.id_support_category,
+            support.fr_name AS support_fr_name,
+            support.en_name AS support_en_name,
+            support_category.codename AS category_codename
+            FROM support_asset
+            INNER JOIN support ON support.id = support_asset.id_support
+            INNER JOIN support_category ON support_category.id = support.id_support_category
+            WHERE support_asset.codename = '".$Database->real_escape_string($asset_codename)."'
+              AND support.codename = '".$Database->real_escape_string($support_codename)."'
+              AND support_category.codename = '".$Database->real_escape_string($category_codename)."'
+              AND support_asset.deleted IS NULL
+              AND support.deleted IS NULL
+              AND support_category.deleted IS NULL
+        ");
+        if (!is_array($asset))
+            continue ;
+        $configuration = realpath($entrypoint) ?: $entrypoint;
+        foreach (dabsic_dependency_walk($configuration) as $edge)
+        {
+            $resolved = $edge["resolved_path"] ?? NULL;
+            if ($resolved === NULL || !isset($targets[$resolved]))
+                continue ;
+            $quiz = $targets[$resolved];
+            $key = (int)$quiz["id"].":support_asset:".(int)$asset["id"].":".$configuration.":".$resolved;
+            if (isset($usages[$key]))
+                continue ;
+            $chain = [];
+            foreach ((array)($edge["chain"] ?? []) as $chain_file)
+                $chain[] = questionnaire_relative_project_path($chain_file);
+            $usages[$key] = [
+                "quiz" => $quiz,
+                "context" => "support_asset",
+                "asset" => $asset,
+                "language" => "NA",
+                "configuration" => questionnaire_relative_project_path($configuration),
+                "entrypoint" => "preaccess",
+                "depth" => (int)($edge["depth"] ?? 0),
+                "directive" => $edge["directive"] ?? "include",
+                "requested_path" => $edge["requested_path"] ?? "",
+                "chain" => $chain,
+            ];
+        }
+    }
+    return (array_values($usages));
+}
+
+function questionnaire_usages($only_quiz_id = 0)
+{
+    $activity = questionnaire_activity_usages((int)$only_quiz_id);
+    foreach ($activity as &$usage)
+        $usage["context"] = "activity";
+    unset($usage);
+    return (array_merge(
+        $activity,
+        questionnaire_support_usages((int)$only_quiz_id),
+        questionnaire_support_asset_usages((int)$only_quiz_id)
+    ));
 }
 
 function questionnaire_relative_project_path($path)
@@ -502,7 +689,7 @@ function questionnaire_dabsic_list($name, array $values, $indent = "  ")
 function questionnaire_default_model($codename = "questionnaire", $name = "Nouveau questionnaire", $description = "")
 {
     return ([
-        "format_version" => 1,
+        "format_version" => 2,
         "codename" => questionnaire_safe_codename($codename) ?: "questionnaire",
         "name" => trim((string)$name) ?: "Nouveau questionnaire",
         "description" => (string)$description,
@@ -570,21 +757,30 @@ function questionnaire_normalize_model(array $model, $forced_codename = NULL)
                 $qkey = $original_qkey.$suffix;
             $seen_questions[$qkey] = true;
             $type = strtolower(trim((string)($question["type"] ?? "text")));
-            if (!in_array($type, ["text", "textarea", "radio", "checkbox"], true))
+            if (!in_array($type, ["text", "textarea", "radio", "checkbox", "scale"], true))
                 $type = "text";
             $policy = strtolower(trim((string)($question["policy"] ?? "exact")));
             if (!in_array($policy, ["exact", "penalty"], true))
                 $policy = "exact";
-            $choices = questionnaire_string_list($question["choices"] ?? []);
-            $correct = questionnaire_string_list($question["correct"] ?? []);
-            if (in_array($type, ["radio", "checkbox"], true))
-                $correct = array_values(array_filter($correct, function($value) use ($choices) {
-                    return (in_array($value, $choices, true));
-                }));
-            if ($type == "radio" && count($correct) > 1)
-                $correct = [reset($correct)];
-            if (!in_array($type, ["radio", "checkbox"], true))
+            $field_definition = form_field_definition([
+                "type" => $type,
+                "required" => !empty($question["required"]),
+                "choices" => form_field_sequence($question["choices"] ?? []),
+                "choice_values" => form_field_sequence($question["choice_values"] ?? []),
+            ]);
+            $choices = $field_definition["choices"];
+            $choice_values = $field_definition["choice_values"];
+            // Keep the visual model literal here. Validation, not
+            // normalization, owns semantic mistakes such as an unknown stable
+            // value or several correct values for a radio question.
+            $correct = form_field_sequence($question["correct"] ?? []);
+            if (!in_array($type, ["radio", "checkbox", "scale"], true))
+            {
                 $choices = [];
+                $choice_values = [];
+            }
+            if ($type == "scale")
+                $correct = [];
             $normalized_group["questions"][] = [
                 "key" => $qkey,
                 "label" => trim((string)($question["label"] ?? $qkey)) ?: $qkey,
@@ -594,6 +790,7 @@ function questionnaire_normalize_model(array $model, $forced_codename = NULL)
                 "policy" => $policy,
                 "penalty" => is_numeric($question["penalty"] ?? NULL) ? max(0, (float)$question["penalty"]) : 1,
                 "choices" => $choices,
+                "choice_values" => $choice_values,
                 "correct" => $correct,
                 "medals" => questionnaire_string_list($question["medals"] ?? []),
             ];
@@ -611,7 +808,7 @@ function questionnaire_serialize_model(array $model)
     $out = "' Questionnaire Infosphere - définition Dabsic canonique\n";
     $out .= "' Les réponses et l'exploitation sont volontairement stockées ailleurs.\n\n";
     $out .= "[Questionnaire\n";
-    $out .= "  FormatVersion = 1\n";
+    $out .= "  FormatVersion = 2\n";
     $out .= "  Codename = ".questionnaire_dabsic_string($model["codename"])."\n";
     $out .= "  Name = ".questionnaire_dabsic_string($model["name"])."\n";
     $out .= "  Description = ".questionnaire_dabsic_string($model["description"])."\n";
@@ -636,6 +833,7 @@ function questionnaire_serialize_model(array $model)
             $out .= "        Policy = ".questionnaire_dabsic_string($question["policy"])."\n";
             $out .= "        Penalty = ".questionnaire_dabsic_number($question["penalty"])."\n";
             $out .= questionnaire_dabsic_list("Choices", $question["choices"], "        ");
+            $out .= questionnaire_dabsic_list("ChoiceValues", $question["choice_values"], "        ");
             $out .= questionnaire_dabsic_list("Correct", $question["correct"], "        ");
             $out .= questionnaire_dabsic_list("Medals", $question["medals"], "        ");
             $out .= "      ]\n";
@@ -728,7 +926,7 @@ function questionnaire_unmanaged_top_level_content($content)
     }
 
     // Dabsic comments begin with an apostrophe.  Ignore comment-only lines and
-    // whitespace; everything else is content the V1 visual serializer does not
+    // whitespace; everything else is content the V2 visual serializer does not
     // own and therefore must never overwrite.
     $remaining = preg_replace('/^[\t ]*\'.*$/m', '', $remaining);
     return (trim((string)$remaining));
@@ -753,11 +951,13 @@ function questionnaire_parse_content($content, $reference = "")
         questionnaire_simple_scalar($root["Name"] ?? $codename, $codename),
         questionnaire_simple_scalar($root["Description"] ?? "", "")
     );
-    $model["format_version"] = (int)questionnaire_simple_scalar($root["FormatVersion"] ?? 1, 1);
+    $model["format_version"] = (int)questionnaire_simple_scalar($root["FormatVersion"] ?? 0, 0);
     $model["minimum_percent"] = questionnaire_normalize_percent(questionnaire_simple_scalar($root["MinimumPercent"] ?? 0, 0));
     $model["medals"] = questionnaire_string_list($root["Medals"] ?? []);
     $model["groups"] = [];
     $reasons = [];
+    if ($model["format_version"] !== 2)
+        $reasons[] = "Questionnaire.FormatVersion.unsupported";
 
     if (questionnaire_unmanaged_top_level_content($content) !== "")
         $reasons[] = "TopLevel.unmanaged";
@@ -824,22 +1024,22 @@ function questionnaire_parse_content($content, $reference = "")
                 $reasons[] = "FormGroup.".$group_key.".Fields.".$question_key;
                 continue ;
             }
-            foreach (questionnaire_unknown_keys($question_tree, ["Label", "Type", "Required", "Points", "Policy", "Penalty", "Choices", "Correct", "Medals"]) as $key)
+            foreach (questionnaire_unknown_keys($question_tree, ["Label", "Type", "Required", "Points", "Policy", "Penalty", "Choices", "ChoiceValues", "Correct", "Medals"]) as $key)
                 $reasons[] = "FormGroup.".$group_key.".Fields.".$question_key.".".$key;
             foreach (["Label", "Type", "Required", "Points", "Policy", "Penalty"] as $key)
                 if (array_key_exists($key, $question_tree) && !is_scalar($question_tree[$key]) && $question_tree[$key] !== NULL)
                     $reasons[] = "FormGroup.".$group_key.".Fields.".$question_key.".".$key.".expression";
-            foreach (["Choices", "Correct", "Medals"] as $key)
+            foreach (["Choices", "ChoiceValues", "Correct", "Medals"] as $key)
                 if (!questionnaire_simple_list($question_tree[$key] ?? []))
                     $reasons[] = "FormGroup.".$group_key.".Fields.".$question_key.".".$key.".expression";
             // Nested scopes inside a field are a valid advanced Dabsic use,
-            // but the V1 visual editor must not flatten/destroy them.
+            // but the V2 visual editor must not flatten/destroy them.
             foreach ($question_tree as $key => $value)
-                if (is_array($value) && !in_array((string)$key, ["Choices", "Correct", "Medals"], true))
+                if (is_array($value) && !in_array((string)$key, ["Choices", "ChoiceValues", "Correct", "Medals"], true))
                     $reasons[] = "FormGroup.".$group_key.".Fields.".$question_key.".".$key;
 
             $type = strtolower(trim((string)questionnaire_simple_scalar($question_tree["Type"] ?? "text", "text")));
-            if (!in_array($type, ["text", "textarea", "radio", "checkbox"], true))
+            if (!in_array($type, ["text", "textarea", "radio", "checkbox", "scale"], true))
             {
                 $reasons[] = "Type:".$question_key;
                 $type = "text";
@@ -858,8 +1058,12 @@ function questionnaire_parse_content($content, $reference = "")
                 "points" => is_numeric(questionnaire_simple_scalar($question_tree["Points"] ?? NULL, NULL)) ? (float)$question_tree["Points"] : 1,
                 "policy" => $policy,
                 "penalty" => is_numeric(questionnaire_simple_scalar($question_tree["Penalty"] ?? NULL, NULL)) ? (float)$question_tree["Penalty"] : 1,
-                "choices" => questionnaire_string_list($question_tree["Choices"] ?? []),
-                "correct" => questionnaire_string_list($question_tree["Correct"] ?? []),
+                // Keep the two V2 sequences literal here. The common field
+                // contract applies the sole implicit convention (an entirely
+                // omitted scale means 1..5) and rejects incomplete pairings.
+                "choices" => form_field_sequence($question_tree["Choices"] ?? []),
+                "choice_values" => form_field_sequence($question_tree["ChoiceValues"] ?? []),
+                "correct" => $type == "scale" ? [] : form_field_sequence($question_tree["Correct"] ?? []),
                 "medals" => questionnaire_string_list($question_tree["Medals"] ?? []),
             ];
         }
@@ -867,6 +1071,28 @@ function questionnaire_parse_content($content, $reference = "")
     }
     if (!count($model["groups"]))
         $model["groups"] = questionnaire_default_model()["groups"];
+    foreach ($model["groups"] as &$parsed_group)
+        foreach ($parsed_group["questions"] as &$parsed_question)
+        {
+            $field_definition = form_field_definition($parsed_question);
+            $parsed_question["choices"] = $field_definition["choices"];
+            $parsed_question["choice_values"] = $field_definition["choice_values"];
+            if (!$field_definition["valid"])
+                foreach ($field_definition["errors"] as $field_error)
+                    $reasons[] = "FormGroup.".$parsed_group["key"].".Fields.".$parsed_question["key"].".".$field_error;
+            if (in_array($parsed_question["type"], ["radio", "checkbox"], true))
+            {
+                $correct_values = form_field_sequence($parsed_question["correct"] ?? []);
+                if (count($correct_values) !== count(array_unique($correct_values, SORT_STRING)))
+                    $reasons[] = "FormGroup.".$parsed_group["key"].".Fields.".$parsed_question["key"].".Correct.duplicate";
+                if ($parsed_question["type"] === "radio" && count($correct_values) > 1)
+                    $reasons[] = "FormGroup.".$parsed_group["key"].".Fields.".$parsed_question["key"].".Correct.multiple";
+                foreach ($correct_values as $correct_value)
+                    if (!in_array($correct_value, $parsed_question["choice_values"], true))
+                        $reasons[] = "FormGroup.".$parsed_group["key"].".Fields.".$parsed_question["key"].".Correct.unknown_value";
+            }
+        }
+    unset($parsed_group, $parsed_question);
     $model["advanced"] = count($reasons) > 0;
     $model["advanced_reasons"] = array_values(array_unique($reasons));
     return (["ok" => true, "model" => $model]);
@@ -949,6 +1175,46 @@ function questionnaire_create($id_school, $codename, $name, $description = "", $
     return (["ok" => true, "id" => (int)$Database->insert_id]);
 }
 
+
+function questionnaire_validate_model(array $model)
+{
+    foreach ($model["groups"] ?? [] as $group)
+        foreach ($group["questions"] ?? [] as $question)
+        {
+            $field = form_field_definition($question);
+            if (!$field["valid"])
+                return ([
+                    "ok" => false,
+                    "error" => "QuestionnaireInvalidChoices",
+                    "details" => (string)($question["key"] ?? "?").": ".implode(", ", $field["errors"]),
+                ]);
+            if (in_array($field["type"], ["radio", "checkbox"], true))
+            {
+                $correct_values = form_field_sequence($question["correct"] ?? []);
+                if (count($correct_values) !== count(array_unique($correct_values, SORT_STRING)))
+                    return ([
+                        "ok" => false,
+                        "error" => "QuestionnaireInvalidChoices",
+                        "details" => (string)($question["key"] ?? "?").": duplicate correct value",
+                    ]);
+                if ($field["type"] === "radio" && count($correct_values) > 1)
+                    return ([
+                        "ok" => false,
+                        "error" => "QuestionnaireInvalidChoices",
+                        "details" => (string)($question["key"] ?? "?").": a radio question can have at most one correct value",
+                    ]);
+                foreach ($correct_values as $correct)
+                    if (!in_array($correct, $field["choice_values"], true))
+                        return ([
+                            "ok" => false,
+                            "error" => "QuestionnaireInvalidChoices",
+                            "details" => (string)($question["key"] ?? "?").": correct value ".$correct." is not a ChoiceValue",
+                        ]);
+            }
+        }
+    return (["ok" => true]);
+}
+
 function questionnaire_save_visual($id, array $model, $expected_hash)
 {
     global $Database;
@@ -965,6 +1231,9 @@ function questionnaire_save_visual($id, array $model, $expected_hash)
         return (["ok" => false, "error" => "DabsicEditorConflict"]);
 
     $model = questionnaire_normalize_model($model, $questionnaire["codename"]);
+    $validation = questionnaire_validate_model($model);
+    if (!$validation["ok"])
+        return ($validation);
     $content = questionnaire_serialize_model($model);
     $result = dabsic_editor_save_file($questionnaire["reference"], $content, $current["hash"]);
     if (!$result["ok"])

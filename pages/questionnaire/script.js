@@ -113,20 +113,35 @@
         return actions;
     }
 
-    function choiceRow(choice, correct, radioName) {
+    function choiceRow(value, label, correct, radioName) {
         var row = node("div", "questionnaire-choice-row");
         var selector = input(radioName ? "radio" : "checkbox", correct, "questionnaire-choice-correct");
-        var text = input("text", choice, "questionnaire-choice-value");
+        var stable = input("text", value, "questionnaire-choice-stable-value");
+        var text = input("text", label, "questionnaire-choice-value");
         if (radioName)
             selector.name = radioName;
         selector.title = t("QuestionnaireBuilderCorrect", "Bonne réponse");
+        stable.placeholder = t("QuestionnaireBuilderChoiceValue", "Valeur stable");
+        stable.title = t("QuestionnaireBuilderChoiceValueHelp", "Identifiant stocké, indépendant du libellé affiché");
         text.placeholder = t("QuestionnaireBuilderChoice", "Proposition");
         row.appendChild(selector);
+        row.appendChild(stable);
         row.appendChild(text);
         row.appendChild(button("↑", "questionnaire-icon", "choice-up", t("QuestionnaireBuilderMoveUp", "Monter")));
         row.appendChild(button("↓", "questionnaire-icon", "choice-down", t("QuestionnaireBuilderMoveDown", "Descendre")));
         row.appendChild(button("×", "questionnaire-icon questionnaire-danger", "choice-delete", t("QuestionnaireBuilderDelete", "Supprimer")));
         return row;
+    }
+
+    function nextChoiceStableValue(card) {
+        var used = Object.create(null);
+        qa(card, ".questionnaire-choice-stable-value").forEach(function (inputNode) {
+            used[String(inputNode.value || "").trim()] = true;
+        });
+        var index = 1;
+        while (used["choice_" + index])
+            ++index;
+        return "choice_" + index;
     }
 
     function refreshQuestionMode(card) {
@@ -135,13 +150,20 @@
         var freeCorrect = q(card, "[data-q-free-correct-block]");
         var policy = q(card, "[data-q-question-policy]").value;
         var penalty = q(card, "[data-q-penalty-field]");
-        var showChoices = type === "radio" || type === "checkbox";
+        var showChoices = type === "radio" || type === "checkbox" || type === "scale";
         var rows = qa(card, ".questionnaire-choice-row");
         var radioName = "q-correct-" + (card.getAttribute("data-q-uid") || Math.random().toString(36).slice(2));
 
         choices.hidden = !showChoices;
         if (freeCorrect)
             freeCorrect.hidden = showChoices;
+        if (type === "scale" && rows.length < 2) {
+            var list = q(card, "[data-q-choices]");
+            ["1", "2", "3", "4", "5"].forEach(function (value) {
+                list.appendChild(choiceRow(value, value, false, ""));
+            });
+            rows = qa(card, ".questionnaire-choice-row");
+        }
         penalty.hidden = policy !== "penalty";
         rows.forEach(function (row) {
             var current = q(row, ".questionnaire-choice-correct");
@@ -154,6 +176,7 @@
                 current = replacement;
             }
             current.name = type === "radio" ? radioName : "";
+            current.style.display = type === "scale" ? "none" : "";
         });
         if (type === "radio") {
             var selected = rows.filter(function (row) {
@@ -203,7 +226,8 @@
             ["text", t("QuestionnaireBuilderTypeText", "Réponse libre courte")],
             ["textarea", t("QuestionnaireBuilderTypeTextarea", "Réponse libre longue")],
             ["radio", t("QuestionnaireBuilderTypeRadio", "Choix unique")],
-            ["checkbox", t("QuestionnaireBuilderTypeCheckbox", "Choix multiples")]
+            ["checkbox", t("QuestionnaireBuilderTypeCheckbox", "Choix multiples")],
+            ["scale", t("QuestionnaireBuilderTypeScale", "Échelle")]
         ].forEach(function (entry) {
             var option = node("option", "", entry[1]);
             option.value = entry[0];
@@ -244,8 +268,9 @@
         choicesBlock.appendChild(node("h4", "", t("QuestionnaireBuilderChoices", "Propositions et bonnes réponses")));
         choicesBlock.appendChild(node("p", "questionnaire-help", t("QuestionnaireBuilderChoicesHelp", "La coche à gauche marque une bonne réponse. Un choix unique ne peut avoir qu’une seule bonne réponse.")));
         choicesList.setAttribute("data-q-choices", "1");
-        (question.choices || []).forEach(function (choice) {
-            choicesList.appendChild(choiceRow(choice, correct.indexOf(choice) !== -1, (question.type || "text") === "radio" ? "q-correct-" + uid : ""));
+        (question.choices || []).forEach(function (choice, choiceIndex) {
+            var stableValue = (question.choice_values || [])[choiceIndex] || choice;
+            choicesList.appendChild(choiceRow(stableValue, choice, correct.indexOf(stableValue) !== -1, (question.type || "text") === "radio" ? "q-correct-" + uid : ""));
         });
         choicesBlock.appendChild(choicesList);
         var addChoice = button("+ " + t("QuestionnaireBuilderAddChoice", "Ajouter une proposition"), "questionnaire-secondary questionnaire-small", "add-choice");
@@ -315,7 +340,7 @@
 
     function serializeBuilder(builder, original) {
         var model = {
-            format_version: 1,
+            format_version: 2,
             codename: original.codename || "questionnaire",
             name: q(builder, '[data-q-general="name"]').value.trim(),
             description: q(builder, '[data-q-general="description"]').value,
@@ -335,15 +360,18 @@
             qa(groupCardNode, "[data-q-question]").forEach(function (questionCardNode, questionIndex) {
                 var type = q(questionCardNode, "[data-q-question-type]").value;
                 var choices = [];
+                var choiceValues = [];
                 var correct = [];
-                if (type === "radio" || type === "checkbox") {
+                if (type === "radio" || type === "checkbox" || type === "scale") {
                     qa(questionCardNode, ".questionnaire-choice-row").forEach(function (row) {
-                        var value = q(row, ".questionnaire-choice-value").value.trim();
+                        var value = q(row, ".questionnaire-choice-stable-value").value.trim();
+                        var label = q(row, ".questionnaire-choice-value").value.trim();
                         var selected = q(row, ".questionnaire-choice-correct").checked;
-                        if (!value)
+                        if (!value || !label)
                             return;
-                        choices.push(value);
-                        if (selected)
+                        choices.push(label);
+                        choiceValues.push(value);
+                        if (selected && type !== "scale")
                             correct.push(value);
                     });
                 } else {
@@ -358,6 +386,7 @@
                     policy: q(questionCardNode, "[data-q-question-policy]").value,
                     penalty: numeric(q(questionCardNode, "[data-q-question-penalty]").value, 1),
                     choices: choices,
+                    choice_values: choiceValues,
                     correct: correct,
                     medals: readLines(q(questionCardNode, "[data-q-question-medals]").value)
                 });
@@ -365,6 +394,47 @@
             model.groups.push(group);
         });
         return model;
+    }
+
+    function validateChoiceRows(builder) {
+        var error = "";
+        qa(builder, "[data-q-question]").some(function (card) {
+            var type = q(card, "[data-q-question-type]").value;
+            var rows;
+            var stableSeen = Object.create(null);
+            var labelSeen = Object.create(null);
+            if (["radio", "checkbox", "scale"].indexOf(type) === -1)
+                return false;
+            rows = qa(card, ".questionnaire-choice-row");
+            if ((type === "radio" || type === "checkbox") && !rows.length) {
+                error = t("QuestionnaireBuilderMissingChoice", "Une question à choix doit contenir au moins une proposition.");
+                return true;
+            }
+            return rows.some(function (row) {
+                var value = q(row, ".questionnaire-choice-stable-value").value.trim();
+                var label = q(row, ".questionnaire-choice-value").value.trim();
+                if (!value || !label) {
+                    error = t("QuestionnaireBuilderIncompleteChoice", "Chaque proposition doit avoir une valeur stable et un libellé.");
+                    return true;
+                }
+                if (stableSeen[value]) {
+                    error = t("QuestionnaireBuilderDuplicateChoiceValue", "Deux propositions utilisent la même valeur stable : ") + value;
+                    return true;
+                }
+                if (labelSeen[label]) {
+                    error = t("QuestionnaireBuilderDuplicateChoiceLabel", "Deux propositions utilisent le même libellé : ") + label;
+                    return true;
+                }
+                if (type === "scale" && !Number.isFinite(Number(value))) {
+                    error = t("QuestionnaireBuilderScaleNumericValue", "Les valeurs stables d’une échelle doivent être numériques.");
+                    return true;
+                }
+                stableSeen[value] = true;
+                labelSeen[label] = true;
+                return false;
+            });
+        });
+        return error;
     }
 
     function attachBuilder(builder) {
@@ -417,13 +487,15 @@
                     policy: "exact",
                     penalty: 1,
                     choices: [t("QuestionnaireBuilderChoice", "Proposition") + " 1", t("QuestionnaireBuilderChoice", "Proposition") + " 2"],
+                    choice_values: ["choice_1", "choice_2"],
                     correct: [],
                     medals: []
                 }, qa(card, "[data-q-question]").length));
             } else if (action === "add-choice") {
                 card = target.closest("[data-q-question]");
                 var type = q(card, "[data-q-question-type]").value;
-                q(card, "[data-q-choices]").appendChild(choiceRow(t("QuestionnaireBuilderChoice", "Proposition") + " " + (qa(card, ".questionnaire-choice-row").length + 1), false, type === "radio" ? "q-correct-" + card.getAttribute("data-q-uid") : ""));
+                var choiceIndex = qa(card, ".questionnaire-choice-row").length + 1;
+                q(card, "[data-q-choices]").appendChild(choiceRow(nextChoiceStableValue(card), t("QuestionnaireBuilderChoice", "Proposition") + " " + choiceIndex, false, type === "radio" ? "q-correct-" + card.getAttribute("data-q-uid") : ""));
                 refreshQuestionMode(card);
             } else if (action === "choice-up" || action === "choice-down") {
                 move(target.closest(".questionnaire-choice-row"), action === "choice-up" ? -1 : 1);
@@ -446,7 +518,14 @@
 
         builder.addEventListener("submit", function (event) {
             var out = q(builder, "[data-questionnaire-model-output]");
-            var serialized = serializeBuilder(builder, model);
+            var choiceError = validateChoiceRows(builder);
+            var serialized;
+            if (choiceError) {
+                event.preventDefault();
+                window.alert(choiceError);
+                return;
+            }
+            serialized = serializeBuilder(builder, model);
             if (!serialized.name) {
                 event.preventDefault();
                 window.alert(t("QuestionnaireBuilderNameRequired", "Le questionnaire doit avoir un nom."));

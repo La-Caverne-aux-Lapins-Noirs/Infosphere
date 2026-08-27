@@ -5,6 +5,34 @@ function support_menu_escape($value)
     return (htmlspecialchars((string)$value, ENT_QUOTES, "UTF-8"));
 }
 
+function support_preaccess_lock_marker($status, $editor = false, $title = "Pré-accès")
+{
+    if (!is_array($status))
+        return ;
+    $configured = !empty($status["configured"]);
+    $passed = !empty($status["passed"]);
+    if (!$configured)
+        return ;
+    if ($editor)
+    {
+        $icon = "🔒";
+        $label = $title." configuré";
+    }
+    else if ($passed)
+    {
+        $icon = "🔓";
+        $label = $title." réussi";
+    }
+    else
+    {
+        $icon = "🔒";
+        $label = $title." requis";
+    }
+    ?>
+    <span class="support_preaccess_marker" title="<?=support_menu_escape($label); ?>" aria-label="<?=support_menu_escape($label); ?>"><?=$icon; ?></span>
+    <?php
+}
+
 function support_menu_can_display_technical_labels()
 {
     return (function_exists("can_edit_supports") && can_edit_supports());

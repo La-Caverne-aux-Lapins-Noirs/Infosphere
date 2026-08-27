@@ -219,6 +219,42 @@ require_once (__DIR__."/../error_net.php");
      );
  });
 
+ function support_show_asset_preaccess(link, screen_id, payload)
+ {
+     let screen = document.getElementById(screen_id);
+     let support_id = link && link.getAttribute ? link.getAttribute("data-support-id") : null;
+     let html = "";
+
+     if (!screen)
+         return ;
+     support_hide_next_asset_prompt(screen_id);
+     support_stop_all_media();
+     Array.prototype.forEach.call(document.getElementsByClassName("asset_link"), function(el) {
+         el.classList.remove("selected");
+     });
+     Array.prototype.forEach.call(screen.getElementsByClassName("screen_media"), function(el) {
+         el.style.display = "none";
+     });
+     if (link)
+         link.classList.add("selected");
+     try { html = atob(payload || ""); }
+     catch (e) { html = ""; }
+     let target = screen.getElementsByTagName("div")[0];
+     if (target)
+     {
+         target.style.backgroundImage = "";
+         target.innerHTML = html;
+         target.style.display = "block";
+     }
+     if (support_id)
+     {
+         support_asset_intercom_current[support_id] = null;
+         support_asset_intercom_loading[support_id] = null;
+         support_asset_intercom_placeholder(support_id, "Discussion verrouillée avec cette ressource.");
+         support_show_asset_pedagogy(support_id, null);
+     }
+ }
+
  function support_asset_intercom_placeholder(support_id, message)
  {
      let box = document.getElementById("support_asset_intercom_" + support_id);
@@ -362,6 +398,66 @@ require_once (__DIR__."/../error_net.php");
      );
  }
 
+ function support_refresh_menu(callback)
+ {
+     send_ajax(
+         'GET',
+         '/api/support_category/1/get_menu',
+         null,
+         'main_menu',
+         null,
+         null,
+         null,
+         function(success) {
+             if (success && callback)
+                 callback();
+         }
+     );
+ }
+
+ function support_show_structure_configuration(page, id, payload)
+ {
+     let target = page + '_' + id;
+     let node = document.getElementById(target);
+     let html = '';
+
+     if (!node || !['category', 'support'].includes(page))
+         return ;
+     try { html = atob(payload || ''); }
+     catch (e) { html = ''; }
+     if (typeof support_stop_all_media == 'function')
+         support_stop_all_media();
+     support_base_display_panel(page, id, false, true);
+     node.innerHTML = html;
+     support_loaded_panel[target] = true;
+ }
+
+ function support_refresh_structure_panel(page, id)
+ {
+     let target = page + '_' + id;
+     let node = document.getElementById(target);
+
+     if (!node)
+         return ;
+     support_loaded_panel[target] = false;
+     node.innerHTML = support_loading_message();
+     support_lazy_load_panel(page, id, function() {
+         if (page == 'support')
+             support_prepare_asset_layout(id);
+     });
+ }
+
+ function support_after_structure_edit(page, id)
+ {
+     support_refresh_menu();
+     support_refresh_structure_panel(page, id);
+ }
+
+ function support_refresh_panel(support_id)
+ {
+     support_refresh_structure_panel('support', support_id);
+ }
+
  function support_display_panel(page, panel, to_admin = false, to_user = false, after_load = null)
  {
      support_base_display_panel(page, panel, to_admin, to_user);
@@ -381,12 +477,9 @@ require_once (__DIR__."/../error_net.php");
 	   false,
 	   true,
 	   function() {
-	       switch_asset(document.getElementById("asset<?=$gid; ?>button"),
-			    'screen_<?=$id_support; ?>',
-			    '<?=$gasset["type"]; ?>',
-			    '<?=addslashes($gasset["content"]); ?>',
-			    '<?=isset($gasset["hls_content"]) ? addslashes($gasset["hls_content"]) : ""; ?>'
-	       );
+               let asset_link = document.getElementById("asset<?=$gid; ?>button");
+               if (asset_link)
+                   asset_link.click();
 	   }
        );
      <?php } ?>

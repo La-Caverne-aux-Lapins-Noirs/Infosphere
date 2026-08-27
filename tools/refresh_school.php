@@ -64,6 +64,22 @@ function school_document_logo_path($school, $absolute = false, $with_fallback = 
     return (school_logo_path($school, "document", $absolute, $with_fallback));
 }
 
+function school_stamp_path($school, $absolute = false)
+{
+    global $Configuration;
+
+    $codename = school_logo_codename($school);
+    if ($codename == "")
+        return ("");
+    $candidate = $Configuration->SchoolsDir($codename)."stamp.png";
+    $candidate_absolute = $candidate;
+    if ($candidate_absolute != "" && $candidate_absolute[0] != "/")
+        $candidate_absolute = dirname(__DIR__)."/".$candidate_absolute;
+    if (!file_exists($candidate_absolute) || is_dir($candidate_absolute))
+        return ("");
+    return ($absolute ? $candidate_absolute : $candidate);
+}
+
 function school_favicon_path($school, $absolute = false)
 {
     global $Configuration;
@@ -172,13 +188,14 @@ function school_update_logos($codename, array $data)
         "site_logo" => "icon.png",
         "document_logo" => "document_logo.png",
         "document_icon" => "document_logo.png",
+        "stamp" => "stamp.png",
         "favicon" => "favicon.png",
     ];
     foreach ($logos as $field => $filename)
     {
         if (!array_key_exists($field, $data) || school_logo_payload_empty($data[$field]))
             continue ;
-        $minimum_size = $field == "favicon" ? 16 : 100;
+        $minimum_size = $field == "favicon" ? 16 : ($field == "stamp" ? 48 : 100);
         if (($ret = school_upload_logo_payload($data[$field], $dir.$filename, $minimum_size))->is_error())
             return ($ret);
         $changed = $changed || ($ret instanceof ValueResponse && $ret->value);
@@ -360,6 +377,7 @@ function refresh_school($school)
 	"logo" => school_document_logo_path($school, true),
 	"document_logo" => school_document_logo_path($school, true),
 	"site_logo" => school_site_logo_path($school, true),
+	"stamp" => school_stamp_path($school, true),
 	"logo_width" => "3cm",
 	"logo_height" => "2cm",
 	"document_logo_width" => "3cm",

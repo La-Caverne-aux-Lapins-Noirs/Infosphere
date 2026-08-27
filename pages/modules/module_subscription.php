@@ -1,4 +1,9 @@
 <?php $js = "silent_submitf(this, {after_success: refresh});"; ?>
+<?php
+$matter_preaccess_status = (!$matter->registered && function_exists("matter_preaccess_status"))
+    ? matter_preaccess_status($matter->full_activity, (int)$User["id"])
+    : ["configured" => false, "passed" => true, "quizzes" => [], "next" => NULL];
+?>
 
 <?php if ($matter->registered) { ?>
 
@@ -31,6 +36,9 @@
     
     <?php } else if (!period($matter->registration_date, $matter->close_date)) { ?>
 	<b><?=$Dictionnary["SubscriptionPeriodIsClose"]; ?></b>
+
+    <?php } else if (!empty($matter_preaccess_status["configured"]) && empty($matter_preaccess_status["passed"])) { ?>
+        <?php require (__DIR__."/matter_preaccess.php"); ?>
 
     <?php } else { ?>
 	<form method="put" action="/api/module/<?=$matter->id; ?>/registration">

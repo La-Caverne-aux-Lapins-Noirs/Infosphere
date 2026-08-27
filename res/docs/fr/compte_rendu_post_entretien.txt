@@ -1,0 +1,206 @@
+\noindent\makebox[0pt][l]{\hspace{\dimexpr\textwidth-6.4cm\relax}\begin{minipage}[t]{6.4cm}[@Size;1]Entretien réalisé par: [#FLine;[#Variable;Analyst.Identity]]Date: [#FLine;[#Variable;NeedsAnalysis.AnalysisDate]]Heure: [#FLine;[#Variable;InterviewReport.InterviewTime]]Modalité: [#FLine;[#Variable;InterviewReport.InterviewMode]]\end{minipage}}
+
+# [@Center] Compte rendu post-entretien
+
+[@Size;1]
+Ce document retranscrit les principaux éléments échangés lors de l'entretien, formalise l'analyse du besoin du bénéficiaire et consigne la proposition de formation, les informations d'admission ainsi que les prochaines étapes convenues.
+
+### Identification et projet du bénéficiaire
+
+[@Columns;2;
+Bénéficiaire: [#FLine;[#Variable;Student.Identity]]
+
+Courriel: [#FLine;[#Variable;Student.Mail]]
+
+Téléphone: [#FLine;[#Variable;Student.Phone]]
+
+Formation / parcours proposé: [#FLine;[#Variable;NeedsAnalysis.TargetTraining]]
+
+Niveau d'entrée: [#FLine;[#Variable;NeedsAnalysis.TargetLevel]]
+
+Rentrée envisagée: [#FLine;[#Variable;NeedsAnalysis.TargetEntry]]
+]
+
+Situation actuelle: [#FLine;[#Variable;NeedsAnalysis.CurrentSituation]]
+
+Dernier diplôme / niveau atteint: [#FLine;[#Variable;NeedsAnalysis.LastDiploma]]
+
+Formation(s) ou expérience(s) antérieure(s) pertinente(s): [#FLine;[#Variable;NeedsAnalysis.PreviousExperience]]
+
+Projet professionnel / métier ou domaine visé: [#FLine;[#Variable;NeedsAnalysis.ProfessionalProject]]
+
+\par\vspace{0.20cm}
+
+[@TextBox;2.0;[#Variable;NeedsAnalysis.Motivations];Motivations exprimées]
+
+Contraintes particulières connues: [#FLine;[#Variable;NeedsAnalysis.Constraints]]
+
+Compétences / connaissances déjà acquises: [#FLine;[#Variable;NeedsAnalysis.AcquiredSkills]]
+
+Compétences / connaissances à acquérir ou renforcer: [#FLine;[#Variable;NeedsAnalysis.SkillsToAcquire]]
+
+Objectif principal de la formation: [#FLine;[#Variable;NeedsAnalysis.MainObjective]]
+
+Attentes particulières du bénéficiaire: [#FLine;[#Variable;NeedsAnalysis.Expectations]]
+
+### À propos de l'EFRITS
+
+L'EFRITS est un établissement d'enseignement supérieur privé en informatique centré sur le développement de logiciels et adoptant une approche bas niveau, proche du système d'exploitation et du matériel. Sa pédagogie repose fortement sur la réalisation de projets et de travaux pratiques. L'EFRITS est également organisme de formation et centre de formation d'apprentis (CFA).\par\vspace{0.20cm}
+
+L'établissement propose habituellement 30 à 40 projets par an, couvrant notamment le système, le graphisme, l'audio, le réseau, l'électronique, l'intelligence artificielle, le web et la cybersécurité. Parmi les exemples de réalisations figurent des moteurs 3D, jeux vidéo, logiciels pair-à-pair, services réseau, systèmes de chiffrement et d'authentification, automates, serveurs vidéo et utilitaires de manipulation de fichiers et de flux.\par\vspace{0.20cm}
+
+Les élèves sont évalués à partir de leurs réalisations concrètes et des compétences démontrées, matérialisées par des médailles de compétences ; le référentiel du bachelor en compte plus de 2 000. Les langages principaux de l'école sont le C et le C++, avec PHP et JavaScript pour le web ; l'assembleur ainsi que d'autres langages, notamment Go, Python, Bash ou Kotlin, sont également abordés selon les matières. L'environnement de travail principal est GNU/Linux et l'école privilégie les logiciels libres.
+
+\par\vspace{0.40cm}
+
+Cadre de la relation envisagée : [@CheckBox;[#IfC;InterviewReport.RelationshipSchool;==;1;1]] établissement d'enseignement supérieur  [@CheckBox;[#IfC;InterviewReport.RelationshipTrainingOrganization;==;1;1]] organisme de formation  [@CheckBox;[#IfC;InterviewReport.RelationshipCfa;==;1;1]] CFA.
+
+\par\vspace{0.40cm}
+
+[@TextBox;2.0;[#Variable;InterviewReport.SchoolPresentationNotes];Points spécifiques présentés ou discutés au sujet de l'établissement]
+
+[@NewPage]
+
+### Analyse du besoin et adéquation de la proposition
+
+Besoin d'individualisation ou d'adaptation du parcours: [#FLine;[#Variable;NeedsAnalysis.Individualization]]
+
+Cohérence du projet avec les objectifs de la formation: [#FLine;[#Variable;NeedsAnalysis.ProjectConsistency]]
+
+Prérequis satisfaits: [#FLine;[#Variable;NeedsAnalysis.Prerequisites]]
+
+Niveau d'entrée adapté aux acquis: [#FLine;[#Variable;NeedsAnalysis.EntryLevelConsistency]]
+
+Rythme, durée et modalités compatibles avec la situation: [#FLine;[#Variable;NeedsAnalysis.ModalitiesConsistency]]
+
+Débouchés / poursuites cohérents avec le projet: [#FLine;[#Variable;NeedsAnalysis.OutcomesConsistency]]
+
+### Besoins spécifiques et accessibilité
+
+Situation de handicap déjà déclarée: [#FLine;[#Variable;Student.Handicap]]
+
+Nature déclarée, le cas échéant: [#FLine;[#Variable;Student.HandicapKind]]
+
+Besoin particulier d'accessibilité ou d'aménagement: [#FLine;[#Variable;NeedsAnalysis.AccessibilityNeed]]
+
+Adaptation fonctionnelle envisagée: [#FLine;[#Variable;NeedsAnalysis.AccessibilityAdaptation]]
+
+Action prévue: [#FLine;[#Variable;NeedsAnalysis.AccessibilityAction]]
+
+### Proposition de formation
+
+[@Columns;2;
+Formation / parcours proposé: [#FLine;[#Variable;NeedsAnalysis.TargetTraining]]
+
+Niveau d'entrée: [#FLine;[#Variable;NeedsAnalysis.TargetLevel]]
+
+Rentrée envisagée: [#FLine;[#Variable;NeedsAnalysis.TargetEntry]]
+
+Statut / mode de formation: [#FLine;[#Variable;NeedsAnalysis.TrainingMode]]
+
+Durée: [#FLine;[#Variable;InterviewReport.TrainingDuration]]
+
+Modalités pédagogiques: [#FLine;[#Variable;InterviewReport.TrainingModality]]
+]
+
+Certification / titre préparé: [#FLine;[#Variable;InterviewReport.Certification]]
+
+Informations communiquées sur l'alternance et les stages: [#FLine;[#Variable;InterviewReport.AlternationInternship]]
+
+Informations communiquées sur les dates de rentrée: [#FLine;[#Variable;InterviewReport.EntryDates]]
+
+Parcours retenu / proposition formulée: [#FLine;[#Variable;NeedsAnalysis.ProposedPath]]
+
+\par\vspace{0.20cm}
+
+[@TextBox;2.0;[#Variable;InterviewReport.TrainingProposalNotes];Précisions complémentaires sur la proposition de formation]
+
+### Financement et facturation
+
+[@Columns;2;
+Financement envisagé: [#FLine;[#Variable;NeedsAnalysis.Funding]]
+
+Entreprise / financeur / prescripteur: [#FLine;[#Variable;NeedsAnalysis.ThirdParty]]
+
+Tarif retenu: [#FLine;[#Variable;InterviewReport.TariffTemplateName]]
+
+Scolarité hors frais d'inscription: [#FLine;[#Variable;InterviewReport.TuitionPrice]]
+
+Frais d'inscription: [#FLine;[#Variable;InterviewReport.RegistrationFee]]
+
+Coût total: [#FLine;[#Variable;InterviewReport.TotalPrice]]
+]
+
+Le montant demandé à l'inscription est de [#FLine;[#Variable;InterviewReport.AmountDueAtRegistration]]. [@IfC;InterviewReport.ForeignStudent;==;1;Pour cet étudiant étranger, ce montant comprend les frais d'inscription et une avance correspondant à un sixième de la scolarité, soit [#FLine;[#Variable;InterviewReport.ForeignTuitionAdvance]]. Cette avance est déduite de la scolarité et n'augmente pas son coût total. ]Le solde de scolarité restant après inscription est de [#FLine;[#Variable;InterviewReport.TuitionBalance]].
+
+[@TextBox;1.8;[#Variable;InterviewReport.PaymentSchedule];Échelonnement / échéancier annoncé pour le solde]
+
+[@TextBox;1.8;[#Variable;NeedsAnalysis.ThirdPartyNeeds];Attentes exprimées par le tiers]
+
+Les frais d'inscription sont remboursés lorsque le bénéficiaire ne peut pas suivre la formation pour un motif administratif, notamment en cas de refus de visa.
+
+Conditions ou précisions complémentaires communiquées sur ce remboursement: [#FLine;[#Variable;InterviewReport.RegistrationFeeRefundPolicy]]
+
+Pour l'émission d'une facture, l'identité de la personne ou de la structure qui règle la formation ainsi que son adresse postale doivent être connues.
+
+Responsable du règlement: [#FLine;[#Variable;InterviewReport.BillingResponsible]]
+
+Adresse de facturation: [#FLine;[#Variable;InterviewReport.BillingAddress]]
+
+[@NewPage]
+
+### Admission
+
+Nous vous recontacterons au sujet de l'épreuve d'admission et vous en transmettrons alors le contenu et les modalités.
+
+### Constitution du dossier
+
+Les pièces demandées pour constituer votre dossier sont indiquées ci-dessous :
+
+\par\vspace{0.20cm}
+
+Derniers bulletins : [@CheckBox;[#IfC;InterviewReport.ReportCardsReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.ReportCardsReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.ReportCardsReceived;==;2;1]] Non requise
+
+Derniers diplômes : [@CheckBox;[#IfC;InterviewReport.DiplomasReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.DiplomasReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.DiplomasReceived;==;2;1]] Non requise
+
+Carte d'identité ou passeport : [@CheckBox;[#IfC;InterviewReport.IdentityDocumentReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.IdentityDocumentReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.IdentityDocumentReceived;==;2;1]] Non requise
+
+Photographie portrait destinée au profil intranet : [@CheckBox;[#IfC;InterviewReport.PortraitReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.PortraitReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.PortraitReceived;==;2;1]] Non requise
+
+Règlement des frais d'inscription : [@CheckBox;[#IfC;InterviewReport.RegistrationFeeReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.RegistrationFeeReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.RegistrationFeeReceived;==;2;1]] Non requise
+
+Justificatif de domicile : [@CheckBox;[#IfC;InterviewReport.AddressProofReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.AddressProofReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.AddressProofReceived;==;2;1]] Non requise
+
+Attestation d'hébergement : [@CheckBox;[#IfC;InterviewReport.HostingCertificateReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.HostingCertificateReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.HostingCertificateReceived;==;2;1]] Non requise
+
+Preuve du règlement de la CVEC : [@CheckBox;[#IfC;InterviewReport.CvecProofReceived;==;0;1]] À fournir   [@CheckBox;[#IfC;InterviewReport.CvecProofReceived;==;1;1]] Fournie   [@CheckBox;[#IfC;InterviewReport.CvecProofReceived;==;2;1]] Non requise
+
+\par\vspace{0.20cm}
+
+[@TextBox;1.8;[#Variable;InterviewReport.AdditionalDocuments];Pièces complémentaires demandées / observations]
+
+### Suite donnée à l'entretien
+
+Adaptations / actions à réaliser avant l'entrée: [#FLine;[#Variable;NeedsAnalysis.ActionsBeforeEntry]]
+
+Prochaine étape: [#FLine;[#Variable;NeedsAnalysis.NextStep]]
+
+\par\vspace{0.20cm}
+
+[@TextBox;2.0;[#Variable;InterviewReport.BeneficiaryCorrections];Corrections / précisions demandées par le bénéficiaire]
+
+[@TextBox;2.0;[#Variable;NeedsAnalysis.Notes];Observations complémentaires]
+
+[@TextBox;2.5;[#Variable;NeedsAnalysis.Conclusion];Conclusion]
+
+### Validation du compte rendu
+
+[@Columns;2;
+Entretien réalisé par : [#Variable;Analyst.Identity]
+
+Signature :
+[@IfC;Analyst.Signature;!=;;[@Image;[#Variable;Analyst.Signature];width=4cm;height=2cm]]
+
+Cachet :
+[@IfC;School.Stamp;!=;;[@Image;[#Variable;School.Stamp];width=4cm;height=3cm;random_angle=-20:20]]
+]

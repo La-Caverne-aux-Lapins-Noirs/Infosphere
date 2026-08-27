@@ -17,6 +17,8 @@ $all_users = implode(";", $all_users);
 <br />
 <br />
 
+<?php require (__DIR__."/matter_preaccess_admin.php"); ?>
+
 <form
     method="put"
     action="/api/module/<?=$matter->id; ?>/registration"

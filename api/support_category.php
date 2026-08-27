@@ -163,7 +163,79 @@ function AddSupportList($id, $data, $method, $output, $module)
 	$data))->is_error()
     )
         return ($ret);
+    if ($id > 0)
+    {
+        $preaccess_ids = [];
+        foreach ((array)($data["preaccess_quizzes"] ?? []) as $id_quiz)
+            if ((int)$id_quiz > 0)
+                $preaccess_ids[] = (int)$id_quiz;
+        // Compatibilité avec le premier formulaire, qui ne proposait qu'un quiz.
+        if ((int)($data["preaccess_quiz"] ?? 0) > 0)
+            $preaccess_ids[] = (int)$data["preaccess_quiz"];
+        $preaccess = support_quiz_sync((int)($ret->value["id"] ?? 0), $preaccess_ids);
+        if (!$preaccess["ok"])
+            return (new ErrorResponse($preaccess["error"] ?? "QuizSupportEntrypointCannotWrite", $preaccess["details"] ?? ""));
+    }
     return (DisplaySupportList($id, $data, "GET", $output, $module));
+}
+
+function EditSupportDefinition($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $LanguageList;
+    global $SUBID;
+
+    $id_category = abs((int)$id);
+    $id_support = (int)$SUBID;
+    if ($id_category <= 0)
+        bad_request();
+
+    $table = "support_category";
+    $id_target = $id_category;
+    if ($id_support != -1)
+    {
+        $id_support = abs($id_support);
+        $row = db_select_one("* FROM support WHERE id = $id_support AND id_support_category = $id_category AND deleted IS NULL");
+        if ($row == NULL)
+            not_found();
+        $table = "support";
+        $id_target = $id_support;
+    }
+    else
+    {
+        $row = db_select_one("* FROM support_category WHERE id = $id_category AND deleted IS NULL");
+        if ($row == NULL)
+            not_found();
+    }
+
+    $fields = [];
+    foreach ($LanguageList as $language => $language_name)
+        foreach (["name", "description"] as $field)
+        {
+            $key = $language."_".$field;
+            if (isset($data[$key]))
+                $fields[$key] = $data[$key];
+        }
+    if (count($fields) > 0)
+        db_update_one($table, $id_target, $fields);
+
+    if ($table === "support")
+    {
+        $preaccess_ids = [];
+        foreach ((array)($data["preaccess_quizzes"] ?? []) as $id_quiz)
+            if ((int)$id_quiz > 0)
+                $preaccess_ids[] = (int)$id_quiz;
+        $preaccess = support_quiz_sync($id_support, $preaccess_ids);
+        if (!$preaccess["ok"])
+            return (new ErrorResponse($preaccess["error"] ?? "QuizSupportEntrypointCannotWrite", $preaccess["details"] ?? ""));
+    }
+
+    add_log(EDITING_OPERATION, $table." #".$id_target);
+    return (new ValueResponse([
+        "msg" => $table === "support"
+            ? ($Dictionnary["SupportEdited"] ?? "Chapitre modifié.")
+            : ($Dictionnary["SupportCategoryEdited"] ?? "Section modifiée."),
+    ]));
 }
 
 function support_asset_uploaded_file($field)
@@ -318,6 +390,17 @@ function AddSupportAsset($id, $data, $method, $output, $module)
 	    $data))->is_error())
 	    return ($ret);
     }
+
+    $asset_preaccess_ids = [];
+    foreach ((array)($data["preaccess_quizzes"] ?? []) as $id_quiz)
+        if ((int)$id_quiz > 0)
+            $asset_preaccess_ids[] = (int)$id_quiz;
+    $saved_asset_id = (int)($ret->value["id"] ?? 0);
+    if ($saved_asset_id <= 0)
+        return (new ErrorResponse("QuizSupportAssetEntrypointCannotWrite"));
+    $preaccess = support_asset_quiz_sync($saved_asset_id, $asset_preaccess_ids);
+    if (!$preaccess["ok"])
+        return (new ErrorResponse($preaccess["error"] ?? "QuizSupportAssetEntrypointCannotWrite", $preaccess["details"] ?? ""));
    
     return (DisplayAssetList($subid, $data, "GET", $output, $module));
 }
@@ -337,6 +420,8 @@ function EditSupportAsset($id, $data, $method, $output, $module)
     $id_asset = (int)$SUBSUBID;
     if ($id_category == -1 || $id_support == -1)
 	bad_request();
+    if ($id_asset == -1 && !empty($data["edit_definition"]))
+        return (EditSupportDefinition($id_category, $data, $method, $output, $module));
     if ($id_asset == -1)
     {
 	if (($support = fetch_support_category($id_category))->is_error())
@@ -458,6 +543,7 @@ function DeleteSupportAsset($id, $data, $method, $output, $module)
     {
 	if ($asset["id"] == $id_asset)
 	{
+            support_asset_quiz_remove_metadata($asset);
 	    if (($ret = mark_as_deleted(
 		"support_asset", $id_asset, "codename", true))->is_error()
 	    )
@@ -492,6 +578,82 @@ function DeleteSupportAsset($id, $data, $method, $output, $module)
     not_found();
 }
 
+
+function SetSupportPreaccessQuiz($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id_category = abs((int)$id);
+    $id_support = isset($data["id_support"]) ? abs((int)$data["id_support"]) : 0;
+    $id_quiz = isset($data["id_quiz"]) ? (int)$data["id_quiz"] : 0;
+    if ($id_category <= 0 || $id_support <= 0 || $id_quiz <= 0)
+        bad_request();
+    $support = support_quiz_context($id_support);
+    if (!is_array($support) || (int)$support["id_support_category"] !== $id_category)
+        not_found();
+
+    $ret = $method === "DELETE"
+        ? support_quiz_remove($support, $id_quiz)
+        : support_quiz_add($support, $id_quiz);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizSupportEntrypointCannotWrite", $ret["details"] ?? ""));
+
+    add_log(EDITING_OPERATION, "Support #$id_support preaccess quiz #$id_quiz".($method === "DELETE" ? " removed" : " linked"));
+    return (new ValueResponse([
+        "msg" => $method === "DELETE"
+            ? ($Dictionnary["QuizSupportPreaccessRemoved"] ?? "Questionnaire de pré-accès retiré du support.")
+            : ($Dictionnary["QuizSupportPreaccessAdded"] ?? "Questionnaire de pré-accès ajouté au support."),
+    ]));
+}
+
+function StartSupportAssetPreaccessAttempt($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id_category = abs((int)$id);
+    $id_asset = isset($data["id_asset"]) ? abs((int)$data["id_asset"]) : 0;
+    if ($id_category <= 0 || $id_asset <= 0 || !is_array($User) || (int)($User["id"] ?? 0) <= 0)
+        forbidden();
+    $asset = support_asset_quiz_context($id_asset);
+    if (!is_array($asset) || (int)$asset["id_support_category"] !== $id_category)
+        not_found();
+
+    $ret = support_asset_preaccess_start($asset, (int)$User["id"]);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizAttemptCannotCreate", $ret["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => !empty($ret["created"])
+            ? ($Dictionnary["QuizAttemptCreated"] ?? "Tentative créée.")
+            : ($Dictionnary["QuizAttemptResume"] ?? "Reprise de la tentative en cours."),
+        "content" => "index.php?p=QuizAttemptMenu&a=".(int)$ret["id"],
+    ]));
+}
+
+function StartSupportPreaccessAttempt($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $id_category = abs((int)$id);
+    $id_support = isset($data["id_support"]) ? abs((int)$data["id_support"]) : 0;
+    if ($id_category <= 0 || $id_support <= 0 || !is_array($User) || (int)($User["id"] ?? 0) <= 0)
+        forbidden();
+    $support = support_quiz_context($id_support);
+    if (!is_array($support) || (int)$support["id_support_category"] !== $id_category)
+        not_found();
+
+    $ret = support_preaccess_start($support, (int)$User["id"]);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"] ?? "QuizAttemptCannotCreate", $ret["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => !empty($ret["created"])
+            ? ($Dictionnary["QuizAttemptCreated"] ?? "Tentative créée.")
+            : ($Dictionnary["QuizAttemptResume"] ?? "Reprise de la tentative en cours."),
+        "content" => "index.php?p=QuizAttemptMenu&a=".(int)$ret["id"],
+    ]));
+}
+
 $Tab = [
     "GET" => [
 	"" => [
@@ -512,6 +674,18 @@ $Tab = [
 	],
     ],
     "POST" => [
+        "preaccess" => [
+            "can_edit_supports",
+            "SetSupportPreaccessQuiz",
+        ],
+        "preaccess_attempt" => [
+            "logged_in",
+            "StartSupportPreaccessAttempt",
+        ],
+        "asset_preaccess_attempt" => [
+            "logged_in",
+            "StartSupportAssetPreaccessAttempt",
+        ],
 	"" => [
 	    "can_edit_supports",
 	    "AddSupportList",
@@ -522,12 +696,20 @@ $Tab = [
 	],
     ],
     "PUT" => [
+        "" => [
+            "can_edit_supports",
+            "EditSupportDefinition",
+        ],
 	"support" => [
 	    "can_edit_supports",
 	    "EditSupportAsset",
 	]
     ],
     "DELETE" => [
+        "preaccess" => [
+            "can_edit_supports",
+            "SetSupportPreaccessQuiz",
+        ],
 	"" => [
 	    "can_edit_supports",
 	    "DeleteSupport", // Handle support and category

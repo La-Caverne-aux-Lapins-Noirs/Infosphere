@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/dabsic_form.php");
+require_once (__DIR__."/document_hash.php");
 
 function build_document_list($value)
 {
@@ -136,11 +137,13 @@ function build_document_mergeconf_command(array $parts, $output_file, array $inc
     return ($cmd);
 }
 
-function build_document_render_command($input_file, $output_name, array $include_paths = [])
+function build_document_render_command($input_file, $output_name, array $include_paths = [], $hash_file = "")
 {
     $cmd = "docbuilder";
     foreach (build_document_existing_dirs($include_paths) as $path)
 	$cmd .= " -I ".escapeshellarg($path);
+    if ($hash_file != "")
+        $cmd .= " --hash-file ".escapeshellarg($hash_file);
     $cmd .= " -i ".escapeshellarg($input_file);
     $cmd .= " -o ".escapeshellarg($output_name);
     return ($cmd);
@@ -185,23 +188,36 @@ function build_document_from_parts($output_name, array $document_parts, array $i
 	return (new ErrorResponse("CannotWriteFile", "temporary document"));
     @unlink($tmp);
     $merged = $tmp.".dab";
+    $hash_file = $tmp.".sha256";
 
-    $ret = run_command(build_document_mergeconf_command($parts, $merged, $include_paths));
+    // Keep one explicit mergeconf pass for Infosphere diagnostics/forms, but let
+    // DocBuilder compute the authoritative fingerprint from the resolved input.
+    $merge_parts = document_builder_append_dabsic_hash_parts($parts, "");
+    $ret = run_command(build_document_mergeconf_command($merge_parts, $merged, $include_paths));
     if ($ret["exit_code"] !== 0 || !file_exists($merged))
     {
 	@unlink($merged);
 	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
     }
 
-    $ret = run_command(build_document_render_command($merged, $output_name, $include_paths));
+    $ret = run_command(build_document_render_command($merged, $output_name, $include_paths, $hash_file));
     @unlink($merged);
     if ($ret["exit_code"] !== 0 || !file_exists($output_name))
+    {
+        @unlink($hash_file);
 	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
+    }
+
+    $dabsic_hash = strtolower(trim((string)@file_get_contents($hash_file)));
+    @unlink($hash_file);
+    if (!preg_match('/^[a-f0-9]{64}$/D', $dabsic_hash))
+        return (new ErrorResponse("CannotReadFile", "DocBuilder Dabsic hash"));
 
     return (new ValueResponse([
 	"output" => $output_name,
 	"stdout" => $ret["stdout"],
-	"stderr" => $ret["stderr"]
+	"stderr" => $ret["stderr"],
+        "dabsic_hash" => $dabsic_hash,
     ]));
 }
 
@@ -715,6 +731,8 @@ function document_builder_person_context(array $user)
     $fields["name"] = $identity;
     $fields["street"] = $fields["address"] ?? "";
     $fields["postal_city"] = trim(($fields["postal_code"] ?? "")." ".($fields["city"] ?? ""));
+    $signature = function_exists("user_identity_signature_file") ? user_identity_signature_file($user) : "";
+    $fields["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
     return ($fields);
 }
 
@@ -767,6 +785,7 @@ function document_builder_school_context(array $school)
 	"logo" => function_exists("school_document_logo_path") ? school_document_logo_path($school, true) : "",
 	"document_logo" => function_exists("school_document_logo_path") ? school_document_logo_path($school, true) : "",
 	"site_logo" => function_exists("school_site_logo_path") ? school_site_logo_path($school, true) : "",
+	"stamp" => function_exists("school_stamp_path") ? school_stamp_path($school, true) : "",
 	"logo_width" => "3cm",
 	"logo_height" => "2cm",
 	"document_logo_width" => "3cm",

@@ -46,7 +46,7 @@ if (isset($_GET["p"]))
     $Position = $_GET["p"];
 else
     $Position = "HomeMenu";
-if ($Position == "RegistrationForm")
+if ($Position == "RegistrationForm" || $Position == "QuizPublic")
 {
     header("Cache-Control: no-store, private");
     header("Referrer-Policy: no-referrer");
@@ -104,6 +104,8 @@ $Unlisted = [
     "JuryMenu" => "./pages/jury/",
     "DabsicEditorMenu" => "./pages/dabsic_editor/",
     "DabsicFormMenu" => "./pages/dabsic_form/",
+    "QuizAttemptMenu" => "./pages/quiz_attempt/",
+    "QuizPublic" => "./pages/quiz_public/",
     "RegistrationForm" => "./pages/registration_form/",
     "DocumentSignaturePdf" => "./pages/document_pdf/",
     "DocumentWorkflowPdf" => "./pages/document_pdf/",
@@ -113,6 +115,7 @@ $TopMenu = [
     "HomeMenu" => "./pages/home/",
     "ProfileMenu" => "./pages/profile/",
     "CalendarMenu" => "./pages/calendar/",
+    "QuizInboxMenu" => "./pages/quiz_inbox/",
     "ModulesMenu" => "./pages/modules/",
     
     "ClassMenu" => "./pages/support/",

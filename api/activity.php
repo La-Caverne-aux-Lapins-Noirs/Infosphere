@@ -34,6 +34,30 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "SetSubject"
 	],
+	"preaccess" => [
+	    "is_teacher_for_activity",
+	    "SetActivityPreaccessQuiz"
+	],
+	"preaccess_attempt" => [
+	    "logged_in",
+	    "StartActivityPreaccessAttempt"
+	],
+	"satisfaction_quiz" => [
+	    "is_teacher_for_activity",
+	    "SetActivitySatisfactionQuiz"
+	],
+	"satisfaction_attempt" => [
+	    "logged_in",
+	    "StartActivitySatisfactionAttempt"
+	],
+	"rubric_quiz" => [
+	    "is_teacher_for_activity",
+	    "SetActivityRubricQuiz"
+	],
+	"rubric_attempt" => [
+	    "is_assistant_for_activity",
+	    "StartActivityRubricAttempt"
+	],
 	"wallpaper" => [
 	    "is_teacher_for_activity",
 	    "AddMood"
@@ -149,6 +173,18 @@ $Tab = [
 	"subject" => [
 	    "is_teacher_for_activity",
 	    "SetSubject"
+	],
+	"preaccess" => [
+	    "is_teacher_for_activity",
+	    "SetActivityPreaccessQuiz"
+	],
+	"satisfaction_quiz" => [
+	    "is_teacher_for_activity",
+	    "SetActivitySatisfactionQuiz"
+	],
+	"rubric_quiz" => [
+	    "is_teacher_for_activity",
+	    "SetActivityRubricQuiz"
 	],
 	"medal" => [
 	    "is_teacher_for_activity",

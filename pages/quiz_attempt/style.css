@@ -1,0 +1,147 @@
+.quiz-attempt-page
+{
+    width: min(1100px, calc(100% - 24px));
+    margin: 0 auto;
+    padding: 12px 0 40px 0;
+}
+
+.quiz-attempt-heading,
+.quiz-attempt-manager-nav,
+.quiz-attempt-actions,
+.quiz-attempt-score
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.quiz-attempt-heading
+{
+    margin-bottom: 15px;
+}
+
+.quiz-attempt-heading h2
+{
+    margin-bottom: 4px;
+}
+
+.quiz-attempt-heading p
+{
+    margin: 0;
+    opacity: .8;
+}
+
+.quiz-attempt-meta
+{
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.quiz-attempt-meta > *
+{
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, .25);
+}
+
+.quiz-attempt-manager-nav
+{
+    margin-bottom: 12px;
+    padding: 8px;
+    border: 1px solid rgba(140, 140, 140, .35);
+    border-radius: 5px;
+}
+
+.quiz-attempt-form textarea,
+.quiz-attempt-form input[type="text"]
+{
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 780px;
+}
+
+.quiz-attempt-actions
+{
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+.quiz-attempt-result-summary,
+.quiz-attempt-result-group
+{
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid rgba(140, 140, 140, .35);
+    border-radius: 6px;
+}
+
+.quiz-attempt-score strong
+{
+    font-size: 1.35em;
+}
+
+.quiz-attempt-pass
+{
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.quiz-attempt-pass.yes,
+.quiz-attempt-result-question.correct
+{
+    background: rgba(35, 125, 70, .18);
+}
+
+.quiz-attempt-pass.no,
+.quiz-attempt-result-question.wrong
+{
+    background: rgba(160, 55, 55, .18);
+}
+
+.quiz-attempt-result-question.neutral
+{
+    background: rgba(120, 120, 120, .12);
+}
+
+.quiz-attempt-result-questions
+{
+    display: grid;
+    gap: 6px;
+}
+
+.quiz-attempt-result-question
+{
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 4px;
+}
+
+.quiz-attempt-artifacts
+{
+    margin-top: 18px;
+}
+
+.quiz-attempt-artifacts details
+{
+    margin-top: 7px;
+    border: 1px solid rgba(140, 140, 140, .28);
+    border-radius: 5px;
+    padding: 7px 9px;
+}
+
+.quiz-attempt-artifacts pre
+{
+    max-height: 420px;
+    overflow: auto;
+    padding: 10px;
+    background: rgba(0, 0, 0, .28);
+    white-space: pre;
+}

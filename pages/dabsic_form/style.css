@@ -122,7 +122,9 @@
     color: #f2d37e;
 }
 
-.dabsic-form-field input
+.dabsic-form-field input,
+.dabsic-form-field select,
+.dabsic-form-field textarea
 {
     width: 100%;
     min-height: 34px;
@@ -135,7 +137,21 @@
     font-size: 15px;
 }
 
-.dabsic-form-field input:focus
+.dabsic-form-field textarea
+{
+    min-height: 86px;
+    resize: vertical;
+}
+
+.dabsic-form-field input[readonly]
+{
+    color: #c7d8c8;
+    background: #202521;
+}
+
+.dabsic-form-field input:focus,
+.dabsic-form-field select:focus,
+.dabsic-form-field textarea:focus
 {
     outline: none;
     border-color: #74b8ff;
@@ -194,6 +210,32 @@
     gap: 20px;
     padding: 11px 0 4px 0;
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0), #020702 35%);
+}
+
+.dabsic-form-action-buttons
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.dabsic-form-finalize
+{
+    min-width: 220px;
+    min-height: 34px;
+    border: 1px solid #3275a8;
+    border-radius: 4px;
+    background: #184e78;
+    color: white;
+    cursor: pointer;
+}
+
+.dabsic-form-finalize:disabled
+{
+    cursor: default;
+    opacity: 0.45;
 }
 
 .dabsic-form-save
@@ -320,4 +362,24 @@
     padding: 2px 0 10px 0;
     color: #8bd58f;
     font-weight: bold;
+}
+
+/* Shared FormGroup interactive controls */
+.dabsic-form-field .form-field-choices
+{
+    display: grid;
+    gap: 6px;
+}
+
+.dabsic-form-field .form-field-choice
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dabsic-form-field .form-field-choice input
+{
+    width: auto;
+    min-height: auto;
 }

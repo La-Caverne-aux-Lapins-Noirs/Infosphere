@@ -2,6 +2,8 @@
 
 require_once (__DIR__."/document_signatures.php");
 require_once (__DIR__."/document_sources.php");
+require_once (__DIR__."/form_field.php");
+require_once (__DIR__."/public_invitation.php");
 
 function registration_form_kinds()
 {
@@ -122,13 +124,20 @@ function registration_form_build_document_schema(array $metadata, $role = "")
             $editable = isset($edit[$group]);
             if ($editable)
                 $schema["requested_fields"][] = $field;
+            $declared_type = strtolower(trim((string)($field_definition["type"] ?? "")));
+            $field_type = !empty($field_definition["type_explicit"]) && form_field_is_common_type($declared_type)
+                ? $declared_type
+                : registration_form_field_type($field);
             $schema["fields"][$field] = [
                 "label" => (string)($field_definition["label"] ?? registration_form_label($field)),
                 "custom_label" => true,
-                "type" => registration_form_field_type($field),
+                "type" => $field_type,
+                "declared_type" => $declared_type,
                 "group" => $group,
                 "editable" => $editable,
                 "required" => !empty($field_definition["required"]),
+                "choices" => $field_definition["choices"] ?? [],
+                "choice_values" => $field_definition["choice_values"] ?? [],
             ];
         }
     }
@@ -191,7 +200,7 @@ function registration_form_is_profile_kind($kind)
 
 function registration_form_token_hash($token)
 {
-    return (hash("sha256", (string)$token));
+    return (public_invitation_token_hash($token));
 }
 
 function registration_form_decode_json($value, $default = [])
@@ -204,11 +213,7 @@ function registration_form_decode_json($value, $default = [])
 
 function registration_form_public_url($token)
 {
-    $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ||
-        (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && strtolower($_SERVER["HTTP_X_FORWARDED_PROTO"]) == "https");
-    $host = $_SERVER["HTTP_HOST"] ?? "";
-    $base = ($host == "" ? "" : (($https ? "https" : "http")."://".$host));
-    return ($base."/index.php?p=RegistrationForm&token=".rawurlencode($token));
+    return (public_invitation_url("RegistrationForm", $token));
 }
 
 function registration_form_allowed_prefixes()
@@ -525,15 +530,15 @@ function registration_form_refresh_schema($id, array $schema, array $new_fields)
 function registration_form_fetch_invitation($token, $allow_completed = true)
 {
     global $Database;
-    if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/i', $token))
+    if (!public_invitation_token_is_valid($token))
         return (["ok" => false, "error" => "RegistrationFormInvalidToken"]);
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $row = db_select_one("user_form.*, user.codename, user.mail, user.first_name, user.family_name, user.profile_status
         FROM user_form LEFT JOIN user ON user.id = user_form.id_user
         WHERE token_hash = '$hash'");
-    if ($row == NULL || $row["revoked_at"] !== NULL)
+    if ($row == NULL || public_invitation_is_revoked($row["revoked_at"] ?? NULL))
         return (["ok" => false, "error" => "RegistrationFormInvalidToken"]);
-    if (strtotime($row["expires_at"]) < time())
+    if (public_invitation_is_expired($row["expires_at"] ?? NULL))
         return (["ok" => false, "error" => "RegistrationFormExpired"]);
     if (!$allow_completed && $row["completed_at"] !== NULL)
         return (["ok" => false, "error" => "RegistrationFormCompleted"]);
@@ -817,7 +822,7 @@ function registration_form_create_invitation($id_user, $kind, $id_creator)
     if ($schema_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
 
-    $token = bin2hex(random_bytes(32));
+    $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $schema_sql = $Database->real_escape_string($schema_json);
     $id_user = (int)$id_user;
@@ -858,7 +863,7 @@ function registration_form_create_profile_invitation($id_user, $id_creator)
     if ($schema_json === false || $answers_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
 
-    $token = bin2hex(random_bytes(32));
+    $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $schema_sql = $Database->real_escape_string($schema_json);
     $answers_sql = $Database->real_escape_string($answers_json);
@@ -970,16 +975,21 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     ];
     $known_values = array_merge(dabsic_form_prefill_from_chain($chain_json), $loaded["values"]);
     $answers = [];
-    foreach (array_keys($schema["fields"]) as $field)
-        $answers[$field] = array_key_exists($field, $known_values)
-            ? (string)$known_values[$field] : "";
+    foreach (($schema["fields"] ?? []) as $field => $definition)
+    {
+        $value = array_key_exists($field, $known_values) ? $known_values[$field] : NULL;
+        if (form_field_is_common_type($definition["type"] ?? ""))
+            $answers[$field] = form_field_storage_value($definition, $value);
+        else
+            $answers[$field] = is_scalar($value) || $value === NULL ? (string)($value ?? "") : "";
+    }
 
     $schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $answers_json = json_encode($answers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($schema_json === false || $answers_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
 
-    $token = bin2hex(random_bytes(32));
+    $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $schema_sql = $Database->real_escape_string($schema_json);
     $answers_sql = $Database->real_escape_string($answers_json);
@@ -1019,7 +1029,7 @@ function registration_form_revoke_token($token)
 {
     global $Database;
 
-    if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/i', $token))
+    if (!public_invitation_token_is_valid($token))
         return (false);
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     return ((bool)$Database->query("UPDATE user_form SET revoked_at = NOW() WHERE token_hash = '$hash' AND revoked_at IS NULL"));
@@ -1206,11 +1216,14 @@ function registration_form_save_document_invitation(array $invitation, array $an
     {
         if (empty($definition["editable"]))
             continue ;
-        $invitation_value = array_key_exists($field, $invitation_values)
-            ? (string)$invitation_values[$field] : "";
-        $current_value = array_key_exists($field, $loaded["values"])
-            ? (string)$loaded["values"][$field]
-            : (string)($prefilled[$field] ?? "");
+        $invitation_value = form_field_storage_value($definition, $invitation_values[$field] ?? NULL);
+        $current_value = form_field_storage_value($definition, array_key_exists($field, $loaded["values"])
+            ? $loaded["values"][$field] : ($prefilled[$field] ?? NULL));
+        if ($definition["type"] === "checkbox")
+        {
+            sort($invitation_value, SORT_STRING);
+            sort($current_value, SORT_STRING);
+        }
         if ($invitation_value !== $current_value)
             $concurrent[] = $field;
     }
@@ -1311,7 +1324,13 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
 
     $answers = $invitation["answers_data"];
     foreach ($submitted as $field => $value)
-        $answers[$field] = is_scalar($value) || $value === NULL ? (string)$value : "";
+    {
+        $definition = $allowed[$field] ?? [];
+        if (form_field_is_common_type($definition["type"] ?? ""))
+            $answers[$field] = form_field_storage_value($definition, $value);
+        else
+            $answers[$field] = is_scalar($value) || $value === NULL ? (string)$value : "";
+    }
     if (registration_form_is_document_signature_kind($invitation["kind"] ?? ""))
         return (registration_form_save_document_signature_invitation($invitation, $finalize, $signature_consent));
     if (registration_form_is_document_kind($invitation["kind"] ?? ""))
@@ -1491,7 +1510,7 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
     if ($schema_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
 
-    $token = bin2hex(random_bytes(32));
+    $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $schema_sql = $Database->real_escape_string($schema_json);
     $kind = "SIG-".substr(hash("sha256", $owner_user_id."|".$instance_id."|".$role), 0, 28);

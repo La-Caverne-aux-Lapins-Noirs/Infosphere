@@ -240,9 +240,17 @@ function support_asset_intercom_visible_asset_ids()
         {
             if (empty($support["selected"]) || !isset($support["asset"]))
                 continue ;
+            if (function_exists("support_preaccess_can_read")
+                && !support_preaccess_can_read((int)($support["id"] ?? 0), (int)$User["id"]))
+                continue ;
             foreach ($support["asset"] as $asset)
                 if (!empty($asset["selected"]) && isset($asset["id"]))
+                {
+                    if (function_exists("support_asset_preaccess_can_read")
+                        && !support_asset_preaccess_can_read((int)$asset["id"], (int)$User["id"]))
+                        continue ;
                     $cache[(int)$asset["id"]] = true;
+                }
         }
     }
     return ($cache);

@@ -261,9 +261,9 @@ function document_workflow_create_frozen_instance($id_user, $model_reference, $m
         $metadata["task_plan"] = $obligation_plan;
 
     // Callers may attach non-authoritative workflow metadata (archive targets,
-    // source context, display label). Core integrity/state fields above cannot
+    // source context, display label, resolved Dabsic fingerprint). Core integrity/state fields above cannot
     // be overridden through this extension point.
-    foreach (["display_name", "archive_targets", "source_context"] as $extra_key)
+    foreach (["display_name", "archive_targets", "source_context", "resolved_dabsic_hash"] as $extra_key)
         if (array_key_exists($extra_key, $extra_metadata))
             $metadata[$extra_key] = $extra_metadata[$extra_key];
 

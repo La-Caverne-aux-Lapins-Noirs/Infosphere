@@ -41,6 +41,22 @@
 		<?php support_copy_codename_button($category["codename"], "@"); ?>
 	    <?php } ?>
 	</span>
+        <?php if (can_edit_supports()) { ?>
+            <input
+                type="button"
+                value="E"
+                class="support_admin_button"
+                title="Modifier la section"
+                onclick="support_show_structure_configuration(
+                    'category',
+                    <?=(int)$category["id"]; ?>,
+                    '<?=base64_encode(requirex(__DIR__."/config_structure.php", [
+                        "structure_type" => "category",
+                        "category" => $category
+                    ])); ?>'
+                );"
+            />
+        <?php } ?>
 	<br /><br />
 	<input
 	    id="menu_category_<?=$category["id"]; ?>_button"
@@ -61,6 +77,7 @@
     <ul id="menu_category_<?=$category["id"]; ?>">
 	<?php foreach ($category["support"] as $support) { ?>
 	    <?php if ($support["selected"] == false) continue ; ?>
+            <?php $support_preaccess_menu_status = support_preaccess_status($support, support_progress_current_user_id()); ?>
 	    <li>
 		<?php if (can_edit_supports()) { ?>
 		    <?php
@@ -85,6 +102,20 @@
 		    </form>
 		<?php } ?>
 		<?php if (can_edit_supports()) { ?>
+                    <input
+                        type="button"
+                        value="E"
+                        class="support_admin_button"
+                        title="Modifier le chapitre"
+                        onclick="support_show_structure_configuration(
+                            'support',
+                            <?=(int)$support["id"]; ?>,
+                            '<?=base64_encode(requirex(__DIR__."/config_structure.php", [
+                                "structure_type" => "support",
+                                "support" => $support
+                            ])); ?>'
+                        );"
+                    />
 		    <?php support_copy_codename_button($support["codename"]); ?>
 		<?php } ?>
 		<a onclick="display_panel('support', <?=$support["id"]; ?>, false, true);" style="cursor: pointer;">
@@ -96,6 +127,7 @@
 			    support_new_message_marker($support_intercom_unread, $support_intercom_unread == 1 ? "1 élément avec nouveau message" : $support_intercom_unread." éléments avec nouveaux messages");
 			    ?>
 			    <?php support_pedagogical_coverage_warning_marker(support_pedagogical_support_content_coverage($support), "Chapitre contenant du contenu non couvert par une matière ou activité"); ?>
+                            <?php support_preaccess_lock_marker($support_preaccess_menu_status, can_edit_supports(), "Pré-accès du chapitre"); ?>
 			    <?php support_compact_label($support, support_empty_menu_class($support), support_empty_menu_title($support)); ?>
 			</h4>
 		    </div>

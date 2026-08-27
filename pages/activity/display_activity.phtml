@@ -1,3 +1,37 @@
+<style>
+.activity-preaccess-admin
+{
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid rgba(128, 128, 128, .35);
+    border-radius: 6px;
+}
+.activity-preaccess-admin > strong,
+.activity-preaccess-admin > small
+{
+    display: block;
+    margin-bottom: 6px;
+}
+.activity-preaccess-admin-row
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+.activity-preaccess-admin form
+{
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+.activity-preaccess-admin select
+{
+    min-width: 220px;
+    max-width: 420px;
+}
+</style>
 <?php
 global $Configuration;
 global $BackgroundColor;
@@ -304,13 +338,147 @@ $js = "silent_submit(this)";
 		    "linked_elems" => $module->mcq,
 		    "admin_func" => "is_teacher_for_activity"
 		]); ?>
-		<?php list_of_links([
-		    "hook_name" => "activity",
-		    "hook_id" => $module->id,
-		    "linked_name" => "satisfaction",
-		    "linked_elems" => $module->satisfaction,
-		    "admin_func" => "is_teacher_or_director_for_activity"
-		]); ?>
+                <?php if ($module->parent_activity != -1) {
+                    $activity_preaccess_quizzes = activity_quiz_entrypoint_quizzes($module, "preaccess");
+                    $activity_preaccess_own = activity_quiz_managed_quizzes($module, "preaccess");
+                    $activity_preaccess_own_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_preaccess_own);
+                    $activity_preaccess_all_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_preaccess_quizzes);
+                    $activity_quiz_catalog = questionnaire_list();
+                    $activity_quiz_refresh = "send_ajax('get', '/api/".$page."/".(int)$module->id."', null, 'edit_formular', null, null, null, function() { setTimeout(select_formular, 1); })";
+                ?>
+                    <div class="activity-preaccess-admin">
+                        <strong><?=$Dictionnary["QuizPreaccess"] ?? "Questionnaires de pré-accès"; ?></strong>
+                        <small><?=$Dictionnary["QuizPreaccessAdminHelp"] ?? "Tous les questionnaires référencés par preaccess.dab doivent être réussis avant l'accès au sujet. Une configuration du template reste héritée."; ?></small>
+                        <?php foreach ($activity_preaccess_quizzes as $pre_quiz) {
+                            $pre_loaded = questionnaire_load_model($pre_quiz);
+                            $pre_label = $pre_loaded["ok"] ? $pre_loaded["model"]["name"] : $pre_quiz["codename"];
+                            $pre_is_own = in_array((int)$pre_quiz["id"], $activity_preaccess_own_ids, true);
+                        ?>
+                            <div class="activity-preaccess-admin-row">
+                                <span><?=htmlspecialchars($pre_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> <code><?=htmlspecialchars($pre_quiz["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></span>
+                                <?php if ($pre_is_own) { ?>
+                                    <form method="delete" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/preaccess" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                                        <input type="hidden" name="id_quiz" value="<?=(int)$pre_quiz["id"]; ?>" />
+                                        <button type="submit" class="danger">×</button>
+                                    </form>
+                                <?php } else { ?>
+                                    <small><?=$Dictionnary["QuizPreaccessInherited"] ?? "hérité"; ?></small>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                        <form method="post" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/preaccess" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                            <select name="id_quiz" required>
+                                <option value=""><?=$Dictionnary["QuizPreaccessAdd"] ?? "Ajouter un questionnaire…"; ?></option>
+                                <?php foreach ($activity_quiz_catalog as $pre_quiz) {
+                                    if (in_array((int)$pre_quiz["id"], $activity_preaccess_all_ids, true))
+                                        continue;
+                                    $pre_loaded = questionnaire_load_model($pre_quiz);
+                                    $pre_label = $pre_loaded["ok"] ? $pre_loaded["model"]["name"] : $pre_quiz["codename"];
+                                ?>
+                                    <option value="<?=(int)$pre_quiz["id"]; ?>"><?=htmlspecialchars(($pre_quiz["school_codename"] ?? "")." / ".$pre_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                                <?php } ?>
+                            </select>
+                            <button type="submit">+</button>
+                        </form>
+                        <?php $preaccess_path = activity_quiz_managed_entrypoint_path($module, "preaccess"); ?>
+                        <small><code><?=htmlspecialchars(questionnaire_relative_project_path($preaccess_path), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></small>
+                    </div>
+                <?php } ?>
+
+                <?php if ($module->parent_activity != -1) {
+                    $activity_satisfaction_quizzes = activity_quiz_entrypoint_quizzes($module, "satisfaction");
+                    $activity_satisfaction_own = activity_quiz_managed_quizzes($module, "satisfaction");
+                    $activity_satisfaction_own_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_satisfaction_own);
+                    $activity_satisfaction_all_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_satisfaction_quizzes);
+                    $activity_quiz_catalog = questionnaire_list();
+                    $activity_quiz_refresh = "send_ajax('get', '/api/".$page."/".(int)$module->id."', null, 'edit_formular', null, null, null, function() { setTimeout(select_formular, 1); })";
+                ?>
+                    <div class="activity-preaccess-admin">
+                        <strong><?=$Dictionnary["QuizSatisfaction"] ?? "Enquêtes de satisfaction"; ?></strong>
+                        <small><?=$Dictionnary["QuizSatisfactionAdminHelp"] ?? "Les questionnaires référencés par satisfaction.dab sont proposés aux étudiants dans l'onglet Avis sur l'activité. Les questionnaires du template restent hérités."; ?></small>
+                        <?php foreach ($activity_satisfaction_quizzes as $sat_quiz) {
+                            $sat_loaded = questionnaire_load_model($sat_quiz);
+                            $sat_label = $sat_loaded["ok"] ? $sat_loaded["model"]["name"] : $sat_quiz["codename"];
+                            $sat_is_own = in_array((int)$sat_quiz["id"], $activity_satisfaction_own_ids, true);
+                        ?>
+                            <div class="activity-preaccess-admin-row">
+                                <span><?=htmlspecialchars($sat_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> <code><?=htmlspecialchars($sat_quiz["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></span>
+                                <?php if ($sat_is_own) { ?>
+                                    <form method="delete" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/satisfaction_quiz" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                                        <input type="hidden" name="id_quiz" value="<?=(int)$sat_quiz["id"]; ?>" />
+                                        <button type="submit" class="danger">×</button>
+                                    </form>
+                                <?php } else { ?>
+                                    <small><?=$Dictionnary["QuizPreaccessInherited"] ?? "hérité"; ?></small>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                        <form method="post" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/satisfaction_quiz" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                            <select name="id_quiz" required>
+                                <option value=""><?=$Dictionnary["QuizSatisfactionAdd"] ?? "Ajouter une enquête…"; ?></option>
+                                <?php foreach ($activity_quiz_catalog as $sat_quiz) {
+                                    if (in_array((int)$sat_quiz["id"], $activity_satisfaction_all_ids, true))
+                                        continue;
+                                    $sat_loaded = questionnaire_load_model($sat_quiz);
+                                    $sat_label = $sat_loaded["ok"] ? $sat_loaded["model"]["name"] : $sat_quiz["codename"];
+                                ?>
+                                    <option value="<?=(int)$sat_quiz["id"]; ?>"><?=htmlspecialchars(($sat_quiz["school_codename"] ?? "")." / ".$sat_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                                <?php } ?>
+                            </select>
+                            <button type="submit">+</button>
+                        </form>
+                        <?php $satisfaction_path = activity_quiz_managed_entrypoint_path($module, "satisfaction"); ?>
+                        <small><code><?=htmlspecialchars(questionnaire_relative_project_path($satisfaction_path), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></small>
+                    </div>
+
+
+                <?php if ($module->parent_activity != -1) {
+                    $activity_rubric_quizzes = activity_quiz_entrypoint_quizzes($module, "rubric");
+                    $activity_rubric_own = activity_quiz_managed_quizzes($module, "rubric");
+                    $activity_rubric_own_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_rubric_own);
+                    $activity_rubric_all_ids = array_map(function($quiz) { return ((int)$quiz["id"]); }, $activity_rubric_quizzes);
+                    $activity_quiz_catalog = questionnaire_list();
+                    $activity_quiz_refresh = "send_ajax('get', '/api/".$page."/".(int)$module->id."', null, 'edit_formular', null, null, null, function() { setTimeout(select_formular, 1); })";
+                ?>
+                    <div class="activity-preaccess-admin">
+                        <strong><?=$Dictionnary["QuizRubric"] ?? "Barèmes d’évaluation"; ?></strong>
+                        <small><?=$Dictionnary["QuizRubricAdminHelp"] ?? "Les questionnaires référencés par rubric.dab sont remplis par les responsables pédagogiques pour évaluer les étudiants. Les médailles obtenues sont portées par l’activité."; ?></small>
+                        <?php foreach ($activity_rubric_quizzes as $rubric_quiz) {
+                            $rubric_loaded = questionnaire_load_model($rubric_quiz);
+                            $rubric_label = $rubric_loaded["ok"] ? $rubric_loaded["model"]["name"] : $rubric_quiz["codename"];
+                            $rubric_is_own = in_array((int)$rubric_quiz["id"], $activity_rubric_own_ids, true);
+                        ?>
+                            <div class="activity-preaccess-admin-row">
+                                <span><?=htmlspecialchars($rubric_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> <code><?=htmlspecialchars($rubric_quiz["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></span>
+                                <?php if ($rubric_is_own) { ?>
+                                    <form method="delete" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/rubric_quiz" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                                        <input type="hidden" name="id_quiz" value="<?=(int)$rubric_quiz["id"]; ?>" />
+                                        <button type="submit" class="danger">×</button>
+                                    </form>
+                                <?php } else { ?>
+                                    <small><?=$Dictionnary["QuizPreaccessInherited"] ?? "hérité"; ?></small>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                        <form method="post" action="/api/<?=$page; ?>/<?=(int)$module->id; ?>/rubric_quiz" onsubmit="return silent_submitf(this, {after_success: function() { <?=$activity_quiz_refresh; ?>; }});">
+                            <select name="id_quiz" required>
+                                <option value=""><?=$Dictionnary["QuizRubricAdd"] ?? "Ajouter un barème…"; ?></option>
+                                <?php foreach ($activity_quiz_catalog as $rubric_quiz) {
+                                    if (in_array((int)$rubric_quiz["id"], $activity_rubric_all_ids, true))
+                                        continue;
+                                    $rubric_loaded = questionnaire_load_model($rubric_quiz);
+                                    $rubric_label = $rubric_loaded["ok"] ? $rubric_loaded["model"]["name"] : $rubric_quiz["codename"];
+                                ?>
+                                    <option value="<?=(int)$rubric_quiz["id"]; ?>"><?=htmlspecialchars(($rubric_quiz["school_codename"] ?? "")." / ".$rubric_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                                <?php } ?>
+                            </select>
+                            <button type="submit">+</button>
+                        </form>
+                        <?php $rubric_path = activity_quiz_managed_entrypoint_path($module, "rubric"); ?>
+                        <small><code><?=htmlspecialchars(questionnaire_relative_project_path($rubric_path), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></code></small>
+                    </div>
+                <?php } ?>
+                <?php } ?>
 	    </div>
 	</td>
     </tr>

@@ -33,7 +33,20 @@ function gather_form(form, wrapper, ismap)
     {
 	if (fields[name].name == "")
 	    continue ;
-	if (fields[name].type == "checkbox")
+	if (fields[name].tagName == "SELECT" && fields[name].multiple)
+	{
+	    let key = fields[name].name;
+	    let values = [];
+
+	    if (key.endsWith("[]"))
+		key = key.substring(0, key.length - 2);
+	    Array.prototype.forEach.call(fields[name].options, function(option) {
+		if (option.selected)
+		    values.push(option.value);
+	    });
+	    filling[key] = values;
+	}
+	else if (fields[name].type == "checkbox")
 	    filling[fields[name].name] = fields[name].checked ? 1 : 0;
 	else if (fields[name].type == "file")
 	{

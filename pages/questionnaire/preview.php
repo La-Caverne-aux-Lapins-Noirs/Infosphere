@@ -22,23 +22,10 @@
                         <?=htmlspecialchars($question["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
                         <?php if ($question["required"]) { ?><span class="questionnaire-required">*</span><?php } ?>
                     </label>
-                    <?php if ($question["type"] == "textarea") { ?>
-                        <textarea rows="4" disabled></textarea>
-                    <?php } else if ($question["type"] == "radio" || $question["type"] == "checkbox") { ?>
-                        <div class="questionnaire-preview-choices">
-                            <?php foreach ($question["choices"] as $ci => $choice) { ?>
-                                <label>
-                                    <input type="<?=$question["type"] == "radio" ? "radio" : "checkbox"; ?>" name="preview-<?=htmlspecialchars($group["key"]."-".$question["key"], ENT_QUOTES); ?>" disabled />
-                                    <span><?=htmlspecialchars($choice, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
-                                </label>
-                            <?php } ?>
-                            <?php if (!count($question["choices"])) { ?>
-                                <span class="questionnaire-empty"><?=$Dictionnary["QuestionnaireNoChoices"] ?? "Aucune proposition définie."; ?></span>
-                            <?php } ?>
-                        </div>
-                    <?php } else { ?>
-                        <input type="text" disabled />
-                    <?php } ?>
+                    <?=form_field_render($question, NULL, [
+                        "name" => "preview-".$group["key"]."-".$question["key"],
+                        "disabled" => true,
+                    ]); ?>
                 </div>
             <?php } ?>
         </fieldset>

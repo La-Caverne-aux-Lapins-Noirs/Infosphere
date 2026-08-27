@@ -1,4 +1,5 @@
 Document = "Report"
+Title = "Bulletin"
 
 [Header
   Left = [Text($,Left)
