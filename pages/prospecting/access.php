@@ -1,4 +1,4 @@
 <?php
 
-$access = is_commercial() || is_secretariat();
+$access = am_i_commercial() || am_i_secretariat();
 

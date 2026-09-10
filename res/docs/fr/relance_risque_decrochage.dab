@@ -1,0 +1,21 @@
+@include ".base_relance_suivi/base.dab"
+Title = "Relance pour risque de désengagement ou de rupture"
+
+[FollowUp
+  Reason = "Risque de désengagement ou de rupture de parcours"
+  SupportProposal = "Un entretien avec l'équipe pédagogique afin d'identifier les difficultés rencontrées et de rechercher avec vous les mesures pédagogiques, organisationnelles ou d'orientation permettant de poursuivre votre parcours."
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Prévention du décrochage
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance concernant la poursuite de votre parcours de formation
+LetterSubject]
+
+{Content
+  @insert txt ($) "relance_risque_decrochage.txt"
+}

@@ -1,6 +1,10 @@
 <?php
 
-function am_i_teacher($teacher)
+function am_i_teacher()
 {
-    return (retrieve_authority($teacher) >= TEACHER);
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_teacher((int)$User["id"]));
 }

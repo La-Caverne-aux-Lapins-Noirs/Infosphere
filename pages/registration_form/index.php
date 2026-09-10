@@ -230,7 +230,7 @@ else
                                         ? ($Dictionnary["RegistrationFormSignatureRecorded"] ?? "Une signature est déjà enregistrée pour ce formulaire. Dessiner la remplacera.")
                                         : ($Dictionnary["RegistrationFormSignatureOptional"] ?? "Signez ici lorsque cette signature est nécessaire."));
                             ?></p>
-                            <canvas width="900" height="260" aria-label="Signature"></canvas>
+                            <canvas width="680" height="260" aria-label="Signature"></canvas>
                             <div><button type="button" data-clear-signature><?=$Dictionnary["Clear"] ?? "Effacer"; ?></button></div>
                         </section>
                         <?php } ?>

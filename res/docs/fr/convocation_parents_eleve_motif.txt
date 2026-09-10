@@ -1,0 +1,33 @@
+[#IfC;Parent.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Nous vous prions de bien vouloir vous présenter avec **[#Variable;Student.Identity]** à un rendez-vous avec la direction de [#Variable;School.Name] le **[#Variable;Appointment.Date] à [#Variable;Appointment.Time]** à l'adresse suivante :
+
+[@Indent]
+
+[@Center;**[#Variable;School.TrainingAddress]**]
+
+[@Indent]
+
+[@Indent]Cette convocation a pour motif :
+
+[@Center;**[#Variable;Appointment.Motive]**]
+
+[#IfC;Appointment.AdditionalNotice;!=;;[@Indent]
+
+[@Indent][#Variable;Appointment.AdditionalNotice]
+
+]
+[@Indent]En cas d'impossibilité de vous présenter à cette date, merci de prévenir l'établissement dans les meilleurs délais afin qu'un autre rendez-vous puisse être convenu.
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Parent.Gender;==;female;Madame;Monsieur], l'expression de ma considération distinguée.
+
+[@Indent]
+
+[@Right;La direction
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[#IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

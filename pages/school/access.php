@@ -1,3 +1,3 @@
 <?php
 
-$access = is_director();
+$access = am_i_director();

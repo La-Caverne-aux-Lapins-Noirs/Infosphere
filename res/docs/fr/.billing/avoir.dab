@@ -1,0 +1,104 @@
+@include ".base_letter/base.dab"
+Title = "Avoir"
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  FirstName = ""
+  FamilyName = ""
+]
+
+[Finance
+  Identity = ""
+  FirstName = ""
+  FamilyName = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[CreditNote
+  Reference = ""
+  Label = ""
+  Amount = ""
+  IssueDateLabel = ""
+  RelatedInvoiceReference = ""
+  RelatedInvoiceLabel = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève / bénéficiaire"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [Finance
+    Type = "finance"
+    Prefix = "Finance"
+    Label = "Responsable financier / destinataire"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Avoir
+  Left]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Finance.Identity]\par
+  [#Variable;Finance.Address]\par
+  [#Variable;Finance.PostalCity][@IfC;Finance.Country;!=;;\par[#Variable;Finance.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Avoir [#Variable;CreditNote.Reference]
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;CreditNote.IssueDateLabel]
+LetterDate]
+
+{Content
+  [Text($,Content)
+    Nous vous adressons l'avoir **[#Variable;CreditNote.Reference]** relatif à la facture **[#Variable;CreditNote.RelatedInvoiceReference]**.\par
+    \par
+    Facture concernée : [#Variable;CreditNote.RelatedInvoiceReference] — [#Variable;CreditNote.RelatedInvoiceLabel]\par
+    Motif / libellé : [#Variable;CreditNote.Label]\par
+    \par
+    **Montant de l'avoir : [#Variable;CreditNote.Amount]**\par
+    \par
+    Cet avoir est porté au crédit du compte financier de [#Variable;Student.Identity]. Un remboursement éventuel est enregistré séparément du présent avoir.
+  Content]
+}

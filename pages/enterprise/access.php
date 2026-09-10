@@ -1,3 +1,3 @@
 <?php
 
-$access = is_admin() || is_director() || is_commercial();
+$access = is_admin() || am_i_director() || am_i_commercial();

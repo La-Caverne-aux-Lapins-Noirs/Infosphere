@@ -1,10 +1,13 @@
 
 # Article 6 - Fin de stage : rapport-évaluation
 
-Le ou la stagiaire est tenu(e) à la fin du stage, de rédiger un rapport qu’il
+[@Size;3]
+[@Columns;2;
+[@Indent]Le ou la stagiaire est tenu(e) à la fin du stage, de rédiger un rapport qu’il
 (qu’elle) peut soumettre au chef de service de l’organisme d’accueil avant d’en
-remettre un exemplaire à l’EFRITS.  
+remettre un exemplaire à l’établissement [#Variable;School.Name].
 
-En cas de soutenance, le tuteur ou son représentant pourra être convié à y
+[@Indent]En cas de soutenance, le tuteur ou son représentant pourra être convié à y
 participer. Le chef d'entreprise délivre à l'intéressé une attestation de stage.
+]
 

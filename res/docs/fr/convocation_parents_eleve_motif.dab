@@ -1,0 +1,117 @@
+@include ".base_letter/base.dab"
+Title = "Convocation d'un élève avec son responsable légal"
+
+[School
+  Name = ""
+  LegalAddress = ""
+  LegalCity = ""
+  TrainingAddress = ""
+  Phone = ""
+  Mail = ""
+]
+
+[Student
+  Identity = ""
+  Gender = ""
+]
+
+[Parent
+  Identity = ""
+  Gender = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[Appointment
+  Date = ""
+  Time = ""
+  Motive = ""
+  AdditionalNotice = ""
+]
+
+[Generation
+  Date = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève"
+    Required = 1
+    Auto = "Owner"
+  ]
+  [Parent
+    Type = "parent"
+    Prefix = "Parent"
+    Label = "Responsable légal destinataire"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Direction signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Direction"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Convocation
+  Left]
+]
+
+[FormLabel
+  [Convocation
+    Label = "Convocation"
+    [Appointment
+      Date = "Date"
+      Time = "Heure"
+      Motive = "Motif"
+      AdditionalNotice = "Consigne complémentaire"
+    ]
+  ]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Parent.Identity]\par
+  [#Variable;Parent.Address]\par
+  [#Variable;Parent.PostalCity][@IfC;Parent.Country;!=;;\par[#Variable;Parent.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Convocation concernant [#Variable;Student.Identity][@IfC;Appointment.Motive;!=;; - [#Variable;Appointment.Motive]]
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "convocation_parents_eleve_motif.txt"
+}

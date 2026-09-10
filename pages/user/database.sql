@@ -18,6 +18,7 @@ CREATE TABLE `user` (
   `visibility` int(11) NOT NULL DEFAULT 3,
   `authority` int(11) NOT NULL DEFAULT 0,
   `money` int(11) NOT NULL DEFAULT 0,
+  `billing_hidden` tinyint(1) NOT NULL DEFAULT 0,
 
   -- Informations personnelles
   `nickname` varchar(255) DEFAULT NULL,

@@ -7,6 +7,7 @@
 
 require_once ("tools/document_workflow.php");
 require_once ("tools/registration_form.php");
+require_once ("tools/document_print.php");
 
 function document_pdf_not_found($message = "Document indisponible.", $status = 404)
 {
@@ -29,6 +30,27 @@ if ($Position == "DocumentSignaturePdf")
     header("X-Content-Type-Options: nosniff");
     header("Cache-Control: private, no-store, max-age=0");
     readfile($result["file"]);
+    exit ;
+}
+
+if ($Position == "DocumentPrintPdf")
+{
+    if (!logged_in())
+        document_pdf_not_found("Accès interdit.", 403);
+    $id_task = (int)($_GET["task"] ?? 0);
+    $task = document_task_row($id_task);
+    if (!is_array($task) || !document_print_current_user_can_manage_task($task))
+        document_pdf_not_found();
+    $pdf = document_print_file_for_task($task);
+    if ($pdf->is_error())
+        document_pdf_not_found("Document indisponible ou empreinte invalide.", 409);
+    $metadata = document_task_metadata($task);
+    $filename = document_print_safe_filename($metadata["original_filename"] ?? "document.pdf");
+    header("Content-Type: application/pdf");
+    header("Content-Disposition: inline; filename=\"".$filename."\"");
+    header("X-Content-Type-Options: nosniff");
+    header("Cache-Control: private, no-store, max-age=0");
+    readfile($pdf->value);
     exit ;
 }
 

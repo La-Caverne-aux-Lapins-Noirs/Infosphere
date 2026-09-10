@@ -67,7 +67,7 @@ function validate_external_relation_subscription_post()
     $target = (int)$_POST["relation_target"];
     if ($target <= 0 || db_select_one("id FROM user WHERE id = $target AND authority != -1") == NULL)
         return (new ErrorResponse("UserNotFound"));
-    if (!$User || (!is_commercial() && !is_identity_authority_for_user($target)))
+    if (!$User || (!am_i_commercial() && !is_identity_authority_for_user($target)))
         return (new ErrorResponse("InvalidParameter", "relation_target"));
     if (!count(user_relation_values($_POST["relation"] ?? [])))
         return (new ErrorResponse("MissingField", "relation"));

@@ -158,7 +158,7 @@ function GetRessourceDir($id, $data, $method, $output, $module, $msg = "")
         -1,
         "ressource",
         "medalres_browser",
-        is_teacher(),
+        am_i_teacher(),
         "",
         false,
         "",

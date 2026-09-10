@@ -34,6 +34,33 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
             "create_parent" => true
         ]);
 
+    if (preg_match('/^prospect-convocation:(motivation-theory|practical):([0-9]+)$/', (string)$key, $m))
+    {
+        require_once (__DIR__."/prospect_convocation.php");
+        $kind = (string)$m[1];
+        $id_prospect = (int)$m[2];
+        $spec = prospect_convocation_spec($kind);
+        $prospect = document_context_user($id_prospect);
+        if ($spec == NULL || !is_array($prospect) ||
+            ($prospect["profile_status"] ?? "") != "prospect" || empty($prospect["codename"]))
+            return (NULL);
+
+        $user_root = realpath($Configuration->UsersDir($prospect["codename"]));
+        if ($user_root === false || !is_dir($user_root))
+            return (NULL);
+        $directory = $user_root.DIRECTORY_SEPARATOR."admin/admission";
+        $absolute_file = $directory.DIRECTORY_SEPARATOR.$spec["output"];
+
+        return ([
+            "absolute_file" => $absolute_file,
+            "authorized_root" => $user_root,
+            "label" => $spec["label"]." - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
+            "create_parent" => true,
+            "private_user_output" => true,
+            "owner_user_id" => $id_prospect,
+        ]);
+    }
+
     if (preg_match('/^post-interview-report:([0-9]+)$/', (string)$key, $m))
     {
         $prospect = document_context_user((int)$m[1]);
@@ -53,7 +80,8 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
             "authorized_root" => $user_root,
             "label" => "Compte rendu post-entretien - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
             "create_parent" => true,
-            "private_user_output" => true
+            "private_user_output" => true,
+            "owner_user_id" => (int)$m[1]
         ]);
     }
 
@@ -78,7 +106,8 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
         return ([
             "file" => rtrim($relative, "/")."/".$m[2]."-".$m[3].".dab",
             "label" => "Données documentaires de ".$user["codename"],
-            "create_parent" => true
+            "create_parent" => true,
+            "owner_user_id" => $id_user
         ]);
     }
 
@@ -106,9 +135,25 @@ function dabsic_form_user_can_access_output($key)
         return (
             am_i_cycle_director() ||
             is_director_for_school(-1) ||
-            is_secretariat() ||
-            is_commercial()
+            am_i_secretariat() ||
+            am_i_commercial()
         );
+
+    // Admission convocations use the same prospect-side authorization model
+    // as the post-interview report.
+    if (preg_match('/^prospect-convocation:(?:motivation-theory|practical):([0-9]+)$/', (string)$key, $m))
+    {
+        $prospect = document_context_user((int)$m[1]);
+        if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect")
+            return (false);
+        $school = document_context_first_school_for_user((int)$m[1]);
+        $id_school = is_array($school) ? (int)($school["id_school"] ?? -1) : -1;
+        return (
+            is_director_for_school($id_school) ||
+            is_secretariat_for_school($id_school) ||
+            is_commercial_for_school($id_school)
+        );
+    }
 
     // Post-interview reports are prospect-side admission documents.
     if (preg_match('/^post-interview-report:([0-9]+)$/', (string)$key, $m))
@@ -120,8 +165,8 @@ function dabsic_form_user_can_access_output($key)
         $id_school = is_array($school) ? (int)($school["id_school"] ?? -1) : -1;
         return (
             is_director_for_school($id_school) ||
-            is_secretariat($id_school) ||
-            is_commercial($id_school)
+            is_secretariat_for_school($id_school) ||
+            is_commercial_for_school($id_school)
         );
     }
 
@@ -628,6 +673,7 @@ function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$me
         $is_field = array_key_exists("Label", $child)
             || array_key_exists("Required", $child)
             || array_key_exists("Default", $child)
+            || array_key_exists("Readonly", $child)
             || array_key_exists("Type", $child)
             || array_key_exists("Choices", $child)
             || array_key_exists("ChoiceValues", $child);
@@ -644,6 +690,15 @@ function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$me
                 "group" => (string)$group,
                 "required" => !empty($child["Required"]),
                 "default" => trim((string)($child["Default"] ?? "")),
+                // Readonly is a field-level presentation/access constraint.
+                // FormRole remains group-based, but a semantic context value
+                // can thus be displayed inside an otherwise editable group.
+                "readonly" => !empty($child["Readonly"]),
+                // Form values are plain text by default. RawLatex is an
+                // explicit, model-author-only escape hatch for the rare field
+                // whose stored value is intentionally TeX markup. Never set
+                // it on user-editable free-text fields.
+                "raw_latex" => !empty($child["RawLatex"]),
                 // Type only becomes authoritative for document forms when it
                 // was explicitly declared. Historical administrative fields
                 // without Type keep their dedicated heuristic renderer.
@@ -797,10 +852,12 @@ function dabsic_form_role_groups(array $metadata, $role, $access = "read")
 
 function dabsic_form_role_fields(array $metadata, $role, $access = "read")
 {
+    $access = strtolower(trim((string)$access));
     $groups = array_flip(dabsic_form_role_groups($metadata, $role, $access));
     $out = [];
     foreach (($metadata["fields"] ?? []) as $field => $definition)
-        if (isset($groups[$definition["group"] ?? ""]))
+        if (isset($groups[$definition["group"] ?? ""]) &&
+            !($access === "edit" && !empty($definition["readonly"])))
             $out[] = (string)$field;
     return ($out);
 }

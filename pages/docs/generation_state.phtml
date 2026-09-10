@@ -33,47 +33,39 @@
 
     <form method="post" action="/api/doc/0/generate" class="documents_generate_panel" onsubmit="return doc_generate_submit(this);">
 	<div class="documents_generate_toolbar">
-	    <input type="submit" value="<?=$Dictionnary["GenerateWithContext"] ?? "Aperçu prérempli"; ?>" class="documents_generate_button" title="Génère le document avec les paramètres Dabsic ajoutés ci-dessous et les informations éventuellement complétées." />
-	    <input type="button" value="Compléter les informations" title="Ouvre un formulaire contenant uniquement les champs qui ne sont pas déjà fournis par les paramètres Dabsic." onclick="return doc_complete_selected(this.form);" />
+	    <input type="submit" value="<?=$Dictionnary["GenerateWithContext"] ?? "Aperçu prérempli"; ?>" class="documents_generate_button" title="Génère le document avec le contexte défini ci-dessous et les informations éventuellement complétées." />
+	    <input type="button" value="Compléter les informations" title="Ouvre un formulaire contenant uniquement les champs qui ne sont pas déjà fournis par le contexte du document." onclick="return doc_complete_selected(this.form);" />
 	    <input type="button" value="<?=$Dictionnary["GenerateBlankDocument"] ?? "Modèle vierge"; ?>" title="Génère un modèle sans données bénéficiaire ni valeurs de formulaire, tout en conservant l’identité visuelle et les coordonnées de l’établissement." onclick="return doc_generate_submit(this.form, true, this);" />
 	</div>
 	<div id="doc_generation_error" class="doc_generation_error" style="display: none;"></div>
-	<input type="hidden" id="doc_chain" name="chain" value="[]" />
+	<input type="hidden" id="doc_context_bindings" name="context_bindings" value="{}" />
 	<input type="hidden" name="form_output" value="" />
 
-	<div class="doc_chain_box">
-	    <div style="font-weight: bold;">Paramètres Dabsic composés</div>
-	    <div id="doc_chain_list"></div>
-	    <div class="doc_chain_buttons">
-		<input type="button" value="+ Élève" onclick="doc_chain_add('student', 'Student');" />
-		<input type="button" value="+ Enseignant" onclick="doc_chain_add('teacher', 'Teacher');" />
-		<input type="button" value="+ Directeur" onclick="doc_chain_add('director', 'SignatureSources.Director', 'Director');" />
-		<input type="button" value="+ Commercial" onclick="doc_chain_add('commercial', 'Commercial');" />
-		<input type="button" value="+ Bibliothécaire" onclick="doc_chain_add('librarian', 'Librarian');" />
-		<input type="button" value="+ Secrétariat" onclick="doc_chain_add('secretariat', 'Secretariat');" />
-		<input type="button" value="+ École" onclick="doc_chain_add('school', 'School');" />
-		<input type="button" value="+ Entreprise" onclick="doc_chain_add('organization', 'Company');" />
-		<input type="button" value="+ Parent" onclick="doc_chain_add('parent', 'Parent');" />
-		<input type="button" value="+ Tuteur" onclick="doc_chain_add('tutor', 'Company.Tutor');" />
-		<input type="button" value="+ Jury" onclick="doc_chain_add('jury', 'Jury');" />
-		<input type="button" value="+ Session de titre" onclick="doc_chain_add('title_session', 'TitleSession');" />
-		<input type="button" value="+ Destinataire" onclick="doc_chain_add('user', 'Destination');" />
-		<input type="button" value="+ Champ" onclick="doc_chain_add('field');" />
-	    </div>
+	<div class="doc_context_box">
+	    <div style="font-weight: bold;">Contexte du document</div>
+	    <div id="doc_context_status" class="doc_context_status">Sélectionnez un document.</div>
+	    <div id="doc_context_list"></div>
+	    <div id="doc_context_buttons" class="doc_context_buttons"></div>
 	</div>
 
-	<div class="doclist">
+	<div class="doc_search_box">
+	    <input id="doc_search" type="search" autocomplete="off" placeholder="Rechercher un document…" aria-label="Rechercher un document" oninput="doc_filter_documents(this.value);" />
+	</div>
+
+	<div class="doclist" id="doc_document_list">
 	    <?php foreach (get_doc_sources() as $source => $docs) { ?>
-		<div class="doc_source_title"><?=htmlentities($docs["label"]); ?></div>
+		<div class="doc_source_title" data-doc-source="<?=htmlspecialchars($source, ENT_QUOTES); ?>"><?=htmlentities($docs["label"]); ?></div>
 		<?php foreach ($docs["documents"] as $doc) { ?>
 		    <?php
 		    $ref = document_reference_from_source_path($source, $doc);
 		    $hash = md5($ref);
 		    $form_file = document_source_editor_path($source, $doc);
+		    $context_schema = $form_file !== NULL
+		        ? document_context_schema_public(document_context_model_schema($form_file)) : [];
 		    ?>
 		    <input type="hidden" id="doc_<?=$hash; ?>" name="doc_<?=$hash; ?>" value="0" />
 		    <input type="hidden" name="docref_<?=$hash; ?>" value="<?=htmlentities($ref); ?>" />
-		    <div class="doc_document_choice" onclick="doc_toggle('doc_<?=$hash; ?>', this);" title="<?=htmlentities($ref); ?>" data-reference="<?=htmlspecialchars($ref, ENT_QUOTES); ?>" data-form-file="<?=htmlspecialchars((string)$form_file, ENT_QUOTES); ?>" data-form-hash="<?=$hash; ?>">
+		    <div class="doc_document_choice" onclick="doc_toggle('doc_<?=$hash; ?>', this);" title="<?=htmlentities($ref); ?>" data-doc-source="<?=htmlspecialchars($source, ENT_QUOTES); ?>" data-reference="<?=htmlspecialchars($ref, ENT_QUOTES); ?>" data-form-file="<?=htmlspecialchars((string)$form_file, ENT_QUOTES); ?>" data-form-hash="<?=$hash; ?>" data-contexts="<?=htmlspecialchars(json_encode($context_schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
 			<?=htmlentities(document_reference_label($ref)); ?>
 		    </div>
 		<?php } ?>

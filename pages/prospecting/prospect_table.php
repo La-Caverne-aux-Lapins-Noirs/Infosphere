@@ -32,12 +32,71 @@ function prospecting_target_entries()
     ]);
 }
 
+function prospecting_current_class_options()
+{
+    return ([
+        -9 => "Autre",
+        -8 => "CM1",
+        -7 => "CM2",
+        -6 => "6ème",
+        -5 => "5ème",
+        -4 => "4ème",
+        -3 => "3ème",
+        -2 => "Seconde",
+        -1 => "Première",
+         0 => "Terminale",
+         1 => "Bac+1",
+         2 => "Bac+2",
+         3 => "Bac+3",
+         4 => "Bac+4",
+         5 => "Bac+5",
+         6 => "Bac+6",
+         7 => "Bac+7",
+         8 => "Bac+8",
+         9 => "En reconversion",
+        10 => "?",
+    ]);
+}
+
+function prospecting_inline_select($prospect, $field, $value, $options, $label, $class = "")
+{
+    $id = (int)($prospect["id"] ?? 0);
+    $widget_id = "prospect_inline_".$id."_".$field;
+    $classes = trim("prospect_inline_editor ".$class);
+
+    ob_start();
+    ?>
+    <div class="<?=htmlspecialchars($classes); ?>" id="<?=htmlspecialchars($widget_id); ?>">
+        <button
+            type="button"
+            class="prospect_inline_toggle"
+            title="Cliquer pour modifier"
+        ><?=htmlspecialchars($label); ?></button>
+        <form
+            method="put"
+            action="/api/prospect/<?=$id; ?>/orientation"
+            onsubmit="return prospecting_inline_editor_submit(this);"
+        >
+            <select name="<?=htmlspecialchars($field); ?>" aria-label="<?=htmlspecialchars($label); ?>">
+                <?php foreach ($options as $option_value => $option_label) { ?>
+                    <option value="<?=htmlspecialchars((string)$option_value); ?>"<?=$option_value == $value ? " selected" : ""; ?>><?=htmlspecialchars($option_label); ?></option>
+                <?php } ?>
+            </select>
+            <button type="submit" class="prospect_inline_confirm" title="Enregistrer" aria-label="Enregistrer">&#10003;</button>
+            <button type="button" class="prospect_inline_cancel" title="Annuler" aria-label="Annuler">&#10007;</button>
+        </form>
+    </div>
+    <?php
+    return (ob_get_clean());
+}
+
 function prospecting_table_fields()
 {
     global $Dictionnary;
     global $Configuration;
 
     $class_level = prospecting_class_levels();
+    $current_class_options = prospecting_current_class_options();
     $target_class = prospecting_target_classes();
     $target_entry = prospecting_target_entries();
 
@@ -111,16 +170,29 @@ function prospecting_table_fields()
             "width"   => "74px",
             "options" => $target_class,
             "raw"     => fn($p) => isset($p["target_class"]) ? (int)$p["target_class"] : 0,
-            "render"  => function($p) use ($target_class, $class_level)
+            "render"  => function($p) use ($target_class, $current_class_options)
             {
                 $target = isset($p["target_class"]) ? (int)$p["target_class"] : 0;
-                $current = isset($p["current_class"]) ? (int)$p["current_class"] : 19;
-                $current = real_class_level($p["registration_date"], $current);
-                $target_label = htmlspecialchars($target_class[$target] ?? "/");
-                $current_label = htmlspecialchars($class_level[$current + 9] ?? "?");
+                $stored_current = isset($p["current_class"]) ? (int)$p["current_class"] : 10;
+                $current = real_class_level($p["registration_date"], $stored_current);
+
                 return (
-                    "<strong class='prospect_target_class'>$target_label</strong>".
-                    "<span class='prospect_current_class'>Niveau actuel : $current_label</span>"
+                    prospecting_inline_select(
+                        $p,
+                        "target_class",
+                        $target,
+                        $target_class,
+                        $target_class[$target] ?? "/",
+                        "prospect_target_class"
+                    ).
+                    prospecting_inline_select(
+                        $p,
+                        "current_class",
+                        $current,
+                        $current_class_options,
+                        "Niveau actuel : ".($current_class_options[$current] ?? "?"),
+                        "prospect_current_class"
+                    )
                 );
             },
             "cell_class" => "prospect_target_class_cell",
@@ -135,7 +207,18 @@ function prospecting_table_fields()
             "render"  => function($p) use ($target_entry)
             {
                 $v = isset($p["target_entry"]) ? (int)$p["target_entry"] : 0;
-                return ucfirst($p["last_school"] ?? "")."<br/>".htmlspecialchars($target_entry[$v] ?? "Septembre");
+                $school = trim((string)($p["last_school"] ?? ""));
+                $school = $school != ""
+                    ? "<span class='prospect_last_school'>".htmlspecialchars(ucfirst($school))."</span>"
+                    : "";
+                return ($school.prospecting_inline_select(
+                    $p,
+                    "target_entry",
+                    $v,
+                    $target_entry,
+                    $target_entry[$v] ?? "Septembre",
+                    "prospect_target_entry"
+                ));
             },
         ],
         [

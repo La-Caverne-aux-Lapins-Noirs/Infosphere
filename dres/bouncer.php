@@ -255,7 +255,7 @@ if ($type == "activity")
 
 if ($type == "doc")
 {
-    if (!is_teacher() && !is_director())
+    if (!am_i_teacher() && !am_i_director())
         forbidden();
     render_file();
 }

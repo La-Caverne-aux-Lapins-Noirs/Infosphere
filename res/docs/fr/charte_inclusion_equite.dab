@@ -1,0 +1,79 @@
+Document = "Contract"
+Title = "Charte en faveur de l'inclusion et de l'équité"
+
+[Contexts
+  [Student
+    Type = "user"
+    Prefix = "Member"
+    Label = "Signataire de la charte"
+    Auto = "Owner"
+    Required = 1
+    Signatory = "Member"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    Blank = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Représentant de l'établissement"
+    Required = 1
+    Blank = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Member
+    Required = 1
+    Role = "Membre de la communauté de l’établissement"
+  ]
+  [Director
+    Required = 1
+    Role = "Représentant de l’établissement"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Charte en faveur de l'inclusion et de l'équité [@PageCounter]
+  Left]
+  Right = [Text($,Right)
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+
+  $(School.SchoolInfo)
+
+  $(School.FormationInfo)
+
+  $(School.AlternationInfo)
+
+  $(School.Phone) $(School.Mail)
+
+  \par\vspace{0.20cm}
+
+  Signature du document: [#Variable;DocBuilder.DabsicHash]
+Footer]
+
+{Content
+  @insert txt ($) ".base_charte_inclusion_equite/introduction.txt",
+  @insert txt ($) ".base_contrat_inscription/inclusion/principes.txt",
+  @insert txt ($) ".base_charte_inclusion_equite/engagements_efrits.txt",
+  @insert txt ($) ".base_charte_inclusion_equite/reperes_discriminations.txt",
+  @insert txt ($) ".base_charte_inclusion_equite/ressources.txt",
+  @insert txt ($) ".base_charte_inclusion_equite/engagement_signataire.txt",
+  @insert txt ($) ".base_contrat_inscription/signature.txt"
+}

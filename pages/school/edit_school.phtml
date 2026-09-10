@@ -59,6 +59,19 @@
 	"linked_elems" => $content["librarian"],
     ]); ?>
 </td><td>
+    <?php list_of_links([
+        "hook_name" => "school",
+        "hook_id" => $content["id"],
+        "linked_name" => [
+            "table" => "user",
+            "name" => "accountant",
+            "label" => "Comptabilité",
+            "placeholder" => "Comptabilité",
+            "" => "accountant",
+        ],
+        "linked_elems" => $content["accountant"],
+    ]); ?>
+</td><td>
     <?php $js = "window.confirm('".$Dictionnary["ConfirmDeletion"]."') && silent_submit(this, 'cyclelist');" ?>
     <form
 	method="delete"

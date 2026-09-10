@@ -1,0 +1,131 @@
+@include "res/docs/fr/.base_letter/base.dab"
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  FirstName = ""
+  FamilyName = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[Result
+  CycleCodename = ""
+  CycleName = ""
+  Flames = "0"
+  RangeLabel = ""
+  RebootProposal = "0"
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Responsable signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Direction"
+  ]
+]
+
+[FormGroup
+  [Resultat
+    Label = "Résultat trimestriel"
+    [Fields
+      [Result
+        [CycleCodename
+          Label = "Nom de code du trimestre"
+          Required = 1
+        ]
+        [CycleName
+          Label = "Nom du trimestre"
+          Required = 1
+        ]
+        [Flames
+          Label = "Flammes obtenues"
+          Required = 1
+        ]
+        [RangeLabel
+          Label = "Catégorie de résultat"
+        ]
+        [RebootProposal
+          Label = "Proposer une réamorce du trimestre"
+          Type = "boolean"
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Etablissement
+    Label = "Établissement"
+    {Read
+      "Resultat"
+    }
+    {Edit
+      "Resultat"
+    }
+    {Validate
+      "Resultat"
+    }
+  ]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Student.Identity]\par
+  [#Variable;Student.Address]\par
+  [#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\par[#Variable;Student.Country]]
+Target]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]

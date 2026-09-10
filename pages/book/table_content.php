@@ -1,5 +1,6 @@
 
 <?php
+require_once (__DIR__."/../../tools/document_print.php");
 $js = "
 silent_submitf(this.parentNode, {
 	tofill: 'booktable',
@@ -86,7 +87,7 @@ silent_submitf(this.parentNode, {
 			<?=$Dictionnary["YouHaveTheBook"]; ?>
 		    <?php } ?>
 		</form>
-		<?php if ($available != $book["nbr"] || is_librarian()) { ?>
+		<?php if ($available != $book["nbr"] || am_i_librarian()) { ?>
 		    <?=$Dictionnary["Borrowers"]; ?> :<br />
 		    <?php foreach ($status as $s) { ?>
 			<?=display_nickname($s["id_user"]); ?>
@@ -99,7 +100,7 @@ silent_submitf(this.parentNode, {
 				</span>
 			    <?php } ?>
 			<?php } ?>
-			<?php if (is_librarian()) { ?>
+			<?php if (am_i_librarian()) { ?>
 			    <form method="put" action="/api/book/<?=$book["id"]; ?>">
 				<input type="hidden" id="action" name="command" value="" />
 				<?php if ($s["status"] == 0) { ?>
@@ -132,6 +133,23 @@ silent_submitf(this.parentNode, {
 				<?php } ?>
 			    </form>
 			<?php } ?>
+            <?php
+            $loan_due_stamp = date_to_timestamp($s["end_date"] ?? "");
+            $loan_is_late = ($s["status"] == 2 && $loan_due_stamp !== NULL && $loan_due_stamp < now());
+            $loan_school_id = document_print_school_id_for_user((int)$s["id_user"]);
+            $can_queue_library_notice = $loan_is_late && document_print_current_user_can_manage_context([
+                "type" => "library",
+                "owner_user_id" => (int)$s["id_user"],
+                "school_id" => $loan_school_id,
+                "book_user_id" => (int)$s["id"],
+            ]);
+            ?>
+            <?php if ($can_queue_library_notice) { ?>
+                <form method="post" action="/api/book/<?=$book["id"]; ?>/overdue_notice" style="display: inline-block;">
+                    <input type="hidden" name="loan_id" value="<?=(int)$s["id"]; ?>" />
+                    <input type="button" value="Relance postale" onclick="return silent_submitf(this.form);" />
+                </form>
+            <?php } ?>
 			<br />
 		    <?php } ?>
 		<?php } ?>

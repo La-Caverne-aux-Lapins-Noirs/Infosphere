@@ -2,6 +2,14 @@
     <?php
     require_once (__DIR__."/../../tools/student_log.php");
     require_once (__DIR__."/../../tools/halfday_presence.php");
+    require_once (__DIR__."/../../tools/document_sources.php");
+    require_once (__DIR__."/../../tools/document_print.php");
+
+    $cycle_result_documents = get_cycle_result_document_sources();
+    $cycle_result_school = count($cycle["school"] ?? []) ? $cycle["school"][array_key_first($cycle["school"])] : NULL;
+    $cycle_result_school_codename = is_array($cycle_result_school) ? (string)($cycle_result_school["codename"] ?? "") : "";
+    $can_generate_cycle_result_letters = $can_edit_cycle && !empty($cycle["done"]) && $cycle_result_school_codename != "" && count($cycle_result_documents) === 4;
+    $cycle_result_labels = student_correspondence_result_labels();
 
     $cycle_metric_users = [];
     foreach ($cycle["user"] as $usr)
@@ -73,6 +81,9 @@
 			<?php } ?>
 			<th class="cycle_student_small_col">Matières</th>
 			<th class="cycle_student_small_col">Flammes</th>
+                        <?php if ($can_generate_cycle_result_letters) { ?>
+                            <th class="cycle_student_register_col">Courrier de résultat</th>
+                        <?php } ?>
 			<?php for ($i = 0; $i < $cycle_metric_days; ++$i) { ?>
 			    <?php $day = $cycle_metric_start + $i * 24 * 60 * 60; ?>
 			    <th class="cycle_student_day_col" title="<?=european_date($day, true); ?>">
@@ -87,6 +98,14 @@
 		    <?php foreach ($cycle_metric_users as $uid => $usr) { ?>
 			<?php
 			$stat = try_get($cycle_metric_stats, $uid, ["matter_count" => 0, "credit_d" => 0, "credit_a" => 0]);
+                        $result_letter = NULL;
+                        $result_source = NULL;
+                        if ($can_generate_cycle_result_letters)
+                        {
+                            $result_letter = student_correspondence_cycle_result($uid, (int)$cycle["id"]);
+                            if (is_array($result_letter))
+                                $result_source = $cycle_result_documents[$result_letter["kind"]] ?? NULL;
+                        }
 			?>
 			<tr>
 			    <th class="cycle_student_identity_col cycle_student_identity">
@@ -105,6 +124,50 @@
 			    <?php } ?>
 			    <td class="cycle_student_small_col"><?=(int)$stat["matter_count"]; ?></td>
 			    <td class="cycle_student_small_col"><?=(int)$stat["credit_d"]; ?>–<?=(int)$stat["credit_a"]; ?></td>
+                            <?php if ($can_generate_cycle_result_letters) { ?>
+                                <td class="cycle_student_register_col">
+                                    <?php if (is_array($result_letter) && is_array($result_source)) { ?>
+                                        <form method="post" action="/api/doc/0/generate" target="_blank">
+                                            <input type="hidden" name="doc_cycle_result" value="1" />
+                                            <input type="hidden" name="docref_cycle_result" value="<?=htmlspecialchars($result_source["reference"], ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="save_user_document" value="<?=$uid; ?>" />
+                                            <input type="hidden" name="context_bindings" value="<?=htmlspecialchars(json_encode([
+                                                "Student" => $uid,
+                                                "School" => $cycle_result_school_codename,
+                                            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="queue_for_print" value="0" />
+                                            <input type="hidden" name="print_context_type" value="cycle" />
+                                            <input type="hidden" name="print_owner_user_id" value="<?=$uid; ?>" />
+                                            <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
+                                            <input type="hidden" name="print_school_id" value="<?=document_print_school_id_for_cycle((int)$cycle["id"]); ?>" />
+                                            <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars((string)($usr["codename"] ?? $uid), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                            <input type="hidden" name="print_label" value="<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? "Courrier de résultat", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                            <input type="hidden" name="print_source_key" value="cycle-result:<?=(int)$cycle["id"]; ?>:<?=$uid; ?>:<?=htmlspecialchars((string)$result_letter["kind"], ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="fields[]" value="Result.CycleCodename=<?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="fields[]" value="Result.CycleName=<?=htmlspecialchars(($cycle["name"] ?? "") != "" ? $cycle["name"] : $cycle["codename"], ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="fields[]" value="Result.Flames=<?=(int)$result_letter["flames"]; ?>" />
+                                            <input type="hidden" name="fields[]" value="Result.RangeLabel=<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? $result_letter["kind"], ENT_QUOTES); ?>" />
+                                            <?php if (in_array($result_letter["kind"], ["support", "encouragement"], true)) { ?>
+                                                <label style="white-space: nowrap;">
+                                                    <input type="checkbox" name="fields[]" value="Result.RebootProposal=1" />
+                                                    Proposer une réamorce
+                                                </label>
+                                            <?php } ?>
+                                            <input type="submit" value="<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? "Courrier", ENT_QUOTES); ?> (<?=(int)$result_letter["flames"]; ?>)" onclick="this.form.queue_for_print.value='0';" />
+                                            <?php if (document_print_current_user_can_manage_context([
+                                                "type" => "cycle",
+                                                "owner_user_id" => $uid,
+                                                "cycle_id" => (int)$cycle["id"],
+                                                "school_id" => document_print_school_id_for_cycle((int)$cycle["id"]),
+                                            ])) { ?>
+                                                <input type="submit" value="+ impression" title="Générer ce courrier et l'ajouter à la file d'impression" onclick="this.form.queue_for_print.value='1';" />
+                                            <?php } ?>
+                                        </form>
+                                    <?php } else { ?>
+                                        —
+                                    <?php } ?>
+                                </td>
+                            <?php } ?>
 			    <?php for ($i = 0; $i < $cycle_metric_days; ++$i) { ?>
 				<?php
 				$day = $cycle_metric_start + $i * 24 * 60 * 60;

@@ -19,6 +19,7 @@ function school_mailbox_purposes()
         "jury" => "Jurys / examens",
         "quality" => "Qualité",
         "secretariat" => "Secrétariat",
+        "archive" => "Archives des envois (CCI)",
     ]);
 }
 

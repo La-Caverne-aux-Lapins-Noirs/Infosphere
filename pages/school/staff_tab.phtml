@@ -1,5 +1,6 @@
 <?php
 require_once (__DIR__."/user_cards.php");
+require_once (__DIR__."/../../tools/document_sources.php");
 
 $school_staff_roles = [
     ["field" => "director", "label" => "Direction", "admin" => "only_admin"],
@@ -7,7 +8,10 @@ $school_staff_roles = [
     ["field" => "commercial", "label" => "Commercial", "admin" => "is_director_for_school"],
     ["field" => "secretariat", "label" => "Secrétariat", "admin" => "is_director_for_school"],
     ["field" => "librarian", "label" => "Bibliothèque", "admin" => "is_director_for_school"],
+    ["field" => "accountant", "label" => "Comptabilité", "admin" => "is_director_for_school"],
 ];
+$school_inclusion_charter = get_inclusion_charter_document_source();
+$can_generate_inclusion_charter = $school_inclusion_charter !== NULL && is_director_for_school($school["id"]);
 ?>
 
 <div class="school_staff_columns">
@@ -24,10 +28,53 @@ $school_staff_roles = [
                     <p class="school_empty_people">Aucun membre.</p>
                 <?php } else { ?>
                     <?php foreach ($school[$field] as $member) { ?>
-                        <?php school_admin_member_card($school["id"], $field, $member, $can_manage); ?>
+                        <?php
+                        $actions = [];
+                        $member_id = school_admin_member_id($member, $field);
+                        if ($can_generate_inclusion_charter && $member_id > 0)
+                            $actions[] = [
+                                "class" => "school_member_document_button",
+                                "label" => "Charte",
+                                "title" => "Générer la charte inclusion et équité préremplie",
+                                "onclick" => "school_staff_inclusion_charter_generate(".$member_id.");",
+                            ];
+                        school_admin_member_card($school["id"], $field, $member, $can_manage, $actions);
+                        ?>
                     <?php } ?>
                 <?php } ?>
             </div>
         </section>
     <?php } ?>
 </div>
+
+<?php if ($can_generate_inclusion_charter) { ?>
+<form
+    id="school_staff_inclusion_charter_form"
+    method="post"
+    action="/api/doc/0/generate"
+    target="_blank"
+    style="display: none;"
+>
+    <input type="hidden" name="doc_school_inclusion_charter" value="1" />
+    <input
+        type="hidden"
+        name="docref_school_inclusion_charter"
+        value="<?=htmlspecialchars($school_inclusion_charter["reference"], ENT_QUOTES); ?>"
+    />
+    <input type="hidden" name="context_bindings" value="{}" />
+</form>
+<script>
+function school_staff_inclusion_charter_generate(userId)
+{
+    var form = document.getElementById('school_staff_inclusion_charter_form');
+    if (!form || !userId)
+        return false;
+    form.querySelector('[name="context_bindings"]').value = JSON.stringify({
+        Student: String(userId),
+        School: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+    });
+    form.submit();
+    return false;
+}
+</script>
+<?php } ?>

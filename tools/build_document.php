@@ -121,6 +121,118 @@ function build_document_normalize_part($part)
     return (build_document_file_part($part));
 }
 
+
+/**
+ * Escape plain form text before it reaches the LaTeX renderer.
+ *
+ * Values remain unmodified in their authoritative Dabsic storage. This is a
+ * rendering boundary only: DocBuilder receives a temporary resolved document
+ * where textual FormGroup fields are TeX-safe. Besides making ordinary input
+ * such as "R&D" work, this prevents free-text form values from becoming TeX
+ * commands while xelatex is invoked with shell escape enabled.
+ */
+function build_document_latex_escape_text($value)
+{
+    return (strtr((string)$value, [
+        "\\" => "\\textbackslash{}",
+        "{" => "\\{",
+        "}" => "\\}",
+        "$" => "\\$",
+        "&" => "\\&",
+        "#" => "\\#",
+        "_" => "\\_",
+        "%" => "\\%",
+        "~" => "\\textasciitilde{}",
+        "^" => "\\textasciicircum{}",
+    ]));
+}
+
+function build_document_latex_form_field_is_text(array $definition)
+{
+    if (!empty($definition["raw_latex"]))
+        return (false);
+
+    // These values are controls/identifiers first and text second. They are
+    // routinely consumed by IfC or server-side lookup logic and are not free
+    // prose. Computed fields, on the other hand, may contain labels/currency
+    // text and are safe to escape like ordinary display text.
+    $type = strtolower(trim((string)($definition["type"] ?? "text")));
+    return (!in_array($type, [
+        "radio", "checkbox", "scale", "boolean_checkbox", "boolean",
+        "billing_template",
+    ], true));
+}
+
+function build_document_latex_form_metadata(array $parts)
+{
+    foreach ($parts as $part)
+    {
+        if (($part["type"] ?? "") !== "file")
+            continue ;
+        $file = (string)($part["file"] ?? "");
+        if ($file == "" || strtolower(pathinfo($file, PATHINFO_EXTENSION)) !== "dab")
+            continue ;
+        $metadata = dabsic_form_form_metadata($file);
+        if (is_array($metadata) && count($metadata["fields"] ?? []))
+            return ($metadata);
+    }
+    return (NULL);
+}
+
+function build_document_latex_form_overrides($merged_file, array $metadata)
+{
+    $content = @file_get_contents($merged_file);
+    if ($content === false)
+        return (new ErrorResponse("CannotReadFile", $merged_file));
+
+    $process = dabsic_form_process("mergeconf -if .dabsic -of .json", $content);
+    if (($process["status"] ?? 1) !== 0)
+        return (new ErrorResponse("CannotExecute", dabsic_form_clean_diagnostic($process["stderr"] ?? "")));
+    $tree = json_decode((string)($process["stdout"] ?? ""), true);
+    if (!is_array($tree))
+        return (new ErrorResponse("CannotReadFile", "resolved Dabsic form values"));
+
+    $values = [];
+    dabsic_form_flatten_values($tree, "", $values);
+    $overrides = [];
+    foreach (($metadata["fields"] ?? []) as $field => $definition)
+    {
+        if (!build_document_latex_form_field_is_text((array)$definition) ||
+            !array_key_exists($field, $values) || is_array($values[$field]) || is_object($values[$field]))
+            continue ;
+        $raw = (string)$values[$field];
+        $escaped = build_document_latex_escape_text($raw);
+        if ($escaped !== $raw)
+            $overrides[$field] = $escaped;
+    }
+    return ($overrides);
+}
+
+function build_document_latex_safe_merged_file($merged_file, array $parts, array $include_paths = [])
+{
+    $metadata = build_document_latex_form_metadata($parts);
+    if ($metadata === NULL)
+        return (new ValueResponse(["file" => $merged_file, "temporary" => false]));
+
+    $overrides = build_document_latex_form_overrides($merged_file, $metadata);
+    if (is_object($overrides) && $overrides->is_error())
+        return ($overrides);
+    if (!count($overrides))
+        return (new ValueResponse(["file" => $merged_file, "temporary" => false]));
+
+    $safe_file = $merged_file.".texsafe.dab";
+    $safe_parts = [["type" => "file", "file" => $merged_file]];
+    foreach ($overrides as $field => $value)
+        $safe_parts[] = ["type" => "field", "key" => $field, "value" => $value];
+    $ret = run_command(build_document_mergeconf_command($safe_parts, $safe_file, $include_paths));
+    if ($ret["exit_code"] !== 0 || !file_exists($safe_file))
+    {
+        @unlink($safe_file);
+        return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
+    }
+    return (new ValueResponse(["file" => $safe_file, "temporary" => true]));
+}
+
 function build_document_mergeconf_command(array $parts, $output_file, array $include_paths = [])
 {
     $cmd = "mergeconf";
@@ -200,7 +312,24 @@ function build_document_from_parts($output_name, array $document_parts, array $i
 	return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
     }
 
-    $ret = run_command(build_document_render_command($merged, $output_name, $include_paths, $hash_file));
+    // FormGroup values are authoritative plain data, not TeX source. Build a
+    // temporary rendering copy with only textual form fields escaped. The
+    // original merged Dabsic remains untouched and stored form data never gains
+    // presentation-level backslashes such as \& or \_.
+    $render_input = $merged;
+    $safe = build_document_latex_safe_merged_file($merged, $parts, $include_paths);
+    if ($safe->is_error())
+    {
+        @unlink($merged);
+        @unlink($hash_file);
+        return ($safe);
+    }
+    if (!empty($safe->value["file"]))
+        $render_input = (string)$safe->value["file"];
+
+    $ret = run_command(build_document_render_command($render_input, $output_name, $include_paths, $hash_file));
+    if (!empty($safe->value["temporary"]) && $render_input !== $merged)
+        @unlink($render_input);
     @unlink($merged);
     if ($ret["exit_code"] !== 0 || !file_exists($output_name))
     {
@@ -458,9 +587,9 @@ function document_builder_contract_person_fields(array $user)
 
     if (count($administrative))
         $out = user_identity_merge_dabsic_tree($out, $administrative);
-    if (function_exists("user_identity_signature_file"))
+    if (function_exists("user_identity_document_signature_file"))
     {
-        $signature = user_identity_signature_file($user);
+        $signature = user_identity_document_signature_file($user);
         if ($signature != "" && is_file($signature))
             $out["signature"] = $signature;
     }
@@ -731,7 +860,7 @@ function document_builder_person_context(array $user)
     $fields["name"] = $identity;
     $fields["street"] = $fields["address"] ?? "";
     $fields["postal_city"] = trim(($fields["postal_code"] ?? "")." ".($fields["city"] ?? ""));
-    $signature = function_exists("user_identity_signature_file") ? user_identity_signature_file($user) : "";
+    $signature = function_exists("user_identity_document_signature_file") ? user_identity_document_signature_file($user) : "";
     $fields["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
     return ($fields);
 }
@@ -774,7 +903,12 @@ function document_builder_school_context(array $school)
 	"city" => $school["city"] ?? "",
 	"phone" => $school["phone"] ?? "",
 	"mail" => $school["mail"] ?? "",
+	"billing_information" => $school["organization_billing_information"] ?? ($school["billing_information"] ?? ""),
+	"RIB" => $school["organization_billing_information"] ?? ($school["billing_information"] ?? ""),
 	"main_info" => $main_info,
+	"is_school" => school_activity_flags($school)["is_school"],
+        "is_of" => school_activity_flags($school)["is_of"],
+        "is_cfa" => school_activity_flags($school)["is_cfa"],
 	"school_info" => $school_info,
 	"formation_info" => $formation_info,
 	"alternation_info" => $alternation_info,

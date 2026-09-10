@@ -148,29 +148,29 @@ function DeleteCampaign($id, $data, $method, $output, $module)
 $Tab = [
     "GET" => [
         "" => [
-            "is_commercial,is_secretariat",
+            "am_i_commercial,am_i_secretariat",
             "DisplayCampaign",
         ],
         "prospects" => [
-            "is_commercial,is_secretariat",
+            "am_i_commercial,am_i_secretariat",
             "DisplayCampaignProspects",
         ],
     ],
     "POST" => [
         "" => [
-            "is_commercial,is_secretariat",
+            "am_i_commercial,am_i_secretariat",
             "AddCampaign",
         ],
     ],
     "PUT" => [
         "" => [
-            "is_commercial,is_secretariat",
+            "am_i_commercial,am_i_secretariat",
             "EditCampaign",
         ],
     ],
     "DELETE" => [
         "" => [
-            "is_commercial,is_secretariat",
+            "am_i_commercial,am_i_secretariat",
             "DeleteCampaign",
         ],
     ],

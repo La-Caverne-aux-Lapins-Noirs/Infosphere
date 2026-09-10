@@ -1,6 +1,24 @@
 Document = "Report"
 Title = "Bulletin"
 
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "People.Student"
+    Label = "Élève"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+]
+
 [Header
   Left = [Text($,Left)
     [@Size;5]

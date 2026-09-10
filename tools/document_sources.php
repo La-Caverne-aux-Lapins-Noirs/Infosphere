@@ -263,6 +263,28 @@ function document_reference_label($reference)
     return (document_title_from_file($file, document_title_fallback($path)));
 }
 
+function document_source_descriptor($source, $doc)
+{
+    $editor_path = document_source_editor_path($source, $doc);
+    if ($editor_path === NULL)
+        return (NULL);
+    $reference = document_reference_from_source_path($source, $doc);
+    return ([
+        "source" => $source,
+        "path" => $doc,
+        "reference" => $reference,
+        "editor_path" => $editor_path,
+        "label" => document_reference_label($reference),
+    ]);
+}
+
+function document_source_sort_descriptors(&$documents)
+{
+    usort($documents, function ($a, $b) {
+        return (strnatcasecmp($a["label"], $b["label"]));
+    });
+}
+
 function get_contract_document_sources()
 {
     $contracts = [];
@@ -274,20 +296,105 @@ function get_contract_document_sources()
             $basename = mb_strtolower(basename($doc));
             if (strpos($basename, "contrat") === false && strpos($basename, "contract") === false)
                 continue ;
-            $editor_path = document_source_editor_path($source, $doc);
-            if ($editor_path === NULL)
-                continue ;
-            $contracts[] = [
-                "source" => $source,
-                "path" => $doc,
-                "reference" => document_reference_from_source_path($source, $doc),
-                "editor_path" => $editor_path,
-                "label" => document_reference_label(document_reference_from_source_path($source, $doc)),
-            ];
+            $descriptor = document_source_descriptor($source, $doc);
+            if ($descriptor !== NULL)
+                $contracts[] = $descriptor;
         }
     }
-    usort($contracts, function ($a, $b) {
-        return (strnatcasecmp($a["label"], $b["label"]));
-    });
+    document_source_sort_descriptors($contracts);
     return ($contracts);
+}
+
+function get_inclusion_charter_document_source()
+{
+    // Prefer a school-customizable dres copy when one exists, otherwise fall
+    // back to the fixed model shipped with Infosphere.
+    foreach (get_document_sources() as $source => $docs)
+        foreach ($docs["documents"] as $doc)
+            if (mb_strtolower(basename($doc)) === "charte_inclusion_equite.dab")
+                if (($descriptor = document_source_descriptor($source, $doc)) !== NULL)
+                    return ($descriptor);
+    return (NULL);
+}
+
+function get_document_sources_by_basenames(array $basenames)
+{
+    $wanted = array_fill_keys(array_map("mb_strtolower", $basenames), true);
+    $out = [];
+    foreach (get_document_sources() as $source => $docs)
+        foreach ($docs["documents"] as $doc)
+        {
+            $basename = mb_strtolower(basename($doc));
+            if (!isset($wanted[$basename]))
+                continue ;
+            if (($descriptor = document_source_descriptor($source, $doc)) !== NULL)
+                $out[$basename] = $descriptor;
+        }
+    return ($out);
+}
+
+function get_student_followup_document_sources()
+{
+    $names = [
+        "relance_absences_repetees.dab",
+        "relance_absence_prolongee.dab",
+        "relance_retards_repetes.dab",
+        "relance_travaux_non_realises.dab",
+        "relance_risque_decrochage.dab",
+        "relance_assiduite.dab",
+    ];
+    $sources = get_document_sources_by_basenames($names);
+    $out = [];
+    foreach ($names as $name)
+        if (isset($sources[$name]))
+            $out[$name] = $sources[$name];
+    return ($out);
+}
+
+function get_student_followup_document_source()
+{
+    $sources = get_student_followup_document_sources();
+    return (isset($sources["relance_assiduite.dab"]) ? $sources["relance_assiduite.dab"] : NULL);
+}
+
+function get_payment_reminder_document_source()
+{
+    $sources = get_document_sources_by_basenames(["relance_paiement_retard.dab"]);
+    return ($sources["relance_paiement_retard.dab"] ?? NULL);
+}
+
+function get_payment_schedule_document_source()
+{
+    $sources = get_document_sources_by_basenames(["echeancier_paiements.dab"]);
+    return ($sources["echeancier_paiements.dab"] ?? NULL);
+}
+
+function get_cycle_result_document_sources()
+{
+    $mapping = [
+        "exceptional" => "felicitations_trimestre_exceptionnel.dab",
+        "objective" => "felicitations_trimestre_objectif.dab",
+        "encouragement" => "encouragement_trimestre_50_99.dab",
+        "support" => "encouragement_trimestre_0_49.dab",
+    ];
+    $sources = get_document_sources_by_basenames(array_values($mapping));
+    $out = [];
+    foreach ($mapping as $kind => $basename)
+        if (isset($sources[$basename]))
+            $out[$kind] = $sources[$basename];
+    return ($out);
+}
+
+function get_student_document_sources()
+{
+    $documents = get_contract_document_sources();
+    $charter = get_inclusion_charter_document_source();
+    if ($charter !== NULL)
+    {
+        $references = array_column($documents, "reference");
+        if (!in_array($charter["reference"], $references, true))
+            $documents[] = $charter;
+    }
+    document_source_sort_descriptors($documents);
+    return ($documents);
 }

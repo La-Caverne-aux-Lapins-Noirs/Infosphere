@@ -5,6 +5,31 @@ TitleQualifier = "DÉFINITIVE"
   AutomaticSignature = 0
 ]
 
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Candidat"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Directeur signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
 [Signatures
   [Director
     Required = 1

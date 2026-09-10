@@ -1,3 +1,3 @@
 <?php
 
-$access = is_teacher();
+$access = am_i_teacher();

@@ -11,17 +11,17 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "AddMedal",
 	],
 	"ressource" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "AddRessource",
 	]
     ],
     "PUT" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "MoveMedal",
 	],
 	"ressource" => [
@@ -31,11 +31,11 @@ $Tab = [
     ],
     "DELETE" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DeleteMedal",
 	],
 	"ressource" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "RemoveRessource",
 	],
     ],

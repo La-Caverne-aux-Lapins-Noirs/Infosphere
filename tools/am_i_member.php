@@ -1,6 +1,6 @@
 <?php
 
-function am_i_member($teacher)
+function am_i_member()
 {
-    return (retrieve_authority($teacher) >= 0);
+    return (is_intranet_member_profile());
 }

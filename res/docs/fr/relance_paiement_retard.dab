@@ -1,0 +1,203 @@
+@include ".base_letter/base.dab"
+Title = "Relance pour paiement en retard"
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  FirstName = ""
+  FamilyName = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[Finance
+  Identity = ""
+  Gender = ""
+  FirstName = ""
+  FamilyName = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[PaymentReminder
+  InvoiceReferences = ""
+  InvoiceLines = ""
+  TotalOutstanding = ""
+  OldestDueDate = ""
+  ResponseDeadline = ""
+  Observations = ""
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Bénéficiaire / débiteur"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [Finance
+    Type = "finance"
+    Prefix = "Finance"
+    Label = "Responsable financier / destinataire"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Responsable signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Direction"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Relance pour paiement en retard
+  Left]
+]
+
+[FormGroup
+  [Beneficiaire
+    Label = "Bénéficiaire"
+    [Fields
+      [Student
+        [Identity
+          Label = "Nom et prénom"
+        ]
+        [Address
+          Label = "Adresse"
+        ]
+        [PostalCity
+          Label = "Code postal et ville"
+        ]
+        [Country
+          Label = "Pays"
+        ]
+      ]
+      [Finance
+        [Identity
+          Label = "Responsable financier / destinataire"
+        ]
+        [Gender
+          Label = "Genre du destinataire"
+        ]
+        [Address
+          Label = "Adresse du destinataire"
+        ]
+        [PostalCity
+          Label = "Code postal et ville du destinataire"
+        ]
+        [Country
+          Label = "Pays du destinataire"
+        ]
+      ]
+    ]
+  ]
+  [Factures
+    Label = "Factures concernées"
+    [Fields
+      [PaymentReminder
+        [InvoiceReferences
+          Label = "Références / noms de code des factures"
+          Required = 1
+        ]
+        [InvoiceLines
+          Label = "Détail des factures"
+          Required = 1
+        ]
+        [TotalOutstanding
+          Label = "Montant total restant dû"
+          Required = 1
+        ]
+        [OldestDueDate
+          Label = "Échéance la plus ancienne"
+        ]
+        [ResponseDeadline
+          Label = "Date limite demandée"
+        ]
+        [Observations
+          Label = "Observations"
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Etablissement
+    Label = "Établissement"
+    {Read
+      "Beneficiaire",
+      "Factures"
+    }
+    {Edit
+      "Factures"
+    }
+    {Validate
+      "Factures"
+    }
+  ]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Finance.Identity]\par
+  [#Variable;Finance.Address]\par
+  [#Variable;Finance.PostalCity][@IfC;Finance.Country;!=;;\par[#Variable;Finance.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance pour paiement en retard concernant [#Variable;Student.Identity] — [#Variable;PaymentReminder.InvoiceReferences]
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "relance_paiement_retard.txt"
+}

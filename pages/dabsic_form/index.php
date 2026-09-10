@@ -2,6 +2,7 @@
 
 require_once (__DIR__."/../../tools/dabsic_form.php");
 require_once (__DIR__."/../../tools/document_sources.php");
+require_once (__DIR__."/../../tools/post_interview_report.php");
 
 if (!dabsic_form_user_can_access_output($_GET["output"] ?? ""))
 {
@@ -11,10 +12,39 @@ if (!dabsic_form_user_can_access_output($_GET["output"] ?? ""))
 
 $dabsic_form_reference_key = $_GET["file"] ?? "";
 $dabsic_form_output_key = $_GET["output"] ?? "";
-$dabsic_form_chain = $_GET["chain"] ?? "";
+$dabsic_form_chain = "";
+$dabsic_form_context_bindings = $_GET["context_bindings"] ?? "";
+$dabsic_form_context_fields = $_GET["context_fields"] ?? "";
 $dabsic_form_mode = ($_GET["mode"] ?? "dabsic") === "docbuilder" ? "docbuilder" : "dabsic";
-$dabsic_form_discovery = dabsic_form_discover_fields($dabsic_form_reference_key, $dabsic_form_mode, $dabsic_form_chain);
 $dabsic_form_output = dabsic_form_resolve_output($dabsic_form_output_key, false);
+$dabsic_form_owner_user_id = (int)($dabsic_form_output["definition"]["owner_user_id"] ?? 0);
+
+// The public/document GUI now exchanges semantic context bindings.  The
+// low-level chain remains an internal transport for mergeconf and persisted
+// workflows, not something an operator has to compose manually.
+if ($dabsic_form_mode === "docbuilder"
+    && (trim((string)$dabsic_form_context_bindings) !== "" || trim((string)$dabsic_form_context_fields) !== ""))
+{
+    $dabsic_form_context_reference = dabsic_editor_resolve_file($dabsic_form_reference_key, false);
+    if ($dabsic_form_context_reference["ok"])
+    {
+        $dabsic_form_context_bundle = document_context_model_bundle(
+            $dabsic_form_context_reference["absolute"],
+            $dabsic_form_context_bindings,
+            $dabsic_form_context_fields,
+            [
+                "current_user_id" => (int)($User["id"] ?? 0),
+                "owner_user_id" => $dabsic_form_owner_user_id,
+                "strict" => false,
+            ]
+        );
+        $dabsic_form_chain = json_encode(
+            $dabsic_form_context_bundle["chain"],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        ) ?: "[]";
+    }
+}
+$dabsic_form_discovery = dabsic_form_discover_fields($dabsic_form_reference_key, $dabsic_form_mode, $dabsic_form_chain);
 $dabsic_form_error = "";
 $dabsic_form_details = "";
 $dabsic_form_values = [];
@@ -103,6 +133,15 @@ $dabsic_form_groups = [];
 $dabsic_form_readonly_groups = [];
 $dabsic_form_billing_templates = [];
 $dabsic_form_post_interview_prospect_id = 0;
+$dabsic_form_post_interview_analyst_id = 0;
+$dabsic_form_post_interview_analyst_name = "";
+$dabsic_form_post_interview_signature_exists = false;
+$dabsic_form_post_interview_signature_data = "";
+$dabsic_form_post_interview_signature_editable = false;
+$dabsic_form_post_interview_finalized = false;
+$dabsic_form_post_interview_sent_at = "";
+$dabsic_form_post_interview_sent_to = "";
+$dabsic_form_post_interview_sent_bcc = "";
 if ($dabsic_form_error === "" && preg_match('/^post-interview-report:([0-9]+)$/', $dabsic_form_output_key, $m))
 {
     $dabsic_form_post_interview_prospect_id = (int)$m[1];
@@ -110,6 +149,38 @@ if ($dabsic_form_error === "" && preg_match('/^post-interview-report:([0-9]+)$/'
     $id_school = is_array($school) ? (int)($school["id_school"] ?? 0) : 0;
     if ($id_school > 0)
         $dabsic_form_billing_templates = billing_fetch_templates_for_school($id_school, "school");
+
+    $report_state = post_interview_report_workspace(
+        $dabsic_form_post_interview_prospect_id,
+        (int)($User["id"] ?? 0),
+        false
+    );
+    if ($report_state["ok"] && !empty($report_state["exists"]))
+    {
+        $report_workspace = $report_state["workspace"] ?? [];
+        $dabsic_form_post_interview_analyst_id = (int)($report_workspace["analyst_id"] ?? ($report_workspace["created_by"] ?? 0));
+        $analyst = document_context_person($dabsic_form_post_interview_analyst_id);
+        if (is_array($analyst))
+            $dabsic_form_post_interview_analyst_name = trim((string)($analyst["identity"] ?? ($analyst["name"] ?? "")));
+        $signature = post_interview_report_signature_file($dabsic_form_post_interview_analyst_id);
+        if ($signature != "" && is_file($signature))
+        {
+            $raw_signature = @file_get_contents($signature);
+            if ($raw_signature !== false)
+            {
+                $dabsic_form_post_interview_signature_exists = true;
+                $dabsic_form_post_interview_signature_data = "data:image/png;base64,".base64_encode($raw_signature);
+            }
+        }
+        $dabsic_form_post_interview_signature_editable =
+            $dabsic_form_post_interview_analyst_id > 0 &&
+            $dabsic_form_post_interview_analyst_id === (int)($User["id"] ?? 0) &&
+            ($report_workspace["status"] ?? "Draft") !== "Finalized";
+        $dabsic_form_post_interview_finalized = ($report_workspace["status"] ?? "Draft") === "Finalized";
+        $dabsic_form_post_interview_sent_at = trim((string)($report_workspace["sent_at"] ?? ""));
+        $dabsic_form_post_interview_sent_to = trim((string)($report_workspace["sent_to"] ?? ""));
+        $dabsic_form_post_interview_sent_bcc = trim((string)($report_workspace["sent_bcc"] ?? ""));
+    }
 }
 if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
 {
@@ -179,7 +250,10 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-overrides-hash="<?=htmlspecialchars($dabsic_form_overrides_hash, ENT_QUOTES, "UTF-8"); ?>"
             data-overrides-exists="<?=$dabsic_form_overrides_exists ? "1" : "0"; ?>"
             data-save-url="/api/dabsic/0/form"
+            data-preview-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report_preview" : ""; ?>"
             data-finalize-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report" : ""; ?>"
+            data-signature-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report_signature" : ""; ?>"
+            data-report-finalized="<?=$dabsic_form_post_interview_finalized ? "1" : "0"; ?>"
             data-confirm-finalize="Valider ce compte rendu, générer le PDF signé et tamponné, puis l'envoyer au prospect ?"
             data-confirm-save="<?=htmlspecialchars($Dictionnary["DabsicFormConfirmSave"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-unsaved-warning="<?=htmlspecialchars($Dictionnary["DabsicEditorUnsavedWarning"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
@@ -192,6 +266,21 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-override-value-placeholder="<?=htmlspecialchars($Dictionnary["DabsicFormOverrideValue"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-remove-label="<?=htmlspecialchars($Dictionnary["Delete"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
         >
+            <?php if ($dabsic_form_post_interview_finalized && $dabsic_form_post_interview_sent_at != "") {
+                $sent_timestamp = strtotime($dabsic_form_post_interview_sent_at);
+                $sent_label = $sent_timestamp !== false ? date("d/m/Y à H:i", $sent_timestamp) : $dabsic_form_post_interview_sent_at;
+            ?>
+                <div class="dabsic-form-message is-success">
+                    <strong>Envoi accepté par le service mail le <?=htmlspecialchars($sent_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>.</strong>
+                    <?php if ($dabsic_form_post_interview_sent_to != "") { ?>
+                        Destinataire : <?=htmlspecialchars($dabsic_form_post_interview_sent_to, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>.
+                    <?php } ?>
+                    <?php if ($dabsic_form_post_interview_sent_bcc != "") { ?>
+                        Copie d'archive (CCI) : <?=htmlspecialchars($dabsic_form_post_interview_sent_bcc, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>.
+                    <?php } ?>
+                    <br /><small>Cet état confirme l'acceptation de l'envoi par Mailgun ; il ne constitue pas à lui seul un accusé de livraison dans la boîte du destinataire.</small>
+                </div>
+            <?php } ?>
             <?php if (!count($dabsic_form_groups) && !count($dabsic_form_readonly_groups)) { ?>
                 <div class="dabsic-form-message is-success"><?=$Dictionnary["DabsicFormNothingMissing"]; ?></div>
             <?php } ?>
@@ -202,10 +291,11 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                     <?php foreach (($group["fields"] ?? []) as $field) {
                         $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
                         $value = $dabsic_form_values[$field] ?? "";
+                        $field_editable = $group["editable"] && empty($definition["readonly"]);
                     ?>
-                        <div class="dabsic-form-field<?=$group["editable"] ? "" : " is-readonly"; ?>">
+                        <div class="dabsic-form-field<?=$field_editable ? "" : " is-readonly"; ?>">
                             <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if (!empty($definition["required"])) { ?><strong class="dabsic-form-required"> *</strong><?php } ?></span>
-                            <?php if ($group["editable"]) {
+                            <?php if ($field_editable) {
                                 $field_type = strtolower((string)($definition["type"] ?? "text"));
                                 $field_key = htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
                             ?>
@@ -303,19 +393,64 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                 <button id="dabsic-form-override-add" class="dabsic-form-override-add" type="button">+ <?=$Dictionnary["DabsicFormAddOverride"]; ?></button>
             </fieldset>
 
+            <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
+                <fieldset
+                    id="dabsic-form-signature"
+                    class="dabsic-form-group dabsic-form-signature"
+                    data-signature-exists="<?=$dabsic_form_post_interview_signature_exists ? "1" : "0"; ?>"
+                    data-signature-editable="<?=$dabsic_form_post_interview_signature_editable ? "1" : "0"; ?>"
+                >
+                    <legend>Signature de la personne ayant conduit l'entretien</legend>
+                    <?php if ($dabsic_form_post_interview_analyst_name != "") { ?>
+                        <p class="dabsic-form-signature-owner">
+                            Signataire : <strong><?=htmlspecialchars($dabsic_form_post_interview_analyst_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong>
+                        </p>
+                    <?php } ?>
+
+                    <?php if (!$dabsic_form_post_interview_signature_editable) { ?>
+                        <p>Cette signature ne peut être modifiée depuis ce compte rendu.</p>
+                        <?php if ($dabsic_form_post_interview_signature_exists) { ?>
+                            <img class="dabsic-form-signature-current" src="<?=htmlspecialchars($dabsic_form_post_interview_signature_data, ENT_QUOTES, "UTF-8"); ?>" alt="Signature actuelle" />
+                        <?php } ?>
+                    <?php } else { ?>
+                        <div id="dabsic-form-signature-existing" <?=$dabsic_form_post_interview_signature_exists ? "" : "hidden"; ?>>
+                            <p>Cette signature est enregistrée sur votre profil et sera utilisée pour le compte rendu.</p>
+                            <?php if ($dabsic_form_post_interview_signature_exists) { ?>
+                                <img id="dabsic-form-signature-current" class="dabsic-form-signature-current" src="<?=htmlspecialchars($dabsic_form_post_interview_signature_data, ENT_QUOTES, "UTF-8"); ?>" alt="Signature actuelle" />
+                            <?php } else { ?>
+                                <img id="dabsic-form-signature-current" class="dabsic-form-signature-current" alt="Signature actuelle" hidden />
+                            <?php } ?>
+                            <div>
+                                <button id="dabsic-form-signature-replace" type="button">Refaire / remplacer la signature</button>
+                            </div>
+                        </div>
+                        <div id="dabsic-form-signature-editor" <?=$dabsic_form_post_interview_signature_exists ? "hidden" : ""; ?>>
+                            <p>Tracez votre signature ci-dessous. Elle sera enregistrée sur votre profil et pourra être réutilisée dans vos prochains documents.</p>
+                            <canvas id="dabsic-form-signature-canvas" width="680" height="260" aria-label="Zone de signature"></canvas>
+                            <div class="dabsic-form-signature-buttons">
+                                <button id="dabsic-form-signature-clear" type="button">Effacer</button>
+                                <button id="dabsic-form-signature-cancel" type="button" <?=$dabsic_form_post_interview_signature_exists ? "" : "hidden"; ?>>Conserver la signature actuelle</button>
+                                <button id="dabsic-form-signature-save" type="button">Enregistrer la signature</button>
+                            </div>
+                        </div>
+                    <?php } ?>
+                </fieldset>
+            <?php } ?>
+
             <div id="dabsic-form-message" class="dabsic-form-message" aria-live="assertive"></div>
 
             <div class="dabsic-form-actions">
                 <span>
                     <?=$Dictionnary["DabsicFormFieldCount"]; ?>: <?=count(dabsic_form_role_fields($dabsic_form_metadata, $dabsic_form_role, "edit")); ?>
                     <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
-                        — la validation apposera la signature de l'auteur et le tampon de l'école, puis enverra le PDF.
+                        — la validation apposera la signature de la personne ayant conduit l'entretien et le tampon de l'école, puis enverra le PDF.
                     <?php } ?>
                 </span>
                 <div class="dabsic-form-action-buttons">
                     <input id="dabsic-form-save" class="dabsic-form-save" type="submit" value="<?=$Dictionnary["Save"]; ?>" disabled />
                     <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
-                        <input id="dabsic-form-finalize" class="dabsic-form-finalize" type="button" value="Valider, générer et envoyer" />
+                        <input id="dabsic-form-preview" class="dabsic-form-preview" type="button" value="Prévisualiser le PDF (sans envoi)" />
+                        <input id="dabsic-form-finalize" class="dabsic-form-finalize" type="button" value="<?=$dabsic_form_post_interview_finalized ? "Compte rendu déjà envoyé" : "Valider, générer et envoyer"; ?>" <?=$dabsic_form_post_interview_finalized ? "disabled" : ""; ?> />
                     <?php } ?>
                 </div>
             </div>

@@ -58,35 +58,53 @@
   function position_popup(popup, button, wanted_width) {
     const rect = button.getBoundingClientRect();
     const margin = 8;
+    const gap = 4;
+    const viewport_width = document.documentElement.clientWidth || window.innerWidth;
+    const viewport_height = document.documentElement.clientHeight || window.innerHeight;
 
-    const width = Math.min(
+    const width = Math.max(1, Math.min(
       wanted_width,
-      window.innerWidth - margin * 2
-    );
+      viewport_width - margin * 2
+    ));
 
     let left = rect.left;
-    if (left + width > window.innerWidth - margin)
-      left = window.innerWidth - width - margin;
+    if (left + width > viewport_width - margin)
+      left = viewport_width - width - margin;
     if (left < margin)
       left = margin;
 
-    const space_below = window.innerHeight - rect.bottom - margin;
-    const space_above = rect.top - margin;
-    const max_height = Math.max(180, Math.min(520, Math.max(space_below, space_above) - 4));
-
     popup.style.width = width + "px";
-    popup.style.left = left + "px";
-    popup.style.maxHeight = max_height + "px";
+    popup.style.left = Math.round(left) + "px";
 
-    let top = rect.bottom + 4;
+    // Mesurer d'abord la hauteur réellement nécessaire (dans la limite
+    // générale de 520 px), puis choisir le côté qui peut effectivement la
+    // contenir. L'ancien test sur un seuil fixe de 220 px pouvait ouvrir une
+    // grille de 500 px vers le bas alors qu'il ne restait que ~250 px.
+    const viewport_max_height = Math.max(1, viewport_height - margin * 2);
+    popup.style.maxHeight = Math.min(520, viewport_max_height) + "px";
+    popup.style.top = margin + "px";
 
-    if (space_below < 220 && space_above > space_below) {
-      top = rect.top - max_height - 4;
-      if (top < margin)
-        top = margin;
+    let popup_height = popup.getBoundingClientRect().height;
+    const space_below = Math.max(0, viewport_height - rect.bottom - gap - margin);
+    const space_above = Math.max(0, rect.top - gap - margin);
+    const open_above = popup_height > space_below && space_above > space_below;
+    const available_height = open_above ? space_above : space_below;
+
+    if (popup_height > available_height) {
+      popup.style.maxHeight = Math.max(1, Math.min(520, available_height)) + "px";
+      popup_height = popup.getBoundingClientRect().height;
     }
 
-    popup.style.top = top + "px";
+    let top;
+    if (open_above)
+      top = rect.top - gap - popup_height;
+    else
+      top = rect.bottom + gap;
+
+    // Dernier garde-fou : même avec des tailles/zooms inhabituels, la popup
+    // reste intégralement dans le viewport.
+    top = Math.max(margin, Math.min(top, viewport_height - popup_height - margin));
+    popup.style.top = Math.round(top) + "px";
   }
 
   function open_bigselect(select, display_button) {

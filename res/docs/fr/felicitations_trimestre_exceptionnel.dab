@@ -1,0 +1,16 @@
+@include ".base_resultat_trimestre/base.dab"
+Title = "Félicitations — résultat trimestriel exceptionnel"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Félicitations pour votre trimestre
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Félicitations pour vos résultats trimestriels
+LetterSubject]
+
+{Content
+  @insert txt ($) "felicitations_trimestre_exceptionnel.txt"
+}

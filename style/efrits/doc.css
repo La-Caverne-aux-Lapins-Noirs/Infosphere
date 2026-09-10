@@ -30,7 +30,7 @@
     border-radius: 0 !important;
 }
 
-.doc_chain_box
+.doc_context_box
 {
     background-color: rgba(0, 0, 0, 0.20);
     border-radius: 10px;
@@ -41,4 +41,19 @@
     background-color: rgba(255, 0, 0, 0.16);
     border: 1px solid rgba(255, 0, 0, 0.45);
     border-radius: 10px;
+}
+
+.doc_context_status
+{
+    color: rgba(220, 255, 220, 0.78);
+}
+
+.doc_context_buttons input:disabled
+{
+    opacity: 0.72;
+}
+
+.doc_context_row_automatic
+{
+    background-color: rgba(0, 255, 0, 0.055);
 }

@@ -3,25 +3,25 @@
   [Fields
     [Student
       [FirstName
-        Label = "Prénom du stagiaire"
+        Label = "Prénom"
       ]
       [FamilyName
-        Label = "Nom du stagiaire"
+        Label = "Nom"
       ]
       [BirthDate
-        Label = "Date de naissance du stagiaire"
+        Label = "Date de naissance"
       ]
       [BirthPlace
-        Label = "Lieu de naissance du stagiaire"
+        Label = "Lieu de naissance"
       ]
       [Address
-        Label = "Adresse du stagiaire"
+        Label = "Adresse"
       ]
       [Courriel
-        Label = "Courriel du stagiaire"
+        Label = "Courriel"
       ]
       [Phone
-        Label = "Téléphone du stagiaire"
+        Label = "Téléphone"
       ]
       [INE
         Label = "INE"
@@ -36,83 +36,63 @@
         Label = "Année de formation"
       ]
       [Codename
-        Label = "Identifiant du stagiaire"
+        Label = "Nom de code"
       ]
       [Id
-        Label = "Identifiant interne du stagiaire"
+        Label = "Identifiant interne"
+      ]
+    ]
+    [Internship
+      [Insurance
+        Label = "Assurance responsabilité civile"
+      ]
+      [Administration
+        Label = "Inscription : école ou formation professionnelle"
+      ]
+      [LegalRepresentative
+        Label = "Représentant légal si mineur"
       ]
     ]
   ]
 ]
 [Entreprise
-  Label = "Entreprise"
+  Label = "Organisme d’accueil"
   [Fields
     [Company
       [LegalName
-        Label = "Raison sociale de l'entreprise"
+        Label = "Raison sociale"
       ]
       [LegalAddress
-        Label = "Adresse du siège de l'entreprise"
-      ]
-      [Address
-        Label = "Lieu du stage"
+        Label = "Adresse du siège"
       ]
       [SIRET
-        Label = "SIRET de l'entreprise"
+        Label = "SIRET"
       ]
       [Phone
-        Label = "Téléphone de l'entreprise"
+        Label = "Téléphone de l’organisme"
       ]
       [Courriel
-        Label = "Courriel de l'entreprise"
-      ]
-      [Representative
-        Label = "Représentant légal de l'entreprise"
-      ]
-      [Role
-        Label = "Qualité du représentant de l'entreprise"
-      ]
-      [Tutor
-        [FirstName
-          Label = "Prénom du tuteur de stage"
-        ]
-        [FamilyName
-          Label = "Nom du tuteur de stage"
-        ]
-        [Mail
-          Label = "Courriel du tuteur de stage"
-        ]
-        [Phone
-          Label = "Téléphone du tuteur de stage"
-        ]
-        [Role
-          Label = "Fonction du tuteur de stage"
-        ]
+        Label = "Courriel de l’organisme"
       ]
     ]
-  ]
-]
-[Stage
-  Label = "Stage"
-  [Fields
+    [CompanyTutor
+      [FirstName
+        Label = "Prénom du représentant / tuteur"
+      ]
+      [FamilyName
+        Label = "Nom du représentant / tuteur"
+      ]
+      [Mail
+        Label = "Courriel du représentant / tuteur"
+      ]
+      [Phone
+        Label = "Téléphone du représentant / tuteur"
+      ]
+    ]
     [Internship
-      [StartDate
-        Label = "Date de début du stage"
-      ]
-      [EndDate
-        Label = "Date de fin du stage"
-      ]
-      [DurationInDay
-        Label = "Durée du stage en jours"
-      ]
-      [HourPerDay
-        Label = "Durée quotidienne en heures"
-      ]
-      [Purpose
-        Label = "Objectifs et missions du stage"
-      ]
-      [Paiement
-        Label = "Gratification / rémunération"
+      [CompanyTutorRole
+        Label = "Fonction du représentant / tuteur"
+        Required = 1
       ]
     ]
   ]
@@ -122,42 +102,126 @@
   [Fields
     [School
       [LegalName
-        Label = "Nom de l'établissement"
+        Label = "Raison sociale"
       ]
       [LegalAddress
-        Label = "Adresse de l'établissement"
+        Label = "Adresse du siège"
       ]
       [SIRET
-        Label = "SIRET de l'établissement"
+        Label = "SIRET"
       ]
       [Phone
-        Label = "Téléphone de l'établissement"
+        Label = "Téléphone"
       ]
       [Courriel
-        Label = "Courriel de l'établissement"
+        Label = "Courriel"
       ]
-      [Representative
-        Label = "Représentant de l'établissement"
+    ]
+    [SchoolTutor
+      [FirstName
+        Label = "Prénom du représentant / référent"
       ]
-      [Role
-        Label = "Qualité du représentant de l'établissement"
+      [FamilyName
+        Label = "Nom du représentant / référent"
       ]
-      [Tutor
-        [FirstName
-          Label = "Prénom de l'enseignant référent"
-        ]
-        [FamilyName
-          Label = "Nom de l'enseignant référent"
-        ]
-        [Mail
-          Label = "Courriel de l'enseignant référent"
-        ]
-        [Phone
-          Label = "Téléphone de l'enseignant référent"
-        ]
-        [Role
-          Label = "Fonction de l'enseignant référent"
-        ]
+      [Mail
+        Label = "Courriel du représentant / référent"
+      ]
+      [Phone
+        Label = "Téléphone du représentant / référent"
+      ]
+    ]
+    [Internship
+      [SchoolTutorRole
+        Label = "Fonction du représentant / référent"
+        Required = 1
+      ]
+    ]
+  ]
+]
+[Stage
+  Label = "Stage et conditions particulières"
+  [Fields
+    [Internship
+      [Nature
+        Label = "Nature du stage (pédagogique, réorientation, complémentaire, césure)"
+      ]
+      [Subject
+        Label = "Sujet du stage"
+        Required = 1
+      ]
+      [Purpose
+        Type = "textarea"
+        Label = "Activités et missions confiées"
+        Required = 1
+      ]
+      [Skills
+        Type = "textarea"
+        Label = "Compétences à acquérir"
+      ]
+      [StartDate
+        Label = "Date de début"
+        Required = 1
+      ]
+      [EndDate
+        Label = "Date de fin"
+        Required = 1
+      ]
+      [DurationInDay
+        Label = "Nombre total de jours de présence"
+        Required = 1
+      ]
+      [HourPerDay
+        Label = "Heures par jour"
+      ]
+      [DayPerWeek
+        Label = "Jours par semaine"
+      ]
+      [DurationInHour
+        Label = "Nombre total d’heures de présence"
+        Required = 1
+      ]
+      [Address
+        Label = "Adresse précise du lieu du stage"
+        Required = 1
+      ]
+      [Schedule
+        Type = "textarea"
+        Label = "Temps complet / partiel, horaires, jours travaillés et calendrier détaillé"
+        Required = 1
+      ]
+      [Paid
+        Type = "radio"
+        {Choices "Oui", "Non"}
+        {ChoiceValues "Oui", "Non"}
+        Label = "Gratification : oui ou non"
+        Required = 1
+      ]
+      [HourlyPayment
+        Label = "Gratification horaire (euros)"
+      ]
+      [TotalPayment
+        Label = "Gratification totale prévisionnelle (euros)"
+      ]
+      [Paiement
+        Type = "textarea"
+        Label = "Montant mensuel et modalités de versement"
+      ]
+      [Benefits
+        Type = "textarea"
+        Label = "Avantages et remboursement des frais"
+      ]
+      [Leaves
+        Type = "textarea"
+        Label = "Congés et autorisations d’absence"
+      ]
+      [SigningCity
+        Label = "Ville de signature"
+        Required = 1
+      ]
+      [SigningDate
+        Label = "Date de signature"
+        Required = 1
       ]
     ]
   ]

@@ -2,7 +2,8 @@
   Label = "Bénéficiaire"
   {Read
     "Beneficiaire",
-    "Payeur"
+    "Payeur",
+    "Facture"
   }
   {Edit
     "Beneficiaire",
@@ -16,12 +17,15 @@
 [Etablissement
   Label = "Établissement"
   {Read
+    "Facture",
     "Facturation"
   }
   {Edit
+    "Facture",
     "Facturation"
   }
   {Validate
+    "Facture",
     "Facturation"
   }
 ]

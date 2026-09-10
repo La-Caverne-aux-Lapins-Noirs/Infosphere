@@ -11,21 +11,21 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_admin",
+	    "only_admin",
 	    "AddFunction",
 	],
 	"user" => [
-	    "is_admin",
+	    "only_admin",
 	    "AddFunctionAuthorization",
 	],
     ],
     "DELETE" => [
 	"" => [
-	    "is_admin",
+	    "only_admin",
 	    "DeleteFunction"
 	],
 	"user" => [
-	    "is_admin",
+	    "only_admin",
 	    "DeleteFunctionAuthorization",
 	]
     ]

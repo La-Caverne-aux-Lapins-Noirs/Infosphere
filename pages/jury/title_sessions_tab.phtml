@@ -18,30 +18,28 @@ function title_session_manager_label(array $user)
     return ($name);
 }
 
-function title_session_document_hidden($model, array $chain)
+function title_session_document_hidden($model, array $contexts, array $fields = [])
 {
     $hash = preg_replace('/[^a-zA-Z0-9_]/', '_', $model);
     ?>
     <input type="hidden" name="doc_<?=$hash; ?>" value="1" />
     <input type="hidden" name="docref_<?=$hash; ?>" value="res_docs:fr/<?=htmlspecialchars($model, ENT_QUOTES); ?>.dab" />
-    <input type="hidden" name="chain" value="<?=htmlspecialchars(json_encode($chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
+    <input type="hidden" name="context_bindings" value="<?=htmlspecialchars(json_encode($contexts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
+    <?php foreach ($fields as $key => $value) { ?>
+        <input type="hidden" name="fields[]" value="<?=htmlspecialchars($key."=".$value, ENT_QUOTES); ?>" />
+    <?php } ?>
     <?php
 }
 
-function title_session_base_document_chain(array $session)
+function title_session_base_document_contexts(array $session)
 {
-    $chain = [
-        ["type" => "school", "prefix" => "School", "id" => (string)$session["id_school"]],
-        ["type" => "title_session", "prefix" => "TitleSession", "id" => (string)$session["id"]],
+    $contexts = [
+        "School" => (string)$session["id_school"],
+        "TitleSession" => (string)$session["id"],
     ];
     if ((int)($session["id_session_manager"] ?? 0) > 0)
-        $chain[] = [
-            "type" => "user",
-            "prefix" => "SessionManager",
-            "id" => (string)$session["id_session_manager"],
-            "signatory" => "SessionManager",
-        ];
-    return ($chain);
+        $contexts["SessionManager"] = (string)$session["id_session_manager"];
+    return ($contexts);
 }
 ?>
 <div class="jury_page jury_title_sessions_page">
@@ -161,9 +159,9 @@ function title_session_base_document_chain(array $session)
                                 </form>
                                 <form method="post" action="/api/doc/0/generate" target="_blank">
                                     <?php
-                                    $chain = title_session_base_document_chain($title_session);
-                                    $chain[] = ["type" => "jury", "prefix" => "Jury", "id" => (string)$jury["id"]];
-                                    title_session_document_hidden("convocation_jury", $chain);
+                                    $contexts = title_session_base_document_contexts($title_session);
+                                    $contexts["Jury"] = (string)$jury["id"];
+                                    title_session_document_hidden("convocation_jury", $contexts);
                                     ?>
                                     <input type="submit" value="<?=$Dictionnary["GenerateJuryConvocation"] ?? "Convocation"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
                                 </form>
@@ -178,19 +176,12 @@ function title_session_base_document_chain(array $session)
                     <?php foreach ($title_session["candidates"] as $candidate) { ?>
                         <div class="title_session_person">
                             <a href="<?=profile($candidate["id"]); ?>"><?=htmlentities(jury_person_name($candidate)); ?></a>
-                            <span class="smalltext"><?=htmlentities($Dictionnary["CandidateFirstAppointment"] ?? "Premier rendez-vous"); ?> : <?=htmlentities($candidate["questionnaire_date"]); ?> <?=htmlentities($candidate["questionnaire_time"]); ?> · <?=htmlentities($Dictionnary["CandidateJuryAppointment"] ?? "Jury"); ?> : <?=htmlentities($candidate["jury_date"]); ?> <?=htmlentities($candidate["jury_arrival_time"]); ?></span>
+                            <span class="smalltext"><?=htmlentities($Dictionnary["CandidateFirstAppointment"] ?? "Premier rendez-vous"); ?> : <?=htmlentities($candidate["questionnaire_date"] ?? ""); ?> <?=htmlentities($candidate["questionnaire_time"] ?? ""); ?> · <?=htmlentities($Dictionnary["CandidateJuryAppointment"] ?? "Passage devant le jury"); ?> : <?=htmlentities($candidate["jury_date"] ?? ""); ?> <?=htmlentities($candidate["jury_appointment_time"] ?? ""); ?> · <?=htmlentities($Dictionnary["CandidateJuryPresence"] ?? "Présence demandée"); ?> : <?=htmlentities($candidate["jury_arrival_time"] ?? "09:00"); ?></span>
                             <form method="post" action="/api/doc/0/generate" target="_blank">
                                 <?php
-                                $chain = title_session_base_document_chain($title_session);
-                                $chain[] = ["type" => "student", "prefix" => "Student", "id" => (string)$candidate["id"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.Number", "value" => $candidate["candidate_number"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.QuestionnaireDate", "value" => $candidate["questionnaire_date"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.QuestionnaireTime", "value" => $candidate["questionnaire_time"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.JuryDate", "value" => $candidate["jury_date"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.JuryArrivalTime", "value" => $candidate["jury_arrival_time"]];
-                                $chain[] = ["type" => "field", "key" => "Candidate.VAENotice", "value" => ""];
-                                $chain[] = ["type" => "field", "key" => "Candidate.AuthorizationNotice", "value" => ""];
-                                title_session_document_hidden("convocation_candidat_certification", $chain);
+                                $contexts = title_session_base_document_contexts($title_session);
+                                $contexts["Student"] = (string)$candidate["id"];
+                                title_session_document_hidden("convocation_candidat_certification", $contexts);
                                 ?>
                                 <input type="submit" value="<?=$Dictionnary["GenerateCandidateCertificationConvocation"] ?? "Convocation certification"; ?>" <?=(int)($title_session["id_session_manager"] ?? 0) > 0 ? "" : 'disabled title="'.htmlspecialchars($Dictionnary["TitleSessionMissingManagerForConvocation"] ?? "Définissez d’abord un responsable de session.", ENT_QUOTES).'"'; ?> />
                             </form>

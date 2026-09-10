@@ -1,30 +1,40 @@
+' Mise en page commune des courriers administratifs.
+' Les positions From/Target sont exprimées depuis le bord physique de la page.
+Document = "Letter"
 
-'Peut etre un champ, ou deux (Left Right) ou trois (Left Middle Right)
+[Letter
+  HeaderHeight = "1cm"
+  FromX = "2cm"
+  FromY = "2.5cm"
+  FromWidth = "7.5cm"
+  DateX = "14cm"
+  DateY = "10cm"
+  DateWith = "7cm"
+  TargetX = "11.5cm"
+  TargetY = "5cm"
+  TargetWidth = "7cm"
+  BodyGap = "4cm"
+  BodyLeft = "1cm"
+  BodyRight = "1cm"
+  BottomMargin = "2cm"
+  FooterHeight = "2cm"
+]
+
 [Header
-  Left = [Text($,Left)
-    [@Size;9] $([.].Company.Name)
-  Left]
   Right = [Text($,Right)
-    [@Image;$([.].Company.Logo);width=4cm;height=2cm]
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
   Right]
 ]
 
 Footer = [Text($,Footer)
-  [@Center] [@Size;2] $([.].Company.Name), $([.].Company.Street) $([.].Company.City)
+  [@Center;
+    [@Size;0]
+    $(School.MainInfo)
+    $(School.SchoolInfo)
+    $(School.FormationInfo)
+    $(School.AlternationInfo)
+    $(School.Phone) $(School.Mail)
+  ]
 Footer]
-
-From = [Text($,From)
-  $([.].Company.Name)
-  $([.].Company.Street)
-  $([.].Company.City)
-  $([.].Company.Phone)
-  $([.].Company.Mail)
-From]
-
-Target = [Text($,Target)
-  $([.].Destination.Name)
-  $([.].Destination.Street)
-  $([.].Destination.City)
-Target]
-
-Document = "Letter"

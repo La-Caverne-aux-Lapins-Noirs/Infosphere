@@ -5,12 +5,74 @@ function enterprise_document_roles()
     return (["contact", "representative", "tutor"]);
 }
 
-function enterprise_document_role($role)
+function enterprise_document_role_list($roles)
 {
-    $role = trim((string)$role);
-    if ($role == "")
-        return ("contact");
-    return ($role);
+    if (!is_array($roles))
+        $roles = preg_split('/\s*[,;]\s*/', trim((string)$roles), -1, PREG_SPLIT_NO_EMPTY);
+
+    $selected = [];
+    foreach (enterprise_document_roles() as $role)
+        if (in_array($role, $roles, true))
+            $selected[] = $role;
+    if (!count($selected))
+        $selected[] = "contact";
+    return ($selected);
+}
+
+function enterprise_document_role($roles)
+{
+    return (implode(",", enterprise_document_role_list($roles)));
+}
+
+function enterprise_has_document_role($roles, $role)
+{
+    return (in_array($role, enterprise_document_role_list($roles), true));
+}
+
+function enterprise_document_roles_from_data(array $data)
+{
+    $roles = [];
+    $explicit = false;
+
+    foreach (enterprise_document_roles() as $role)
+    {
+        $field = "document_role_".$role;
+        if (!array_key_exists($field, $data))
+            continue ;
+        $explicit = true;
+        if (!empty($data[$field]))
+            $roles[] = $role;
+    }
+
+    if (!$explicit && isset($data["document_roles"]))
+    {
+        $explicit = true;
+        $roles = is_array($data["document_roles"]) ? $data["document_roles"] : [$data["document_roles"]];
+    }
+    if (!$explicit && isset($data["document_role"]))
+        $roles = enterprise_document_role_list($data["document_role"]);
+
+    return (enterprise_document_role($roles));
+}
+
+function enterprise_contact_candidates($id_organization)
+{
+    $id_organization = (int)$id_organization;
+    return (db_select_all("
+        user.id, user.codename, user.first_name, user.family_name, user.mail
+        FROM user
+        WHERE user.authority != -1
+        AND NOT EXISTS (
+            SELECT organization_user.id
+            FROM organization_user
+            WHERE organization_user.id_organization = $id_organization
+            AND organization_user.id_user = user.id
+        )
+        ORDER BY
+            COALESCE(NULLIF(user.family_name, ''), user.codename) ASC,
+            COALESCE(NULLIF(user.first_name, ''), user.codename) ASC,
+            user.codename ASC
+    "));
 }
 
 function enterprise_fetch_id($id)
@@ -214,6 +276,8 @@ function enterprise_dabsic_context(array $enterprise)
             "phone" => $enterprise["phone"] ?? "",
             "website" => $enterprise["website"] ?? "",
             "activity" => $enterprise["activity"] ?? "",
+            "billing_information" => $enterprise["billing_information"] ?? "",
+            "RIB" => $enterprise["billing_information"] ?? "",
             "notes" => $enterprise["notes"] ?? "",
             "representative" => $representative["identity"] ?? "",
             "role" => $representative["role"] ?? "",
@@ -307,6 +371,7 @@ function add_enterprise(array $data)
         "website" => trim((string)($data["website"] ?? "")),
         "siret" => enterprise_digits($data["siret"] ?? ""),
         "activity" => trim((string)($data["activity"] ?? "")),
+        "billing_information" => trim((string)($data["billing_information"] ?? "")),
         "notes" => trim((string)($data["notes"] ?? "")),
     ];
 
@@ -348,7 +413,7 @@ function edit_enterprise($id, array $data)
         "name", "legal_name",
         "head_office_address_line1", "head_office_address_line2",
         "head_office_zipcode", "head_office_city", "head_office_country",
-        "phone", "mail", "website", "activity", "notes"
+        "phone", "mail", "website", "activity", "billing_information", "notes"
     ] as $field)
         if (isset($data[$field]))
             $fields[$field] = trim((string)$data[$field]);
@@ -373,7 +438,7 @@ function edit_enterprise($id, array $data)
     $enterprise = fetch_enterprises($id);
     if (($refresh = refresh_enterprise($enterprise))->is_error())
         return ($refresh);
-    add_log(EDIT_OPERATION, "enterprise {$enterprise["codename"]}", $id);
+    add_log(EDITING_OPERATION, "enterprise {$enterprise["codename"]}", $id);
     return (new ValueResponse($enterprise));
 }
 
@@ -440,7 +505,7 @@ function set_enterprise_contact($id_organization, array $data)
     $id_user = (int)$ret->value;
 
     $position = trim((string)($data["position"] ?? ""));
-    $document_role = enterprise_document_role($data["document_role"] ?? "contact");
+    $document_role = enterprise_document_roles_from_data($data);
 
     if ($Database->query("
         INSERT INTO organization_user (id_organization, id_user, position, document_role)
@@ -466,7 +531,7 @@ function edit_enterprise_contact($id_organization, $id_link, array $data)
     $id_organization = (int)$ret->value;
     $id_link = (int)$id_link;
     $position = trim((string)($data["position"] ?? ""));
-    $document_role = enterprise_document_role($data["document_role"] ?? "contact");
+    $document_role = enterprise_document_roles_from_data($data);
 
     if ($Database->query("
         UPDATE organization_user
@@ -509,6 +574,6 @@ function delete_enterprise($id)
     $id = (int)$ret->value;
     if ($Database->query("UPDATE organization SET deleted = NOW() WHERE id = $id AND type = 'enterprise'") == false)
         return (new ErrorResponse("CannotEdit"));
-    add_log(EDIT_OPERATION, "enterprise deleted", $id);
+    add_log(EDITING_OPERATION, "enterprise deleted", $id);
     return (new Response);
 }

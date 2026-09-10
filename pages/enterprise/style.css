@@ -494,6 +494,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.enterprise_contact_add_grid > *,
+.enterprise_contact_inline_form > *,
+.enterprise_contact_card > *
+{
+    min-width: 0;
+}
+
 .enterprise_contact_position
 {
     grid-column: 1 / -1;
@@ -533,7 +540,7 @@
 {
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(110px, 145px) minmax(120px, 1fr) 42px;
+    grid-template-columns: minmax(0, 1fr) 42px;
 }
 
 .enterprise_contact_delete_form input[type="button"]
@@ -649,4 +656,183 @@
     {
         grid-template-columns: repeat(2, minmax(320px, 1fr));
     }
+}
+
+
+/* Les contacts peuvent réutiliser un compte Infosphère existant. Le rôle métier
+ * reste un champ libre ; document_role ne sert qu'aux contextes documentaires. */
+.enterprise_contact_existing_user,
+.enterprise_contact_position
+{
+    grid-column: span 2;
+}
+
+.enterprise_contact_existing_user small,
+.enterprise_contact_position small,
+.enterprise_contact_document_roles small
+{
+    display: block;
+    margin-top: 2px;
+    opacity: 0.72;
+    font-size: 10px;
+    line-height: 1.15;
+}
+
+.enterprise_contact_new_fields
+{
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+    gap: 8px;
+    overflow: hidden;
+}
+
+.enterprise_contact_new_fields_hidden
+{
+    display: none;
+}
+
+.enterprise_contact_document_role_label
+{
+    opacity: 0.70;
+}
+
+@media (max-width: 850px)
+{
+    .enterprise_contact_existing_user,
+    .enterprise_contact_position,
+    .enterprise_contact_new_fields
+    {
+        grid-column: auto;
+    }
+
+    .enterprise_contact_new_fields
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Les usages documentaires d'un contact sont cumulables. */
+.enterprise_contact_document_roles,
+.enterprise_contact_inline_roles
+{
+    border: 1px solid rgba(0, 255, 0, 0.22);
+    border-radius: 7px;
+    box-sizing: border-box;
+    margin: 0;
+    max-width: 100%;
+    padding: 7px 9px;
+}
+
+.enterprise_contact_document_roles
+{
+    grid-column: 1 / -1;
+}
+
+.enterprise_contact_document_roles legend,
+.enterprise_contact_inline_roles legend
+{
+    color: inherit;
+    font-weight: bold;
+    padding: 0 4px;
+}
+
+.enterprise_contact_document_roles label,
+.enterprise_contact_inline_roles label
+{
+    align-items: center;
+    display: inline-flex;
+    font-weight: normal;
+    gap: 4px;
+    margin-right: 12px;
+    white-space: nowrap;
+}
+
+.enterprise_contact_form .enterprise_contact_document_roles input[type="checkbox"],
+.enterprise_contact_inline_form .enterprise_contact_inline_roles input[type="checkbox"]
+{
+    height: auto;
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+.enterprise_contact_document_roles small
+{
+    display: block;
+    font-size: 10px;
+    line-height: 1.15;
+    margin-top: 5px;
+    opacity: 0.72;
+}
+
+.enterprise_contact_inline_form
+{
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) 42px;
+}
+
+.enterprise_contact_inline_form > input[type="text"]
+{
+    grid-column: 1 / -1;
+}
+
+.enterprise_contact_inline_roles
+{
+    grid-column: 1;
+}
+
+.enterprise_contact_inline_form > input[type="submit"]
+{
+    grid-column: 2;
+    grid-row: 2;
+    height: 100%;
+    min-width: 42px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.enterprise_contact_inline_roles
+{
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 8px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.enterprise_panel input[type="submit"],
+.enterprise_admin_page input[type="submit"]
+{
+    background: rgba(0, 120, 0, 0.92) !important;
+    border: 1px solid rgba(115, 255, 115, 0.95) !important;
+    border-radius: 7px;
+    color: #ffffff !important;
+    cursor: pointer;
+    font-weight: bold;
+    min-height: 30px;
+    padding: 5px 10px;
+    text-shadow: 0 1px 2px #000000;
+}
+
+.enterprise_panel input[type="submit"]:hover,
+.enterprise_admin_page input[type="submit"]:hover
+{
+    background: rgba(0, 170, 0, 0.96) !important;
+}
+
+.enterprise_contact_delete_form input[type="submit"]
+{
+    background: rgba(110, 0, 0, 0.90) !important;
+    border-color: rgba(255, 120, 120, 0.95) !important;
+}
+
+@media (max-width: 850px)
+{
+    .enterprise_contact_document_roles
+    {
+        grid-column: auto;
+    }
+
 }

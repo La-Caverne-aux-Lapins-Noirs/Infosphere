@@ -1,19 +1,91 @@
-Document = "Generic"
-Title = "Convocation de jury"
+@include ".base_letter/base.dab"
+Title = "Convocation d'un membre du jury à une session de certification"
 
-[Header
-  Left = [Text($,Left)
-    [@Size;1]
-    [#Variable;School.Organization.LegalName]
-    [#Variable;School.Organization.Address]
-    [#Variable;School.Organization.Phone]
-  Left]
-  Right = [Text($,Right)
-    [@Size;1]
-    [#Variable;Jury.Identity]
-    [#Variable;Jury.Address]
-    [#Variable;Jury.PostalCity]
-  Right]
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  TrainingAddress = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Jury
+  Identity = ""
+  Gender = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[TitleSession
+  StartDate = ""
+  EndDate = ""
+  StartTime = ""
+  EndTime = ""
+  JuryArrivalTime = ""
+  VenueAddress = ""
+  EquipmentNotice = ""
+  [Title
+    Id = 0
+    Codename = ""
+    Name = ""
+    FrName = ""
+    EnName = ""
+    Code = ""
+  ]
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Contexts
+  [Jury
+    Type = "jury"
+    Prefix = "Jury"
+    Label = "Membre du jury"
+    Required = 1
+  ]
+  [TitleSession
+    Type = "title_session"
+    Prefix = "TitleSession"
+    Label = "Session de certification"
+    Required = 1
+    Placeholder = "ID de la session de titre"
+  ]
+  [Certification
+    Type = "title"
+    Prefix = "TitleSession.Title"
+    Label = "Certification"
+    Required = 1
+    InferFrom = "TitleSession"
+    Placeholder = "id ou nom de code de la certification"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "TitleSession"
+  ]
+  [SessionManager
+    Type = "user"
+    Prefix = "SessionManager"
+    Label = "Responsable de session"
+    Required = 1
+    Signatory = "SessionManager"
+    InferFrom = "TitleSession"
+    Placeholder = "id ou nom de code"
+  ]
 ]
 
 [Signatures
@@ -23,52 +95,82 @@ Title = "Convocation de jury"
   ]
 ]
 
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Convocation à une session de certification
+  Left]
+]
+
+Footer = [Text($,Footer)
+  [#Center;
+    [@Size;0]
+    $(School.MainInfo)
+    $(School.SchoolInfo)
+    $(School.FormationInfo)
+    $(School.AlternationInfo)
+    $(School.Phone) $(School.Mail)
+  ]
+Footer]
+
 [FormLabel
   [Destinataire
     Label = "Membre du jury"
     [Jury
-      Identity = "Nom et prénom du membre du jury"
+      Identity = "Nom et prénom"
+      Gender = "Genre"
       Address = "Adresse"
       PostalCity = "Code postal et ville"
-    ]
-  ]
-  [SessionExamen
-    Label = "Session d'examen"
-    [Exam
-      CertificationName = "Titre / certification visé(e)"
-      CertificationCode = "Code de la certification"
-      StartDate = "Premier jour de la session"
-      EndDate = "Dernier jour de la session"
-      ArrivalDate = "Date de convocation"
-      ArrivalTime = "Heure de convocation"
-      VenueName = "Nom du centre d'examen"
-      VenueAddress = "Adresse du centre d'examen"
-      EquipmentNotice = "Consigne relative aux équipements obligatoires"
-      AdditionalNotice = "Consigne complémentaire"
+      Country = "Pays"
     ]
   ]
   [Emission
     Label = "Émission de la convocation"
-    [Convocation
-      IssueCity = "Ville d'émission"
-      IssueDate = "Date d'émission"
+    [Generation
+      Date = "Date d'émission"
     ]
-    [SessionManager
-      Identity = "Responsable de session"
+    [Signatories
+      [SessionManager
+        Identity = "Responsable de session"
+      ]
+    ]
+  ]
+  [SessionTitre
+    Label = "Certification et session"
+    [TitleSession
+      StartDate = "Date de début de session"
+      EndDate = "Date de fin de session"
+      JuryArrivalTime = "Heure de présence demandée aux membres du jury"
+      VenueAddress = "Adresse du centre d'examen"
+      EquipmentNotice = "Consigne relative aux équipements, le cas échéant"
+      [Title
+        FrName = "Certification"
+        Code = "Code de la certification"
+      ]
     ]
   ]
 ]
 
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Jury.Identity]\par
+  [#Variable;Jury.Address]\par
+  [#Variable;Jury.PostalCity][@IfC;Jury.Country;!=;;\\[#Variable;Jury.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Convocation en qualité de membre du jury - [#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
 {Content
-  "[@Size;1]\n",
-  "[@Right;[#Variable;Convocation.IssueCity], le [#Variable;Convocation.IssueDate]]\n\n",
-  "**Objet : Convocation à la session d'examen du [#Variable;Exam.StartDate] au [#Variable;Exam.EndDate] pour le titre professionnel [#Variable;Exam.CertificationName]**\n\n",
-  "Madame, Monsieur,\n\n",
-  "Vous avez accepté d'être désigné(e) en tant que membre de jury pour une session d'examen visant l'obtention du titre professionnel [#Variable;Exam.CertificationName][@IfC;Exam.CertificationCode;!=;; ([#Variable;Exam.CertificationCode])], qui se déroulera au centre [#Variable;Exam.VenueName] du [#Variable;Exam.StartDate] au [#Variable;Exam.EndDate].\n\n",
-  "Vous voudrez bien vous présenter muni(e) d'une pièce d'identité et de la présente convocation le **[#Variable;Exam.ArrivalDate] à [#Variable;Exam.ArrivalTime]** à l'adresse suivante :\n\n",
-  "[@Center;**[#Variable;Exam.VenueAddress]**]\n\n",
-  "[@IfC;Exam.EquipmentNotice;!=;;[#Variable;Exam.EquipmentNotice]\n\n]",
-  "[@IfC;Exam.AdditionalNotice;!=;;[#Variable;Exam.AdditionalNotice]\n\n]",
-  "Je vous prie d'agréer, Madame, Monsieur, l'expression de ma considération distinguée.\n\n\n",
-  "[@Right;Le responsable de session\n[#Variable;Signatories.SessionManager.Identity]]\n"
+  @insert txt ($) "convocation_jury.txt"
 }

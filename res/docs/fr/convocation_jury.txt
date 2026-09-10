@@ -1,0 +1,31 @@
+[#IfC;Jury.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Vous êtes convoqué[@IfC;Jury.Gender;==;female;e] en qualité de membre du jury pour la session de certification **[#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]**. La session se déroulera du **[#Variable;TitleSession.StartDate]** au **[#Variable;TitleSession.EndDate]**. Votre présence est demandée le **[#Variable;TitleSession.StartDate] à [#Variable;TitleSession.JuryArrivalTime]**.
+
+[@Indent]
+
+[@Indent]Les travaux du jury auront lieu à l'adresse suivante :
+
+[@Center;**[#Variable;School.TrainingAddress]**]
+
+[@Indent]Dans le cadre de cette session, vous aurez à évaluer les candidats conformément au référentiel de certification et aux modalités d'évaluation applicables, puis à participer aux délibérations du jury.
+
+[@Indent]
+
+[@Indent]Vous devrez être muni[@IfC;Jury.Gender;==;female;e] :
+
+- [@Indent][@Indent]de l'original de votre pièce d'identité ;
+- [@Indent][@Indent]de la présente convocation ;
+[@IfC;TitleSession.EquipmentNotice;!=;;- [#Variable;TitleSession.EquipmentNotice] ;
+]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Jury.Gender;==;female;Madame;Monsieur], l'expression de ma considération distinguée.
+
+[@Indent]
+
+[@Right;Le responsable de session
+[#Variable;Signatories.SessionManager.Identity]
+\par\vspace{0.08cm}
+[@IfC;Signatories.SessionManager.Signature;!=;;[@Image;[#Variable;Signatories.SessionManager.Signature];width=4.6cm;height=2.3cm]]]

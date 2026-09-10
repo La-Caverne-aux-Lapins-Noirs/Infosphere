@@ -15,6 +15,7 @@
     function attachForm(root) {
         var inputs = Array.prototype.slice.call(root.querySelectorAll("[data-dabsic-field]"));
         var saveButton = document.getElementById("dabsic-form-save");
+        var previewButton = document.getElementById("dabsic-form-preview");
         var finalizeButton = document.getElementById("dabsic-form-finalize");
         var stateBox = document.getElementById("dabsic-form-state");
         var messageBox = document.getElementById("dabsic-form-message");
@@ -22,10 +23,29 @@
         var outputComplete = root.getAttribute("data-output-complete") === "1";
         var saving = false;
         var savingPromise = null;
+        var previewing = false;
         var finalizing = false;
+        var reportFinalized = root.getAttribute("data-report-finalized") === "1";
+        var signatureSaving = false;
         var savedTimer = null;
         var overrideList = document.getElementById("dabsic-form-overrides-list");
         var overrideAdd = document.getElementById("dabsic-form-override-add");
+        var signatureBox = document.getElementById("dabsic-form-signature");
+        var signatureEditor = document.getElementById("dabsic-form-signature-editor");
+        var signatureExisting = document.getElementById("dabsic-form-signature-existing");
+        var signatureCanvas = document.getElementById("dabsic-form-signature-canvas");
+        var signatureCurrent = document.getElementById("dabsic-form-signature-current");
+        var signatureReplace = document.getElementById("dabsic-form-signature-replace");
+        var signatureClear = document.getElementById("dabsic-form-signature-clear");
+        var signatureCancel = document.getElementById("dabsic-form-signature-cancel");
+        var signatureSave = document.getElementById("dabsic-form-signature-save");
+        var signatureState = {
+            exists: signatureBox && signatureBox.getAttribute("data-signature-exists") === "1",
+            editable: signatureBox && signatureBox.getAttribute("data-signature-editable") === "1",
+            drawn: false,
+            drawing: false,
+            last: null
+        };
 
         if (!saveButton || !stateBox || !messageBox)
             return;
@@ -175,12 +195,21 @@
 
         function updateState() {
             var dirty = isDirty();
+            var busy = saving || previewing || finalizing || signatureSaving;
             root.classList.toggle("is-dirty", dirty);
-            saveButton.disabled = !dirty || saving || finalizing;
+            saveButton.disabled = !dirty || busy;
+            if (previewButton)
+                previewButton.disabled = busy;
             if (finalizeButton)
-                finalizeButton.disabled = saving || finalizing;
+                finalizeButton.disabled = busy || reportFinalized;
+            if (signatureSave)
+                signatureSave.disabled = signatureSaving || !signatureState.drawn;
             if (finalizing)
                 setState("saving", "Génération et envoi…");
+            else if (previewing)
+                setState("saving", "Génération de l'aperçu…");
+            else if (signatureSaving)
+                setState("saving", "Enregistrement de la signature…");
             else if (saving)
                 setState("saving", label("saving-label", "Sauvegarde…"));
             else if (dirty)
@@ -268,29 +297,125 @@
             return savingPromise;
         }
 
-        function finalizeReport() {
-            var url = root.getAttribute("data-finalize-url") || "";
-            var popup;
+        function canvasBlob(canvas) {
+            return new Promise(function (resolve, reject) {
+                canvas.toBlob(function (blob) {
+                    if (blob)
+                        resolve(blob);
+                    else
+                        reject(new Error("Impossible de lire la signature tracée."));
+                }, "image/png");
+            });
+        }
 
-            if (!url || finalizing)
-                return;
-            if (!window.confirm(label("confirm-finalize", "Valider, générer et envoyer ce compte rendu ?")))
-                return;
+        function signaturePoint(event) {
+            var rect = signatureCanvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - rect.left) * signatureCanvas.width / Math.max(1, rect.width),
+                y: (event.clientY - rect.top) * signatureCanvas.height / Math.max(1, rect.height)
+            };
+        }
 
-            popup = window.open("", "_blank");
-            if (popup)
-                popup.document.write('<p style="font-family:sans-serif">Génération du compte rendu…</p>');
-            finalizing = true;
+        function clearSignatureCanvas() {
+            if (!signatureCanvas)
+                return;
+            signatureCanvas.getContext("2d").clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            signatureState.drawn = false;
+            signatureState.drawing = false;
+            signatureState.last = null;
+            updateState();
+        }
+
+        function showSignatureEditor() {
+            if (!signatureState.editable || !signatureEditor)
+                return;
+            if (signatureExisting)
+                signatureExisting.hidden = true;
+            signatureEditor.hidden = false;
+            clearSignatureCanvas();
+        }
+
+        function showExistingSignature() {
+            if (signatureExisting)
+                signatureExisting.hidden = false;
+            if (signatureEditor)
+                signatureEditor.hidden = true;
+            clearSignatureCanvas();
+        }
+
+        function saveSignatureIfNeeded(requireSignature) {
+            var url = root.getAttribute("data-signature-url") || "";
+            var previewData;
+
+            if (!signatureBox) {
+                if (requireSignature)
+                    return Promise.reject(new Error("Aucune signature n'est disponible pour la personne ayant conduit l'entretien."));
+                return Promise.resolve(true);
+            }
+            if (!signatureState.editable) {
+                if (requireSignature && !signatureState.exists)
+                    return Promise.reject(new Error("La signature de la personne ayant conduit l'entretien est manquante."));
+                return Promise.resolve(true);
+            }
+            if (!signatureState.drawn) {
+                if (requireSignature && !signatureState.exists)
+                    return Promise.reject(new Error("Tracez votre signature avant de générer le compte rendu."));
+                return Promise.resolve(true);
+            }
+            if (!url || !signatureCanvas)
+                return Promise.reject(new Error("Le service d'enregistrement de signature n'est pas disponible."));
+
+            previewData = signatureCanvas.toDataURL("image/png");
+            signatureSaving = true;
             setMessage("", "error");
             updateState();
-
-            save(false).then(function (saved) {
-                if (!saved)
-                    throw new Error("Le compte rendu n'a pas pu être sauvegardé avant sa validation.");
-                return fetch(url, {
-                    method: "POST",
-                    credentials: "same-origin"
+            return canvasBlob(signatureCanvas).then(function (blob) {
+                var body = new FormData();
+                body.append("signature", blob, "signature.png");
+                return fetch(url, {method: "POST", credentials: "same-origin", body: body});
+            }).then(function (response) {
+                return response.text().then(function (text) {
+                    var packet = null;
+                    try {
+                        packet = JSON.parse(text);
+                    } catch (error) {
+                        throw new Error(text || response.statusText || "L'enregistrement de la signature a échoué.");
+                    }
+                    if (!response.ok || !packet || packet.result !== "ok")
+                        throw new Error(packet && packet.msg ? htmlToText(packet.msg) :
+                            response.statusText || "L'enregistrement de la signature a échoué.");
+                    return packet;
                 });
+            }).then(function (packet) {
+                signatureState.exists = true;
+                signatureState.drawn = false;
+                signatureState.drawing = false;
+                signatureState.last = null;
+                signatureBox.setAttribute("data-signature-exists", "1");
+                if (signatureCurrent) {
+                    signatureCurrent.src = previewData;
+                    signatureCurrent.hidden = false;
+                }
+                if (signatureCancel)
+                    signatureCancel.hidden = false;
+                showExistingSignature();
+                signatureSaving = false;
+                setMessage(packet.msg || "Signature enregistrée.", "success");
+                updateState();
+                return true;
+            }).catch(function (error) {
+                signatureSaving = false;
+                updateState();
+                throw error;
+            });
+        }
+
+        function fetchPdf(url, popup, loadingText) {
+            if (popup)
+                popup.document.body.innerHTML = '<p style="font-family:sans-serif">' + loadingText + '</p>';
+            return fetch(url, {
+                method: "POST",
+                credentials: "same-origin"
             }).then(function (response) {
                 var contentType = response.headers.get("Content-Type") || "";
                 if (response.ok && contentType.toLowerCase().indexOf("application/pdf") >= 0)
@@ -306,14 +431,77 @@
                         response.statusText || "La génération du PDF a échoué.");
                 });
             }).then(function (blob) {
-                var url = URL.createObjectURL(blob);
+                var objectUrl = URL.createObjectURL(blob);
                 if (popup)
-                    popup.location = url;
+                    popup.location = objectUrl;
                 else
-                    window.open(url, "_blank", "noopener");
-                window.setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                    window.open(objectUrl, "_blank", "noopener");
+                window.setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 60000);
+                return true;
+            });
+        }
+
+        function previewReport() {
+            var url = root.getAttribute("data-preview-url") || "";
+            var popup;
+
+            if (!url || previewing || finalizing)
+                return;
+            popup = window.open("", "_blank");
+            if (popup)
+                popup.document.write('<p style="font-family:sans-serif">Préparation de l\'aperçu…</p>');
+            previewing = true;
+            setMessage("", "error");
+            updateState();
+
+            save(false).then(function (saved) {
+                if (!saved)
+                    throw new Error("Le brouillon n'a pas pu être sauvegardé avant la prévisualisation.");
+                return saveSignatureIfNeeded(true);
+            }).then(function () {
+                return fetchPdf(url, popup, "Génération de l'aperçu…");
+            }).then(function () {
+                previewing = false;
+                setMessage("Aperçu généré : aucun mail n'a été envoyé et le compte rendu n'a pas été finalisé.", "success");
+                updateState();
+            }).catch(function (error) {
+                if (popup)
+                    popup.close();
+                previewing = false;
+                setMessage(error && error.message ? error.message :
+                    "La prévisualisation du compte rendu a échoué.", "error");
+                updateState();
+            });
+        }
+
+        function finalizeReport() {
+            var url = root.getAttribute("data-finalize-url") || "";
+            var popup;
+
+            if (!url || finalizing || previewing || reportFinalized)
+                return;
+            if (!window.confirm(label("confirm-finalize", "Valider, générer et envoyer ce compte rendu ?")))
+                return;
+
+            popup = window.open("", "_blank");
+            if (popup)
+                popup.document.write('<p style="font-family:sans-serif">Génération du compte rendu…</p>');
+            finalizing = true;
+            setMessage("", "error");
+            updateState();
+
+            save(false).then(function (saved) {
+                if (!saved)
+                    throw new Error("Le compte rendu n'a pas pu être sauvegardé avant sa validation.");
+                return saveSignatureIfNeeded(true);
+            }).then(function () {
+                return fetchPdf(url, popup, "Génération et envoi du compte rendu…");
+            }).then(function () {
                 finalizing = false;
-                setMessage("Compte rendu finalisé, stocké et envoyé au prospect.", "success");
+                reportFinalized = true;
+                if (finalizeButton)
+                    finalizeButton.value = "Compte rendu déjà envoyé";
+                setMessage("Compte rendu finalisé : l'envoi a été accepté par le service mail. Rechargez la page pour consulter la trace d'envoi détaillée.", "success");
                 updateState();
                 try {
                     if (window.opener && !window.opener.closed)
@@ -330,6 +518,64 @@
                 updateState();
             });
         }
+
+        if (signatureCanvas && signatureState.editable) {
+            var signatureContext = signatureCanvas.getContext("2d");
+            signatureContext.lineWidth = 3;
+            signatureContext.lineCap = "round";
+            signatureContext.lineJoin = "round";
+            signatureContext.strokeStyle = "#000";
+
+            signatureCanvas.addEventListener("pointerdown", function (event) {
+                var point;
+                if (event.button !== undefined && event.button !== 0)
+                    return;
+                event.preventDefault();
+                point = signaturePoint(event);
+                signatureState.drawing = true;
+                signatureState.last = point;
+                try { signatureCanvas.setPointerCapture(event.pointerId); } catch (ignore) {}
+            });
+            signatureCanvas.addEventListener("pointermove", function (event) {
+                var point;
+                if (!signatureState.drawing)
+                    return;
+                event.preventDefault();
+                point = signaturePoint(event);
+                signatureContext.beginPath();
+                signatureContext.moveTo(signatureState.last.x, signatureState.last.y);
+                signatureContext.lineTo(point.x, point.y);
+                signatureContext.stroke();
+                signatureState.last = point;
+                signatureState.drawn = true;
+                updateState();
+            });
+            ["pointerup", "pointercancel"].forEach(function (name) {
+                signatureCanvas.addEventListener(name, function (event) {
+                    if (!signatureState.drawing)
+                        return;
+                    signatureState.drawing = false;
+                    signatureState.last = null;
+                    try { signatureCanvas.releasePointerCapture(event.pointerId); } catch (ignore) {}
+                    updateState();
+                });
+            });
+        }
+        if (signatureReplace)
+            signatureReplace.addEventListener("click", showSignatureEditor);
+        if (signatureClear)
+            signatureClear.addEventListener("click", clearSignatureCanvas);
+        if (signatureCancel)
+            signatureCancel.addEventListener("click", showExistingSignature);
+        if (signatureSave)
+            signatureSave.addEventListener("click", function () {
+                saveSignatureIfNeeded(true).catch(function (error) {
+                    setMessage(error && error.message ? error.message : "L'enregistrement de la signature a échoué.", "error");
+                    updateState();
+                });
+            });
+        if (previewButton)
+            previewButton.addEventListener("click", previewReport);
 
         if (overrideList)
             Array.prototype.forEach.call(overrideList.querySelectorAll(".dabsic-form-override-remove"), function (button) {
@@ -366,7 +612,7 @@
         });
 
         window.addEventListener("beforeunload", function (event) {
-            if (!isDirty())
+            if (!isDirty() && !signatureState.drawn)
                 return;
             event.preventDefault();
             event.returnValue = label("unsaved-warning", "Des modifications ne sont pas sauvegardées.");

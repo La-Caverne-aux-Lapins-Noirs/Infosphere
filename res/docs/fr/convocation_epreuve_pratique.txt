@@ -1,0 +1,39 @@
+[#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Dans le cadre de votre candidature auprès de [#Variable;School.Name], vous êtes convoqué[@IfC;Student.Gender;==;female;e] à l'épreuve pratique de la procédure d'admission.
+
+[@Indent]
+
+[@Indent]Votre présence est demandée le **[#Variable;AdmissionAppointment.Date] à [#Variable;AdmissionAppointment.Time]** à l'adresse suivante :
+
+[@Indent]
+
+[@Center;**[#Variable;School.TrainingAddress]**]
+
+[@Indent]
+
+[@Indent]Cette épreuve a pour objet d'apprécier votre capacité à raisonner, à mettre en pratique vos connaissances et à vous confronter à un exercice technique dans les conditions prévues par l'établissement.
+
+[@Indent]
+
+[@Indent]Vous devrez vous présenter muni[@IfC;Student.Gender;==;female;e] :
+
+- [@Indent][@Indent]de l'original de votre pièce d'identité.
+- [@Indent][@Indent]de la présente convocation.
+[#IfC;AdmissionAppointment.AdditionalNotice;!=;;- [#Variable;AdmissionAppointment.AdditionalNotice]
+]
+
+[@Indent]En cas d'impossibilité de vous présenter à cette date, merci de prévenir l'établissement dans les meilleurs délais.
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de ma considération distinguée.
+
+[@Indent]
+
+[@Right;La direction
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[#IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

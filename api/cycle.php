@@ -105,7 +105,7 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_director",
+	    "am_i_director",
 	    "AddCycle",
 	],
 	"activity" => [

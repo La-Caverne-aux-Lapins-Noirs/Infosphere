@@ -1,0 +1,21 @@
+@include ".base_relance_suivi/base.dab"
+Title = "Relance après absence prolongée ou absence de nouvelles"
+
+[FollowUp
+  Reason = "Absence prolongée ou absence de nouvelles"
+  SupportProposal = "Une prise de contact avec l'équipe pédagogique afin de faire le point sur votre situation et d'étudier les conditions permettant une reprise ou une continuité adaptée de la formation."
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Relance après absence prolongée
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance après une absence prolongée ou une absence de nouvelles
+LetterSubject]
+
+{Content
+  @insert txt ($) "relance_absence_prolongee.txt"
+}

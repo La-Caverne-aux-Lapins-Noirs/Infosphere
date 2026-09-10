@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/school_activity.php");
+
 function school_logo_candidate_names($kind)
 {
     if ($kind == "document")
@@ -232,6 +234,8 @@ function school_main_info(array $school)
 
 function school_private_school_info(array $school)
 {
+    if (!school_activity_flags($school)["is_school"])
+        return "";
     $number = trim((string)($school["school_registration_number"] ?? ""));
     $academy = trim((string)($school["school_registration_academy"] ?? ""));
     if ($number == "")
@@ -242,6 +246,8 @@ function school_private_school_info(array $school)
 
 function school_formation_info(array $school)
 {
+    if (!school_activity_flags($school)["is_of"] && !school_activity_flags($school)["is_cfa"])
+        return "";
     $number = trim((string)($school["formation_activity_number"] ?? ""));
     $region = trim((string)($school["formation_activity_region"] ?? ""));
     if ($number == "")
@@ -257,6 +263,8 @@ function school_formation_info(array $school)
 
 function school_alternation_info(array $school)
 {
+    if (!school_activity_flags($school)["is_cfa"])
+        return "";
     $number = trim((string)($school["alternation_registration_number"] ?? ""));
     $academy = trim((string)($school["alternation_registration_academy"] ?? ""));
     if ($number == "")
@@ -320,6 +328,8 @@ function refresh_school($school)
 	"SIRET" => $school["siret"] ?? "",
 	"registration_registry" => $school["registration_registry"] ?? "",
 	"registration_number" => $school["registration_number"] ?? "",
+	"billing_information" => $school["organization_billing_information"] ?? "",
+	"RIB" => $school["organization_billing_information"] ?? "",
 	"main_info" => $main_info,
     ];
 
@@ -355,6 +365,10 @@ function refresh_school($school)
 	    "phone" => "",
 	    "role" => "",
 	],
+
+	"is_school" => school_activity_flags($school)["is_school"],
+        "is_of" => school_activity_flags($school)["is_of"],
+        "is_cfa" => school_activity_flags($school)["is_cfa"],
 
 	"organization" => $organization_dabsic,
 	"main_info" => $main_info,

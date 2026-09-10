@@ -1,0 +1,21 @@
+@include ".base_relance_suivi/base.dab"
+Title = "Relance pour travaux ou évaluations non réalisés"
+
+[FollowUp
+  Reason = "Travaux ou évaluations non réalisés"
+  SupportProposal = "Un échange pédagogique afin d'identifier les difficultés rencontrées, de préciser les travaux prioritaires et, lorsque cela est possible, de convenir d'un plan de rattrapage ou d'une adaptation permettant la poursuite du parcours."
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Relance pour travaux non réalisés
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance concernant des travaux ou évaluations non réalisés
+LetterSubject]
+
+{Content
+  @insert txt ($) "relance_travaux_non_realises.txt"
+}

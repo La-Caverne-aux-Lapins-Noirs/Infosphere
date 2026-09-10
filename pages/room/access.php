@@ -1,3 +1,3 @@
 <?php
 
-$access = is_student() || is_teacher() || is_director();
+$access = is_student() || am_i_teacher() || am_i_director();

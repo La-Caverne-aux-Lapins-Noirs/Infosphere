@@ -153,6 +153,20 @@ function list_of_links($params)
 	$placeholder = $linked_name["placeholder"];
     else
 	$placeholder = $name;
+    if (isset($linked_name["label"]))
+        $label = $linked_name["label"];
+    else
+        $label = $name;
+
+    $dictionary_label = function($value) use ($Dictionnary) {
+        $value = (string)$value;
+        $key = ucfirst($value);
+        if (isset($Dictionnary[$key]))
+            return ((string)$Dictionnary[$key]);
+        if (isset($Dictionnary[$value]))
+            return ((string)$Dictionnary[$value]);
+        return ($value);
+    };
 
     $form_id = $name."-".$hook_id;
     $form_id .= $extra_form_id;
@@ -165,7 +179,7 @@ function list_of_links($params)
 	<?=isset($Background) && $Background ? $BackgroundColor : ""; ?>
     >
     <?php } ?>
-    <h5><?=$Dictionnary[ucfirst($name)]; ?></h5>
+    <h5><?=htmlspecialchars($dictionary_label($label), ENT_QUOTES); ?></h5>
 	<?php if (@strlen($admin_func) && $admin_func($hook_id)) { ?>
 	    <form
 		method="<?=$method; ?>"
@@ -178,7 +192,7 @@ function list_of_links($params)
 		    type="text"
 		    name="<?=$name; ?>"
 		    id="<?=$name.$hook_id; ?>_name"
-		    placeholder="<?=$Dictionnary[ucfirst($placeholder)]; ?>"
+		    placeholder="<?=htmlspecialchars($dictionary_label($placeholder), ENT_QUOTES); ?>"
 		    onkeypress="return event.keyCode != 13 ? true : <?=$submit; ?>;"
 		/>
 		<input

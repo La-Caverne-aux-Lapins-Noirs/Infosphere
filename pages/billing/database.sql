@@ -53,6 +53,8 @@ CREATE TABLE `billing_entry` (
   `amount` int(11) NOT NULL,
   `entry_type` varchar(32) NOT NULL DEFAULT 'tuition',
   KEY `entry_type` (`entry_type`),
+  `related_entry_id` int(11) DEFAULT NULL,
+  KEY `related_entry_id` (`related_entry_id`),
   `invoice_type` varchar(32) NOT NULL DEFAULT 'school',
   KEY `invoice_type` (`invoice_type`),
   `due_date` datetime NOT NULL,
@@ -87,3 +89,4 @@ CREATE TABLE `billing_payment` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `deleted` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+

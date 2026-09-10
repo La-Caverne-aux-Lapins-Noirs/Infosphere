@@ -1,7 +1,29 @@
 
 # Article 12 - Droit applicable - Tribunaux compétents
 
-La présente convention est régie exclusivement par le droit français. Tout litige
-non résolu par voie amiable sera soumis à la compétence de la juridiction français
+[@Size;3]
+[@Columns;2;
+[@Indent]La présente convention est régie exclusivement par le droit français. Tout litige
+non résolu par voie amiable sera soumis à la compétence de la juridiction française
 compétente.
+]
 
+[@Indent]
+
+[@Indent]
+
+[@Size;5]
+[@Indent]Si le stagiaire est mineur :
+
+[@Indent][@Indent]Nom et qualité du représentant légal, date et signature :
+
+[@Indent][#FLine;[#Variable;Internship.LegalRepresentative]]
+
+[@Indent]
+
+[@Indent]
+
+[@Size;5]
+[@Indent]Fait à [#Variable;Internship.SigningCity], le [#Variable;Internship.SigningDate], en trois exemplaires, un pour chaque partie.
+
+[@Indent]

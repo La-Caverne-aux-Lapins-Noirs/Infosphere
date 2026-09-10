@@ -1,0 +1,34 @@
+[@Indent][#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Le trimestre **[#Variable;Result.CycleName]** ([#Variable;Result.CycleCodename]) est désormais clôturé. Vous y avez obtenu **[#Variable;Result.Flames] flammes**.
+
+[@Indent]Ce résultat montre qu'une partie significative du travail attendu a été acquise, tout en laissant une marge importante de progression pour atteindre l'objectif trimestriel de 100 flammes.
+
+[@Indent]
+
+[@Indent]Nous vous encourageons à vous appuyer sur les acquis de ce trimestre, à identifier les matières ou méthodes de travail qui vous ont davantage mis en difficulté et à solliciter l'équipe pédagogique lorsque cela peut vous aider à progresser.
+
+[@Indent]
+
+[@Indent]Nous comptons sur votre engagement pour le trimestre suivant et restons disponibles pour vous accompagner.
+
+[@Indent]
+
+[@Indent][@IfC;Result.RebootProposal;==;1;
+Compte tenu de ce résultat, nous vous proposons une **réamorce du trimestre**. Cette possibilité consiste à reprendre un trimestre afin de consolider les acquis qui restent fragiles et de repartir sur des bases plus solides. Si vous souhaitez retenir cette proposition, nous vous invitons à prendre contact avec l'équipe pédagogique afin d'en examiner les modalités.
+;
+À ce stade, nous n'estimons pas qu'une **réamorce du trimestre** soit nécessaire. Cette possibilité reste néanmoins ouverte si vous estimez qu'une reprise du trimestre vous permettrait de consolider plus sereinement vos acquis : vous pouvez en faire la demande afin que nous étudiions cette option avec vous.
+]
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de mes salutations distinguées.
+
+[@Indent]
+
+[@Right;Pour [#Variable;School.Name]
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[@IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

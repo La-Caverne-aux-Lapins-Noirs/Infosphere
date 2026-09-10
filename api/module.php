@@ -24,7 +24,7 @@ function DisplayModulePanel($id, $data, $method, $output, $module)
     if (!isset($matter->id) || ($matter->parent_activity != -1 && $matter->parent_activity !== NULL))
 	not_found();
 
-    if (!is_director() && !is_cycle_director() && !$matter->is_teacher &&
+    if (!am_i_director() && !am_i_cycle_director() && !$matter->is_teacher &&
 	!$matter->registered && !$matter->can_subscribe)
 	forbidden();
 
@@ -38,7 +38,7 @@ function DisplayModulePanel($id, $data, $method, $output, $module)
     // distinguait ces deux cas avec $is_admin_module. En lazy-load, il faut
     // transmettre explicitement le contexte pour ne pas afficher les boutons
     // d'administration dans la vue élève, notamment en incarnation.
-    $can_manage_module = $matter->is_teacher || is_director() || is_cycle_director();
+    $can_manage_module = $matter->is_teacher || am_i_director() || am_i_cycle_director();
     $managed_context = (isset($data["managed"]) && $data["managed"])
 	|| (isset($_GET["managed"]) && $_GET["managed"]);
     $is_admin_module = $managed_context && $can_manage_module;
@@ -58,4 +58,4 @@ $Tab["POST"]["import"] = [
     "am_i_director,am_i_cycle_director",
     "ImportModuleDescription"
 ];
-// $Tab["PUT"][0] = "is_teacher";
+// $Tab["PUT"][0] = "am_i_teacher";

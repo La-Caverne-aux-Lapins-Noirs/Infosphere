@@ -3,7 +3,7 @@
 /**
  * Generic role-based obligations attached to a document workflow.
  *
- * A task describes what a role must do (currently fill or sign).  The role is
+ * A task describes what a role must do (fill, sign or print).  The role is
  * the stable semantic identity; id_assignee_user is optional so a task may be
  * assigned later, or completed by any staff member entitled to act for that
  * role.  This also allows future workflows to materialize several tasks with
@@ -17,7 +17,7 @@ function document_task_table_available()
 
 function document_task_action_is_valid($action)
 {
-    return (in_array((string)$action, ["fill", "sign"], true));
+    return (in_array((string)$action, ["fill", "sign", "print"], true));
 }
 
 function document_task_role_is_valid($role)
@@ -285,6 +285,64 @@ function document_task_rows_for_instance($instance_id, $id_owner_user = 0)
     $owner = (int)$id_owner_user > 0 ? " AND id_owner_user = ".(int)$id_owner_user : "";
     return (db_select_all("* FROM document_task WHERE instance_id = '$instance_sql'$owner
         ORDER BY task_action ASC, id ASC"));
+}
+
+function document_task_row($id_task)
+{
+    if (!document_task_table_available())
+        return (NULL);
+    $id_task = (int)$id_task;
+    if ($id_task <= 0)
+        return (NULL);
+    return (db_select_one("* FROM document_task WHERE id = $id_task"));
+}
+
+/**
+ * Complete one concrete task by id.  This is intentionally action-agnostic:
+ * callers must perform their business/access checks before using it.  It is
+ * mainly useful for obligations such as printing which are not tied to a
+ * form role or a workflow signature slot.
+ */
+function document_task_complete_id($id_task, $completed_by_user = 0, $assignee_user = 0)
+{
+    global $Database;
+
+    if (!document_task_table_available())
+        return (new ValueResponse(["available" => false, "completed" => false]));
+    $row = document_task_row($id_task);
+    if ($row == NULL)
+        return (new ValueResponse(["available" => true, "completed" => false, "missing" => true]));
+    if (($row["status"] ?? "") === "completed")
+        return (new ValueResponse(["available" => true, "completed" => true, "id" => (int)$row["id"]]));
+    if (($row["status"] ?? "") !== "pending")
+        return (new ErrorResponse("InvalidParameter", "document task status"));
+
+    $id_task = (int)$row["id"];
+    $completed_by_user = (int)$completed_by_user;
+    $assignee_user = (int)$assignee_user;
+    $completed_sql = $completed_by_user > 0 ? (string)$completed_by_user : "NULL";
+    $assignee_clause = "";
+    if ((int)($row["id_assignee_user"] ?? 0) <= 0 && $assignee_user > 0)
+        $assignee_clause = ", id_assignee_user = $assignee_user";
+    if (!$Database->query("UPDATE document_task
+        SET status = 'completed', completed_at = NOW(), completed_by_user = $completed_sql$assignee_clause
+        WHERE id = $id_task AND status = 'pending'"))
+        return (new ErrorResponse("CannotEdit", "document task"));
+    return (new ValueResponse(["available" => true, "completed" => true, "id" => $id_task]));
+}
+
+function document_task_expire_id($id_task)
+{
+    global $Database;
+
+    if (!document_task_table_available())
+        return (true);
+    $id_task = (int)$id_task;
+    if ($id_task <= 0)
+        return (false);
+    return ((bool)$Database->query("UPDATE document_task
+        SET status = 'expired', expired_at = NOW()
+        WHERE id = $id_task AND status = 'pending'"));
 }
 
 function document_task_complete_form_role($id_form, $role, $completed_by_user = 0, $assignee_user = 0)

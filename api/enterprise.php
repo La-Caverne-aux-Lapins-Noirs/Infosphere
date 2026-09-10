@@ -48,6 +48,22 @@ function DeleteEnterprise($id, $data, $method, $output, $module)
     return (new ValueResponse(["msg" => $Dictionnary["Deleted"]]));
 }
 
+
+function EnterpriseContactsResponse($id, $msg)
+{
+    global $Dictionnary;
+
+    $enterprise = fetch_enterprises($id);
+    if (!is_array($enterprise) || !count($enterprise))
+        return (new ErrorResponse("CannotRetrieveContent"));
+    ob_start();
+    require ("./pages/enterprise/contacts_content.php");
+    return (new ValueResponse([
+        "msg" => $msg,
+        "content" => ob_get_clean(),
+    ]));
+}
+
 function AddEnterpriseContact($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -56,7 +72,7 @@ function AddEnterpriseContact($id, $data, $method, $output, $module)
         bad_request();
     if (($ret = set_enterprise_contact($id, $data))->is_error())
         return ($ret);
-    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+    return (EnterpriseContactsResponse($id, $Dictionnary["Edited"]));
 }
 
 function EditEnterpriseContact($id, $data, $method, $output, $module)
@@ -68,7 +84,7 @@ function EditEnterpriseContact($id, $data, $method, $output, $module)
         bad_request();
     if (($ret = edit_enterprise_contact($id, $SUBID, $data))->is_error())
         return ($ret);
-    return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
+    return (EnterpriseContactsResponse($id, $Dictionnary["Edited"]));
 }
 
 function DeleteEnterpriseContact($id, $data, $method, $output, $module)
@@ -80,7 +96,7 @@ function DeleteEnterpriseContact($id, $data, $method, $output, $module)
         bad_request();
     if (($ret = delete_enterprise_contact($id, $SUBID))->is_error())
         return ($ret);
-    return (new ValueResponse(["msg" => $Dictionnary["Deleted"]]));
+    return (EnterpriseContactsResponse($id, $Dictionnary["Deleted"]));
 }
 
 function ExportEnterpriseDabsic($id, $data, $method, $output, $module)
@@ -104,41 +120,41 @@ function ExportEnterpriseDabsic($id, $data, $method, $output, $module)
 $Tab = [
     "GET" => [
         "" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "DisplayEnterprise"
         ],
         "dabsic" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "ExportEnterpriseDabsic"
         ],
     ],
     "POST" => [
         "" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "AddEnterprise"
         ],
         "contact" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "AddEnterpriseContact"
         ],
     ],
     "PUT" => [
         "" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "EditEnterprise"
         ],
         "contact" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "EditEnterpriseContact"
         ],
     ],
     "DELETE" => [
         "" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "DeleteEnterprise"
         ],
         "contact" => [
-            ["is_admin", "is_director", "is_commercial"],
+            ["only_admin", "am_i_director", "am_i_commercial"],
             "DeleteEnterpriseContact"
         ],
     ],

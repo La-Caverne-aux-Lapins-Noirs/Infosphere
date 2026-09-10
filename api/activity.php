@@ -5,11 +5,11 @@ require ("activities.php");
 $Tab = [
     "GET" => [
 	"" => [
-	    "am_i_director,am_i_cycle_director,is_teacher",
+	    "am_i_director,am_i_cycle_director,am_i_teacher",
 	    "DisplayActivity"
 	],
 	"admin" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DisplayActivityAdmin"
 	],
 	"export" => [
@@ -79,7 +79,7 @@ $Tab = [
 	    "Instantiate",
 	],
 	"duplicate" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DuplicateActivity",
 	],
 	"import" => [

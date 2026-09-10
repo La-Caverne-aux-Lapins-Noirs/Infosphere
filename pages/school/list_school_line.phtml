@@ -14,7 +14,7 @@
 	></div>
     </td>
     <td><?=$content["codename"]; ?></td>
-    <td <?=clickable($URL); ?>><?=$content["name"]; ?></td>
+    <td <?=clickable($URL); ?>><?=$content["name"]; ?><br /><small><?=htmlspecialchars(implode(" · ", school_activity_labels($content)) ?: "Aucune activité déclarée", ENT_QUOTES); ?></small></td>
     <?php if (!is_admin()) { ?>
 	<td>
 	    <?php foreach ($content["director"] as $dir) { ?>
@@ -38,6 +38,11 @@
 	    <?php } ?>
 	</td><td>
 	    <?php foreach ($content["librarian"] as $dir) { ?>
+		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
+		><?=$dir["codename"]; ?></a><br />
+	    <?php } ?>
+	</td><td>
+	    <?php foreach ($content["accountant"] as $dir) { ?>
 		<a href="index.php?p=ProfileMenu&amp;<?=$dir["id"]; ?>"
 		><?=$dir["codename"]; ?></a><br />
 	    <?php } ?>

@@ -1,18 +1,20 @@
 
 # Article 4 - Statut du stagiaire
 
-Le ou la stagiaire, pendant la durée de son stage dans l’organisme d’accueil demeure
+[@Size;3]
+[@Columns;2;
+[@Indent]Le ou la stagiaire, pendant la durée de son stage dans l’organisme d’accueil demeure
 étudiant(e) de l’établissement d’enseignement supérieur privé ou stagiaire de
 l’organisme de formation professionnelle.  
 
-Durant son stage, le ou la stagiaire est soumis(e) à la discipline et au règlement
+[@Indent]Durant son stage, le ou la stagiaire est soumis(e) à la discipline et au règlement
 intérieur de l’organisme d’accueil, notamment en ce qui concerne les horaires, les
 règles d’hygiène et de sécurité en vigueur. 
 
-En cas de manquement, le responsable de l’organisme d’accueil peut mettre fin au
+[@Indent]En cas de manquement, le responsable de l’organisme d’accueil peut mettre fin au
 stage du ou la stagiaire, après avoir prévenu le responsable du stage de
 l’établissement d’enseignement supérieur privé ou de l’organisme de formation.
 Toute modification de date entraînera la rédaction d’un avenant à la convention en
-cours. Toute absence, notamment dans le cadre d’obligations attestées par l’EFRITS,
+cours. Toute absence, notamment dans le cadre d’obligations attestées par l’établissement [#Variable;School.Name],
 sera justifiée par le responsable de formation.
-
+]

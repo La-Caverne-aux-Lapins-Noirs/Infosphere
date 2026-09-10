@@ -13,10 +13,10 @@ function get_modules($template, $id = -1)
 	$id = "";
 
     $filter = "";
-    if (!is_director())
+    if (!am_i_director())
     {
 	$filter = " AND (1 ";
-	if (!is_cycle_director())
+	if (!am_i_cycle_director())
 	{
 	    $filter .= " AND activity_teacher.id_user = {$User["id"]}";
 	    foreach ($User["laboratories"] as $lab)

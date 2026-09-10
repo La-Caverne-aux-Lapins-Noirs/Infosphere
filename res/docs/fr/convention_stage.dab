@@ -12,11 +12,11 @@ Title = "Convention de stage"
 [Signatures
   [SchoolTutor
     Required = 1
-    Role = "Enseignant(e) référent(e)"
+    Role = "Référent de l’établissement"
   ]
   [CompanyTutor
     Required = 1
-    Role = "Tuteur(trice) de stage"
+    Role = "Tuteur de l’organisme d’accueil"
   ]
   [Student
     Required = 1

@@ -126,6 +126,7 @@ require_once ("get_user_children.php");
 require_once ("get_codename.php");
 require_once ("fetch_user.php");
 require_once ("full_profile/index.php");
+require_once ("student_correspondence.php");
 require_once ("profile.php");
 require_once ("templated_fetch.php");
 require_once ("fetch_laboratory.php");

@@ -498,6 +498,49 @@ function jury_can_certify_title($id_user, $id_title)
     ") != NULL);
 }
 
+function title_session_candidate_schedule_context($id_title_session, $id_user)
+{
+    $id_title_session = (int)$id_title_session;
+    $id_user = (int)$id_user;
+    $session = fetch_title_session_basic($id_title_session);
+    if ($session == NULL || $id_user <= 0)
+        return (NULL);
+
+    // The certification session start is the common first appointment
+    // (questionnaire in the current certification workflow). The individual
+    // jury time comes from the appointment slot actually assigned to the
+    // candidate's team. If several linked calendar sessions contain slots, the
+    // latest assigned slot is the jury passage.
+    $candidate = db_select_one("ceres FROM user WHERE id = $id_user AND deleted IS NULL");
+    $slot = db_select_one("
+        appointment_slot.begin_date
+        FROM title_session_session
+        LEFT JOIN session ON session.id = title_session_session.id_session
+        LEFT JOIN team ON team.id_session = session.id
+        LEFT JOIN user_team
+          ON user_team.id_team = team.id
+         AND user_team.id_user = $id_user
+        LEFT JOIN appointment_slot
+          ON appointment_slot.id_session = session.id
+         AND appointment_slot.id_team = team.id
+        WHERE title_session_session.id_title_session = $id_title_session
+          AND user_team.id IS NOT NULL
+          AND appointment_slot.id IS NOT NULL
+          AND appointment_slot.begin_date IS NOT NULL
+        ORDER BY appointment_slot.begin_date DESC, appointment_slot.id DESC
+    ");
+    $jury = is_array($slot) ? trim((string)($slot["begin_date"] ?? "")) : "";
+
+    return ([
+        "number" => is_array($candidate) ? trim((string)($candidate["ceres"] ?? "")) : "",
+        "questionnaire_date" => title_session_date_value($session["start_date"] ?? ""),
+        "questionnaire_time" => title_session_time_value($session["start_time"] ?? ""),
+        "jury_date" => $jury != "" ? date("d/m/Y", strtotime($jury)) : "",
+        "jury_appointment_time" => $jury != "" ? date("H:i", strtotime($jury)) : "",
+        "jury_arrival_time" => "09:00",
+    ]);
+}
+
 function fetch_title_session_candidates($id_title_session)
 {
     $id_title_session = (int)$id_title_session;
@@ -533,31 +576,17 @@ function fetch_title_session_candidates($id_title_session)
 
     foreach ($candidates as &$candidate)
     {
-        $id_user = (int)$candidate["id_user"];
-        $appointments = db_select_one("
-            MIN(COALESCE(appointment_slot.begin_date, session.begin_date)) as first_arrival,
-            MAX(COALESCE(appointment_slot.begin_date, session.begin_date)) as last_arrival
-            FROM title_session_session
-            LEFT JOIN session ON session.id = title_session_session.id_session
-            LEFT JOIN team ON team.id_session = session.id
-            LEFT JOIN user_team ON user_team.id_team = team.id AND user_team.id_user = $id_user
-            LEFT JOIN appointment_slot
-              ON appointment_slot.id_session = session.id
-             AND appointment_slot.id_team = team.id
-            WHERE title_session_session.id_title_session = $id_title_session
-              AND user_team.id IS NOT NULL
-              AND session.id IS NOT NULL
-        ");
-        $first = $appointments["first_arrival"] ?? NULL;
-        $last = $appointments["last_arrival"] ?? NULL;
-        $candidate["questionnaire_date"] = $first ? date("d/m/Y", strtotime($first)) : "";
-        $candidate["questionnaire_time"] = $first ? date("H:i", strtotime($first)) : "";
-        $candidate["jury_date"] = $last ? date("d/m/Y", strtotime($last)) : "";
-        $candidate["jury_arrival_time"] = "09:00";
-        // Compatibility with code still expecting the former single appointment.
-        $candidate["arrival_date"] = $candidate["questionnaire_date"];
-        $candidate["arrival_time"] = $candidate["questionnaire_time"];
+        $schedule = title_session_candidate_schedule_context(
+            $id_title_session,
+            (int)$candidate["id_user"]
+        );
+        if (is_array($schedule))
+            foreach ($schedule as $key => $value)
+                $candidate[$key] = $value;
         $candidate["candidate_number"] = trim((string)($candidate["ceres"] ?? ""));
+        // Compatibility with code still expecting the former single appointment.
+        $candidate["arrival_date"] = $candidate["questionnaire_date"] ?? "";
+        $candidate["arrival_time"] = $candidate["questionnaire_time"] ?? "";
     }
     unset($candidate);
     return ($candidates);
@@ -698,6 +727,7 @@ function title_session_document_context($id_title_session)
         "issue_date" => date("d/m/Y"),
         "venue_address" => $venue,
         "equipment_notice" => "",
+        "additional_notice" => "",
         "session_manager_id" => (int)($session["id_session_manager"] ?? 0),
         "title" => [
             "id" => (int)$session["id_title"],

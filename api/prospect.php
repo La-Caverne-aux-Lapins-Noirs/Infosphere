@@ -1,6 +1,8 @@
 <?php
 
 require_once (__DIR__."/../tools/post_interview_report.php");
+require_once (__DIR__."/../tools/prospect_convocation.php");
+require_once (__DIR__."/../tools/document_print.php");
 
 function MoveProspectToCampaign($id, $data, $method, $output, $module)
 {
@@ -41,6 +43,61 @@ function MoveProspectToCampaign($id, $data, $method, $output, $module)
 function TransformProspect($id, $data, $method, $output, $module)
 {
     return (transform_prospect($id));
+}
+
+function UpdateProspectOrientation($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id = (int)$id;
+    if ($id <= 0)
+        bad_request();
+
+    $prospect = db_select_one("id, registration_date
+        FROM user
+        WHERE id = $id AND profile_status = 'prospect' AND deleted IS NULL
+    ");
+    if ($prospect == NULL)
+        return (new ErrorResponse("NotFound"));
+
+    $update = [];
+
+    if (array_key_exists("current_class", $data))
+    {
+        $value = filter_var($data["current_class"], FILTER_VALIDATE_INT);
+        if ($value === false || $value < -9 || $value > 10)
+            return (new ErrorResponse("InvalidParameter", "current_class"));
+        $update["current_class"] = stored_class_level_for_current(
+            $prospect["registration_date"],
+            (int)$value
+        );
+    }
+
+    if (array_key_exists("target_class", $data))
+    {
+        $value = filter_var($data["target_class"], FILTER_VALIDATE_INT);
+        if ($value === false || $value < 0 || $value > 7)
+            return (new ErrorResponse("InvalidParameter", "target_class"));
+        $update["target_class"] = (int)$value;
+    }
+
+    if (array_key_exists("target_entry", $data))
+    {
+        $value = filter_var($data["target_entry"], FILTER_VALIDATE_INT);
+        if ($value === false || $value < 0 || $value > 2)
+            return (new ErrorResponse("InvalidParameter", "target_entry"));
+        $update["target_entry"] = (int)$value;
+    }
+
+    if (count($update) != 1)
+        bad_request();
+
+    if (db_update_one("user", $id, $update) === NULL)
+        return (new ErrorResponse("CannotUpdate"));
+
+    return (new ValueResponse([
+        "msg" => $Dictionnary["Edited"] ?? "Prospect modifié",
+    ]));
 }
 
 function DisplayActions($id, $data, $method, $output, $module)
@@ -129,6 +186,27 @@ function FinalizeProspectInterviewReport($id, $data, $method, $output, $module)
     return (post_interview_report_finalize((int)$id, (int)($User["id"] ?? 0)));
 }
 
+function PreviewProspectInterviewReport($id, $data, $method, $output, $module)
+{
+    global $User;
+
+    return (post_interview_report_preview((int)$id, (int)($User["id"] ?? 0)));
+}
+
+function SaveProspectInterviewReportSignature($id, $data, $method, $output, $module)
+{
+    global $User;
+
+    $source = $_FILES["signature"]["tmp_name"] ?? "";
+    $error = (int)($_FILES["signature"]["error"] ?? UPLOAD_ERR_NO_FILE);
+    return (post_interview_report_save_signature(
+        (int)$id,
+        (int)($User["id"] ?? 0),
+        $source,
+        $error
+    ));
+}
+
 function GenerateProspectDocument($id, $data, $method, $output, $module)
 {
     global $User;
@@ -145,11 +223,16 @@ function GenerateProspectDocument($id, $data, $method, $output, $module)
     if ($document == "post-interview-report")
         return (post_interview_report_start($id, (int)($User["id"] ?? 0)));
 
+    if ($document == "convocation:motivation-theory")
+        return (prospect_convocation_start($id, "motivation-theory"));
+    if ($document == "convocation:practical")
+        return (prospect_convocation_start($id, "practical"));
+
     // Les autres générations conservaient historiquement le droit commercial.
     // La route est maintenant seulement « logged_in » afin que le compte rendu
     // puisse aussi respecter ses propres droits (direction/secrétariat/commercial),
     // mais cela ne doit pas élargir l'accès aux contrats et attestations.
-    if (!is_commercial())
+    if (!am_i_commercial())
         return (new ErrorResponse("PermissionDenied"));
 
     if (preg_match('/^contract:(ECL|OF|OFA|CFA)$/', $document, $match))
@@ -170,6 +253,33 @@ function GenerateProspectDocument($id, $data, $method, $output, $module)
 
     if ($ret->is_error())
         return ($ret);
+
+    if (!empty($data["queue_for_print"]))
+    {
+        $output_file = (string)($ret->value["output"] ?? "");
+        $prospect = db_select_one("id, codename, first_name, family_name FROM user WHERE id = $id AND deleted IS NULL");
+        $school_id = document_print_school_id_for_user($id);
+        $recipient = is_array($prospect)
+            ? trim((string)($prospect["first_name"] ?? "")." ".(string)($prospect["family_name"] ?? ""))
+            : "";
+        if ($recipient == "" && is_array($prospect))
+            $recipient = (string)($prospect["codename"] ?? "");
+        $label = strpos($document, "admission:") === 0
+            ? "Attestation d’admission définitive"
+            : "Contrat d’admission";
+        $queued = document_print_queue_file($output_file, $label, [
+            "type" => "prospect",
+            "owner_user_id" => $id,
+            "prospect_user_id" => $id,
+            "school_id" => $school_id,
+            "source_key" => "prospect-document:".$document.":".$id,
+            "recipient_label" => $recipient,
+        ]);
+        if ($queued->is_error())
+            return ($queued);
+        $message .= " — ajouté aux documents à imprimer";
+    }
+
     return (new ValueResponse([
         "msg" => $message,
         "content" => document_builder_public_url($ret->value["output"])
@@ -228,35 +338,47 @@ function DeleteAction($id, $data, $method, $output, $module)
 $Tab = [
     "GET" => [
 	"" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "DisplayActions"
 	]
     ],
     "POST" => [
 	"paction" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "AddAction",
 	],
         "interview_report" => [
             "logged_in",
             "FinalizeProspectInterviewReport",
         ],
+        "interview_report_preview" => [
+            "logged_in",
+            "PreviewProspectInterviewReport",
+        ],
+        "interview_report_signature" => [
+            "logged_in",
+            "SaveProspectInterviewReportSignature",
+        ],
     ],
     "PUT" => [
 	"" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "ConcludeProspect",
 	],
 	"transform" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "TransformProspect",
 	],
 	"campaign" => [
-	    "is_commercial,is_secretariat",
+	    "am_i_commercial,am_i_secretariat",
 	    "MoveProspectToCampaign",
 	],
+        "orientation" => [
+            "am_i_commercial,am_i_secretariat",
+            "UpdateProspectOrientation",
+        ],
 	"registration" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "SendProspectRegistrationForm",
 	],
 	"document" => [
@@ -266,7 +388,7 @@ $Tab = [
     ],
     "DELETE" => [
 	"paction" => [
-	    "is_commercial",
+	    "am_i_commercial",
 	    "DeleteAction",
 	]
     ]

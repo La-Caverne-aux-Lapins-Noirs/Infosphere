@@ -91,6 +91,26 @@ function document_signature_parse_scope($file, $scope_name)
     return ($slots);
 }
 
+function document_signature_resolve_include($source_file, $include)
+{
+    $include = trim((string)$include);
+    if ($include === "")
+        return (NULL);
+
+    $candidates = [dirname($source_file).DIRECTORY_SEPARATOR.$include];
+    $project_root = realpath(__DIR__."/..");
+    if ($project_root !== false)
+        $candidates[] = rtrim($project_root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$include;
+
+    foreach ($candidates as $candidate)
+    {
+        $real = realpath($candidate);
+        if ($real !== false && is_file($real))
+            return ($real);
+    }
+    return (NULL);
+}
+
 function document_signature_include_files($file, &$visited = NULL)
 {
     if ($visited === NULL)
@@ -103,10 +123,13 @@ function document_signature_include_files($file, &$visited = NULL)
     $content = @file_get_contents($real);
     if ($content === false)
         return ($files);
-    $dir = dirname($real);
     if (preg_match_all('/@include\s+"([^"]+)"/', $content, $matches))
         foreach ($matches[1] as $include)
-            $files = array_merge($files, document_signature_include_files($dir.DIRECTORY_SEPARATOR.$include, $visited));
+        {
+            $resolved = document_signature_resolve_include($real, $include);
+            if ($resolved !== NULL)
+                $files = array_merge($files, document_signature_include_files($resolved, $visited));
+        }
     return (array_values(array_unique($files)));
 }
 

@@ -69,7 +69,7 @@ function SetRole($id, $data, $role)
 	"left_field_name" => "user",
 	"right_field_name" => "school",
 	"properties" => [
-	    "authority" => strtoupper($role)
+	    "authority" => user_school_authority_value(strtoupper($role))
 	],
 	"allow_duplicate" => true
     ];
@@ -111,6 +111,13 @@ function SetLibrarian($id, $data, $method, $output, $module)
     if ($id == -1)
 	bad_request();
     return (SetRole($id, $data, "librarian"));
+}
+
+function SetAccountant($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+        bad_request();
+    return (SetRole($id, $data, "accountant"));
 }
 
 function SetTeacher($id, $data, $method, $output, $module)
@@ -243,7 +250,7 @@ function SendSchoolMail($id, $data, $method, $output, $module)
 $Tab = [
     "GET" => [
 	"" => [
-	    "is_teacher,is_director",
+	    "am_i_teacher,am_i_director",
 	    "DisplaySchool"
 	]
     ],
@@ -263,6 +270,10 @@ $Tab = [
 	"librarian" => [
 	    "is_director_for_school",
 	    "SetLibrarian",
+	],
+	"accountant" => [
+	    "is_director_for_school",
+	    "SetAccountant",
 	],
 	"teacher" => [
 	    "is_director_for_school",
@@ -303,6 +314,10 @@ $Tab = [
 	"librarian" => [
 	    "is_director_for_school",
 	    "SetLibrarian",
+	],
+	"accountant" => [
+	    "is_director_for_school",
+	    "SetAccountant",
 	],
 	"teacher" => [
 	    "is_director_for_school",

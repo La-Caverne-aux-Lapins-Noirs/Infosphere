@@ -2,6 +2,8 @@
 if (!isset($albedo) || $albedo != 1)
     return ;
 
+require_once ("tools/document_print.php");
+
 // Albedo orienté utilisateurs: messages privés + médailles automatiques.
 // Les seuils sont volontairement regroupés ici pour rester simples à ajuster.
 define("USER_ALBEDO_ABSENCE_DAYS", 30);
@@ -423,10 +425,88 @@ function user_albedo_process_student($student)
             user_albedo_mark_resolved($id_user, $condition);
 }
 
+function user_albedo_process_print_queue()
+{
+    global $Database;
+
+    if (!document_print_table_available())
+        return (0);
+    $pending = db_select_one("COUNT(*) as count FROM document_task WHERE task_action = 'print' AND status = 'pending'");
+    if ((int)($pending["count"] ?? 0) <= 0)
+    {
+        $Database->query("
+            UPDATE user_guidance
+            SET active = 0, resolved_date = NOW(), last_seen = NOW()
+            WHERE condition_key = 'documents_to_print' AND active = 1
+        ");
+        return (0);
+    }
+
+    $users = db_select_all("
+        id, codename, first_name, family_name
+        FROM user
+        WHERE deleted IS NULL
+          AND authority >= 0
+          AND profile_status = 'member'
+        ORDER BY id ASC
+    ");
+    $notified = 0;
+    foreach ($users as $staff)
+    {
+        $id_user = (int)$staff["id"];
+        $summary = document_print_assistant_summary($id_user);
+        if ((int)$summary["count"] <= 0)
+        {
+            user_albedo_mark_resolved($id_user, "documents_to_print");
+            continue ;
+        }
+
+        $details = json_encode([
+            "count" => (int)$summary["count"],
+            "oldest" => (string)$summary["oldest"],
+            "task_ids" => $summary["task_ids"],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($details === false)
+            $details = "{}";
+        $state_hash = sha1("documents_to_print|".$details);
+        $previous = user_albedo_load_state($id_user, "documents_to_print");
+        $state = user_albedo_save_state(
+            $id_user,
+            "documents_to_print",
+            1,
+            $state_hash,
+            (int)$summary["count"],
+            $details
+        );
+        if ($state == NULL)
+            continue ;
+
+        $changed = $previous == NULL
+            || (int)($previous["active"] ?? 0) == 0
+            || (string)($previous["state_hash"] ?? "") !== $state_hash;
+        $reminder_due = $previous != NULL
+            && user_albedo_date_old_enough($previous["last_message_date"] ?? NULL, 7);
+        if (!$changed && !$reminder_due)
+            continue ;
+
+        $message = (int)$summary["count"]." document(s) attendent une impression ou un traitement postal.";
+        if (count($summary["labels"]))
+            $message .= "\n\n".implode("\n", array_map(function($label) { return "• ".$label; }, $summary["labels"]));
+        $message .= "\n\nOuvre la page Documents, onglet « À imprimer », pour les traiter : /?p=DocMenu";
+        if (user_albedo_private_message($id_user, "Documents à imprimer", $message))
+        {
+            $Database->query("UPDATE user_guidance SET last_message_date = NOW() WHERE id = ".((int)$state["id"]));
+            ++$notified;
+        }
+    }
+    return ($notified);
+}
+
 $processed = 0;
 foreach (user_albedo_current_students() as $student)
 {
     user_albedo_process_student($student);
     ++$processed;
 }
-add_log(TRACE, "Albedo user guidance checked $processed current student(s).", 1, [], true);
+$print_notified = user_albedo_process_print_queue();
+add_log(TRACE, "Albedo user guidance checked $processed current student(s); print queue notified $print_notified staff member(s).", 1, [], true);

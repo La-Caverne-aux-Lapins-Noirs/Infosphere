@@ -6,7 +6,7 @@ require ("sessions.php");
 $Tab = [
     "GET" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DisplaySession"
 	],
 	"export" => [
@@ -30,11 +30,11 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_teacher", // Ca devrait etre le prof de l'activité...
+	    "am_i_teacher", // Ca devrait etre le prof de l'activité...
 	    "AddSession"
 	],
 	"import" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "ImportSessionDescription"
 	],
 	"jury" => [

@@ -2,7 +2,7 @@
     method="put"
     action="/api/enterprise/<?=$enterprise["id"]; ?>"
     class="enterprise_admin_card enterprise_admin_form enterprise_admin_block enterprise_admin_full_block"
-    onsubmit="return silent_submitf(this, {after_success: refresh});"
+    onsubmit="return silent_submitf(this, {});"
 >
     <?php if (!empty($enterprise["id_school"])) { ?>
         <p class="enterprise_add_notice">
@@ -82,6 +82,10 @@
                 <textarea name="activity"><?=htmlspecialchars($enterprise["activity"] ?? "", ENT_QUOTES); ?></textarea>
             </label>
             <label>
+                Informations de paiement / RIB
+                <textarea name="billing_information" placeholder="IBAN, BIC, modalités ou référence de paiement"><?=htmlspecialchars($enterprise["billing_information"] ?? "", ENT_QUOTES); ?></textarea>
+            </label>
+            <label>
                 Notes internes
                 <textarea name="notes"><?=htmlspecialchars($enterprise["notes"] ?? "", ENT_QUOTES); ?></textarea>
             </label>
@@ -99,7 +103,7 @@
     </div>
 
     <div class="enterprise_actions">
-        <input type="button" onclick="silent_submitf(this.form, {after_success: refresh});" value="<?=$Dictionnary["Save"]; ?>" />
+        <input type="button" onclick="return silent_submitf(this.form, {});" value="<?=$Dictionnary["Save"]; ?>" />
     </div>
 </form>
 

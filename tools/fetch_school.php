@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/school_activity.php");
+
 function fetch_school($id = -1)
 {
     global $Language;
@@ -34,6 +36,7 @@ function fetch_school($id = -1)
        organization.siret as siret,
        organization.registration_registry as registration_registry,
        organization.registration_number as registration_number,
+       organization.billing_information as organization_billing_information,
        COALESCE(NULLIF(school.address, ''), NULLIF(organization.address, ''), '') as address,
        COALESCE(NULLIF(school.phone, ''), NULLIF(organization.phone, ''), '') as phone,
        COALESCE(NULLIF(school.mail, ''), NULLIF(organization.mail, ''), '') as mail
@@ -42,6 +45,14 @@ function fetch_school($id = -1)
        WHERE school.deleted IS NULL $id
        ORDER BY school.codename
     ");
+    $school_authority_student = user_school_authority_sql("STUDENT");
+    $school_authority_director = user_school_authority_sql("DIRECTOR");
+    $school_authority_secretariat = user_school_authority_sql("SECRETARIAT");
+    $school_authority_commercial = user_school_authority_sql("COMMERCIAL");
+    $school_authority_teacher = user_school_authority_sql("TEACHER");
+    $school_authority_librarian = user_school_authority_sql("LIBRARIAN");
+    $school_authority_accountant = user_school_authority_sql("ACCOUNTANT");
+
     foreach ($out as &$v)
     {
 	if (($v["name"] ?? "") == "")
@@ -60,35 +71,42 @@ function fetch_school($id = -1)
 	$v["user"] = db_select_all("
            user.id as id, user.id as id_user, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'STUDENT'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_student."
 	   AND user.deleted IS NULL
 	   AND user.profile_status = 'member'
 	   ");
 	$v["director"] = db_select_all("
            user.id as id, user.id as id_director, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'DIRECTOR'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_director."
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
 	$v["secretariat"] = db_select_all("
            user.id as id, user.id as id_secretariat, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'SECRETARIAT'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_secretariat."
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
 	$v["commercial"] = db_select_all("
            user.id as id, user.id as id_commercial, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'COMMERCIAL'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_commercial."
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
 	$v["librarian"] = db_select_all("
            user.id as id, user.id as id_librarian, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'LIBRARIAN'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_librarian."
+	   AND user.deleted IS NULL
+	   AND user.profile_status != 'jury'
+	   ");
+	$v["accountant"] = db_select_all("
+           user.id as id, user.id as id_accountant, user.codename as codename
+           FROM user_school LEFT JOIN user ON user_school.id_user = user.id
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_accountant."
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
@@ -96,7 +114,7 @@ function fetch_school($id = -1)
 	$v["teacher"] = db_select_all("
            user.id as id, user.id as id_teacher, user.codename as codename
            FROM user_school LEFT JOIN user ON user_school.id_user = user.id
-           WHERE id_school = ".$v["id"]." AND user_school.authority = 'TEACHER'
+           WHERE id_school = ".$v["id"]." AND user_school.authority = ".$school_authority_teacher."
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");

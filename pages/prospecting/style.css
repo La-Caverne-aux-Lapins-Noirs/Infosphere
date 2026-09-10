@@ -1242,3 +1242,104 @@ td
     line-height: inherit;
     opacity: inherit;
 }
+
+/* Edition directe des informations d'orientation d'un prospect. */
+.prospect_inline_editor
+{
+    display: block;
+    margin: 0;
+    min-width: 0;
+}
+
+.prospect_inline_toggle
+{
+    appearance: none;
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin: 0;
+    padding: 1px 2px !important;
+    width: 100%;
+}
+
+.prospect_inline_toggle:hover,
+.prospect_inline_toggle:focus
+{
+    color: #00ff00;
+    outline: 1px dashed rgba(0, 255, 0, 0.65);
+}
+
+.prospect_inline_editor form
+{
+    align-items: center;
+    display: none;
+    gap: 3px;
+    justify-content: center;
+    margin: 0;
+    width: 100%;
+}
+
+.prospect_inline_editor.editing .prospect_inline_toggle
+{
+    display: none;
+}
+
+.prospect_inline_editor.editing form
+{
+    display: flex;
+}
+
+.prospect_inline_editor select
+{
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+}
+
+.prospect_inline_editor button[type="submit"],
+.prospect_inline_editor .prospect_inline_cancel
+{
+    flex: 0 0 auto;
+    height: 22px;
+    line-height: 18px;
+    padding: 0 4px !important;
+    width: auto !important;
+}
+
+.prospect_target_class .prospect_inline_toggle
+{
+    font-weight: bold;
+}
+
+.prospect_inline_editor.prospect_current_class
+{
+    font-size: 1em;
+    line-height: normal;
+    margin-top: 3px;
+    opacity: 1;
+}
+
+.prospect_current_class .prospect_inline_toggle
+{
+    font-size: 0.82em;
+    line-height: 1.15em;
+    opacity: 0.78;
+}
+
+.prospect_last_school
+{
+    display: block;
+    margin-bottom: 3px;
+}
+
+/* Le menu + Ajouter flotte dans le viewport. Le JS le place sous le bouton
+ * quand il y a de la place, sinon au-dessus, et le borne aux bords de l'écran. */
+.action_menu.prospecting_floating_action_menu
+{
+    margin: 0;
+    overflow-y: auto;
+    position: fixed;
+    z-index: 10020;
+}

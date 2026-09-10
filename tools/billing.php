@@ -1,10 +1,41 @@
 <?php
 
-function is_billing_manager($id_school = -1)
+function is_billing_manager($id_user = -1)
+{
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    $id_user = (int)$id_user;
+    return (
+        is_director($id_user) ||
+        is_secretariat($id_user) ||
+        is_accountant($id_user)
+    );
+}
+
+function am_i_billing_manager()
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_billing_manager((int)$User["id"]));
+}
+
+function is_billing_manager_for_school($id_school)
 {
     if (is_admin())
         return (true);
-    return (is_director_for_school($id_school) || is_secretariat($id_school));
+    return (
+        is_director_for_school($id_school) ||
+        is_secretariat_for_school($id_school) ||
+        is_accountant_for_school($id_school)
+    );
 }
 
 
@@ -14,7 +45,7 @@ function is_billing_manager_for_billing_entry($id_entry)
         return (true);
     $id_entry = (int)$id_entry;
     if ($id_entry <= 0)
-        return (is_billing_manager());
+        return (am_i_billing_manager());
     $entry = db_select_one("id_user FROM billing_entry WHERE id = $id_entry");
     if ($entry == NULL)
         return (false);
@@ -27,7 +58,7 @@ function is_billing_manager_for_billing_payment($id_payment)
         return (true);
     $id_payment = (int)$id_payment;
     if ($id_payment <= 0)
-        return (is_billing_manager());
+        return (am_i_billing_manager());
     $payment = db_select_one("id_user FROM billing_payment WHERE id = $id_payment AND deleted IS NULL");
     if ($payment == NULL)
         return (false);
@@ -75,13 +106,11 @@ function billing_managed_school_ids()
         return (array_keys(db_select_all("id FROM school WHERE deleted IS NULL", "id")));
     if (!$User)
         return ([]);
-    $rows = db_select_all("
-        id_school
-        FROM user_school
-        WHERE id_user = {$User["id"]}
-          AND (authority = 'DIRECTOR' OR authority = 'SECRETARIAT')
-    ", "id_school");
-    return (array_keys($rows));
+    $out = [];
+    foreach (user_school_authorities((int)$User["id"]) as $id_school => $roles)
+        if (isset($roles["DIRECTOR"]) || isset($roles["SECRETARIAT"]) || isset($roles["ACCOUNTANT"]))
+            $out[] = (int)$id_school;
+    return ($out);
 }
 
 function billing_school_filter($alias = "user_school")
@@ -98,6 +127,7 @@ function billing_school_filter($alias = "user_school")
 function billing_user_is_managed($id_user)
 {
     $id_user = (int)$id_user;
+    $student_authority = user_school_student_authority_sql();
     if ($id_user <= 0)
         return (false);
     if (is_admin())
@@ -106,20 +136,21 @@ function billing_user_is_managed($id_user)
         user_school.id
         FROM user_school
         WHERE user_school.id_user = $id_user
-          AND user_school.authority = 'STUDENT'
+          AND user_school.authority = $student_authority
         ".billing_school_filter("user_school")) != NULL);
 }
 
 function billing_user_main_school($id_user)
 {
     $id_user = (int)$id_user;
+    $student_authority = user_school_student_authority_sql();
     return (db_select_one("
         school.id as id_school,
         school.codename as school_codename
         FROM user_school
         LEFT JOIN school ON school.id = user_school.id_school
         WHERE user_school.id_user = $id_user
-          AND user_school.authority = 'STUDENT'
+          AND user_school.authority = $student_authority
           AND school.deleted IS NULL
         ".billing_school_filter("user_school")."
         ORDER BY user_school.id DESC
@@ -172,11 +203,14 @@ function billing_account_for_user($id_user)
 {
     $id_user = (int)$id_user;
     $today = dbnow();
+    // Draft credit notes are not commitments and therefore must not alter the
+    // projected account before they are actually issued.
     $planned = db_select_one("
         COALESCE(SUM(amount), 0) as amount
         FROM billing_entry
         WHERE id_user = $id_user
           AND deleted IS NULL
+          AND (entry_type != 'credit_note' OR sent_date IS NOT NULL)
     ");
     $issued = db_select_one("
         COALESCE(SUM(amount), 0) as amount
@@ -193,6 +227,15 @@ function billing_account_for_user($id_user)
           AND sent_date IS NOT NULL
           AND due_date <= '$today'
     ");
+    $to_invoice = db_select_one("
+        COALESCE(SUM(amount), 0) as amount
+        FROM billing_entry
+        WHERE id_user = $id_user
+          AND deleted IS NULL
+          AND sent_date IS NULL
+          AND entry_type != 'credit_note'
+          AND amount > 0
+    ");
     $paid = db_select_one("
         COALESCE(SUM(amount), 0) as amount
         FROM billing_payment
@@ -202,23 +245,114 @@ function billing_account_for_user($id_user)
     $planned = (int)$planned["amount"];
     $issued = (int)$issued["amount"];
     $due = (int)$due["amount"];
+    $to_invoice = (int)$to_invoice["amount"];
     $paid = (int)$paid["amount"];
+    $balance = $issued - $paid;
+    $projected_balance = $planned - $paid;
+    $coverage = billing_payment_coverage_for_user($id_user);
+    $late = 0;
+    $today_stamp = now();
+    foreach (billing_positive_invoices_for_user($id_user, true) as $entry)
+    {
+        $due_stamp = date_to_timestamp($entry["due_date"] ?? "");
+        if ($due_stamp == NULL || $due_stamp > $today_stamp)
+            continue ;
+        $late += max(0, (int)$entry["amount"] - (int)($coverage[(int)$entry["id"]] ?? 0));
+    }
+
     return ([
         "planned" => $planned,
         "billed" => $issued,
         "due" => $due,
         "paid" => $paid,
-        "balance" => $planned - $paid,
-        "billed_unpaid" => max(0, $issued - $paid),
-        "late" => max(0, $due - $paid),
-        "advance" => max(0, $paid - $issued),
+        "balance" => $balance,
+        "projected_balance" => $projected_balance,
+        "to_invoice" => max(0, $to_invoice),
+        "billed_unpaid" => max(0, $balance),
+        "late" => max(0, $late),
+        "advance" => max(0, -$balance),
     ]);
 }
 
-function billing_fetch_students()
+
+function billing_account_statement($entries, $payments)
+{
+    $statement = [];
+
+    foreach ($entries as $entry)
+    {
+        if (empty($entry["sent_date"]))
+            continue ;
+        $amount = (int)$entry["amount"];
+        $credit_note = billing_is_credit_note($entry);
+        $statement[] = [
+            "type" => $credit_note ? "credit_note" : "invoice",
+            "id" => (int)$entry["id"],
+            "date" => $entry["sent_date"],
+            "label" => $entry["label"],
+            "reference" => trim((string)($entry["invoice_reference"] ?? "")),
+            "due_date" => $credit_note ? NULL : $entry["due_date"],
+            "debit" => $credit_note ? 0 : max(0, $amount),
+            "credit" => $credit_note ? abs(min(0, $amount)) : 0,
+            "comment" => "",
+            "external" => billing_is_external_invoice($entry),
+            "has_pdf" => !empty($entry["invoice_filename"]),
+            "related_entry_id" => (int)($entry["related_entry_id"] ?? 0),
+        ];
+    }
+
+    foreach ($payments as $payment)
+    {
+        $amount = (int)$payment["amount"];
+        $refund = $amount < 0;
+        $statement[] = [
+            "type" => $refund ? "refund" : "payment",
+            "id" => (int)$payment["id"],
+            "date" => $payment["payment_date"],
+            "label" => trim((string)($payment["comment"] ?? "")),
+            "reference" => trim((string)($payment["transfer_reference"] ?? "")),
+            "due_date" => NULL,
+            "debit" => $refund ? abs($amount) : 0,
+            "credit" => $refund ? 0 : max(0, $amount),
+            "comment" => trim((string)($payment["comment"] ?? "")),
+        ];
+    }
+
+    $order = ["invoice" => 0, "credit_note" => 1, "payment" => 2, "refund" => 3];
+    usort($statement, function($a, $b) use ($order)
+    {
+        $ta = date_to_timestamp($a["date"]);
+        $tb = date_to_timestamp($b["date"]);
+
+        if ($ta == $tb)
+        {
+            $oa = $order[$a["type"]] ?? 9;
+            $ob = $order[$b["type"]] ?? 9;
+            if ($oa != $ob)
+                return ($oa <=> $ob);
+            return ($a["id"] <=> $b["id"]);
+        }
+        return ($ta <=> $tb);
+    });
+
+    $balance = 0;
+    foreach ($statement as &$movement)
+    {
+        $balance += (int)$movement["debit"] - (int)$movement["credit"];
+        $movement["balance"] = $balance;
+    }
+    unset($movement);
+
+    return ($statement);
+}
+
+
+function billing_fetch_students($include_hidden = false)
 {
     global $Language;
 
+    $student_authority = user_school_student_authority_sql();
+    $hidden_filter = $include_hidden ? "" : " AND COALESCE(user.billing_hidden, 0) = 0 ";
     $students = db_select_all("
         DISTINCT user.id,
         user.codename,
@@ -226,15 +360,17 @@ function billing_fetch_students()
         user.family_name,
         user.mail,
         NULL as deleted,
+        COALESCE(user.billing_hidden, 0) as billing_hidden,
         school.codename as school_codename,
         COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name
         FROM user_school
         LEFT JOIN user ON user.id = user_school.id_user
         LEFT JOIN school ON school.id = user_school.id_school
         LEFT JOIN organization ON organization.id = school.id_organization
-        WHERE user_school.authority = 'STUDENT'
+        WHERE user_school.authority = $student_authority
           AND user.deleted IS NULL
           AND school.deleted IS NULL
+          $hidden_filter
         ".billing_school_filter("user_school")."
         ORDER BY school.codename, user.family_name, user.first_name, user.codename
     ");
@@ -244,6 +380,7 @@ function billing_fetch_students()
         $student["account"] = billing_account_for_user($student["id"]);
         $student["entries"] = billing_fetch_entries($student["id"]);
         $student["payments"] = billing_fetch_payments($student["id"]);
+        $student["account_statement"] = billing_account_statement($student["entries"], $student["payments"]);
     }
     return ($students);
 }
@@ -353,6 +490,7 @@ function billing_fetch_issued_invoices()
         user.first_name,
         user.family_name,
         user.mail,
+        user.billing_hidden,
         school.codename as school_codename,
         COALESCE(NULLIF(organization.{$Language}_name, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as school_name,
         billing_template.name as template_name,
@@ -374,9 +512,14 @@ function billing_fetch_issued_invoices()
         if (!isset($coverages[$id_user]))
             $coverages[$id_user] = billing_payment_coverage_for_user($id_user);
         $invoice["covered_amount"] = $coverages[$id_user][(int)$invoice["id"]] ?? 0;
+        $invoice["credit_capacity"] = 0;
+        if (empty($invoice["deleted"]) && !billing_is_credit_note($invoice) && (int)$invoice["amount"] > 0)
+            $invoice["credit_capacity"] = max(0, (int)$invoice["amount"] - billing_credit_note_total_for_entry((int)$invoice["id"], false));
         $invoice["status_key"] = "issued";
         if (!empty($invoice["deleted"]))
             $invoice["status_key"] = "deleted";
+        else if (billing_is_credit_note($invoice))
+            $invoice["status_key"] = "credit_note";
         else if (!empty($invoice["paid_date"]))
             $invoice["status_key"] = "paid";
         else if ($invoice["covered_amount"] >= (int)$invoice["amount"])
@@ -540,6 +683,43 @@ function billing_add_entry($id_user, $label, $amount, $due_date, $id_template = 
     ") != NULL);
 }
 
+
+function billing_add_credit_note($id_user, $related_entry_id, $label, $amount, $date)
+{
+    global $Database;
+    global $User;
+
+    $id_user = (int)$id_user;
+    $related_entry_id = (int)$related_entry_id;
+    $amount = (int)$amount;
+    if (!billing_user_is_managed($id_user) || $amount <= 0 || $related_entry_id <= 0)
+        return (false);
+    $related = billing_entry_with_user($related_entry_id);
+    if ($related == NULL || (int)$related["id_user"] != $id_user || empty($related["sent_date"]) ||
+        billing_is_credit_note($related) || (int)$related["amount"] <= 0)
+        return (false);
+    $already = billing_credit_note_total_for_entry($related_entry_id, false);
+    if ($already + $amount > (int)$related["amount"])
+        return (false);
+    $school = billing_user_main_school($id_user);
+    if ($school == NULL)
+        return (false);
+    $label = trim((string)$label);
+    if ($label == "")
+        $label = "Avoir sur facture ".billing_invoice_document_reference($related);
+    $label = $Database->real_escape_string($label);
+    $date = $Database->real_escape_string(db_form_date($date));
+    $invoice_type = $Database->real_escape_string(billing_normalize_invoice_type($related["invoice_type"] ?? "school"));
+    $actor = isset($User["id"]) ? (int)$User["id"] : "NULL";
+    $negative = -$amount;
+    return ($Database->query("
+        INSERT INTO billing_entry
+        (id_user, id_school, id_template, label, amount, entry_type, related_entry_id, invoice_type, due_date, id_actor)
+        VALUES
+        ($id_user, {$school["id_school"]}, NULL, '$label', $negative, 'credit_note', $related_entry_id, '$invoice_type', '$date', $actor)
+    ") != NULL);
+}
+
 function billing_apply_template($id_user, $id_template, $first_due_date, $schedule)
 {
     $id_user = (int)$id_user;
@@ -611,50 +791,113 @@ function billing_invoice_recipients($id_user)
     return (array_values(array_unique($mails)));
 }
 
-function billing_invoice_reference_prefix($school_codename = "")
+function billing_invoice_draft_reference()
 {
-    global $Configuration;
-
-    $base = trim((string)@$Configuration->Properties["billing_invoice_prefix"]);
-    if ($base == "")
-        $base = "INFSPH";
-    $base = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '-', $base));
-    $base = trim($base, "-");
-    if ($base == "")
-        $base = "INFSPH";
-
-    $school = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '-', (string)$school_codename));
-    $school = trim($school, "-");
-    if ($school == "")
-        return ($base);
-    return ($base."-".$school);
+    return ("BROUILLON");
 }
 
-function billing_school_codename_for_entry($id_entry)
+function billing_invoice_missing_reference()
+{
+    return ("SANS-REFERENCE");
+}
+
+function billing_invoice_document_reference($entry)
+{
+    if (empty($entry["sent_date"]))
+        return (billing_invoice_draft_reference());
+
+    $reference = trim((string)($entry["invoice_reference"] ?? ""));
+    if ($reference != "")
+        return ($reference);
+    return (billing_invoice_missing_reference());
+}
+
+function billing_is_external_invoice($entry)
+{
+    return (is_array($entry) && (($entry["entry_type"] ?? "") === "external_invoice"));
+}
+
+
+function billing_is_credit_note($entry)
+{
+    return (is_array($entry) && (($entry["entry_type"] ?? "") === "credit_note"));
+}
+
+function billing_entry_document_label($entry)
+{
+    global $Dictionnary;
+
+    return (billing_is_credit_note($entry)
+        ? ($Dictionnary["BillingCreditNote"] ?? "Avoir")
+        : ($Dictionnary["BillingInvoice"] ?? "Facture"));
+}
+
+function billing_credit_note_total_for_entry($id_entry, $issued_only = false)
 {
     $id_entry = (int)$id_entry;
-    $school = db_select_one("
-        school.codename
+    if ($id_entry <= 0)
+        return (0);
+    $issued_filter = $issued_only ? " AND sent_date IS NOT NULL " : "";
+    $row = db_select_one("
+        COALESCE(SUM(-amount), 0) as amount
         FROM billing_entry
-        LEFT JOIN school ON school.id = billing_entry.id_school
-        WHERE billing_entry.id = $id_entry
+        WHERE related_entry_id = $id_entry
+          AND entry_type = 'credit_note'
+          AND amount < 0
+          AND deleted IS NULL
+          $issued_filter
     ");
-
-    if ($school == NULL)
-        return ("");
-    return ((string)$school["codename"]);
+    return ((int)($row["amount"] ?? 0));
 }
 
-function billing_invoice_default_reference($entry)
+function billing_positive_invoices_for_user($id_user, $issued_only = false)
 {
-    $id_entry = is_array($entry) ? (int)$entry["id"] : (int)$entry;
-    $school_codename = "";
+    $id_user = (int)$id_user;
+    $issued_filter = $issued_only ? " AND sent_date IS NOT NULL " : "";
+    return (db_select_all("
+        *
+        FROM billing_entry
+        WHERE id_user = $id_user
+          AND deleted IS NULL
+          AND amount > 0
+          AND entry_type != 'credit_note'
+          $issued_filter
+        ORDER BY due_date ASC, id ASC
+    "));
+}
 
-    if (is_array($entry))
-        $school_codename = (string)($entry["school_codename"] ?? "");
-    if ($school_codename == "")
-        $school_codename = billing_school_codename_for_entry($id_entry);
-    return (billing_invoice_reference_prefix($school_codename)."-".date("Y")."-".sprintf("%05d", $id_entry));
+function billing_payment_schedule_for_user($id_user)
+{
+    $id_user = (int)$id_user;
+    $payments = db_select_one("
+        COALESCE(SUM(amount), 0) as amount
+        FROM billing_payment
+        WHERE id_user = $id_user
+          AND deleted IS NULL
+    ");
+    $available = max(0, (int)($payments["amount"] ?? 0));
+    $rows = [];
+
+    foreach (billing_positive_invoices_for_user($id_user, false) as $entry)
+    {
+        $amount = max(0, (int)$entry["amount"]);
+        $credit = min($amount, billing_credit_note_total_for_entry((int)$entry["id"], true));
+        $effective = max(0, $amount - $credit);
+        $cash = min($effective, $available);
+        $available -= $cash;
+        $remaining = $effective - $cash;
+        if ($remaining <= 0)
+            continue ;
+        $rows[] = [
+            "id" => (int)$entry["id"],
+            "date" => $entry["due_date"],
+            "label" => $entry["label"],
+            "reference" => !empty($entry["sent_date"]) ? billing_invoice_document_reference($entry) : "",
+            "issued" => !empty($entry["sent_date"]),
+            "remaining" => $remaining,
+        ];
+    }
+    return ($rows);
 }
 
 function billing_invoice_safe_filename($reference)
@@ -720,16 +963,25 @@ function billing_invoice_text($entry, $reference)
     $name = trim(($entry["first_name"] ?? "")." ".($entry["family_name"] ?? ""));
     if ($name == "")
         $name = $entry["codename"] ?? "";
-    return (
-        $Dictionnary["BillingInvoice"]." : ".$reference."\n".
+    $piece = billing_entry_document_label($entry);
+    $amount = billing_is_credit_note($entry) ? abs((int)$entry["amount"]) : (int)$entry["amount"];
+    $body =
+        $piece." : ".$reference."\n".
         $Dictionnary["Student"]." : ".$name."\n".
         $Dictionnary["BillingLabel"]." : ".$entry["label"]."\n".
         $Dictionnary["BillingInvoiceType"]." : ".billing_invoice_type_label($entry["invoice_type"] ?? "school")."\n".
-        $Dictionnary["Amount"]." : ".billing_euros($entry["amount"])."\n".
-        $Dictionnary["DueDate"]." : ".billing_document_date_label($entry["due_date"])."\n".
-        $Dictionnary["Reference"]." : ".$reference."\n"
-    );
+        $Dictionnary["Amount"]." : ".billing_euros($amount)."\n";
+    if (!billing_is_credit_note($entry))
+        $body .= $Dictionnary["DueDate"]." : ".billing_document_date_label($entry["due_date"])."\n";
+    else if (!empty($entry["related_entry_id"]))
+    {
+        $related = billing_entry_with_user((int)$entry["related_entry_id"], true);
+        if ($related != NULL)
+            $body .= ($Dictionnary["BillingRelatedInvoice"] ?? "Facture concernée")." : ".billing_invoice_document_reference($related)."\n";
+    }
+    return ($body.$Dictionnary["Reference"]." : ".$reference."\n");
 }
+
 
 function billing_invoice_mail_body($entry, $reference, $relative_path = "")
 {
@@ -764,19 +1016,51 @@ function billing_invoice_relative_path_for_state($state, $filename)
     return ("admin/invoices_to_pay/".$filename);
 }
 
+
+function billing_entry_document_directory($entry, $state = false)
+{
+    global $Configuration;
+
+    if (billing_is_credit_note($entry) && $state !== "deleted")
+        return ($Configuration->UsersDir($entry["codename"])."admin/credit_notes/");
+    return (billing_invoice_directory($entry["codename"], $state));
+}
+
+function billing_entry_document_relative_path($entry, $state = false)
+{
+    if (empty($entry["invoice_filename"]))
+        return ("");
+    if (billing_is_credit_note($entry) && $state !== "deleted")
+        return ("admin/credit_notes/".$entry["invoice_filename"]);
+    return (billing_invoice_relative_path_for_state($state, $entry["invoice_filename"]));
+}
+
 function billing_invoice_relative_path($entry)
 {
     if (empty($entry["invoice_filename"]))
         return ("");
     if (!empty($entry["deleted"]))
-        return (billing_invoice_relative_path_for_state("deleted", $entry["invoice_filename"]));
+        return (billing_entry_document_relative_path($entry, "deleted"));
+    if (billing_is_credit_note($entry))
+        return (billing_entry_document_relative_path($entry, false));
     if (!empty($entry["paid_date"]))
-        return (billing_invoice_relative_path_for_state("paid", $entry["invoice_filename"]));
-    return (billing_invoice_relative_path_for_state(false, $entry["invoice_filename"]));
+        return (billing_entry_document_relative_path($entry, "paid"));
+    return (billing_entry_document_relative_path($entry, false));
 }
 
-function billing_invoice_model_file()
+
+function billing_invoice_model_file($entry = NULL)
 {
+    if (billing_is_credit_note($entry))
+    {
+        // Credit notes are generated only through Billing because generating the
+        // PDF must also create the accounting movement. Keep the model out of
+        // the generic Documents catalogue to avoid a disconnected credit note.
+        foreach (["./res/docs/fr/.billing/avoir.dab", "./res/docs/.billing/avoir.dab"] as $candidate)
+            if (file_exists($candidate) && !is_dir($candidate))
+                return ($candidate);
+        return (NULL);
+    }
     if (function_exists("document_builder_find_model"))
     {
         $model = document_builder_find_model("facture");
@@ -788,6 +1072,7 @@ function billing_invoice_model_file()
             return ($candidate);
     return (NULL);
 }
+
 
 function billing_invoice_context_fields($entry, $reference)
 {
@@ -827,6 +1112,45 @@ function billing_invoice_context_fields($entry, $reference)
         document_context_flatten($fields, "FinancialResponsible", $parent);
     }
 
+
+    $finance = function_exists("document_context_relation_user")
+        ? document_context_relation_user((int)$entry["id_user"], "financial", 0) : NULL;
+    if ($finance == NULL)
+        $finance = $student;
+    if ($finance != NULL)
+    {
+        document_context_flatten($fields, "Finance", $finance);
+        document_context_flatten($fields, "FinancialResponsible", $finance);
+    }
+
+    if (billing_is_credit_note($entry))
+    {
+        $related = !empty($entry["related_entry_id"])
+            ? billing_entry_with_user((int)$entry["related_entry_id"], true) : NULL;
+        $credit = [
+            "reference" => $reference,
+            "label" => $entry["label"] ?? "",
+            "amount_cents" => abs((int)($entry["amount"] ?? 0)),
+            "amount" => billing_euros(abs((int)($entry["amount"] ?? 0))),
+            "issue_date" => !empty($entry["sent_date"]) ? $entry["sent_date"] : ($entry["due_date"] ?? dbnow()),
+            "issue_date_label" => billing_document_date_label(!empty($entry["sent_date"]) ? $entry["sent_date"] : ($entry["due_date"] ?? dbnow())),
+            "related_invoice_reference" => $related == NULL ? "" : billing_invoice_document_reference($related),
+            "related_invoice_label" => $related["label"] ?? "",
+        ];
+        document_context_flatten($fields, "CreditNote", $credit);
+        if ($related != NULL)
+        {
+            $related_data = [
+                "id" => (int)$related["id"],
+                "reference" => billing_invoice_document_reference($related),
+                "label" => $related["label"] ?? "",
+                "amount" => billing_euros((int)$related["amount"]),
+                "sent_date_label" => billing_document_date_label($related["sent_date"] ?? ""),
+            ];
+            document_context_flatten($fields, "RelatedInvoice", $related_data);
+        }
+    }
+
     $school = document_context_school((int)$entry["id_school"]);
     if ($school != NULL)
     {
@@ -844,10 +1168,10 @@ function billing_invoice_context_fields($entry, $reference)
 
 function billing_build_invoice_document($entry, $reference, $output)
 {
-    $model = billing_invoice_model_file();
+    $model = billing_invoice_model_file($entry);
     if ($model == NULL)
     {
-        add_log(TRACE, "Cannot build invoice #".((int)$entry["id"]).": missing res/docs/facture.dab", $entry["id_user"] ?? -1);
+        add_log(TRACE, "Cannot build invoice #".((int)$entry["id"]).": missing billing document model", $entry["id_user"] ?? -1);
         return (NULL);
     }
 
@@ -870,7 +1194,7 @@ function billing_build_invoice_document($entry, $reference, $output)
 
 function billing_write_invoice_placeholder(&$entry, $reference, $state = false)
 {
-    $dir = billing_invoice_directory($entry["codename"], $state);
+    $dir = billing_entry_document_directory($entry, $state);
     new_directory($dir."index.php");
 
     $filename = billing_invoice_existing_pdf_filename($entry, $reference);
@@ -882,7 +1206,7 @@ function billing_write_invoice_placeholder(&$entry, $reference, $state = false)
     return ([
         "filename" => $filename,
         "path" => $path,
-        "relative_path" => billing_invoice_relative_path_for_state($state, $filename),
+        "relative_path" => billing_entry_document_relative_path(array_merge($entry, ["invoice_filename" => $filename]), $state),
         "content" => $content,
     ]);
 }
@@ -891,7 +1215,10 @@ function billing_invoice_existing_file_path($entry)
 {
     if (empty($entry["invoice_filename"]))
         return ("");
-    $path = billing_invoice_directory($entry["codename"], !empty($entry["deleted"]) ? "deleted" : (!empty($entry["paid_date"]) ? true : false)).$entry["invoice_filename"];
+    $state = !empty($entry["deleted"]) ? "deleted" : (!empty($entry["paid_date"]) ? true : false);
+    if (billing_is_credit_note($entry) && empty($entry["deleted"]))
+        $state = false;
+    $path = billing_entry_document_directory($entry, $state).$entry["invoice_filename"];
     if (!file_exists($path) || is_dir($path))
         return ("");
     if (substr((string)@file_get_contents($path, false, NULL, 0, 4), 0, 4) !== "%PDF")
@@ -899,15 +1226,14 @@ function billing_invoice_existing_file_path($entry)
     return ($path);
 }
 
+
 function billing_invoice_pdf_response($id_entry)
 {
     $entry = billing_entry_with_user($id_entry, true);
     if ($entry == NULL || !billing_user_is_managed($entry["id_user"]))
         return (false);
 
-    $ref = trim((string)$entry["invoice_reference"]);
-    if ($ref == "")
-        $ref = billing_invoice_default_reference($entry);
+    $ref = billing_invoice_document_reference($entry);
     $filename = billing_invoice_existing_pdf_filename($entry, $ref);
 
     $path = billing_invoice_existing_file_path($entry);
@@ -915,6 +1241,10 @@ function billing_invoice_pdf_response($id_entry)
         $content = file_get_contents($path);
     else
     {
+        // An external invoice can only be displayed when its original PDF was
+        // imported. Never manufacture an Infosphere invoice in its place.
+        if (billing_is_external_invoice($entry))
+            return (false);
         $tmp = tempnam(sys_get_temp_dir(), "infosphere_invoice_");
         if ($tmp === false)
             return (false);
@@ -956,10 +1286,32 @@ function billing_unlink_invoice_files($entry)
         return ;
     foreach ([false, true, "deleted"] as $state)
     {
-        $path = billing_invoice_directory($entry["codename"], $state).$entry["invoice_filename"];
+        $path = billing_entry_document_directory($entry, $state).$entry["invoice_filename"];
         if (file_exists($path))
             @unlink($path);
     }
+}
+
+
+function billing_store_external_invoice_pdf(&$entry, $content)
+{
+    if (!is_string($content) || strlen($content) < 5 || substr($content, 0, 5) !== "%PDF-")
+        return (false);
+    if (strlen($content) > 20 * 1024 * 1024)
+        return (false);
+
+    $dir = billing_invoice_directory($entry["codename"], false);
+    new_directory($dir."index.php");
+    $filename = "external-".billing_invoice_safe_filename($entry["invoice_reference"] ?? "invoice");
+    $path = $dir.$filename;
+    if (file_put_contents($path, $content) === false)
+    {
+        @unlink($path);
+        return (false);
+    }
+    @chmod($path, 0664);
+    $entry["invoice_filename"] = $filename;
+    return ($filename);
 }
 
 function billing_payment_coverage_for_user($id_user)
@@ -971,19 +1323,21 @@ function billing_payment_coverage_for_user($id_user)
         WHERE id_user = $id_user
           AND deleted IS NULL
     ");
-    $remaining = (int)$paid["amount"];
+    $remaining_cash = max(0, (int)($paid["amount"] ?? 0));
     $coverage = [];
 
-    foreach (billing_fetch_entries($id_user) as $entry)
+    foreach (billing_positive_invoices_for_user($id_user, true) as $entry)
     {
         $amount = max(0, (int)$entry["amount"]);
-        $covered = min($amount, max(0, $remaining));
-
-        $coverage[(int)$entry["id"]] = $covered;
-        $remaining -= $covered;
+        $credit = min($amount, billing_credit_note_total_for_entry((int)$entry["id"], true));
+        $cash_needed = max(0, $amount - $credit);
+        $cash = min($cash_needed, $remaining_cash);
+        $remaining_cash -= $cash;
+        $coverage[(int)$entry["id"]] = $credit + $cash;
     }
     return ($coverage);
 }
+
 
 function billing_paid_entry_ids_for_user($id_user)
 {
@@ -1010,45 +1364,78 @@ function billing_paid_archivable_entries($id_user)
     return ($entries);
 }
 
-function billing_send_invoice_placeholder($id_entry)
+function billing_send_invoice_placeholder($id_entry, $reference)
 {
     global $Dictionnary;
 
     $entry = billing_entry_with_user($id_entry);
     if ($entry == NULL || !billing_user_is_managed($entry["id_user"]))
-        return (false);
+        return (["error" => "CannotSendMail"]);
+    if (!empty($entry["sent_date"]))
+        return (["error" => "BillingInvoiceAlreadyIssued"]);
 
-    $ref = trim((string)$entry["invoice_reference"]);
-    if ($ref == "")
-        $ref = billing_invoice_default_reference($entry);
-    if (!billing_invoice_reference_is_available($ref, $entry["id"]))
-        return (false);
-
-    $file = billing_write_invoice_placeholder($entry, $ref, false);
-    if ($file == NULL)
-        return (false);
+    $reference = trim((string)$reference);
+    if ($reference == "")
+        return (["error" => "BillingInvoiceReferenceRequired"]);
+    if (strlen($reference) > 128)
+        return (["error" => "BillingInvoiceReferenceTooLong"]);
+    if (!billing_invoice_reference_is_available($reference, $entry["id"]))
+        return (["error" => "BillingInvoiceReferenceAlreadyUsed"]);
 
     $recipients = billing_invoice_recipients($entry["id_user"]);
     if (!count($recipients))
-        return (false);
+        return (["error" => "CannotSendMail"]);
 
-    $body = billing_invoice_mail_body($entry, $ref, $file["relative_path"]);
+    // A credit note has an explicit issue date chosen when its draft is prepared.
+    // Normal invoices keep the historical behaviour: their issue date is the
+    // instant at which they are actually sent.
+    $issue_date = billing_is_credit_note($entry) ? $entry["due_date"] : dbnow();
+    $entry["invoice_reference"] = $reference;
+    $entry["sent_date"] = $issue_date;
+
+    $file = billing_write_invoice_placeholder($entry, $reference, false);
+    if ($file == NULL)
+    {
+        billing_unlink_invoice_files($entry);
+        return (["error" => "CannotBuildInvoice"]);
+    }
+
+    // Persist exactly the number chosen by the operator immediately before
+    // delivery. This checks uniqueness, but does not calculate, reserve or
+    // validate any sequence. A failed delivery rolls the issue back entirely.
+    if (db_update_one("billing_entry", (int)$entry["id"], [
+        "invoice_reference" => $reference,
+        "sent_date" => $issue_date,
+        "invoice_filename" => $file["filename"],
+    ]) === NULL)
+    {
+        if (!empty($file["path"]) && file_exists($file["path"]))
+            @unlink($file["path"]);
+        return (["error" => "BillingInvoiceReferenceAlreadyUsed"]);
+    }
+
+    $body = billing_invoice_mail_body($entry, $reference, $file["relative_path"]);
     $mail = send_mail(
         $recipients,
-        $Dictionnary["BillingInvoice"]." ".$ref,
+        billing_entry_document_label($entry)." ".$reference,
         $body,
         NULL,
         [$file["filename"] => $file["content"]],
         false
     );
     if ($mail->is_error())
-        return (false);
+    {
+        if (!empty($file["path"]) && file_exists($file["path"]))
+            @unlink($file["path"]);
+        db_update_one("billing_entry", (int)$entry["id"], [
+            "invoice_reference" => NULL,
+            "sent_date" => NULL,
+            "invoice_filename" => NULL,
+        ]);
+        return (["error" => "CannotSendMail"]);
+    }
 
-    db_update_one("billing_entry", (int)$entry["id"], [
-        "sent_date" => dbnow(),
-        "invoice_reference" => $ref,
-        "invoice_filename" => $file["filename"],
-    ]);
+    billing_reconcile_paid_invoices($entry["id_user"]);
     billing_archive_paid_invoices($entry["id_user"]);
 
     $updated = billing_entry_with_user($entry["id"]);
@@ -1066,13 +1453,13 @@ function billing_archive_paid_invoices($id_user)
     $count = 0;
     foreach (billing_paid_archivable_entries($id_user) as $entry)
     {
+        if (billing_is_credit_note($entry))
+            continue ;
         $entry = billing_entry_with_user($entry["id"]);
         if ($entry == NULL)
             continue ;
-        $ref = trim((string)$entry["invoice_reference"]);
-        if ($ref == "")
-            $ref = billing_invoice_default_reference($entry);
-        if (empty($entry["invoice_filename"]))
+        $ref = billing_invoice_document_reference($entry);
+        if (empty($entry["invoice_filename"]) && !billing_is_external_invoice($entry))
             $entry["invoice_filename"] = billing_invoice_safe_filename($ref);
 
         $source_dir = billing_invoice_directory($entry["codename"], false);
@@ -1081,22 +1468,24 @@ function billing_archive_paid_invoices($id_user)
         $source = $source_dir.$entry["invoice_filename"];
         $target = $target_dir.$entry["invoice_filename"];
 
-        if (file_exists($source))
+        if (!empty($entry["invoice_filename"]) && file_exists($source))
         {
             if (!@rename($source, $target))
                 continue ;
         }
-        else
+        else if (!billing_is_external_invoice($entry))
         {
             $file = billing_write_invoice_placeholder($entry, $ref, true);
             if ($file == NULL)
                 continue ;
         }
 
-        db_update_one("billing_entry", (int)$entry["id"], [
-            "paid_date" => dbnow(),
-            "invoice_filename" => $entry["invoice_filename"],
-        ]);
+        // An imported invoice may legitimately have no PDF. Its accounting
+        // state can still be archived without inventing a replacement PDF.
+        $update = ["paid_date" => dbnow()];
+        if (!empty($entry["invoice_filename"]))
+            $update["invoice_filename"] = $entry["invoice_filename"];
+        db_update_one("billing_entry", (int)$entry["id"], $update);
         ++$count;
     }
     return ($count);
@@ -1112,6 +1501,8 @@ function billing_reconcile_paid_invoices($id_user)
     $count = 0;
     foreach (billing_fetch_entries($id_user) as $entry)
     {
+        if (billing_is_credit_note($entry))
+            continue ;
         if (empty($entry["paid_date"]) || isset($paid_entries[(int)$entry["id"]]))
             continue ;
         $entry = billing_entry_with_user($entry["id"]);
@@ -1137,11 +1528,9 @@ function billing_move_invoice_to_deleted(&$entry)
 {
     if (empty($entry["invoice_filename"]))
     {
-        if (empty($entry["sent_date"]))
+        if (empty($entry["sent_date"]) || billing_is_external_invoice($entry))
             return (true);
-        $ref = trim((string)$entry["invoice_reference"]);
-        if ($ref == "")
-            $ref = billing_invoice_default_reference($entry);
+        $ref = billing_invoice_document_reference($entry);
         $entry["invoice_filename"] = billing_invoice_safe_filename($ref);
         return (billing_write_invoice_placeholder($entry, $ref, "deleted") !== NULL);
     }
@@ -1152,9 +1541,9 @@ function billing_move_invoice_to_deleted(&$entry)
     $sources = [];
 
     if (!empty($entry["paid_date"]))
-        $sources[] = billing_invoice_directory($entry["codename"], true).$entry["invoice_filename"];
-    $sources[] = billing_invoice_directory($entry["codename"], false).$entry["invoice_filename"];
-    $sources[] = billing_invoice_directory($entry["codename"], true).$entry["invoice_filename"];
+        $sources[] = billing_entry_document_directory($entry, true).$entry["invoice_filename"];
+    $sources[] = billing_entry_document_directory($entry, false).$entry["invoice_filename"];
+    $sources[] = billing_entry_document_directory($entry, true).$entry["invoice_filename"];
 
     foreach (array_unique($sources) as $source)
     {
@@ -1168,9 +1557,9 @@ function billing_move_invoice_to_deleted(&$entry)
         return (true);
     if (!empty($entry["sent_date"]))
     {
-        $ref = trim((string)$entry["invoice_reference"]);
-        if ($ref == "")
-            $ref = billing_invoice_default_reference($entry);
+        if (billing_is_external_invoice($entry))
+            return (true);
+        $ref = billing_invoice_document_reference($entry);
         return (billing_write_invoice_placeholder($entry, $ref, "deleted") !== NULL);
     }
     return (true);
@@ -1214,5 +1603,6 @@ function billing_delete_payment($id_payment)
     if (db_update_one("billing_payment", (int)$payment["id"], ["deleted" => dbnow()]) == NULL)
         return (false);
     billing_reconcile_paid_invoices($payment["id_user"]);
+    billing_archive_paid_invoices($payment["id_user"]);
     return (true);
 }

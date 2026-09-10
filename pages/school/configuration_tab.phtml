@@ -26,6 +26,7 @@ $school_registration_fields = [
         onsubmit="return silent_submitf(this, {after_success: refresh});"
     >
         <div class="school_config_columns">
+            <?php require __DIR__."/activity_fields.phtml"; ?>
             <section class="school_config_section">
                 <h4>Organisation liée</h4>
                 <label>
@@ -113,8 +114,9 @@ $school_registration_fields = [
             <section class="school_config_section school_config_section_wide">
                 <h4>Boîtes fonctionnelles</h4>
                 <p class="school_admin_notice">
-                    Ces adresses reçoivent les notifications liées aux tâches de l'établissement.
-                    Si une boîte n'est pas renseignée, le mail général de l'établissement est utilisé.
+                    Ces adresses sont utilisées par les différents workflows de l'établissement.
+                    Si une boîte fonctionnelle n'est pas renseignée, le mail général de l'établissement est utilisé lorsque le workflow prévoit un repli.
+                    La boîte « Archives des envois (CCI) » reçoit uniquement les copies cachées des documents qui activent explicitement l'archivage.
                 </p>
                 <?php if (!school_mailbox_table_available()) { ?>
                     <p class="school_admin_notice"><strong>Migration SQL requise :</strong> la table <code>school_mailbox</code> n'existe pas encore.</p>

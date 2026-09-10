@@ -1,0 +1,38 @@
+[#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Vous êtes convoqué[@IfC;Student.Gender;==;female;e] dans le cadre de la certification **[#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]**.
+Un premier rendez-vous est fixé le [#ShortLine;[#Variable;Candidate.QuestionnaireDate];1.5] à [#ShortLine;[#Variable;Candidate.QuestionnaireTime];1.5].
+Votre passage devant le jury est prévu le [#ShortLine;[#Variable;Candidate.JuryDate];1.5] à [#ShortLine;[#Variable;Candidate.JuryAppointmentTime];1.5].
+Vous êtes néanmoins attendu[@IfC;Student.Gender;==;female;e] dès **[#Variable;Candidate.JuryArrivalTime]**.
+
+[@Indent]
+
+[@Indent]Les épreuves auront lieu à l'adresse suivante :
+
+[@Indent]
+
+[@Center;**[#Variable;School.TrainingAddress]**]
+
+[@Indent]
+
+[@Indent]Vous devrez être muni[@IfC;Student.Gender;==;female;e] :
+
+- [@Indent][@Indent]de l'original de votre pièce d'identité
+- [@Indent][@Indent]de la présente convocation
+- [@Indent][@Indent]des machines, logiciels et accès nécessaires à votre démonstration et à votre présentation
+[#IfC;Candidate.VAENotice;!=;;- [#Variable;Candidate.VAENotice]]
+[#IfC;TitleSession.EquipmentNotice;!=;;- [#Variable;TitleSession.EquipmentNotice]]
+[#IfC;Candidate.AuthorizationNotice;!=;;- [#Variable;Candidate.AuthorizationNotice]]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de ma considération distinguée.
+
+[@Indent]
+
+[#Right;Le responsable de session
+[#Variable;Signatories.SessionManager.Identity]	
+\par\vspace{0.08cm}
+[#IfC;Signatories.SessionManager.Signature;!=;;[@Image;[#Variable;Signatories.SessionManager.Signature];width=4.6cm;height=2.3cm]]
+]
+

@@ -1,0 +1,25 @@
+[#Indent]L'établissement [#Variable;School.Name] entend garantir à toute personne un cadre d'apprentissage et de travail respectueux, accessible et sûr. Cette exigence s'applique aux apprenants, formateurs, personnels, intervenants, partenaires et, plus généralement, à toute personne participant à une activité organisée par l'établissement [#Variable;School.Name], y compris à distance, lors d'un évènement ou sur un espace numérique lié à l'établissement.
+
+[#Indent]
+
+[#Indent]Toute personne doit respecter la dignité, l'intégrité et les droits d'autrui. Les désaccords, y compris politiques, philosophiques, religieux, scientifiques ou pédagogiques, peuvent être exprimés et débattus dès lors qu'ils le sont sans intimidation, harcèlement, humiliation, menace, violence ni discrimination.
+
+
+[#Indent]Sont notamment interdits les comportements, décisions ou propos discriminatoires fondés sur l'origine, la nationalité, l'appartenance ou la non-appartenance réelle ou supposée à une ethnie, une nation ou une prétendue race, le sexe, l'orientation sexuelle, l'identité ou l'expression de genre, l'âge, l'état de santé, la perte d'autonomie, le handicap, la grossesse, la situation de famille, l'apparence physique, le nom, le lieu de résidence, la langue, les convictions religieuses, les opinions politiques ou philosophiques, les activités syndicales ou mutualistes, ainsi que la situation économique ou sociale, la précarité ou le milieu social réel ou supposé.
+
+
+[#Indent]La protection des opinions politiques, philosophiques ou religieuses contre les discriminations n'autorise pas, au nom de ces opinions ou convictions, à porter atteinte aux droits, à la dignité ou à la sécurité d'autrui, ni à tenir des propos discriminatoires ou à perturber le déroulement de la formation.
+
+
+[#Indent]Sont également prohibés le harcèlement moral ou sexuel, les agissements sexistes, les violences, menaces, injures, intimidations, mises à l'écart discriminatoires, représailles envers une personne ayant signalé de bonne foi une situation, ainsi que les comportements racistes, antisémites, xénophobes, homophobes, biphobes, transphobes, intersexophobes ou validistes.
+
+[#Indent]
+
+[#Indent]Toute personne témoin ou destinataire d'une situation contraire à ces principes est invitée à la signaler à la direction ou à la personne référente désignée par l'établissement [#Variable;School.Name]. Un témoignage ou signalement doit être accueilli avec sérieux, sans préjuger de sa qualification définitive. La personne qui signale une situation de bonne foi ne doit subir aucune mesure de rétorsion du fait de ce signalement.
+
+
+[#Indent]Lorsqu'une intervention immédiate est possible sans se mettre soi-même ni autrui en danger, chacun est encouragé à contribuer à faire cesser la situation ou à solliciter une personne en capacité d'intervenir. En cas de danger grave ou immédiat, les services de secours ou autorités compétentes peuvent être contactés.
+
+[#Indent]
+
+[#Indent]Tout manquement peut donner lieu aux mesures prévues par le règlement intérieur et, selon la gravité ou la répétition des faits, à une sanction pouvant aller jusqu'à l'exclusion définitive. Toute sanction disciplinaire est prise dans le respect de la procédure applicable et du principe de proportionnalité.

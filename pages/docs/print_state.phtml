@@ -1,0 +1,56 @@
+<?php
+$print_tasks = isset($print_tasks) && is_array($print_tasks) ? $print_tasks : [];
+?>
+
+<div class="documents_print_queue">
+    <p>
+        Cette file contient les PDF qui doivent encore être imprimés ou pris en charge pour un envoi postal.
+        Le PDF affiché est la version figée au moment de sa mise en attente.
+    </p>
+    <?php if (!count($print_tasks)) { ?>
+        <p><em>Aucun document en attente d'impression.</em></p>
+    <?php } else { ?>
+        <table class="content_table documents_print_table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Destinataire</th>
+                    <th>Contexte</th>
+                    <th>En attente depuis</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($print_tasks as $print_task) { ?>
+                <?php
+                $print_meta = $print_task["print_metadata"] ?? document_task_metadata($print_task);
+                $print_label = trim((string)($print_meta["label"] ?? "Document"));
+                $created_stamp = date_to_timestamp($print_task["created_at"] ?? "");
+                ?>
+                <tr>
+                    <td><?=htmlspecialchars($print_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars(document_print_recipient_label($print_task), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars(document_print_context_label($print_task), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
+                    <td><?=htmlspecialchars($created_stamp == NULL ? (string)($print_task["created_at"] ?? "") : datex("d/m/Y H:i", $created_stamp), ENT_QUOTES); ?></td>
+                    <td class="document_workflow_actions">
+                        <a
+                            href="<?=htmlspecialchars(document_print_task_url($print_task), ENT_QUOTES); ?>"
+                            target="_blank"
+                            rel="noopener"
+                        >Ouvrir le PDF</a>
+                        <form
+                            method="post"
+                            action="/api/doc/0/print"
+                            onsubmit="return document_print_complete(this);"
+                            style="display: inline-block; margin-left: 0.5em;"
+                        >
+                            <input type="hidden" name="task_id" value="<?=(int)$print_task["id"]; ?>" />
+                            <input type="button" value="Imprimé / traité" onclick="return document_print_complete(this.form);" />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+    <?php } ?>
+</div>

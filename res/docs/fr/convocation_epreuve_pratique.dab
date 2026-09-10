@@ -1,0 +1,103 @@
+@include ".base_letter/base.dab"
+Title = "Convocation à l'épreuve pratique d'admission"
+
+[School
+  Name = ""
+  LegalAddress = ""
+  LegalCity = ""
+  TrainingAddress = ""
+  Phone = ""
+  Mail = ""
+]
+
+[Student
+  Identity = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+  Gender = ""
+]
+
+[AdmissionAppointment
+  Date = ""
+  Time = ""
+  AdditionalNotice = ""
+]
+
+[Generation
+  Date = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Candidat"
+    Required = 1
+    Auto = "Owner"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Direction signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Direction"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Convocation aux épreuves d'admission
+  Left]
+]
+
+[FormLabel
+  [RendezVous
+    Label = "Rendez-vous"
+    [AdmissionAppointment
+      Date = "Date"
+      Time = "Heure"
+      AdditionalNotice = "Consigne complémentaire / matériel à apporter"
+    ]
+  ]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Student.Identity]\par
+  [#Variable;Student.Address]\par
+  [#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\par[#Variable;Student.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Convocation à l'épreuve pratique d'admission
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "convocation_epreuve_pratique.txt"
+}

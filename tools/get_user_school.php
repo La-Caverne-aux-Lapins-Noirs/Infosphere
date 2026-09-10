@@ -24,14 +24,48 @@ function user_school_authority_is_numeric()
     return ($numeric);
 }
 
+function user_school_authority_numeric_value($authority)
+{
+    static $map = [
+        "STUDENT" => 0,
+        "DIRECTOR" => 1,
+        "SECRETARIAT" => 2,
+        "COMMERCIAL" => 3,
+        "TEACHER" => 4,
+        "LIBRARIAN" => 5,
+        "ACCOUNTANT" => 6,
+    ];
+    $authority = strtoupper(trim((string)$authority));
+    return ($map[$authority] ?? NULL);
+}
+
+function user_school_authority_value($authority)
+{
+    $authority = strtoupper(trim((string)$authority));
+    if (!user_school_authority_is_numeric())
+        return ($authority);
+    $numeric = user_school_authority_numeric_value($authority);
+    return ($numeric === NULL ? $authority : $numeric);
+}
+
 function user_school_student_authority_value()
 {
-    return (user_school_authority_is_numeric() ? 0 : "STUDENT");
+    return (user_school_authority_value("STUDENT"));
+}
+
+function user_school_authority_sql($authority)
+{
+    global $Database;
+
+    $value = user_school_authority_value($authority);
+    if (user_school_authority_is_numeric())
+        return ((string)(int)$value);
+    return ("'".$Database->real_escape_string((string)$value)."'");
 }
 
 function user_school_student_authority_sql()
 {
-    return (user_school_authority_is_numeric() ? "0" : "'STUDENT'");
+    return (user_school_authority_sql("STUDENT"));
 }
 
 function get_user_school(array &$usr, $by_name = false)
@@ -73,6 +107,7 @@ function get_user_school(array &$usr, $by_name = false)
 	"COMMERCIAL",
 	"TEACHER",
 	"LIBRARIAN",
+	"ACCOUNTANT",
     ];
 
     $usr["school_authority"] = $constants[0];

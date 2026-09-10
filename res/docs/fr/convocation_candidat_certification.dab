@@ -1,10 +1,12 @@
-Document = "Generic"
+@include ".base_letter/base.dab"
 Title = "Convocation du candidat à une session de certification"
 
 [School
   Name = ""
   LegalName = ""
   LegalAddress = ""
+  LegalCity = ""
+  TrainingAddress = ""
   Phone = ""
   Mail = ""
   DocumentLogo = ""
@@ -19,6 +21,7 @@ Title = "Convocation du candidat à une session de certification"
   Address = ""
   PostalCity = ""
   Country = ""
+  Gender = ""
 ]
 
 [Candidate
@@ -26,19 +29,70 @@ Title = "Convocation du candidat à une session de certification"
   QuestionnaireDate = ""
   QuestionnaireTime = ""
   JuryDate = ""
-  JuryArrivalTime = "09:00"
+  JuryAppointmentTime = ""
+  JuryArrivalTime = "08:45"
   VAENotice = ""
   AuthorizationNotice = ""
 ]
 
 [TitleSession
-  IssueDate = ""
+  StartDate = ""
+  StartTime = ""
   VenueAddress = ""
   EquipmentNotice = ""
   [Title
+    Id = 0
+    Codename = ""
     Name = ""
     FrName = ""
+    EnName = ""
     Code = ""
+  ]
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Candidat"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [TitleSession
+    Type = "title_session"
+    Prefix = "TitleSession"
+    Label = "Session de certification"
+    Placeholder = "ID de la session de titre"
+  ]
+  [Certification
+    Type = "title"
+    Prefix = "TitleSession.Title"
+    Label = "Certification"
+    Required = 1
+    InferFrom = "TitleSession"
+    Placeholder = "id ou nom de code de la certification"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student,TitleSession"
+  ]
+  [SessionManager
+    Type = "user"
+    Prefix = "SessionManager"
+    Label = "Responsable de session"
+    Required = 1
+    Signatory = "SessionManager"
+    InferFrom = "TitleSession"
+    Placeholder = "id ou nom de code"
   ]
 ]
 
@@ -53,21 +107,7 @@ Title = "Convocation du candidat à une session de certification"
   Left = [Text($,Left)
     [@Size;5] Convocation à une session de certification
   Left]
-  Right = [Text($,Right)
-    [@IfC;School.DocumentLogo;!=;;
-      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
-    ]
-  Right]
 ]
-
-Footer = [Text($,Footer)
-  [@Size;0]
-  $(School.MainInfo)
-  $(School.SchoolInfo)
-  $(School.FormationInfo)
-  $(School.AlternationInfo)
-  $(School.Phone) $(School.Mail)
-Footer]
 
 [FormLabel
   [Destinataire
@@ -77,19 +117,24 @@ Footer]
       Address = "Adresse"
       PostalCity = "Code postal et ville"
       Country = "Pays"
+      Gender = "Genre"
     ]
     [Candidate
       Number = "Numéro de candidat"
       QuestionnaireDate = "Date du premier rendez-vous"
       QuestionnaireTime = "Heure du premier rendez-vous"
       JuryDate = "Date de passage devant le jury"
-      JuryArrivalTime = "Heure de présence pour le jury"
+      JuryAppointmentTime = "Heure de passage devant le jury"
+      JuryArrivalTime = "Heure de présence demandée"
       VAENotice = "Mention VAE, le cas échéant"
       AuthorizationNotice = "Habilitation ou autre justificatif, le cas échéant"
     ]
   ]
   [Emission
     Label = "Émission de la convocation"
+    [Generation
+      Date = "Date d'émission"
+    ]
     [Signatories
       [SessionManager
         Identity = "Responsable de session"
@@ -97,29 +142,44 @@ Footer]
     ]
   ]
   [SessionTitre
-    Label = "Session de titre"
+    Label = "Certification et session"
     [TitleSession
-      IssueDate = "Date d'émission"
+      StartDate = "Date de début de session"
+      StartTime = "Heure de début de session"
       VenueAddress = "Adresse du centre d'examen"
       EquipmentNotice = "Équipements de protection individuelle, le cas échéant"
       [Title
-        FrName = "Titre professionnel"
-        Code = "Code du titre"
+        FrName = "Certification"
+        Code = "Code de la certification"
       ]
     ]
   ]
 ]
 
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Student.Identity]\par
+  [#IfC;Candidate.Number;!=;;Candidat n° [#Variable;Candidate.Number]\par]
+  [#Variable;Student.Address]\par
+  [#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\par[#Variable;Student.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Convocation à la certification [#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]
+LetterSubject]
+
+Date = [Text($,XDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+XDate]
+
+
 {Content
-  "\\noindent\\begin{minipage}[t]{0.47\\textwidth}\\strut{}[#Variable;School.Name]\\\\\\strut{}[#Variable;School.LegalAddress]\\\\\\strut{}[#Variable;School.Phone]\\\\\\strut{}[#Variable;School.Mail]\\end{minipage}\\hfill\\begin{minipage}[t]{0.47\\textwidth}\\raggedleft\\strut{}[#Variable;Student.Identity]\\\\[@IfC;Candidate.Number;!=;;Candidat n° [#Variable;Candidate.Number]\\\\]\\strut{}[#Variable;Student.Address]\\\\\\strut{}[#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\\\\\\strut{}[#Variable;Student.Country]]\\end{minipage}\\par\\vspace{0.7cm}\n",
-  "[@Right;Le [#Variable;TitleSession.IssueDate]]\n\n",
-  "**Objet : Convocation à une session de certification pour le titre professionnel [#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]**\\par\\vspace{0.35cm}\n",
-  "Madame, Monsieur,\\par\\vspace{0.35cm}\n",
-  "Un premier rendez-vous est fixé le **[#Variable;Candidate.QuestionnaireDate] à [#Variable;Candidate.QuestionnaireTime]**.\n\n",
-  "Pour votre passage devant le jury de certification visant l'obtention du titre professionnel [#Variable;TitleSession.Title.FrName], vous êtes attendu(e) le **[#Variable;Candidate.JuryDate] à [#Variable;Candidate.JuryArrivalTime]**.\n\n",
-  "Ces deux rendez-vous auront lieu à l'adresse suivante :\n\n",
-  "[@Center;**[#Variable;TitleSession.VenueAddress]**]\n\n",
-  "Vous devrez être muni(e) :\n\n- de l'original de votre pièce d'identité ;\n- de la présente convocation ;\n- des machines, logiciels et accès nécessaires à votre démonstration et à votre présentation ;\n[@IfC;Candidate.VAENotice;!=;;- [#Variable;Candidate.VAENotice] ;\n][@IfC;TitleSession.EquipmentNotice;!=;;- [#Variable;TitleSession.EquipmentNotice] ;\n][@IfC;Candidate.AuthorizationNotice;!=;;- [#Variable;Candidate.AuthorizationNotice] ;\n]\n",
-  "Je vous prie d'agréer, Madame, Monsieur, l'expression de ma considération distinguée.\n\n\n",
-  "[@Right;Le responsable de session\n[#Variable;Signatories.SessionManager.Identity]\n[@IfC;Signatories.SessionManager.Signature;!=;;[@Image;[#Variable;Signatories.SessionManager.Signature];width=4cm;height=2cm]]]\n"
+  @insert txt ($) "convocation_candidat_certification.txt",
+  @insert txt ($) "convocation_candidat_certification_remise.txt"
 }

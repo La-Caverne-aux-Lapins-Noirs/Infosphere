@@ -1,0 +1,152 @@
+@include ".base_letter/base.dab"
+Title = "Convocation à la rentrée scolaire"
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  TrainingAddress = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+  Gender = ""
+]
+
+[Cycle
+  Id = 0
+  Codename = ""
+  Number = 0
+  Name = ""
+  FrName = ""
+  EnName = ""
+  FirstDay = ""
+  FirstDayDate = ""
+  SchoolId = 0
+]
+
+[SchoolStart
+  ArrivalTime = "09:00"
+  AdditionalNotice = ""
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève"
+    Required = 1
+  ]
+  [Cycle
+    Type = "cycle"
+    Prefix = "Cycle"
+    Label = "Cycle / trimestre"
+    Required = 1
+    Placeholder = "id ou nom de code du cycle"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Cycle"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Directeur signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+    Role = "Directeur(trice)"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Convocation à la rentrée scolaire
+  Left]
+]
+
+[FormLabel
+  [Destinataire
+    Label = "Élève"
+    [Student
+      Identity = "Nom et prénom"
+      Address = "Adresse"
+      PostalCity = "Code postal et ville"
+      Country = "Pays"
+      Gender = "Genre"
+    ]
+  ]
+  [Rentree
+    Label = "Rentrée"
+    [Cycle
+      Name = "Cycle / trimestre"
+      FirstDayDate = "Date de rentrée"
+    ]
+    [SchoolStart
+      ArrivalTime = "Heure de convocation"
+      AdditionalNotice = "Consigne complémentaire"
+    ]
+  ]
+  [Emission
+    Label = "Émission de la convocation"
+    [Generation
+      Date = "Date d'émission"
+    ]
+    [Signatories
+      [Director
+        Identity = "Directeur signataire"
+      ]
+    ]
+  ]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Student.Identity]\par
+  [#Variable;Student.Address]\par
+  [#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\par[#Variable;Student.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Convocation à la rentrée scolaire[@IfC;Cycle.Name;!=;; - [#Variable;Cycle.Name]]
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "convocation_rentree.txt"
+}

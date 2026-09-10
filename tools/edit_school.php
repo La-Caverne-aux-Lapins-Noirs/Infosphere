@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/school_activity.php");
+
 function edit_school($id, $data)
 {
     global $Database;
@@ -10,7 +12,10 @@ function edit_school($id, $data)
     if (($school = fetch_school($id)) instanceof Response)
         return ($school);
 
-    $school_fields = [];
+    $activity = school_activity_updates($data);
+    if ($activity->is_error())
+        return $activity;
+    $school_fields = $activity->value;
     $mailbox_updates = [];
     if (function_exists("school_mailbox_purposes"))
         foreach (school_mailbox_purposes() as $purpose => $label)

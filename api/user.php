@@ -160,23 +160,20 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
     if ($source_reference == "" || !hash_equals(md5($source_reference), $model_hash))
         return (new ErrorResponse("InvalidParameter", "model_hash"));
 
-    $signature_bindings = $data["signature_bindings"] ?? [];
-    if (is_string($signature_bindings))
-        $signature_bindings = json_decode($signature_bindings, true);
-    if (!is_array($signature_bindings))
-        $signature_bindings = [];
-    $signature_schema = document_signature_model_slots($resolved["absolute"]);
-    $signature_bindings = document_signature_normalize_bindings($signature_bindings, array_keys($signature_schema));
-    $missing_signatures = document_signature_missing_required_bindings($signature_schema, $signature_bindings);
-    if (count($missing_signatures))
-        return (new ErrorResponse("MissingField", "Signatures.".implode(", Signatures.", $missing_signatures)));
-
-    $chain = registration_form_document_chain(
+    $context_bindings = $data["context_bindings"] ?? [];
+    $bundle = registration_form_document_bundle(
+        $resolved["absolute"],
         $target,
         isset($User["id"]) ? (int)$User["id"] : 0,
         $target_year,
-        $signature_bindings
+        $context_bindings,
+        true
     );
+    if (!$bundle["ok"])
+        return (new ErrorResponse("MissingField", "Contexts.".implode(", Contexts.", $bundle["missing"])));
+    $context_bindings = $bundle["bindings"];
+    $signature_bindings = $bundle["signature_bindings"];
+    $chain = $bundle["chain"];
     $chain_json = json_encode($chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($chain_json === false)
         return (new ErrorResponse("CannotEdit"));
@@ -224,6 +221,7 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
             "source_reference" => $source_reference,
             "model_hash" => $model_hash,
             "target_year" => $target_year,
+            "context_bindings" => $context_bindings,
             "signature_bindings" => $signature_bindings,
             "chain" => $chain_json,
             "staff_role" => $staff_role,
@@ -321,7 +319,7 @@ function SendUserDocumentForm($id, $data, $method, $output, $module)
         $data["target_year"] ?? 0,
         $data["document_label"] ?? "",
         (int)$User["id"],
-        $data["signature_bindings"] ?? [],
+        $data["context_bindings"] ?? [],
         $data["form_role"] ?? "Beneficiaire"
     );
     if (!$result["ok"])
@@ -1027,7 +1025,7 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_director",
+	    "am_i_director",
 	    "SubscribeUser"
 	],
 	"todolist" => [

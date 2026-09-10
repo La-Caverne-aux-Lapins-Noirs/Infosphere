@@ -1,0 +1,21 @@
+@include ".base_relance_suivi/base.dab"
+Title = "Relance — autre difficulté / prévention de rupture"
+
+[FollowUp
+  Reason = "Autre difficulté susceptible d'affecter la poursuite du parcours"
+  SupportProposal = "Un échange avec l'équipe pédagogique afin d'identifier les difficultés rencontrées et les mesures permettant la poursuite de la formation."
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Relance et prévention de rupture
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance relative à la poursuite de votre formation
+LetterSubject]
+
+{Content
+  @insert txt ($) "relance_assiduite.txt"
+}

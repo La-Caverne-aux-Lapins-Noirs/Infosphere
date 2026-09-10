@@ -129,13 +129,13 @@ function AddDesk($id, $data, $method, $output, $module)
 $Tab = [
     "POST" => [
         "" => [
-            "is_director",
+            "am_i_director",
             "AddDesk"
         ]
     ],
     "PUT" => [
         "" => [
-            "is_director",
+            "am_i_director",
             "SetDesk"
         ]
     ]

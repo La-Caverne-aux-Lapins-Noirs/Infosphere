@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/school_activity.php");
+
 function add_school($codename, $icon, $lng)
 {
     global $Configuration;
@@ -23,6 +25,9 @@ function add_school($codename, $icon, $lng)
     if ($base_url != "" && !school_base_url_is_available($base_url))
         return (new ErrorResponse("SchoolBaseUrlAlreadyUsed"));
 
+    $activity = school_activity_updates($lng);
+    if ($activity->is_error())
+        return $activity;
     $fields = [
         "id_organization" => $id_organization,
         "base_url" => $base_url == "" ? NULL : $base_url,
@@ -39,6 +44,8 @@ function add_school($codename, $icon, $lng)
         "alternation_registration_number" => trim((string)($lng["alternation_registration_number"] ?? "")),
         "alternation_registration_academy" => trim((string)($lng["alternation_registration_academy"] ?? "")),
     ];
+
+    $fields = array_merge($fields, school_activity_flags($fields), $activity->value);
 
     if (($ret = @try_insert(
         "school",

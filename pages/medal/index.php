@@ -5,7 +5,7 @@
 <?php $medals = fetch_medal(); ?>
 <div>
     <h2 class="alignable_blocks"><?=$Dictionnary["Medals"]; ?></h2>
-    <?php if (is_teacher()) { ?>
+    <?php if (am_i_teacher()) { ?>
 	<a class="alignable_blocks" href="index.php?p=FunctionMenu&amp;pp=MedalsMenu">
 	    <input type="button" value="<?=$Dictionnary["Functions"]; ?>" />
 	</a>
@@ -23,7 +23,7 @@
     </form>
 </div>
 <br />
-<?php if (is_teacher()) { ?>
+<?php if (am_i_teacher()) { ?>
    
     <script>
      function clear_formular(form)
@@ -55,18 +55,18 @@
     </script>
 <?php } ?>
 
-<?php if (is_teacher()) { ?>
+<?php if (am_i_teacher()) { ?>
     <table class="afullscreen medal_admin_layout"><tr><td class="formular_slot" style="width: 65%;">
 <?php } ?>
 <div class="fullscreen scrollable" id="medallist">
     <?php require_once ("list_medal.phtml"); ?>
 </div>
-<?php if (is_teacher()) { ?>
+<?php if (am_i_teacher()) { ?>
 
     </td><td>
 	<table class="fullscreen medal_editor_layout"><tr><td class="formular_slot">
 
-	    <?php if (is_teacher()) { ?>
+	    <?php if (am_i_teacher()) { ?>
 		<?php $js = "silent_submit(this, 'medallist');"; ?>
 		<form
 		    method="post"

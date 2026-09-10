@@ -200,7 +200,7 @@ function fetch_organization_users($id_organization, $document_role = NULL)
     $id_organization = (int)$id_organization;
     $where_role = "";
     if ($document_role !== NULL)
-        $where_role = " AND organization_user.document_role = '".db_escape($document_role)."' ";
+        $where_role = " AND FIND_IN_SET('".db_escape($document_role)."', REPLACE(organization_user.document_role, ' ', '')) > 0 ";
     return (db_select_all("
         organization_user.id as id_link,
         organization_user.id_user as id_user,
@@ -220,10 +220,10 @@ function fetch_organization_users($id_organization, $document_role = NULL)
         AND user.authority != -1
         $where_role
         ORDER BY
-            CASE organization_user.document_role
-                WHEN 'representative' THEN 0
-                WHEN 'tutor' THEN 1
-                WHEN 'contact' THEN 2
+            CASE
+                WHEN FIND_IN_SET('representative', REPLACE(organization_user.document_role, ' ', '')) > 0 THEN 0
+                WHEN FIND_IN_SET('tutor', REPLACE(organization_user.document_role, ' ', '')) > 0 THEN 1
+                WHEN FIND_IN_SET('contact', REPLACE(organization_user.document_role, ' ', '')) > 0 THEN 2
                 ELSE 3
             END,
             organization_user.id ASC
@@ -235,7 +235,9 @@ function first_organization_user_by_role(array $organization, $role)
     if (!isset($organization["contacts"]))
         return ([]);
     foreach ($organization["contacts"] as $contact)
-        if (($contact["document_role"] ?? "") == $role)
+        if (function_exists("enterprise_has_document_role")
+            ? enterprise_has_document_role($contact["document_role"] ?? "", $role)
+            : in_array($role, preg_split('/\s*[,;]\s*/', (string)($contact["document_role"] ?? ""), -1, PREG_SPLIT_NO_EMPTY), true))
             return ($contact);
     return ([]);
 }

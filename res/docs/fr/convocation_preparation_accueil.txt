@@ -1,0 +1,50 @@
+[#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Vous êtes convoqué[@IfC;Student.Gender;==;female;e] à la **journée de préparation et d'accueil** organisée en amont de votre rentrée dans le cycle **[#Variable;Cycle.Name]** de [#Variable;School.Name].
+
+[@Indent]
+
+[@Indent]Votre présence est demandée le **[#Variable;Cycle.PreparationDayDate] à [#Variable;PreparationDay.ArrivalTime]** à l'adresse suivante :
+
+[@Indent]
+
+[@Center;**[#Variable;School.TrainingAddress]**]
+
+[@Indent]
+
+[@Indent]Cette journée est consacrée à la préparation de votre arrivée. Elle vous permettra de faire connaissance avec les autres personnes de votre promotion.
+Elle vous permettra de tester vos identifiants sur nos ordinateurs et de découvrir l'intranet.
+Nous vous proposerons un atelier pour en apprendre les fonctionnalités de base et explorer les contenus déjà disponibles.
+
+Cette journée vous permettra également de traiter les derniers éléments administratifs nécessaires avant le début des activités scolaires - tel que
+l'obtention de votre carte d'étudiant[@IfC;Student.Gender;==;female;e] si vous ne l'avez pas déjà.
+
+[@Indent]
+
+[@Indent]La rentrée scolaire du cycle aura lieu le **[#Variable;Cycle.FirstDayDate]**.
+
+[@Indent]
+
+[@Indent]Merci de vous présenter muni[@IfC;Student.Gender;==;female;e] d'une pièce d'identité et, si elle vous a déjà été remise, de votre carte d'étudiant.
+[#IfC;PreparationDay.AdditionalNotice;!=;;
+[@Indent]
+
+[@Indent][#Variable;PreparationDay.AdditionalNotice]
+]
+
+[@Indent]
+
+[@Indent]En cas d'impossibilité de vous présenter à cette date, merci de prévenir l'établissement dans les meilleurs délais.
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de ma considération distinguée.
+
+[@Indent]
+
+[@Right;La direction
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[#IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

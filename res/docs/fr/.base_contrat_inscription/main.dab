@@ -8,6 +8,43 @@ MinimumSlice=1
 MaximumSlice=12
 PriceReduction=0
  
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Apprenant"
+    Auto = "Owner"
+    Required = 1
+    Signatory = "Student"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    Blank = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Directeur signataire"
+    Required = 1
+    Blank = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+  [Finance
+    Type = "finance"
+    Prefix = "Finance"
+    Label = "Responsable financier"
+    Required = 1
+    Signatory = "Finance"
+    InferFrom = "Student"
+  ]
+]
+
 [Header
   Left = [Text($,Left)
     [@Size;5] $([].Title) [@PageCounter]
@@ -65,7 +102,9 @@ Footer]
   @insert txt ($) "interieur/article13.txt",
   @insert txt ($) "interieur/article14.txt",
   @insert txt ($) "interieur/article15.txt",
-  @insert txt ($) "interieur/article16.txt",
+  @insert txt ($) "interieur/article16_debut.txt",
+  @insert txt ($) "inclusion/principes.txt",
+  @insert txt ($) "interieur/article16_fin.txt",
   @insert txt ($) "interieur/article17.txt",
   @insert txt ($) "interieur/article18.txt",
   @insert txt ($) "interieur/article19.txt",

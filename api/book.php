@@ -1,5 +1,7 @@
 <?php
 
+require_once ("tools/book_documents.php");
+
 function DisplayBooks($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -41,6 +43,22 @@ function AddBook($id, $data, $method, $output, $module)
     return ($ret);
 }
 
+function QueueBookOverdueNotice($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $loan_id = (int)($data["loan_id"] ?? 0);
+    if ((int)$id <= 0 || $loan_id <= 0)
+        bad_request();
+    $ret = book_overdue_notice_queue((int)$id, $loan_id);
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentQueuedForPrint"] ?? "Relance ajoutée aux documents à imprimer.",
+        "task_id" => (int)($ret->value["task_id"] ?? 0),
+    ]));
+}
+
 function EditBook($id, $data, $method, $output, $module)
 {
     global $Database;
@@ -66,7 +84,7 @@ function EditBook($id, $data, $method, $output, $module)
     }
     else if ($cst["status"] == 0)
     {
-	if (!is_librarian() || @$data["command"] == "cancel")
+	if (!am_i_librarian() || @$data["command"] == "cancel")
 	    // J'annule ma demande
 	    db_update_one("book_user", $cst["id"], [
 		"status" => -1,
@@ -84,7 +102,7 @@ function EditBook($id, $data, $method, $output, $module)
     else if ($cst["status"] == 1)
     {
 	// Le livre est emporté
-	if (!is_librarian() || @$data["command"] == "cancel")
+	if (!am_i_librarian() || @$data["command"] == "cancel")
 	    // J'annule ma demande
 	    db_update_one("book_user", $cst["id"], [
 		"status" => -1,
@@ -103,7 +121,7 @@ function EditBook($id, $data, $method, $output, $module)
     }
     else if ($cst["status"] == 2)
     {
-	if (!is_librarian())
+	if (!am_i_librarian())
 	    // On ne peut pas déclarer soi meme avoir rendu
 	    return (new ErrorResponse("PermissionDenied"));
 	// Le bibliothécaire annonce avoir rendu
@@ -129,9 +147,13 @@ $Tab = [
     ],
     "POST" => [
 	"" => [
-	    "is_librarian",
+	    "am_i_librarian",
 	    "AddBook",
-	]
+	],
+        "overdue_notice" => [
+            "am_i_librarian",
+            "QueueBookOverdueNotice",
+        ]
     ],
     "PUT" => [
 	"" => [
@@ -141,7 +163,7 @@ $Tab = [
     ],
     "DELETE" => [
 	"" => [
-	    "is_librarian",
+	    "am_i_librarian",
 	    "DeleteBook",
 	]
     ]

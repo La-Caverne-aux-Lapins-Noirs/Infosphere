@@ -270,7 +270,7 @@ function can_manage_relation_administrative_user($id_user)
     if (!logged_in() || !user_relation_is_administrative_contact($id_user))
         return (false);
     foreach (user_relation_managed_children($id_user) as $child)
-        if (is_identity_authority_for_user((int)$child["id"]) || is_commercial())
+        if (is_identity_authority_for_user((int)$child["id"]) || am_i_commercial())
             return (true);
     return (false);
 }
@@ -285,7 +285,7 @@ function can_manage_user_administrative_profile($id_user)
     $user = db_select_one("profile_status FROM user WHERE id = $id_user AND authority != -1");
     if ($user == NULL)
         return (false);
-    if (($user["profile_status"] ?? "") == "prospect" && is_commercial())
+    if (($user["profile_status"] ?? "") == "prospect" && am_i_commercial())
         return (true);
     return (can_manage_relation_administrative_user($id_user));
 }
@@ -300,9 +300,9 @@ function can_send_user_administrative_form($id_user)
         return (false);
     $status = $user["profile_status"] ?? "";
     if (user_relation_is_administrative_contact($id_user))
-        return (is_admin() || is_commercial() || can_manage_relation_administrative_user($id_user));
+        return (is_admin() || am_i_commercial() || can_manage_relation_administrative_user($id_user));
     if ($status == "prospect")
-        return (is_admin() || is_commercial() || is_identity_authority_for_user($id_user));
+        return (is_admin() || am_i_commercial() || is_identity_authority_for_user($id_user));
     return (false);
 }
 

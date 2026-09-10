@@ -1,0 +1,43 @@
+[#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Nous vous contactons à la suite de retards répétés constatés dans le cadre de votre formation. Ces retards peuvent perturber votre progression et le déroulement des activités ; nous souhaitons donc faire le point avec vous avant que la situation ne s'installe.
+
+[@Indent]
+
+**Éléments constatés :** [#Variable;FollowUp.Facts]
+[@IfC;FollowUp.Period;!=;;**Période concernée :** [#Variable;FollowUp.Period]
+]
+[@IfC;FollowUp.PreviousContacts;!=;;
+**Contacts ou relances déjà effectués :** [#Variable;FollowUp.PreviousContacts]
+]
+
+[@Indent]
+
+[@Indent]Nous souhaitons nous assurer que cette situation ne résulte pas d'une difficulté pédagogique, personnelle, sociale, matérielle, administrative ou d'accessibilité pour laquelle un accompagnement pourrait être mis en place.
+
+**Mesure proposée afin de favoriser la poursuite du parcours :** [#Variable;FollowUp.SupportProposal]
+[@IfC;FollowUp.MeetingProposal;!=;;
+**Proposition de rendez-vous :** [#Variable;FollowUp.MeetingProposal]
+]
+[@Indent][@IfC;FollowUp.ResponseDeadline;!=;;
+Nous vous remercions de prendre contact avec [#Variable;School.Name] au plus tard le **[#Variable;FollowUp.ResponseDeadline]**, afin que nous puissions faire le point avec vous et convenir des suites adaptées.
+;
+Nous vous remercions de prendre contact avec [#Variable;School.Name] dans les meilleurs délais, afin que nous puissions faire le point avec vous et convenir des suites adaptées.
+]
+
+[@Indent]
+
+[@Indent]Cette démarche s'inscrit dans le suivi de votre engagement et dans la prévention des ruptures de parcours.
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de mes salutations distinguées.
+
+[@Indent]
+
+[@Right;Pour [#Variable;School.Name]
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[@IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

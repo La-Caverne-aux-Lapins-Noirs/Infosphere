@@ -1,5 +1,23 @@
 
 Document = ""
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+]
+
   
 Titre = "Certificat de scolarité"
 

@@ -1,0 +1,23 @@
+[@Indent][#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Le livre **« [#Variable;BookLoan.Book] »**, emprunté auprès de la bibliothèque de [#Variable;School.Name], devait être rendu au plus tard le **[#Variable;BookLoan.DueDate]**.
+
+[@Indent]À la date d'édition de ce courrier, son retour n'a pas encore été enregistré.[@IfC;BookLoan.DaysLate;>;0; Le retard constaté est de **[#Variable;BookLoan.DaysLate] jour(s)**.;]
+
+[@Indent]
+
+[@Indent]Nous vous remercions de rapporter ce document à l'établissement dès que possible ou de prendre contact avec la bibliothèque si sa restitution pose une difficulté particulière.
+
+[@Indent]
+
+[@Indent]Si le livre a été rendu entre-temps, vous pouvez naturellement ne pas tenir compte de ce rappel.
+
+[@Indent]
+
+[@Indent]Cordialement,
+
+[@Indent]
+
+[@Right;La bibliothèque de [#Variable;School.Name]]

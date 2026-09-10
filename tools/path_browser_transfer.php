@@ -118,13 +118,13 @@ function path_browser_transfer_context($page, $id, $type, $language)
         return (["root" => path_browser_transfer_activity_root((int)$id, $type, $language), "prefix" => "", "kind" => "activity"]);
     if ($page === "medal" && $type === "ressource")
     {
-        if (!is_teacher())
+        if (!am_i_teacher())
             forbidden();
         return (["root" => $Configuration->MedalsDir(".ressources"), "prefix" => "", "kind" => "medal"]);
     }
     if ($page === "doc" && $type === "file")
     {
-        if (!is_teacher())
+        if (!am_i_teacher())
             forbidden();
         return (["root" => $Configuration->DocDir(), "prefix" => "", "kind" => "doc"]);
     }

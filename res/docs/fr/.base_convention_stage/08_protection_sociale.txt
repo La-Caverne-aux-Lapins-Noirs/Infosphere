@@ -1,35 +1,44 @@
 
+[@NewPage]
+
 # Article 8 - Régime de protection sociale
 
-Pendant la durée du stage, le/la stagiaire reste affilié(e) à son régime de
+[@Size;3]
+[@Columns;2;
+[@Indent]Pendant la durée du stage, le/la stagiaire reste affilié(e) à son régime de
 sécurité sociale antérieur. Il doit impérativement vérifier ses conditions de
-couverture maladie et fournir une attestation de couverture à l’EFRITS au moment
+couverture maladie et fournir une attestation de couverture à l’établissement [#Variable;School.Name] au moment
 de la signature de la convention de stage et dans tous les cas avant le départ.
+]
 
 ## Gratification inférieure à 15% du plafond horaire de la sécurité sociale
 
-La gratification de stage n'est pas soumise à cotisation sociale. 
+[@Size;3]
+[@Columns;2;
+[@Indent]La gratification de stage n'est pas soumise à cotisation sociale.
 
-Le stagiaire bénéficie de la législation sur les accidents de travail au titre du
+[@Indent]Le stagiaire bénéficie de la législation sur les accidents de travail au titre du
 régime étudiant de l'article L.412-8 2° du code de la sécurité sociale lorsqu’il a
 ce statut. 
 
-En cas d'accident ou de maladie professionnelle survenant au stagiaire, soit au
+[@Indent]En cas d'accident ou de maladie professionnelle survenant au stagiaire, soit au
 cours d'activités dans l'organisme d’accueil, soit au cours du trajet, soit sur les
 lieux rendus utiles pour les besoins du stage, l'organisme d'accueil envoie la
 déclaration à la Caisse Primaire d'Assurance Maladie en mentionnant l'établissement
 d'enseignement comme employeur, avec copie à l'établissement d'enseignement.
+]
 
 ## Gratification supérieure à 15% du plafond horaire de la sécurité sociale
 
-Les cotisations sociales sont calculées sur le différentiel entre le montant de
-la gratification et 15 % du plafond horaire de la Sécurité Sociale. 
-
-Le ou la stagiaire bénéficie de la couverture légale en application des
+[@Size;3]
+[@Columns;2;
+[@Indent]Les cotisations sociales sont calculées sur le différentiel entre le montant de
+la gratification et 15 % du plafond horaire de la Sécurité Sociale. Le ou la stagiaire bénéficie de la couverture légale en application des
 dispositions des articles L.411-1 et suivants du code de la Sécurité Sociale. En
 cas d'accident survenant au/à la stagiaire soit au cours des activités dans
 l'organisme d’accueil, soit au cours du trajet, soit sur des lieux rendus utiles
 pour les besoins de son stage, l'organisme d'accueil effectue toutes les démarches
-nécessaires auprès de la Caisse Primaire d'Assurance Maladie et informe l’EFRITS
+nécessaires auprès de la Caisse Primaire d'Assurance Maladie et informe l’établissement [#Variable;School.Name]
 dans les meilleurs délais.
+]
 

@@ -1,9 +1,11 @@
 <?php
 
 require_once (__DIR__."/document_signatures.php");
+require_once (__DIR__."/document_context.php");
 require_once (__DIR__."/document_sources.php");
 require_once (__DIR__."/form_field.php");
 require_once (__DIR__."/public_invitation.php");
+require_once (__DIR__."/user_identity.php");
 
 function registration_form_kinds()
 {
@@ -30,57 +32,34 @@ function registration_form_document_signature_consent_text()
     return ("Je confirme avoir pris connaissance du document affiché et demande que la signature tracée soit associée à cette version précise du document.");
 }
 
-function registration_form_signature_source_entry($source, $slot, array $user, $id_creator, $school_codename)
+function registration_form_document_context_bindings($model_file, array $user, $bindings)
 {
-    if (!document_signature_slot_is_valid($slot))
-        return (NULL);
-    $prefix = "SignatureSources.".$slot;
-    $student_id = $user["codename"] ?? (string)$user["id"];
-    switch ($source)
-    {
-        case "Student": return (["type" => "student", "prefix" => $prefix, "id" => $student_id, "signatory" => $slot]);
-        case "Director": return ($school_codename != "" ? ["type" => "director", "prefix" => $prefix, "id" => $school_codename, "signatory" => $slot] : NULL);
-        case "Legal1": return (["type" => "legal1", "prefix" => $prefix, "id" => $student_id, "signatory" => $slot]);
-        case "Legal2": return (["type" => "legal2", "prefix" => $prefix, "id" => $student_id, "signatory" => $slot]);
-        case "Finance": return (["type" => "finance", "prefix" => $prefix, "id" => $student_id, "signatory" => $slot]);
-        case "Generator": return ((int)$id_creator > 0 ? ["type" => "user", "prefix" => $prefix, "id" => (int)$id_creator, "signatory" => $slot] : NULL);
-    }
-    return (NULL);
+    return (document_context_normalize_bindings(
+        $bindings,
+        document_context_model_schema($model_file)
+    ));
 }
 
-function registration_form_document_chain(array $user, $id_creator, $target_year, array $signature_bindings = [])
+function registration_form_document_bundle($model_file, array $user, $id_creator, $target_year, $context_bindings = [], $strict = true)
 {
-    $chain = [];
-    $school_ref = document_context_first_school_for_user((int)$user["id"]);
-    $school = NULL;
-    if (is_array($school_ref) && isset($school_ref["id_school"]))
-        $school = fetch_school((int)$school_ref["id_school"]);
-    $school_codename = is_array($school) ? ($school["codename"] ?? "") : "";
-    if ($school_codename != "")
-        $chain[] = ["type" => "school", "prefix" => "School", "id" => $school_codename];
-    $student_id = $user["codename"] ?? (string)$user["id"];
-    $chain[] = ["type" => "student", "prefix" => "Student", "id" => $student_id];
-
-    foreach ($signature_bindings as $slot => $source)
-    {
-        $entry = registration_form_signature_source_entry($source, $slot, $user, $id_creator, $school_codename);
-        if ($entry != NULL)
-            $chain[] = $entry;
-    }
-
+    $context_bindings = registration_form_document_context_bindings($model_file, $user, $context_bindings);
     $target_year = (int)$target_year;
+    $fields = [];
     if ($target_year >= 1 && $target_year <= 5)
     {
-        $class = "EF".$target_year;
-        $chain[] = ["type" => "field", "key" => "Student.ChosenClass", "value" => $class];
-        $chain[] = ["type" => "field", "key" => "Student.CurrentYear", "value" => (string)$target_year];
-        if (($student_slot = array_search("Student", $signature_bindings, true)) !== false)
-        {
-            $chain[] = ["type" => "field", "key" => "SignatureSources.".$student_slot.".ChosenClass", "value" => $class];
-            $chain[] = ["type" => "field", "key" => "SignatureSources.".$student_slot.".CurrentYear", "value" => (string)$target_year];
-        }
+        $fields["Student.ChosenClass"] = "EF".$target_year;
+        $fields["Student.CurrentYear"] = (string)$target_year;
     }
-    return ($chain);
+    return (document_context_model_bundle(
+        $model_file,
+        $context_bindings,
+        $fields,
+        [
+            "current_user_id" => (int)$id_creator,
+            "owner_user_id" => (int)($user["id"] ?? 0),
+            "strict" => (bool)$strict,
+        ]
+    ));
 }
 
 function registration_form_build_document_schema(array $metadata, $role = "")
@@ -886,7 +865,7 @@ function registration_form_create_profile_invitation($id_user, $id_creator)
     ]);
 }
 
-function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $signature_bindings = [], $form_role = "Beneficiaire")
+function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $context_bindings = [], $form_role = "Beneficiaire")
 {
     global $Database;
 
@@ -920,13 +899,19 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     $workflow_mailbox = function_exists("document_model_workflow_mailbox")
         ? document_model_workflow_mailbox($resolved_reference["absolute"]) : "";
 
-    $signature_schema = document_signature_model_slots($resolved_reference["absolute"]);
-    $signature_slots = array_keys($signature_schema);
-    $signature_bindings = document_signature_normalize_bindings($signature_bindings, $signature_slots);
-    $missing_signatures = document_signature_missing_required_bindings($signature_schema, $signature_bindings);
-    if (count($missing_signatures))
-        return (["ok" => false, "error" => "MissingField", "details" => "Signatures.".implode(", Signatures.", $missing_signatures)]);
-    $chain = registration_form_document_chain($user, $id_creator, $target_year, $signature_bindings);
+    $bundle = registration_form_document_bundle(
+        $resolved_reference["absolute"],
+        $user,
+        $id_creator,
+        $target_year,
+        $context_bindings,
+        true
+    );
+    if (!$bundle["ok"])
+        return (["ok" => false, "error" => "MissingField", "details" => "Contexts.".implode(", Contexts.", $bundle["missing"])]);
+    $context_bindings = $bundle["bindings"];
+    $signature_bindings = $bundle["signature_bindings"];
+    $chain = $bundle["chain"];
     $chain_json = json_encode($chain, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($chain_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
@@ -968,6 +953,7 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
         "label" => trim((string)$label),
         "target_year" => $target_year,
         "model_hash" => strtolower($model_hash),
+        "context_bindings" => $context_bindings,
         "signature_bindings" => $signature_bindings,
         "form_role" => $form_role,
         "form_roles" => $form_roles,
@@ -1037,72 +1023,7 @@ function registration_form_revoke_token($token)
 
 function registration_form_store_png($source, $target)
 {
-    if (!is_uploaded_file($source) || filesize($source) > 4 * 1024 * 1024)
-        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
-    $info = @getimagesize($source);
-    if (!$info || $info[2] != IMAGETYPE_PNG || $info[0] < 20 || $info[1] < 20 || $info[0] > 2000 || $info[1] > 1000)
-        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
-    if (!function_exists("imagecreatefrompng") || !function_exists("imagepng"))
-        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
-
-    // Decode and regenerate the upload instead of keeping arbitrary PNG data.
-    // The alpha channel is preserved, but every visible pixel is forced to
-    // black so the stored file always matches the signature contract.
-    $input = @imagecreatefrompng($source);
-    if ($input === false)
-        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
-    $output = imagecreatetruecolor($info[0], $info[1]);
-    if ($output === false)
-    {
-        imagedestroy($input);
-        return (["ok" => false, "error" => "CannotWritePngFile"]);
-    }
-    imagealphablending($output, false);
-    imagesavealpha($output, true);
-    $colors = [];
-    $visible_pixels = 0;
-    $truecolor = imageistruecolor($input);
-    for ($y = 0; $y < $info[1]; ++$y)
-        for ($x = 0; $x < $info[0]; ++$x)
-        {
-            $pixel = imagecolorat($input, $x, $y);
-            $alpha = $truecolor
-                ? (($pixel >> 24) & 0x7F)
-                : (imagecolorsforindex($input, $pixel)["alpha"] ?? 127);
-            if ($alpha < 120)
-                ++$visible_pixels;
-            if (!isset($colors[$alpha]))
-                $colors[$alpha] = imagecolorallocatealpha($output, 0, 0, 0, $alpha);
-            imagesetpixel($output, $x, $y, $colors[$alpha]);
-        }
-    imagedestroy($input);
-    if ($visible_pixels < 8)
-    {
-        imagedestroy($output);
-        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
-    }
-
-    if (($ret = new_directory($target))->is_error())
-    {
-        imagedestroy($output);
-        return (["ok" => false, "error" => "CannotWritePngFile", "details" => strval($ret)]);
-    }
-    $tmp = tempnam(dirname($target), ".signature-");
-    if ($tmp === false || !@imagepng($output, $tmp, 6))
-    {
-        imagedestroy($output);
-        if ($tmp !== false)
-            @unlink($tmp);
-        return (["ok" => false, "error" => "CannotWritePngFile"]);
-    }
-    imagedestroy($output);
-    @chmod($tmp, 0640);
-    if (!@rename($tmp, $target))
-    {
-        @unlink($tmp);
-        return (["ok" => false, "error" => "CannotWritePngFile"]);
-    }
-    return (["ok" => true]);
+    return (user_identity_store_signature_png($source, $target, true));
 }
 
 function registration_form_handle_signatures(array $student, array $groups, array &$answers, array $delete_groups = [])

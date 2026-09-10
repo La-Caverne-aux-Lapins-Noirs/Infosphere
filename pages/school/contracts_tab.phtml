@@ -3,6 +3,16 @@ require_once (__DIR__."/../../tools/document_sources.php");
 
 $directors = $school["director"] ?? [];
 $contracts = get_contract_document_sources();
+$default_director_id = 0;
+foreach ($directors as $director)
+{
+    $candidate = (int)($director["id_director"] ?? $director["id_user"] ?? $director["id"] ?? 0);
+    if ($candidate > 0)
+    {
+        $default_director_id = $candidate;
+        break ;
+    }
+}
 ?>
 
 <style>
@@ -48,7 +58,8 @@ $contracts = get_contract_document_sources();
     <p>
         Ces documents sont générés pour l’école
         <b><?=htmlspecialchars($school["name"] ?? $school["codename"], ENT_QUOTES); ?></b>,
-        sans élève, parent, responsable financier ni entreprise.
+        sans élève, parent, responsable financier ni entreprise. L’école et le
+        directeur éventuellement sélectionné restent des contextes visibles du modèle vierge.
     </p>
 
     <?php if (!count($contracts)) { ?>
@@ -82,15 +93,15 @@ $contracts = get_contract_document_sources();
                             <input type="hidden" name="docref_<?=$hash; ?>" value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>" />
                             <input type="hidden" name="form_file" value="<?=htmlspecialchars($contract["editor_path"], ENT_QUOTES); ?>" />
                             <input type="hidden" name="blank_document" value="1" />
-                            <input type="hidden" name="chain" value="[]" />
+                            <input type="hidden" name="context_bindings" value="{}" />
                             <select name="director_id">
-                                <option value="">Aucun signataire</option>
+                                <option value="">Sans directeur signataire</option>
                                 <?php foreach ($directors as $director) { ?>
                                     <?php
                                     $id_director = (int)($director["id_director"] ?? $director["id_user"] ?? $director["id"] ?? -1);
                                     ?>
                                     <?php if ($id_director > 0) { ?>
-                                        <option value="<?=$id_director; ?>">
+                                        <option value="<?=$id_director; ?>" <?=$id_director === $default_director_id ? "selected" : ""; ?>>
                                             <?=htmlspecialchars($director["identity"] ?? $director["codename"] ?? (string)$id_director, ENT_QUOTES); ?>
                                         </option>
                                     <?php } ?>
@@ -110,15 +121,15 @@ $contracts = get_contract_document_sources();
 </section>
 
 <script>
-function school_contract_chain(form)
+function school_contract_context_bindings(form)
 {
-    var chain = [
-        {type: 'school', prefix: 'School', id: '<?=addslashes($school["codename"]); ?>'}
-    ];
+    var bindings = {
+        School: <?=json_encode((string)$school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+    };
     var director = form.querySelector('[name="director_id"]').value;
     if (director != '')
-        chain.push({type: 'user', prefix: 'SignatureSources.Director', id: director, signatory: 'Director'});
-    return chain;
+        bindings.Director = director;
+    return bindings;
 }
 
 function school_contract_open_form(form, hash)
@@ -136,14 +147,13 @@ function school_contract_open_form(form, hash)
         '&output=' + encodeURIComponent(output) +
         '&mode=docbuilder' +
         '&form_role=Etablissement' +
-        '&chain=' + encodeURIComponent(JSON.stringify(school_contract_chain(form)));
+        '&context_bindings=' + encodeURIComponent(JSON.stringify(school_contract_context_bindings(form)));
     window.open(url, '_blank', 'noopener');
 }
 
 function school_contract_prepare(form)
 {
-    var chain = school_contract_chain(form);
-    form.querySelector('[name="chain"]').value = JSON.stringify(chain);
+    form.querySelector('[name="context_bindings"]').value = JSON.stringify(school_contract_context_bindings(form));
     form.querySelector('[name="director_id"]').disabled = true;
     setTimeout(function() { form.querySelector('[name="director_id"]').disabled = false; }, 0);
     return true;

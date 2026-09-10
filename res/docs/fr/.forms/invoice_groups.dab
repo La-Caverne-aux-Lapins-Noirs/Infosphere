@@ -1,3 +1,46 @@
+[Facture
+  Label = "Facture"
+  [Fields
+    [Invoice
+      [Reference
+        Label = "Numéro de facture"
+        Required = 1
+      ]
+      [Label
+        Label = "Désignation"
+        Required = 1
+      ]
+      [Quantity
+        Label = "Quantité"
+      ]
+      [UnitPrice
+        Label = "Prix unitaire HT"
+        Required = 1
+      ]
+      [VAT
+        Label = "TVA (%)"
+      ]
+      [IssueDateLabel
+        Label = "Date d’émission"
+      ]
+      [DueDateLabel
+        Label = "Date d’échéance"
+      ]
+      [TypeLabel
+        Label = "Type de facture"
+      ]
+      [Currency
+        Label = "Devise (EUR par défaut)"
+      ]
+      [VATExemption
+        Label = "Mention d’exonération / TVA non applicable"
+      ]
+      [Note
+        Label = "Note de facture"
+      ]
+    ]
+  ]
+]
 [Beneficiaire
   Label = "Bénéficiaire"
   [Fields

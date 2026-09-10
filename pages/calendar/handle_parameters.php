@@ -68,7 +68,7 @@ else
 $wlist["type"] = "";
 if (isset($_COOKIE["filter_type"]) && strtolower($_COOKIE["filter_type"]) == "template")
 {
-    if (is_teacher())
+    if (am_i_teacher())
     {
 	$wlist["type"] = "template";
 	$start = $start = first_day_of_week(0);

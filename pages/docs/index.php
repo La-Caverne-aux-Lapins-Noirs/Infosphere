@@ -1,130 +1,381 @@
 <?php
 require_once ("get_docs.php");
 require_once (__DIR__."/../../tools/document_workflow.php");
+require_once (__DIR__."/../../tools/document_print.php");
+require_once (__DIR__."/../../tools/document_context_schema.php");
 ?>
 <div class="documents_page">
 <h2 class="alignable_blocks"><?=$Dictionnary["Documents"]; ?></h2>
 
 <script>
+var docContextActiveReference = '';
+var docContextAutofillTimer = null;
+var docContextAutofillSerial = 0;
+
 function doc_toggle(id, elem)
 {
     var input = document.getElementById(id);
-    input.value = input.value == '0' ? '1' : '0';
-    elem.classList.toggle('selected');
+    var selecting = input.value == '0';
+    input.value = selecting ? '1' : '0';
+    elem.classList.toggle('selected', selecting);
     var completion = document.querySelector('.documents_generate_panel [name="form_output"]');
     if (completion)
         completion.value = '';
+    doc_context_refresh_model();
 }
 
-function doc_chain_add(type, prefix_value, signatory_value)
+function doc_search_normalize(value)
 {
-    var list = document.getElementById('doc_chain_list');
-    var row = document.createElement('div');
-    row.className = 'doc_chain_row';
-    row.innerHTML =
-        '<select class="doc_chain_type" onchange="doc_chain_refresh(this.parentNode);">' +
-        '<option value="student">Élève</option>' +
-        '<option value="teacher">Enseignant</option>' +
-        '<option value="director">Directeur</option>' +
-        '<option value="commercial">Commercial</option>' +
-        '<option value="librarian">Bibliothécaire</option>' +
-        '<option value="secretariat">Secrétariat</option>' +
-        '<option value="school">École</option>' +
-        '<option value="organization">Entreprise / organisation</option>' +
-        '<option value="parent">Parent</option>' +
-        '<option value="tutor">Tuteur entreprise</option>' +
-        '<option value="jury">Jury</option>' +
-        '<option value="title_session">Session de titre</option>' +
-        '<option value="user">Utilisateur exact</option>' +
-        '<option value="field">Champ libre</option>' +
-        '</select>' +
-        '<input class="doc_chain_prefix" type="text" placeholder="Préfixe Dabsic" />' +
-        '<input class="doc_chain_id" type="text" placeholder="id ou codename" />' +
-        '<input class="doc_chain_key" type="text" placeholder="Champ" style="display:none;" />' +
-        '<input class="doc_chain_value" type="text" placeholder="Valeur" style="display:none;" />' +
-        '<input class="doc_chain_signatory" type="text" placeholder="Rôle de signature (optionnel)" />' +
-        '<input type="button" value="↑" onclick="doc_chain_move(this.parentNode, -1);" />' +
-        '<input type="button" value="↓" onclick="doc_chain_move(this.parentNode, 1);" />' +
-        '<input type="button" value="×" onclick="this.parentNode.remove(); doc_chain_serialize();" />';
-    list.appendChild(row);
-    row.querySelector('.doc_chain_type').value = type || 'user';
-    row.querySelector('.doc_chain_prefix').value = prefix_value || '';
-    row.querySelector('.doc_chain_signatory').value = signatory_value || '';
-    doc_chain_refresh(row);
+    value = String(value || '').toLowerCase();
+    if (typeof value.normalize === 'function')
+        value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return value.trim();
 }
 
-function doc_chain_refresh(row)
+function doc_filter_documents(value)
 {
-    var type = row.querySelector('.doc_chain_type').value;
-    var prefix = row.querySelector('.doc_chain_prefix');
-    var id = row.querySelector('.doc_chain_id');
-    var key = row.querySelector('.doc_chain_key');
-    var value = row.querySelector('.doc_chain_value');
-    var signatory = row.querySelector('.doc_chain_signatory');
-    key.style.display = type == 'field' ? '' : 'none';
-    value.style.display = type == 'field' ? '' : 'none';
-    prefix.style.display = type == 'field' ? 'none' : '';
-    id.style.display = type == 'field' ? 'none' : '';
-    signatory.style.display = type == 'field' ? 'none' : '';
-    if (['teacher', 'director', 'commercial', 'librarian', 'secretariat'].indexOf(type) != -1)
-        id.placeholder = 'école, vide = école précédente';
-    else if (type == 'parent')
-        id.placeholder = 'enfant, vide = élève/utilisateur précédent';
-    else if (type == 'tutor')
-        id.placeholder = 'entreprise, vide = entreprise précédente';
-    else if (type == 'school')
-        id.placeholder = 'école, vide = école précédente';
-    else if (type == 'organization')
-        id.placeholder = 'entreprise / organisation';
-    else if (type == 'jury')
-        id.placeholder = 'jury: id ou codename';
-    else if (type == 'title_session')
-        id.placeholder = 'id de la session de titre';
-    else
-        id.placeholder = 'id ou codename';
-    doc_chain_serialize();
+    var list = document.getElementById('doc_document_list');
+    if (!list)
+        return;
+
+    var needle = doc_search_normalize(value);
+    var visibleSources = {};
+    list.querySelectorAll('.doc_document_choice').forEach(function (item) {
+        var haystack = doc_search_normalize(
+            (item.textContent || '') + ' ' +
+            (item.getAttribute('title') || '') + ' ' +
+            (item.getAttribute('data-reference') || '')
+        );
+        var visible = needle === '' || haystack.indexOf(needle) !== -1;
+        item.style.display = visible ? '' : 'none';
+        if (visible)
+            visibleSources[item.getAttribute('data-doc-source') || ''] = true;
+    });
+
+    list.querySelectorAll('.doc_source_title').forEach(function (title) {
+        var source = title.getAttribute('data-doc-source') || '';
+        title.style.display = visibleSources[source] ? '' : 'none';
+    });
 }
 
-function doc_chain_move(row, delta)
+function doc_context_selected_items()
 {
-    var parent = row.parentNode;
-    if (delta < 0 && row.previousElementSibling)
-        parent.insertBefore(row, row.previousElementSibling);
-    else if (delta > 0 && row.nextElementSibling)
-        parent.insertBefore(row.nextElementSibling, row);
-    doc_chain_serialize();
+    var form = document.querySelector('.documents_generate_panel');
+    return form ? Array.prototype.slice.call(form.querySelectorAll('.doc_document_choice.selected')) : [];
 }
 
-function doc_chain_serialize()
+function doc_context_schema()
 {
-    var rows = document.getElementsByClassName('doc_chain_row');
-    var chain = [];
-    for (var i = 0; i < rows.length; ++i)
+    var schema = {};
+    doc_context_selected_items().forEach(function (item) {
+        var current = {};
+        try { current = JSON.parse(item.getAttribute('data-contexts') || '{}'); }
+        catch (e) { current = {}; }
+        Object.keys(current).forEach(function (name) {
+            var definition = current[name] || {};
+            if (!schema[name])
+            {
+                schema[name] = Object.assign({}, definition);
+                schema[name].infer_from = (definition.infer_from || []).slice();
+                return;
+            }
+            var merged = schema[name];
+            merged.required = !!merged.required || !!definition.required;
+            merged.infer_from = Array.from(new Set((merged.infer_from || []).concat(definition.infer_from || [])));
+            if (!merged.auto && definition.auto) merged.auto = definition.auto;
+            if (!merged.placeholder && definition.placeholder) merged.placeholder = definition.placeholder;
+            if (!merged.signatory && definition.signatory) merged.signatory = definition.signatory;
+            if (!merged.label && definition.label) merged.label = definition.label;
+            if (merged.type && definition.type && merged.type !== definition.type)
+                merged.conflict = true;
+        });
+    });
+    return schema;
+}
+
+function doc_context_bindings(includeAutomatic)
+{
+    if (typeof includeAutomatic === 'undefined')
+        includeAutomatic = true;
+    var out = {};
+    document.querySelectorAll('#doc_context_list .doc_context_row').forEach(function (row) {
+        if (!includeAutomatic && row.getAttribute('data-context-origin') === 'automatic')
+            return;
+        var input = row.querySelector('[data-context-value]');
+        var name = row.getAttribute('data-context-name') || '';
+        var value = input ? input.value.trim() : '';
+        if (name && value)
+            out[name] = value;
+    });
+    return out;
+}
+
+function doc_context_serialize()
+{
+    var input = document.getElementById('doc_context_bindings');
+    if (input)
+        input.value = JSON.stringify(doc_context_bindings());
+}
+
+function doc_context_schedule_autofill()
+{
+    if (docContextAutofillTimer !== null)
+        window.clearTimeout(docContextAutofillTimer);
+    docContextAutofillTimer = window.setTimeout(function () {
+        docContextAutofillTimer = null;
+        doc_context_autofill();
+    }, 180);
+}
+
+function doc_context_apply_autofill(payload)
+{
+    var bindings = payload && payload.bindings ? payload.bindings : {};
+    var automatic = new Set(payload && Array.isArray(payload.automatic) ? payload.automatic : []);
+    var explicit = doc_context_bindings(false);
+
+    document.querySelectorAll('#doc_context_list .doc_context_row[data-context-origin="automatic"]').forEach(function (row) {
+        var name = row.getAttribute('data-context-name') || '';
+        if (!automatic.has(name) || !bindings[name] || explicit[name])
+            row.remove();
+    });
+
+    automatic.forEach(function (name) {
+        if (explicit[name] || !bindings[name])
+            return;
+        var row = doc_context_find_row(name);
+        if (!row)
+            row = doc_context_add(name, bindings[name], 'automatic', false);
+        if (!row)
+            return;
+        row.setAttribute('data-context-origin', 'automatic');
+        row.classList.add('doc_context_row_automatic');
+        var definition = doc_context_schema()[name] || {};
+        var label = row.querySelector('label');
+        if (label)
+            label.textContent = (definition.label || name) + (definition.required ? ' *' : '') + ' — automatique';
+        var input = row.querySelector('[data-context-value]');
+        if (input)
+            input.value = bindings[name];
+    });
+    doc_context_serialize();
+    doc_context_refresh_buttons();
+}
+
+function doc_context_autofill()
+{
+    var selected = doc_context_selected_items();
+    if (!selected.length)
+        return;
+    var request = ++docContextAutofillSerial;
+    var data = new FormData();
+    selected.forEach(function (item) {
+        var hash = item.getAttribute('data-form-hash') || '';
+        var reference = item.getAttribute('data-reference') || '';
+        if (!hash || !reference)
+            return;
+        data.set('doc_' + hash, '1');
+        data.set('docref_' + hash, reference);
+    });
+    data.set('context_bindings', JSON.stringify(doc_context_bindings(false)));
+    fetch('/api/doc/0/context', {method: 'POST', body: data, credentials: 'same-origin'})
+        .then(function (response) { return response.json(); })
+        .then(function (payload) {
+            if (request !== docContextAutofillSerial)
+                return;
+            if (!payload || payload.result !== 'ok')
+            {
+                doc_generation_set_error(payload && payload.msg ? payload.msg : 'Impossible de compléter automatiquement le contexte.');
+                return;
+            }
+            doc_context_apply_autofill(payload);
+        })
+        .catch(function () {
+            if (request === docContextAutofillSerial)
+                doc_generation_set_error('Impossible de compléter automatiquement le contexte.');
+        });
+}
+
+function doc_context_placeholder(definition)
+{
+    if (definition.placeholder)
+        return definition.placeholder;
+    switch ((definition.type || '').toLowerCase())
     {
-        var row = rows[i];
-        var type = row.querySelector('.doc_chain_type').value;
-        if (type == 'field')
+        case 'school': return 'id ou nom de code de l’école';
+        case 'cycle': return 'id ou nom de code du cycle';
+        case 'title_session': return 'id de la session de titre';
+        case 'organization': return 'id ou nom de l’organisation';
+        case 'tutor': return 'id ou nom de code du tuteur';
+        case 'jury': return 'id ou nom de code du juré';
+        case 'student': return 'id ou nom de code de l’élève';
+        default: return 'id ou nom de code';
+    }
+}
+
+function doc_context_find_row(name)
+{
+    var rows = document.querySelectorAll('#doc_context_list [data-context-name]');
+    for (var i = 0; i < rows.length; ++i)
+        if ((rows[i].getAttribute('data-context-name') || '') === name)
+            return rows[i];
+    return null;
+}
+
+function doc_context_remove(row)
+{
+    row.remove();
+    doc_context_serialize();
+    doc_context_refresh_buttons();
+    doc_context_schedule_autofill();
+}
+
+function doc_context_add(name, value, origin, focus)
+{
+    var schema = doc_context_schema();
+    var definition = schema[name];
+    if (!definition)
+        return null;
+    if (typeof value === 'undefined') value = '';
+    if (!origin) origin = 'explicit';
+    if (typeof focus === 'undefined') focus = true;
+    var list = document.getElementById('doc_context_list');
+    var existing = doc_context_find_row(name);
+    if (existing)
+    {
+        if (origin === 'explicit')
         {
-            var key = row.querySelector('.doc_chain_key').value.trim();
-            if (key != '')
-                chain.push({type: type, key: key, value: row.querySelector('.doc_chain_value').value});
+            existing.setAttribute('data-context-origin', 'explicit');
+            existing.classList.remove('doc_context_row_automatic');
+            var existingLabel = existing.querySelector('label');
+            if (existingLabel)
+                existingLabel.textContent = (definition.label || name) + (definition.required ? ' *' : '');
+        }
+        var existingInput = existing.querySelector('[data-context-value]');
+        if (existingInput && value !== '')
+            existingInput.value = value;
+        if (existingInput && focus)
+            existingInput.focus();
+        return existing;
+    }
+
+    var row = document.createElement('div');
+    row.className = 'doc_context_row' + (origin === 'automatic' ? ' doc_context_row_automatic' : '');
+    row.setAttribute('data-context-name', name);
+    row.setAttribute('data-context-origin', origin);
+
+    var label = document.createElement('label');
+    label.textContent = (definition.label || name) + (definition.required ? ' *' : '') + (origin === 'automatic' ? ' — automatique' : '');
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.setAttribute('data-context-value', '1');
+    input.placeholder = doc_context_placeholder(definition);
+    input.value = value;
+    input.addEventListener('input', function () {
+        row.setAttribute('data-context-origin', 'explicit');
+        row.classList.remove('doc_context_row_automatic');
+        label.textContent = (definition.label || name) + (definition.required ? ' *' : '');
+        doc_context_serialize();
+        doc_context_refresh_buttons();
+        doc_context_schedule_autofill();
+    });
+    var remove = document.createElement('input');
+    remove.type = 'button';
+    remove.value = '×';
+    remove.addEventListener('click', function () { doc_context_remove(row); });
+
+    row.appendChild(label);
+    row.appendChild(input);
+    row.appendChild(remove);
+    list.appendChild(row);
+    doc_context_serialize();
+    doc_context_refresh_buttons();
+    if (focus) input.focus();
+    return row;
+}
+
+function doc_context_refresh_buttons()
+{
+    var buttons = document.getElementById('doc_context_buttons');
+    var status = document.getElementById('doc_context_status');
+    if (!buttons || !status)
+        return;
+    buttons.innerHTML = '';
+
+    var selected = doc_context_selected_items();
+    if (selected.length == 0)
+    {
+        status.textContent = 'Sélectionnez un ou plusieurs documents.';
+        return;
+    }
+
+    var schema = doc_context_schema();
+    var names = Object.keys(schema);
+    if (!names.length)
+    {
+        status.textContent = 'Ce modèle ne déclare aucun contexte composable.';
+        return;
+    }
+
+    var bindings = doc_context_bindings();
+    var missing = [];
+    names.forEach(function (name) {
+        var definition = schema[name];
+        var row = doc_context_find_row(name);
+        var explicit = !!bindings[name];
+        var automatic = explicit && row && row.getAttribute('data-context-origin') === 'automatic';
+        if (definition.required && !explicit)
+            missing.push(definition.label || name);
+
+        var button = document.createElement('input');
+        button.type = 'button';
+        if (explicit)
+        {
+            button.value = '✓ ' + (definition.label || name) + (automatic ? ' (automatique)' : '');
+            button.disabled = true;
         }
         else
         {
-            var entry = {
-                type: type,
-                prefix: row.querySelector('.doc_chain_prefix').value.trim(),
-                id: row.querySelector('.doc_chain_id').value.trim()
-            };
-            var signatory = row.querySelector('.doc_chain_signatory').value.trim();
-            if (signatory != '')
-                entry.signatory = signatory;
-            chain.push(entry);
+            button.value = '+ ' + (definition.label || name) + (definition.required ? ' *' : '');
+            button.addEventListener('click', function () { doc_context_add(name); });
         }
-    }
-    document.getElementById('doc_chain').value = JSON.stringify(chain);
+        buttons.appendChild(button);
+    });
+
+    var conflicts = names.filter(function (name) { return !!schema[name].conflict; });
+    if (conflicts.length)
+        status.textContent = 'Les documents sélectionnés utilisent différemment le contexte : ' + conflicts.join(', ') + '. Sélectionnez-les séparément.';
+    else
+        status.textContent = missing.length
+            ? 'Contexte requis restant : ' + missing.join(', ')
+            : 'Le contexte requis est complet. Les valeurs trouvées automatiquement sont affichées ci-dessus.';
 }
 
+function doc_context_missing_required()
+{
+    var schema = doc_context_schema();
+    var bindings = doc_context_bindings();
+    return Object.keys(schema).filter(function (name) {
+        return !!schema[name].conflict || (schema[name].required && !bindings[name]);
+    });
+}
+
+function doc_context_refresh_model()
+{
+    var selected = doc_context_selected_items();
+    var reference = selected.map(function (item) { return item.getAttribute('data-reference') || ''; }).sort().join('|');
+    if (reference !== docContextActiveReference)
+    {
+        docContextActiveReference = reference;
+        var schema = doc_context_schema();
+        document.querySelectorAll('#doc_context_list [data-context-name]').forEach(function (row) {
+            if (!schema[row.getAttribute('data-context-name') || ''])
+                row.remove();
+        });
+        doc_context_serialize();
+    }
+    doc_context_refresh_buttons();
+    doc_context_schedule_autofill();
+}
 
 function doc_generation_clean_error(message)
 {
@@ -216,13 +467,21 @@ function doc_completion_nonce()
 
 function doc_complete_selected(form)
 {
-    doc_chain_serialize();
+    doc_context_serialize();
     var selected = Array.prototype.slice.call(form.querySelectorAll('.doc_document_choice.selected'));
     if (selected.length != 1)
     {
         doc_generation_set_error(selected.length == 0
             ? 'Sélectionnez un document à compléter.'
             : 'La complétion champ par champ nécessite de sélectionner un seul document.');
+        return false;
+    }
+
+    var missing = doc_context_missing_required();
+    if (missing.length)
+    {
+        var schema = doc_context_schema();
+        doc_generation_set_error('Définissez d’abord le contexte requis : ' + missing.map(function (name) { return schema[name].label || name; }).join(', '));
         return false;
     }
 
@@ -243,7 +502,7 @@ function doc_complete_selected(form)
         '&output=' + encodeURIComponent(output) +
         '&mode=docbuilder' +
         '&form_role=Etablissement' +
-        '&chain=' + encodeURIComponent(document.getElementById('doc_chain').value || '[]');
+        '&context_bindings=' + encodeURIComponent(document.getElementById('doc_context_bindings').value || '{}');
     window.open(url, '_blank', 'noopener');
     doc_generation_set_error('');
     return false;
@@ -255,8 +514,23 @@ function doc_generate_submit(form, blank, trigger)
     var old_value = button ? button.value : '';
     var xhr = new XMLHttpRequest();
 
-    doc_chain_serialize();
-    var chain_input = document.getElementById('doc_chain');
+    doc_context_serialize();
+    var selected = doc_context_selected_items();
+    if (selected.length == 0)
+    {
+        doc_generation_set_error('Sélectionnez au moins un document.');
+        return false;
+    }
+    if (!blank)
+    {
+        var missing = doc_context_missing_required();
+        if (missing.length)
+        {
+            var schema = doc_context_schema();
+            doc_generation_set_error('Définissez d’abord le contexte requis : ' + missing.map(function (name) { return schema[name].label || name; }).join(', '));
+            return false;
+        }
+    }
     var completion_input = form.querySelector('[name="form_output"]');
     var saved_completion = completion_input ? completion_input.value : '';
     if (blank && completion_input)
@@ -328,9 +602,23 @@ function document_workflow_expire(form)
     }));
 }
 
+function document_print_complete(form)
+{
+    if (!window.confirm('Marquer ce document comme imprimé / traité ?'))
+        return false;
+    return silent_submit(form, null, null, null, null, null, '', false, false, function () {
+        var row = form.closest ? form.closest('tr') : null;
+        if (row)
+            row.remove();
+        var table = form.closest ? form.closest('table') : null;
+        if (table && table.querySelectorAll('tbody tr').length == 0)
+            window.location.reload();
+    });
+}
+
 window.addEventListener('input', function(ev) {
-    if (ev.target.closest && ev.target.closest('#doc_chain_list'))
-        doc_chain_serialize();
+    if (ev.target.closest && ev.target.closest('#doc_context_list'))
+        doc_context_serialize();
 });
 </script>
 
@@ -339,6 +627,13 @@ $documents_panel = [
     "Génération" => __DIR__."/generation_state.phtml",
 ];
 $documents_panel_data = [[]];
+$print_tasks = document_print_visible_tasks();
+$print_tab_label = "À imprimer (".count($print_tasks).")";
+if (document_print_can_access_page())
+{
+    $documents_panel[$print_tab_label] = __DIR__."/print_state.phtml";
+    $documents_panel_data[] = ["print_tasks" => $print_tasks];
+}
 if (document_workflow_can_monitor())
 {
     $workflow_instances = document_workflow_visible_instances();
@@ -368,6 +663,10 @@ if (document_workflow_can_monitor())
 }
 ?>
 <div class="documents_workflow_panel">
-    <?php tabpanel($documents_panel, "documents-main", "Génération", "", "", $documents_panel_data); ?>
+    <?php
+    $documents_default_tab = (am_i_accountant() || am_i_librarian())
+        ? $print_tab_label : "Génération";
+    tabpanel($documents_panel, "documents-main", $documents_default_tab, "", "", $documents_panel_data);
+    ?>
 </div>
 </div>

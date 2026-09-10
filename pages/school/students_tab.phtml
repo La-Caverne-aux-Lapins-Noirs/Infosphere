@@ -34,8 +34,42 @@ if (!function_exists("school_student_contract_default_year"))
 }
 
 $can_manage_students = is_director_for_school($school["id"]);
-$contracts = get_contract_document_sources();
-$can_generate_contracts = is_teacher() && count($contracts);
+$student_documents = get_student_document_sources();
+$can_generate_contracts = is_teacher() && count($student_documents);
+$student_followup_documents = get_student_followup_document_sources();
+$can_generate_followup = is_teacher() && count($student_followup_documents);
+$student_followup_defaults = [
+    "relance_absences_repetees.dab" => [
+        "label" => "Absences répétées",
+        "reason" => "Absences répétées",
+        "support" => "Un échange avec l'équipe pédagogique afin d'identifier l'origine des absences et les mesures permettant de rétablir une assiduité compatible avec la poursuite de la formation.",
+    ],
+    "relance_absence_prolongee.dab" => [
+        "label" => "Absence prolongée / absence de nouvelles",
+        "reason" => "Absence prolongée ou absence de nouvelles",
+        "support" => "Une prise de contact avec l'équipe pédagogique afin de faire le point sur votre situation et d'étudier les conditions permettant une reprise ou une continuité adaptée de la formation.",
+    ],
+    "relance_retards_repetes.dab" => [
+        "label" => "Retards répétés",
+        "reason" => "Retards répétés",
+        "support" => "Un échange avec l'équipe pédagogique afin d'identifier les difficultés à l'origine des retards et de convenir de mesures permettant de retrouver une ponctualité compatible avec le déroulement de la formation.",
+    ],
+    "relance_travaux_non_realises.dab" => [
+        "label" => "Travaux / évaluations non réalisés",
+        "reason" => "Travaux ou évaluations non réalisés",
+        "support" => "Un échange pédagogique afin d'identifier les difficultés rencontrées, de préciser les travaux prioritaires et, lorsque cela est possible, de convenir d'un plan de rattrapage ou d'une adaptation permettant la poursuite du parcours.",
+    ],
+    "relance_risque_decrochage.dab" => [
+        "label" => "Risque de désengagement / rupture",
+        "reason" => "Risque de désengagement ou de rupture de parcours",
+        "support" => "Un entretien avec l'équipe pédagogique afin d'identifier les difficultés rencontrées et de rechercher avec vous les mesures pédagogiques, organisationnelles ou d'orientation permettant de poursuivre votre parcours.",
+    ],
+    "relance_assiduite.dab" => [
+        "label" => "Autre difficulté / prévention de rupture",
+        "reason" => "Autre difficulté susceptible d'affecter la poursuite du parcours",
+        "support" => "Un échange avec l'équipe pédagogique afin d'identifier les difficultés rencontrées et les mesures permettant la poursuite de la formation.",
+    ],
+];
 $directors = $school["director"] ?? [];
 $default_director_id = "";
 if (count($directors) == 1)
@@ -70,6 +104,13 @@ if ((int)$default_director_id <= 0)
                         "onclick" => "school_student_document_open(".$student_id.", ".json_encode($student_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).", ".$default_year.");",
                     ];
                 }
+                if ($can_generate_followup && $student_id > 0)
+                    $actions[] = [
+                        "class" => "school_member_document_button",
+                        "label" => "Relances",
+                        "title" => "Préparer une relance de suivi / prévention de rupture",
+                        "onclick" => "school_student_followup_open(".$student_id.", ".json_encode($student_codename, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).");",
+                    ];
                 school_admin_member_card($school["id"], "user", $member, $can_manage_students, $actions);
                 ?>
             <?php } ?>
@@ -115,7 +156,9 @@ if ((int)$default_director_id <= 0)
 
             <input type="hidden" name="doc_student_document" value="1" />
             <input type="hidden" name="docref_student_document" value="" />
-            <input type="hidden" name="chain" value="[]" />
+            <input type="hidden" name="context_bindings" value="{}" />
+            <input type="hidden" name="fields[]" data-document-class-field value="" />
+            <input type="hidden" name="fields[]" data-document-year-field value="" />
             <input type="hidden" data-document-student-id value="" />
 
             <div class="school_student_document_fields">
@@ -123,7 +166,7 @@ if ((int)$default_director_id <= 0)
                     <span>Document</span>
                     <select data-document-reference required>
                         <option value="">Choisir un modèle</option>
-                        <?php foreach ($contracts as $contract) { ?>
+                        <?php foreach ($student_documents as $contract) { ?>
                             <option value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>">
                                 <?=htmlspecialchars($contract["label"], ENT_QUOTES); ?>
                             </option>
@@ -213,23 +256,18 @@ function school_student_document_prepare(form)
 
     form.querySelector('[name="docref_student_document"]').value = reference;
 
-    // Les champs d'année sont ajoutés APRES les contextes élève. mergeconf
-    // applique la dernière valeur rencontrée : ils remplacent donc bien les
-    // valeurs éventuellement présentes dans identity.dab.
-    var chain = [
-        {type: 'school', prefix: 'School', id: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>},
-        {type: 'student', prefix: 'Student', id: student},
-        {type: 'student', prefix: 'SignatureSources.Student', id: student, signatory: 'Student'}
-    ];
+    var bindings = {
+        School: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+        Student: student
+    };
     if (director != '')
-        chain.push({type: 'user', prefix: 'SignatureSources.Director', id: director, signatory: 'Director'});
-    chain.push(
-        {type: 'field', key: 'Student.ChosenClass', value: 'EF' + year},
-        {type: 'field', key: 'Student.CurrentYear', value: String(year)},
-        {type: 'field', key: 'SignatureSources.Student.ChosenClass', value: 'EF' + year},
-        {type: 'field', key: 'SignatureSources.Student.CurrentYear', value: String(year)}
-    );
-    form.querySelector('[name="chain"]').value = JSON.stringify(chain);
+        bindings.Director = director;
+    form.querySelector('[name="context_bindings"]').value = JSON.stringify(bindings);
+
+    // Explicit year overrides remain mergeconf fields.  Student is also the
+    // signatory source declared by the model, so no duplicate identity scope is needed.
+    form.querySelector('[data-document-class-field]').value = 'Student.ChosenClass=EF' + year;
+    form.querySelector('[data-document-year-field]').value = 'Student.CurrentYear=' + year;
 
     window.setTimeout(school_student_document_close, 0);
     return true;
@@ -244,6 +282,227 @@ function school_student_document_prepare(form)
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && !overlay.hidden)
             school_student_document_close();
+    });
+})();
+</script>
+<?php } ?>
+
+
+<?php if ($can_generate_followup) { ?>
+<div
+    id="school_student_followup_overlay"
+    class="school_student_document_overlay"
+    role="presentation"
+    hidden
+>
+    <section
+        class="school_student_document_dialog school_admin_card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="school_student_followup_title"
+        aria-describedby="school_student_followup_identity"
+        onclick="event.stopPropagation();"
+    >
+        <form
+            id="school_student_followup_form"
+            method="post"
+            action="/api/doc/0/generate"
+            target="_blank"
+            onsubmit="return school_student_followup_prepare(this);"
+        >
+            <header class="school_student_document_header">
+                <div>
+                    <h4 id="school_student_followup_title">Relance de suivi / prévention de rupture</h4>
+                    <p id="school_student_followup_identity"></p>
+                </div>
+                <button
+                    type="button"
+                    class="school_student_document_close"
+                    onclick="school_student_followup_close();"
+                    title="Fermer"
+                    aria-label="Fermer la fenêtre"
+                >×</button>
+            </header>
+
+            <input type="hidden" name="doc_student_followup" value="1" />
+            <input type="hidden" name="docref_student_followup" value="" />
+            <input type="hidden" name="context_bindings" value="{}" />
+            <input type="hidden" name="save_user_document" value="0" />
+            <textarea name="fields[]" data-followup-field="Reason" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="Period" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="Facts" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="PreviousContacts" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="ResponseDeadline" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="SupportProposal" hidden></textarea>
+            <textarea name="fields[]" data-followup-field="MeetingProposal" hidden></textarea>
+
+            <div class="school_student_document_fields">
+                <label>
+                    <span>Type de relance</span>
+                    <select data-followup-type onchange="school_student_followup_apply_type(this.form);" required>
+                        <?php foreach ($student_followup_defaults as $basename => $definition) { ?>
+                            <?php if (!isset($student_followup_documents[$basename])) continue ; ?>
+                            <option
+                                value="<?=htmlspecialchars($student_followup_documents[$basename]["reference"], ENT_QUOTES); ?>"
+                                data-reason="<?=htmlspecialchars($definition["reason"], ENT_QUOTES); ?>"
+                                data-support="<?=htmlspecialchars($definition["support"], ENT_QUOTES); ?>"
+                            ><?=htmlspecialchars($definition["label"], ENT_QUOTES); ?></option>
+                        <?php } ?>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Période concernée</span>
+                    <input type="text" data-followup-period placeholder="Ex. du 15 au 28 septembre 2026" />
+                </label>
+
+                <label>
+                    <span>Date limite de prise de contact</span>
+                    <input type="text" data-followup-deadline placeholder="Ex. 5 octobre 2026" />
+                </label>
+
+                <label style="grid-column: 1 / -1;">
+                    <span>Faits constatés</span>
+                    <textarea data-followup-facts rows="4" required placeholder="Décrire factuellement les absences, retards, travaux non réalisés ou autres signaux observés."></textarea>
+                </label>
+
+                <label style="grid-column: 1 / -1;">
+                    <span>Contacts / relances déjà effectués</span>
+                    <textarea data-followup-previous rows="3" placeholder="Ex. appel du 25/09 sans réponse ; courriel du 26/09."></textarea>
+                </label>
+
+                <label style="grid-column: 1 / -1;">
+                    <span>Mesure d'accompagnement proposée</span>
+                    <textarea data-followup-support rows="3" required>Un échange avec l'équipe pédagogique afin d'identifier les difficultés rencontrées et les mesures permettant la poursuite de la formation.</textarea>
+                </label>
+
+                <label style="grid-column: 1 / -1;">
+                    <span>Proposition de rendez-vous</span>
+                    <input type="text" data-followup-meeting placeholder="Ex. entretien le 3 octobre à 14 h, ou rendez-vous à convenir" />
+                </label>
+
+                <label>
+                    <span>Responsable signataire</span>
+                    <select data-followup-director data-default-director="<?=htmlspecialchars((string)$default_director_id, ENT_QUOTES); ?>" required>
+                        <option value="">Choisir</option>
+                        <?php foreach ($directors as $director) { ?>
+                            <?php $id_director = (int)($director["id_director"] ?? $director["id_user"] ?? $director["id"] ?? -1); ?>
+                            <?php if ($id_director > 0) { ?>
+                                <option value="<?=$id_director; ?>">
+                                    <?=htmlspecialchars($director["identity"] ?? $director["codename"] ?? (string)$id_director, ENT_QUOTES); ?>
+                                </option>
+                            <?php } ?>
+                        <?php } ?>
+                    </select>
+                </label>
+            </div>
+
+            <footer class="school_student_document_actions">
+                <button type="submit" class="school_student_document_submit">
+                    Générer et archiver la relance
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>
+
+<script>
+var schoolStudentFollowupLastTrigger = null;
+
+function school_student_followup_open(studentId, studentCodename)
+{
+    var overlay = document.getElementById('school_student_followup_overlay');
+    var form = document.getElementById('school_student_followup_form');
+    schoolStudentFollowupLastTrigger = document.activeElement;
+
+    form.querySelector('[name="save_user_document"]').value = studentId;
+    form.setAttribute('data-student-id', studentId);
+    form.querySelector('[data-followup-type]').selectedIndex = 0;
+    form.querySelector('[data-followup-period]').value = '';
+    form.querySelector('[data-followup-deadline]').value = '';
+    form.querySelector('[data-followup-facts]').value = '';
+    form.querySelector('[data-followup-previous]').value = '';
+    form.querySelector('[data-followup-meeting]').value = '';
+    school_student_followup_apply_type(form);
+
+    var director = form.querySelector('[data-followup-director]');
+    director.value = director.getAttribute('data-default-director') || '';
+    document.getElementById('school_student_followup_identity').textContent = studentCodename;
+
+    overlay.hidden = false;
+    document.body.classList.add('school_student_document_open');
+    window.setTimeout(function () {
+        form.querySelector('[data-followup-type]').focus();
+    }, 0);
+}
+
+function school_student_followup_close()
+{
+    var overlay = document.getElementById('school_student_followup_overlay');
+    if (overlay.hidden)
+        return ;
+    overlay.hidden = true;
+    document.body.classList.remove('school_student_document_open');
+    if (schoolStudentFollowupLastTrigger && typeof schoolStudentFollowupLastTrigger.focus == 'function')
+        schoolStudentFollowupLastTrigger.focus();
+    schoolStudentFollowupLastTrigger = null;
+}
+
+function school_student_followup_apply_type(form)
+{
+    var select = form.querySelector('[data-followup-type]');
+    var option = select && select.options.length ? select.options[select.selectedIndex] : null;
+    if (!option)
+        return ;
+    form.querySelector('[data-followup-support]').value = option.getAttribute('data-support') || '';
+}
+
+function school_student_followup_set_field(form, name, value)
+{
+    var target = form.querySelector('[data-followup-field="' + name + '"]');
+    if (target)
+        target.value = 'FollowUp.' + name + '=' + value;
+}
+
+function school_student_followup_prepare(form)
+{
+    var student = form.getAttribute('data-student-id') || '';
+    var director = form.querySelector('[data-followup-director]').value;
+    var type = form.querySelector('[data-followup-type]');
+    var option = type && type.options.length ? type.options[type.selectedIndex] : null;
+    var facts = form.querySelector('[data-followup-facts]').value.trim();
+    var support = form.querySelector('[data-followup-support]').value.trim();
+    if (student == '' || director == '' || !option || type.value == '' || facts == '' || support == '')
+        return false;
+    form.querySelector('[name="docref_student_followup"]').value = type.value;
+
+    form.querySelector('[name="context_bindings"]').value = JSON.stringify({
+        Student: student,
+        School: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+        Director: director
+    });
+
+    school_student_followup_set_field(form, 'Reason', option.getAttribute('data-reason') || option.textContent.trim());
+    school_student_followup_set_field(form, 'Period', form.querySelector('[data-followup-period]').value.trim());
+    school_student_followup_set_field(form, 'Facts', facts);
+    school_student_followup_set_field(form, 'PreviousContacts', form.querySelector('[data-followup-previous]').value.trim());
+    school_student_followup_set_field(form, 'ResponseDeadline', form.querySelector('[data-followup-deadline]').value.trim());
+    school_student_followup_set_field(form, 'SupportProposal', support);
+    school_student_followup_set_field(form, 'MeetingProposal', form.querySelector('[data-followup-meeting]').value.trim());
+
+    window.setTimeout(school_student_followup_close, 0);
+    return true;
+}
+
+(function () {
+    var overlay = document.getElementById('school_student_followup_overlay');
+    overlay.addEventListener('click', function (event) {
+        if (event.target === overlay)
+            school_student_followup_close();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !overlay.hidden)
+            school_student_followup_close();
     });
 })();
 </script>

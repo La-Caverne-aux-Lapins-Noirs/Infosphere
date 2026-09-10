@@ -25,6 +25,22 @@ $fbid = "cycle_document_file_browser_".$id;
 $path_browser_can_cd = true;
 $nocd = false;
 $file_browser_height = "420px";
+$cycle_start_date = trim((string)($cycle["first_day"] ?? ""));
+$cycle_start_date_label = "";
+$cycle_preparation_date_label = "";
+$cycle_integration_date_label = "";
+$cycle_document_context = document_context_cycle((int)$cycle["id"]);
+if (is_array($cycle_document_context))
+{
+    $cycle_start_date_label = trim((string)($cycle_document_context["first_day_date"] ?? ""));
+    $cycle_preparation_date_label = trim((string)($cycle_document_context["preparation_day_date"] ?? ""));
+    $cycle_integration_date_label = trim((string)($cycle_document_context["integration_day_date"] ?? ""));
+}
+$cycle_school_id = document_context_cycle_school_id((int)$cycle["id"]);
+$cycle_director = $cycle_school_id == NULL
+    ? NULL : document_context_staff_for_school($cycle_school_id, "DIRECTOR");
+$cycle_convocation_ready = $cycle_start_date_label != ""
+    && $cycle_school_id != NULL && is_array($cycle_director);
 ?>
 <section class="cycle_admin_card cycle_admin_documents">
     <h2><?=$Dictionnary["Documents"] ?? "Documents"; ?></h2>
@@ -177,6 +193,111 @@ $file_browser_height = "420px";
             </tbody>
         </table>
         </div>
+    <?php } ?>
+
+    <h3>Documents de rentrée</h3>
+    <p>
+        Les trois dates sont calculées automatiquement à partir du premier jour du cycle :
+        préparation et accueil le <strong>lundi de la semaine précédente</strong><?=($cycle_preparation_date_label != "" ? " (".htmlspecialchars($cycle_preparation_date_label, ENT_QUOTES).")" : ""); ?>,
+        intégration le <strong>samedi précédant le cycle</strong><?=($cycle_integration_date_label != "" ? " (".htmlspecialchars($cycle_integration_date_label, ENT_QUOTES).")" : ""); ?>,
+        rentrée le <strong>premier jour du cycle</strong><?=($cycle_start_date_label != "" ? " (".htmlspecialchars($cycle_start_date_label, ENT_QUOTES).")" : ""); ?>.
+    </p>
+    <?php if (!$cycle_convocation_ready) { ?>
+        <p class="smalltext">
+            <?php if ($cycle_start_date_label == "") { ?>Définissez d'abord le premier jour du cycle.<?php } ?>
+            <?php if ($cycle_school_id == NULL) { ?> Rattachez le cycle à une école.<?php } ?>
+            <?php if ($cycle_school_id != NULL && !is_array($cycle_director)) { ?> Définissez un directeur pour l'école afin de signer les documents.<?php } ?>
+        </p>
+    <?php } ?>
+    <?php if (count($cycle["user"] ?? [])) { ?>
+        <div class="cycle_document_workflow_table">
+        <table>
+            <thead><tr><th>Élève</th><th>Préparation et accueil</th><th>Intégration</th><th>Rentrée</th></tr></thead>
+            <tbody>
+            <?php foreach (($cycle["user"] ?? []) as $student) {
+                $student_id = (int)($student["id"] ?? ($student["id_user"] ?? 0));
+                if ($student_id <= 0)
+                    continue ;
+                $student_context = document_context_person($student_id);
+                $student_label = is_array($student_context)
+                    ? trim((string)($student_context["identity"] ?? "")) : "";
+                if ($student_label == "")
+                    $student_label = (string)($student["codename"] ?? $student_id);
+                $bindings = json_encode([
+                    "Student" => (string)$student_id,
+                    "Cycle" => (string)$cycle["id"],
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $escaped_bindings = htmlspecialchars($bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+            ?>
+                <tr>
+                    <td><a href="index.php?p=ProfileMenu&amp;a=<?=$student_id; ?>"><?=htmlspecialchars($student_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></a></td>
+                    <td>
+                        <strong><?=htmlspecialchars($cycle_preparation_date_label != "" ? $cycle_preparation_date_label : "—", ENT_QUOTES); ?></strong>
+                        <form method="post" action="/api/doc/0/generate" target="_blank" class="document_workflow_actions">
+                            <input type="hidden" name="doc_convocation_preparation_accueil" value="1" />
+                            <input type="hidden" name="docref_convocation_preparation_accueil" value="res_docs:fr/convocation_preparation_accueil.dab" />
+                            <input type="hidden" name="context_bindings" value="<?=$escaped_bindings; ?>" />
+                            <input type="hidden" name="queue_for_print" value="0" />
+                            <input type="hidden" name="print_context_type" value="cycle" />
+                            <input type="hidden" name="print_owner_user_id" value="<?=$student_id; ?>" />
+                            <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
+                            <input type="hidden" name="print_school_id" value="<?=(int)$cycle_school_id; ?>" />
+                            <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars($student_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="hidden" name="print_label" value="Convocation préparation et accueil" />
+                            <input type="hidden" name="print_source_key" value="cycle-convocation_preparation_accueil:<?=(int)$cycle["id"]; ?>:<?=$student_id; ?>" />
+                            <input type="time" value="09:00" aria-label="Heure de la journée de préparation et d'accueil" onchange="this.nextElementSibling.value='PreparationDay.ArrivalTime='+this.value;" <?=$cycle_convocation_ready && $cycle_preparation_date_label != "" ? "" : "disabled"; ?> />
+                            <input type="hidden" name="fields[]" value="PreparationDay.ArrivalTime=09:00" />
+                            <input type="submit" value="Convocation" onclick="this.form.queue_for_print.value='0';" <?=$cycle_convocation_ready && $cycle_preparation_date_label != "" ? "" : "disabled"; ?> />
+                            <input type="submit" value="Convocation + impression" onclick="this.form.queue_for_print.value='1';" <?=$cycle_convocation_ready && $cycle_preparation_date_label != "" ? "" : "disabled"; ?> />
+                        </form>
+                    </td>
+                    <td>
+                        <strong><?=htmlspecialchars($cycle_integration_date_label != "" ? $cycle_integration_date_label : "—", ENT_QUOTES); ?></strong>
+                        <form method="post" action="/api/doc/0/generate" target="_blank" class="document_workflow_actions">
+                            <input type="hidden" name="doc_invitation_journee_integration" value="1" />
+                            <input type="hidden" name="docref_invitation_journee_integration" value="res_docs:fr/invitation_journee_integration.dab" />
+                            <input type="hidden" name="context_bindings" value="<?=$escaped_bindings; ?>" />
+                            <input type="hidden" name="queue_for_print" value="0" />
+                            <input type="hidden" name="print_context_type" value="cycle" />
+                            <input type="hidden" name="print_owner_user_id" value="<?=$student_id; ?>" />
+                            <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
+                            <input type="hidden" name="print_school_id" value="<?=(int)$cycle_school_id; ?>" />
+                            <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars($student_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="hidden" name="print_label" value="Invitation journée d’intégration" />
+                            <input type="hidden" name="print_source_key" value="cycle-invitation_journee_integration:<?=(int)$cycle["id"]; ?>:<?=$student_id; ?>" />
+                            <input type="time" value="09:00" aria-label="Heure de la journée d'intégration" onchange="this.nextElementSibling.value='IntegrationDay.ArrivalTime='+this.value;" <?=$cycle_convocation_ready && $cycle_integration_date_label != "" ? "" : "disabled"; ?> />
+                            <input type="hidden" name="fields[]" value="IntegrationDay.ArrivalTime=09:00" />
+                            <input type="submit" value="Invitation" onclick="this.form.queue_for_print.value='0';" <?=$cycle_convocation_ready && $cycle_integration_date_label != "" ? "" : "disabled"; ?> />
+                            <input type="submit" value="Invitation + impression" onclick="this.form.queue_for_print.value='1';" <?=$cycle_convocation_ready && $cycle_integration_date_label != "" ? "" : "disabled"; ?> />
+                        </form>
+                    </td>
+                    <td>
+                        <strong><?=htmlspecialchars($cycle_start_date_label != "" ? $cycle_start_date_label : "—", ENT_QUOTES); ?></strong>
+                        <form method="post" action="/api/doc/0/generate" target="_blank" class="document_workflow_actions">
+                            <input type="hidden" name="doc_convocation_rentree" value="1" />
+                            <input type="hidden" name="docref_convocation_rentree" value="res_docs:fr/convocation_rentree.dab" />
+                            <input type="hidden" name="context_bindings" value="<?=$escaped_bindings; ?>" />
+                            <input type="hidden" name="queue_for_print" value="0" />
+                            <input type="hidden" name="print_context_type" value="cycle" />
+                            <input type="hidden" name="print_owner_user_id" value="<?=$student_id; ?>" />
+                            <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
+                            <input type="hidden" name="print_school_id" value="<?=(int)$cycle_school_id; ?>" />
+                            <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars($student_label, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                            <input type="hidden" name="print_label" value="Convocation de rentrée" />
+                            <input type="hidden" name="print_source_key" value="cycle-convocation_rentree:<?=(int)$cycle["id"]; ?>:<?=$student_id; ?>" />
+                            <input type="time" value="09:00" aria-label="Heure de rentrée" onchange="this.nextElementSibling.value='SchoolStart.ArrivalTime='+this.value;" <?=$cycle_convocation_ready ? "" : "disabled"; ?> />
+                            <input type="hidden" name="fields[]" value="SchoolStart.ArrivalTime=09:00" />
+                            <input type="submit" value="Convocation" onclick="this.form.queue_for_print.value='0';" <?=$cycle_convocation_ready ? "" : "disabled"; ?> />
+                            <input type="submit" value="Convocation + impression" onclick="this.form.queue_for_print.value='1';" <?=$cycle_convocation_ready ? "" : "disabled"; ?> />
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        </div>
+    <?php } else { ?>
+        <p class="smalltext">Aucun élève n'est rattaché à ce cycle.</p>
     <?php } ?>
 
     <h3>Fichiers du cycle</h3>

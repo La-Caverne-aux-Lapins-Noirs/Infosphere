@@ -5,6 +5,30 @@ Title = "Compte rendu post-entretien"
   Mailbox = "admission"
 ]
 
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Bénéficiaire"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Analyst
+    Type = "user"
+    Prefix = "Analyst"
+    Label = "Personne ayant conduit l'entretien"
+    Auto = "CurrentUser"
+  ]
+]
+
 [Header
   Left = [Text($,Left)
     [@Size;5] Compte rendu post-entretien [@PageCounter]
@@ -60,6 +84,7 @@ Footer]
         [Identity
           Label = "Entretien réalisé par"
           Required = 1
+          Readonly = 1
           Default = "@CurrentUser.Identity"
         ]
       ]

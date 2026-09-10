@@ -109,6 +109,7 @@ $Unlisted = [
     "RegistrationForm" => "./pages/registration_form/",
     "DocumentSignaturePdf" => "./pages/document_pdf/",
     "DocumentWorkflowPdf" => "./pages/document_pdf/",
+    "DocumentPrintPdf" => "./pages/document_pdf/",
 ];
 
 $TopMenu = [

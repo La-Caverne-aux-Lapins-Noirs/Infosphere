@@ -1,0 +1,89 @@
+@include ".base_letter/base.dab"
+Title = "Relance pour retour de livre"
+
+[Contexts
+  [BookLoan
+    Type = "book_loan"
+    Prefix = "BookLoan"
+    Label = "Livre emprunté"
+    Required = 1
+    Placeholder = "id du prêt ou nom de code du livre"
+  ]
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Emprunteur"
+    Required = 1
+    InferFrom = "BookLoan"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+]
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+]
+
+[Student
+  Identity = ""
+  Gender = ""
+  Address = ""
+  PostalCity = ""
+  Country = ""
+]
+
+[BookLoan
+  Book = ""
+  BookCodename = ""
+  StartDate = ""
+  DueDate = ""
+  DaysLate = 0
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Bibliothèque — rappel de retour
+  Left]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Target = [Text($,Target)
+  [#Variable;Student.Identity]\par
+  [#Variable;Student.Address]\par
+  [#Variable;Student.PostalCity][@IfC;Student.Country;!=;;\par[#Variable;Student.Country]]
+Target]
+
+Subject = [Text($,LetterSubject)
+  Objet : Retour du livre « [#Variable;BookLoan.Book] »
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "relance_retour_livre.txt"
+}

@@ -412,7 +412,7 @@ function user_identity_write_identity_dabsic($id_user)
     $fields["name"] = $identity;
     $fields["street"] = $fields["address"] ?? "";
     $fields["postal_city"] = trim((string)($fields["postal_code"] ?? "")." ".(string)($fields["city"] ?? ""));
-    $signature = user_identity_signature_file($user);
+    $signature = user_identity_document_signature_file($user);
     $fields["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
 
     $file = $Configuration->UsersDir($user["codename"])."admin/identity.dab";
@@ -426,6 +426,230 @@ function user_identity_signature_file(array $user)
     if (!isset($user["codename"]) || $user["codename"] == "")
         return ("");
     return ($Configuration->UsersDir($user["codename"])."admin/signature.png");
+}
+
+/**
+ * Store a handwritten signature as a compact black/transparent PNG.
+ *
+ * The browser canvas is deliberately comfortable to sign in, therefore the
+ * uploaded bitmap usually contains a lot of empty area.  Keeping that canvas
+ * geometry in the document makes the handwriting look tiny.  We detect the
+ * actual ink (alpha + luminance), crop it with a small safety margin and turn
+ * it into black ink on transparency.  White backgrounds are therefore also
+ * removed when a browser/device flattened the canvas before upload.
+ */
+function user_identity_store_signature_png($source, $target, $require_uploaded_file = true)
+{
+    if (($require_uploaded_file && !is_uploaded_file($source)) || !is_file($source) || filesize($source) > 4 * 1024 * 1024)
+        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
+    $info = @getimagesize($source);
+    if (!$info || $info[2] != IMAGETYPE_PNG || $info[0] < 20 || $info[1] < 20 || $info[0] > 2000 || $info[1] > 1000)
+        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
+    if (!function_exists("imagecreatefrompng") || !function_exists("imagepng"))
+        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
+
+    $input = @imagecreatefrompng($source);
+    if ($input === false)
+        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
+    if (!imageistruecolor($input) && function_exists("imagepalettetotruecolor"))
+        @imagepalettetotruecolor($input);
+    $truecolor = imageistruecolor($input);
+
+    $width = imagesx($input);
+    $height = imagesy($input);
+    $min_x = $width;
+    $min_y = $height;
+    $max_x = -1;
+    $max_y = -1;
+    $visible_pixels = 0;
+
+    // "Ink" is opacity multiplied by darkness.  It detects an ordinary
+    // transparent canvas as well as a PNG whose empty background became white.
+    // A deliberately low threshold keeps anti-aliased edges in the crop.
+    for ($y = 0; $y < $height; ++$y)
+        for ($x = 0; $x < $width; ++$x)
+        {
+            $pixel = imagecolorat($input, $x, $y);
+            if ($truecolor)
+            {
+                $alpha = ($pixel >> 24) & 0x7F;
+                $red = ($pixel >> 16) & 0xFF;
+                $green = ($pixel >> 8) & 0xFF;
+                $blue = $pixel & 0xFF;
+            }
+            else
+            {
+                $rgba = imagecolorsforindex($input, $pixel);
+                $alpha = (int)($rgba["alpha"] ?? 127);
+                $red = (int)($rgba["red"] ?? 255);
+                $green = (int)($rgba["green"] ?? 255);
+                $blue = (int)($rgba["blue"] ?? 255);
+            }
+            $luminance = (299 * $red + 587 * $green + 114 * $blue) / 1000;
+            $ink = (127 - $alpha) * (255 - $luminance);
+            if ($ink < 1024)
+                continue ;
+            $min_x = min($min_x, $x);
+            $min_y = min($min_y, $y);
+            $max_x = max($max_x, $x);
+            $max_y = max($max_y, $y);
+            if ($ink >= 4096)
+                ++$visible_pixels;
+        }
+
+    if ($max_x < $min_x || $max_y < $min_y || $visible_pixels < 8)
+    {
+        imagedestroy($input);
+        return (["ok" => false, "error" => "RegistrationFormInvalidSignature"]);
+    }
+
+    $ink_width = $max_x - $min_x + 1;
+    $ink_height = $max_y - $min_y + 1;
+    $padding = max(3, (int)ceil(min($ink_width, $ink_height) * 0.04));
+
+    // When normalizing the canonical file in place, avoid rewriting it on
+    // every document generation once it is already tightly cropped and has a
+    // transparent background.
+    $source_real = @realpath($source);
+    $target_real = @realpath($target);
+    if (!$require_uploaded_file && $source_real !== false && $source_real === $target_real)
+    {
+        $margins = [$min_x, $min_y, $width - 1 - $max_x, $height - 1 - $max_y];
+        $transparent_corners = true;
+        foreach ([[0, 0], [$width - 1, 0], [0, $height - 1], [$width - 1, $height - 1]] as $corner)
+        {
+            $pixel = imagecolorat($input, $corner[0], $corner[1]);
+            if ($truecolor)
+                $alpha = ($pixel >> 24) & 0x7F;
+            else
+            {
+                $rgba = imagecolorsforindex($input, $pixel);
+                $alpha = (int)($rgba["alpha"] ?? 0);
+            }
+            if ($alpha < 96)
+            {
+                $transparent_corners = false;
+                break ;
+            }
+        }
+        if ($transparent_corners && max($margins) <= $padding + 2)
+        {
+            imagedestroy($input);
+            return ([
+                "ok" => true,
+                "hash" => hash_file("sha256", $source),
+                "width" => $width,
+                "height" => $height,
+                "unchanged" => true,
+            ]);
+        }
+    }
+
+    $min_x = max(0, $min_x - $padding);
+    $min_y = max(0, $min_y - $padding);
+    $max_x = min($width - 1, $max_x + $padding);
+    $max_y = min($height - 1, $max_y + $padding);
+    $crop_width = $max_x - $min_x + 1;
+    $crop_height = $max_y - $min_y + 1;
+
+    $output = imagecreatetruecolor($crop_width, $crop_height);
+    if ($output === false)
+    {
+        imagedestroy($input);
+        return (["ok" => false, "error" => "CannotWritePngFile"]);
+    }
+    imagealphablending($output, false);
+    imagesavealpha($output, true);
+    $transparent = imagecolorallocatealpha($output, 0, 0, 0, 127);
+    imagefill($output, 0, 0, $transparent);
+    $colors = [127 => $transparent];
+
+    for ($out_y = 0; $out_y < $crop_height; ++$out_y)
+        for ($out_x = 0; $out_x < $crop_width; ++$out_x)
+        {
+            $pixel = imagecolorat($input, $min_x + $out_x, $min_y + $out_y);
+            if ($truecolor)
+            {
+                $alpha = ($pixel >> 24) & 0x7F;
+                $red = ($pixel >> 16) & 0xFF;
+                $green = ($pixel >> 8) & 0xFF;
+                $blue = $pixel & 0xFF;
+            }
+            else
+            {
+                $rgba = imagecolorsforindex($input, $pixel);
+                $alpha = (int)($rgba["alpha"] ?? 127);
+                $red = (int)($rgba["red"] ?? 255);
+                $green = (int)($rgba["green"] ?? 255);
+                $blue = (int)($rgba["blue"] ?? 255);
+            }
+            $luminance = (299 * $red + 587 * $green + 114 * $blue) / 1000;
+            $effective_opacity = (127 - $alpha) * (255 - $luminance) / 255;
+            $output_alpha = max(0, min(127, 127 - (int)round($effective_opacity)));
+            if (!isset($colors[$output_alpha]))
+                $colors[$output_alpha] = imagecolorallocatealpha($output, 0, 0, 0, $output_alpha);
+            imagesetpixel($output, $out_x, $out_y, $colors[$output_alpha]);
+        }
+    imagedestroy($input);
+
+    if (($ret = new_directory($target))->is_error())
+    {
+        imagedestroy($output);
+        return (["ok" => false, "error" => "CannotWritePngFile", "details" => strval($ret)]);
+    }
+    $tmp = tempnam(dirname($target), ".signature-");
+    if ($tmp === false || !@imagepng($output, $tmp, 6))
+    {
+        imagedestroy($output);
+        if ($tmp !== false)
+            @unlink($tmp);
+        return (["ok" => false, "error" => "CannotWritePngFile"]);
+    }
+    imagedestroy($output);
+    @chmod($tmp, 0640);
+    if (!@rename($tmp, $target))
+    {
+        @unlink($tmp);
+        return (["ok" => false, "error" => "CannotWritePngFile"]);
+    }
+
+    return ([
+        "ok" => true,
+        "hash" => hash_file("sha256", $target),
+        "width" => $crop_width,
+        "height" => $crop_height,
+    ]);
+}
+
+/**
+ * Return the canonical profile signature used by documents.
+ *
+ * Signatures are normalized directly in admin/signature.png.  Older files
+ * created before automatic trimming are rewritten in place the first time a
+ * document uses them.  The former signature.document.png derivative is only
+ * recognized as a migration aid and is removed after its contents have been
+ * promoted to the canonical file.
+ */
+function user_identity_document_signature_file(array $user)
+{
+    $source = user_identity_signature_file($user);
+    if ($source == "" || !is_file($source))
+        return ("");
+
+    $legacy = dirname($source)."/signature.document.png";
+    if (is_file($legacy))
+    {
+        $normalized = user_identity_store_signature_png($legacy, $source, false);
+        @unlink($legacy);
+        if ($normalized["ok"])
+            return ($source);
+    }
+
+    // Normalize an old, wide-canvas signature directly in place.  New
+    // signatures already went through the same routine when they were saved;
+    // applying it again is harmless and keeps a single canonical file.
+    user_identity_store_signature_png($source, $source, false);
+    return ($source);
 }
 
 function user_identity_nested_unset(&$tree, $path)

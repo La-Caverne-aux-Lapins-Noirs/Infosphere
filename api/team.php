@@ -296,12 +296,12 @@ $Tab = [
 	    "SetTicket",
 	],
 	"user" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "SetUserTeam",
 	],
 	/*
 	"commentaries" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "SetTeamCommentaries",
 	],
 	*/
@@ -316,7 +316,7 @@ $Tab = [
 	    "SetTicket",
 	],
 	"user" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "SetUserTeam",
 	],
     ]

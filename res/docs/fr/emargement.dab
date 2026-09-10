@@ -1,5 +1,15 @@
 Document = "SignInSheet"
 
+
+[Contexts
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+  ]
+]
+
 [Header
   Left = [Text($,Left)
     [@Size;5]

@@ -1,0 +1,9 @@
+
+
+## Engagement du signataire
+
+[#Indent]Je soussigné(e) **[#Variable;Member.Identity]** déclare avoir pris
+connaissance de la présente charte, en comprendre les principes et m'engager
+à les respecter et à contribuer, dans le cadre de mes responsabilités,
+à leur mise en oeuvre.
+

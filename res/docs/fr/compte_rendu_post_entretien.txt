@@ -43,9 +43,9 @@ Objectif principal de la formation: [#FLine;[#Variable;NeedsAnalysis.MainObjecti
 
 Attentes particulières du bénéficiaire: [#FLine;[#Variable;NeedsAnalysis.Expectations]]
 
-### À propos de l'EFRITS
+### À propos de [#Variable;School.Name]
 
-L'EFRITS est un établissement d'enseignement supérieur privé en informatique centré sur le développement de logiciels et adoptant une approche bas niveau, proche du système d'exploitation et du matériel. Sa pédagogie repose fortement sur la réalisation de projets et de travaux pratiques. L'EFRITS est également organisme de formation et centre de formation d'apprentis (CFA).\par\vspace{0.20cm}
+[#Variable;School.Name] est un établissement d'enseignement supérieur privé en informatique centré sur le développement de logiciels et adoptant une approche bas niveau, proche du système d'exploitation et du matériel. Sa pédagogie repose fortement sur la réalisation de projets et de travaux pratiques. [#Variable;School.Name] est également organisme de formation et centre de formation d'apprentis (CFA).\par\vspace{0.20cm}
 
 L'établissement propose habituellement 30 à 40 projets par an, couvrant notamment le système, le graphisme, l'audio, le réseau, l'électronique, l'intelligence artificielle, le web et la cybersécurité. Parmi les exemples de réalisations figurent des moteurs 3D, jeux vidéo, logiciels pair-à-pair, services réseau, systèmes de chiffrement et d'authentification, automates, serveurs vidéo et utilitaires de manipulation de fichiers et de flux.\par\vspace{0.20cm}
 
@@ -198,9 +198,9 @@ Prochaine étape: [#FLine;[#Variable;NeedsAnalysis.NextStep]]
 [@Columns;2;
 Entretien réalisé par : [#Variable;Analyst.Identity]
 
-Signature :
-[@IfC;Analyst.Signature;!=;;[@Image;[#Variable;Analyst.Signature];width=4cm;height=2cm]]
+Signature :\par\vspace{0.08cm}
+[@IfC;Analyst.Signature;!=;;[@Image;[#Variable;Analyst.Signature];width=4.6cm;height=2.3cm]]
 
-Cachet :
+Cachet :\par\vspace{0.08cm}
 [@IfC;School.Stamp;!=;;[@Image;[#Variable;School.Stamp];width=4cm;height=3cm;random_angle=-20:20]]
 ]

@@ -1,0 +1,21 @@
+@include ".base_relance_suivi/base.dab"
+Title = "Relance pour retards répétés"
+
+[FollowUp
+  Reason = "Retards répétés"
+  SupportProposal = "Un échange avec l'équipe pédagogique afin d'identifier les difficultés à l'origine des retards et de convenir de mesures permettant de retrouver une ponctualité compatible avec le déroulement de la formation."
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Relance pour retards répétés
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Relance concernant des retards répétés
+LetterSubject]
+
+{Content
+  @insert txt ($) "relance_retards_repetes.txt"
+}

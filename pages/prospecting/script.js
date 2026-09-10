@@ -235,6 +235,55 @@ function close_file_browser_for_action_div(action_div)
     prospecting_sync_action_height(file_browser);
 }
 
+function prospecting_position_action_menu(action_div)
+{
+    let button;
+    let menu;
+    let button_rect;
+    let menu_rect;
+    let margin = 8;
+    let gap = 3;
+    let left;
+    let top;
+
+    if (!action_div)
+        return;
+    button = action_div.querySelector(".action_edit > button");
+    menu = action_div.querySelector(".action_menu");
+    if (!button || !menu || menu.classList.contains("hidden"))
+        return;
+
+    button_rect = button.getBoundingClientRect();
+    menu.classList.add("prospecting_floating_action_menu");
+    menu.style.width = Math.max(135, Math.round(button_rect.width)) + "px";
+    menu.style.maxHeight = Math.max(80, window.innerHeight - margin * 2) + "px";
+
+    // Le menu est maintenant en position fixe : on peut le mesurer sans que
+    // sa hauteur agrandisse la ligne de la table.
+    menu_rect = menu.getBoundingClientRect();
+    left = button_rect.right - menu_rect.width;
+    left = Math.max(margin, Math.min(left, window.innerWidth - menu_rect.width - margin));
+
+    top = button_rect.bottom + gap;
+    if (top + menu_rect.height > window.innerHeight - margin)
+        top = button_rect.top - menu_rect.height - gap;
+    top = Math.max(margin, Math.min(top, window.innerHeight - menu_rect.height - margin));
+
+    menu.style.left = Math.round(left) + "px";
+    menu.style.top = Math.round(top) + "px";
+}
+
+function prospecting_reset_action_menu_position(menu)
+{
+    if (!menu)
+        return;
+    menu.classList.remove("prospecting_floating_action_menu");
+    menu.style.removeProperty("left");
+    menu.style.removeProperty("top");
+    menu.style.removeProperty("width");
+    menu.style.removeProperty("max-height");
+}
+
 function open_action_div(div)
 {
     let menu = div.querySelector(".action_menu");
@@ -245,6 +294,11 @@ function open_action_div(div)
     div.classList.add("open");
     div.style.maxHeight = div.scrollHeight + "px";
     expand_file_browser_for_action_div(div);
+    if (menu)
+        window.requestAnimationFrame(function() {
+            prospecting_position_action_menu(div);
+            div.style.maxHeight = div.scrollHeight + "px";
+        });
 }
 
 function close_action_div(div)
@@ -252,7 +306,10 @@ function close_action_div(div)
     let menu = div.querySelector(".action_menu");
 
     if (menu)
+    {
         menu.classList.add("hidden");
+        prospecting_reset_action_menu_position(menu);
+    }
 
     div.classList.remove("open");
     div.style.maxHeight = "20px";
@@ -304,6 +361,16 @@ document.addEventListener("keydown", function(e)
         currently_open_action_div = null;
     }
 });
+
+window.addEventListener("resize", function() {
+    if (currently_open_action_div)
+        prospecting_position_action_menu(currently_open_action_div);
+});
+
+document.addEventListener("scroll", function() {
+    if (currently_open_action_div)
+        prospecting_position_action_menu(currently_open_action_div);
+}, true);
 
 document.addEventListener('click', async function (event) {
 
@@ -705,4 +772,73 @@ document.addEventListener("keydown", function(event) {
     document.querySelectorAll(".prospect_registration_widget.editing").forEach(function(widget) {
         prospecting_campaign_registration_close(widget);
     });
+});
+
+
+function prospecting_inline_editor_close(widget)
+{
+    if (widget)
+        widget.classList.remove("editing");
+}
+
+function prospecting_inline_editor_after_success()
+{
+    let campaign_select = document.getElementById("prospecting_campaign_select");
+
+    if (campaign_select && campaign_select.value)
+    {
+        prospecting_campaign_load(campaign_select.value);
+        return;
+    }
+    refresh();
+}
+
+function prospecting_inline_editor_submit(form)
+{
+    return (silent_submitf(form, {
+        after_success: prospecting_inline_editor_after_success
+    }));
+}
+
+document.addEventListener("click", function(event) {
+    let toggle = event.target.closest(".prospect_inline_toggle");
+    let cancel = event.target.closest(".prospect_inline_cancel");
+    let widget;
+    let select;
+
+    if (toggle)
+    {
+        event.preventDefault();
+        event.stopPropagation();
+        widget = toggle.closest(".prospect_inline_editor");
+        document.querySelectorAll(".prospect_inline_editor.editing").forEach(function(open_widget) {
+            if (open_widget !== widget)
+                prospecting_inline_editor_close(open_widget);
+        });
+        if (widget)
+        {
+            widget.classList.add("editing");
+            select = widget.querySelector("select");
+            if (select)
+                select.focus();
+        }
+        return;
+    }
+
+    if (cancel)
+    {
+        event.preventDefault();
+        event.stopPropagation();
+        prospecting_inline_editor_close(cancel.closest(".prospect_inline_editor"));
+        return;
+    }
+
+    if (!event.target.closest(".prospect_inline_editor"))
+        document.querySelectorAll(".prospect_inline_editor.editing").forEach(prospecting_inline_editor_close);
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.key != "Escape")
+        return;
+    document.querySelectorAll(".prospect_inline_editor.editing").forEach(prospecting_inline_editor_close);
 });

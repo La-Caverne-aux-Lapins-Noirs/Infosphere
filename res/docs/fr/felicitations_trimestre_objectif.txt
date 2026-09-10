@@ -1,0 +1,26 @@
+[@Indent][#IfC;Student.Gender;==;female;Madame;Monsieur],
+
+[@Indent]
+
+[@Indent]Nous avons le plaisir de vous féliciter pour vos résultats au trimestre **[#Variable;Result.CycleName]** ([#Variable;Result.CycleCodename]).
+
+[@Indent]Vous avez obtenu **[#Variable;Result.Flames] flammes**. Vous avez ainsi atteint ou dépassé l'objectif de 100 flammes fixé pour ce niveau de reconnaissance.
+
+[@Indent]
+
+[@Indent]Ce résultat témoigne d'un travail sérieux et d'une progression satisfaisante. Nous vous encourageons à poursuivre dans cette voie et à consolider les compétences acquises au trimestre suivant.
+
+[@Indent]
+
+[@Indent]Recevez toutes nos félicitations pour ce travail.
+
+[@Indent]
+
+[@Indent]Je vous prie d'agréer, [#IfC;Student.Gender;==;female;Madame;Monsieur], l'expression de mes salutations distinguées.
+
+[@Indent]
+
+[@Right;Pour [#Variable;School.Name]
+[#Variable;Signatories.Director.Identity]
+\par\vspace{0.08cm}
+[@IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm]]]

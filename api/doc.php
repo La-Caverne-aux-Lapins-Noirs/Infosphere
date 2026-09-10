@@ -4,6 +4,7 @@ require_once ("./tools/document_sources.php");
 require_once ("./tools/document_context.php");
 require_once ("./tools/dabsic_form.php");
 require_once ("./tools/document_workflow.php");
+require_once ("./tools/document_print.php");
 
 
 
@@ -280,14 +281,26 @@ function document_generation_blank_school_id(array $chain)
     return (NULL);
 }
 
-function document_generation_apply_blank_context(&$fields, &$files, &$temporary_files, array $chain)
+function document_generation_apply_blank_context(&$fields, &$files, &$temporary_files, array $chain, array $preserved = [])
 {
+    $has_school = false;
+    foreach ($preserved as $entry)
+        if (is_array($entry) && strtolower(trim((string)($entry["type"] ?? ""))) === "school")
+            $has_school = true;
+
+    if (count($preserved))
+        document_context_apply_chain($fields, $preserved, $files, $temporary_files);
+
+    if ($has_school)
+        return (true);
+
     $id_school = document_generation_blank_school_id($chain);
     if ($id_school == NULL)
         return (false);
 
-    // Reuse the normal context builder, but inject only School. Student,
-    // staff, custom fields and saved form values deliberately stay absent.
+    // Blank removes beneficiary/workflow values, but the institutional
+    // identity stays available. Models may explicitly opt other visible
+    // context values into blank generation with Contexts.<Name>.Blank = 1.
     document_context_apply_chain(
         $fields,
         [["type" => "school", "prefix" => "School", "id" => (string)$id_school]],
@@ -359,10 +372,177 @@ function document_generation_debug_report($docbuilder_command, array $temporary_
     return ($out);
 }
 
+function ResolveDocContext($id, $data, $method, $output, $module)
+{
+    global $User;
+
+    if (!document_generation_staff_request_allowed(is_array($data) ? $data : []))
+        return (new ErrorResponse("PermissionDenied"));
+
+    $bindings = $data["context_bindings"] ?? [];
+    $documents = [];
+    foreach ($data as $key => $value)
+    {
+        if (strncmp((string)$key, "doc_", 4) != 0 || !$value)
+            continue ;
+        $hash = substr((string)$key, 4);
+        $reference = trim((string)($data["docref_".$hash] ?? ""));
+        if ($reference == "")
+            continue ;
+        $file = document_reference_to_path($reference);
+        if ($file != NULL && is_file($file))
+            $documents[] = $file;
+    }
+    if (!count($documents))
+        return (new ErrorResponse("MissingField", "document model"));
+
+    $resolved = [];
+    $automatic = [];
+    $missing = [];
+    foreach ($documents as $file)
+    {
+        $bundle = document_context_model_bundle(
+            $file,
+            $bindings,
+            [],
+            [
+                "current_user_id" => (int)($User["id"] ?? 0),
+                "strict" => true,
+            ]
+        );
+        foreach (document_context_materialized_bindings($bundle) as $name => $value)
+            $resolved[$name] = $value;
+        $automatic = array_merge($automatic, document_context_automatic_names($bundle));
+        $missing = array_merge($missing, $bundle["missing"] ?? []);
+    }
+
+    return (new ValueResponse([
+        "bindings" => $resolved,
+        "automatic" => array_values(array_unique($automatic)),
+        "missing" => array_values(array_unique($missing)),
+    ]));
+}
+
+function document_generation_request_references(array $data)
+{
+    $out = [];
+    foreach ($data as $key => $value)
+        if (strncmp((string)$key, "docref_", 7) === 0 && trim((string)$value) != "")
+            $out[] = (string)$value;
+    return (array_values(array_unique($out)));
+}
+
+function document_generation_request_context_bindings(array $data)
+{
+    $bindings = $data["context_bindings"] ?? [];
+    if (is_string($bindings))
+        $bindings = json_decode($bindings, true);
+    return (is_array($bindings) ? $bindings : []);
+}
+
+function document_generation_staff_request_allowed(array $data)
+{
+    global $User;
+
+    if (am_i_teacher())
+        return (true);
+    if (!is_array($User))
+        return (false);
+    $refs = document_generation_request_references($data);
+    if (!count($refs))
+        return (false);
+    $basenames = array_map(function($reference) {
+        $split = explode(":", (string)$reference, 2);
+        return (basename(count($split) == 2 ? $split[1] : $split[0]));
+    }, $refs);
+    $bindings = document_generation_request_context_bindings($data);
+
+    // Librarians can compose the overdue-book reminder from the generic
+    // Documents page. The BookLoan semantic context resolves the borrower and
+    // school; once a loan is supplied, authorization is scoped to that school.
+    if (count($basenames) === 1 && $basenames[0] === "relance_retour_livre.dab")
+    {
+        $book_loan_value = trim((string)($bindings["BookLoan"] ?? ""));
+        if ($book_loan_value == "")
+            return (am_i_librarian());
+        $loan = document_context_book_loan($book_loan_value);
+        if (!is_array($loan))
+            return (false);
+        $id_student = (int)($loan["student_id"] ?? 0);
+        $school_id = $id_student > 0 ? document_print_school_id_for_user($id_student) : 0;
+        return ($id_student > 0 && $school_id > 0 && document_print_user_can_manage_context(
+            (int)$User["id"],
+            [
+                "type" => "library",
+                "owner_user_id" => $id_student,
+                "school_id" => $school_id,
+                "book_user_id" => (int)($loan["id"] ?? 0),
+            ]
+        ));
+    }
+
+    // Billing staff may only use the dedicated late-payment reminder model
+    // through this extra permission. Other generic document generation keeps
+    // the historical teacher restriction.
+    if (count($basenames) === 1 && $basenames[0] === "relance_paiement_retard.dab")
+    {
+        $id_student = (int)($bindings["Student"] ?? 0);
+        $school_id = $id_student > 0 ? document_print_school_id_for_user($id_student) : 0;
+        return ($id_student > 0 && $school_id > 0 && is_billing_manager_for_school($school_id));
+    }
+
+    // The cycle administration page already exposes these three generated
+    // letters to cycle/school authorities. Allow the same people to actually
+    // execute the generation even if they are not activity teachers.
+    $cycle_models = [
+        "convocation_preparation_accueil.dab",
+        "invitation_journee_integration.dab",
+        "convocation_rentree.dab",
+    ];
+    if (!array_diff($basenames, $cycle_models))
+    {
+        $id_cycle = (int)($bindings["Cycle"] ?? 0);
+        $id_student = (int)($bindings["Student"] ?? 0);
+        return ($id_cycle > 0 && $id_student > 0 && document_print_user_can_manage_context(
+            (int)$User["id"],
+            [
+                "type" => "cycle",
+                "owner_user_id" => $id_student,
+                "cycle_id" => $id_cycle,
+                "school_id" => document_print_school_id_for_cycle($id_cycle),
+            ]
+        ));
+    }
+
+    // End-of-cycle result letters are generated from the cycle student table.
+    // Their Dabsic model has Student/School contexts only, so scope the extra
+    // permission from the student itself rather than trusting form fields.
+    $result_models = [
+        "felicitations_trimestre_exceptionnel.dab",
+        "felicitations_trimestre_objectif.dab",
+        "encouragement_trimestre_50_99.dab",
+        "encouragement_trimestre_0_49.dab",
+    ];
+    if (count($basenames) === 1 && in_array($basenames[0], $result_models, true))
+    {
+        $id_student = (int)($bindings["Student"] ?? 0);
+        return ($id_student > 0 && document_print_user_can_manage_context(
+            (int)$User["id"],
+            [
+                "type" => "user",
+                "owner_user_id" => $id_student,
+                "school_id" => document_print_school_id_for_user($id_student),
+            ]
+        ));
+    }
+    return (false);
+}
+
 function _GenerateDoc($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
     global $Configuration;
+    global $User;
 
     $files = [];
     $context_files = [];
@@ -373,13 +553,62 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $finalize_document = !empty($data["finalize_document"]);
     $blank_document = !empty($data["blank_document"]);
     $target_year = isset($data["target_year"]) ? (int)$data["target_year"] : 0;
-    $signature_bindings = $data["signature_bindings"] ?? [];
+    $queue_for_print = !empty($data["queue_for_print"]);
+    $print_context = [
+        "type" => trim((string)($data["print_context_type"] ?? "user")),
+        "owner_user_id" => (int)($data["print_owner_user_id"] ?? $save_user_document),
+        "school_id" => (int)($data["print_school_id"] ?? 0),
+        "cycle_id" => (int)($data["print_cycle_id"] ?? 0),
+        "prospect_user_id" => (int)($data["print_prospect_user_id"] ?? 0),
+        "billing_entry_id" => (int)($data["print_billing_entry_id"] ?? 0),
+        "book_user_id" => (int)($data["print_book_user_id"] ?? 0),
+        "source_key" => trim((string)($data["print_source_key"] ?? "")),
+        "recipient_label" => trim((string)($data["print_recipient_label"] ?? "")),
+    ];
+    $print_label = trim((string)($data["print_label"] ?? ""));
+    $signature_bindings = [];
+    $context_bindings = $data["context_bindings"] ?? "";
     $selected_document_reference = "";
     $selected_document_file = "";
+    $selected_documents = [];
+
+    // Contexts are semantic: the same Student/School/etc. binding can feed
+    // several selected models, even when those models expose the value under
+    // different Dabsic prefixes.  Form/workflow finalization still targets one
+    // model because its signature/task schema is model-specific.
+    foreach ($data as $key => $val)
+    {
+        if (strncmp($key, "doc_", 4) != 0 || $val == 0)
+            continue ;
+        $hash = substr($key, 4);
+        if (!isset($data["docref_".$hash]))
+            continue ;
+        $reference = (string)$data["docref_".$hash];
+        $file = document_reference_to_path($reference);
+        if ($file == NULL || !is_file($file))
+            continue ;
+        $selected_documents[] = [
+            "reference" => $reference,
+            "file" => $file,
+            "priority" => (int)$val,
+        ];
+        if ($selected_document_reference == "")
+        {
+            $selected_document_reference = $reference;
+            $selected_document_file = $file;
+        }
+    }
+    if ($finalize_document && count($selected_documents) != 1)
+        return (new ErrorResponse("InvalidParameter", "document model"));
+
     unset(
         $data["action"], $data["form_output"], $data["save_user_document"],
         $data["finalize_document"], $data["blank_document"], $data["target_year"],
-        $data["signature_bindings"]
+        $data["signature_bindings"], $data["context_bindings"],
+        $data["queue_for_print"], $data["print_context_type"],
+        $data["print_owner_user_id"], $data["print_school_id"], $data["print_cycle_id"],
+        $data["print_prospect_user_id"], $data["print_billing_entry_id"], $data["print_book_user_id"],
+        $data["print_source_key"], $data["print_recipient_label"], $data["print_label"]
     );
 
     if (isset($data["fields"]))
@@ -397,15 +626,51 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         unset($data["fields"]);
     }
 
-    $document_chain = isset($data["chain"])
-        ? document_context_parse_chain($data["chain"]) : [];
+    $document_chain = [];
+    $blank_preserved_chain = [];
+    $missing_contexts = [];
+    foreach ($selected_documents as $selected_document)
+    {
+        $context_bundle = document_context_model_bundle(
+            $selected_document["file"],
+            $context_bindings,
+            [],
+            [
+                "current_user_id" => (int)($User["id"] ?? 0),
+                "owner_user_id" => $save_user_document,
+                "strict" => !$blank_document,
+            ]
+        );
+        $document_chain = array_merge($document_chain, $context_bundle["chain"]);
+        if ($blank_document)
+            foreach (($context_bundle["schema"] ?? []) as $context_name => $definition)
+                if (!empty($definition["blank"])
+                    && isset($context_bundle["bindings"][$context_name])
+                    && isset($context_bundle["resolved"][$context_name]))
+                    $blank_preserved_chain[] = document_context_chain_entry(
+                        $context_name,
+                        $definition,
+                        $context_bundle["resolved"][$context_name]["value"]
+                    );
+        $missing_contexts = array_merge($missing_contexts, $context_bundle["missing"]);
+        foreach ($context_bundle["signature_bindings"] as $slot => $source)
+            $signature_bindings[$slot] = $source;
+    }
+    $missing_contexts = array_values(array_unique($missing_contexts));
+    if (count($missing_contexts) && !$blank_document)
+        return (new ErrorResponse(
+            "MissingField",
+            "Contexts.".implode(", Contexts.", $missing_contexts)
+        ));
+
     if ($blank_document)
     {
         if (!document_generation_apply_blank_context(
             $fields,
             $context_files,
             $temporary_files,
-            $document_chain
+            $document_chain,
+            $blank_preserved_chain
         ))
             return (new ErrorResponse(
                 "MissingField",
@@ -419,43 +684,29 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             $context_files,
             $temporary_files
         );
+
+    // Generation metadata is a fact of the produced document, not an operator
+    // choice. Keep it in a normal Dabsic scope so models can use it without a
+    // mergeconf transformation. A blank template deliberately has no date.
+    if (!$blank_document)
+    {
+        $generation_context = document_context_data_scope_file("Generation", [
+            "date" => date("d/m/Y"),
+            "time" => date("H:i"),
+            "datetime" => date("d/m/Y H:i"),
+        ], $temporary_files);
+        if ($generation_context != NULL)
+            $context_files[] = $generation_context;
+    }
     unset($data["chain"]);
 
-    // Nouveau format robuste: doc_<hash>=0|1 + docref_<hash>=source:path.
-    foreach ($data as $key => $val)
-    {
-        if (strncmp($key, "doc_", 4) != 0 || $val == 0)
-            continue ;
-        $hash = substr($key, 4);
-        if (!isset($data["docref_".$hash]))
-            continue ;
-        $reference = (string)$data["docref_".$hash];
-        $file = document_reference_to_path($reference);
-        if ($selected_document_reference == "")
-        {
-            $selected_document_reference = $reference;
-            $selected_document_file = $file;
-        }
-        if ($val == 1)
-            array_unshift($files, $file);
+    // doc_<hash>=0|1 + docref_<hash>=source:path.  Keep the historical
+    // ordering semantics: priority 1 documents are prepended.
+    foreach ($selected_documents as $selected_document)
+        if ($selected_document["priority"] == 1)
+            array_unshift($files, $selected_document["file"]);
         else
-            $files[] = $file;
-    }
-
-    // Ancien format conservé pour compatibilité avec les pages encore non migrées.
-    foreach ($data as $file => $val)
-    {
-        if ($val == 0 || strncmp($file, "doc_", 4) == 0 || strncmp($file, "docref_", 7) == 0)
-            continue ;
-        $file = str_replace("_dab", ".dab", $file);
-        $file = $Configuration->DocDir().$file;
-        if (!file_exists($file))
-            continue ;
-        if ($val == 1)
-            array_unshift($files, $file);
-        else
-            $files[] = $file;
-    }
+            $files[] = $selected_document["file"];
 
     // mergeconf résout après lecture de tous les fichiers et, en cas de
     // redéfinition, la dernière valeur l'emporte. Les contextes doivent donc
@@ -661,6 +912,35 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         @chmod($saved_document, 0640);
     }
 
+    $print_task = NULL;
+    if ($queue_for_print && !$blank_document)
+    {
+        if ((int)$print_context["owner_user_id"] <= 0)
+            return (new ErrorResponse("InvalidParameter", "print owner"));
+        if ((int)$print_context["school_id"] <= 0 && (int)$print_context["cycle_id"] > 0)
+            $print_context["school_id"] = document_print_school_id_for_cycle((int)$print_context["cycle_id"]);
+        if ((int)$print_context["school_id"] <= 0)
+            $print_context["school_id"] = document_print_school_id_for_user((int)$print_context["owner_user_id"]);
+        if ($print_label == "")
+            $print_label = pathinfo($output_filename, PATHINFO_FILENAME);
+        if ((string)$print_context["source_key"] == "")
+            $print_context["source_key"] = "docbuilder:".$selected_document_reference.":".(int)$print_context["owner_user_id"];
+        $print_task = document_print_queue_content(
+            $content,
+            $output_filename,
+            $print_label,
+            $print_context
+        );
+        if ($print_task->is_error())
+        {
+            @unlink($hash_file);
+            @unlink($pdf);
+            foreach ($temporary_files as $temporary_file)
+                @unlink($temporary_file);
+            return ($print_task);
+        }
+    }
+
     // Le Dabsic fusionné est volontairement conservé dans /tmp pour
     // permettre sa vérification manuelle, même après une génération réussie.
     @unlink($hash_file);
@@ -682,13 +962,32 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         "content" => $content,
         "saved_document" => $saved_document,
         "resolved_dabsic_hash" => $resolved_dabsic_hash,
-        "document_instance" => ($document_instance instanceof ValueResponse) ? $document_instance->value : NULL
+        "document_instance" => ($document_instance instanceof ValueResponse) ? $document_instance->value : NULL,
+        "print_task" => ($print_task instanceof ValueResponse) ? $print_task->value : NULL
     ]));
 }
 
 
+function CompletePrintDocTask($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $id_task = (int)($data["task_id"] ?? 0);
+    if ($id_task <= 0)
+        bad_request();
+    $ret = document_print_complete_task($id_task);
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentPrintCompleted"] ?? "Document marqué comme imprimé / traité.",
+        "task_id" => $id_task,
+    ]));
+}
+
 function GenerateDoc($id, $data, $method, $output, $module)
 {
+    if (!document_generation_staff_request_allowed(is_array($data) ? $data : []))
+        return (new ErrorResponse("PermissionDenied"));
     ob_start();
     $request = _GenerateDoc($id, $data, $method, $output, $module);
     $unexpected_output = ob_get_clean();
@@ -730,7 +1029,7 @@ function DisplayDoc($id, $data, $method, $output, $module)
         0,
         "file",
         "file_browser",
-        is_teacher(),
+        am_i_teacher(),
         "",
         false,
         "",
@@ -880,25 +1179,33 @@ function DeleteDoc($id, $data, $method, $output, $module)
 $Tab = [
     "PUT" => [
 	"file" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DisplayDoc",
 	]
     ],
     "POST" => [
 	"" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "AddDoc",
 	],
 	"generate" => [
-	    "is_teacher",
+	    "logged_in",
 	    "GenerateDoc",
 	],
+        "print" => [
+            "logged_in",
+            "CompletePrintDocTask",
+        ],
+        "context" => [
+            "logged_in",
+            "ResolveDocContext",
+        ],
 	"expire" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "ExpireDocRequest",
 	],
 	"task" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "CompleteDocTask",
 	],
         "remind" => [
@@ -908,7 +1215,7 @@ $Tab = [
     ],
     "DELETE" => [
 	"file" => [
-	    "is_teacher",
+	    "am_i_teacher",
 	    "DeleteDoc",
 	]
     ],

@@ -19,6 +19,20 @@ function is_me($id)
     return ($User != NULL && $User["id"] == $id);
 }
 
+/*
+ * Access predicate naming convention:
+ *   is_<role>($id_user)          -> role carried by that user.
+ *   am_i_<role>()                -> role carried by the current actor
+ *                                    (global administrators are accepted).
+ *   is_<role>_for_<resource>($id)-> current actor may act in that resource
+ *                                    context (global administrators may be
+ *                                    accepted by the contextual predicate).
+ *
+ * api/calltab.php always passes the route resource ID to authorization
+ * callbacks. Actor-wide route checks must therefore use am_i_* (or an
+ * explicit ID-ignoring adapter such as only_admin), never is_<role>.
+ */
+
 function is_intranet_member_profile($usr = NULL)
 {
     global $User;
@@ -41,6 +55,7 @@ function normalize_school_authority($authority)
         3 => "COMMERCIAL",
         4 => "TEACHER",
         5 => "LIBRARIAN",
+        6 => "ACCOUNTANT",
     ];
 
     if (is_int($authority)
@@ -109,38 +124,44 @@ function user_school_ids($id_user, $authority = NULL)
     return ($out);
 }
 
-function is_assistant($usr = NULL)
+function is_teacher($id_user = -1, $lvl = 2)
 {
-    return (is_teacher(NULL, $usr, 1));
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return (false);
+
+    $usr = db_select_one("id, profile_status FROM user WHERE id = $id_user");
+    if ($usr == NULL || !is_intranet_member_profile($usr))
+        return (false);
+
+    $lvl = (int)$lvl;
+    return (db_select_one("
+        activity_teacher.id
+        FROM activity_teacher
+        LEFT JOIN user_laboratory
+          ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
+         AND user_laboratory.authority >= $lvl
+        WHERE activity_teacher.id_user = $id_user
+           OR user_laboratory.id_user = $id_user
+    ") != NULL);
+}
+
+function is_assistant($id_user = -1)
+{
+    return (is_teacher($id_user, ASSISTANT));
 }
 
 function can_manage_corrections()
 {
-    return (is_assistant() || am_i_director() || am_i_cycle_director());
-}
-
-function is_teacher($id = NULL, $usr = NULL, $lvl = 2)
-{
-    global $User;
-
-    if (!$User && $usr == NULL)
-	return (false);
-    if ($usr == NULL)
-	$usr = $User;
-    if (!is_intranet_member_profile($usr))
-	return (false);
-    if ($User && $usr["id"] == $User["id"] && is_admin())
-	return (true);
-    $ret = db_select_one("
-	activity_teacher.id
-        FROM activity_teacher
-	LEFT JOIN user_laboratory
-        ON user_laboratory.id_laboratory = activity_teacher.id_laboratory
-        AND user_laboratory.authority >= $lvl
-	WHERE activity_teacher.id_user = {$usr["id"]}
-	OR user_laboratory.id_user = {$usr["id"]}
-	");
-    return (!!$ret);
+    return (am_i_assistant() || am_i_director() || am_i_cycle_director());
 }
 
 function is_assistant_for_activity($id, $activity = NULL)
@@ -360,17 +381,21 @@ function is_cycle_director_of($id_user = -1, $id_cycle = -1)
 {
     global $User;
 
-    if (!$User)
-	return (false);
-    if (is_admin())
-	return (true);
     if ($id_user == -1)
-	$id_user = $User["id"];
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return (false);
+
     $id_cycle = (int)$id_cycle;
     if ($id_cycle == -1)
-	$id_cycle = "";
+        $cycle_filter = "";
     else
-	$id_cycle = " AND cycle_teacher.id_cycle = $id_cycle ";
+        $cycle_filter = " AND cycle_teacher.id_cycle = $id_cycle ";
     return (db_select_one("
         cycle_teacher.id_user, user_laboratory.id_user
         FROM cycle_teacher
@@ -379,7 +404,7 @@ function is_cycle_director_of($id_user = -1, $id_cycle = -1)
         WHERE (cycle_teacher.id_user = $id_user
         OR user_laboratory.id_user = $id_user
         )
-	$id_cycle
+        $cycle_filter
     ") != NULL);
 }
 
@@ -403,12 +428,22 @@ function is_cycle_director_for_student($id_student)
 
 function is_director_for_cycle($id)
 {
-    return (is_cycle_director_of(-1, $id));
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    return (is_cycle_director_of((int)$User["id"], $id));
 }
 
 function am_i_cycle_director()
 {
-    return (is_cycle_director_of());
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_cycle_director((int)$User["id"]));
 }
 
 function is_director_for_student($id, $big_admin = true)
@@ -484,48 +519,59 @@ function is_director_for_activity($id)
     return ($activity->is_director);
 }
 
-function is_director_for_school($id)
+function is_director_for_school($id_school)
 {
     global $User;
 
     if (!logged_in())
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "DIRECTOR", $id));
+        return (true);
+    return (user_has_school_authority($User["id"], "DIRECTOR", $id_school));
 }
 
-function is_secretariat_for_school($id)
+function is_secretariat_for_school($id_school)
 {
     global $User;
 
     if (!$User)
         return (false);
     if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "SECRETARIAT", $id));
+        return (true);
+    return (user_has_school_authority($User["id"], "SECRETARIAT", $id_school));
 }
 
-function is_commercial_for_school($id)
+function is_commercial_for_school($id_school)
 {
     global $User;
 
     if (!$User)
         return (false);
     if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "COMMERCIAL", $id));
+        return (true);
+    return (user_has_school_authority($User["id"], "COMMERCIAL", $id_school));
 }
 
-function is_teacher_for_school($id)
+function is_accountant_for_school($id_school)
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    if (is_admin())
+        return (true);
+    return (user_has_school_authority($User["id"], "ACCOUNTANT", $id_school));
+}
+
+function is_teacher_for_school($id_school)
 {
     global $User;
 
     if (!is_intranet_member_profile())
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "TEACHER", $id));
+        return (true);
+    return (user_has_school_authority($User["id"], "TEACHER", $id_school));
 }
 
 function is_assistant_for_school($id)
@@ -593,9 +639,11 @@ function is_assistant_for_school($id)
     ") != NULL);
 }
 
-function can_edit_supports($id = -1)
+function can_edit_supports()
 {
-    return (is_teacher_for_school($id));
+    // Support categories are global resources: the API route ID is a
+    // category/support identifier, not an establishment identifier.
+    return (is_teacher_for_school(-1));
 }
 
 function is_director_for_room($id)
@@ -613,19 +661,17 @@ function is_director_for_room($id)
     return (false);
 }
 
-function is_director($id = -1)
+function is_director($id_user = -1)
 {
     global $User;
 
-    if (!$User)
-	return (false);
-    if (is_admin())
-	return (true);
-    if ($id == -1)
-	$id = $User["id"];
-    if ((int)$User["id"] != (int)$id)
-        return (false);
-    return (user_has_school_authority($User["id"], "DIRECTOR"));
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    return (user_has_school_authority((int)$id_user, "DIRECTOR"));
 }
 
 function am_i_director()
@@ -633,8 +679,8 @@ function am_i_director()
     global $User;
 
     if (!$User)
-	return (false);
-    return (is_director($User["id"]));
+        return (false);
+    return (is_admin() || is_director((int)$User["id"]));
 }
 
 function am_i_director_of($id_school)
@@ -714,37 +760,102 @@ function is_member_of_laboratory($id_lab)
 	") != NULL);
 }
 
-function is_librarian($id = -1)
+function is_librarian_for_school($id_school)
 {
     global $User;
 
     if (!$User)
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "LIBRARIAN", $id));
+        return (true);
+    return (user_has_school_authority((int)$User["id"], "LIBRARIAN", (int)$id_school));
+}
+
+function is_librarian($id_user = -1)
+{
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    return (user_has_school_authority((int)$id_user, "LIBRARIAN"));
+}
+
+function am_i_librarian()
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_librarian((int)$User["id"]));
 }
 
 // L'adm au sens des étudiants
-function is_secretariat($id = -1)
+function is_secretariat($id_user = -1)
+{
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    return (user_has_school_authority((int)$id_user, "SECRETARIAT"));
+}
+
+function am_i_secretariat()
 {
     global $User;
 
     if (!$User)
-	return (false);
-    if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "SECRETARIAT", $id));
+        return (false);
+    return (is_admin() || is_secretariat((int)$User["id"]));
 }
 
-function is_commercial($id = -1)
+function is_commercial($id_user = -1)
+{
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    return (user_has_school_authority((int)$id_user, "COMMERCIAL"));
+}
+
+function am_i_commercial()
 {
     global $User;
 
     if (!$User)
-	return (false);
-    if (is_admin())
-	return (true);
-    return (user_has_school_authority($User["id"], "COMMERCIAL", $id));
+        return (false);
+    return (is_admin() || is_commercial((int)$User["id"]));
 }
 
+function is_accountant($id_user = -1)
+{
+    global $User;
+
+    if ($id_user == -1)
+    {
+        if (!$User)
+            return (false);
+        $id_user = (int)$User["id"];
+    }
+    return (user_has_school_authority((int)$id_user, "ACCOUNTANT"));
+}
+
+function am_i_accountant()
+{
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_accountant((int)$User["id"]));
+}

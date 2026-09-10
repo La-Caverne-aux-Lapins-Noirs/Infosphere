@@ -24,14 +24,14 @@ function DisplayModule($id, $data, $method, $output, $module)
     {
 	$is_teacher = is_teacher_for_activity($id);
 	$shortcut = false;
-	if (!is_director() && !is_cycle_director() && !$is_teacher)
+	if (!am_i_director() && !am_i_cycle_director() && !$is_teacher)
 	    forbidden();
 	else
 	    $shortcut = true;
 	if (($module = new FullActivity)->build($id) == false)
 	    return (new ValueResponse(["content" => $Dictionnary["Empty"]]));
 	foreach ($module->cycle as $cyc)
-	    if (is_cycle_director_of(-1, $cyc["id_cycle"]))
+	    if (is_director_for_cycle($cyc["id_cycle"]))
 	{
 	    $shortcut = true;
 	    break ;

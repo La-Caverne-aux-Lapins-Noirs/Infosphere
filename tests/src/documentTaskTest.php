@@ -33,6 +33,21 @@ class DocumentTaskTest extends XTestCase
         $this->assertSame(13, $plan["Teacher_13"]["id_assignee_user"]);
     }
 
+    public function testPrintActionIsAcceptedByGenericDocumentTasks()
+    {
+        $this->assertTrue(document_task_action_is_valid("print"));
+        $plan = document_task_plan_normalize([
+            "Postal" => [
+                "Action" => "print",
+                "Role" => "Print",
+                "RoleLabel" => "Impression / envoi postal",
+            ],
+        ]);
+        $this->assertArrayHasKey("Postal", $plan);
+        $this->assertSame("print", $plan["Postal"]["action"]);
+        $this->assertSame("Print", $plan["Postal"]["role"]);
+    }
+
     public function testAttendanceRegisterCampaignDeduplicatesTeachersButNotRoles()
     {
         $plan = attendance_register_campaign_signature_task_plan(

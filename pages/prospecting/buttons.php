@@ -46,7 +46,8 @@
 
 <?php $document_js = "silent_submitf(this, {after_success: open_generated_document});"; ?>
 <form method="put" action="/api/prospect/<?=$p["id"]; ?>/document" class="decision_buttons prospect_document_form">
-    <select name="document" required title="Document à générer">
+    <input type="hidden" name="queue_for_print" value="0" />
+    <select name="document" required title="Document à générer" onchange="prospect_document_update_print_button(this.form);">
         <option value="">Document…</option>
         <optgroup label="Contrats">
             <option value="contract:ECL">Contrat ECL</option>
@@ -58,6 +59,10 @@
             <option value="admission:domestic" title="Attestation d’admission définitive — étudiant français">Admission FR</option>
             <option value="admission:foreign" title="Attestation d’admission définitive — étudiant étranger">Admission</option>
         </optgroup>
+        <optgroup label="Convocations d’admission">
+            <option value="convocation:motivation-theory" title="Convocation à l’entretien de motivation et au test théorique">Entretien + test théorique</option>
+            <option value="convocation:practical" title="Convocation à l’épreuve pratique d’admission">Épreuve pratique</option>
+        </optgroup>
         <optgroup label="Qualiopi">
             <option value="post-interview-report" title="Compléter ou reprendre le compte rendu post-entretien">Compte rendu post-entretien</option>
         </optgroup>
@@ -66,6 +71,24 @@
         type="button"
         value="Générer"
         class="prospect_document_generate"
-        onclick='this.form.reportValidity() && <?=$document_js; ?>'
+        onclick="if (this.form.reportValidity()) { this.form.queue_for_print.value='0'; <?=$document_js; ?> }"
+    />
+    <input
+        type="button"
+        value="Générer + impression"
+        class="prospect_document_generate prospect_document_print"
+        title="Générer le document et l'ajouter à la file d'impression"
+        disabled
+        onclick="if (this.form.reportValidity()) { this.form.queue_for_print.value='1'; <?=$document_js; ?> }"
     />
 </form>
+<script>
+function prospect_document_update_print_button(form)
+{
+    var select = form ? form.querySelector('[name="document"]') : null;
+    var button = form ? form.querySelector('.prospect_document_print') : null;
+    if (!select || !button)
+        return;
+    button.disabled = !/^(?:admission|contract):/.test(select.value || '');
+}
+</script>

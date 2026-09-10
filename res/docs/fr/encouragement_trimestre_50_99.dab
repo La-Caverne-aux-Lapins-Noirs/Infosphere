@@ -1,0 +1,16 @@
+@include ".base_resultat_trimestre/base.dab"
+Title = "Encouragement — résultats trimestriels à consolider"
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Encouragement pour la suite du parcours
+  Left]
+]
+
+Subject = [Text($,LetterSubject)
+  Objet : Encouragement à la suite de vos résultats trimestriels
+LetterSubject]
+
+{Content
+  @insert txt ($) "encouragement_trimestre_50_99.txt"
+}

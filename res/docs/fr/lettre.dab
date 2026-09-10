@@ -1,0 +1,16 @@
+
+[Contexts
+  [Destination
+    Type = "user"
+    Prefix = "Destination"
+    Label = "Destinataire"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    InferFrom = "Destination"
+  ]
+]

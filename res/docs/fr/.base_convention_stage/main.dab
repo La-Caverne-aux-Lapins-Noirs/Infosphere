@@ -1,12 +1,53 @@
 
 Document = "Contract"
 
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Stagiaire"
+    Auto = "Owner"
+    Required = 1
+    Signatory = "Student"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [SchoolTutor
+    Type = "staff"
+    Prefix = "SchoolTutor"
+    Label = "Référent de l’établissement"
+    Placeholder = "Nom de code d’une personne ayant un rôle dans cet établissement"
+    Required = 1
+    Signatory = "SchoolTutor"
+    InferFrom = "School"
+  ]
+  [Company
+    Type = "organization"
+    Prefix = "Company"
+    Label = "Organisation d’accueil"
+    Required = 1
+  ]
+  [CompanyTutor
+    Type = "tutor"
+    Prefix = "CompanyTutor"
+    Label = "Tuteur de l’organisme d’accueil"
+    Required = 1
+    Signatory = "CompanyTutor"
+    InferFrom = "Company"
+  ]
+]
+
 [Header
   Left = [Text($,Left)
-    [@Size;5] $([].Title)
+    [@Size;5] $([].Title) [@PageCounter]
   Left]
   Right = [Text($,Right)
-    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+    [@Image;[#Variable;School.Logo];width=3cm;height=2cm]
   Right]
 ]
 

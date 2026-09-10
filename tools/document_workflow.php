@@ -330,6 +330,11 @@ function document_workflow_source_user_id($owner_user_id, $source, $created_by =
 {
     $owner_user_id = (int)$owner_user_id;
     $source = trim((string)$source);
+    if (preg_match('/^User_([0-9]+)$/D', $source, $m))
+    {
+        $id = (int)$m[1];
+        return (db_select_one("id FROM user WHERE id = $id AND authority != -1") != NULL ? $id : NULL);
+    }
     if ($source == "Student")
         return ($owner_user_id);
     if ($source == "Generator")
@@ -750,6 +755,7 @@ function document_workflow_enrich_document_form(array $row)
     $row["document_instance_id"] = trim((string)($document["instance_id"] ?? ""));
     $row["document_expired_at"] = trim((string)($document["expired_at"] ?? ""));
     $row["document_chain"] = $document["chain"] ?? "[]";
+    $row["document_context_bindings"] = $document["context_bindings"] ?? [];
     $row["document_signature_bindings"] = $document["signature_bindings"] ?? [];
     $row["school_codenames"] = document_workflow_document_form_school_codenames($row);
     $row["document_tasks"] = document_workflow_ensure_form_tasks($row);

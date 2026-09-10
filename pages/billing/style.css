@@ -41,23 +41,404 @@
 
 .billing_account_box
 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    grid-template-rows: auto auto;
+    gap: 2px 5px;
+    height: 100%;
+    min-height: 54px;
+    padding: 3px 4px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.billing_account_compact
+{
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 4px;
-    border-radius: 8px;
+    justify-content: center;
+    gap: 1px;
+    line-height: 1.08;
 }
 
 .billing_account_box strong
 {
-    font-size: 1.35em;
+    display: block;
+    font-size: 1.25em;
+    line-height: 1.05;
 }
 
-.billing_account_box span,
-.billing_account_box small,
-.billing_account_box b
+.billing_account_status,
+.billing_account_metrics,
+.billing_account_to_invoice
 {
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.billing_account_status
+{
+    font-weight: bold;
+}
+
+.billing_account_metrics,
+.billing_account_to_invoice
+{
+    font-size: 10px;
+}
+
+.billing_account_statement_button
+{
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    width: 42px;
+    min-height: 48px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.92);
+    color: black;
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.billing_account_statement_button:hover
+{
+    background: white;
+}
+
+.billing_account_dialog
+{
+    width: min(1120px, calc(100vw - 60px));
+    max-width: 1120px;
+    max-height: calc(100vh - 60px);
+    padding: 0;
+    border: 2px solid black;
+    border-radius: 10px;
+    background: white;
+    color: black;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.billing_account_dialog::backdrop
+{
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.billing_account_dialog_header
+{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 16px;
+    border-bottom: 1px solid black;
+    background: white;
+}
+
+.billing_account_dialog_header h3
+{
+    margin: 0;
+}
+
+.billing_account_dialog_header small
+{
+    display: block;
+    margin-top: 2px;
+    opacity: 0.65;
+}
+
+.billing_account_close
+{
+    min-width: 38px;
+    height: 38px;
+    border: 1px solid black;
+    border-radius: 50%;
+    background: white;
+    color: black;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 32px;
+}
+
+.billing_account_close:hover
+{
+    background: black;
+    color: white;
+}
+
+.billing_account_summary
+{
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: 8px;
+    padding: 14px 16px 6px 16px;
+}
+
+.billing_account_summary > div
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 72px;
+    padding: 8px;
+    border: 1px solid #888;
+    border-radius: 7px;
+    background: #f7f7f7;
+    box-sizing: border-box;
+}
+
+.billing_account_summary span
+{
+    font-size: 12px;
+}
+
+.billing_account_summary strong
+{
+    font-size: 18px;
+}
+
+.billing_account_summary small
+{
+    opacity: 0.65;
+}
+
+.billing_account_statement,
+.billing_account_pending,
+.billing_account_external_invoice,
+.billing_account_quick_payment
+{
+    margin: 12px 16px 16px 16px;
+}
+
+.billing_account_statement h4,
+.billing_account_pending h4,
+.billing_account_external_invoice h4,
+.billing_account_quick_payment h4
+{
+    margin: 0 0 7px 0;
+}
+
+.billing_account_pending p
+{
+    margin: -2px 0 7px 0;
+    font-size: 12px;
+    opacity: 0.72;
+}
+
+.billing_account_table_scroll
+{
+    width: 100%;
+    overflow-x: auto;
+}
+
+#billing_table .billing_account_dialog table
+{
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    table-layout: auto;
+    background: white;
+    color: black;
+}
+
+#billing_table .billing_account_dialog th,
+#billing_table .billing_account_dialog td
+{
+    padding: 6px 8px;
+    border: 1px solid #aaa;
+    background: white;
+    color: black;
+    text-align: left;
+    vertical-align: top;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 12px;
+}
+
+#billing_table .billing_account_dialog th
+{
+    background: #ededed;
+}
+
+#billing_table .billing_account_dialog td.billing_account_amount,
+#billing_table .billing_account_dialog th.billing_account_amount
+{
+    text-align: right;
+    white-space: nowrap;
+}
+
+#billing_table .billing_account_dialog tr.billing_account_debit_row td:first-child
+{
+    border-left: 4px solid #a00000;
+}
+
+#billing_table .billing_account_dialog tr.billing_account_credit_row td:first-child
+{
+    border-left: 4px solid #007000;
+}
+
+#billing_table .billing_account_dialog td.billing_account_empty
+{
+    padding: 18px;
+    text-align: center;
+    opacity: 0.65;
+}
+
+.billing_account_external_invoice,
+.billing_account_quick_payment
+{
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 8px;
+    background: #f7f7f7;
+}
+
+.billing_account_external_invoice > p
+{
+    margin: -2px 0 9px 0;
+    font-size: 12px;
+    opacity: 0.72;
+}
+
+.billing_account_external_invoice form
+{
+    display: grid;
+    grid-template-columns: 150px 130px 145px 145px 120px minmax(180px, 1fr);
+    gap: 8px;
+    align-items: end;
+}
+
+.billing_account_external_invoice label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+}
+
+.billing_account_external_invoice .billing_external_invoice_label,
+.billing_account_external_invoice .billing_external_invoice_pdf
+{
+    grid-column: span 3;
+}
+
+.billing_account_external_invoice .billing_external_invoice_paid
+{
+    grid-column: 1 / 3;
+    flex-direction: row;
+    align-items: center;
+    align-self: center;
+}
+
+.billing_external_invoice_payment_fields
+{
+    grid-column: 3 / 7;
+    display: grid;
+    grid-template-columns: 150px minmax(180px, 1fr) minmax(220px, 2fr);
+    gap: 8px;
+    align-items: end;
+}
+
+.billing_external_invoice_payment_fields.hidden
+{
+    display: none;
+}
+
+#billing_panel .billing_account_external_invoice input,
+#billing_panel .billing_account_external_invoice select
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#billing_panel .billing_account_external_invoice .billing_external_invoice_paid input[type="checkbox"]
+{
+    width: auto;
+}
+
+.billing_account_external_invoice input[type="button"]
+{
+    grid-column: 1 / -1;
+    height: 32px;
+}
+
+.billing_account_quick_payment form
+{
+    display: grid;
+    grid-template-columns: 150px 150px minmax(180px, 1fr) minmax(180px, 1fr) 150px;
+    gap: 8px;
+    align-items: end;
+}
+
+.billing_account_quick_payment label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+}
+
+#billing_panel .billing_account_quick_payment input
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_account_quick_payment input[type="button"]
+{
+    height: 32px;
+}
+
+@media (max-width: 900px)
+{
+    .billing_account_summary
+    {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+
+    .billing_account_external_invoice form,
+    .billing_account_quick_payment form
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .billing_account_external_invoice .billing_external_invoice_label,
+    .billing_account_external_invoice .billing_external_invoice_pdf,
+    .billing_account_external_invoice .billing_external_invoice_paid,
+    .billing_external_invoice_payment_fields
+    {
+        grid-column: 1 / -1;
+    }
+
+    .billing_external_invoice_payment_fields
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .billing_external_invoice_payment_fields > small
+    {
+        grid-column: 1 / -1;
+    }
+
+    .billing_account_external_invoice input[type="button"],
+    .billing_account_quick_payment input[type="button"]
+    {
+        grid-column: 1 / -1;
+    }
 }
 
 #billing_table td.billing_account_late
@@ -86,6 +467,7 @@
 
 .billing_action_div
 {
+    --billing-action-width: 330px;
     border: 1px solid black;
     border-radius: 10px;
     min-height: 44px;
@@ -109,7 +491,7 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: calc(100% - 220px);
+    width: calc(100% - var(--billing-action-width) - 10px);
     min-height: 44px;
     box-sizing: border-box;
     text-align: left;
@@ -123,14 +505,14 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    width: 210px;
+    width: var(--billing-action-width);
     margin-left: auto;
     box-sizing: border-box;
 }
 
 .billing_action_edit > button
 {
-    width: 210px;
+    width: var(--billing-action-width);
     height: 44px;
     border: 1px solid black;
     background: black;
@@ -141,7 +523,7 @@
 
 .billing_action_menu
 {
-    width: 320px;
+    width: var(--billing-action-width);
     border: 1px solid black;
     background: white;
     color: black;
@@ -291,8 +673,10 @@ button.billing_event
     top: 38px;
     z-index: 50;
     display: flex;
-    gap: 4px;
-    padding: 5px;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 285px;
+    padding: 7px;
     border: 1px solid black;
     border-radius: 6px;
     background: white;
@@ -300,13 +684,48 @@ button.billing_event
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
 }
 
+.billing_invoice_reference_field
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.billing_invoice_reference_field input
+{
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px 7px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    font: inherit;
+    background: white;
+    color: black;
+}
+
+.billing_invoice_reference_field small
+{
+    max-width: 285px;
+    font-weight: normal;
+    line-height: 1.25;
+    color: #555;
+}
+
+.billing_pending_invoice_actions
+{
+    display: flex;
+    gap: 4px;
+}
+
 .billing_pending_invoice_menu.hidden
 {
     display: none;
 }
 
-.billing_pending_invoice_menu button,
-.billing_pending_invoice_menu a
+.billing_pending_invoice_actions button,
+.billing_pending_invoice_actions a
 {
     min-width: 80px;
     padding: 4px 7px;
@@ -321,8 +740,8 @@ button.billing_event
     display: inline-block;
 }
 
-.billing_pending_invoice_menu button:hover,
-.billing_pending_invoice_menu a:hover
+.billing_pending_invoice_actions button:hover,
+.billing_pending_invoice_actions a:hover
 {
     background: black;
     color: white;
@@ -703,4 +1122,468 @@ button.billing_event
 {
     background: black;
     color: white;
+}
+
+.billing_action_menu form.billing_payment_reminder_form
+{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.billing_payment_reminder_invoices
+{
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #bbb;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.billing_payment_reminder_invoices label
+{
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 5px;
+    margin: 2px 0;
+    font-size: small;
+}
+
+.billing_action_menu .billing_payment_reminder_invoices input[type="checkbox"]
+{
+    width: auto;
+    margin-top: 2px;
+}
+
+.billing_payment_reminder_form textarea,
+.billing_payment_reminder_form input[type="submit"]
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* External invoices are created from the per-student + Add menu. */
+.billing_action_menu form.billing_external_invoice_form
+{
+    grid-template-columns: 1fr 1fr;
+}
+
+.billing_action_menu .billing_external_invoice_form label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    font-size: 11px;
+}
+
+.billing_action_menu .billing_external_invoice_form .billing_action_menu_full
+{
+    grid-column: 1 / -1;
+}
+
+.billing_action_menu .billing_external_invoice_form .billing_external_invoice_paid
+{
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.billing_action_menu .billing_external_invoice_form .billing_external_invoice_paid input[type="checkbox"]
+{
+    width: auto;
+    margin-top: 2px;
+}
+
+.billing_action_menu .billing_external_invoice_payment_fields
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+
+.billing_action_menu .billing_external_invoice_payment_fields.hidden
+{
+    display: none;
+}
+
+.billing_action_menu .billing_external_invoice_payment_fields > small
+{
+    grid-column: 1 / -1;
+}
+
+.billing_action_menu .billing_external_invoice_pdf small
+{
+    opacity: 0.7;
+}
+
+.billing_show_hidden_users
+{
+    margin-left: 10px;
+    padding: 3px 7px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 4px;
+    font-size: small;
+}
+
+.billing_show_hidden_users input
+{
+    vertical-align: middle;
+}
+
+#billing_table .billing_user_visibility_button
+{
+    width: auto;
+    max-width: 100%;
+    margin-top: 4px;
+    padding: 2px 5px;
+    font-size: 10px;
+}
+
+#billing_panel.billing_table_loading
+{
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.billing_hidden_badge
+{
+    display: inline-block;
+    margin-top: 3px;
+    padding: 1px 5px;
+    border: 1px dashed currentColor;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.billing_hidden_user
+{
+    opacity: 0.6;
+}
+
+.billing_payment_schedule_form
+{
+    margin: 3px 0 0 0;
+}
+
+.billing_payment_schedule_form button
+{
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 11px;
+}
+
+.billing_credit_note_pending,
+.billing_credit_note_sent
+{
+    border-radius: 15px;
+}
+
+.billing_credit_note_pending
+{
+    background-color: rgba(0, 120, 190, 0.25);
+    border-style: dashed;
+    color: black;
+}
+
+.billing_credit_note_sent
+{
+    background-color: rgba(0, 120, 190, 0.9);
+    color: white;
+}
+
+.billing_refund_sent
+{
+    min-width: 42px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border: 0;
+    border-radius: 2px;
+    background-color: rgba(190, 90, 0, 0.9);
+    color: white;
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%, 9px 50%);
+    box-shadow: inset 0 0 0 1px black;
+}
+
+.billing_invoice_status_credit_note .billing_invoice_status
+{
+    background: rgba(0, 120, 190, 0.9);
+}
+
+/* Issued invoice quick action: prepare a credit note directly from its bubble. */
+.billing_issued_invoice_menu label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.billing_issued_invoice_menu input
+{
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px 7px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: white;
+    color: black;
+    font: inherit;
+}
+
+.billing_issued_invoice_menu > small
+{
+    max-width: 320px;
+    line-height: 1.3;
+}
+
+.billing_invoice_action_stack
+{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+
+.billing_invoice_action_stack > a,
+.billing_invoice_action_stack > span
+{
+    text-align: center;
+}
+
+.billing_invoice_credit_note_button
+{
+    width: 100%;
+    box-sizing: border-box;
+    padding: 3px 5px;
+    font-size: 11px;
+}
+
+.billing_invoice_credit_note_dialog
+{
+    width: min(430px, calc(100vw - 32px));
+    box-sizing: border-box;
+    border: 1px solid black;
+    border-radius: 7px;
+    padding: 14px;
+}
+
+.billing_invoice_credit_note_dialog::backdrop
+{
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.billing_invoice_credit_note_dialog form,
+.billing_invoice_credit_note_dialog label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.billing_invoice_credit_note_dialog form
+{
+    gap: 10px;
+}
+
+.billing_invoice_credit_note_dialog input
+{
+    box-sizing: border-box;
+    width: 100%;
+    padding: 6px 8px;
+}
+
+.billing_invoice_credit_note_dialog_actions
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+/* Main billing view: keep the application body fixed and scroll only the ledger. */
+#body.billing_page_active
+{
+    overflow: hidden;
+}
+
+#billing_page
+{
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.billing_toolbar
+{
+    flex: 0 0 auto;
+    min-height: 28px;
+    white-space: nowrap;
+}
+
+#billing_page #billing_panel
+{
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+#billing_table
+{
+    min-width: 1000px;
+}
+
+#billing_table td
+{
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+#billing_table td.billing_id_cell
+{
+    width: 65px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.billing_id_box
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+#billing_table .billing_user_visibility_button
+{
+    width: 23px;
+    min-width: 23px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: black;
+    font-family: "DejaVu Sans", "Noto Sans Symbols 2", sans-serif;
+    font-size: 15px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+#billing_table .billing_user_visibility_button.billing_visibility_visible
+{
+    color: #00d800;
+}
+
+#billing_table .billing_user_visibility_button.billing_visibility_hidden
+{
+    color: #ff4040;
+}
+
+.billing_student_school
+{
+    opacity: 0.85;
+    font-size: 10px;
+}
+
+.billing_hidden_badge
+{
+    margin-left: 4px;
+    margin-top: 0;
+    vertical-align: middle;
+}
+
+#billing_table td.billing_account_late,
+#billing_table td.billing_account_billed_unpaid,
+#billing_table td.billing_account_advance,
+#billing_table td.billing_account_ok
+{
+    width: 260px;
+    padding: 0;
+}
+
+.billing_payment_schedule_form
+{
+    grid-column: 1;
+    grid-row: 2;
+    margin: 1px 0 0 0;
+}
+
+.billing_payment_schedule_form button
+{
+    padding: 1px 3px;
+    line-height: 1.1;
+}
+
+.billing_action_menu
+{
+    width: var(--billing-action-width);
+    max-height: min(620px, calc(100vh - 150px));
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.billing_action_selector
+{
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.billing_action_choice
+{
+    margin-top: 6px;
+}
+
+.billing_action_choice.hidden
+{
+    display: none;
+}
+
+.billing_action_choice > form
+{
+    margin-bottom: 0;
+}
+
+.billing_action_menu form.billing_external_invoice_form
+{
+    gap: 3px 4px;
+}
+
+.billing_action_menu .billing_external_invoice_form label
+{
+    gap: 1px;
+    line-height: 1.05;
+}
+
+.billing_action_menu .billing_external_invoice_form label > span
+{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.billing_action_menu .billing_external_invoice_form input[type="file"]
+{
+    font-size: 10px;
+}
+
+.billing_action_menu .billing_external_invoice_pdf
+{
+    margin-top: 1px;
+}
+
+.billing_action_menu .billing_external_invoice_paid
+{
+    margin-top: 1px;
+    margin-bottom: 1px;
 }

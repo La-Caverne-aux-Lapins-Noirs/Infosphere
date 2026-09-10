@@ -1,12 +1,43 @@
-Document = "Report"
+Document = "Invoice"
+Title = "Facture"
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Élève / bénéficiaire"
+    Auto = "Owner"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Parent
+    Type = "parent"
+    Prefix = "Parent"
+    Label = "Responsable légal"
+    InferFrom = "Student"
+  ]
+  [Finance
+    Type = "finance"
+    Prefix = "Finance"
+    Label = "Responsable financier / destinataire"
+    InferFrom = "Student"
+  ]
+]
 
 [Header
   Left = [Text($,Left)
     [@Size;5]
-    Facture
+    [#Variable;School.LegalName]
   Left]
   Right = [Text($,Right)
-    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
   Right]
 ]
 
@@ -21,25 +52,6 @@ Footer]
 
 BillingInformation = [].School.RIB
 
-'Ce qu'il y a en dessous doit etre completé dynamiquement
-
-[Student
-
-]
-
-[Parent
-
-]
-
-{Products
-  [
-    Content = "Placeholder"
-    Quantity = 1
-    Price = 1
-    VAT = 0
-  ]
-}
-
 [FormGroup
   @insert "res/docs/fr/.forms/invoice_groups.dab"
 ]
@@ -47,3 +59,6 @@ BillingInformation = [].School.RIB
 [FormRole
   @insert "res/docs/fr/.forms/invoice_roles.dab"
 ]
+
+' Products/Items est un tableau de lignes interprété directement par DocBuilder Invoice.
+' Chaque ligne accepte Content, Quantity, Price (HT) et VAT.

@@ -1,0 +1,81 @@
+[@NewPage]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]
+
+[@Center;**RÉCÉPISSÉ DE REMISE EN MAIN PROPRE**]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]Je soussigné[@IfC;Student.Gender;==;female;e], **[#Variable;Student.Identity]**[@IfC;Candidate.Number;!=;;,
+candidat[@IfC;Student.Gender;==;female;e] n° **[#Variable;Candidate.Number]**], reconnais avoir reçu en
+main propre ma convocation à la certification **[#Variable;TitleSession.Title.FrName][@IfC;TitleSession.Title.Code;!=;; ([#Variable;TitleSession.Title.Code])]**.
+
+[@Indent]
+
+[@Indent]La convocation remise concerne mon passage devant le jury prévu le **[#Variable;Candidate.JuryDate]** à
+**[#Variable;Candidate.JuryAppointmentTime]**, avec une présence demandée à compter de **[#Variable;Candidate.JuryArrivalTime]**.
+
+[@Indent]
+
+[@Indent]Le présent récépissé atteste uniquement de la remise matérielle de la convocation au candidat.
+
+[@Indent]
+
+[@Indent]**Remise effectuée :**
+
+[@Indent]
+
+Lieu : [#FLine;]
+
+Date et heure : [#FLine;]
+
+[@Indent]
+
+[@Columns;2;
+
+Le candidat :
+
+Ajoutez la mention manuscrite
+« Reçu en main propre » :
+
+
+
+Signature :
+
+
+
+;
+
+Pour l’établissement :
+
+Nom : [#Variable;Signatories.SessionManager.Identity]
+
+Qualité : Responsable de session
+
+
+
+Signature :
+
+
+
+]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]
+
+[@Indent]Ce récépissé signé est destiné à être conservé par l’établissement comme preuve de remise de la convocation.

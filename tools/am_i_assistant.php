@@ -1,6 +1,10 @@
 <?php
 
-function am_i_assistant($teacher)
+function am_i_assistant()
 {
-    return (retrieve_authority($teacher) >= ASSISTANT);
+    global $User;
+
+    if (!$User)
+        return (false);
+    return (is_admin() || is_assistant((int)$User["id"]));
 }

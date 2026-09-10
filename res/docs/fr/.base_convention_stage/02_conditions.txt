@@ -1,23 +1,34 @@
+
+[@NewPage]
+
 # Article 2 - Conditions du stage
 
 ## Nature du stage
 
-[@Size;1]
-Le stage est un stage pédagogique intégré à la formation suivie par le ou la stagiaire.
+[@Size;3]
+[@Columns;2;
+[@Indent][#Variable;Internship.Nature]
+]
 
 ## Sujet du stage
 
-Le sujet du stage est le développement de logiciel.
+[@Size;3]
+[@Columns;2;
+[@Indent][#Variable;Internship.Subject]
+]
 
 ## Activités confiées au stagiaire
 
-[#Variable;Internship.Purpose]
+[@Size;3]
+[@Columns;2;
+[@Indent][#Variable;Internship.Purpose]
+]
 
 ## Objectifs du stage
 
-[@Size;1]
-[@Columns;3;
-Le stage correspond à une période temporaire de mise en situation en milieu
+[@Size;3]
+[@Columns;2;
+[@Indent]Le stage correspond à une période temporaire de mise en situation en milieu
 professionnel au cours de laquelle le stagiaire acquiert des compétences
 professionnelles et met en œuvre les acquis de sa formation en vue de l'obtention
 d'un diplôme ou d'une certification et de favoriser son insertion professionnelle.
@@ -25,33 +36,50 @@ Le ou la stagiaire se voit confier une ou des missions conformes au projet
 pédagogique définies par son établissement d'enseignement supérieur privé ou
 organisme de formation professionnelle et approuvées par l'organisme d'accueil. 
 
-Le programme est établi par l’établissement d’enseignement supérieur privé ou
+[@Indent]
+
+[@Indent]Le programme est établi par l’établissement d’enseignement supérieur privé ou
 organisme de formation professionnelle et l'organisme d'accueil en fonction du
-programme général de la formation dispensée. 
+programme général de la formation dispensée.
 ]
 
-## Objectifs pédagogies
+## Objectifs pédagogiques
 
-[@Size;1]
-Outre les clauses générales figurant à la présente convention et que les parties,
+[@Size;3]
+[@Indent]Outre les clauses générales figurant à la présente convention et que les parties,
 par leur signature ci-dessous, acceptent sans restriction, les conditions
 particulières de déroulement du stage sont les suivantes :
 
-- Le stage se déroulera du [#Variable;Internship.StartDate] au [#Variable;Internship.EndDate]
-- Il correspond à [#Variable;Internship.DurationInDay] dans l'organisme d'acceuil
-- Nombre d'heures par jour : [#Variable;Internship.HourPerDay]
-- Nombre de jours travaillés par semaine : [#Variable;Internship;DayPerWeek]
+- Le stage se déroulera du [#ShortLine;[#Variable;Internship.StartDate]] au [#ShortLine;[#Variable;Internship.EndDate]]
+- Il correspond à [#ShortLine;[#Variable;Internship.DurationInDay]] jours dans l'organisme d'accueil
+- Nombre d'heures par jour : [#ShortLine;[#Variable;Internship.HourPerDay]]
+- Nombre de jours travaillés par semaine : [#ShortLine;[#Variable;Internship.DayPerWeek]]
 
-Durée totale du stage : [#Variable.Internship.Duration.InHour]
+Durée totale du stage : [#ShortLine;[#Variable;Internship.DurationInHour]] heures
 
-Adresse précise du lieu de déroulement du stage: [#Variable;Company.Address]
+Adresse précise du lieu de déroulement du stage: [#ShortLine;[#Variable;Internship.Address]]
+
+## Organisation et calendrier
+
+[@Size;3]
+[@Indent][#Variable;Internship.Schedule]
+
+## Compétences à acquérir
+
+[@Size;3]
+[@Indent][#Variable;Internship.Skills]
 
 ## Critères d'évaluation du stage
 
-L'entreprise devra fournir un indice de satisfaction à l'EFRITS.
-Le ou la stagiaire sera invité/e à faire de même pour l'entreprise.  
+[@Size;3]
+[@Columns;2;
+[@Indent]L'entreprise devra fournir un indice de satisfaction à l’établissement [#ShortLine;[#Variable;School.Name]].
+Le ou la stagiaire sera invité(e) à faire de même pour l'entreprise.
 
-Le ou la stagiaire devra présenter un court document résumant les réalisations
-auquel il ou elle aura contribué/e ainsi qu'en faire une courte conférence face
+[@Indent]
+
+[@Indent]Le ou la stagiaire devra présenter un court document résumant les réalisations
+auquel il ou elle aura contribué(e) ainsi qu'en faire une courte conférence face
 à un public composé de ses pairs et du corps pédagogique.
+]
 

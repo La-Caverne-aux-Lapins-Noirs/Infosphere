@@ -19,6 +19,7 @@
     <input type="text" name="head_office_country" placeholder="Pays" value="France" /><br />
 
     <textarea name="activity" placeholder="Activité / service d'accueil"></textarea><br />
+    <textarea name="billing_information" placeholder="Informations de paiement / RIB (IBAN, BIC, modalités)"></textarea><br />
     <textarea name="notes" placeholder="Notes internes"></textarea><br />
 
     <p class="enterprise_add_notice">

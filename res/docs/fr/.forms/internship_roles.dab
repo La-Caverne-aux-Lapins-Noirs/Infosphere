@@ -19,12 +19,21 @@
 [Etablissement
   Label = "Établissement"
   {Read
-    "Etablissement"
+    "Etablissement",
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
   }
   {Edit
-    "Etablissement"
+    "Etablissement",
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
   }
   {Validate
-    "Etablissement"
+    "Etablissement",
+    "Stagiaire",
+    "Entreprise",
+    "Stage"
   }
 ]

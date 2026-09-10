@@ -1,0 +1,14 @@
+
+
+## Engagements de l'établissement [#Variable;School.Name]
+
+[#Variable;School.Name] s'engage à :
+
+- Rendre ces principes accessibles aux apprenants, personnels, formateurs, intervenants et partenaires.
+- Désigner une personne ou une fonction à laquelle les situations peuvent être signalées et orienter, lorsque cela est nécessaire, vers les interlocuteurs ou services compétents.
+- Accueillir les signalements avec sérieux, discrétion et impartialité, dans les limites imposées par la sécurité des personnes et les obligations légales.
+- Prévenir les représailles envers les personnes ayant signalé ou témoigné de bonne foi.
+- Rechercher les aménagements raisonnables et adaptations nécessaires lorsque la situation d'une personne le requiert.
+- Sensibiliser les nouveaux membres de la communauté à ces engagements.
+- Traiter les manquements et, lorsqu'une sanction est nécessaire, appliquer les règles disciplinaires de manière proportionnée et contradictoire.
+

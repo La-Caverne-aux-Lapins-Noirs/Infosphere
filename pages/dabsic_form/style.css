@@ -383,3 +383,91 @@
     width: auto;
     min-height: auto;
 }
+
+
+.dabsic-form-preview
+{
+    min-width: 220px;
+    min-height: 34px;
+    border: 1px solid #777;
+    border-radius: 4px;
+    background: #30343a;
+    color: white;
+    cursor: pointer;
+}
+
+.dabsic-form-preview:hover:not(:disabled)
+{
+    background: #414852;
+}
+
+.dabsic-form-preview:disabled
+{
+    cursor: default;
+    opacity: 0.45;
+}
+
+.dabsic-form-signature-owner
+{
+    margin: 0 0 10px 0;
+}
+
+.dabsic-form-signature-current
+{
+    display: block;
+    max-width: 420px;
+    max-height: 125px;
+    margin: 10px 0 12px 0;
+    padding: 8px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: white;
+    object-fit: contain;
+}
+
+#dabsic-form-signature-canvas
+{
+    display: block;
+    width: 100%;
+    max-width: 680px;
+    height: auto;
+    aspect-ratio: 34 / 13;
+    margin: 10px 0;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: white;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.dabsic-form-signature-buttons
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dabsic-form-signature button
+{
+    min-height: 32px;
+    padding: 5px 11px;
+}
+
+#dabsic-form-signature-save
+{
+    border-color: #237d29;
+    background: #0a4c0e;
+    color: white;
+}
+
+#dabsic-form-signature-replace
+{
+    border-color: #777;
+    background: #30343a;
+    color: white;
+}
+
+.dabsic-form-page [hidden]
+{
+    display: none !important;
+}

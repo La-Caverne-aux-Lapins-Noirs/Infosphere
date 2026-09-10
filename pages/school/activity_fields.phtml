@@ -1,0 +1,39 @@
+<?php $activity_flags = school_activity_flags($school ?? ["is_school" => 1, "is_of" => 0, "is_cfa" => 0]); ?>
+<section class="school_config_section">
+    <h4>Activités de l'établissement</h4>
+    <?php foreach (["is_school" => "École", "is_of" => "Organisme de formation (OF)", "is_cfa" => "Centre de formation d'apprentis (CFA)"] as $key => $label) { ?>
+        <label><?=$label; ?>
+            <select name="<?=$key; ?>" onchange="schoolActivityFields(this.form)">
+                <option value="1" <?=$activity_flags[$key] ? "selected" : ""; ?>>Oui</option>
+                <option value="0" <?=$activity_flags[$key] ? "" : "selected"; ?>>Non</option>
+            </select>
+        </label>
+    <?php } ?>
+    <p class="school_admin_notice">Les champs administratifs s'affichent selon les activités. Une activité désactivée n'apparaît plus dans les mentions des nouveaux documents. Ses numéros restent conservés.</p>
+</section>
+<script>
+function schoolActivityFields(form) {
+    var active = function (key) { return form.elements[key] && form.elements[key].value === '1'; };
+    var groups = {
+        is_school: ['school_registration_number', 'school_registration_academy'],
+        formation: ['formation_activity_number', 'formation_activity_region'],
+        is_cfa: ['cfa_name', 'executing_establishment_name', 'alternation_registration_number', 'alternation_registration_academy'],
+        uai: ['uai']
+    };
+    Object.keys(groups).forEach(function (key) {
+        var show = key === 'formation' ? active('is_of') || active('is_cfa')
+            : key === 'uai' ? active('is_school') || active('is_cfa') : active(key);
+        groups[key].forEach(function (name) {
+            var input = form.elements[name];
+            if (!input) return;
+            var label = input.closest('label');
+            (label || input).style.display = show ? '' : 'none';
+            if (!label && input.nextElementSibling && input.nextElementSibling.tagName === 'BR')
+                input.nextElementSibling.style.display = show ? '' : 'none';
+        });
+    });
+}
+setTimeout(function () {
+    document.querySelectorAll('select[name="is_school"]').forEach(function (select) { schoolActivityFields(select.form); });
+}, 0);
+</script>
