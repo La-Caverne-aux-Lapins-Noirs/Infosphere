@@ -9,7 +9,7 @@
             </select>
         </label>
     <?php } ?>
-    <p class="school_admin_notice">Les champs administratifs s'affichent selon les activités. Une activité désactivée n'apparaît plus dans les mentions des nouveaux documents. Ses numéros restent conservés.</p>
+    <p class="school_admin_notice">Les champs administratifs qui ne correspondent pas aux activités de l'établissement restent visibles en lecture seule. Leurs valeurs sont conservées, mais ne sont pas utilisées dans les nouveaux documents.</p>
 </section>
 <script>
 function schoolActivityFields(form) {
@@ -21,15 +21,16 @@ function schoolActivityFields(form) {
         uai: ['uai']
     };
     Object.keys(groups).forEach(function (key) {
-        var show = key === 'formation' ? active('is_of') || active('is_cfa')
+        var editable = key === 'formation' ? active('is_of') || active('is_cfa')
             : key === 'uai' ? active('is_school') || active('is_cfa') : active(key);
         groups[key].forEach(function (name) {
             var input = form.elements[name];
             if (!input) return;
             var label = input.closest('label');
-            (label || input).style.display = show ? '' : 'none';
-            if (!label && input.nextElementSibling && input.nextElementSibling.tagName === 'BR')
-                input.nextElementSibling.style.display = show ? '' : 'none';
+            input.readOnly = !editable;
+            input.setAttribute('aria-readonly', editable ? 'false' : 'true');
+            if (label)
+                label.classList.toggle('school_activity_readonly', !editable);
         });
     });
 }

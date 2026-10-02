@@ -18,4 +18,4 @@ require_once (__DIR__."/albedo/pickup.php");
 require_once (__DIR__."/albedo/automatic_evaluation.php");
 require_once (__DIR__."/albedo/deploy_exam.php");
 require_once (__DIR__."/albedo/appointment_slots.php");
-
+require_once (__DIR__."/albedo/session_signin_sheet.php");

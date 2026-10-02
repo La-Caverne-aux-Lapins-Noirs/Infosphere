@@ -33,6 +33,16 @@ if (!function_exists("home_intercom_url"))
 {
 function home_intercom_url($context, $id_subject)
 {
+    // Les discussions rattachees a une personne vivent sur son profil, pas
+    // dans l'Intercom general. Le profil sait deja selectionner son onglet
+    // Intercom et ouvrir directement le sujet passe dans `ref`.
+    if ($context["misc_type"] == "user")
+        return ("index.php?".http_build_query([
+            "p" => "ProfileMenu",
+            "a" => (int)$context["id_misc"],
+            "ref" => (int)$id_subject,
+        ]));
+
     return ("index.php?".http_build_query([
         "p" => "IntercomMenu",
         "table" => $context["misc_type"],
@@ -80,6 +90,32 @@ function home_intercom_user_contexts()
         home_intercom_dictionary("HomeIntercomPrivateMessages", "Messages privés")
     );
 
+    // Si l'utilisateur a ouvert un fil prive sur le profil de quelqu'un
+    // d'autre, les reponses restent rattachees a ce profil (id_misc). Il faut
+    // donc aussi surveiller ces contextes, pas seulement son propre profil.
+    $private_visibility = (int)INTERCOM_PRIVATE;
+    foreach (db_select_all("
+        DISTINCT root.id_misc as id
+        FROM message as root
+        WHERE root.misc_type = 'user'
+          AND root.id_message IS NULL
+          AND root.visibility = $private_visibility
+          AND root.id_user = $uid
+          AND root.id_misc <> $uid
+        ORDER BY root.id_misc ASC
+    ") as $profile)
+    {
+        $profile_id = (int)$profile["id"];
+        home_intercom_add_context(
+            $contexts,
+            "user",
+            $profile_id,
+            "private",
+            home_intercom_dictionary("HomeIntercomPrivateMessages", "Messages privés").
+                " — ".intercom_context_name("user", $profile_id)
+        );
+    }
+
     // Annonces générales.
     home_intercom_add_context(
         $contexts,
@@ -92,7 +128,21 @@ function home_intercom_user_contexts()
     );
 
     // Salons école accessibles.
-    $schools = db_select_all("\n        school.id,\n        school.codename,\n        COALESCE(NULLIF(organization.$field, ''), NULLIF(organization.name, ''), NULLIF(organization.legal_name, ''), school.codename) as name\n        FROM school\n        LEFT JOIN organization\n          ON organization.id = school.id_organization\n        WHERE school.deleted IS NULL OR school.deleted = 0\n        ORDER BY school.id ASC\n    ");
+    $schools = db_select_all("
+        school.id,
+        school.codename,
+        COALESCE(
+            NULLIF(organization.$field, ''),
+            NULLIF(organization.name, ''),
+            NULLIF(organization.legal_name, ''),
+            school.codename
+        ) as name
+        FROM school
+        LEFT JOIN organization
+          ON organization.id = school.id_organization
+        WHERE school.deleted IS NULL OR school.deleted = 0
+        ORDER BY school.id ASC
+    ");
     foreach ($schools as $school)
     {
         $id_school = (int)$school["id"];
@@ -115,7 +165,16 @@ function home_intercom_user_contexts()
     }
 
     // Annonces des cycles où l'utilisateur est inscrit.
-    foreach (db_select_all("\n        DISTINCT cycle.id,\n        COALESCE(NULLIF(cycle.$field, ''), cycle.codename) as name\n        FROM user_cycle\n        LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle\n        WHERE user_cycle.id_user = $uid\n          AND cycle.id IS NOT NULL\n          AND (cycle.deleted IS NULL OR cycle.deleted = 0)\n        ORDER BY COALESCE(NULLIF(cycle.$field, ''), cycle.codename)\n    ") as $cycle)
+    foreach (db_select_all("
+        DISTINCT cycle.id,
+        COALESCE(NULLIF(cycle.$field, ''), cycle.codename) as name
+        FROM user_cycle
+        LEFT JOIN cycle ON cycle.id = user_cycle.id_cycle
+        WHERE user_cycle.id_user = $uid
+          AND cycle.id IS NOT NULL
+          AND (cycle.deleted IS NULL OR cycle.deleted = 0)
+        ORDER BY COALESCE(NULLIF(cycle.$field, ''), cycle.codename)
+    ") as $cycle)
         home_intercom_add_context(
             $contexts,
             "cycle",
@@ -126,7 +185,70 @@ function home_intercom_user_contexts()
 
     // Annonces des matières qui concernent l'utilisateur.
     // On vise le modèle de matière, pour garder le même salon d'année en année.
-    foreach (db_select_all("\n        DISTINCT target.id as id,\n        COALESCE(\n            NULLIF(target.$field, ''),\n            NULLIF(matter_source.$field, ''),\n            NULLIF(source.$field, ''),\n            target.codename\n        ) as name\n        FROM user_cycle\n        LEFT JOIN activity_cycle ON activity_cycle.id_cycle = user_cycle.id_cycle\n        LEFT JOIN activity as source ON source.id = activity_cycle.id_activity\n        LEFT JOIN activity as matter_source\n          ON matter_source.id = CASE\n              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1\n              THEN source.parent_activity\n              ELSE source.id\n          END\n        LEFT JOIN activity as target\n          ON target.id = CASE\n              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1\n              THEN matter_source.id_template\n              ELSE matter_source.id\n          END\n        WHERE user_cycle.id_user = $uid\n          AND source.id IS NOT NULL\n          AND matter_source.id IS NOT NULL\n          AND target.id IS NOT NULL\n          AND (target.parent_activity IS NULL OR target.parent_activity = -1)\n          AND (source.deleted IS NULL OR source.deleted = 0)\n          AND (matter_source.deleted IS NULL OR matter_source.deleted = 0)\n          AND (target.deleted IS NULL OR target.deleted = 0)\n        UNION\n        SELECT DISTINCT target.id as id,\n        COALESCE(\n            NULLIF(target.$field, ''),\n            NULLIF(matter_source.$field, ''),\n            NULLIF(source.$field, ''),\n            target.codename\n        ) as name\n        FROM user_team\n        LEFT JOIN team ON team.id = user_team.id_team\n        LEFT JOIN activity as source ON source.id = team.id_activity\n        LEFT JOIN activity as matter_source\n          ON matter_source.id = CASE\n              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1\n              THEN source.parent_activity\n              ELSE source.id\n          END\n        LEFT JOIN activity as target\n          ON target.id = CASE\n              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1\n              THEN matter_source.id_template\n              ELSE matter_source.id\n          END\n        WHERE user_team.id_user = $uid\n          AND source.id IS NOT NULL\n          AND matter_source.id IS NOT NULL\n          AND target.id IS NOT NULL\n          AND (target.parent_activity IS NULL OR target.parent_activity = -1)\n          AND (source.deleted IS NULL OR source.deleted = 0)\n          AND (matter_source.deleted IS NULL OR matter_source.deleted = 0)\n          AND (target.deleted IS NULL OR target.deleted = 0)\n        ORDER BY name\n    ") as $activity)
+    foreach (db_select_all("
+        DISTINCT target.id as id,
+        COALESCE(
+            NULLIF(target.$field, ''),
+            NULLIF(matter_source.$field, ''),
+            NULLIF(source.$field, ''),
+            target.codename
+        ) as name
+        FROM user_cycle
+        LEFT JOIN activity_cycle ON activity_cycle.id_cycle = user_cycle.id_cycle
+        LEFT JOIN activity as source ON source.id = activity_cycle.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+              THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+              THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE user_cycle.id_user = $uid
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (target.parent_activity IS NULL OR target.parent_activity = -1)
+          AND (source.deleted IS NULL OR source.deleted = 0)
+          AND (matter_source.deleted IS NULL OR matter_source.deleted = 0)
+          AND (target.deleted IS NULL OR target.deleted = 0)
+        UNION
+        SELECT DISTINCT target.id as id,
+        COALESCE(
+            NULLIF(target.$field, ''),
+            NULLIF(matter_source.$field, ''),
+            NULLIF(source.$field, ''),
+            target.codename
+        ) as name
+        FROM user_team
+        LEFT JOIN team ON team.id = user_team.id_team
+        LEFT JOIN activity as source ON source.id = team.id_activity
+        LEFT JOIN activity as matter_source
+          ON matter_source.id = CASE
+              WHEN source.parent_activity IS NOT NULL AND source.parent_activity != -1
+              THEN source.parent_activity
+              ELSE source.id
+          END
+        LEFT JOIN activity as target
+          ON target.id = CASE
+              WHEN matter_source.id_template IS NOT NULL AND matter_source.id_template != -1
+              THEN matter_source.id_template
+              ELSE matter_source.id
+          END
+        WHERE user_team.id_user = $uid
+          AND source.id IS NOT NULL
+          AND matter_source.id IS NOT NULL
+          AND target.id IS NOT NULL
+          AND (target.parent_activity IS NULL OR target.parent_activity = -1)
+          AND (source.deleted IS NULL OR source.deleted = 0)
+          AND (matter_source.deleted IS NULL OR matter_source.deleted = 0)
+          AND (target.deleted IS NULL OR target.deleted = 0)
+        ORDER BY name
+    ") as $activity)
         home_intercom_add_context(
             $contexts,
             "activity",
@@ -144,7 +266,15 @@ if (!function_exists("home_intercom_visible_message_clause"))
 function home_intercom_visible_message_clause($message_alias = "msg")
 {
     // Les messages masqués par modération ne doivent pas déclencher la home.
-    return ("\n        NOT EXISTS (\n            SELECT hidden.id\n            FROM message_report hidden\n            WHERE hidden.id_message = $message_alias.id\n              AND hidden.status = -1\n            LIMIT 1\n        )\n    ");
+    return ("
+        NOT EXISTS (
+            SELECT hidden.id
+            FROM message_report hidden
+            WHERE hidden.id_message = $message_alias.id
+              AND hidden.status = -1
+            LIMIT 1
+        )
+    ");
 }
 }
 
@@ -159,8 +289,58 @@ function home_intercom_unread_entries_for_context($context, $limit = 8)
     $id_misc = (int)$context["id_misc"];
     $limit = max(1, (int)$limit);
     $visible = home_intercom_visible_message_clause("msg");
+    $visible_root = home_intercom_visible_message_clause("root");
+    $private_visibility = (int)INTERCOM_PRIVATE;
+    $context_filter = "";
 
-    return (db_select_all("\n        root.id as id_subject,\n        root.title as title,\n        COALESCE(last_msg.message, root.message) as excerpt,\n        COALESCE(last_msg.post_date, root.post_date) as post_date,\n        COALESCE(last_author.id, root_author.id) as uid,\n        COALESCE(last_author.nickname, root_author.nickname) as nickname,\n        COALESCE(last_author.codename, root_author.codename) as ucodename,\n        COALESCE(last_msg.id, root.id) as last_message_id\n        FROM message as root\n        LEFT JOIN (\n            SELECT id_message, MAX(view_date) as view_date\n            FROM message_user\n            WHERE id_user = $uid\n            GROUP BY id_message\n        ) as message_user\n          ON message_user.id_message = root.id\n        LEFT JOIN message as last_msg\n          ON last_msg.id = (\n              SELECT msg.id\n              FROM message as msg\n              WHERE (msg.id = root.id OR msg.id_message = root.id)\n                AND msg.id_user != $uid\n                AND $visible\n                AND (message_user.view_date IS NULL OR msg.post_date > message_user.view_date)\n              ORDER BY msg.post_date DESC, msg.id DESC\n              LIMIT 1\n          )\n        LEFT JOIN user as last_author ON last_author.id = last_msg.id_user\n        LEFT JOIN user as root_author ON root_author.id = root.id_user\n        WHERE root.misc_type = '$misc_type'\n          AND root.id_misc = $id_misc\n          AND root.id_message IS NULL\n          AND last_msg.id IS NOT NULL\n        ORDER BY last_msg.post_date DESC, last_msg.id DESC\n        LIMIT $limit\n    "));
+    // Pour un profil tiers, ne parcourir que les fils prives ouverts par
+    // l'utilisateur courant. Sinon le simple ajout de ce profil aux contextes
+    // ferait remonter ses autres conversations dans la home.
+    if ($context["misc_type"] == "user" && $id_misc != $uid)
+        $context_filter = "
+          AND root.visibility = $private_visibility
+          AND root.id_user = $uid
+        ";
+
+    return (db_select_all("
+        root.id as id_subject,
+        root.title as title,
+        COALESCE(last_msg.message, root.message) as excerpt,
+        COALESCE(last_msg.post_date, root.post_date) as post_date,
+        COALESCE(last_author.id, root_author.id) as uid,
+        COALESCE(last_author.nickname, root_author.nickname) as nickname,
+        COALESCE(last_author.codename, root_author.codename) as ucodename,
+        COALESCE(last_msg.id, root.id) as last_message_id
+        FROM message as root
+        LEFT JOIN (
+            SELECT id_message, MAX(view_date) as view_date
+            FROM message_user
+            WHERE id_user = $uid
+            GROUP BY id_message
+        ) as message_user
+          ON message_user.id_message = root.id
+        LEFT JOIN message as last_msg
+          ON last_msg.id = (
+              SELECT msg.id
+              FROM message as msg
+              WHERE (msg.id = root.id OR msg.id_message = root.id)
+                AND msg.id_user != $uid
+                AND $visible
+                AND (message_user.view_date IS NULL OR msg.post_date > message_user.view_date)
+              ORDER BY msg.post_date DESC, msg.id DESC
+              LIMIT 1
+          )
+        LEFT JOIN user as last_author ON last_author.id = last_msg.id_user
+        LEFT JOIN user as root_author ON root_author.id = root.id_user
+        WHERE root.misc_type = '$misc_type'
+          AND root.id_misc = $id_misc
+          AND root.id_message IS NULL
+          AND $visible_root
+          $context_filter
+          AND last_msg.id IS NOT NULL
+        ORDER BY last_msg.post_date DESC, last_msg.id DESC
+        LIMIT $limit
+    "));
 }
 }
 

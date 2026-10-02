@@ -1,5 +1,57 @@
+@include ".base_letter/base.dab"
+Title = "Certificat de scolarité"
 
-Document = ""
+[Workflow
+  AutoFinalize = 1
+  {DeliveryRecipients "Student"}
+]
+
+[Letter
+  BodyGap = "3.2cm"
+  BodyLeft = "1cm"
+  BodyRight = "1cm"
+  DateX = "13cm"
+  DateY = "8.2cm"
+]
+
+[School
+  Name = ""
+  LegalName = ""
+  LegalAddress = ""
+  LegalCity = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  Stamp = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Id = ""
+  Identity = ""
+  FirstName = ""
+  FamilyName = ""
+  Gender = ""
+  BirthDate = ""
+  BirthPlace = ""
+  BirthCity = ""
+  BirthCountry = ""
+  INE = ""
+  ChosenClass = ""
+  CurrentYear = ""
+]
+
+[Generation
+  Date = ""
+  Time = ""
+  Datetime = ""
+  SchoolPeriod = ""
+  SchoolYearStart = ""
+  SchoolYearEnd = ""
+]
 
 [Contexts
   [Student
@@ -16,8 +68,44 @@ Document = ""
     Required = 1
     InferFrom = "Student"
   ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Direction signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
 ]
 
-  
-Titre = "Certificat de scolarité"
+[Signatures
+  [Director
+    Required = 1
+    Role = "Direction"
+  ]
+]
 
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Certificat de scolarité
+  Left]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.LegalAddress]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Subject = [Text($,LetterSubject)
+  Objet : Certificat de scolarité
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;School.LegalCity;!=;;[#Variable;School.LegalCity], ;]le [#Variable;Generation.Date]
+LetterDate]
+
+{Content
+  @insert txt ($) "certificat_scolarite.txt"
+}

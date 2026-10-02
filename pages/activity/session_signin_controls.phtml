@@ -1,0 +1,27 @@
+<?php
+$session_signin_session = $session_signin_session ?? $session;
+if (!session_signin_schema_ready())
+{
+    echo '<p>Les tables SQL de l’émargement de session doivent être installées.</p>';
+    return ;
+}
+$session_signin_pdf = session_signin_pdf_path((int)$session_signin_session->id);
+$session_signin_ready = $session_signin_pdf && is_file($session_signin_pdf);
+$session_signin_record = db_select_one("signin_morning_end, signin_afternoon_start FROM session WHERE id = ".(int)$session_signin_session->id);
+?>
+<div class="activity_session_signin_controls">
+    <strong><?=session_signin_escape($Dictionnary["SessionSignInSheet"]); ?></strong>
+    <?php if (!$session_signin_ready) { ?>
+    <form method="post" action="/api/session/<?=(int)$session_signin_session->id; ?>/sign_in_sheet"
+          onsubmit="return silent_submitf(this, {after_success: function () { window.location.reload(); }});">
+        <label>Fin du matin <input type="time" name="morning_end" value="<?=session_signin_escape($session_signin_record["signin_morning_end"] ?? "13:00"); ?>" required /></label>
+        <label>Début de l’après-midi <input type="time" name="afternoon_start" value="<?=session_signin_escape($session_signin_record["signin_afternoon_start"] ?? "14:00"); ?>" required /></label>
+        <input type="submit" value="<?=session_signin_escape($Dictionnary["SessionSignInGenerate"]); ?>" />
+    </form>
+    <?php } ?>
+    <?php if ($session_signin_ready) { ?>
+        <a class="button_link" href="/session_signin_download.php?scope=session&amp;id=<?=(int)$session_signin_session->id; ?>">
+            <?=session_signin_escape($Dictionnary["SessionSignInDownload"]); ?>
+        </a>
+    <?php } ?>
+</div>

@@ -258,7 +258,14 @@ function intercom_page_report_nav_item($report)
     $author = trim((string)(try_get($report, "author_nickname", "") ?: try_get($report, "author_codename", "")));
     if ($author != "")
         $subtitle .= " · ".$author;
-    $href = intercom_page_link($type, $id, NULL, $subject);
+    if ($type == "user")
+        $href = "index.php?".http_build_query([
+            "p" => "ProfileMenu",
+            "a" => $id,
+            "ref" => $subject,
+        ]);
+    else
+        $href = intercom_page_link($type, $id, NULL, $subject);
     ?>
     <a class="intercom_nav_item intercom_report_nav_item" href="<?=intercom_page_h($href); ?>">
         <span class="intercom_nav_title">⚠ <?=intercom_page_h($title); ?></span>

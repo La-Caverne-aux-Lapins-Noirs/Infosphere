@@ -2,7 +2,27 @@
 
 function enterprise_document_roles()
 {
-    return (["contact", "representative", "tutor"]);
+    return (["contact", "representative", "tutor", "billing"]);
+}
+
+function enterprise_billing_payer_kinds()
+{
+    return (["direct", "opco", "institutional", "other"]);
+}
+
+function enterprise_billing_payer_kind($kind)
+{
+    $kind = strtolower(trim((string)$kind));
+    if (in_array($kind, enterprise_billing_payer_kinds(), true))
+        return ($kind);
+    return ("direct");
+}
+
+function enterprise_billing_reminder_enabled_value($value, $payer_kind = "direct")
+{
+    if (enterprise_billing_payer_kind($payer_kind) === "opco")
+        return (0);
+    return ((int)$value > 0 ? 1 : 0);
 }
 
 function enterprise_document_role_list($roles)
@@ -229,8 +249,11 @@ function enterprise_main_info(array $enterprise)
     $address = enterprise_main_info_address($enterprise);
     $registry = trim((string)($enterprise["registration_registry"] ?? ""));
     $registration_number = trim((string)($enterprise["registration_number"] ?? ""));
+    $share_capital = trim((string)($enterprise["share_capital"] ?? ""));
     $out = $legal_name;
 
+    if ($share_capital != "")
+        $out .= ($out == "" ? "" : " ")."au capital de ".$share_capital;
     if ($address != "")
         $out .= ($out == "" ? "" : " : ")."Siège social : ".$address;
     if ($registration_number != "")
@@ -258,11 +281,21 @@ function enterprise_dabsic_context(array $enterprise)
             "codename" => $enterprise["codename"] ?? "",
             "name" => $enterprise["name"] ?? "",
             "legal_name" => $enterprise["legal_name"] ?? ($enterprise["name"] ?? ""),
+            "Identity" => $enterprise["legal_name"] ?? ($enterprise["name"] ?? ""),
+            "identity" => $enterprise["legal_name"] ?? ($enterprise["name"] ?? ""),
             "SIRET" => $siret,
             "SIREN" => enterprise_siren($enterprise),
             "NIC" => enterprise_nic($enterprise),
+            "registration_registry" => $enterprise["registration_registry"] ?? "",
+            "registration_number" => $enterprise["registration_number"] ?? "",
+            "share_capital" => $enterprise["share_capital"] ?? "",
             "address" => $legal_address,
+            "Address" => $legal_address,
             "legal_address" => $legal_address,
+            "PostalCode" => $enterprise["head_office_zipcode"] ?? "",
+            "City" => $enterprise["head_office_city"] ?? "",
+            "PostalCity" => trim((string)($enterprise["head_office_zipcode"] ?? "")." ".(string)($enterprise["head_office_city"] ?? "")),
+            "Country" => $enterprise["head_office_country"] ?? "",
             "head_office" => [
                 "address_line1" => $enterprise["head_office_address_line1"] ?? "",
                 "address_line2" => $enterprise["head_office_address_line2"] ?? "",
@@ -272,7 +305,17 @@ function enterprise_dabsic_context(array $enterprise)
             ],
             "main_info" => enterprise_main_info($enterprise),
             "mail" => $enterprise["mail"] ?? "",
+            "Mail" => $enterprise["mail"] ?? "",
             "courriel" => $enterprise["mail"] ?? "",
+            "VATNumber" => $enterprise["vat_number"] ?? "",
+            "ElectronicInvoiceAddress" => $enterprise["electronic_invoice_address"] ?? "",
+            "ElectronicInvoiceAddressScheme" => $enterprise["electronic_invoice_address_scheme"] ?? "",
+            "ElectronicInvoiceRoutingCode" => $enterprise["electronic_invoice_routing_code"] ?? "",
+            "BillingPayerKind" => enterprise_billing_payer_kind($enterprise["billing_payer_kind"] ?? "direct"),
+            "BillingReminderEnabled" => enterprise_billing_reminder_enabled_value(
+                $enterprise["billing_reminder_enabled"] ?? 1,
+                $enterprise["billing_payer_kind"] ?? "direct"
+            ),
             "phone" => $enterprise["phone"] ?? "",
             "website" => $enterprise["website"] ?? "",
             "activity" => $enterprise["activity"] ?? "",
@@ -370,6 +413,19 @@ function add_enterprise(array $data)
         "mail" => $mail,
         "website" => trim((string)($data["website"] ?? "")),
         "siret" => enterprise_digits($data["siret"] ?? ""),
+        "vat_number" => strtoupper(trim((string)($data["vat_number"] ?? ""))),
+        "electronic_invoice_address" => trim((string)($data["electronic_invoice_address"] ?? "")),
+        "electronic_invoice_address_scheme" => trim((string)($data["electronic_invoice_address_scheme"] ?? "")),
+        "electronic_invoice_routing_code" => trim((string)($data["electronic_invoice_routing_code"] ?? "")),
+        "electronic_invoice_routing_scheme" => trim((string)($data["electronic_invoice_routing_scheme"] ?? "")),
+        "billing_payer_kind" => enterprise_billing_payer_kind($data["billing_payer_kind"] ?? "direct"),
+        "billing_reminder_enabled" => enterprise_billing_reminder_enabled_value(
+            $data["billing_reminder_enabled"] ?? 1,
+            $data["billing_payer_kind"] ?? "direct"
+        ),
+        "registration_registry" => trim((string)($data["registration_registry"] ?? "")),
+        "registration_number" => trim((string)($data["registration_number"] ?? "")),
+        "share_capital" => trim((string)($data["share_capital"] ?? "")),
         "activity" => trim((string)($data["activity"] ?? "")),
         "billing_information" => trim((string)($data["billing_information"] ?? "")),
         "notes" => trim((string)($data["notes"] ?? "")),
@@ -411,14 +467,28 @@ function edit_enterprise($id, array $data)
     $fields = [];
     foreach ([
         "name", "legal_name",
+        "registration_registry", "registration_number", "share_capital",
         "head_office_address_line1", "head_office_address_line2",
         "head_office_zipcode", "head_office_city", "head_office_country",
-        "phone", "mail", "website", "activity", "billing_information", "notes"
+        "phone", "mail", "website", "activity", "billing_information", "notes",
+        "vat_number", "electronic_invoice_address", "electronic_invoice_address_scheme",
+        "electronic_invoice_routing_code", "electronic_invoice_routing_scheme",
+        "billing_payer_kind", "billing_reminder_enabled"
     ] as $field)
         if (isset($data[$field]))
             $fields[$field] = trim((string)$data[$field]);
     if (isset($data["siret"]))
         $fields["siret"] = enterprise_digits($data["siret"]);
+    if (isset($fields["vat_number"]))
+        $fields["vat_number"] = strtoupper($fields["vat_number"]);
+    if (isset($fields["billing_payer_kind"]))
+        $fields["billing_payer_kind"] = enterprise_billing_payer_kind($fields["billing_payer_kind"]);
+    $payer_kind = $fields["billing_payer_kind"] ?? ($enterprise["billing_payer_kind"] ?? "direct");
+    if (isset($fields["billing_reminder_enabled"]) || $payer_kind === "opco")
+        $fields["billing_reminder_enabled"] = enterprise_billing_reminder_enabled_value(
+            $fields["billing_reminder_enabled"] ?? ($enterprise["billing_reminder_enabled"] ?? 1),
+            $payer_kind
+        );
     if (isset($fields["mail"]) && $fields["mail"] != "" && filter_var($fields["mail"], FILTER_VALIDATE_EMAIL) === false)
         return (new ErrorResponse("BadMail"));
 
@@ -484,8 +554,8 @@ function enterprise_contact_user_id(array $data)
 
     $id_user = (int)$ret->value["id"];
     $fields = [
-        "first_name" => strtolower($first),
-        "family_name" => strtolower($family),
+        "first_name" => $first,
+        "family_name" => $family,
         "phone" => trim((string)($data["phone"] ?? "")),
     ];
     if (($ret = set_user_data($id_user, $fields))->is_error())

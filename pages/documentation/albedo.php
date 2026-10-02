@@ -23,6 +23,14 @@ function document_workflow_albedo_mail($invitation, $instance, $role_label, $rem
     return (send_mail($mail, $subject, $content));
 }
 
+function document_workflow_albedo_invitation_retry_due(array $signature)
+{
+    $last_attempt = (int)($signature["LastInvitationAttemptTimestamp"] ?? 0);
+    if ($last_attempt <= 0)
+        return (true);
+    return (time() - $last_attempt >= 60 * 60);
+}
+
 function document_workflow_albedo_process_instance($file)
 {
     $loaded = document_workflow_load_instance(dirname($file));
@@ -42,13 +50,18 @@ function document_workflow_albedo_process_instance($file)
     }
 
     $changed = false;
-    foreach (($instance["Signatures"] ?? []) as $slot => &$signature)
+    if (!isset($instance["Signatures"]) || !is_array($instance["Signatures"]))
+        return ;
+
+    // Iterate the persisted array itself.  Iterating ($instance["Signatures"] ?? [])
+    // by reference only mutates a temporary copy; invitation timestamps were then
+    // lost and Albedo created a fresh token/mail on every pass.
+    foreach ($instance["Signatures"] as $slot => &$signature)
     {
         if (!is_array($signature) || ($signature["Status"] ?? "Pending") == "Signed")
             continue ;
         if (document_workflow_signature_is_external_campaign($signature))
             continue ;
-        $semantic_role = document_workflow_signature_semantic_role($slot, $signature);
         $role_label = document_workflow_signature_role_label($slot, $signature);
         $signatory = document_workflow_signature_assignee_user_id(
             (int)($instance["OwnerUserId"] ?? 0),
@@ -66,6 +79,13 @@ function document_workflow_albedo_process_instance($file)
         $reminder = $last_ts !== false && time() - $last_ts >= 3 * 24 * 3600;
         if ($last != "" && !$reminder)
             continue ;
+        if (!document_workflow_albedo_invitation_retry_due($signature))
+            continue ;
+
+        $attempt_timestamp = time();
+        $signature["LastInvitationAttemptTimestamp"] = $attempt_timestamp;
+        $signature["InvitationAttemptCount"] = (int)($signature["InvitationAttemptCount"] ?? 0) + 1;
+        $changed = true;
 
         $invitation = registration_form_create_document_signature_invitation(
             (int)$instance["OwnerUserId"], (string)$instance["Id"], $slot, $signatory, 1
@@ -101,7 +121,9 @@ function document_workflow_albedo_process_instance($file)
         $signature["InvitationId"] = (int)$invitation["id"];
         $signature["SignatoryUserId"] = (int)$signatory;
         $changed = true;
-        add_log(TRACE, "Document workflow ".$instance["Id"]." signature request sent for slot $slot ($semantic_role) to user $signatory.", 1, true);
+        add_log(EDITING_OPERATION, document_workflow_signature_mail_log_message(
+            $instance, $slot, $signature, $invitation["user"] ?? [], $signatory, $reminder, "automatic"
+        ), 1, false);
     }
     unset($signature);
     if ($changed)
@@ -135,6 +157,8 @@ function document_workflow_albedo_unlock($handle)
 
 function document_workflow_albedo_seal_retry_due(array $instance)
 {
+    if (defined("DOCUMENT_WORKFLOW_FORCE_SEAL_RETRY") && DOCUMENT_WORKFLOW_FORCE_SEAL_RETRY)
+        return (true);
     $last = trim((string)($instance["SealLastAttemptAt"] ?? ""));
     if ($last == "")
         return (true);
@@ -158,6 +182,13 @@ function document_workflow_albedo_seal_instance($file)
     $instance = $loaded->value["data"];
     if (($instance["Status"] ?? "") != "Signed")
         return ;
+
+    // PdfSign is explicitly opt-in.  Never let the sealing worker turn a
+    // perfectly valid Infosphere-signed document into a PdfSign configuration
+    // error merely because the school has no pdfsign.dab.
+    if (!document_workflow_require_pdf_sign($instance))
+        return ;
+
     if (!document_workflow_albedo_seal_retry_due($instance))
         return ;
 
@@ -200,7 +231,20 @@ function document_workflow_albedo_seal_instance($file)
             document_workflow_write_instance($loaded->value["file"], $instance);
             return ;
         }
-        $sealed = pdfsign_seal($school_codename, $frozen, $tmp, $tmp_timestamp);
+        $seal_source = $frozen;
+        if (!empty($instance["FrozenDabsicFile"]))
+        {
+            $rendered = document_workflow_render_signed_pdf($instance, $directory);
+            if ($rendered->is_error())
+            {
+                $instance["SealError"] = "SignedRenderFailed";
+                $instance["SealErrorDetail"] = substr(strval($rendered), 0, 4000);
+                document_workflow_write_instance($loaded->value["file"], $instance);
+                return ;
+            }
+            $seal_source = $directory.(string)$rendered->value["file"];
+        }
+        $sealed = pdfsign_seal($school_codename, $seal_source, $tmp, $tmp_timestamp);
         if (!$sealed["ok"])
         {
             @unlink($tmp);
@@ -418,134 +462,92 @@ function document_workflow_albedo_delivery_filename(array $instance)
 
 function document_workflow_albedo_deliver_completed_instance($file)
 {
-    $loaded = document_workflow_load_instance(dirname($file));
-    if ($loaded->is_error())
-        return ;
-    $instance = $loaded->value["data"];
-    if (($instance["Status"] ?? "") != "Completed" || !empty($instance["DeliveredAt"]))
-        return ;
-    if (!document_workflow_albedo_delivery_retry_due($instance))
-        return ;
+    return (document_workflow_deliver_completed_instance($file, true));
+}
 
-    $lock = document_workflow_albedo_lock($loaded->value["directory"]);
-    if ($lock === NULL)
-        return ;
-    try
+
+function document_workflow_albedo_finalize_ready_workspaces($id_user, $codename)
+{
+    global $Configuration;
+
+    $id_user = (int)$id_user;
+    $directory = $Configuration->UsersDir($codename)."admin/documentation/forms/";
+    foreach (glob($directory.".workspace-*.json") ?: [] as $workspace_file)
     {
-        $loaded = document_workflow_load_instance($loaded->value["directory"]);
-        if ($loaded->is_error())
-            return ;
-        $instance = $loaded->value["data"];
-        if (($instance["Status"] ?? "") != "Completed" || !empty($instance["DeliveredAt"]))
-            return ;
+        $raw = @file_get_contents($workspace_file);
+        $workspace = $raw !== false ? json_decode($raw, true) : NULL;
+        if (!is_array($workspace) || empty($workspace["released_at"]) || empty($workspace["auto_finalize"]))
+            continue ;
+        $model_hash = strtolower(trim((string)($workspace["model_hash"] ?? "")));
+        $target_year = (int)($workspace["target_year"] ?? -1);
+        $reference = trim((string)($workspace["reference"] ?? ""));
+        $source_reference = trim((string)($workspace["source_reference"] ?? ""));
+        if (!preg_match('/^[a-f0-9]{32}$/D', $model_hash) || $target_year < 0 || $target_year > 5
+            || $reference == "" || $source_reference == "")
+            continue ;
+        $output_key = "user-document:".$id_user.":".$model_hash.":".$target_year;
+        if (document_workflow_processed_instance_for_output($id_user, $output_key) != "")
+            continue ;
+        $resolved = dabsic_editor_resolve_file($reference, false);
+        if (!$resolved["ok"])
+        {
+            add_log(REPORT, "Cannot resolve released document workspace $workspace_file", $id_user, true);
+            continue ;
+        }
+        $metadata = dabsic_form_form_metadata($resolved["absolute"]);
+        $semantic = document_workflow_workspace_semantic_bindings($workspace);
+        if (!document_workflow_workspace_required_roles_complete(
+            $id_user, $output_key, $metadata["roles"] ?? [],
+            (int)($workspace["created_by"] ?? 0), $semantic
+        ))
+            continue ;
 
-        $directory = $loaded->value["directory"];
-        $final = $directory.($instance["FinalFile"] ?? ($instance["SealedFile"] ?? "sealed.pdf"));
-        $expected = (string)($instance["FinalHash"] ?? ($instance["SealedHash"] ?? ""));
-        if (!is_file($final) || $expected == "" || hash_file("sha256", $final) !== $expected)
-        {
-            $instance["Status"] = "Error";
-            $instance["Error"] = "FinalHashMismatch";
-            $instance["ErrorAt"] = date("Y-m-d H:i:s");
-            document_workflow_write_instance($loaded->value["file"], $instance);
-            return ;
-        }
-
-        $instance["DeliveryLastAttemptAt"] = date("Y-m-d H:i:s");
-        $instance["DeliveryAttemptCount"] = (int)($instance["DeliveryAttemptCount"] ?? 0) + 1;
-        $filename = document_workflow_albedo_delivery_filename($instance);
-        $attachments = [$filename => file_get_contents($final)];
-        if (!empty($instance["TimestampFile"]))
-        {
-            $timestamp = $directory.$instance["TimestampFile"];
-            $timestamp_hash = (string)($instance["TimestampHash"] ?? "");
-            if (!is_file($timestamp) || $timestamp_hash == "" || hash_file("sha256", $timestamp) !== $timestamp_hash)
-            {
-                $instance["Status"] = "Error";
-                $instance["Error"] = "TimestampHashMismatch";
-                $instance["ErrorAt"] = date("Y-m-d H:i:s");
-                document_workflow_write_instance($loaded->value["file"], $instance);
-                return ;
-            }
-            $attachments[$filename.".tsr"] = file_get_contents($timestamp);
-        }
-
-        $recipients = document_workflow_albedo_delivery_recipients($instance);
-        $delivered = [];
-        foreach (($instance["DeliveredUsers"] ?? []) as $id_user)
-        {
-            $id_user = (int)$id_user;
-            if ($id_user > 0)
-                $delivered[$id_user] = true;
-        }
-        $failed = [];
-        foreach ($recipients as $id_user)
-        {
-            $id_user = (int)$id_user;
-            if (isset($delivered[$id_user]))
-                continue ;
-            $user = db_select_one("id, first_name, family_name, mail FROM user WHERE id = ".(int)$id_user." AND authority != -1");
-            $mail = trim((string)($user["mail"] ?? ""));
-            if ($user == NULL || $mail == "")
-            {
-                $failed[] = (int)$id_user;
-                continue ;
-            }
-            $subject = "Document finalisé : ".document_workflow_instance_label($instance);
-            $content = "Bonjour".(trim((string)($user["first_name"] ?? "")) != "" ? " ".$user["first_name"] : "").",\n\n".
-                "Le document est désormais finalisé. Vous trouverez en pièce jointe la version définitive qui a été conservée par Infosphere.\n\n".
-                "Référence : ".(string)($instance["Id"] ?? "")."\n".
-                "Empreinte SHA-256 : ".$expected."\n";
-            try
-            {
-                $sent = send_mail($mail, $subject, $content, NULL, $attachments, true);
-            }
-            catch (Throwable $e)
-            {
-                $sent = new ErrorResponse("CannotSendMail", $e->getMessage());
-            }
-            if ($sent->is_error())
-                $failed[] = (int)$id_user;
-            else
-                $delivered[$id_user] = true;
-        }
-
-        $instance["DeliveredUsers"] = array_keys($delivered);
-        if (count($failed))
-        {
-            $instance["DeliveryPendingUsers"] = $failed;
-            $instance["DeliveryError"] = "CannotDeliverToAllRecipients";
-        }
+        require_once (__DIR__."/../../api/doc.php");
+        $key = "albedo_".$model_hash;
+        $request = _GenerateDoc(0, [
+            "doc_".$key => 1,
+            "docref_".$key => $source_reference,
+            "form_output" => $output_key,
+            "save_user_document" => $id_user,
+            "finalize_document" => 1,
+            "target_year" => $target_year,
+            "context_bindings" => document_context_bindings_json($workspace["context_bindings"] ?? []),
+        ], "POST", NULL, NULL);
+        if ($request instanceof ErrorResponse)
+            add_log(REPORT, "Automatic document finalization failed for $output_key: ".strval($request), $id_user, true);
         else
-        {
-            unset($instance["DeliveryPendingUsers"], $instance["DeliveryError"]);
-            $instance["DeliveredAt"] = date("Y-m-d H:i:s");
-        }
-        document_workflow_write_instance($loaded->value["file"], $instance);
-        if (!count($failed))
-            add_log(TRACE, "Document workflow ".$instance["Id"]." final PDF delivered to recipients.", 1, true);
-    }
-    finally
-    {
-        document_workflow_albedo_unlock($lock);
+            add_log(EDITING_OPERATION, "Document workspace finalized automatically after all contributions: $output_key", $id_user, false);
     }
 }
 
-foreach (db_select_all("id, codename FROM user WHERE authority != -1") as $document_user)
+if (!defined("DOCUMENT_WORKFLOW_ALBEDO_NO_AUTORUN") || !DOCUMENT_WORKFLOW_ALBEDO_NO_AUTORUN)
 {
-    $root = $Configuration->UsersDir($document_user["codename"]).document_workflow_root();
-    foreach (glob($root."/*/instance.dab") ?: [] as $document_instance_file)
+    foreach (db_select_all("id, codename FROM user WHERE authority != -1") as $document_user)
     {
-        document_workflow_albedo_recover_unsigned_completed_instance($document_instance_file);
-        document_workflow_albedo_process_instance($document_instance_file);
-        document_workflow_albedo_seal_instance($document_instance_file);
-        document_workflow_albedo_complete_sealed_instance($document_instance_file);
-        $sync = attendance_register_sync_campaign_instance($document_instance_file);
-        if ($sync->is_error())
-            add_log(REPORT, "Cannot synchronize attendance-register campaign ".$document_instance_file.": ".strval($sync), 1, true);
-        $archive = document_workflow_archive_completed_instance($document_instance_file);
-        if ($archive->is_error())
-            add_log(REPORT, "Cannot archive completed document workflow ".$document_instance_file.": ".strval($archive), 1, true);
-        document_workflow_albedo_deliver_completed_instance($document_instance_file);
+        document_workflow_albedo_finalize_ready_workspaces((int)$document_user["id"], (string)$document_user["codename"]);
+        $root = $Configuration->UsersDir($document_user["codename"]).document_workflow_root();
+        foreach (glob($root."/*/instance.dab") ?: [] as $document_instance_file)
+        {
+            document_workflow_albedo_recover_unsigned_completed_instance($document_instance_file);
+            document_workflow_albedo_process_instance($document_instance_file);
+            $fallback = document_workflow_finalize_signed_without_pdfsign($document_instance_file);
+            if ($fallback->is_error())
+                add_log(REPORT, "Cannot complete signed workflow without PdfSign ".$document_instance_file.": ".strval($fallback), 1, true);
+            document_workflow_albedo_seal_instance($document_instance_file);
+            document_workflow_albedo_complete_sealed_instance($document_instance_file);
+            $sync = attendance_register_sync_campaign_instance($document_instance_file);
+            if ($sync->is_error())
+                add_log(REPORT, "Cannot synchronize attendance-register campaign ".$document_instance_file.": ".strval($sync), 1, true);
+            $archive = document_workflow_archive_completed_instance($document_instance_file);
+            if ($archive->is_error())
+                add_log(REPORT, "Cannot archive completed document workflow ".$document_instance_file.": ".strval($archive), 1, true);
+            document_workflow_albedo_deliver_completed_instance($document_instance_file);
+            $delivery_status = document_workflow_refresh_delivery_status($document_instance_file, true);
+            if ($delivery_status->is_error())
+                add_log(REPORT, "Cannot refresh Mailgun delivery status for ".$document_instance_file.": ".strval($delivery_status), 1, true);
+            $print = document_workflow_queue_completed_instance_for_print($document_instance_file);
+            if ($print->is_error())
+                add_log(REPORT, "Cannot queue completed document workflow for print ".$document_instance_file.": ".strval($print), 1, true);
+        }
     }
 }

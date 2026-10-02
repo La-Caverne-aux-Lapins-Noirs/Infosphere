@@ -59,7 +59,16 @@ foreach ($user->managed_activities["activities"] as $man)
     {
 	foreach ($matter->team as &$subx)
 	{
-	    $subuserx = &$subx["user"][array_key_first($subx["user"])];
+	    // Les equipes orphelines n'ont aucun utilisateur indexable. Elles
+	    // ne doivent jamais produire une requete SQL avec un id_user vide.
+	    if (!isset($subx["user"]) || !is_array($subx["user"]) || count($subx["user"]) == 0)
+		continue ;
+	    $subuser_key = array_key_first($subx["user"]);
+	    if ($subuser_key === NULL
+		|| !isset($subx["user"][$subuser_key]["id"])
+		|| (int)$subx["user"][$subuser_key]["id"] <= 0)
+		continue ;
+	    $subuserx = &$subx["user"][$subuser_key];
 	    $subuserx["medal"] = [];
 
 	    // On cherche les médailles dans les activités de la matière

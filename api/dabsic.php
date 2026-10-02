@@ -99,7 +99,14 @@ function FinalizeRegistrationForm($id, $data, $method, $output, $module)
     $values = registration_form_decode_json($data["values"] ?? "{}", []);
     $deleted = registration_form_decode_json($data["delete_signatures"] ?? "[]", []);
     $consent = in_array(strtolower(trim((string)($data["signature_consent"] ?? ""))), ["1", "true", "yes", "oui", "on"], true);
-    $result = registration_form_save_invitation($data["token"] ?? "", $values, true, $deleted, $consent);
+    $reuse_profile_signature = in_array(
+        strtolower(trim((string)($data["reuse_profile_signature"] ?? ""))),
+        ["1", "true", "yes", "oui", "on"],
+        true
+    );
+    $result = registration_form_save_invitation(
+        $data["token"] ?? "", $values, true, $deleted, $consent, $reuse_profile_signature
+    );
     if (!$result["ok"])
         return (new ErrorResponse($result["error"], $result["details"] ?? ""));
     $completed = (bool)($result["completed"] ?? false);
@@ -109,7 +116,21 @@ function FinalizeRegistrationForm($id, $data, $method, $output, $module)
             : ($Dictionnary["RegistrationFormNewFields"] ?? "De nouvelles informations sont nécessaires."),
         "completed" => $completed,
         "refresh" => (bool)($result["refresh"] ?? false),
-        "details" => $result["details"] ?? ""
+        "details" => $result["details"] ?? "",
+        "redirect" => $result["redirect"] ?? ""
+    ]));
+}
+
+function CancelCommunicationEventRegistration($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $result = communication_event_cancel_response($data["token"] ?? "");
+    if (!$result["ok"])
+        return (new ErrorResponse($result["error"], $result["details"] ?? ""));
+    return (new ValueResponse([
+        "msg" => $Dictionnary["CommunicationEventCancelled"] ?? "Votre inscription à l’évènement a été annulée.",
+        "cancelled" => true,
     ]));
 }
 
@@ -130,6 +151,10 @@ $Tab = [
         "registration_finalize" => [
             "everybody",
             "FinalizeRegistrationForm"
+        ],
+        "registration_event_cancel" => [
+            "everybody",
+            "CancelCommunicationEventRegistration"
         ]
     ]
 ];

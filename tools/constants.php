@@ -46,7 +46,8 @@ define("INTERCOM_PUBLIC", 0); // PUBLIC (OR LIMITED TO LAB/MISC)
 
 define("INCLASS", 3);
 define("DAILY", 10);
-define("TUTORING", 11);
+define("PLANIFICATION", 11);
+define("TUTORING", 11); // Legacy alias
 define("DEFENSE", 12);
 define("RETROSPECTIVE", 13);
 define("MODULE", 18);

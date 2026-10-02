@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/../tools/attendance_register.php");
+require_once (__DIR__."/../tools/cycle_enrollment.php");
 
 function DisplayCycles($id, $data, $method, $output, $module)
 {
@@ -17,6 +18,23 @@ function DisplayCycles($id, $data, $method, $output, $module)
     ob_start();
     require ("./pages/cycle/list_cycle.phtml");
     return (new ValueResponse(["content" => ob_get_clean()]));
+}
+
+
+function ExportCycleTemplate($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+        bad_request();
+    return (cycle_template_export_response($id));
+}
+
+function ExportCycleTimeline($id, $data, $method, $output, $module)
+{
+    if ($id == -1)
+        bad_request();
+    $filter_requested = isset($data["matter_filter"]);
+    $matter_ids = $filter_requested ? ($data["matter"] ?? []) : NULL;
+    return (cycle_timeline_response($id, $matter_ids, $filter_requested));
 }
 
 function AddCycle($id, $data, $method, $output, $module)
@@ -243,91 +261,114 @@ function SetCycleTeacher($id, $data, $method, $output, $module)
 
 function SetUser($id, $data, $method, $output, $module)
 {
-    global $Dictionnary;
-
-    if ($id == -1 || $module != "cycle")
-	bad_request();
+    if ($id == -1 || $module != "cycle" || !isset($data["user"], $data["enrollment_mode"]))
+        bad_request();
+    if (($cyc = resolve_codename("cycle", $id))->is_error())
+        return ($cyc);
+    $cyc = $cyc->value;
+    if (($mode = cycle_enrollment_mode_validate($cyc, $data["enrollment_mode"]))->is_error())
+        return ($mode);
     if (($users = resolve_codename("user", $data["user"]))->is_error())
-	return ($users);
+        return ($users);
     $users = $users->value;
-    if (($ret = handle_links($users, $id, "user", "cycle"))->is_error())
-	return ($ret);
-    if (($ret = automatic_subscription_subscribe_user_to_cycle($users, $id))->is_error())
-	add_log(WARNING, "Automatic cycle subscription failed: ".strval($ret), 1);
-    $cycle = fetch_cycle($module, $id, true, false, true);
+    if (($ret = handle_linksf([
+        "left_value" => $users,
+        "right_value" => $cyc,
+        "left_field_name" => "user",
+        "right_field_name" => "cycle",
+        "properties" => ["enrollment_mode" => $mode->value],
+    ]))->is_error())
+        return ($ret);
+    if (($ret = automatic_subscription_subscribe_user_to_cycle($users, $cyc))->is_error())
+        add_log(WARNING, "Automatic cycle subscription failed: ".strval($ret), 1);
+    $cycle = fetch_cycle($module, $cyc, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];
     return (new ValueResponse([
-	"msg" => "Edited",
-	"content" => list_of_linksb([
-	    "method" => "post",
-	    "hook_name" => $module,
-	    "hook_id" => $cycle["id"],
-	    "linked_name" => "user",
-	    "linked_elems" => $cycle["user"],
-	    "admin_func" => "is_director_for_cycle",
-	    "extra_properties" => [
-		[
-		    "name" => $Dictionnary["Curriculum"],
-		    "codename" => "cursus",
-		],
-	    ]
-    ])]));
+        "msg" => "Edited",
+        "content" => list_of_linksb([
+            "method" => "post",
+            "hook_name" => $module,
+            "hook_id" => $cycle["id"],
+            "linked_name" => "user",
+            "linked_elems" => $cycle["user"],
+            "admin_func" => "is_director_for_cycle",
+            "extra_properties" => cycle_user_link_extra_properties($cycle["id"]),
+        ])
+    ]));
 }
 
 function SetUserProps($id, $data, $method, $output, $module)
 {
-    global $Dictionnary;
     global $Database;
     global $User;
 
     if ($id == -1 || $module != "cycle")
-	bad_request();
+        bad_request();
     if (($users = resolve_codename("user", $data["user"]))->is_error())
-	return ($users);
+        return ($users);
     $users = $users->value;
     if (($cyc = resolve_codename("cycle", $id))->is_error())
-	return ($cyc);
+        return ($cyc);
     $cyc = $cyc->value;
 
-    $usrcyc = db_select_one("id FROM user_cycle WHERE id_user = $users AND id_cycle = $cyc");
+    $usrcyc = db_select_one("id, enrollment_mode FROM user_cycle WHERE id_user = $users AND id_cycle = $cyc");
+    if ($usrcyc == NULL)
+        return (new ErrorResponse("NotFound"));
+
+    if (array_key_exists("enrollment_mode", $data))
+    {
+        $requested_mode = trim((string)$data["enrollment_mode"]);
+        $current_mode = trim((string)($usrcyc["enrollment_mode"] ?? ""));
+        if ($requested_mode == "")
+        {
+            // Les anciennes relations peuvent ne pas encore avoir de mode :
+            // modifier un commentaire ne doit pas les transformer en valeur vide.
+            if ($current_mode == "")
+                unset($data["enrollment_mode"]);
+            else
+                return (new ErrorResponse("CannotEdit", "Le mode d'inscription ne peut pas être supprimé."));
+        }
+        else if ($requested_mode != $current_mode)
+        {
+            if (($mode = cycle_enrollment_mode_validate($cyc, $requested_mode))->is_error())
+                return ($mode);
+            $data["enrollment_mode"] = $mode->value;
+        }
+    }
+
     if (($ret = update_table(
-	"user_cycle",
-	$usrcyc,
-	$data,
-	["id", "id_user", "id_cycle", "user", "action"]
+        "user_cycle",
+        $usrcyc["id"],
+        $data,
+        ["id", "id_user", "id_cycle", "user", "action"]
     ))->is_error())
         return ($ret);
 
     if (isset($data["commentaries"]))
     {
-	$commentaries = strip_tags($data["commentaries"]);
-	$commentaries = $Database->real_escape_string($commentaries);
-	$author = $User["id"];
-	$now = db_form_date(now());
-	$Database->query("
-		INSERT INTO comment (id_user, id_misc, misc_type, content)
-		VALUES ($author, {$usrcyc["id"]}, 2, '$commentaries')
-	");
+        $commentaries = strip_tags($data["commentaries"]);
+        $commentaries = $Database->real_escape_string($commentaries);
+        $author = $User["id"];
+        $Database->query("
+            INSERT INTO comment (id_user, id_misc, misc_type, content)
+            VALUES ($author, {$usrcyc["id"]}, 2, '$commentaries')
+        ");
     }
-    
-    $cycle = fetch_cycle($module, $id, true, false, true);
+
+    $cycle = fetch_cycle($module, $cyc, true, false, true);
     $cycle = $cycle[array_key_first($cycle)];
     return (new ValueResponse([
-	"msg" => "Edited",
-	"content" => list_of_linksb([
-	    "method" => "post",
-	    "hook_name" => $module,
-	    "hook_id" => $cycle["id"],
-	    "linked_name" => "user",
-	    "linked_elems" => $cycle["user"],
-	    "admin_func" => "is_director_for_cycle",
-	    "extra_properties" => [
-		[
-		    "name" => $Dictionnary["Curriculum"],
-		    "codename" => "cursus",
-		]
-	    ]
-    ])]));
+        "msg" => "Edited",
+        "content" => list_of_linksb([
+            "method" => "post",
+            "hook_name" => $module,
+            "hook_id" => $cycle["id"],
+            "linked_name" => "user",
+            "linked_elems" => $cycle["user"],
+            "admin_func" => "is_director_for_cycle",
+            "extra_properties" => cycle_user_link_extra_properties($cycle["id"]),
+        ])
+    ]));
 }
 
 function SetMatter($id, $data, $method, $output, $module)
@@ -467,9 +508,9 @@ function InstantiateCycle($id, $data, $method, $output, $module)
     if ($id == -1)
 	bad_request();
     // On récupère la semaine d'instantiation
-    // Celle ci ne peut pas etre plus dans le passé qu'un trimestre.
+    // Celle ci ne peut pas etre plus dans le passé qu'un trimestre - a moins qu'on soit admin
     $first_week = date_to_timestamp(@$data["first_week"]);
-    if ($first_week < now() - 60 * 60 * 24 * 7 * 15)
+    if ($first_week < now() - 60 * 60 * 24 * 7 * 15 && !is_admin())
 	bad_request();
     $first_week_tstamp = $first_week;
     $first_week = db_form_date($first_week);

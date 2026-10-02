@@ -10,6 +10,44 @@ function destroy_team_fully($team_id)
     add_log(TRACE, "Deleting team #$team_id which is now empty");
 }
 
+function unsubscribe_user_from_team($team_id, $id_user)
+{
+    global $Database;
+
+    $team_id = (int)$team_id;
+    $id_user = (int)$id_user;
+    if ($team_id <= 0 || $id_user <= 0)
+        return (new ErrorResponse("InvalidParameter"));
+    $membership = db_select_one("id, status FROM user_team WHERE id_team = $team_id AND id_user = $id_user");
+    if ($membership == NULL)
+        return (new ErrorResponse("TeamDoesNotExist"));
+
+    $count = db_select_one("COUNT(user_team.id) as count FROM user_team WHERE id_team = $team_id");
+    $count = (int)($count["count"] ?? 0);
+    $status = (int)$membership["status"];
+    $Database->query("DELETE FROM user_team WHERE id_user = $id_user AND id_team = $team_id");
+    $idcn = get_codename("user", $id_user);
+    add_log(TRACE, "Remove user $idcn #$id_user from team #$team_id");
+
+    if ($count - 1 <= 0)
+        destroy_team_fully($team_id);
+    else if ($status == 2)
+    {
+        $all = db_select_all("* FROM user_team WHERE id_team = $team_id AND status != 0");
+        if ($all == [])
+            destroy_team_fully($team_id);
+        else
+        {
+            shuffle($all);
+            $Database->query("UPDATE user_team SET status = 2 WHERE id = ".(int)$all[0]["id"]);
+            $new_id = (int)$all[0]["id_user"];
+            $new_codename = get_codename("user", $new_id);
+            add_log(TRACE, "Promoting $new_codename #$new_id to administrator of team #$team_id");
+        }
+    }
+    return (new ValueResponse(""));
+}
+
 function unsubscribe_from_instance($activity, $login = NULL, $admin = false)
 {
     global $Database;
@@ -75,32 +113,5 @@ function unsubscribe_from_instance($activity, $login = NULL, $admin = false)
         return (new ErrorResponse("TeamDoesNotExist"));
     $team_id = $team["id"];
 
-    $count = db_select_one("COUNT(user_team.id) as count FROM user_team WHERE id_team = $team_id");
-    $count = $count["count"];
-
-    // On supprime l'utilisateur de l'equipe.
-    $status = db_select_one("status FROM user_team WHERE id_user = $id AND id_team = $team_id")["status"];
-    $Database->query("DELETE FROM user_team WHERE id_user = $id AND id_team = $team_id");
-    $idcn = get_codename("user", $id);
-    add_log(TRACE, "Remove user $idcn #$id from team #$team_id");
-
-    // On regarde si l'equipe est maintenant vide.
-    if ($count - 1 <= 0)
-	// Si c'est le cas, on detruit ses inscriptions et on detruit l'equipe
-	destroy_team_fully($team_id);
-    else if ($status == 2)
-    {   // Si c'est l'administrateur d'équipe qui s'est barré...
-	// On etabli un nouvel administrateur - si d'autres membres avaient été accepté, sinon on detruit l'equipe
-	if (($all = db_select_all("* FROM user_team WHERE id_team = $team_id AND status != 0")) == [])
-	    destroy_team_fully($team_id);
-	else
-	{
-	    shuffle($all);
-	    $Database->query("UPDATE user_team SET status = 2 WHERE id = ".$all[0]["id"]);
-	    $id =$all[0]["id_user"];
-	    $idcn = get_codename("user", $id);
-	    add_log(TRACE, "Promoting $idcn #$id to administrator of team #$team_id");
-	}
-    }
-    return (new ValueResponse(""));
+    return (unsubscribe_user_from_team($team_id, $id));
 }

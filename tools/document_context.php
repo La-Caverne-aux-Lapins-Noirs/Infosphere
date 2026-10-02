@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/document_context_schema.php");
+require_once (__DIR__."/school_activity.php");
 
 function document_context_sanitize_key($key)
 {
@@ -105,6 +106,12 @@ function document_context_person($id)
             ? user_identity_document_signature_file($user) : "";
         $person["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
     }
+    if (!isset($person["initials"]))
+    {
+        $initials = function_exists("user_identity_document_initials_file")
+            ? user_identity_document_initials_file($user) : "";
+        $person["initials"] = ($initials != "" && is_file($initials)) ? $initials : "";
+    }
     if (function_exists("jury_user_title_context") && isset($user["id"]))
         $person = array_merge($person, jury_user_title_context($user["id"]));
     return ($person);
@@ -148,19 +155,22 @@ function document_context_school($id)
     else
         $out = $school;
 
-    // School est le cocontractant complet : on expose d'abord les données de
-    // l'organisation juridique au même niveau, puis les données propres à
-    // l'établissement les complètent ou les remplacent.
+    // School représente l'établissement, tandis que School.Organization porte
+    // la personne morale. On garde quelques alias juridiques au premier niveau
+    // pour les anciens documents, mais sans perdre la séparation sémantique.
+    $organization_legal_address = function_exists("enterprise_legal_address")
+        ? enterprise_legal_address($school) : ($school["organization_address"] ?? "");
     $organization = [
         "id_organization" => $school["id_organization"] ?? -1,
         "organization_codename" => $school["organization_codename"] ?? "",
         "organization_name" => $school["organization_name"] ?? "",
         "legal_name" => $school["legal_name"] ?? "",
-        "legal_address" => $school["organization_address"] ?? "",
+        "legal_address" => $organization_legal_address,
         "SIRET" => $school["siret"] ?? "",
         "website" => $school["website"] ?? "",
         "registration_registry" => $school["registration_registry"] ?? "",
         "registration_number" => $school["registration_number"] ?? "",
+        "share_capital" => $school["share_capital"] ?? "",
     ];
     $out = array_replace($organization, $out);
 
@@ -176,14 +186,23 @@ function document_context_school($id)
     $out["billing_information"] = $out["billing_information"] ?? ($school["organization_billing_information"] ?? "");
     $out["RIB"] = $out["RIB"] ?? $out["billing_information"];
     $out = array_merge($out, school_activity_flags($school));
-    $out["NDA"] = $school["formation_activity_number"] ?? "";
-    $out["UAI"] = $school["uai"] ?? "";
-    $out["cfa_name"] = $school["cfa_name"] ?? "";
-    $out["executing_establishment_name"] = $school["executing_establishment_name"] ?? "";
+    $out = array_merge($out, school_activity_document_fields($school));
     $out["main_info"] = function_exists("enterprise_main_info") ? enterprise_main_info($school) : (function_exists("school_main_info") ? school_main_info($school) : ($school["main_info"] ?? ""));
+    $out["organization_main_info"] = $out["main_info"];
+    $out["organization_phone"] = $school["organization_phone"] ?? "";
+    $out["organization_mail"] = $school["organization_mail"] ?? "";
+    $out["organization_legal_address"] = $organization_legal_address;
     $out["school_info"] = function_exists("school_private_school_info") ? school_private_school_info($school) : ($school["school_info"] ?? "");
     $out["formation_info"] = function_exists("school_formation_info") ? school_formation_info($school) : ($school["formation_info"] ?? "");
     $out["alternation_info"] = function_exists("school_alternation_info") ? school_alternation_info($school) : ($school["alternation_info"] ?? "");
+    $out["document_information"] = $school["document_information"] ?? "";
+    $out["vat_exemption_mention"] = $school["vat_exemption_mention"] ?? "";
+    $out["teacher_list"] = function_exists("user_school_teacher_list")
+        ? user_school_teacher_list((int)($school["id"] ?? 0)) : "";
+    // The rectorate roster is intentionally not embedded in every School
+    // context. Building it walks teaching assignments and sessions, which is
+    // useful only for the annual rectorate document. The dedicated
+    // rectorate_teachers semantic context below materializes it lazily.
     $out["main"] = $out["main_info"];
     $out["school"] = $out["school_info"];
     $out["formation"] = $out["formation_info"];
@@ -195,16 +214,18 @@ function document_context_school($id)
         "fr_name" => $school["fr_name"] ?? "",
         "en_name" => $school["en_name"] ?? "",
         "legal_name" => $school["legal_name"] ?? "",
-        "address" => $school["organization_address"] ?? "",
+        "address" => $organization_legal_address,
+        "legal_address" => $organization_legal_address,
         "phone" => $school["organization_phone"] ?? "",
         "mail" => $school["organization_mail"] ?? "",
         "website" => $school["website"] ?? "",
         "SIRET" => $school["siret"] ?? "",
         "registration_registry" => $school["registration_registry"] ?? "",
         "registration_number" => $school["registration_number"] ?? "",
+        "share_capital" => $school["share_capital"] ?? "",
         "billing_information" => $school["organization_billing_information"] ?? "",
         "RIB" => $school["organization_billing_information"] ?? "",
-        "main_info" => $out["main_info"],
+        "main_info" => function_exists("enterprise_main_info") ? enterprise_main_info($school) : $out["main_info"],
     ];
     if (function_exists("school_document_logo_path"))
     {
@@ -575,8 +596,23 @@ function document_context_user_identity_file($id)
     return (is_file($file) ? $file : NULL);
 }
 
-function document_context_add_person_scope(&$fields, &$files, &$temporary_files, $prefix, $id, $data)
+function document_context_add_person_scope(&$fields, &$files, &$temporary_files, $prefix, $id, $data, $include_signature = true)
 {
+    if (!$include_signature)
+    {
+        if (is_array($data))
+        {
+            unset($data["signature"]);
+            unset($data["Signature"]);
+        }
+        $context_file = document_context_data_scope_file($prefix, is_array($data) ? $data : [], $temporary_files);
+        if ($context_file != NULL)
+            $files[] = $context_file;
+        else if (is_array($data))
+            document_context_flatten($fields, $prefix, $data);
+        return ;
+    }
+
     $identity = document_context_user_identity_file($id);
     if ($identity != NULL)
     {
@@ -725,12 +761,23 @@ function document_context_infer_binding($name, array $definition, array $resolve
         $id = document_context_binding_school_id($name, $definition, "", $resolved);
         return ($id == NULL ? NULL : (string)$id);
     }
+    if ($type === "rectorate_teachers")
+    {
+        // This context has no operator-entered identity of its own: it is the
+        // annual roster derived from an already resolved School context. Keep
+        // the same binding value (id or codename) and resolve it only when the
+        // chain is materialized.
+        foreach ($definition["infer_from"] ?? [] as $source_name)
+            if (isset($resolved[$source_name]) && ($resolved[$source_name]["type"] ?? "") === "school")
+                return ((string)$resolved[$source_name]["value"]);
+        return (NULL);
+    }
     if (in_array($type, ["director", "teacher", "commercial", "librarian", "secretariat"], true))
     {
         $school = document_context_binding_school_id($name, $definition, "", $resolved);
         return ($school == NULL ? NULL : "school:".$school);
     }
-    if (in_array($type, ["parent", "legal1", "legal2", "finance"], true))
+    if (in_array($type, ["parent", "legal1", "legal2", "finance", "emergency"], true))
     {
         foreach ($definition["infer_from"] ?? [] as $source_name)
             if (isset($resolved[$source_name]) && in_array($resolved[$source_name]["type"] ?? "", ["student", "user"], true))
@@ -798,7 +845,7 @@ function document_context_chain_entry($name, array $definition, $value)
     if (in_array($type, ["director", "teacher", "commercial", "librarian", "secretariat"], true)
         && strncmp($value, "school:", 7) === 0)
         $entry["school"] = substr($value, 7);
-    else if (in_array($type, ["parent", "legal1", "legal2", "finance"], true)
+    else if (in_array($type, ["parent", "legal1", "legal2", "finance", "emergency"], true)
         && strncmp($value, "student:", 8) === 0)
         $entry["student"] = substr($value, 8);
     else if ($type === "tutor" && strncmp($value, "organization:", 13) === 0)
@@ -830,7 +877,7 @@ function document_context_signatory_user_id(array $definition, $value)
         $person = document_context_staff_for_school($school, $roles[$type]);
         return (is_array($person) && (int)($person["id"] ?? 0) > 0 ? (int)$person["id"] : NULL);
     }
-    if ($type === "parent" || in_array($type, ["legal1", "legal2", "finance"], true))
+    if ($type === "parent" || in_array($type, ["legal1", "legal2", "finance", "emergency"], true))
     {
         if (strncmp($value, "student:", 8) !== 0)
             return (document_context_user_id($value));
@@ -846,6 +893,11 @@ function document_context_signatory_user_id(array $definition, $value)
         {
             $person = document_context_relation_user($id_user, "financial", 0);
             return (is_array($person) && (int)($person["id"] ?? 0) > 0 ? (int)$person["id"] : $id_user);
+        }
+        if ($type === "emergency")
+        {
+            $person = document_context_relation_user($id_user, "emergency", 0);
+            return (is_array($person) && (int)($person["id"] ?? 0) > 0 ? (int)$person["id"] : NULL);
         }
         $person = document_context_relation_user($id_user, "legal", $type === "legal2" ? 1 : 0);
         return (is_array($person) && (int)($person["id"] ?? 0) > 0 ? (int)$person["id"] : NULL);
@@ -1025,7 +1077,7 @@ function document_context_materialized_binding_value(array $definition, $value)
     if ($value == "")
         return (NULL);
 
-    if (in_array($type, ["user", "student", "jury", "staff", "director", "teacher", "commercial", "librarian", "secretariat", "parent", "legal1", "legal2", "finance", "tutor"], true))
+    if (in_array($type, ["user", "student", "jury", "staff", "director", "teacher", "commercial", "librarian", "secretariat", "parent", "legal1", "legal2", "finance", "emergency", "tutor"], true))
     {
         $id = document_context_signatory_user_id($definition, $value);
         return ($id == NULL ? NULL : document_context_binding_canonical_user($id));
@@ -1137,7 +1189,9 @@ function document_context_data_scope_write(&$content, $indent, array $data)
             $content .= $indent."]\n";
             continue ;
         }
-        if (is_bool($value) || is_int($value) || is_float($value))
+        if (is_bool($value))
+            $encoded = $value ? "1" : "0";
+        else if (is_int($value) || is_float($value))
             $encoded = (string)$value;
         else
             $encoded = json_encode(document_context_scalar($value), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -1244,7 +1298,33 @@ function document_context_add_signatory_metadata(&$files, &$temporary_files, arr
         $files[] = $metadata;
 }
 
-function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$temporary_files = NULL)
+function document_context_relation_identity_role($id_student, $id_person, $type)
+{
+    $id_student = (int)$id_student;
+    $id_person = (int)$id_person;
+    if ($id_student <= 0 || $id_person <= 0)
+        return ("");
+    if ($type === "finance" && $id_person === $id_student)
+        return ("Student");
+
+    $legal1 = document_context_relation_user($id_student, "legal", 0);
+    if (is_array($legal1) && (int)($legal1["id"] ?? 0) === $id_person)
+        return ("Legal1");
+    $legal2 = document_context_relation_user($id_student, "legal", 1);
+    if (is_array($legal2) && (int)($legal2["id"] ?? 0) === $id_person)
+        return ("Legal2");
+
+    if ($type === "emergency")
+    {
+        $finance = document_context_relation_user($id_student, "financial", 0);
+        if (is_array($finance) && (int)($finance["id"] ?? 0) === $id_person)
+            return ("Finance");
+    }
+    return ("Other");
+}
+
+
+function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$temporary_files = NULL, array $options = [])
 {
     if (!is_array($chain))
         return ;
@@ -1292,7 +1372,8 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
                 if (($full_school = fetch_school($last_school)) != NULL && is_array($full_school) && isset($full_school["id_organization"]))
                     $last_organization = (int)$full_school["id_organization"];
             }
-            document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $id, $data);
+            document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $id, $data,
+                empty($options["suppress_signatory_signatures"]) || empty($entry["signatory"]));
             document_context_add_signatory_metadata($files, $temporary_files, $entry, $prefix);
             continue ;
         }
@@ -1411,19 +1492,22 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
                 continue ;
             $person_id = (int)($data["id"] ?? 0);
             if ($person_id > 0)
-                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data);
+                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data,
+                    empty($options["suppress_signatory_signatures"]) || empty($entry["signatory"]));
             else
                 document_context_flatten($fields, $prefix, $data);
             document_context_add_signatory_metadata($files, $temporary_files, $entry, $prefix);
             continue ;
         }
-        if ($type == "legal1" || $type == "legal2" || $type == "finance")
+        if ($type == "legal1" || $type == "legal2" || $type == "finance" || $type == "emergency")
         {
+            $relation_student_id = NULL;
             if (isset($entry["student"]) && trim((string)$entry["student"]) != "")
             {
                 $id = document_context_user_id($entry["student"]);
                 if ($id == NULL)
                     continue ;
+                $relation_student_id = $id;
                 if ($type == "finance")
                 {
                     $data = document_context_relation_user($id, "financial", 0);
@@ -1433,6 +1517,8 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
                     if ($data == NULL)
                         $data = document_context_person($id);
                 }
+                else if ($type == "emergency")
+                    $data = document_context_relation_user($id, "emergency", 0);
                 else
                     $data = document_context_relation_user($id, "legal", $type == "legal2" ? 1 : 0);
             }
@@ -1445,9 +1531,20 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
                 continue ;
             $person_id = isset($data["id"]) ? (int)$data["id"] : NULL;
             if ($person_id != NULL)
-                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data);
+                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data,
+                    empty($options["suppress_signatory_signatures"]) || empty($entry["signatory"]));
             else
                 document_context_flatten($fields, $prefix, $data);
+            if ($relation_student_id != NULL && ($type == "finance" || $type == "emergency"))
+            {
+                $relation_role = document_context_relation_identity_role($relation_student_id, $person_id, $type);
+                if ($relation_role != "")
+                {
+                    $metadata = document_context_metadata_scope_file($prefix, ["Is" => $relation_role], $temporary_files);
+                    if ($metadata != NULL)
+                        $files[] = $metadata;
+                }
+            }
             document_context_add_signatory_metadata($files, $temporary_files, $entry, $prefix);
             continue ;
         }
@@ -1479,7 +1576,8 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
             if ($data == NULL)
                 continue ;
             if ($person_id != NULL && $person_id > 0)
-                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data);
+                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, $person_id, $data,
+                    empty($options["suppress_signatory_signatures"]) || empty($entry["signatory"]));
             else
                 document_context_flatten($fields, $prefix, $data);
             document_context_add_signatory_metadata($files, $temporary_files, $entry, $prefix);
@@ -1505,6 +1603,22 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
                 if (trim((string)($data["legal_city"] ?? "")) != "")
                     document_context_flatten($fields, $prefix, ["legal_city" => $data["legal_city"]]);
             }
+            else
+                document_context_flatten($fields, $prefix, $data);
+            continue ;
+        }
+        if ($type == "rectorate_teachers")
+        {
+            $id = isset($entry["id"]) && trim((string)$entry["id"]) != ""
+                ? document_context_school_id($entry["id"]) : $last_school;
+            if ($id == NULL || !function_exists("user_school_rectorate_teacher_context"))
+                continue ;
+            $data = user_school_rectorate_teacher_context((int)$id);
+            if (!is_array($data))
+                continue ;
+            $context_file = document_context_data_scope_file($prefix, $data, $temporary_files);
+            if ($context_file != NULL)
+                $files[] = $context_file;
             else
                 document_context_flatten($fields, $prefix, $data);
             continue ;
@@ -1536,7 +1650,8 @@ function document_context_apply_chain(&$fields, $chain, &$files = NULL, &$tempor
             if ($data == NULL)
                 continue ;
             if (isset($data["id"]) && (int)$data["id"] > 0)
-                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, (int)$data["id"], $data);
+                document_context_add_person_scope($fields, $files, $temporary_files, $prefix, (int)$data["id"], $data,
+                    empty($options["suppress_signatory_signatures"]) || empty($entry["signatory"]));
             else
                 document_context_flatten($fields, $prefix, $data);
             document_context_add_signatory_metadata($files, $temporary_files, $entry, $prefix);

@@ -58,9 +58,16 @@ class ModuleLayer extends Layer
     {
 	if ($this->done_date == NULL || $this->done_date > now())
 	    return (0);
-	if ($this->grade > 4)
-	    return ($this->credit[4]);
-	return ($this->credit[$this->grade]);
+
+	// -1 is a legitimate sentinel for modules without a grade (notably
+	// NO_VALIDATION). Such a module does not map to one of the E..A credit
+	// buckets and must therefore not index $credit with a negative key.
+	$grade = (int)$this->grade;
+	if ($grade < 0)
+	    return (0);
+	if ($grade > 4)
+	    $grade = 4;
+	return (isset($this->credit[$grade]) ? $this->credit[$grade] : 0);
     }
     
     // $sublayer sera des activity layer
@@ -294,7 +301,10 @@ class ModuleLayer extends Layer
 		// Rendu et pas rendu
 		if ($activity->user_team != NULL && $activity->pickup_date != NULL && date_to_timestamp($activity->pickup_date) < now())
 		{
-		    if (count($activity->user_team["work"]) == 0)
+		    $work = $activity->user_team["work"] ?? [];
+		    if (!is_array($work))
+			$work = [];
+		    if (count($work) == 0)
 			$sub->nowork->add($activity->pickup_date, 1);
 		    else
 		    {

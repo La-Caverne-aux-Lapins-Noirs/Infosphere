@@ -309,9 +309,15 @@ class FullProfile extends Layer
 			$module->acquired_credit = $module->manual_credit;
 		}
 		$total += $module->acquired_credit;
-		$max += $module->credit[$module->grade > 4 ? 4 : $module->grade];
-		$grade[] = $module->grade;
-		$grade_cnt += 1;
+		// A module with no grade uses -1 as a sentinel. It has no credit
+		// bucket to contribute here; never turn that sentinel into an array key.
+		if ($module->grade >= 0)
+		{
+		    $credit_grade = min(4, (int)$module->grade);
+		    $max += isset($module->credit[$credit_grade]) ? $module->credit[$credit_grade] : 0;
+		    $grade[] = $module->grade;
+		    $grade_cnt += 1;
+		}
 	    }
 	    $cycle->success = $total > 30;
 	    if ($grade_cnt != 0)
@@ -411,8 +417,9 @@ class FullProfile extends Layer
 	    {
 		$l = new CycleLayer;
 		$fields = [
-		    "id", "codename", "done", "cycle", "first_day",
-		    "commentaries", "hidden", "id_user_cycle", "cursus"
+		    "id", "codename", "name", "done", "cycle", "first_day",
+		    "commentaries", "hidden", "id_user_cycle", "enrollment_mode",
+                    "user_cycle_fr_name", "user_cycle_en_name", "cursus"
 		];
 		foreach ($fields as $label)
 		    $l->$label = $cycle[$label];

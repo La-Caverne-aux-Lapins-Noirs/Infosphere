@@ -1,4 +1,8 @@
 RewriteEngine On
+# Preserve Authorization through the internal rewrite so Bearer console tokens
+# remain visible to PHP under Apache/FastCGI configurations that otherwise drop it.
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%1]
 #RewriteCond %{REQUEST_FILENAME} !-d
 #RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^((?s).*)$ index.php?_mod=/$1 [QSA,L]

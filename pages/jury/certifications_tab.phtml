@@ -24,6 +24,10 @@ if (!isset($certification_skills))
                 <label><?=$Dictionnary["EnglishName"] ?? "Nom anglais"; ?></label>
                 <input type="text" name="en_name" />
             </div>
+            <div class="jury_field certification_diploma_text_field">
+                <label><?=$Dictionnary["DiplomaCentralText"] ?? "Texte central du diplôme"; ?></label>
+                <textarea name="diploma_text" placeholder="<?=$Dictionnary["DiplomaCentralTextHelp"] ?? "Laisser vide pour utiliser le nom français de la certification."; ?>"></textarea>
+            </div>
             <div class="jury_field certification_skill_links_field">
                 <label><?=$Dictionnary["RequiredSkills"] ?? "Compétences requises"; ?></label>
                 <input type="text" name="skills" placeholder="competence;+autre;-ancienne" />
@@ -62,6 +66,10 @@ if (!isset($certification_skills))
                             <div class="jury_field">
                                 <label><?=$Dictionnary["EnglishName"] ?? "Nom anglais"; ?></label>
                                 <input type="text" name="en_name" value="<?=htmlentities($title["en_name"] ?? ""); ?>" />
+                            </div>
+                            <div class="jury_field certification_diploma_text_field">
+                                <label><?=$Dictionnary["DiplomaCentralText"] ?? "Texte central du diplôme"; ?></label>
+                                <textarea name="diploma_text" placeholder="<?=$Dictionnary["DiplomaCentralTextHelp"] ?? "Laisser vide pour utiliser le nom français de la certification."; ?>"><?=htmlspecialchars($title["diploma_text"] ?? "", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></textarea>
                             </div>
                             <div class="jury_field certification_skill_links_field">
                                 <label><?=$Dictionnary["EditRequiredSkills"] ?? "Ajouter / retirer des compétences"; ?></label>

@@ -45,13 +45,17 @@ else if ($_POST["action"] == "add_group_member")
 	return ;
     }
 
-    if (!((count($fetch["user"]) == 0 && am_i_director_of($fetch["school"]))
+    // A director of one of the schools attached to the laboratory may manage
+    // its membership even after the first member has been created. The first
+    // member still becomes laboratory administrator so the laboratory can then
+    // be managed through its own authority system as well.
+    if (!(am_i_director_of($fetch["school"])
        || is_group_admin($_POST["laboratory"])))
     {
 	$request = new ErrorResponse("PermissionDenied");
 	return ;
     }
-    $props = [];
+    $properties = [];
     if (count($fetch["user"]) == 0)
 	$properties = ["authority" => 3];
     if (($request = handle_linksf([

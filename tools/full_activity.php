@@ -55,7 +55,9 @@ class FullActivity extends Response
     public $id;
     public $codename;
     public $deleted;
-    public $type = 0;
+    // Les id d'activity_type commencent a 1. -1 est la sentinelle utilisee
+    // par les couches du profil lorsqu'une activite n'a pas de type resolu.
+    public $type = -1;
     public $type_name = "";
     public $type_type = ""; // 2: activité en salle. 1: travaux. 0: autre (module et exercices seuls)
     public $hidden = 0;
@@ -412,6 +414,23 @@ class FullActivity extends Response
 	$this->medal = [];
 	$this->support = [];
 	$this->teacher = [];
+
+	// Une instance reste liee a ses responsables pedagogiques de template.
+	// Les affectations utilisateur/laboratoire ne sont pas copiees lors de
+	// l'instanciation : elles doivent donc etre resolues comme les autres
+	// proprietes heritees tant que template_link reste actif.
+	if ($this->id_template != -1 && $this->template_link && !$ateacher)
+	{
+	    $template_teachers = fetch_teacher(
+		$this->id_template, true, "activity", true
+	    );
+	    foreach ($template_teachers as &$template_teacher)
+	    {
+		$template_teacher["ref"] = true;
+		$template_teacher["template"] = true;
+	    }
+	    $this->teacher = array_merge($this->teacher, $template_teachers);
+	}
 	
 	// On récupère tout ce qui est lié a l'activité d'une manière ou d'une autre
 	if ($this->id_template != -1 && $this->template_link)
@@ -446,8 +465,8 @@ class FullActivity extends Response
 	    {
 		if ($this->type == DAILY)
 		    $this->name = $Dictionnary["DailyMeetingFor"]." ".$this->reference_name;
-		else if ($this->type == TUTORING)
-		    $this->name = $Dictionnary["TutoringFor"]." ".$this->reference_name;
+		else if ($this->type == PLANIFICATION)
+		    $this->name = $Dictionnary["PlanificationOf"]." ".$this->reference_name;
 		else if ($this->type == DEFENSE) // Soutenance
 		    $this->name = $Dictionnary["DefenseOf"]." ".$this->reference_name;
 		else if ($this->type == RETROSPECTIVE)
@@ -602,6 +621,35 @@ class FullActivity extends Response
 		foreach ($acyc as $ac)
 		    $this->teacher = array_merge($this->teacher, fetch_teacher($ac, true, "cycle"));
 
+	// Le responsable du cycle est une autorite pedagogique sur les activites
+	// de ce cycle, independamment de l'option direction_is_teacher. Pour un
+	// laboratoire responsable, on respecte toutefois le niveau porte par
+	// user_laboratory : une simple appartenance au labo ne suffit pas.
+	$this->is_director = is_admin();
+	$actor_id = is_array($User) ? (int)($User["id"] ?? 0) : 0;
+	if (!$this->is_director && $actor_id > 0)
+	    foreach ($this->cycle as $activity_cycle)
+	    {
+		$id_cycle = (int)($activity_cycle["id_cycle"] ?? 0);
+		if ($id_cycle <= 0)
+		    continue ;
+		if (db_select_one("
+		    cycle_teacher.id
+		    FROM cycle_teacher
+		    LEFT JOIN user_laboratory
+		      ON user_laboratory.id_laboratory = cycle_teacher.id_laboratory
+		     AND user_laboratory.id_user = $actor_id
+		     AND user_laboratory.authority >= ".ASSISTANT."
+		    WHERE cycle_teacher.id_cycle = $id_cycle
+		      AND (cycle_teacher.id_user = $actor_id
+		       OR user_laboratory.id_user = $actor_id)
+		") != NULL)
+		{
+		    $this->is_director = true;
+		    break ;
+		}
+	    }
+
 	$auth = retrieve_authority($this->teacher);
 	$this->is_teacher = $this->is_teacher || $auth >= TEACHER;
 	$this->is_assistant = $this->is_assistant || $auth >= ASSISTANT;
@@ -648,7 +696,11 @@ class FullActivity extends Response
 		    $this->bonus_grade_c = $this->user_team["bonus_grade_c"];
 		    $this->bonus_grade_d = $this->user_team["bonus_grade_d"];
 		    $this->bonus_grade_bonus = $this->user_team["bonus_grade_bonus"];
-		    $this->leader = $this->user_team["status"] == 2;
+		    // leader contient historiquement le statut user_team (0/1/2),
+		    // pas un booleen. Garder la meme semantique en mode only_user
+		    // permet de distinguer une invitation (0) d'un membre accepte (1).
+		    $this->leader = (int)$this->user_team["status"];
+		    $this->is_leader = $this->leader == 2;
 
 		    $this->commentaries = db_select_one("
                       * FROM comment
@@ -702,6 +754,13 @@ class FullActivity extends Response
 			AND (status IS NULL OR status != 'automatic_correction')
                       ORDER BY pickedup_date DESC
 		      ");
+		    // user_team est construit avant l'enrichissement de $this->team.
+		    // Le garder synchronisé évite que les consommateurs ne voient une
+		    // équipe valide sans sa liste de rendus (et notamment count(NULL)
+		    // sous PHP 8 lors de la génération des bulletins).
+		    if ($this->user_team !== NULL
+			&& (int)($this->user_team["id"] ?? 0) === (int)$team["id"])
+			$this->user_team["work"] = $team["work"];
 		    $team["real_members"] = 0;
 		    foreach ($team["user"] as &$u)
 		    {
@@ -892,24 +951,11 @@ class FullActivity extends Response
 	    }
 	}
 
-	// On établis les equipes des sessions qui dépendent d'un projet
-	$tem = [];
-	foreach ($this->team as &$tt)
-	    $tem[$tt["id"]] = &$tt;
-	foreach ($this->session as &$sess)
-	{
-	    foreach ($sess->slot as &$slot)
-	    {
-		if ($slot["id_team"] <= 0)
-		    continue ;
-		if (isset($tem[$slot["id_team"]]))
-		{
-		    $slot["team"] = $tem[$slot["id_team"]];
-		    $tt["slot"] = true;
-		}
-	    }
-	    $sess->team = $this->team;
-	}
+	// FullSession already builds the correct team pool for each session, including
+	// reference_activity teams, and marks only the teams that own a slot in that
+	// precise session. Do not overwrite it here with the activity-wide team list:
+	// doing so made appointment selectboxes inherit slot flags from other sessions
+	// (and the old &$tt reference even marked the last team instead of the owner).
 
 	get_user_promotions($user);
 	if ($this->parent_activity == -1 || $this->parent_activity == NULL)

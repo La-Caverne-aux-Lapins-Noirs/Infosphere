@@ -270,6 +270,20 @@ function user_identity_relation_administrative_fields()
     ]);
 }
 
+function user_identity_has_school_teacher_role($id_user)
+{
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return (false);
+    // Works with both historical integer authorities and symbolic authorities.
+    return (db_select_one("
+        user_school.id
+        FROM user_school
+        WHERE user_school.id_user = $id_user
+          AND UPPER(CAST(user_school.authority AS CHAR)) IN ('4', 'TEACHER')
+    ") != NULL);
+}
+
 function user_identity_contract_administrative_fields($user = NULL)
 {
     if (is_object($user))
@@ -280,7 +294,7 @@ function user_identity_contract_administrative_fields($user = NULL)
         && user_relation_is_administrative_contact((int)$user["id"]))
         return (user_identity_relation_administrative_fields());
 
-    return ([
+    $fields = [
         "BirthCity" => "text",
         "BirthCountry" => "text",
         "INE" => "text",
@@ -289,7 +303,11 @@ function user_identity_contract_administrative_fields($user = NULL)
         "HandicapKind" => "text",
         "LastClass" => "text",
         "LastClassSuccess" => "boolean",
-    ]);
+    ];
+    if (is_array($user) && isset($user["id"])
+        && user_identity_has_school_teacher_role((int)$user["id"]))
+        $fields["RectoratTeachingStartDate"] = "date";
+    return ($fields);
 }
 
 function user_identity_contract_administrative_values(array $user)
@@ -414,6 +432,8 @@ function user_identity_write_identity_dabsic($id_user)
     $fields["postal_city"] = trim((string)($fields["postal_code"] ?? "")." ".(string)($fields["city"] ?? ""));
     $signature = user_identity_document_signature_file($user);
     $fields["signature"] = ($signature != "" && is_file($signature)) ? $signature : "";
+    $initials = user_identity_document_initials_file($user);
+    $fields["initials"] = ($initials != "" && is_file($initials)) ? $initials : "";
 
     $file = $Configuration->UsersDir($user["codename"])."admin/identity.dab";
     return (generate_dabsic($fields, $file));
@@ -426,6 +446,15 @@ function user_identity_signature_file(array $user)
     if (!isset($user["codename"]) || $user["codename"] == "")
         return ("");
     return ($Configuration->UsersDir($user["codename"])."admin/signature.png");
+}
+
+function user_identity_initials_file(array $user)
+{
+    global $Configuration;
+
+    if (!isset($user["codename"]) || $user["codename"] == "")
+        return ("");
+    return ($Configuration->UsersDir($user["codename"])."admin/initials.png");
 }
 
 /**
@@ -650,6 +679,29 @@ function user_identity_document_signature_file(array $user)
     // applying it again is harmless and keeps a single canonical file.
     user_identity_store_signature_png($source, $source, false);
     return ($source);
+}
+
+/** Return the canonical reusable paraphe/initials image for documents. */
+function user_identity_document_initials_file(array $user)
+{
+    global $Configuration;
+
+    $source = user_identity_initials_file($user);
+    if ($source == "")
+        return ("");
+    if (is_file($source))
+    {
+        user_identity_store_signature_png($source, $source, false);
+        return ($source);
+    }
+
+    // Older document code looked for <user>/initials.png.  Import it once into
+    // the same admin namespace as the canonical signature.
+    $legacy = $Configuration->UsersDir($user["codename"])."initials.png";
+    if (!is_file($legacy))
+        return ("");
+    $normalized = user_identity_store_signature_png($legacy, $source, false);
+    return (!empty($normalized["ok"]) ? $source : $legacy);
 }
 
 function user_identity_nested_unset(&$tree, $path)

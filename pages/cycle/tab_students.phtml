@@ -17,7 +17,7 @@
             $cycle_metric_users[(int)try_get($usr, "id_user", $usr["id"])] = $usr;
 
     $cycle_metric_days = 100;
-    $cycle_metric_start = @strlen($cycle["first_day"]) ? remove_hour($cycle["first_day"]) : remove_hour(now());
+    $cycle_metric_start = @strlen($cycle["first_day"]) ? remove_hour($cycle["first_day"]) : remove_hour(user_log_now());
     $cycle_metric_data = halfday_presence_build(
         array_keys($cycle_metric_users),
         $cycle_metric_start,
@@ -47,7 +47,7 @@
 	<h2><?=$Dictionnary["Students"]; ?></h2>
 
 	<div class="cycle_student_metrics_notice">
-	    Présence demi-journée : matin validé à partir de 3h entre 8h et 13h, après-midi validé à partir de 2h entre 13h et 19h.
+	    Présence demi-journée : matin validé à partir de 2h entre 8h et 13h, après-midi validé à partir de 2h entre 13h et 19h.
 	    Les présences/absences d'activité priment sur les logs.
 	    <?php if (!halfday_presence_table_available()) { ?>
 		<br /><b>La table user_log_halfday n'existe pas encore : applique la migration SQL pour alimenter les demi-journées à partir des prochains logs.</b>
@@ -98,14 +98,6 @@
 		    <?php foreach ($cycle_metric_users as $uid => $usr) { ?>
 			<?php
 			$stat = try_get($cycle_metric_stats, $uid, ["matter_count" => 0, "credit_d" => 0, "credit_a" => 0]);
-                        $result_letter = NULL;
-                        $result_source = NULL;
-                        if ($can_generate_cycle_result_letters)
-                        {
-                            $result_letter = student_correspondence_cycle_result($uid, (int)$cycle["id"]);
-                            if (is_array($result_letter))
-                                $result_source = $cycle_result_documents[$result_letter["kind"]] ?? NULL;
-                        }
 			?>
 			<tr>
 			    <th class="cycle_student_identity_col cycle_student_identity">
@@ -125,47 +117,42 @@
 			    <td class="cycle_student_small_col"><?=(int)$stat["matter_count"]; ?></td>
 			    <td class="cycle_student_small_col"><?=(int)$stat["credit_d"]; ?>–<?=(int)$stat["credit_a"]; ?></td>
                             <?php if ($can_generate_cycle_result_letters) { ?>
-                                <td class="cycle_student_register_col">
-                                    <?php if (is_array($result_letter) && is_array($result_source)) { ?>
-                                        <form method="post" action="/api/doc/0/generate" target="_blank">
-                                            <input type="hidden" name="doc_cycle_result" value="1" />
-                                            <input type="hidden" name="docref_cycle_result" value="<?=htmlspecialchars($result_source["reference"], ENT_QUOTES); ?>" />
-                                            <input type="hidden" name="save_user_document" value="<?=$uid; ?>" />
-                                            <input type="hidden" name="context_bindings" value="<?=htmlspecialchars(json_encode([
-                                                "Student" => $uid,
-                                                "School" => $cycle_result_school_codename,
-                                            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
-                                            <input type="hidden" name="queue_for_print" value="0" />
-                                            <input type="hidden" name="print_context_type" value="cycle" />
-                                            <input type="hidden" name="print_owner_user_id" value="<?=$uid; ?>" />
-                                            <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
-                                            <input type="hidden" name="print_school_id" value="<?=document_print_school_id_for_cycle((int)$cycle["id"]); ?>" />
-                                            <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars((string)($usr["codename"] ?? $uid), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
-                                            <input type="hidden" name="print_label" value="<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? "Courrier de résultat", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
-                                            <input type="hidden" name="print_source_key" value="cycle-result:<?=(int)$cycle["id"]; ?>:<?=$uid; ?>:<?=htmlspecialchars((string)$result_letter["kind"], ENT_QUOTES); ?>" />
-                                            <input type="hidden" name="fields[]" value="Result.CycleCodename=<?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?>" />
-                                            <input type="hidden" name="fields[]" value="Result.CycleName=<?=htmlspecialchars(($cycle["name"] ?? "") != "" ? $cycle["name"] : $cycle["codename"], ENT_QUOTES); ?>" />
-                                            <input type="hidden" name="fields[]" value="Result.Flames=<?=(int)$result_letter["flames"]; ?>" />
-                                            <input type="hidden" name="fields[]" value="Result.RangeLabel=<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? $result_letter["kind"], ENT_QUOTES); ?>" />
-                                            <?php if (in_array($result_letter["kind"], ["support", "encouragement"], true)) { ?>
-                                                <label style="white-space: nowrap;">
-                                                    <input type="checkbox" name="fields[]" value="Result.RebootProposal=1" />
-                                                    Proposer une réamorce
-                                                </label>
-                                            <?php } ?>
-                                            <input type="submit" value="<?=htmlspecialchars($cycle_result_labels[$result_letter["kind"]] ?? "Courrier", ENT_QUOTES); ?> (<?=(int)$result_letter["flames"]; ?>)" onclick="this.form.queue_for_print.value='0';" />
-                                            <?php if (document_print_current_user_can_manage_context([
-                                                "type" => "cycle",
-                                                "owner_user_id" => $uid,
-                                                "cycle_id" => (int)$cycle["id"],
-                                                "school_id" => document_print_school_id_for_cycle((int)$cycle["id"]),
-                                            ])) { ?>
-                                                <input type="submit" value="+ impression" title="Générer ce courrier et l'ajouter à la file d'impression" onclick="this.form.queue_for_print.value='1';" />
-                                            <?php } ?>
-                                        </form>
-                                    <?php } else { ?>
-                                        —
-                                    <?php } ?>
+                                <td class="cycle_student_register_col cycle_result_letter_cell" data-cycle-result-user="<?=$uid; ?>">
+                                    <span class="cycle_result_letter_status">Calcul…</span>
+                                    <form method="post" action="/api/doc/0/generate" target="_blank" style="display: none;">
+                                        <input type="hidden" name="doc_cycle_result" value="1" />
+                                        <input type="hidden" name="docref_cycle_result" value="" />
+                                        <input type="hidden" name="save_user_document" value="<?=$uid; ?>" />
+                                        <input type="hidden" name="context_bindings" value="<?=htmlspecialchars(json_encode([
+                                            "Student" => $uid,
+                                            "School" => $cycle_result_school_codename,
+                                        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>" />
+                                        <input type="hidden" name="queue_for_print" value="0" />
+                                        <input type="hidden" name="print_context_type" value="cycle" />
+                                        <input type="hidden" name="print_owner_user_id" value="<?=$uid; ?>" />
+                                        <input type="hidden" name="print_cycle_id" value="<?=(int)$cycle["id"]; ?>" />
+                                        <input type="hidden" name="print_school_id" value="<?=document_print_school_id_for_cycle((int)$cycle["id"]); ?>" />
+                                        <input type="hidden" name="print_recipient_label" value="<?=htmlspecialchars((string)($usr["codename"] ?? $uid), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                        <input type="hidden" name="print_label" value="" />
+                                        <input type="hidden" name="print_source_key" value="" />
+                                        <input type="hidden" name="fields[]" value="Result.CycleCodename=<?=htmlspecialchars($cycle["codename"], ENT_QUOTES); ?>" />
+                                        <input type="hidden" name="fields[]" value="Result.CycleName=<?=htmlspecialchars(($cycle["name"] ?? "") != "" ? $cycle["name"] : $cycle["codename"], ENT_QUOTES); ?>" />
+                                        <input type="hidden" name="fields[]" data-cycle-result-field="flames" value="Result.Flames=" />
+                                        <input type="hidden" name="fields[]" data-cycle-result-field="range" value="Result.RangeLabel=" />
+                                        <label class="cycle_result_letter_reboot" style="display: none; white-space: nowrap;">
+                                            <input type="checkbox" name="fields[]" value="Result.RebootProposal=1" />
+                                            Proposer une réamorce
+                                        </label>
+                                        <input type="submit" class="cycle_result_letter_generate" value="Calcul…" disabled="disabled" onclick="this.form.queue_for_print.value='0';" />
+                                        <?php if (document_print_current_user_can_manage_context([
+                                            "type" => "cycle",
+                                            "owner_user_id" => $uid,
+                                            "cycle_id" => (int)$cycle["id"],
+                                            "school_id" => document_print_school_id_for_cycle((int)$cycle["id"]),
+                                        ])) { ?>
+                                            <input type="submit" class="cycle_result_letter_print" value="+ impression" disabled="disabled" title="Générer ce courrier et l'ajouter à la file d'impression" onclick="this.form.queue_for_print.value='1';" />
+                                        <?php } ?>
+                                    </form>
                                 </td>
                             <?php } ?>
 			    <?php for ($i = 0; $i < $cycle_metric_days; ++$i) { ?>
@@ -211,5 +198,105 @@
 	    "admin_func" => "is_director_for_cycle",
 	    "extra_properties" => $cycle_user_extra_properties,
 	]); ?>
+
+        <?php if ($can_generate_cycle_result_letters) { ?>
+            <script>
+            (function () {
+                var cells = Array.prototype.slice.call(document.querySelectorAll(
+                    '.cycle_result_letter_cell[data-cycle-result-user]'
+                ));
+
+                function failCell(cell, message) {
+                    var status = cell.querySelector('.cycle_result_letter_status');
+                    if (status) {
+                        status.textContent = 'Erreur';
+                        status.title = message || 'Impossible de calculer le courrier de résultat';
+                    }
+                }
+
+                function fillCell(cell, packet) {
+                    var status = cell.querySelector('.cycle_result_letter_status');
+                    var form = cell.querySelector('form');
+                    if (!packet.available || !form) {
+                        if (status)
+                            status.textContent = '—';
+                        return;
+                    }
+
+                    var kind = String(packet.kind || '');
+                    var flames = parseInt(packet.flames, 10);
+                    if (!Number.isFinite(flames))
+                        flames = 0;
+                    var label = String(packet.label || 'Courrier');
+                    var reference = String(packet.reference || '');
+                    if (!reference) {
+                        failCell(cell, 'Source de document introuvable');
+                        return;
+                    }
+
+                    form.querySelector('[name="docref_cycle_result"]').value = reference;
+                    form.querySelector('[name="print_label"]').value = label;
+                    form.querySelector('[name="print_source_key"]').value =
+                        'cycle-result:<?=(int)$cycle["id"]; ?>:' +
+                        cell.getAttribute('data-cycle-result-user') + ':' + kind;
+                    form.querySelector('[data-cycle-result-field="flames"]').value =
+                        'Result.Flames=' + flames;
+                    form.querySelector('[data-cycle-result-field="range"]').value =
+                        'Result.RangeLabel=' + label;
+
+                    var reboot = form.querySelector('.cycle_result_letter_reboot');
+                    if (reboot)
+                        reboot.style.display =
+                            (kind === 'support' || kind === 'encouragement') ? '' : 'none';
+
+                    var generate = form.querySelector('.cycle_result_letter_generate');
+                    if (generate) {
+                        generate.value = label + ' (' + flames + ')';
+                        generate.disabled = false;
+                    }
+                    var printButton = form.querySelector('.cycle_result_letter_print');
+                    if (printButton)
+                        printButton.disabled = false;
+
+                    if (status)
+                        status.style.display = 'none';
+                    form.style.display = '';
+                }
+
+                function loadOne(index) {
+                    if (index >= cells.length)
+                        return;
+                    var cell = cells[index];
+                    var body = new URLSearchParams();
+                    body.set('student', cell.getAttribute('data-cycle-result-user'));
+
+                    fetch('/api/cycle/<?=(int)$cycle["id"]; ?>/result-letter', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                        body: body.toString()
+                    })
+                    .then(function (response) {
+                        if (!response.ok)
+                            throw new Error('HTTP ' + response.status);
+                        return response.json();
+                    })
+                    .then(function (packet) {
+                        if (packet.result !== 'ok')
+                            throw new Error(packet.msg || 'Erreur API');
+                        fillCell(cell, packet);
+                    })
+                    .catch(function (error) {
+                        failCell(cell, error && error.message ? error.message : String(error));
+                    })
+                    .then(function () {
+                        loadOne(index + 1);
+                    });
+                }
+
+                loadOne(0);
+            })();
+            </script>
+        <?php } ?>
     </section>
 <?php } ?>

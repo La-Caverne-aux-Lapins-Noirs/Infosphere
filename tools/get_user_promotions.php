@@ -21,10 +21,17 @@ function get_user_promotions(array &$usr, $by_name = false)
     }
     $forge = "
         cycle.id as id_cycle,
-        cycle.{$Language}_name as name,
+        COALESCE(
+            NULLIF(user_cycle.{$Language}_name, ''),
+            NULLIF(cycle.{$Language}_name, ''),
+            cycle.codename
+        ) as name,
 	user_cycle.commentaries,
         cycle.*,
         user_cycle.hidden as hidden,
+        user_cycle.enrollment_mode as enrollment_mode,
+        user_cycle.fr_name as user_cycle_fr_name,
+        user_cycle.en_name as user_cycle_en_name,
         user_cycle.cursus as cursus,
         user_cycle.id as id,
         user_cycle.id as id_user_cycle
@@ -45,7 +52,7 @@ function get_user_promotions(array &$usr, $by_name = false)
             AND deleted IS NULL
             ORDER BY comment_date DESC
 	    ");
-	$usr["cycle"][$i]["cursus"] = explode(";", $v["cursus"]);
+	$usr["cycle"][$i]["cursus"] = explode(";", (string)($v["cursus"] ?? ""));
 	
 	$usr["cycle"][$i]["last_day"] = date_to_timestamp($v["first_day"]) + 15 * $one_week;
 	$usr["cycle"][$i]["year"] = floor($v["cycle"] / 4); // Fait ici car SQLite n'a pas FLOOR.

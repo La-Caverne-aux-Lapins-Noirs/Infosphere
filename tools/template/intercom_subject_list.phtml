@@ -4,13 +4,26 @@
     </div>
 <?php } ?>
 
-<?php $y = -1; ?>
 <?php foreach ($intercom["subjects"] as $subject) { ?>
-    <?php $y += 1; ?>
+    <?php
+    $intercom_subject_unread =
+        $subject["view_date"] == NULL
+        || date_to_timestamp($subject["view_date"])
+            < date_to_timestamp($subject["last_post"]["post_date"])
+    ;
+    $intercom_subject_action = intercom_api_url_html(
+        $intercom,
+        $subject["id"],
+        [
+            "page" => $intercom["page"],
+            "page_size" => $intercom["page_size"],
+        ]
+    );
+    $intercom_subject_js = "silent_submitf(this, {tofill: '".$intercom["div"]."'});";
+    ?>
     <div
+        class="intercom_subject_list"
         style="
-            top: <?=$y * 55; ?>px;
-            position: relative;
             <?php if (isset($subject["is_moderated"]) && $subject["is_moderated"]) { ?>
             opacity: 0.42;
             filter: grayscale(1);
@@ -19,55 +32,8 @@
             outline: 1px solid rgba(255, 180, 0, 0.80);
             <?php } ?>
         "
-        class="intercom_subject_list"
     >
-        <?php /* intercom_subject_moderation_controls */ ?>
-        <?php if (isset($subject["can_moderate"]) && $subject["can_moderate"]) { ?>
-            <?php
-            $intercom_subject_moderation_action = intercom_api_url_html($intercom, $subject["id"]);
-            $intercom_subject_moderation_js = "silent_submitf(this, {tofill: '".$intercom["div"]."'});";
-            ?>
-            <div style="
-                    position: absolute;
-                    /* intercom_subject_moderation_controls_no_overlap */
-                    top: 3px;
-                    right: 455px;
-                    z-index: 8;
-                    max-width: 330px;
-                    display: flex;
-                    flex-direction: row;
-                    gap: 3px;
-                    align-items: center;
-                    justify-content: flex-end;
-                    flex-wrap: wrap;
-                    padding: 1px 3px;
-                    border-radius: 5px;
-                    background: rgba(0, 0, 0, 0.54);
-                    box-shadow: 0 0 6px rgba(0, 0, 0, 0.65);
-                    font-size: x-small;
-                ">
-                <?php if (isset($subject["report_count"]) && $subject["report_count"] > 0) { ?>
-                    <span style="font-weight: bold; white-space: nowrap;">⚠ <?=$subject["report_count"]; ?></span>
-                <?php } ?>
-                <?php if (isset($subject["report_count"]) && $subject["report_count"] > 0 && !(isset($subject["is_moderated"]) && $subject["is_moderated"])) { ?>
-                    <form method="post" action="<?=$intercom_subject_moderation_action; ?>" onsubmit="return <?=$intercom_subject_moderation_js; ?>" style="display: inline-block; margin: 0;">
-                        <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
-                        <input type="hidden" name="intercom_action" value="close_reports" />
-                        <input type="hidden" name="current_subject" value="-1" />
-                        <input type="button" onclick="<?=$intercom_subject_moderation_js; ?>" value="<?=$Dictionnary["CloseIntercomReports"]; ?>" style="font-size: xx-small; min-height: 16px; padding: 0 3px;" />
-                    </form>
-                <?php } ?>
-                <form method="post" action="<?=$intercom_subject_moderation_action; ?>" onsubmit="return <?=$intercom_subject_moderation_js; ?>" style="display: inline-block; margin: 0;">
-                    <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
-                    <input type="hidden" name="intercom_action" value="<?=(isset($subject["is_moderated"]) && $subject["is_moderated"]) ? "restore" : "moderate"; ?>" />
-                    <input type="hidden" name="current_subject" value="-1" />
-                    <input type="button" onclick="<?=$intercom_subject_moderation_js; ?>" value="<?=(isset($subject["is_moderated"]) && $subject["is_moderated"]) ? $Dictionnary["RestoreIntercomTopic"] : $Dictionnary["ModerateIntercomTopic"]; ?>" style="font-size: xx-small; min-height: 16px; padding: 0 3px;" />
-                </form>
-            </div>
-        <?php } ?>
-
-	
-	<div style="width: 50px; left: 0px;">
+	<div class="intercom_subject_state">
 	    <?php if ($subject["view_date"] == NULL) { ?>
 		<img src="res/new_message.png" alt="<?=$Dictionnary["NewSubject"]; ?>" />
 	    <?php } else if (date_to_timestamp($subject["view_date"])
@@ -77,58 +43,89 @@
 		<img src="res/message.png" alt="<?=$Dictionnary["NothingNew"]; ?>" />
 	    <?php } ?>
 	</div>
-	
-	<div style="width: calc(100% - 2 * 50px - 4 * 100px); left: 50px; right: 450px;">
+
+	<div class="intercom_subject_title_cell">
 	    <form
-		<?php $js = "silent_submitf(this, {tofill: '".$intercom["div"]."'});"; ?>
 		method="get"
-		onsubmit="return <?=$js; ?>"
-		action="<?=intercom_api_url_html($intercom, $subject["id"]); ?>"
-		style="width: 100%; height: 100%;"
+		onsubmit="return <?=$intercom_subject_js; ?>"
+		action="<?=$intercom_subject_action; ?>"
+		class="intercom_subject_title_form"
 	    >
 		<input
-		    style="width: 100%;
-			   height: 50px;
-			   font-size: x-large;
-			   text-align: left;
-			   padding-left: 10px;
-                           <?php /* intercom_subject_title_reserved_for_moderation */ ?>
-                           <?php if (isset($subject["can_moderate"]) && $subject["can_moderate"]) { ?>
-                           padding-right: 170px;
-                           <?php } ?>
-			   "
-			   type="button"
-		           onclick="<?=$js; ?>"
-		           value="<?=htmlentities($subject["title"]); ?>"
+		    type="button"
+		    onclick="<?=$intercom_subject_js; ?>"
+		    value="<?=htmlentities($subject["title"]); ?>"
 		/>
 	    </form>
+
+            <?php if ($intercom_subject_unread || (isset($subject["can_moderate"]) && $subject["can_moderate"])) { ?>
+                <div class="intercom_subject_actions">
+                    <?php if ($intercom_subject_unread) { ?>
+                        <form method="post" action="<?=$intercom_subject_action; ?>" onsubmit="return <?=$intercom_subject_js; ?>">
+                            <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
+                            <input type="hidden" name="intercom_action" value="read" />
+                            <input type="hidden" name="current_subject" value="-1" />
+                            <input
+                                type="button"
+                                onclick="<?=$intercom_subject_js; ?>"
+                                value="<?=htmlentities($Dictionnary["MarkIntercomTopicRead"] ?? "Marquer comme lu"); ?>"
+                            />
+                        </form>
+                    <?php } ?>
+
+                    <?php if (isset($subject["can_moderate"]) && $subject["can_moderate"]) { ?>
+                        <?php if (isset($subject["report_count"]) && $subject["report_count"] > 0) { ?>
+                            <span style="font-weight: bold; white-space: nowrap;">⚠ <?=$subject["report_count"]; ?></span>
+                        <?php } ?>
+                        <?php if (isset($subject["report_count"]) && $subject["report_count"] > 0 && !(isset($subject["is_moderated"]) && $subject["is_moderated"])) { ?>
+                            <form method="post" action="<?=$intercom_subject_action; ?>" onsubmit="return <?=$intercom_subject_js; ?>">
+                                <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
+                                <input type="hidden" name="intercom_action" value="close_reports" />
+                                <input type="hidden" name="current_subject" value="-1" />
+                                <input type="button" onclick="<?=$intercom_subject_js; ?>" value="<?=$Dictionnary["CloseIntercomReports"]; ?>" />
+                            </form>
+                        <?php } ?>
+                        <form method="post" action="<?=$intercom_subject_action; ?>" onsubmit="return <?=$intercom_subject_js; ?>">
+                            <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
+                            <input type="hidden" name="intercom_action" value="<?=(isset($subject["is_moderated"]) && $subject["is_moderated"]) ? "restore" : "moderate"; ?>" />
+                            <input type="hidden" name="current_subject" value="-1" />
+                            <input
+                                type="button"
+                                onclick="<?=$intercom_subject_js; ?>"
+                                value="<?=(isset($subject["is_moderated"]) && $subject["is_moderated"]) ? $Dictionnary["RestoreIntercomTopic"] : $Dictionnary["ModerateIntercomTopic"]; ?>"
+                            />
+                        </form>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 	</div>
 
-	<div style="width: 50px; border-radius: 10px; background-color: lightgray; right: 400px; line-height: 50px; text-align: center;">
+	<div class="intercom_subject_count">
 	    <?=$subject["nbr_message"] + 1; ?>
 	</div>
-	
-	<div style="width: 100px; right: 300px;">
-	    <?php display_avatar($subject["id_user"], 50); ?>
+
+	<div class="intercom_subject_author">
+            <div class="intercom_subject_author_avatar">
+	        <?php display_avatar($subject["id_user"], 50); ?>
+            </div>
+            <div class="intercom_subject_author_meta">
+	        <?php display_nickname($subject["id_user"]); ?>
+	        <span class="intercom_subject_author_date">
+		    <?=human_date($subject["post_date"]); ?>
+	        </span>
+            </div>
 	</div>
-	
-	<div style="width: 100px; right: 200px;">
-	    <?php display_nickname($subject["id_user"]); ?>
-	    <span style="font-size: x-small;">
-		<?=human_date($subject["post_date"]); ?>
-	    </span>
+
+	<div class="intercom_subject_author">
+            <div class="intercom_subject_author_avatar">
+	        <?php display_avatar($subject["last_post"]["id_user"], 50); ?>
+            </div>
+            <div class="intercom_subject_author_meta">
+	        <?php display_nickname($subject["last_post"]["id_user"]); ?>
+	        <span class="intercom_subject_author_date">
+		    <?=human_date($subject["last_post"]["post_date"]); ?>
+	        </span>
+            </div>
 	</div>
-	
-	<div style="width: 100px; right: 100px;">
-	    <?php display_avatar($subject["last_post"]["id_user"], 50); ?>
-	</div>
-	
-	<div style="width: 100px; right: 0px;">
-	    <?php display_nickname($subject["last_post"]["id_user"]); ?><br />
-	    <span style="font-size: x-small;">
-		<?=human_date($subject["last_post"]["post_date"]); ?>
-	    </span>
-	</div>
-	
     </div>
 <?php } ?>

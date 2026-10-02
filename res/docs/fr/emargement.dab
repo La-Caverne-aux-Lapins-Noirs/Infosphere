@@ -1,5 +1,16 @@
 Document = "SignInSheet"
+Title = "Feuille d'émargement de session"
 
+[SignInSheetLayout
+  TopMargin = "1cm"
+  BottomMargin = "2cm"
+  HeaderHeight = "1cm"
+  HeaderGap = "0.45cm"
+  FooterHeight = "2cm"
+  FooterRuleGap = "0.12cm"
+  PeoplePerPage = 30
+  TrainerInlineLimit = 8
+]
 
 [Contexts
   [School
@@ -10,67 +21,36 @@ Document = "SignInSheet"
   ]
 ]
 
+[School
+  Name = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+  Phone = ""
+  Mail = ""
+]
+
 [Header
   Left = [Text($,Left)
     [@Size;5]
-    Feuille d'émargement
+    Feuille d'émargement de session
   Left]
   Right = [Text($,Right)
-    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
   Right]
 ]
 
 Footer = [Text($,Footer)
-  [@Size;0]
-  $(School.MainInfo)
-  $(School.SchoolInfo)
-  $(School.FormationInfo)
-  $(School.AlternationInfo)
-  $(School.Phone) $(School.Mail)
-Footer]
-
-'TOUT CE QU'IL Y A EN DESSOUS DOIT ETRE AJOUTE DYNAMIQUEMENT
-
-[School
-  Name = ""
-  Title = ""
-]
-
-[Cycle
-  Code = "EF6E"
-  Year = 6
-  Trimester = 5
-  Start = "01/01/1970"
-  End = "01/04/1970"
-  Director = ""
-]
-
-{People
-  [
-    Id = 0
-    INE = ""
-    Name = ""
-    {Dates
-      [
-        Day = ""
-        Morning = false
-        Afternoon = true
-        {Activities
-          [
-            CodeName = ""
-            Name = ""
-            Present = true
-          ]
-        }
-      ]
-    }
+  [@Center;
+    [@Size;0]
+    $(School.MainInfo)
+    $(School.SchoolInfo)
+    $(School.FormationInfo)
+    $(School.AlternationInfo)
+    $(School.Phone) $(School.Mail)
   ]
-}
-
-[FormGroup
-  @insert "res/docs/fr/.forms/attendance_groups.dab"
-]
-
-[FormRole
-  @insert "res/docs/fr/.forms/attendance_roles.dab"
-]
+Footer]

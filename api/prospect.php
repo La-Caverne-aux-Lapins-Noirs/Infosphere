@@ -242,9 +242,20 @@ function GenerateProspectDocument($id, $data, $method, $output, $module)
     }
     else if ($document == "admission:domestic" || $document == "admission:foreign")
     {
+        $is_foreign = ($document == "admission:foreign");
+        $form_output = trim((string)($data["form_output"] ?? ""));
+
+        // Le premier clic ouvre le vrai formulaire Dabsic/DocBuilder. La
+        // génération n'a lieu qu'après sa sauvegarde/validation.
+        if ($form_output == "")
+            return (admission_certificate_start($id, $is_foreign, !empty($data["queue_for_print"])));
+
+        if (($form_options = admission_certificate_form_options($id, $is_foreign, $form_output))->is_error())
+            return ($form_options);
         $ret = build_admission_certificate($id, [
-            "is_foreign" => ($document == "admission:foreign"),
-            "definitive" => true,
+            "is_foreign" => $is_foreign,
+            "payment_state" => $form_options->value["payment_state"],
+            "paid_amount" => $form_options->value["paid_amount"],
         ]);
         $message = "Attestation d’admission générée";
     }
@@ -265,7 +276,7 @@ function GenerateProspectDocument($id, $data, $method, $output, $module)
         if ($recipient == "" && is_array($prospect))
             $recipient = (string)($prospect["codename"] ?? "");
         $label = strpos($document, "admission:") === 0
-            ? "Attestation d’admission définitive"
+            ? "Attestation d’admission"
             : "Contrat d’admission";
         $queued = document_print_queue_file($output_file, $label, [
             "type" => "prospect",

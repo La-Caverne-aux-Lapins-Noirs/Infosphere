@@ -1,0 +1,30 @@
+[#Center;CERTIFICAT DE SCOLARITÉ]
+
+[@Indent]
+
+[@Indent]La direction de **[#Variable;School.Name]** atteste que :
+
+[@Indent]
+
+[@Center;**[#Variable;Student.Identity]**]
+
+[@Center;N° élève : **[#Variable;Student.Id]**[#IfC;Student.INE;!=;; — INE : **[#Variable;Student.INE]**]]
+
+[#IfC;Student.BirthDate;!=;;[@Center;[#IfC;Student.Gender;==;female;née;né] le **[#Variable;Student.BirthDate]**[#IfC;Student.BirthCity;!=;; à **[#Variable;Student.BirthCity]**;[#IfC;Student.BirthPlace;!=;; à **[#Variable;Student.BirthPlace]**]][#IfC;Student.BirthCountry;!=;; (**[#Variable;Student.BirthCountry]**)]]]
+
+[@Indent]
+
+[#IfC;Student.Gender;==;female;[@Indent]est inscrite au sein de l'établissement au titre de l'année scolaire **[#Variable;Generation.SchoolPeriod]**[@IfC;Student.ChosenClass;!=;;, dans le cursus **[#Variable;Student.ChosenClass]**].;[@Indent]est inscrit au sein de l'établissement au titre de l'année scolaire **[#Variable;Generation.SchoolPeriod]**[@IfC;Student.ChosenClass;!=;;, dans le cursus **[#Variable;Student.ChosenClass]**].]
+
+[@Indent]
+
+[@Indent]Le présent certificat est délivré à la personne intéressée afin de servir et valoir ce que de droit.
+
+[@Indent]
+
+[@Right;Pour [#Variable;School.Name]
+[#Variable;Signatories.Director.Identity]
+\par
+[#Variable;Signatories.Director.Role]
+\par\vspace{0.08cm}
+[#IfC;Signatories.Director.Signature;!=;;[@Image;[#Variable;Signatories.Director.Signature];width=4.6cm;height=2.3cm][#IfC;School.Stamp;!=;;\par\vspace{-0.25cm}[@Image;[#Variable;School.Stamp];width=3.8cm;height=3.8cm]]]]

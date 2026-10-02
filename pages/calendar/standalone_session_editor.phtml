@@ -1,0 +1,53 @@
+<?php
+$calendar_session_can_manage = session_standalone_can_manage([
+    "id_activity" => $calendar_standalone_edit->id_activity,
+    "id_user" => $calendar_standalone_edit->id_user,
+    "id_laboratory" => $calendar_standalone_edit->id_laboratory,
+]);
+?>
+<div class="calendar_standalone_editor">
+    <a class="calendar_standalone_editor_close" href="index.php?p=CalendarMenu">&#10007;</a>
+    <h3><?=htmlspecialchars((string)$calendar_standalone_edit->name); ?></h3>
+    <p><?=htmlspecialchars(session_standalone_owner_label([
+        "id_activity" => $calendar_standalone_edit->id_activity,
+        "id_user" => $calendar_standalone_edit->id_user,
+        "id_laboratory" => $calendar_standalone_edit->id_laboratory,
+    ])); ?></p>
+
+    <?php if ($calendar_session_can_manage) { ?>
+        <form
+            method="put"
+            action="/api/session/<?=(int)$calendar_standalone_edit->id; ?>"
+            onsubmit="return silent_submitf(this, {after_success: function () { window.location.href='index.php?p=CalendarMenu'; }});"
+        >
+            <input type="text" name="name" value="<?=htmlspecialchars((string)$calendar_standalone_edit->name, ENT_QUOTES); ?>" required />
+            <input type="date" name="day" value="<?=datex("Y-m-d", $calendar_standalone_edit->begin_date); ?>" required />
+            <input type="time" name="begin" value="<?=datex("H:i", $calendar_standalone_edit->begin_date); ?>" required />
+            <input type="time" name="end" value="<?=datex("H:i", $calendar_standalone_edit->end_date); ?>" required />
+            <input type="submit" value="Enregistrer" />
+        </form>
+        <form
+            method="delete"
+            action="/api/session/<?=(int)$calendar_standalone_edit->id; ?>"
+            onsubmit="return silent_submitf(this, {after_success: function () { window.location.href='index.php?p=CalendarMenu'; }});"
+        >
+            <input type="submit" class="delete_wide" value="Supprimer" />
+        </form>
+    <?php } ?>
+
+    <?php if ($calendar_session_can_manage) { ?>
+        <?php list_of_links([
+            "hook_name" => "session",
+            "hook_id" => $calendar_standalone_edit->id,
+            "linked_name" => "room",
+            "linked_elems" => $calendar_standalone_edit->room,
+            "admin_func" => "is_teacher_or_director_for_session",
+        ]); ?>
+    <?php } else if (count($calendar_standalone_edit->room)) { ?>
+        <p><b>Salle<?=count($calendar_standalone_edit->room) > 1 ? "s" : ""; ?> :</b><br />
+        <?php foreach ($calendar_standalone_edit->room as $room) { ?>
+            <?=htmlspecialchars((string)$room["name"]); ?><br />
+        <?php } ?>
+        </p>
+    <?php } ?>
+</div>

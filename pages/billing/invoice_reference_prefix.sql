@@ -1,5 +1,5 @@
 INSERT INTO configuration (codename, value)
-SELECT 'billing_invoice_prefix', 'INFSPH'
+SELECT 'billing_invoice_prefix', 'INF'
 WHERE NOT EXISTS (
   SELECT 1
   FROM configuration

@@ -10,6 +10,7 @@ class CConfiguration
     public $_ActivitiesDir;
     public $_SchoolsDir;
     public $_CyclesDir;
+    public $_SessionsDir;
     public $_OrganizationsDir;
     public $_RoomsDir;
     public $_ConfigurationDir;
@@ -154,6 +155,15 @@ class CConfiguration
             new_directory($dir."index.php");
         return ($dir);
     }
+    function SessionsDir($id_session = NULL)
+    {
+        if ($id_session === NULL)
+            return ($this->_SessionsDir);
+        $id_session = (int)$id_session;
+        if ($id_session <= 0)
+            return (NULL);
+        return ($this->_SessionsDir.$id_session."/");
+    }
     function OrganizationsDir($organization = NULL)
     {
 	if ($organization == NULL)
@@ -200,6 +210,7 @@ class CConfiguration
 	$this->_SchoolsDir = "$DIR/school/";
 	// Les fichiers propres à un cycle (documents collectifs, exports, etc.).
 	$this->_CyclesDir = "$DIR/cycle/";
+	$this->_SessionsDir = "$DIR/session/";
 	// Les fichiers associés aux organisations mutualisées
 	$this->_OrganizationsDir = "$DIR/organization/";
 	// Les fichiers associés aux salles, c'est à dire leur images
@@ -245,4 +256,3 @@ class CConfiguration
 }
 
 $Configuration = new CConfiguration;
-

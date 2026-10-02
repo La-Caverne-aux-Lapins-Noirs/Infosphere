@@ -17,6 +17,7 @@
         var saveButton = document.getElementById("dabsic-form-save");
         var previewButton = document.getElementById("dabsic-form-preview");
         var finalizeButton = document.getElementById("dabsic-form-finalize");
+        var admissionGenerateButton = document.getElementById("dabsic-form-admission-generate");
         var stateBox = document.getElementById("dabsic-form-state");
         var messageBox = document.getElementById("dabsic-form-message");
         var baseline;
@@ -25,9 +26,11 @@
         var savingPromise = null;
         var previewing = false;
         var finalizing = false;
+        var admissionGenerating = false;
         var reportFinalized = root.getAttribute("data-report-finalized") === "1";
         var signatureSaving = false;
         var savedTimer = null;
+        var internshipPaymentAuto = null;
         var overrideList = document.getElementById("dabsic-form-overrides-list");
         var overrideAdd = document.getElementById("dabsic-form-override-add");
         var signatureBox = document.getElementById("dabsic-form-signature");
@@ -85,6 +88,95 @@
             var input = root.querySelector('[data-dabsic-field="' + field + '"]');
             if (input)
                 input.value = value;
+        }
+
+        function setRadioFieldValue(field, value) {
+            var radios = root.querySelectorAll('[data-dabsic-field="' + field + '"]');
+            Array.prototype.forEach.call(radios, function (radio) {
+                if (radio.type === "radio")
+                    radio.checked = radio.value === value;
+            });
+        }
+
+        function internshipDecimal(value) {
+            value = String(value || "").replace(/\u00a0/g, " ").replace(/[ €]/g, "").replace(",", ".").trim();
+            if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value))
+                return null;
+            value = Number(value);
+            return isFinite(value) ? value : null;
+        }
+
+        function internshipNumber(value, decimals, fixed) {
+            var text = Number(value || 0).toLocaleString("fr-FR", {
+                minimumFractionDigits: fixed ? decimals : 0,
+                maximumFractionDigits: decimals
+            });
+            return text.replace(/\u202f/g, " ");
+        }
+
+        function internshipMonth(value) {
+            var match = String(value || "").match(/^(\d{4})-(\d{2})$/);
+            var names = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+            if (!match)
+                return value;
+            return (names[Number(match[2]) - 1] || match[2]) + " " + match[1];
+        }
+
+        function internshipPaymentText(metrics, hourly) {
+            var prefix = "Versement mensuel prévisionnel selon les heures planifiées : ";
+            var parts = [];
+            Object.keys(metrics.monthlyHours || {}).sort().forEach(function (month) {
+                var hours = metrics.monthlyHours[month];
+                parts.push(internshipMonth(month) + " : " + internshipNumber(hours, 2, false) +
+                    " h, soit " + internshipNumber(hours * hourly, 2, true) + " €");
+            });
+            return parts.length ? prefix + parts.join(" ; ") + "." : "";
+        }
+
+        function updateInternshipDerivedValues(eventTarget) {
+            var editor;
+            var hidden;
+            var metrics;
+            var hourlyInput;
+            var hourly;
+            var payment;
+            var prefix = "Versement mensuel prévisionnel selon les heures planifiées : ";
+
+            if (!window.InfosphereInternshipCalendar || !window.InfosphereInternshipCalendar.workMetrics)
+                return;
+            editor = root.querySelector("[data-internship-calendar]");
+            if (!editor)
+                return;
+            hidden = editor.querySelector('input[type="hidden"][data-dabsic-field="Internship.ScheduleCalendar"]');
+            if (!hidden)
+                return;
+            metrics = window.InfosphereInternshipCalendar.workMetrics(
+                hidden.value,
+                parseFloat(editor.getAttribute("data-morning-hours") || "3.5"),
+                parseFloat(editor.getAttribute("data-afternoon-hours") || "3.5")
+            );
+            setFieldValue("Internship.DurationInDay", internshipNumber(metrics.days, 2, false));
+            setFieldValue("Internship.HourPerDay", internshipNumber(metrics.hoursPerDay, 2, false));
+            setFieldValue("Internship.DayPerWeek", internshipNumber(metrics.daysPerWeek, 2, false));
+            setFieldValue("Internship.DurationInHour", internshipNumber(metrics.hours, 2, false));
+
+            hourlyInput = root.querySelector('[data-dabsic-field="Internship.HourlyPayment"]');
+            hourly = hourlyInput ? internshipDecimal(hourlyInput.value) : null;
+            if (hourly !== null) {
+                setRadioFieldValue("Internship.Paid", hourly > 0 ? "Oui" : "Non");
+                setFieldValue("Internship.TotalPayment", internshipNumber(metrics.hours * Math.max(0, hourly), 2, true));
+            } else
+                setFieldValue("Internship.TotalPayment", "");
+
+            payment = root.querySelector('[data-dabsic-field="Internship.Paiement"]');
+            if (!payment)
+                return;
+            if (internshipPaymentAuto === null)
+                internshipPaymentAuto = payment.value.trim() === "" || payment.value.indexOf(prefix) === 0;
+            if (eventTarget === payment)
+                internshipPaymentAuto = payment.value.trim() === "";
+            if (internshipPaymentAuto)
+                payment.value = hourly !== null && hourly > 0 ? internshipPaymentText(metrics, hourly) : "";
         }
 
         function updateBillingAmounts() {
@@ -173,7 +265,13 @@
             return row;
         }
 
+        if (window.InfosphereInternshipCalendar)
+            window.InfosphereInternshipCalendar.attach(root, "data-dabsic-field", function (hidden) {
+                hidden.dispatchEvent(new Event("input", {bubbles: true}));
+            });
+
         baseline = snapshot();
+        updateInternshipDerivedValues(null);
 
         function isDirty() {
             return !outputComplete || snapshot() !== baseline;
@@ -195,16 +293,20 @@
 
         function updateState() {
             var dirty = isDirty();
-            var busy = saving || previewing || finalizing || signatureSaving;
+            var busy = saving || previewing || finalizing || admissionGenerating || signatureSaving;
             root.classList.toggle("is-dirty", dirty);
             saveButton.disabled = !dirty || busy;
             if (previewButton)
                 previewButton.disabled = busy;
             if (finalizeButton)
                 finalizeButton.disabled = busy || reportFinalized;
+            if (admissionGenerateButton)
+                admissionGenerateButton.disabled = busy;
             if (signatureSave)
                 signatureSave.disabled = signatureSaving || !signatureState.drawn;
-            if (finalizing)
+            if (admissionGenerating)
+                setState("saving", "Génération de l’attestation…");
+            else if (finalizing)
                 setState("saving", "Génération et envoi…");
             else if (previewing)
                 setState("saving", "Génération de l'aperçu…");
@@ -441,6 +543,90 @@
             });
         }
 
+        function generateAdmissionCertificate() {
+            var url = root.getAttribute("data-admission-generate-url") || "";
+            var documentName = root.getAttribute("data-admission-document") || "";
+            var queueForPrint = root.getAttribute("data-admission-queue-for-print") === "1";
+            var paymentState = values()["Admission.PaymentState"] || "";
+            var paidAmount = root.querySelector('[data-dabsic-field="Admission.PaidAmount"]');
+            var popup;
+
+            if (!url || !documentName || admissionGenerating || finalizing || previewing)
+                return;
+            if (!root.reportValidity())
+                return;
+            if (paymentState === "") {
+                setMessage("Indiquez l’état du règlement avant de générer l’attestation.", "error");
+                return;
+            }
+            if (paymentState === "partial" && (!paidAmount || paidAmount.value.trim() === "")) {
+                setMessage("Indiquez le montant déjà réglé pour un paiement partiel.", "error");
+                if (paidAmount)
+                    paidAmount.focus();
+                return;
+            }
+
+            popup = window.open("", "_blank");
+            if (popup)
+                popup.document.write('<p style="font-family:sans-serif">Génération de l\'attestation…</p>');
+            admissionGenerating = true;
+            setMessage("", "error");
+            updateState();
+
+            save(false).then(function (saved) {
+                var body;
+                if (!saved)
+                    throw new Error("Le formulaire n'a pas pu être sauvegardé avant la génération.");
+                body = {
+                    document: documentName,
+                    form_output: root.getAttribute("data-output") || "",
+                    queue_for_print: queueForPrint ? 1 : 0
+                };
+                return fetch(url, {
+                    method: "PUT",
+                    credentials: "same-origin",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(body)
+                });
+            }).then(function (response) {
+                return response.text().then(function (text) {
+                    var packet = null;
+                    try {
+                        packet = JSON.parse(text);
+                    } catch (error) {
+                        throw new Error(text || response.statusText || "La génération de l'attestation a échoué.");
+                    }
+                    if (!response.ok || !packet || packet.result !== "ok")
+                        throw new Error(packet && packet.msg ? htmlToText(packet.msg) :
+                            response.statusText || "La génération de l'attestation a échoué.");
+                    return packet;
+                });
+            }).then(function (packet) {
+                admissionGenerating = false;
+                if (popup && packet.content)
+                    popup.location = packet.content;
+                else if (packet.content)
+                    window.open(packet.content, "_blank", "noopener");
+                else if (popup)
+                    popup.close();
+                setMessage(packet.msg || "Attestation d’admission générée.", "success");
+                updateState();
+                try {
+                    if (window.opener && !window.opener.closed)
+                        window.opener.location.reload();
+                } catch (error) {
+                    // Le PDF reste généré même si la page d'origine ne peut pas être rafraîchie.
+                }
+            }).catch(function (error) {
+                if (popup)
+                    popup.close();
+                admissionGenerating = false;
+                setMessage(error && error.message ? error.message :
+                    "La génération de l'attestation a échoué.", "error");
+                updateState();
+            });
+        }
+
         function previewReport() {
             var url = root.getAttribute("data-preview-url") || "";
             var popup;
@@ -591,13 +777,19 @@
                 row.querySelector(".dabsic-form-override-key").focus();
                 updateState();
             });
+        if (admissionGenerateButton)
+            admissionGenerateButton.addEventListener("click", generateAdmissionCertificate);
         if (finalizeButton)
             finalizeButton.addEventListener("click", finalizeReport);
 
-        root.addEventListener("input", updateState);
+        root.addEventListener("input", function (event) {
+            updateInternshipDerivedValues(event.target);
+            updateState();
+        });
         root.addEventListener("change", function (event) {
             if (event.target.matches("[data-dabsic-billing-template], [data-dabsic-billing-foreign=\"1\"]"))
                 updateBillingAmounts();
+            updateInternshipDerivedValues(event.target);
             updateState();
         });
         root.addEventListener("submit", function (event) {

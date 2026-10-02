@@ -117,6 +117,11 @@
 
 .billing_account_dialog
 {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
     width: min(1120px, calc(100vw - 60px));
     max-width: 1120px;
     max-height: calc(100vh - 60px);
@@ -127,6 +132,40 @@
     color: black;
     overflow: auto;
     box-sizing: border-box;
+}
+
+/*
+ * The EFRITS theme sets white text directly on every element.  The dialog has
+ * a light background, so override that rule on its descendants as well as on
+ * the dialog itself.
+ */
+.billing_account_dialog,
+.billing_account_dialog *
+{
+    color: black;
+}
+
+.billing_account_dialog a,
+.billing_account_dialog a:active,
+.billing_account_dialog a:hover,
+.billing_account_dialog a:visited
+{
+    color: #006400;
+}
+
+.billing_account_dialog input[type="text"],
+.billing_account_dialog input[type="date"],
+.billing_account_dialog select,
+.billing_account_dialog textarea
+{
+    background: white;
+    color: black;
+}
+
+.billing_account_dialog input[type="button"],
+.billing_account_dialog input[type="submit"]
+{
+    color: white;
 }
 
 .billing_account_dialog::backdrop
@@ -569,6 +608,18 @@
     grid-column: 1 / -1;
 }
 
+.billing_action_menu .billing_payment_payer_hint
+{
+    grid-column: 1 / -1;
+    display: none;
+    line-height: 1.25;
+}
+
+.billing_action_menu .billing_payment_payer_hint.visible
+{
+    display: block;
+}
+
 .billing_event_form
 {
     display: inline-block;
@@ -684,7 +735,8 @@ button.billing_event
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
 }
 
-.billing_invoice_reference_field
+.billing_invoice_reference_field,
+.billing_invoice_message_field
 {
     display: flex;
     flex-direction: column;
@@ -693,7 +745,8 @@ button.billing_event
     font-weight: bold;
 }
 
-.billing_invoice_reference_field input
+.billing_invoice_reference_field input,
+.billing_invoice_message_field textarea
 {
     box-sizing: border-box;
     width: 100%;
@@ -705,12 +758,77 @@ button.billing_event
     color: black;
 }
 
-.billing_invoice_reference_field small
+.billing_invoice_message_field textarea
+{
+    min-height: 72px;
+    resize: vertical;
+}
+
+.billing_invoice_reference_field small,
+.billing_invoice_message_field small
 {
     max-width: 285px;
     font-weight: normal;
     line-height: 1.25;
     color: #555;
+}
+
+.billing_pending_invoice_edit
+{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #bbb;
+}
+
+.billing_pending_invoice_edit > label,
+.billing_pending_invoice_edit_grid label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+}
+
+.billing_pending_invoice_edit_grid
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.billing_pending_invoice_edit input,
+.billing_pending_invoice_edit select
+{
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid #777;
+    border-radius: 4px;
+    background: white;
+    color: black;
+    font: inherit;
+}
+
+.billing_pending_invoice_save
+{
+    align-self: flex-start;
+    min-width: 90px;
+    padding: 4px 7px;
+    border: 1px solid black;
+    border-radius: 4px;
+    background: #f5f5f5;
+    color: black;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.billing_pending_invoice_save:hover
+{
+    background: black;
+    color: white;
 }
 
 .billing_pending_invoice_actions
@@ -986,6 +1104,19 @@ button.billing_event
     padding-bottom: 35px;
 }
 
+.billing_embedded_panel
+{
+    width: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+#billing_template_panel.billing_embedded_panel,
+#billing_invoice_panel.billing_embedded_panel
+{
+    overflow: visible;
+}
+
 #billing_invoice_table
 {
     width: 100%;
@@ -1131,6 +1262,13 @@ button.billing_event
     gap: 6px;
 }
 
+.billing_action_menu form.billing_payment_reminder_form + form.billing_payment_reminder_form
+{
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #bbb;
+}
+
 .billing_payment_reminder_invoices
 {
     max-height: 150px;
@@ -1273,6 +1411,27 @@ button.billing_event
     width: 100%;
     box-sizing: border-box;
     font-size: 11px;
+}
+
+/*
+ * Billing account document actions only.
+ * Keep these selectors scoped to the billing table so no other site button
+ * inherits the darker treatment.
+ */
+#billing_table .billing_account_statement_button,
+#billing_table .billing_payment_schedule_button
+{
+    background-color: #303030;
+    border-color: #303030;
+    color: white;
+}
+
+#billing_table .billing_account_statement_button:hover,
+#billing_table .billing_payment_schedule_button:hover
+{
+    background-color: black;
+    border-color: black;
+    color: white;
 }
 
 .billing_credit_note_pending,
@@ -1532,6 +1691,53 @@ button.billing_event
     padding: 6px;
 }
 
+/* The billing table lives on a dark theme, but its action popups are white. */
+#billing_table .billing_action_menu,
+#billing_table .billing_action_menu label,
+#billing_table .billing_action_menu label > span,
+#billing_table .billing_action_menu strong,
+#billing_table .billing_action_menu h4,
+#billing_table .billing_pending_invoice_menu,
+#billing_table .billing_pending_invoice_menu label,
+#billing_table .billing_pending_invoice_menu label > span,
+#billing_table .billing_pending_invoice_menu strong,
+#billing_table .billing_pending_invoice_menu a
+{
+    color: black;
+}
+
+#billing_table .billing_pending_invoice_actions a:hover
+{
+    color: white;
+}
+
+#billing_table .billing_action_menu small,
+#billing_table .billing_pending_invoice_menu small
+{
+    color: #555;
+}
+
+.billing_payment_edit_menu label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.billing_payment_edit_menu input[type="text"]
+{
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px 7px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: white;
+    color: black;
+    font: inherit;
+}
+
 .billing_action_selector
 {
     width: 100%;
@@ -1552,6 +1758,57 @@ button.billing_event
 .billing_action_choice > form
 {
     margin-bottom: 0;
+}
+
+.billing_remaining_schedule_form .billing_remaining_schedule_invoices
+{
+    margin: 5px 0;
+    padding: 5px 6px 6px 6px;
+    border: 1px solid #999;
+    border-radius: 4px;
+    background: #f7f7f7;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
+.billing_remaining_schedule_invoices legend
+{
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.billing_remaining_schedule_invoices > small
+{
+    display: block;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+#billing_table .billing_remaining_schedule_invoice
+{
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 4px;
+    margin: 2px 0;
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 1.2;
+}
+
+#billing_table .billing_remaining_schedule_invoice input[type="checkbox"]
+{
+    width: auto;
+    min-width: 13px;
+    height: 13px;
+    margin: 1px 0 0 0;
+}
+
+#billing_table .billing_remaining_schedule_invoice span
+{
+    min-width: 0;
+    white-space: normal;
 }
 
 .billing_action_menu form.billing_external_invoice_form
@@ -1586,4 +1843,1870 @@ button.billing_event
 {
     margin-top: 1px;
     margin-bottom: 1px;
+}
+
+/* Comptabilité : le viewport ne scrolle pas, seul le contenu de l'onglet actif le fait. */
+#body.billing_page_active
+{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#billing_page
+{
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+#billing_page .billing_toolbar
+{
+    flex: 0 0 auto;
+}
+
+#billing_page > .tabpanel
+{
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#billing_page > .tabpanel > .tablist
+{
+    position: static;
+    flex: 0 0 auto;
+    height: auto;
+    padding-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 4px;
+}
+
+#billing_page > .tabpanel > .tablist > a
+{
+    min-width: 0;
+}
+
+#billing_page .billing_tab_button
+{
+    width: 100% !important;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+#billing_page .billing_tab_button.selected
+{
+    font-weight: bold;
+}
+
+#billing_page > .tabpanel > .tabcontent
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+}
+
+#billing_page > .tabpanel > .tabcontent > .billing_tab_content
+{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 0 8px 20px 0;
+    scrollbar-color: green darkgreen;
+}
+
+#billing_panel
+{
+    overflow: visible;
+}
+
+.billing_tab_controls
+{
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    margin-bottom: 4px;
+}
+
+.billing_simple_table
+{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.billing_simple_table th,
+.billing_simple_table td
+{
+    padding: 7px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    text-align: left;
+    vertical-align: top;
+}
+
+.billing_simple_table th
+{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: rgba(0, 35, 0, 0.96);
+}
+
+.billing_simple_table tr:nth-child(even)
+{
+    background: rgba(192, 192, 192, 0.18);
+}
+
+.billing_simple_table td small
+{
+    display: block;
+    opacity: 0.72;
+}
+
+.billing_amount_cell
+{
+    text-align: right !important;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.billing_empty_tab
+{
+    margin: 16px 4px;
+    opacity: 0.8;
+}
+
+.billing_organization_entry_add
+{
+    margin: 0 0 14px 0;
+    padding: 10px;
+    border: 1px solid rgba(0, 255, 0, 0.28);
+    border-radius: 8px;
+    background: rgba(0, 20, 0, 0.55);
+}
+
+.billing_organization_entry_add h3
+{
+    margin: 0 0 8px 0;
+}
+
+.billing_organization_entry_add form
+{
+    display: grid;
+    grid-template-columns: minmax(130px, 0.7fr) minmax(240px, 1.5fr) minmax(140px, 0.8fr) minmax(220px, 1.4fr) minmax(120px, 0.7fr) minmax(160px, 0.9fr);
+    gap: 7px;
+    align-items: end;
+}
+
+.billing_organization_entry_add label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.billing_organization_entry_add label > span
+{
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.billing_organization_entry_add input,
+.billing_organization_entry_add select
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_organization_entry_add .billing_organization_comment
+{
+    grid-column: 1 / -2;
+}
+
+.billing_organization_entry_add input[type="submit"]
+{
+    grid-column: -2 / -1;
+}
+
+@media (max-width: 1200px)
+{
+    .billing_organization_entry_add form
+    {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+
+    .billing_organization_entry_add .billing_organization_comment,
+    .billing_organization_entry_add input[type="submit"]
+    {
+        grid-column: auto;
+    }
+}
+
+.billing_organization_entry_heading
+{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.billing_organization_entry_heading h3
+{
+    margin: 0;
+}
+
+.billing_organization_summary
+{
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.billing_organization_summary span
+{
+    opacity: 0.75;
+}
+
+.billing_organization_entry_add .billing_organization_comment
+{
+    grid-column: span 3;
+}
+
+.billing_organization_entry_add .billing_organization_document
+{
+    grid-column: span 2;
+}
+
+.billing_organization_entry_add input[type="submit"]
+{
+    grid-column: span 1;
+}
+
+.billing_organization_document_cell
+{
+    max-width: 220px;
+}
+
+.billing_organization_document_cell a
+{
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.billing_organization_actions
+{
+    white-space: nowrap;
+}
+
+.billing_organization_actions > button,
+.billing_organization_actions > form
+{
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 3px 3px 0;
+}
+
+.billing_organization_dialog
+{
+    width: min(920px, calc(100vw - 50px));
+    max-height: min(760px, calc(100vh - 70px));
+    padding: 0;
+    border: 1px solid rgba(0, 255, 0, 0.38);
+    border-radius: 10px;
+    background: rgba(0, 20, 0, 0.98);
+    color: inherit;
+    overflow: hidden;
+}
+
+.billing_organization_dialog::backdrop
+{
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.billing_organization_dialog > form
+{
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+    min-height: 0;
+}
+
+.billing_organization_dialog_header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.billing_organization_dialog_header h3
+{
+    margin: 0;
+}
+
+.billing_organization_dialog_header button
+{
+    font-size: 22px;
+    min-width: 38px;
+}
+
+.billing_organization_dialog_fields
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.billing_organization_dialog_fields label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.billing_organization_dialog_fields label > span
+{
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.billing_organization_dialog_fields input,
+.billing_organization_dialog_fields select
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_organization_dialog_fields .billing_dialog_wide
+{
+    grid-column: 1 / -1;
+}
+
+.billing_organization_dialog_fields .billing_delete_document
+{
+    flex-direction: row;
+    align-items: center;
+}
+
+.billing_organization_dialog_fields .billing_delete_document input
+{
+    width: auto;
+}
+
+.billing_organization_dialog_actions
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 1200px)
+{
+    .billing_organization_entry_add .billing_organization_comment,
+    .billing_organization_entry_add .billing_organization_document,
+    .billing_organization_entry_add input[type="submit"]
+    {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 760px)
+{
+    .billing_organization_entry_heading
+    {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .billing_organization_summary
+    {
+        white-space: normal;
+    }
+
+    .billing_organization_dialog_fields
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .billing_organization_dialog_fields .billing_dialog_wide
+    {
+        grid-column: auto;
+    }
+}
+
+.billing_organization_filters
+{
+    display: grid;
+    grid-template-columns: minmax(220px, 1.6fr) minmax(170px, 1fr) minmax(130px, .7fr) minmax(135px, .7fr) minmax(135px, .7fr) auto minmax(250px, 1.2fr);
+    gap: 7px;
+    align-items: end;
+    margin: 0 0 10px 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    background: rgba(0, 20, 0, 0.38);
+}
+
+.billing_organization_filters label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.billing_organization_filters label > span
+{
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.billing_organization_filters input,
+.billing_organization_filters select,
+.billing_organization_filters button
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.billing_statement_picker
+{
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) auto;
+    gap: 5px;
+}
+
+.billing_statement_inline_button
+{
+    display: block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
+.billing_statement_dialog
+{
+    width: min(1180px, calc(100vw - 40px));
+    max-height: calc(100vh - 55px);
+}
+
+.billing_statement_dialog > .billing_organization_dialog_header
+{
+    flex: 0 0 auto;
+}
+
+.billing_statement_summary
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.billing_statement_summary > div
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.billing_statement_summary span
+{
+    font-size: 11px;
+    opacity: .76;
+}
+
+.billing_statement_scroll
+{
+    overflow: auto;
+    padding: 0 14px 14px 14px;
+    max-height: calc(100vh - 240px);
+}
+
+.billing_export_tab
+{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.billing_export_card,
+.billing_export_contents
+{
+    padding: 14px;
+    border: 1px solid rgba(0, 255, 0, 0.28);
+    border-radius: 8px;
+    background: rgba(0, 20, 0, 0.55);
+}
+
+.billing_export_heading h3,
+.billing_export_contents h4
+{
+    margin: 0 0 5px 0;
+}
+
+.billing_export_heading p
+{
+    margin: 0 0 14px 0;
+    opacity: .78;
+}
+
+.billing_export_form
+{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.billing_export_presets,
+.billing_export_dates
+{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 8px;
+}
+
+.billing_export_presets label,
+.billing_export_dates label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.billing_export_presets label > span,
+.billing_export_dates label > span
+{
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.billing_export_presets input
+{
+    width: 100px;
+}
+
+.billing_export_presets input[type="number"],
+.billing_export_dates input[type="date"]
+{
+    background: white;
+    color: black !important;
+}
+
+.billing_export_preset_buttons
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.billing_export_preset_buttons button,
+.billing_export_submit
+{
+    min-height: 30px;
+    padding: 4px 10px;
+    border: 1px solid rgba(0, 255, 0, 0.38);
+    border-radius: 5px;
+    background: rgba(0, 75, 0, 0.92);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_export_preset_buttons button:hover,
+.billing_export_submit:hover
+{
+    background: black;
+    border-color: rgba(0, 255, 0, 0.72);
+}
+
+.billing_export_submit
+{
+    min-width: 220px;
+    font-weight: bold;
+}
+
+.billing_export_tree
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.billing_export_tree > div
+{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.billing_export_tree code,
+.billing_export_tree small
+{
+    opacity: .78;
+}
+
+.billing_export_note
+{
+    margin: 12px 0 0 0;
+    font-size: 11px;
+    opacity: .72;
+}
+
+@media (max-width: 1350px)
+{
+    .billing_organization_filters
+    {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+    .billing_export_tree
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+.billing_bank_tab
+{
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.billing_bank_top_grid
+{
+    display: grid;
+    grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.1fr);
+    gap: 14px;
+}
+
+.billing_bank_card,
+.billing_bank_reconciliation
+{
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 8px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.billing_bank_card h3,
+.billing_bank_reconciliation h3
+{
+    margin: 0 0 5px 0;
+}
+
+.billing_bank_card > p,
+.billing_bank_reconciliation_header p
+{
+    margin: 0 0 12px 0;
+    opacity: 0.78;
+}
+
+.billing_bank_import_form
+{
+    display: grid;
+    grid-template-columns: minmax(120px, 0.35fr) minmax(260px, 1fr) auto;
+    gap: 9px;
+    align-items: end;
+}
+
+.billing_bank_import_form label,
+.billing_supplier_fields label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.billing_bank_import_form label > span,
+.billing_supplier_fields label > span
+{
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.billing_bank_import_form input,
+.billing_bank_import_form select,
+.billing_bank_import_form button,
+.billing_supplier_fields input,
+.billing_supplier_fields select,
+.billing_supplier_actions button,
+.billing_bank_filters input,
+.billing_bank_filters select
+{
+    box-sizing: border-box;
+    min-height: 32px;
+}
+
+.billing_bank_import_form button,
+.billing_supplier_actions button
+{
+    padding: 4px 10px;
+    border: 1px solid rgba(0, 255, 0, 0.38);
+    border-radius: 5px;
+    background: rgba(0, 75, 0, 0.92);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_bank_import_form button:hover,
+.billing_supplier_actions button:hover
+{
+    background: black;
+    border-color: rgba(0, 255, 0, 0.72);
+}
+
+.billing_bank_hint
+{
+    display: block;
+    margin-top: 8px;
+    opacity: 0.72;
+}
+
+.billing_bank_csv_preview
+{
+    margin-top: 12px;
+}
+
+.billing_bank_csv_preview.hidden
+{
+    display: none;
+}
+
+.billing_bank_csv_preview_scroll
+{
+    margin-top: 6px;
+    max-height: 220px;
+    overflow: auto;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+.billing_bank_csv_preview table
+{
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82em;
+}
+
+.billing_bank_csv_preview th,
+.billing_bank_csv_preview td
+{
+    padding: 5px 7px;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.16);
+    white-space: nowrap;
+    text-align: left;
+}
+
+.billing_supplier_fields
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+.billing_supplier_document
+{
+    grid-column: span 2;
+}
+
+.billing_supplier_matches
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 10px;
+    min-height: 30px;
+}
+
+.billing_supplier_matches > small
+{
+    width: 100%;
+    opacity: 0.72;
+}
+
+.billing_supplier_matches button
+{
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 5px;
+    padding: 5px 8px;
+}
+
+.billing_supplier_matches button.selected
+{
+    outline: 2px solid currentColor;
+}
+
+.billing_supplier_actions
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.billing_bank_reconciliation
+{
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+}
+
+.billing_bank_reconciliation_header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 14px;
+    flex: 0 0 auto;
+}
+
+.billing_bank_filters
+{
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.billing_bank_filters input[type="search"]
+{
+    min-width: 260px;
+}
+
+.billing_bank_table_scroll
+{
+    margin-top: 8px;
+    overflow: auto;
+    min-height: 240px;
+    flex: 1 1 auto;
+}
+
+.billing_bank_table
+{
+    width: 100%;
+    min-width: 1180px;
+    border-collapse: collapse;
+    background: rgba(0, 18, 0, 0.88);
+    color: inherit;
+}
+
+.billing_bank_table tbody tr
+{
+    background: rgba(0, 18, 0, 0.88);
+}
+
+.billing_bank_table tbody tr:nth-child(even)
+{
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.billing_bank_table th,
+.billing_bank_table td
+{
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+    vertical-align: top;
+    text-align: left;
+}
+
+.billing_bank_table th
+{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(0, 35, 0, 0.98);
+    color: inherit;
+}
+
+.billing_bank_row.billing_bank_known
+{
+    opacity: 0.58;
+    filter: grayscale(0.45);
+}
+
+.billing_bank_row.billing_bank_suggested
+{
+    box-shadow: inset 3px 0 0 rgba(80, 130, 180, 0.65);
+}
+
+.billing_bank_status_cell small,
+.billing_bank_label_cell small,
+.billing_bank_table td small
+{
+    display: block;
+    margin-top: 3px;
+    opacity: 0.72;
+}
+
+.billing_bank_badge
+{
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 0.78em;
+    white-space: nowrap;
+    background: rgba(127, 127, 127, 0.18);
+}
+
+.billing_bank_badge.suggested
+{
+    background: rgba(80, 130, 180, 0.18);
+}
+
+.billing_bank_badge.matched,
+.billing_bank_badge.known
+{
+    background: rgba(127, 127, 127, 0.28);
+}
+
+.billing_bank_amount
+{
+    white-space: nowrap;
+    font-weight: bold;
+    text-align: right !important;
+}
+
+.billing_bank_amount.debit::before
+{
+    content: "− ";
+}
+
+.billing_bank_amount.credit::before
+{
+    content: "+ ";
+}
+
+.billing_bank_reconcile_form
+{
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto;
+    gap: 5px;
+}
+
+.billing_bank_reconcile_form input[type="text"]
+{
+    min-width: 0;
+}
+
+.billing_bank_create_org
+{
+    white-space: nowrap;
+}
+
+.billing_bank_table input[type="file"]
+{
+    width: 180px;
+    max-width: 180px;
+}
+
+.billing_bank_actions
+{
+    white-space: nowrap;
+}
+
+.billing_bank_actions form
+{
+    display: inline-block;
+    margin: 0 0 4px 4px;
+}
+
+.billing_bank_actions button
+{
+    white-space: nowrap;
+}
+
+@media (max-width: 1250px)
+{
+    .billing_bank_top_grid
+    {
+        grid-template-columns: 1fr;
+    }
+    .billing_supplier_fields
+    {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+}
+
+/* Electronic invoicing ---------------------------------------------------- */
+.billing_einvoice_tab
+{
+    min-height: 0;
+    padding: 8px 10px 16px 10px;
+}
+
+.billing_einvoice_header,
+.billing_einvoice_table_header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.billing_einvoice_header h3,
+.billing_einvoice_table_header h4
+{
+    margin: 0 0 4px 0;
+}
+
+.billing_einvoice_header p
+{
+    margin: 0;
+    opacity: 0.85;
+}
+
+.billing_einvoice_header button
+{
+    min-height: 32px;
+    padding: 5px 12px;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+    border-radius: 5px;
+    background: rgba(0, 75, 0, 0.94);
+    color: white !important;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.billing_einvoice_header button:hover
+{
+    background: black;
+    border-color: rgba(0, 255, 0, 0.8);
+}
+
+.billing_einvoice_architecture
+{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 12px 0 16px 0;
+}
+
+.billing_einvoice_architecture > div,
+.billing_einvoice_school,
+.billing_einvoice_note
+{
+    padding: 9px 11px;
+    border: 1px solid rgba(0, 255, 0, 0.18);
+    border-radius: 7px;
+    background: rgba(0, 20, 0, 0.72);
+}
+
+.billing_einvoice_architecture strong,
+.billing_einvoice_architecture span
+{
+    display: block;
+}
+
+.billing_einvoice_architecture span
+{
+    margin-top: 3px;
+    opacity: 0.82;
+}
+
+.billing_einvoice_school_grid
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.billing_einvoice_school.ready
+{
+    border-color: rgba(0, 255, 0, 0.42);
+}
+
+.billing_einvoice_school.incomplete
+{
+    border-color: rgba(255, 180, 0, 0.45);
+}
+
+.billing_einvoice_school_title
+{
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.billing_einvoice_school small
+{
+    display: block;
+    margin-top: 4px;
+    opacity: 0.82;
+}
+
+.billing_einvoice_missing
+{
+    color: #ffd68a;
+}
+
+.billing_einvoice_note
+{
+    margin: 12px 0 16px 0;
+}
+
+.billing_einvoice_table_header
+{
+    margin: 8px 0 6px 0;
+}
+
+.billing_einvoice_table_scroll
+{
+    width: 100%;
+    overflow: auto;
+    border: 1px solid rgba(0, 255, 0, 0.18);
+}
+
+.billing_einvoice_table
+{
+    width: 100%;
+    min-width: 1080px;
+    border-collapse: collapse;
+    background: rgba(0, 18, 0, 0.88);
+}
+
+.billing_einvoice_table th,
+.billing_einvoice_table td
+{
+    padding: 7px 9px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: top;
+    text-align: left;
+}
+
+.billing_einvoice_table th
+{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(0, 35, 0, 0.98);
+}
+
+.billing_einvoice_table tbody tr:nth-child(even)
+{
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.billing_einvoice_status,
+.billing_einvoice_local_only
+{
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    white-space: nowrap;
+}
+
+.billing_einvoice_status.status_prepared
+{
+    border-color: rgba(0, 255, 0, 0.38);
+    background: rgba(0, 75, 0, 0.5);
+}
+
+.billing_einvoice_status.status_received
+{
+    border-color: rgba(90, 190, 255, 0.55);
+    background: rgba(15, 70, 105, 0.55);
+}
+
+.billing_einvoice_status.status_received_unparsed
+{
+    border-color: rgba(255, 190, 70, 0.6);
+    background: rgba(105, 70, 5, 0.52);
+}
+
+.billing_einvoice_status.status_received_review
+{
+    border-color: rgba(255, 190, 70, 0.6);
+    background: rgba(105, 70, 5, 0.52);
+}
+
+.billing_einvoice_local_only
+{
+    opacity: 0.72;
+}
+
+.billing_einvoice_journal_cell
+{
+    width: 230px;
+    max-width: 280px;
+}
+
+.billing_einvoice_events
+{
+    max-width: 280px;
+}
+
+.billing_einvoice_events summary
+{
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.billing_einvoice_events > div
+{
+    margin-top: 5px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.billing_einvoice_hash
+{
+    font-family: monospace;
+    opacity: 0.68;
+}
+
+@media (max-width: 1050px)
+{
+    .billing_einvoice_architecture
+    {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+.billing_einvoice_ubl
+{
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid rgba(0, 255, 0, 0.42);
+    border-radius: 4px;
+    background: rgba(0, 65, 0, 0.75);
+    color: white !important;
+    text-decoration: none;
+}
+
+.billing_einvoice_ubl:hover
+{
+    background: black;
+    border-color: #00d800;
+}
+
+
+/* Electronic invoicing: local validation and per-school connector settings. */
+.billing_einvoice_connector_form
+{
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) minmax(105px, 0.65fr);
+    gap: 6px;
+}
+
+.billing_einvoice_connector_form label
+{
+    min-width: 0;
+}
+
+.billing_einvoice_connector_form label > span
+{
+    display: block;
+    margin-bottom: 2px;
+    font-size: 0.82em;
+    opacity: 0.82;
+}
+
+.billing_einvoice_connector_form select,
+.billing_einvoice_connector_form input[type="text"]
+{
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: white;
+    color: black;
+}
+
+.billing_einvoice_connector_endpoint
+{
+    grid-column: 1 / -1;
+}
+
+.billing_einvoice_connector_enabled
+{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.billing_einvoice_connector_enabled > span
+{
+    display: inline !important;
+    margin: 0 !important;
+}
+
+.billing_einvoice_connector_form button
+{
+    justify-self: end;
+    min-height: 28px;
+    padding: 4px 10px;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 75, 0, 0.94);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_einvoice_connector_form button:hover
+{
+    background: black;
+}
+
+.billing_einvoice_validation
+{
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.billing_einvoice_validation.ready
+{
+    border: 1px solid rgba(0, 255, 0, 0.42);
+    background: rgba(0, 75, 0, 0.45);
+}
+
+.billing_einvoice_validation.incomplete
+{
+    border: 1px solid rgba(255, 180, 0, 0.55);
+    background: rgba(120, 75, 0, 0.35);
+}
+
+.billing_einvoice_validation_details summary
+{
+    margin-top: 4px;
+    cursor: pointer;
+}
+
+.billing_einvoice_validation_details div
+{
+    font-family: monospace;
+    font-size: 0.82em;
+}
+
+.billing_einvoice_validation_limit
+{
+    display: block;
+    margin-top: 4px;
+    opacity: 0.65;
+}
+
+.billing_einvoice_connector_actions
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.billing_einvoice_connector_form button.secondary,
+.billing_einvoice_transport_action.secondary
+{
+    border-color: rgba(255, 255, 255, 0.30);
+    background: black;
+}
+
+.billing_einvoice_connector_form button:disabled,
+.billing_einvoice_transport_action:disabled
+{
+    opacity: 0.45;
+    cursor: default;
+}
+
+.billing_einvoice_validation_details.warnings summary
+{
+    color: #ffd68a;
+}
+
+.billing_einvoice_validation_details.errors summary
+{
+    color: #ffaaaa;
+}
+
+.billing_einvoice_validation_details div
+{
+    font-family: inherit;
+    max-width: 300px;
+}
+
+.billing_einvoice_transport_cell
+{
+    min-width: 145px;
+}
+
+.billing_einvoice_transport_cell > strong,
+.billing_einvoice_transport_cell > small
+{
+    display: block;
+    margin-bottom: 4px;
+}
+
+.billing_einvoice_transport_ready
+{
+    display: inline-block;
+    margin-bottom: 5px;
+    color: #bfffbf;
+}
+
+.billing_einvoice_transport_action
+{
+    display: block;
+    min-height: 27px;
+    margin-top: 4px;
+    padding: 3px 8px;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 75, 0, 0.94);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_einvoice_transport_action:hover
+{
+    background: black;
+    border-color: rgba(0, 255, 0, 0.85);
+}
+
+.billing_einvoice_xpz12013_config
+{
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 10px;
+    margin-top: 3px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.billing_einvoice_xpz12013_config label
+{
+    min-width: 0;
+}
+
+.billing_einvoice_xpz12013_config input[type="text"],
+.billing_einvoice_xpz12013_config select
+{
+    width: 100%;
+    box-sizing: border-box;
+    background: white;
+    color: black;
+}
+
+.billing_einvoice_xpz12013_config small
+{
+    grid-column: 1 / -1;
+    opacity: 0.75;
+}
+
+@media (max-width: 900px)
+{
+    .billing_einvoice_xpz12013_config
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .billing_einvoice_xpz12013_config small
+    {
+        grid-column: 1;
+    }
+}
+
+/* Electronic invoicing: payment reporting, review queue and transport failures. */
+.billing_einvoice_connector_form input[type="number"],
+.billing_einvoice_xpz12013_config input[type="number"]
+{
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: white;
+    color: black;
+}
+
+.billing_einvoice_payment_reporting
+{
+    grid-column: 1 / -1;
+}
+
+.billing_einvoice_payment_reporting_hint
+{
+    grid-column: 1 / -1;
+    opacity: 0.72;
+}
+
+.billing_einvoice_review_queue
+{
+    margin: 10px 0 14px 0;
+    padding: 8px;
+    border: 1px solid rgba(255, 190, 0, 0.45);
+    border-radius: 6px;
+    background: rgba(95, 60, 0, 0.18);
+}
+
+.billing_einvoice_review_item
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    padding: 7px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.billing_einvoice_review_item > div:first-child
+{
+    min-width: 0;
+}
+
+.billing_einvoice_review_item strong,
+.billing_einvoice_review_item span,
+.billing_einvoice_review_item small
+{
+    display: block;
+}
+
+.billing_einvoice_review_item small
+{
+    margin-top: 2px;
+    opacity: 0.78;
+}
+
+.billing_einvoice_review_actions
+{
+    display: flex;
+    flex: 0 0 auto;
+    gap: 5px;
+}
+
+.billing_einvoice_review_actions button
+{
+    min-height: 27px;
+    padding: 3px 8px;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 75, 0, 0.94);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_einvoice_review_actions button.secondary
+{
+    border-color: rgba(255, 255, 255, 0.30);
+    background: black;
+}
+
+.billing_einvoice_transport_error,
+.billing_einvoice_status.status_transport_error,
+.billing_einvoice_status.status_rejected,
+.billing_einvoice_status.status_refused
+{
+    color: #ffb0b0;
+}
+
+.billing_einvoice_status.status_paid,
+.billing_einvoice_status.status_accepted,
+.billing_einvoice_status.status_completed
+{
+    color: #bfffbf;
+}
+
+@media (max-width: 900px)
+{
+    .billing_einvoice_review_item
+    {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* Local electronic-invoicing Mock simulator. */
+.billing_einvoice_mock_panel
+{
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid rgba(0, 255, 0, 0.35);
+    border-radius: 7px;
+    background: rgba(0, 35, 0, 0.30);
+}
+
+.billing_einvoice_mock_header
+{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 9px;
+}
+
+.billing_einvoice_mock_header strong,
+.billing_einvoice_mock_header small
+{
+    display: block;
+}
+
+.billing_einvoice_mock_header > span
+{
+    white-space: nowrap;
+    opacity: 0.75;
+}
+
+.billing_einvoice_mock_grid
+{
+    display: grid;
+    grid-template-columns: minmax(220px, 0.75fr) minmax(360px, 1.75fr);
+    gap: 9px;
+}
+
+.billing_einvoice_mock_card,
+.billing_einvoice_mock_flows
+{
+    padding: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.24);
+}
+
+.billing_einvoice_mock_card > strong,
+.billing_einvoice_mock_flows > strong
+{
+    display: block;
+    margin-bottom: 7px;
+}
+
+.billing_einvoice_mock_card label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.billing_einvoice_mock_card input,
+.billing_einvoice_mock_card select,
+.billing_einvoice_mock_flow select
+{
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    background: white;
+    color: black;
+}
+
+.billing_einvoice_mock_supplier_fields
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.billing_einvoice_mock_pdf
+{
+    grid-column: 1 / -1;
+}
+
+.billing_einvoice_mock_card button,
+.billing_einvoice_mock_flow button,
+.billing_einvoice_mock_reset button
+{
+    margin-top: 7px;
+    padding: 5px 9px;
+    border: 1px solid rgba(0, 255, 0, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 75, 0, 0.94);
+    color: white !important;
+    cursor: pointer;
+}
+
+.billing_einvoice_mock_card button:hover,
+.billing_einvoice_mock_flow button:hover,
+.billing_einvoice_mock_reset button:hover
+{
+    background: black;
+    border-color: rgba(0, 255, 0, 0.85);
+}
+
+.billing_einvoice_mock_flow button.secondary,
+.billing_einvoice_mock_reset button.secondary
+{
+    background: black;
+    border-color: rgba(255, 255, 255, 0.30);
+}
+
+.billing_einvoice_mock_flows
+{
+    margin-top: 9px;
+}
+
+.billing_einvoice_mock_flow
+{
+    display: grid;
+    grid-template-columns: minmax(170px, 1.4fr) minmax(140px, 0.8fr) auto auto;
+    align-items: center;
+    gap: 7px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.billing_einvoice_mock_flow:first-of-type
+{
+    border-top: 0;
+}
+
+.billing_einvoice_mock_flow strong,
+.billing_einvoice_mock_flow small
+{
+    display: block;
+}
+
+.billing_einvoice_mock_flow button
+{
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+.billing_einvoice_mock_reset
+{
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 1050px)
+{
+    .billing_einvoice_mock_grid
+    {
+        grid-template-columns: 1fr;
+    }
+    .billing_einvoice_mock_supplier_fields
+    {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .billing_einvoice_mock_flow
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.billing_invoice_status_draft .billing_invoice_status
+{
+    background: rgba(85, 85, 85, 0.88);
+    border-style: dashed;
+}
+
+.billing_company_invoice_creator
+{
+    margin: 8px 0 14px 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 180, 0, 0.75);
+    border-radius: 6px;
+    background: rgba(0, 35, 0, 0.55);
+}
+
+.billing_company_invoice_creator h3
+{
+    margin: 0 0 9px 0;
+}
+
+.billing_company_invoice_creator form
+{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 8px;
+    align-items: end;
+}
+
+.billing_company_invoice_creator label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.billing_company_invoice_creator input,
+.billing_company_invoice_creator select,
+.billing_company_draft_issue input
+{
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    background: white;
+    color: black;
+}
+
+.billing_company_invoice_creator .billing_company_invoice_label
+{
+    grid-column: span 2;
+}
+
+.billing_company_invoice_creator button
+{
+    min-height: 30px;
+}
+
+.billing_company_draft_issue
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.billing_company_draft_issue input
+{
+    font-size: 11px;
+    padding: 3px 4px;
+}
+
+@media (max-width: 1100px)
+{
+    .billing_company_invoice_creator form
+    {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
 }

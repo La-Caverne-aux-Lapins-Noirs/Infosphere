@@ -1,0 +1,345 @@
+<?php
+require_once (__DIR__."/../../tools/dabsic_editor_component.php");
+
+$diploma_configuration_reference = diploma_school_configuration_path($school, false);
+$diploma_configuration_path = diploma_school_configuration_path($school, true);
+// Existing schools receive their secret the first time this configuration is
+// opened. It is persisted and never rotated automatically.
+$diploma_secret = diploma_school_ensure_secret($school);
+if (!is_readable($diploma_configuration_path))
+    diploma_write_atomic($diploma_configuration_path, diploma_school_default_configuration($school));
+
+$diploma_status = diploma_school_status($school);
+$diploma_logo_path = school_document_logo_path($school, true, false);
+$diploma_stamp_path = school_stamp_path($school, true);
+$diploma_font_library = diploma_school_font_library($school);
+$diploma_font_assignments = diploma_school_font_assignments($school);
+$diploma_font_usage = diploma_school_font_usage($school);
+$diploma_font_slot_labels = [
+    "title" => $Dictionnary["DiplomaFontSlotTitle"] ?? "Titre principal du diplôme",
+    "promotion" => $Dictionnary["DiplomaFontSlotPromotion"] ?? "Promotion",
+    "school_name" => $Dictionnary["DiplomaFontSlotSchoolName"] ?? "Nom de l'école",
+    "recommendation" => $Dictionnary["DiplomaFontSlotRecommendation"] ?? "Phrase de recommandation",
+    "recipient_name" => $Dictionnary["DiplomaFontSlotRecipientName"] ?? "Nom du diplômé",
+    "recipient_alias" => $Dictionnary["DiplomaFontSlotRecipientAlias"] ?? "Pseudo du diplômé",
+    "recipient_birth" => $Dictionnary["DiplomaFontSlotRecipientBirth"] ?? "Naissance du diplômé",
+    "attribution" => $Dictionnary["DiplomaFontSlotAttribution"] ?? "Phrase d'attribution",
+    "certification" => $Dictionnary["DiplomaFontSlotCertification"] ?? "Texte de certification",
+    "signatory_label" => $Dictionnary["DiplomaFontSlotSignatoryLabel"] ?? "Libellé des signataires",
+    "signatory_name" => $Dictionnary["DiplomaFontSlotSignatoryName"] ?? "Nom des signataires",
+    "signatory_title" => $Dictionnary["DiplomaFontSlotSignatoryTitle"] ?? "Fonction des signataires",
+    "diploma_number" => $Dictionnary["DiplomaFontSlotNumber"] ?? "Numéro du diplôme",
+    "school_phrase" => $Dictionnary["DiplomaFontSlotSchoolPhrase"] ?? "Caractérisation de l'école",
+];
+$diploma_preview_state = diploma_school_preview_state($school);
+$diploma_preview_revision = (int)$diploma_preview_state["mtime"];
+$diploma_status_items = [
+    "generator" => $Dictionnary["DiplomaGenerator"] ?? "Générateur GenDiplome",
+    "configuration" => $Dictionnary["DiplomaConfigurationFile"] ?? "Configuration",
+    "logo" => $Dictionnary["SchoolDocumentLogo"] ?? "Logo des documents",
+    "font" => $Dictionnary["DiplomaFontsAndStyles"] ?? "Polices et styles typographiques",
+    "secret" => $Dictionnary["DiplomaSecret"] ?? "Secret de génération",
+];
+?>
+<section class="school_admin_card school_admin_block school_diploma_block">
+    <div class="school_diploma_split">
+        <div class="school_diploma_settings">
+            <header class="school_diploma_header">
+                <div>
+                    <h4><?=$Dictionnary["SchoolDiplomaConfiguration"] ?? "Configuration des diplômes"; ?></h4>
+                    <p class="school_admin_notice">
+                        <?=$Dictionnary["SchoolDiplomaConfigurationHelp"] ?? "Ce modèle commun à l'école définit l'apparence des diplômes."; ?>
+                    </p>
+                </div>
+                <span class="school_diploma_ready <?=$diploma_status["ready"] ? "is_ready" : "is_missing"; ?>">
+                    <?=$diploma_status["ready"]
+                        ? ($Dictionnary["DiplomaReady"] ?? "Prêt")
+                        : ($Dictionnary["DiplomaMissing"] ?? "Configuration incomplète"); ?>
+                </span>
+            </header>
+
+            <div class="school_diploma_status">
+                <?php foreach ($diploma_status_items as $key => $label) { ?>
+                    <span class="<?=$diploma_status[$key] ? "is_ready" : "is_missing"; ?>">
+                        <?=$diploma_status[$key] ? "✓" : "×"; ?> <?=htmlspecialchars($label); ?>
+                    </span>
+                <?php } ?>
+            </div>
+
+            <?php if ($diploma_status["ready"]) { ?>
+                <section class="school_diploma_render_preview">
+                    <div class="school_diploma_render_preview_header">
+                        <h4><?=$Dictionnary["DiplomaPreview"] ?? "Aperçu du diplôme"; ?></h4>
+                        <form method="put" action="/api/school/<?=(int)$school["id"]; ?>/diploma_preview" onsubmit="return false;">
+                            <button
+                                id="school-diploma-preview-refresh-<?=(int)$school["id"]; ?>"
+                                type="button"
+                                onclick="schoolDiplomaRefreshPreview(this.form, <?=(int)$school["id"]; ?>);"
+                            ><?=$Dictionnary["RefreshPreview"] ?? "Actualiser"; ?></button>
+                        </form>
+                    </div>
+                    <img
+                        id="school-diploma-preview-<?=(int)$school["id"]; ?>"
+                        <?php if ($diploma_preview_state["exists"]) { ?>
+                            src="/api/school/<?=(int)$school["id"]; ?>/diploma_preview?rev=<?=$diploma_preview_revision; ?>"
+                        <?php } else { ?>
+                            hidden
+                        <?php } ?>
+                        alt="<?=$Dictionnary["DiplomaPreview"] ?? "Aperçu du diplôme"; ?>"
+                    />
+                    <small
+                        id="school-diploma-preview-state-<?=(int)$school["id"]; ?>"
+                        data-preview-stale="<?=$diploma_preview_state["stale"] ? "1" : "0"; ?>"
+                    ><?php
+                        if (!$diploma_preview_state["exists"])
+                            echo htmlspecialchars($Dictionnary["DiplomaPreviewMissing"] ?? "Aucun aperçu n'a encore été généré. Cliquez sur Actualiser pour en créer un.");
+                        else if ($diploma_preview_state["stale"])
+                            echo htmlspecialchars($Dictionnary["DiplomaPreviewStale"] ?? "Configuration modifiée : l'aperçu précédent est conservé jusqu'à la prochaine actualisation.");
+                        else
+                            echo htmlspecialchars($Dictionnary["DiplomaPreviewHelp"] ?? "Le dernier aperçu généré est conservé. GenDiplome n'est relancé que lorsque vous cliquez sur Actualiser.");
+                    ?></small>
+                </section>
+            <?php } ?>
+
+            <form method="put" action="/api/school/<?=$school["id"]; ?>/diploma" class="school_admin_form school_diploma_form" onsubmit="return false;">
+                <label>
+                    <?=$Dictionnary["DiplomaSecret"] ?? "Secret de génération"; ?>
+                    <div class="school_diploma_secret_field">
+                        <input
+                            id="school-diploma-secret-<?=(int)$school["id"]; ?>"
+                            type="password"
+                            name="diploma_secret"
+                            value="<?=htmlspecialchars($diploma_secret, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                            minlength="64"
+                            maxlength="64"
+                            pattern="[0-9a-fA-F]{64}"
+                            autocomplete="off"
+                            spellcheck="false"
+                            required
+                        />
+                        <button type="button" onclick="schoolDiplomaToggleSecret(<?=(int)$school["id"]; ?>);">
+                            <?=$Dictionnary["Show"] ?? "Afficher"; ?>
+                        </button>
+                        <button type="button" onclick="schoolDiplomaGenerateSecret(<?=(int)$school["id"]; ?>);">
+                            <?=$Dictionnary["DiplomaGenerateSecret"] ?? "Générer un nouveau secret"; ?>
+                        </button>
+                    </div>
+                    <small class="school_diploma_secret_warning">
+                        <?=$Dictionnary["DiplomaSecretWarning"] ?? "Secret cryptographique propre à cette école. Toute personne qui le connaît peut reproduire la génération procédurale d'un diplôme. Ne le communiquez pas et ne le changez pas après émission, sauf en cas de compromission : un changement empêche de reproduire exactement les diplômes déjà émis."; ?>
+                    </small>
+                </label>
+                <p class="school_admin_notice">
+                    <?=$Dictionnary["DiplomaDocumentLogoHelp"] ?? "Le diplôme réutilise le logo de document défini dans l'onglet Configuration."; ?>
+                </p>
+                <div class="school_admin_actions">
+                    <input type="button" value="<?=$Dictionnary["Save"] ?? "Enregistrer"; ?>" onclick="silent_submitf(this.form, {after_success: refresh});" />
+                </div>
+            </form>
+
+            <section class="school_diploma_font_manager">
+                <header>
+                    <h4><?=$Dictionnary["DiplomaFontLibrary"] ?? "Bibliothèque de polices"; ?></h4>
+                    <p class="school_admin_notice">
+                        <?=$Dictionnary["DiplomaFontLibraryHelp"] ?? "Ajoutez plusieurs polices TTF/OTF puis choisissez indépendamment celle utilisée par chaque zone de texte de GenDiplome."; ?>
+                    </p>
+                </header>
+
+                <form method="put" action="/api/school/<?=$school["id"]; ?>/diploma" class="school_diploma_font_upload" onsubmit="return false;">
+                    <label>
+                        <?=$Dictionnary["DiplomaAddFonts"] ?? "Ajouter des polices"; ?> (.ttf, .otf)
+                        <input type="file" name="diploma_fonts" accept=".ttf,.otf,font/ttf,font/otf" multiple />
+                    </label>
+                    <button type="button" onclick="silent_submitf(this.form, {after_success: refresh});">
+                        <?=$Dictionnary["Upload"] ?? "Mettre en ligne"; ?>
+                    </button>
+                </form>
+
+                <?php if (count($diploma_font_library)) { ?>
+                    <div class="school_diploma_font_library">
+                        <?php foreach ($diploma_font_library as $font_resource => $font_info) { ?>
+                            <?php $font_use_count = count($diploma_font_usage[$font_resource] ?? []); ?>
+                            <div class="school_diploma_font_resource">
+                                <div>
+                                    <strong><?=htmlspecialchars($font_info["name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong>
+                                    <?php if (!empty($font_info["legacy"])) { ?>
+                                        <small><?=$Dictionnary["DiplomaLegacyFont"] ?? "police principale historique"; ?></small>
+                                    <?php } else { ?>
+                                        <small><?=number_format(((int)$font_info["size"]) / 1024, 0, ",", " "); ?> Kio</small>
+                                    <?php } ?>
+                                </div>
+                                <span>
+                                    <?=$font_use_count; ?> <?=$Dictionnary["DiplomaFontUses"] ?? "zone(s)"; ?>
+                                </span>
+                                <?php if (!empty($font_info["managed"])) { ?>
+                                    <form method="put" action="/api/school/<?=$school["id"]; ?>/diploma" onsubmit="return false;">
+                                        <input type="hidden" name="diploma_font_delete" value="<?=htmlspecialchars($font_resource, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                        <button
+                                            type="button"
+                                            <?=$font_use_count ? "disabled" : ""; ?>
+                                            title="<?=$font_use_count ? htmlspecialchars($Dictionnary["DiplomaFontInUseHelp"] ?? "Réaffectez d'abord les zones qui utilisent cette police.", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?>"
+                                            onclick="if (confirm(<?=htmlspecialchars(json_encode($Dictionnary["DiplomaDeleteFontConfirm"] ?? "Supprimer cette police ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, "UTF-8"); ?>)) silent_submitf(this.form, {after_success: refresh});"
+                                        ><?=$Dictionnary["Delete"] ?? "Supprimer"; ?></button>
+                                    </form>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                    </div>
+
+                    <form method="put" action="/api/school/<?=$school["id"]; ?>/diploma" class="school_diploma_font_assignments" onsubmit="return false;">
+                        <div class="school_diploma_font_assignment_header">
+                            <div>
+                                <h5><?=$Dictionnary["DiplomaFontAssignments"] ?? "Affectation des polices"; ?></h5>
+                                <small><?=$Dictionnary["DiplomaFontAssignmentsHelp"] ?? "Le changement de police conserve les tailles, alignements, couleurs et contours propres à chaque zone."; ?></small>
+                            </div>
+                            <label>
+                                <?=$Dictionnary["DiplomaFontApplyEverywhere"] ?? "Préselectionner partout"; ?>
+                                <select onchange="schoolDiplomaSelectFontEverywhere(this);">
+                                    <option value="">—</option>
+                                    <?php foreach ($diploma_font_library as $font_resource => $font_info) { ?>
+                                        <option value="<?=htmlspecialchars($font_resource, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"><?=htmlspecialchars($font_info["name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
+                                    <?php } ?>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="school_diploma_font_assignment_grid">
+                            <?php foreach (diploma_school_font_slots() as $font_slot => $font_definition) { ?>
+                                <?php $current_font = (string)($diploma_font_assignments[$font_slot] ?? ""); ?>
+                                <label>
+                                    <span><?=htmlspecialchars($diploma_font_slot_labels[$font_slot] ?? $font_slot, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
+                                    <select name="diploma_font_slot_<?=$font_slot; ?>" data-diploma-font-slot>
+                                        <?php if ($current_font != "" && !isset($diploma_font_library[$current_font])) { ?>
+                                            <option value="<?=htmlspecialchars($current_font, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" selected>
+                                                <?=$Dictionnary["DiplomaCustomFontResource"] ?? "Ressource Dabsic personnalisée"; ?> — <?=htmlspecialchars(basename($current_font), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
+                                            </option>
+                                        <?php } ?>
+                                        <?php foreach ($diploma_font_library as $font_resource => $font_info) { ?>
+                                            <option value="<?=htmlspecialchars($font_resource, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" <?=$current_font === $font_resource ? "selected" : ""; ?>>
+                                                <?=htmlspecialchars($font_info["name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                </label>
+                            <?php } ?>
+                        </div>
+                        <div class="school_admin_actions">
+                            <button type="button" onclick="silent_submitf(this.form, {after_success: refresh});">
+                                <?=$Dictionnary["DiplomaApplyFontAssignments"] ?? "Appliquer les polices"; ?>
+                            </button>
+                        </div>
+                    </form>
+                <?php } else { ?>
+                    <p class="school_admin_notice is_missing">
+                        <?=$Dictionnary["DiplomaNoFonts"] ?? "Aucune police n'est encore disponible. Ajoutez au moins une police TTF ou OTF."; ?>
+                    </p>
+                <?php } ?>
+            </section>
+        </div>
+
+        <div class="school_diploma_editor">
+            <h4><?=$Dictionnary["DiplomaConfigurationFile"] ?? "Configuration Dabsic"; ?></h4>
+            <?php dabsic_editor_component($diploma_configuration_reference, [
+                "embedded" => true,
+                "show_title" => false,
+                "show_path" => true,
+                "autofocus" => false,
+                "save_url" => "/api/school/".(int)$school["id"]."/diploma",
+                "save_method" => "PUT",
+                "extensions" => ["dab"],
+            ]); ?>
+        </div>
+    </div>
+</section>
+
+<script>
+function schoolDiplomaToggleSecret(id)
+{
+    var input = document.getElementById("school-diploma-secret-" + id);
+    if (!input)
+        return;
+    input.type = input.type === "password" ? "text" : "password";
+}
+
+function schoolDiplomaGenerateSecret(id)
+{
+    var input = document.getElementById("school-diploma-secret-" + id);
+    if (!input || !window.crypto || !window.crypto.getRandomValues)
+        return;
+    if (!confirm(<?=json_encode($Dictionnary["DiplomaGenerateSecretConfirm"] ?? "Remplacer le secret actuel ? Les diplômes déjà émis ne pourront plus être reproduits exactement avec ce nouveau secret.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return;
+    var bytes = new Uint8Array(32);
+    window.crypto.getRandomValues(bytes);
+    input.value = Array.prototype.map.call(bytes, function (byte) {
+        return byte.toString(16).padStart(2, "0");
+    }).join("");
+    input.type = "text";
+}
+
+function schoolDiplomaSelectFontEverywhere(source)
+{
+    var form = source && source.form;
+    if (!form || !source.value)
+        return;
+    form.querySelectorAll("[data-diploma-font-slot]").forEach(function (select) {
+        for (var i = 0; i < select.options.length; ++i)
+            if (select.options[i].value === source.value)
+            {
+                select.value = source.value;
+                break;
+            }
+    });
+}
+
+function schoolDiplomaPreviewMarkStale(id)
+{
+    var image = document.getElementById("school-diploma-preview-" + id);
+    var state = document.getElementById("school-diploma-preview-state-" + id);
+    if (!image || !state || image.hidden)
+        return;
+    state.dataset.previewStale = "1";
+    state.textContent = <?=json_encode($Dictionnary["DiplomaPreviewStale"] ?? "Configuration modifiée : l'aperçu précédent est conservé jusqu'à la prochaine actualisation.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+}
+
+function schoolDiplomaRefreshPreview(form, id)
+{
+    if (!form)
+        return false;
+    var button = document.getElementById("school-diploma-preview-refresh-" + id);
+    var image = document.getElementById("school-diploma-preview-" + id);
+    var state = document.getElementById("school-diploma-preview-state-" + id);
+    if (button)
+        button.disabled = true;
+
+    return silent_submitf(form, {
+        after_success: function () {
+            if (image)
+            {
+                image.src = "/api/school/" + id + "/diploma_preview?rev=" + Date.now();
+                image.hidden = false;
+            }
+            if (state)
+            {
+                state.dataset.previewStale = "0";
+                state.textContent = <?=json_encode($Dictionnary["DiplomaPreviewHelp"] ?? "Le dernier aperçu généré est conservé. GenDiplome n'est relancé que lorsque vous cliquez sur Actualiser.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+            }
+        },
+        after_complete: function (success) {
+            if (button)
+                button.disabled = false;
+            if (!success && state)
+                state.textContent = <?=json_encode($Dictionnary["DiplomaPreviewFailed"] ?? "La génération de l'aperçu a échoué ; l'aperçu précédent est conservé.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+        }
+    });
+}
+
+(function () {
+    var block = document.querySelector(".school_diploma_block");
+    if (!block)
+        return;
+    block.addEventListener("dabsic-editor-saved", function () {
+        // Saving Dabsic must never launch GenDiplome. Keep the last rendered
+        // image and merely tell the director that it no longer reflects the
+        // current configuration.
+        schoolDiplomaPreviewMarkStale(<?=(int)$school["id"]; ?>);
+    });
+})();
+</script>

@@ -14,6 +14,8 @@ CREATE TABLE `user` (
   -- Informations lié au site --
   `uid` int(11) DEFAULT NULL COMMENT 'LDAP',
   `outside_secret` varchar(32) DEFAULT NULL,
+  `calendar_token` char(64) DEFAULT NULL,
+  UNIQUE KEY `calendar_token` (`calendar_token`),
   `registration_date` datetime DEFAULT NULL,
   `visibility` int(11) NOT NULL DEFAULT 3,
   `authority` int(11) NOT NULL DEFAULT 0,
@@ -53,6 +55,9 @@ CREATE TABLE `user_cycle` (
   KEY `id_user` (`id_user`),
   `id_cycle` int(11) NOT NULL,
   KEY `id_cycle` (`id_cycle`),
+  `enrollment_mode` enum('school','of','ofa','cfa') DEFAULT NULL,
+  `fr_name` varchar(255) DEFAULT NULL,
+  `en_name` varchar(255) DEFAULT NULL,
   `hidden` int(11) DEFAULT NULL,
   `commentaries` text DEFAULT NULL,
   `cursus` text DEFAULT NULL
@@ -68,6 +73,21 @@ CREATE TABLE `user_log` (
   `last_ip` text NOT NULL,
   `duration` int(11) DEFAULT NULL,
   `type` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE `user_log_distrans_cursor` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_user` int(11) NOT NULL,
+  `source_key` varchar(191) COLLATE utf8_bin NOT NULL,
+  `reset_token` varchar(191) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `xtime` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `sshtime` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `ssh_idle_time` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `locktime` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `last_seen` datetime DEFAULT NULL,
+  UNIQUE KEY `user_log_distrans_cursor_unique` (`id_user`, `source_key`),
+  KEY `id_user` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `user_medal` (
@@ -143,6 +163,9 @@ CREATE TABLE `user_form` (
   `recipient_mail` varchar(320) DEFAULT NULL,
   `recipient_name` varchar(255) DEFAULT NULL,
   `kind` varchar(32) NOT NULL,
+  `id_communication_event` int(11) DEFAULT NULL,
+  KEY `id_communication_event` (`id_communication_event`),
+  `event_cancelled_at` datetime DEFAULT NULL,
   `token_hash` char(64) NOT NULL,
   UNIQUE KEY `token_hash` (`token_hash`),
   `fields` longtext NOT NULL DEFAULT '{}',
@@ -209,3 +232,18 @@ CREATE TABLE `user_form_signature_evidence` (
   UNIQUE KEY `form_signature_group` (`id_form`, `signature_group`),
   KEY `evidence_sha256` (`evidence_sha256`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `user_console_token` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_user` int(11) NOT NULL,
+  KEY `id_user` (`id_user`),
+  `name` varchar(80) NOT NULL DEFAULT 'Terminal',
+  `token_hash` char(64) NOT NULL,
+  UNIQUE KEY `token_hash` (`token_hash`),
+  `scope` varchar(255) NOT NULL DEFAULT 'console.read',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `last_used_at` datetime DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `revoked_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

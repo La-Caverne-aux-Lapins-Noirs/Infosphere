@@ -298,6 +298,7 @@ function GetIntercom($id, $data, $method, $output, $module)
 	"recursive" => @boolval($data["recursive"]) || (int)$SUBID != -1,
 	"page" => isset($data["page"]) ? (int)$data["page"] : NULL,
 	"page_size" => isset($data["page_size"]) ? (int)$data["page_size"] : 10,
+	"show_hidden" => isset($data["show_hidden"]) && (int)$data["show_hidden"],
     ]);
 
     $support_asset_embedded_intercom =
@@ -368,11 +369,30 @@ function HandleIntercomAction($id, $data, $method, $output, $module)
 
     if (!isset($data["intercom_action"]))
         bad_request();
+
+    if ($data["intercom_action"] == "read_all")
+    {
+        if (!isset($data["action"]))
+            bad_request();
+        if (($context = intercom_resolve_context($data["action"], $id))->is_error())
+            return ($context);
+        $ret = intercom_mark_context_read($data["action"], (int)$context->value);
+        if ($ret->is_error())
+            return ($ret);
+        $SUBID = -1;
+        unset($data["intercom_action"]);
+        $method = "GET";
+        return (GetIntercom($id, $data, $method, $output, $module));
+    }
+
     if ($SUBID == -1)
         bad_request();
     $id_message = (int)$SUBID;
     $current_subject = isset($data["current_subject"]) ? (int)$data["current_subject"] : $id_message;
-    if ($data["intercom_action"] == "report")
+
+    if ($data["intercom_action"] == "read")
+        $ret = intercom_mark_message_subject_read($id_message);
+    else if ($data["intercom_action"] == "report")
         $ret = intercom_report_message($id_message, isset($data["reason"]) ? $data["reason"] : "");
     else if ($data["intercom_action"] == "moderate")
         $ret = intercom_set_message_moderation($id_message, true);
@@ -384,6 +404,16 @@ function HandleIntercomAction($id, $data, $method, $output, $module)
         return (new ErrorResponse("InvalidRequest"));
     if ($ret->is_error())
         return ($ret);
+
+    // Masquer vaut aussi acquittement : on ne doit pas retrouver le même fil
+    // immédiatement dans les notifications de la page d'accueil.
+    if ($data["intercom_action"] == "moderate")
+    {
+        $read = intercom_mark_message_subject_read($id_message);
+        if ($read->is_error())
+            return ($read);
+    }
+
     $SUBID = $current_subject;
     unset($data["intercom_action"]);
     unset($data["reason"]);

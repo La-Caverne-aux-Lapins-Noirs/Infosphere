@@ -5,11 +5,25 @@ require_once (__DIR__."/document_context.php");
 require_once (__DIR__."/document_sources.php");
 require_once (__DIR__."/form_field.php");
 require_once (__DIR__."/public_invitation.php");
+require_once (__DIR__."/communication_event.php");
 require_once (__DIR__."/user_identity.php");
 
 function registration_form_kinds()
 {
     return (["ECL", "OF", "OFA", "CFA"]);
+}
+
+function registration_form_kinds_for_user($id_user)
+{
+    $loaded = registration_form_student((int)$id_user);
+    if (empty($loaded["ok"]))
+        return ([]);
+    $school = document_builder_fetch_student_school($loaded["student"]);
+    if (!is_array($school))
+        return ([]);
+    return (array_values(array_filter(registration_form_kinds(), function($kind) use ($school) {
+        return (school_activity_contract_kind_allowed($school, $kind));
+    })));
 }
 
 function registration_form_profile_kind()
@@ -27,9 +41,25 @@ function registration_form_is_document_signature_kind($kind)
     return (is_string($kind) && strncmp($kind, "SIG-", 4) === 0);
 }
 
+/**
+ * A contribution request (DOC-*) only collects declarative data.  Initials
+ * belong to the later immutable-document signature step (SIG-*), never to the
+ * contribution phase.  Legacy/profile forms keep their historical paraphe.
+ */
+function registration_form_requires_paraph($kind, array $schema = [])
+{
+    if ($kind === communication_event_kind() || communication_event_is_response_kind($kind))
+        return (false);
+    if (registration_form_is_document_kind($kind))
+        return (false);
+    if (registration_form_is_document_signature_kind($kind))
+        return (!empty($schema["document_signature"]["require_initials"]));
+    return (true);
+}
+
 function registration_form_document_signature_consent_text()
 {
-    return ("Je confirme avoir pris connaissance du document affiché et demande que la signature tracée soit associée à cette version précise du document.");
+    return ("Je confirme avoir pris connaissance du document affiché et demande que la signature que j’ai choisie ou tracée soit associée à cette version précise du document.");
 }
 
 function registration_form_document_context_bindings($model_file, array $user, $bindings)
@@ -62,7 +92,7 @@ function registration_form_document_bundle($model_file, array $user, $id_creator
     ));
 }
 
-function registration_form_build_document_schema(array $metadata, $role = "")
+function registration_form_build_document_schema(array $metadata, $role = "", array $known_values = [], $model_reference = "")
 {
     $role = trim((string)$role);
     $definition = dabsic_form_role_definition($metadata, $role);
@@ -91,6 +121,11 @@ function registration_form_build_document_schema(array $metadata, $role = "")
     {
         if (!isset($read[$group]))
             continue ;
+        $group_definition = $metadata["groups"][$group] ?? [];
+        $excluded_models = is_array($group_definition["exclude_models"] ?? NULL)
+            ? $group_definition["exclude_models"] : [];
+        if (count($excluded_models) && in_array(basename((string)$model_reference), $excluded_models, true))
+            continue ;
         $schema["groups"][] = $group;
         $schema["group_labels"][$group] = (string)($metadata["groups"][$group]["label"] ?? $group);
         $schema["group_access"][$group] = [
@@ -100,7 +135,12 @@ function registration_form_build_document_schema(array $metadata, $role = "")
         foreach (($metadata["groups"][$group]["fields"] ?? []) as $field)
         {
             $field_definition = $metadata["fields"][$field] ?? [];
-            $editable = isset($edit[$group]);
+            $has_prefilled_value = array_key_exists($field, $known_values)
+                && $known_values[$field] !== NULL
+                && !(is_string($known_values[$field]) && trim($known_values[$field]) === "");
+            $editable = isset($edit[$group])
+                && empty($field_definition["readonly"])
+                && !( !empty($field_definition["readonly_if_prefilled"]) && $has_prefilled_value );
             if ($editable)
                 $schema["requested_fields"][] = $field;
             $declared_type = strtolower(trim((string)($field_definition["type"] ?? "")));
@@ -115,8 +155,12 @@ function registration_form_build_document_schema(array $metadata, $role = "")
                 "group" => $group,
                 "editable" => $editable,
                 "required" => !empty($field_definition["required"]),
+                "readonly_if_prefilled" => !empty($field_definition["readonly_if_prefilled"]),
                 "choices" => $field_definition["choices"] ?? [],
                 "choice_values" => $field_definition["choice_values"] ?? [],
+                "start_field" => $field_definition["start_field"] ?? "",
+                "end_field" => $field_definition["end_field"] ?? "",
+                "summary_field" => $field_definition["summary_field"] ?? "",
             ];
         }
     }
@@ -182,6 +226,63 @@ function registration_form_token_hash($token)
     return (public_invitation_token_hash($token));
 }
 
+/**
+ * Revoke invitations while preserving their rows as an audit trail.
+ * Pending document tasks belong to the invitation and must be expired with it.
+ */
+function registration_form_revoke_rows(array $ids)
+{
+    global $Database;
+
+    $ids = array_values(array_unique(array_filter(array_map("intval", $ids), function ($id) {
+        return ($id > 0);
+    })));
+    if (!count($ids))
+        return (true);
+    $list = implode(",", $ids);
+    if ($Database->query("UPDATE user_form
+        SET revoked_at = COALESCE(revoked_at, NOW()),
+            expires_at = LEAST(expires_at, DATE_SUB(NOW(), INTERVAL 1 SECOND))
+        WHERE id IN ($list)") === false)
+        return (false);
+
+    require_once (__DIR__."/document_tasks.php");
+    foreach ($ids as $id)
+        if (!document_task_expire_form($id))
+            return (false);
+    return (true);
+}
+
+function registration_form_document_kind($reference, $target_year, $form_role)
+{
+    return ("DOC-".substr(hash("sha256", implode("|", [
+        (string)$reference,
+        (string)(int)$target_year,
+        trim((string)$form_role),
+    ])), 0, 28));
+}
+
+function registration_form_superseded_document_form_ids($id_user, $output_key, $form_role)
+{
+    $id_user = (int)$id_user;
+    $ids = [];
+    foreach (db_select_all("id, fields FROM user_form
+        WHERE id_user = $id_user AND kind LIKE 'DOC-%' AND revoked_at IS NULL") as $row)
+    {
+        $schema = registration_form_decode_json($row["fields"] ?? "", []);
+        $document = isset($schema["document"]) && is_array($schema["document"])
+            ? $schema["document"] : [];
+        if ((string)($document["output"] ?? "") !== (string)$output_key
+            || (string)($document["form_role"] ?? "") !== (string)$form_role)
+            continue ;
+        if (trim((string)($document["processed_at"] ?? "")) != ""
+            || trim((string)($document["instance_id"] ?? "")) != "")
+            continue ;
+        $ids[] = (int)$row["id"];
+    }
+    return ($ids);
+}
+
 function registration_form_decode_json($value, $default = [])
 {
     if (is_array($value))
@@ -190,9 +291,46 @@ function registration_form_decode_json($value, $default = [])
     return (is_array($decoded) ? $decoded : $default);
 }
 
-function registration_form_public_url($token)
+function registration_form_public_url($token, $base_url = NULL)
 {
-    return (public_invitation_url("RegistrationForm", $token));
+    return (public_invitation_url("RegistrationForm", $token, [], $base_url));
+}
+
+function registration_form_document_signature_base_url(array $instance, $owner_user_id)
+{
+    global $Database;
+
+    $school = NULL;
+    $codename = trim((string)($instance["SchoolCodename"] ?? ""));
+    if ($codename != "")
+    {
+        $codename_sql = $Database->real_escape_string($codename);
+        $school = db_select_one("base_url FROM school
+            WHERE codename = '$codename_sql' AND deleted IS NULL");
+    }
+
+    if ($school == NULL && (int)$owner_user_id > 0)
+    {
+        $owner_user_id = (int)$owner_user_id;
+        $school = db_select_one("school.base_url AS base_url FROM user_school
+            LEFT JOIN school ON school.id = user_school.id_school
+            WHERE user_school.id_user = $owner_user_id AND school.deleted IS NULL
+            ORDER BY user_school.id ASC");
+    }
+
+    $base = trim((string)($school["base_url"] ?? ""));
+    if ($base != "" && function_exists("school_base_url_normalize"))
+    {
+        $normalized = school_base_url_normalize($base);
+        $base = ($normalized === false ? "" : $normalized);
+    }
+    if ($base != "")
+        return (rtrim($base, "/"));
+
+    // Interactive requests can still provide their own origin. Albedo runs from
+    // CLI and therefore has no HTTP_HOST: in that context a configured school
+    // base_url is required for a usable absolute invitation link.
+    return (rtrim(public_invitation_request_base_url(), "/"));
 }
 
 function registration_form_allowed_prefixes()
@@ -515,6 +653,36 @@ function registration_form_fetch_invitation($token, $allow_completed = true)
     $row = db_select_one("user_form.*, user.codename, user.mail, user.first_name, user.family_name, user.profile_status
         FROM user_form LEFT JOIN user ON user.id = user_form.id_user
         WHERE token_hash = '$hash'");
+    if ($row == NULL)
+    {
+        $event = communication_event_find_by_token($token);
+        if ($event != NULL)
+        {
+            $schema = communication_event_form_schema($event);
+            if (!count($schema["event"]["sessions"] ?? []))
+                return (["ok" => false, "error" => "CommunicationEventNoSession"]);
+            return (["ok" => true, "invitation" => [
+                "id" => 0,
+                "id_user" => 0,
+                "id_creator" => (int)($event["id_creator"] ?? 0),
+                "recipient_mail" => "",
+                "recipient_name" => "",
+                "kind" => communication_event_kind(),
+                "token_hash" => $hash,
+                "fields" => json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                "answers" => "{}",
+                "created_at" => $event["created_at"] ?? NULL,
+                "expires_at" => NULL,
+                "last_saved_at" => NULL,
+                "completed_at" => NULL,
+                "revoked_at" => NULL,
+                "event_public" => true,
+                "event" => $event,
+                "schema" => $schema,
+                "answers_data" => [],
+            ]]);
+        }
+    }
     if ($row == NULL || public_invitation_is_revoked($row["revoked_at"] ?? NULL))
         return (["ok" => false, "error" => "RegistrationFormInvalidToken"]);
     if (public_invitation_is_expired($row["expires_at"] ?? NULL))
@@ -559,8 +727,7 @@ function registration_form_fetch_invitation($token, $allow_completed = true)
         }
         foreach (($row["schema"]["fields"] ?? []) as $field => $definition)
             if (empty($definition["editable"]))
-                $row["answers_data"][$field] = array_key_exists($field, $known)
-                    ? (string)$known[$field] : "";
+                $row["answers_data"][$field] = dabsic_form_field_value($known, $field, $definition);
     }
 
     if (registration_form_is_profile_kind($kind))
@@ -630,6 +797,100 @@ function registration_form_canonical_json($value)
     ));
 }
 
+
+function registration_form_paraph_path(array $invitation, array $owner_user)
+{
+    global $Configuration;
+
+    $id_form = (int)($invitation["id"] ?? 0);
+    $codename = trim((string)($owner_user["codename"] ?? ""));
+    if ($id_form <= 0 || $codename == "")
+        return ("");
+    return ($Configuration->UsersDir($codename)."admin/form_paraphs/registration-".$id_form.".png");
+}
+
+function registration_form_paraph_evidence_path(array $invitation, array $owner_user)
+{
+    $image = registration_form_paraph_path($invitation, $owner_user);
+    return ($image == "" ? "" : preg_replace('/\.png$/D', '.dab', $image));
+}
+
+function registration_form_handle_paraph(array $invitation, array $owner_user)
+{
+    $target = registration_form_paraph_path($invitation, $owner_user);
+    if ($target == "")
+        return (["ok" => false, "error" => "CannotWritePngFile"]);
+
+    $reuse_profile_initials = function () use ($invitation, $owner_user, $target) {
+        if (is_file($target) || !registration_form_is_document_signature_kind($invitation["kind"] ?? "")
+            || !function_exists("user_identity_document_initials_file"))
+            return (["ok" => true, "exists" => is_file($target)]);
+        $profile_initials = user_identity_document_initials_file($owner_user);
+        if ($profile_initials == "" || !is_file($profile_initials))
+            return (["ok" => true, "exists" => false]);
+        $saved = user_identity_store_signature_png($profile_initials, $target, false);
+        if (!$saved["ok"])
+            return ($saved);
+        return (["ok" => true, "exists" => true, "profile" => true]);
+    };
+
+    if (!isset($_FILES["paraph"]) || !is_array($_FILES["paraph"]))
+        return ($reuse_profile_initials());
+    $error = (int)($_FILES["paraph"]["error"] ?? UPLOAD_ERR_NO_FILE);
+    if ($error == UPLOAD_ERR_NO_FILE)
+        return ($reuse_profile_initials());
+    if ($error != UPLOAD_ERR_OK || empty($_FILES["paraph"]["tmp_name"]))
+        return (["ok" => false, "error" => "RegistrationFormInvalidParaph"]);
+    $saved = registration_form_store_png($_FILES["paraph"]["tmp_name"], $target);
+    if (!$saved["ok"])
+        return ($saved);
+    return (["ok" => true, "exists" => true]);
+}
+
+function registration_form_record_paraph_evidence(array $invitation, array $owner_user, array $answers)
+{
+    $image = registration_form_paraph_path($invitation, $owner_user);
+    if ($image == "" || !is_file($image))
+        return (["ok" => false, "error" => "RegistrationFormParaphRequired"]);
+    $paraph_hash = hash_file("sha256", $image);
+    if ($paraph_hash === false)
+        return (["ok" => false, "error" => "CannotReadFile"]);
+
+    $snapshot = $answers;
+    foreach (array_keys($snapshot) as $key)
+        if (substr((string)$key, -10) === ".Signature")
+            unset($snapshot[$key]);
+    $answers_json = registration_form_canonical_json($snapshot);
+    if ($answers_json === false)
+        return (["ok" => false, "error" => "CannotEdit"]);
+
+    $now = new DateTimeImmutable("now");
+    $evidence = [
+        "version" => "form-paraph-v1",
+        "registration_form_id" => (int)($invitation["id"] ?? 0),
+        "kind" => (string)($invitation["kind"] ?? ""),
+        "token_hash" => (string)($invitation["token_hash"] ?? ""),
+        "owner_user_id" => (int)($owner_user["id"] ?? 0),
+        "recipient_name" => trim((string)($invitation["recipient_name"] ?? "")),
+        "recipient_mail" => trim((string)($invitation["recipient_mail"] ?? "")),
+        "validated_at" => $now->format("Y-m-d\TH:i:s.uP"),
+        "client_ip" => function_exists("get_client_ip") ? (string)get_client_ip() : (string)($_SERVER["REMOTE_ADDR"] ?? ""),
+        "user_agent" => (string)($_SERVER["HTTP_USER_AGENT"] ?? ""),
+        "answers_sha256" => hash("sha256", $answers_json),
+        "paraph_sha256" => $paraph_hash,
+    ];
+    $target = registration_form_paraph_evidence_path($invitation, $owner_user);
+    if ($target == "")
+        return (["ok" => false, "error" => "CannotWriteFile"]);
+    $written = generate_dabsic($evidence, $target);
+    if ($written->is_error())
+        return (["ok" => false, "error" => $written->label ?? "CannotWriteFile", "details" => strval($written)]);
+    add_log(EDITING_OPERATION,
+        "Online form ".(int)($invitation["id"] ?? 0)." validated with paraph ".$paraph_hash,
+        (int)($owner_user["id"] ?? 0)
+    );
+    return (["ok" => true, "paraph_sha256" => $paraph_hash]);
+}
 function registration_form_signature_consent_text()
 {
     return ("Je certifie sur l'honneur l'exactitude des informations renseignées et confirme être la personne désignée par ce formulaire. Je demande que la signature tracée soit associée à cette validation électronique.");
@@ -788,6 +1049,9 @@ function registration_form_create_invitation($id_user, $kind, $id_creator)
     if (!$loaded["ok"])
         return ($loaded);
     $student = $loaded["student"];
+    $school = document_builder_fetch_student_school($student);
+    if (!is_array($school) || !school_activity_contract_kind_allowed($school, $kind))
+        return (["ok" => false, "error" => "ContractModeUnavailable", "details" => $kind]);
     if (($student["profile_status"] ?? "") != "prospect" || trim((string)($student["mail"] ?? "")) == "")
         return (["ok" => false, "error" => "RegistrationFormProspectRequired"]);
 
@@ -800,6 +1064,14 @@ function registration_form_create_invitation($id_user, $kind, $id_creator)
     $schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($schema_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
+
+    $signature_base_url = registration_form_document_signature_base_url($instance, $owner_user_id);
+    if ($signature_base_url == "")
+        return ([
+            "ok" => false,
+            "error" => "InvalidSchoolBaseUrl",
+            "details" => "A complete school base_url is required for background signature invitations.",
+        ]);
 
     $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
@@ -865,7 +1137,7 @@ function registration_form_create_profile_invitation($id_user, $id_creator)
     ]);
 }
 
-function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $context_bindings = [], $form_role = "Beneficiaire")
+function registration_form_create_document_invitation($id_user, $reference, $model_hash, $target_year, $label, $id_creator, $context_bindings = [], $form_role = "Beneficiaire", $recipient_user_id = 0)
 {
     global $Database;
 
@@ -883,8 +1155,6 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     $user = db_select_one("* FROM user WHERE id = $id_user AND authority != -1");
     if ($user == NULL)
         return (["ok" => false, "error" => "UserNotFound"]);
-    if (trim((string)($user["mail"] ?? "")) == "")
-        return (["ok" => false, "error" => "MissingField", "details" => "mail"]);
 
     $resolved_reference = dabsic_editor_resolve_file($reference, false);
     if (!$resolved_reference["ok"])
@@ -929,11 +1199,46 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
         return ($loaded);
 
     $form_metadata = $discovery["form_metadata"] ?? dabsic_form_empty_form_metadata();
-    if (dabsic_form_role_definition($form_metadata, $form_role) == NULL)
+    $role_definition = dabsic_form_role_definition($form_metadata, $form_role);
+    if ($role_definition == NULL)
         return (["ok" => false, "error" => "InvalidParameter", "details" => "form_role"]);
-    $schema = registration_form_build_document_schema($form_metadata, $form_role);
-    if (!count($schema["fields"] ?? []))
-        return (["ok" => false, "error" => "CannotEdit", "details" => "Aucun groupe lisible pour le rôle ".$form_role]);
+    // Determine whether this role has an actual contribution before resolving
+    // a recipient. A pure signatory/no-field role must never require an email
+    // address or produce a public contribution invitation.
+    $known_values = array_merge(dabsic_form_prefill_from_chain($chain_json), $loaded["values"]);
+    $schema = registration_form_build_document_schema(
+        $form_metadata, $form_role, $known_values, $resolved_reference["relative"]
+    );
+    if (!count($schema["fields"] ?? []) || !count($schema["requested_fields"] ?? []))
+        return ([
+            "ok" => true,
+            "skipped" => true,
+            "reason" => "no_fields",
+            "schema" => ["document" => ["form_role" => $form_role]],
+        ]);
+
+    require_once (__DIR__."/document_workflow.php");
+    $semantic_bindings = array_merge(
+        is_array($context_bindings) ? $context_bindings : [],
+        is_array($signature_bindings) ? $signature_bindings : []
+    );
+    $primary_recipient_user_id = document_workflow_form_role_primary_assignee(
+        $id_user, $role_definition, $id_creator, $semantic_bindings
+    );
+    if ((int)$recipient_user_id <= 0)
+        $recipient_user_id = document_workflow_form_role_assignee(
+            $id_user, $role_definition, $id_creator, $semantic_bindings
+        );
+    $recipient_user_id = (int)$recipient_user_id;
+    if ($recipient_user_id <= 0)
+        return (["ok" => false, "error" => "DocumentRoleNoRecipient", "details" => $form_role]);
+    $recipient = db_select_one("* FROM user WHERE id = $recipient_user_id AND authority != -1");
+    if ($recipient == NULL)
+        return (["ok" => false, "error" => "UserNotFound"]);
+    if (!document_workflow_user_can_receive_form($recipient_user_id))
+        return (["ok" => false, "error" => "MissingField", "details" => "mail"]);
+    if (!document_workflow_form_role_dependencies_satisfied($id_user, $output_key, $role_definition))
+        return (["ok" => false, "error" => "DocumentRoleDependencyPending", "details" => $form_role]);
 
     $reference_content = @file_get_contents($resolved_reference["absolute"]);
     if ($reference_content === false)
@@ -957,13 +1262,14 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
         "signature_bindings" => $signature_bindings,
         "form_role" => $form_role,
         "form_roles" => $form_roles,
+        "recipient_user_id" => $recipient_user_id,
+        "primary_recipient_user_id" => (int)$primary_recipient_user_id,
         "mailbox" => $workflow_mailbox,
     ];
-    $known_values = array_merge(dabsic_form_prefill_from_chain($chain_json), $loaded["values"]);
     $answers = [];
     foreach (($schema["fields"] ?? []) as $field => $definition)
     {
-        $value = array_key_exists($field, $known_values) ? $known_values[$field] : NULL;
+        $value = dabsic_form_field_value($known_values, $field, $definition);
         if (form_field_is_common_type($definition["type"] ?? ""))
             $answers[$field] = form_field_storage_value($definition, $value);
         else
@@ -979,26 +1285,63 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
     $schema_sql = $Database->real_escape_string($schema_json);
     $answers_sql = $Database->real_escape_string($answers_json);
-    $kind = "DOC-".substr(hash("sha256", $resolved_reference["relative"]."|".$target_year), 0, 28);
+    // Each role is an autonomous contributor. Invitations for two roles of
+    // the same document must coexist instead of revoking one another.
+    $kind = registration_form_document_kind($resolved_reference["relative"], $target_year, $form_role);
     $kind_sql = $Database->real_escape_string($kind);
-    $recipient_mail = $Database->real_escape_string((string)$user["mail"]);
-    $recipient_name = $Database->real_escape_string(trim((string)($user["first_name"] ?? "")." ".(string)($user["family_name"] ?? "")));
+    $recipient_mail = $Database->real_escape_string((string)$recipient["mail"]);
+    $recipient_name = $Database->real_escape_string(trim((string)($recipient["first_name"] ?? "")." ".(string)($recipient["family_name"] ?? "")));
 
-    $Database->query("UPDATE user_form SET revoked_at = NOW()
-        WHERE id_user = $id_user AND kind = '$kind_sql' AND completed_at IS NULL AND revoked_at IS NULL");
+    if ($Database->query("START TRANSACTION") === false)
+        return (["ok" => false, "error" => "CannotEdit"]);
+    $superseded = registration_form_superseded_document_form_ids(
+        $id_user,
+        $output_key,
+        $form_role
+    );
+    if (!registration_form_revoke_rows($superseded))
+    {
+        $Database->query("ROLLBACK");
+        return (["ok" => false, "error" => "CannotEdit"]);
+    }
     if (!$Database->query("INSERT INTO user_form
         (id_user, id_creator, recipient_mail, recipient_name, kind, token_hash, fields, answers, expires_at)
         VALUES ($id_user, $id_creator, '$recipient_mail', '$recipient_name', '$kind_sql', '$hash', '$schema_sql', '$answers_sql', DATE_ADD(NOW(), INTERVAL 14 DAY))"))
+    {
+        $Database->query("ROLLBACK");
         return (["ok" => false, "error" => "CannotEdit"]);
+    }
     $id_form = (int)$Database->insert_id;
     require_once (__DIR__."/document_workflow.php");
-    document_workflow_ensure_form_tasks([
+    $created_tasks = document_workflow_ensure_form_tasks([
         "id" => $id_form,
         "id_user" => $id_user,
+        "id_creator" => $id_creator,
         "fields" => $schema_json,
         "completed_at" => NULL,
         "revoked_at" => NULL,
     ]);
+    if (document_workflow_form_role_is_required($id_user, $role_definition, $id_creator))
+    {
+        $has_task = false;
+        foreach ($created_tasks as $created_task)
+            if (($created_task["task_action"] ?? "") === "fill"
+                && ($created_task["role"] ?? "") === $form_role)
+            {
+                $has_task = true;
+                break ;
+            }
+        if (!$has_task)
+        {
+            $Database->query("ROLLBACK");
+            return (["ok" => false, "error" => "CannotEdit", "details" => "document task"]);
+        }
+    }
+    if ($Database->query("COMMIT") === false)
+    {
+        $Database->query("ROLLBACK");
+        return (["ok" => false, "error" => "CannotEdit"]);
+    }
 
     return ([
         "ok" => true,
@@ -1006,6 +1349,7 @@ function registration_form_create_document_invitation($id_user, $reference, $mod
         "token" => $token,
         "url" => registration_form_public_url($token),
         "student" => $user,
+        "recipient" => $recipient,
         "schema" => $schema,
         "document_form" => true,
     ]);
@@ -1018,7 +1362,20 @@ function registration_form_revoke_token($token)
     if (!public_invitation_token_is_valid($token))
         return (false);
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
-    return ((bool)$Database->query("UPDATE user_form SET revoked_at = NOW() WHERE token_hash = '$hash' AND revoked_at IS NULL"));
+    $row = db_select_one("id FROM user_form WHERE token_hash = '$hash'");
+    if ($row == NULL || $Database->query("START TRANSACTION") === false)
+        return (false);
+    if (!registration_form_revoke_rows([(int)$row["id"]]))
+    {
+        $Database->query("ROLLBACK");
+        return (false);
+    }
+    if ($Database->query("COMMIT") === false)
+    {
+        $Database->query("ROLLBACK");
+        return (false);
+    }
+    return (true);
 }
 
 function registration_form_store_png($source, $target)
@@ -1138,8 +1495,9 @@ function registration_form_save_document_invitation(array $invitation, array $an
         if (empty($definition["editable"]))
             continue ;
         $invitation_value = form_field_storage_value($definition, $invitation_values[$field] ?? NULL);
-        $current_value = form_field_storage_value($definition, array_key_exists($field, $loaded["values"])
-            ? $loaded["values"][$field] : ($prefilled[$field] ?? NULL));
+        $current_values = array_merge($prefilled, $loaded["values"]);
+        $current_value = form_field_storage_value($definition,
+            dabsic_form_field_value($current_values, $field, $definition));
         if ($definition["type"] === "checkbox")
         {
             sort($invitation_value, SORT_STRING);
@@ -1195,6 +1553,12 @@ function registration_form_save_document_invitation(array $invitation, array $an
     $answers_json = json_encode($answers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $answers_sql = $Database->real_escape_string($answers_json ?: "{}");
     $id = (int)$invitation["id"];
+    if ($finalize)
+    {
+        $profile_saved = registration_form_persist_document_profile_answers($invitation, $schema, $editable_answers);
+        if ($profile_saved->is_error())
+            return (["ok" => false, "error" => $profile_saved->label, "details" => $profile_saved->details]);
+    }
     $completed = $finalize ? ", completed_at = NOW()" : "";
     if (!$Database->query("UPDATE user_form SET answers = '$answers_sql', last_saved_at = NOW()$completed WHERE id = $id"))
         return (["ok" => false, "error" => "CannotEdit"]);
@@ -1204,7 +1568,13 @@ function registration_form_save_document_invitation(array $invitation, array $an
         $recipient_role = trim((string)($schema["document"]["form_role"] ?? ""));
         if ($recipient_role != "")
         {
-            $task = document_task_complete_form_role($id, $recipient_role, $id_user, $id_user);
+            $recipient_user_id = (int)($schema["document"]["recipient_user_id"] ?? $id_user);
+            $task = document_task_complete_form_role(
+                $id,
+                $recipient_role,
+                $recipient_user_id,
+                $recipient_user_id
+            );
             if ($task->is_error())
                 add_log(REPORT, "Cannot complete document fill task $recipient_role for form $id: ".strval($task), $id_user);
         }
@@ -1229,19 +1599,98 @@ function registration_form_save_document_invitation(array $invitation, array $an
     ]);
 }
 
-function registration_form_save_invitation($token, array $submitted, $finalize = false, array $delete_signatures = [], $signature_consent = false)
+function registration_form_persist_document_profile_answers(array $invitation, array $schema, array $editable_answers)
+{
+    require_once (__DIR__."/user_identity.php");
+    $document = is_array($schema["document"] ?? NULL) ? $schema["document"] : [];
+    $role = trim((string)($document["form_role"] ?? ""));
+    $roles = is_array($document["form_roles"] ?? NULL) ? $document["form_roles"] : [];
+    $definition = is_array($roles[$role] ?? NULL) ? $roles[$role] : [];
+    $scopes = is_array($definition["profile_scopes"] ?? NULL) ? $definition["profile_scopes"] : [];
+    $legacy_scope = trim((string)($definition["profile_scope"] ?? ""));
+    if ($legacy_scope != "")
+        $scopes[] = $legacy_scope;
+    $scopes = array_values(array_unique(array_filter(array_map("strval", $scopes))));
+    if (!count($scopes))
+        return (new ValueResponse(true));
+
+    $owner_id = (int)($invitation["id_user"] ?? 0);
+    $primary_id = (int)($document["primary_recipient_user_id"] ?? 0);
+    if ($primary_id <= 0)
+        $primary_id = (int)($document["recipient_user_id"] ?? 0);
+    foreach ($scopes as $scope)
+    {
+        $scope = trim($scope);
+        if ($scope == "")
+            continue ;
+        $updates = [];
+        $prefix = $scope.".";
+        foreach ($editable_answers as $path => $value)
+            if (strncmp((string)$path, $prefix, strlen($prefix)) === 0)
+            {
+                $profile_field = substr((string)$path, strlen($prefix));
+                // Document contexts expose Courriel as a French alias of Mail.
+                // Persist a correction back to the actual account field.
+                if ($profile_field === "Courriel")
+                    $profile_field = "Mail";
+                $updates["Signatories.Student.".$profile_field] = $value;
+            }
+        if (!count($updates))
+            continue ;
+        // Emergency belongs to the learner's administrative context. Identity
+        // scopes belong to their semantic contact even when the learner had to
+        // complete the form because that contact had no usable mailbox.
+        if ($scope === "Emergency")
+        {
+            $updates = [];
+            foreach ($editable_answers as $path => $value)
+                if (strncmp((string)$path, "Emergency.", 10) === 0)
+                    $updates[(string)$path] = $value;
+            $target_id = $owner_id;
+        }
+        else
+            $target_id = $primary_id;
+        if ($target_id <= 0 || !count($updates))
+            continue ;
+        $saved = user_identity_update_registration_answers($target_id, $updates);
+        if ($saved->is_error())
+            return ($saved);
+    }
+    return (new ValueResponse(true));
+}
+
+function registration_form_save_invitation($token, array $submitted, $finalize = false, array $delete_signatures = [], $signature_consent = false, $reuse_profile_signature = false)
 {
     global $Database;
     $loaded = registration_form_fetch_invitation($token, false);
     if (!$loaded["ok"])
         return ($loaded);
     $invitation = $loaded["invitation"];
+    if (!empty($invitation["event_public"]))
+    {
+        if (!$finalize)
+            return (["ok" => false, "error" => "CommunicationEventDraftUnavailable"]);
+        return (communication_event_finalize($invitation["event"], $submitted));
+    }
     $schema = $invitation["schema"];
     $allowed = $schema["fields"] ?? [];
     $is_document_form = registration_form_is_document_kind($invitation["kind"] ?? "");
+    $is_document_signature = registration_form_is_document_signature_kind($invitation["kind"] ?? "");
+    $owner_user = db_select_one("* FROM user WHERE id = ".(int)$invitation["id_user"]." AND authority != -1");
+    if ($owner_user == NULL)
+        return (["ok" => false, "error" => "UserNotFound"]);
     foreach ($submitted as $field => $value)
         if (!isset($allowed[$field]) || ($is_document_form && empty($allowed[$field]["editable"])))
             return (["ok" => false, "error" => "DabsicFormChanged", "details" => $field]);
+    // DOC-* invitations are contribution-only.  A paraphe, when the document
+    // model uses one, is collected later by the dedicated SIG-* invitation.
+    $requires_paraph = registration_form_requires_paraph($invitation["kind"] ?? "", $schema);
+    if ($requires_paraph)
+    {
+        $paraph = registration_form_handle_paraph($invitation, $owner_user);
+        if (!$paraph["ok"])
+            return ($paraph);
+    }
 
     $answers = $invitation["answers_data"];
     foreach ($submitted as $field => $value)
@@ -1252,8 +1701,8 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
         else
             $answers[$field] = is_scalar($value) || $value === NULL ? (string)$value : "";
     }
-    if (registration_form_is_document_signature_kind($invitation["kind"] ?? ""))
-        return (registration_form_save_document_signature_invitation($invitation, $finalize, $signature_consent));
+    if ($is_document_signature)
+        return (registration_form_save_document_signature_invitation($invitation, $finalize, $signature_consent, $reuse_profile_signature));
     if (registration_form_is_document_kind($invitation["kind"] ?? ""))
         return (registration_form_save_document_invitation($invitation, $answers, $finalize));
     if (registration_form_is_profile_kind($invitation["kind"] ?? ""))
@@ -1319,6 +1768,8 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
     if (registration_form_is_profile_kind($invitation["kind"] ?? ""))
     {
         $evidence_hash = "";
+        if ($finalize && !is_file(registration_form_paraph_path($invitation, $owner_user)))
+            return (["ok" => false, "error" => "RegistrationFormParaphRequired"]);
         if ($finalize && registration_form_required_profile_signature($schema))
         {
             $evidence = registration_form_record_profile_signature_evidence($invitation, $student, $schema, $answers);
@@ -1326,8 +1777,14 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
                 return ($evidence);
             $evidence_hash = $evidence["evidence_sha256"] ?? "";
         }
-        if ($finalize && !$Database->query("UPDATE user_form SET completed_at = NOW() WHERE id = $id"))
-            return (["ok" => false, "error" => "CannotEdit"]);
+        if ($finalize)
+        {
+            $paraph_evidence = registration_form_record_paraph_evidence($invitation, $owner_user, $answers);
+            if (!$paraph_evidence["ok"])
+                return ($paraph_evidence);
+            if (!$Database->query("UPDATE user_form SET completed_at = NOW() WHERE id = $id"))
+                return (["ok" => false, "error" => "CannotEdit"]);
+        }
         return ([
             "ok" => true,
             "completed" => $finalize,
@@ -1374,6 +1831,11 @@ function registration_form_save_invitation($token, array $submitted, $finalize =
 
     if ($finalize)
     {
+        if (!is_file(registration_form_paraph_path($invitation, $owner_user)))
+            return (["ok" => false, "error" => "RegistrationFormParaphRequired"]);
+        $paraph_evidence = registration_form_record_paraph_evidence($invitation, $owner_user, $answers);
+        if (!$paraph_evidence["ok"])
+            return ($paraph_evidence);
         if (!$Database->query("UPDATE user_form SET completed_at = NOW() WHERE id = $id"))
             return (["ok" => false, "error" => "CannotEdit"]);
     }
@@ -1425,11 +1887,24 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
             "role_label" => $role_label,
             "frozen_hash" => (string)($instance["FrozenHash"] ?? ""),
             "model" => (string)($instance["Model"] ?? ""),
+            // Standard DocBuilder workflows keep the exact frozen Dabsic and
+            // can therefore render handwritten paraphes/signatures into the
+            // final PDF. Other legacy/specialized workflows keep their
+            // historical signature-only page.
+            "require_initials" => !empty($instance["FrozenDabsicFile"]) ? 1 : 0,
         ],
     ];
     $schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($schema_json === false)
         return (["ok" => false, "error" => "CannotEdit"]);
+
+    $signature_base_url = registration_form_document_signature_base_url($instance, $owner_user_id);
+    if ($signature_base_url == "")
+        return ([
+            "ok" => false,
+            "error" => "InvalidSchoolBaseUrl",
+            "details" => "A complete school base_url is required for background signature invitations.",
+        ]);
 
     $token = public_invitation_generate_token();
     $hash = $Database->real_escape_string(registration_form_token_hash($token));
@@ -1476,7 +1951,10 @@ function registration_form_create_document_signature_invitation($owner_user_id, 
         "ok" => true,
         "id" => (int)$Database->insert_id,
         "token" => $token,
-        "url" => registration_form_public_url($token),
+        "url" => registration_form_public_url(
+            $token,
+            $signature_base_url
+        ),
         "user" => $user,
         "schema" => $schema,
     ]);
@@ -1502,7 +1980,78 @@ function registration_form_document_signature_pdf($token)
     return (["ok" => true, "file" => $pdf]);
 }
 
-function registration_form_save_document_signature_invitation(array $invitation, $finalize, $signature_consent)
+/**
+ * A handwritten Student signature on an enrolment/training contract becomes
+ * the student's canonical profile signature once the signing action itself has
+ * been durably recorded.  Keep this deliberately narrow: staff, financial
+ * contacts and signatures made on unrelated documents must never overwrite a
+ * student's profile handwriting.
+ */
+function registration_form_document_signature_updates_student_profile(array $instance, $owner_user_id, array $user, $semantic_role, $signature_input)
+{
+    if ((string)$signature_input !== "Drawn"
+        || strcasecmp(trim((string)$semantic_role), "Student") !== 0
+        || (int)($user["id"] ?? 0) <= 0
+        || (int)($user["id"] ?? 0) !== (int)$owner_user_id)
+        return (false);
+
+    $model = trim((string)($instance["Model"] ?? ""));
+    if ($model == "")
+        return (false);
+    $basename = strtolower(pathinfo(str_replace("\\", "/", $model), PATHINFO_FILENAME));
+    return (in_array($basename, [
+        "ecl", "contrat_ecole", "contract_school",
+        "of", "contrat_of", "contrat_of_hors_alternance",
+        "ofa", "contrat_of_alternance",
+        "cfa", "contrat_cfa",
+    ], true));
+}
+
+function registration_form_promote_document_signature_to_profile(array $user, $signature_file)
+{
+    $target = user_identity_signature_file($user);
+    if ($target == "" || !is_file($signature_file))
+        return (["ok" => false, "error" => "CannotWriteFile", "details" => "profile signature"]);
+
+    // The immutable per-document signature remains in the workflow directory.
+    // Normalize/copy it separately to admin/signature.png for later documents
+    // such as session sign-in sheets.
+    $saved = user_identity_store_signature_png($signature_file, $target, false);
+    if (!$saved["ok"])
+        return ($saved);
+
+    // identity.dab caches the canonical signature path for document contexts.
+    // Refresh it immediately so subsequent document generation sees the newly
+    // acquired profile signature without waiting for another profile update.
+    $identity = user_identity_write_identity_dabsic((int)$user["id"]);
+    return ([
+        "ok" => true,
+        "file" => $target,
+        "hash" => (string)($saved["hash"] ?? ""),
+        "identity_updated" => !$identity->is_error(),
+        "identity_error" => $identity->is_error() ? strval($identity) : "",
+    ]);
+}
+
+function registration_form_promote_document_initials_to_profile(array $user, $initials_file)
+{
+    $target = user_identity_initials_file($user);
+    if ($target == "" || !is_file($initials_file))
+        return (["ok" => false, "error" => "CannotWriteFile", "details" => "profile initials"]);
+    $saved = user_identity_store_signature_png($initials_file, $target, false);
+    if (!$saved["ok"])
+        return ($saved);
+    $identity = user_identity_write_identity_dabsic((int)$user["id"]);
+    return ([
+        "ok" => true,
+        "file" => $target,
+        "hash" => (string)($saved["hash"] ?? ""),
+        "identity_updated" => !$identity->is_error(),
+        "identity_error" => $identity->is_error() ? strval($identity) : "",
+    ]);
+}
+
+function registration_form_save_document_signature_invitation(array $invitation, $finalize, $signature_consent, $reuse_profile_signature = false)
 {
     global $Database;
 
@@ -1535,22 +2084,61 @@ function registration_form_save_document_signature_invitation(array $invitation,
         || !hash_equals((string)($meta["frozen_hash"] ?? ""), $frozen_hash))
         return (["ok" => false, "error" => "InvalidFile", "details" => "Frozen document hash mismatch"]);
 
+    $user = db_select_one("* FROM user WHERE id = ".(int)$invitation["id_user"]." AND authority != -1");
+    if ($user == NULL)
+        return (["ok" => false, "error" => "UserNotFound"]);
+
     $key = "DocumentSignature";
-    if (!isset($_FILES["signature"]["tmp_name"][$key]) || $_FILES["signature"]["error"][$key] != UPLOAD_ERR_OK)
-        return (["ok" => false, "error" => "RegistrationFormSignatureRequired"]);
     $signature_file = document_workflow_signature_file($instance, $directory, $role);
     if ($signature_file === NULL)
         return (["ok" => false, "error" => "InvalidParameter", "details" => "role"]);
-    $saved = registration_form_store_png($_FILES["signature"]["tmp_name"][$key], $signature_file);
+
+    $signature_input = "Drawn";
+    if ($reuse_profile_signature)
+    {
+        $profile_signature = function_exists("user_identity_document_signature_file")
+            ? user_identity_document_signature_file($user) : "";
+        if ($profile_signature == "" || !is_file($profile_signature))
+            return (["ok" => false, "error" => "RegistrationFormSignatureRequired"]);
+        $saved = user_identity_store_signature_png($profile_signature, $signature_file, false);
+        $signature_input = "Profile";
+    }
+    else
+    {
+        if (!isset($_FILES["signature"]["tmp_name"][$key]) || $_FILES["signature"]["error"][$key] != UPLOAD_ERR_OK)
+            return (["ok" => false, "error" => "RegistrationFormSignatureRequired"]);
+        $saved = registration_form_store_png($_FILES["signature"]["tmp_name"][$key], $signature_file);
+    }
     if (!$saved["ok"])
         return ($saved);
     $signature_hash = hash_file("sha256", $signature_file);
     if ($signature_hash === false)
         return (["ok" => false, "error" => "CannotWriteFile"]);
 
-    $user = db_select_one("* FROM user WHERE id = ".(int)$invitation["id_user"]." AND authority != -1");
-    if ($user == NULL)
-        return (["ok" => false, "error" => "UserNotFound"]);
+    $initials_hash = "";
+    $initials_file = "";
+    if (!empty($meta["require_initials"]))
+    {
+        // The paraphe is a distinct act from the signature and is displayed in
+        // the footer of Contract documents. Store a frozen copy beside the
+        // signature so later form cleanup cannot alter the signed document.
+        $paraph_file = registration_form_paraph_path($invitation, $user);
+        if ($paraph_file == "" || !is_file($paraph_file))
+            return (["ok" => false, "error" => "RegistrationFormParaphRequired"]);
+        $initials_file = document_workflow_initials_file($instance, $directory, $role);
+        if ($initials_file === NULL)
+            return (["ok" => false, "error" => "InvalidParameter", "details" => "role"]);
+        // $paraph_file has already been validated and normalized from the HTTP
+        // upload by registration_form_handle_paraph().  It is now an internal
+        // server-side file, so is_uploaded_file() must not be required again.
+        $initials_saved = user_identity_store_signature_png($paraph_file, $initials_file, false);
+        if (!$initials_saved["ok"])
+            return ($initials_saved);
+        $initials_hash = hash_file("sha256", $initials_file);
+        if ($initials_hash === false)
+            return (["ok" => false, "error" => "CannotWriteFile"]);
+    }
+
     $now = new DateTimeImmutable("now");
     $consent = registration_form_document_signature_consent_text();
     $evidence = [
@@ -1568,8 +2156,11 @@ function registration_form_save_document_signature_invitation(array $invitation,
         "client_ip" => function_exists("get_client_ip") ? get_client_ip() : ($_SERVER["REMOTE_ADDR"] ?? ""),
         "user_agent" => (string)($_SERVER["HTTP_USER_AGENT"] ?? ""),
         "consent" => $consent,
+        "signature_input" => $signature_input,
         "signature_sha256" => $signature_hash,
     ];
+    if ($initials_hash != "")
+        $evidence["initials_sha256"] = $initials_hash;
     $evidence_json = json_encode($evidence, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $evidence_hash = hash("sha256", $evidence_json ?: "");
     $evidence["evidence_sha256"] = $evidence_hash;
@@ -1583,6 +2174,9 @@ function registration_form_save_document_signature_invitation(array $invitation,
     $signature["SignatoryUserId"] = (int)$user["id"];
     $signature["SignedAt"] = $now->format("Y-m-d H:i:s.u");
     $signature["SignatureSha256"] = $signature_hash;
+    if ($initials_hash != "")
+        $signature["InitialsSha256"] = $initials_hash;
+    $signature["SignatureInput"] = $signature_input;
     $signature["EvidenceSha256"] = $evidence_hash;
     if (document_workflow_all_required_signed($instance))
     {
@@ -1603,5 +2197,71 @@ function registration_form_save_document_signature_invitation(array $invitation,
     if (!$Database->query("UPDATE user_form SET completed_at = NOW(), last_saved_at = NOW() WHERE id = $id"))
         return (["ok" => false, "error" => "CannotEdit"]);
     add_log(EDITING_OPERATION, "Document instance $instance_id signed as $semantic_role ($role) by user ".(int)$user["id"], (int)$user["id"]);
+
+    if (registration_form_document_signature_updates_student_profile(
+        $instance, $owner_user_id, $user, $semantic_role, $signature_input
+    ))
+    {
+        $profile_signature = registration_form_promote_document_signature_to_profile($user, $signature_file);
+        if (empty($profile_signature["ok"]))
+            add_log(REPORT,
+                "Cannot promote contract signature to profile for user ".(int)$user["id"].": ".
+                (string)($profile_signature["error"] ?? "CannotWriteFile").
+                (!empty($profile_signature["details"]) ? " (".$profile_signature["details"].")" : ""),
+                (int)$user["id"]
+            );
+        else
+        {
+            add_log(EDITING_OPERATION,
+                "Profile signature updated from signed contract instance $instance_id",
+                (int)$user["id"]
+            );
+            if (empty($profile_signature["identity_updated"]))
+                add_log(REPORT,
+                    "Profile signature saved but identity.dab refresh failed for user ".(int)$user["id"].
+                    (!empty($profile_signature["identity_error"]) ? ": ".$profile_signature["identity_error"] : ""),
+                    (int)$user["id"]
+                );
+        }
+    }
+
+    if ($initials_hash != "" && $initials_file != "")
+    {
+        $profile_initials = registration_form_promote_document_initials_to_profile($user, $initials_file);
+        if (empty($profile_initials["ok"]))
+            add_log(REPORT,
+                "Cannot promote document initials to profile for user ".(int)$user["id"].": ".
+                (string)($profile_initials["error"] ?? "CannotWriteFile"),
+                (int)$user["id"]
+            );
+        else
+            add_log(EDITING_OPERATION,
+                "Profile initials updated from signed document instance $instance_id",
+                (int)$user["id"]
+            );
+    }
+
+    // The last required signature is the natural trigger for delivery.  Do
+    // not make the beneficiary wait for the periodic Albedo pass when the
+    // establishment does not use the optional PdfSign sealing layer.
+    if (($instance["Status"] ?? "") === "Signed")
+    {
+        $completed = document_workflow_finalize_signed_without_pdfsign($loaded->value["file"]);
+        if ($completed->is_error())
+            add_log(REPORT, "Cannot complete signed document workflow $instance_id: ".strval($completed), $owner_user_id);
+
+        $archive = document_workflow_archive_completed_instance($loaded->value["file"]);
+        if ($archive->is_error())
+            add_log(REPORT, "Cannot archive completed document workflow $instance_id: ".strval($archive), $owner_user_id);
+
+        $delivered = document_workflow_deliver_completed_instance($loaded->value["file"], false);
+        if ($delivered->is_error())
+            add_log(REPORT, "Cannot deliver completed document workflow $instance_id: ".strval($delivered), $owner_user_id);
+
+        $printed = document_workflow_queue_completed_instance_for_print($loaded->value["file"]);
+        if ($printed->is_error())
+            add_log(REPORT, "Cannot queue completed document workflow $instance_id for print: ".strval($printed), $owner_user_id);
+    }
+
     return (["ok" => true, "completed" => true, "refresh" => false, "evidence_sha256" => $evidence_hash]);
 }

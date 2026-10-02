@@ -39,6 +39,9 @@
       [Code
         Label = "Code du cycle"
       ]
+      [DisplayName
+        Label = "Nom du cycle pour le bulletin"
+      ]
       [Year
         Label = "Année du cycle"
       ]

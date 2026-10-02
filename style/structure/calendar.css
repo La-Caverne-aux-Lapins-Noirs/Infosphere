@@ -20,18 +20,143 @@
 .calendar_menu
 {
     position: absolute;
-    width: calc(100% - 20px);
-    padding: 10px 10px 10px 10px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 104px;
+    padding: 4px 8px 6px 8px;
     top: 0px;
     left: 0px;
+}
+
+.calendar_menu h2
+{
+    margin: 0px 0px 4px 0px;
+    height: 30px;
+    line-height: 30px;
+    white-space: nowrap;
+}
+
+.calendar_menu .control_buttons.calendar_toolbar
+{
+    position: static;
+    box-sizing: border-box;
+    width: 100%;
+    height: 60px;
+    padding: 0px;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    text-align: left;
+}
+
+.calendar_toolbar form
+{
+    margin: 0px;
+}
+
+.calendar_filter_form
+{
+    width: clamp(220px, 28vw, 420px);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.calendar_filter_form > label
+{
+    height: 20px;
+    line-height: 20px;
+    font-size: small;
+}
+
+.calendar_filter_fields
+{
+    display: flex;
+    height: 38px;
+    gap: 4px;
+}
+
+.calendar_filter_fields input[type="text"]
+{
+    box-sizing: border-box;
+    min-width: 0px;
+    flex: 1;
+}
+
+.calendar_filter_fields input[type="submit"]
+{
+    width: 48px;
+}
+
+.calendar_toolbar_spacer
+{
+    min-width: 8px;
+    flex: 1;
+}
+
+.calendar_template_form
+{
+    display: flex;
+}
+
+.calendar_template_form input[type="button"]
+{
+    box-sizing: border-box;
+    width: 74px;
+    height: 60px;
+}
+
+.calendar_period_form
+{
+    display: flex;
+    height: 60px;
+    gap: 4px;
+}
+
+.calendar_period_weeks
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.calendar_period_weeks input[type="week"]
+{
+    box-sizing: border-box;
+    width: 190px;
+    height: 29px;
+}
+
+.calendar_period_apply
+{
+    box-sizing: border-box;
+    width: 50px;
+    height: 60px;
+}
+
+.calendar_week_navigation
+{
+    width: 64px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.calendar_menu .control_buttons .calendar_week_navigation .wide_button
+{
+    box-sizing: border-box;
+    width: 64px;
+    height: 29px;
 }
 
 .calendar
 {
     position: absolute;
-    top: 80px;
+    top: 104px;
     left: 0px;
-    height: calc(100% - 120px);
+    height: calc(100% - 144px);
     width: 100%;
 }
 
@@ -97,4 +222,217 @@ a .calendar_activity, .calendar_activity, a .short_projects, .short_projects
 .calendar_day_container
 {
     position: relative;
+}
+
+.calendar_external
+{
+    position: relative;
+    min-width: 122px;
+    height: 60px;
+    z-index: 50;
+}
+
+.calendar_external > summary
+{
+    box-sizing: border-box;
+    height: 60px;
+    min-width: 122px;
+    padding: 0px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    list-style: none;
+    border: 1px solid #888;
+    border-radius: 3px;
+    text-align: center;
+    user-select: none;
+}
+
+.calendar_external > summary::-webkit-details-marker
+{
+    display: none;
+}
+
+.calendar_external[open] > summary
+{
+    box-shadow: inset 0px 0px 3px #888;
+}
+
+.calendar_external_panel
+{
+    position: absolute;
+    box-sizing: border-box;
+    top: 64px;
+    left: 0px;
+    z-index: 100;
+    width: min(680px, calc(100vw - 20px));
+    padding: 10px;
+    border: 1px solid #888;
+    border-radius: 3px;
+    background-color: black;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.55);
+    white-space: normal;
+}
+
+.calendar_external_panel p
+{
+    margin: 0px 0px 8px 0px;
+}
+
+.calendar_external_panel label
+{
+    display: block;
+    margin-bottom: 4px;
+}
+
+.calendar_external_url
+{
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.calendar_external_url input[type="text"]
+{
+    box-sizing: border-box;
+    min-width: 0px;
+    flex: 1;
+}
+
+.calendar_external_actions
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.calendar_external_actions form
+{
+    display: inline-flex;
+}
+
+.calendar_external_button
+{
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 8px;
+    border: 1px solid #888;
+    border-radius: 3px;
+    text-decoration: none;
+}
+
+@media (max-width: 900px)
+{
+    .calendar_filter_form
+    {
+        width: 220px;
+    }
+
+    .calendar_period_weeks input[type="week"]
+    {
+        width: 160px;
+    }
+}
+
+
+.calendar_standalone_creator
+{
+    position: relative;
+    min-width: 96px;
+    height: 60px;
+    z-index: 30;
+}
+
+.calendar_standalone_creator > summary
+{
+    box-sizing: border-box;
+    width: 96px;
+    height: 60px;
+    padding: 18px 8px 0px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    cursor: pointer;
+    list-style: none;
+    text-align: center;
+}
+
+.calendar_standalone_creator > summary::-webkit-details-marker
+{
+    display: none;
+}
+
+.calendar_standalone_creator[open] > form
+{
+    display: grid;
+}
+
+.calendar_standalone_creator > form
+{
+    position: absolute;
+    display: none;
+    box-sizing: border-box;
+    top: 64px;
+    left: 0px;
+    width: 330px;
+    padding: 8px;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+}
+
+.calendar_standalone_creator input,
+.calendar_standalone_creator select
+{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.calendar_standalone_time
+{
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 4px;
+}
+
+.calendar_standalone_session
+{
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.30);
+}
+
+.calendar_standalone_entry
+{
+    display: contents;
+    color: inherit;
+    text-decoration: none;
+}
+
+.calendar_standalone_editor
+{
+    position: fixed;
+    z-index: 80;
+    top: 118px;
+    right: 16px;
+    box-sizing: border-box;
+    width: min(360px, calc(100vw - 32px));
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 5px;
+}
+
+.calendar_standalone_editor_close
+{
+    float: right;
+    text-decoration: none;
+}
+
+.calendar_standalone_editor form
+{
+    display: grid;
+    gap: 6px;
+    margin-top: 8px;
 }

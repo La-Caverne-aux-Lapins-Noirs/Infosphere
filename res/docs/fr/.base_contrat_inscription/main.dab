@@ -7,6 +7,10 @@ Ecole=0
 MinimumSlice=1
 MaximumSlice=12
 PriceReduction=0
+
+[Workflow
+  QueueForPrint = 1
+]
  
 
 [Contexts
@@ -41,6 +45,24 @@ PriceReduction=0
     Label = "Responsable financier"
     Required = 1
     Signatory = "Finance"
+    InferFrom = "Student"
+  ]
+  [Legal1
+    Type = "legal1"
+    Prefix = "Legal1"
+    Label = "Premier responsable légal"
+    InferFrom = "Student"
+  ]
+  [Legal2
+    Type = "legal2"
+    Prefix = "Legal2"
+    Label = "Second responsable légal"
+    InferFrom = "Student"
+  ]
+  [Emergency
+    Type = "emergency"
+    Prefix = "Emergency"
+    Label = "Contact d'urgence"
     InferFrom = "Student"
   ]
 ]

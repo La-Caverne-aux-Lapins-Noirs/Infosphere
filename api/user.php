@@ -41,8 +41,8 @@ function SubscribeUser($id, $data, $method, $output, $module)
 	}
 	$id_user = $request->value["id"];
 	$request = @set_user_data($usr["login"], [
-	    "first_name" => strtolower(@$usr["first_name"]),
-	    "family_name" => strtolower(@$usr["family_name"]),
+	    "first_name" => trim((string)@$usr["first_name"]),
+	    "family_name" => trim((string)@$usr["family_name"]),
 	    "birth_date" => db_form_date(@$usr["birth_date"]),
 	    "phone" => @$usr["phone"],
 	    "objectives" => $Dictionnary["DefaultUserObjectives"],
@@ -93,6 +93,110 @@ function RegeneratePassword($id, $data, $method, $output, $module)
     ]));
 }
 
+function DownloadNfcCard($id, $data, $method, $output, $module)
+{
+    $user = nfc_card_user($id);
+    if ($user == NULL)
+        return (new ErrorResponse("UserNotFound"));
+    $ret = nfc_card_ensure_for_user($id);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"]));
+    return (new ValueResponse([
+        "filename" => nfc_card_download_name($user),
+        "content_type" => "application/octet-stream",
+        "content" => $ret["content"],
+    ]));
+}
+
+function RegenerateNfcCard($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $ret = nfc_card_regenerate_for_user($id);
+    if (!$ret["ok"])
+        return (new ErrorResponse($ret["error"]));
+    add_log(CRITICAL_USER_DATA, "NFC access token regenerated", (int)$id);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["NfcCardRegenerated"],
+    ]));
+}
+
+function CheckNfcCardOwner($id, $data, $method, $output, $module)
+{
+    $id = (int)$id;
+    if ($id <= 0)
+        bad_request();
+
+    $owner = nfc_card_owner_lookup($data["token"] ?? "", $id);
+    if ($owner === NULL)
+        bad_request();
+    return (new ValueResponse($owner));
+}
+
+function GetNfcAutoContext($id, $data, $method, $output, $module)
+{
+    $school_id = nfc_card_notification_school_id();
+
+    if ($school_id <= 0)
+        return (new ValueResponse([
+            "enabled" => false,
+            "school_id" => 0,
+            "identify_url" => "",
+        ]));
+    return (new ValueResponse([
+        "enabled" => true,
+        "school_id" => $school_id,
+        "identify_url" => "/api/school/".$school_id."/nfc_card_owner",
+    ]));
+}
+
+function GenerateUserDiploma($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if (!isset($data["id_title"], $data["id_school"]))
+        return (new ErrorResponse("InvalidParameter"));
+    $promotion_year = isset($data["promotion_year"]) ? (int)$data["promotion_year"] : 0;
+    if ($promotion_year != 0 && ($promotion_year < 1900 || $promotion_year > 2200))
+        return (new ErrorResponse("InvalidParameter", "promotion_year"));
+    $ret = diploma_generate_for_user(
+        (int)$id,
+        (int)$data["id_title"],
+        (int)$data["id_school"],
+        [
+            "promotion_year" => $promotion_year,
+            // The nickname is opt-in. Callers that omit the checkbox must not
+            // add it to the diploma implicitly.
+            "include_nickname" => array_key_exists("include_nickname", $data)
+                ? !empty($data["include_nickname"]) : false,
+        ]
+    , $data["issue_date"] ?? NULL);
+    if ($ret->is_error())
+        return ($ret);
+    add_log(CREATIVE_OPERATION, "User diploma generated: ".$ret->value["path"], (int)$id);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DiplomaGenerated"] ?? "Diplôme généré",
+        "stored_file" => $ret->value["path"],
+    ]));
+}
+
+function GenerateUserIdCard($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if (!isset($data["id_school"]))
+        return (new ErrorResponse("InvalidParameter", "id_school"));
+    $study_year = array_key_exists("study_year", $data) ? $data["study_year"] : NULL;
+    $ret = id_card_generate_for_user((int)$id, (int)$data["id_school"], $study_year);
+    if ($ret->is_error())
+        return ($ret);
+    add_log(CREATIVE_OPERATION, "User student card generated: ".$ret->value["path"], (int)$id);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["IdCardGenerated"] ?? "Carte étudiante générée",
+        "stored_file" => $ret->value["path"],
+    ]));
+}
+
 function GenerateScolarityContract($id, $data, $method, $output, $module)
 {
     if ($id == -1)
@@ -137,14 +241,14 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
     require_once (__DIR__."/../tools/document_workflow.php");
 
     $id = (int)$id;
-    if (!is_director_for_student($id))
+    if (!can_manage_student_documents($id))
         forbidden();
     $target = db_select_one("* FROM user WHERE id = $id AND authority != -1");
     if ($target == NULL)
         return (new ErrorResponse("UserNotFound"));
 
     $operation = strtolower(trim((string)($data["operation"] ?? "start")));
-    if (!in_array($operation, ["start", "reset", "abandon"], true))
+    if (!in_array($operation, ["start", "release", "reset", "abandon"], true))
         return (new ErrorResponse("InvalidParameter", "operation"));
     $reference = trim((string)($data["document_file"] ?? ""));
     $model_hash = strtolower(trim((string)($data["model_hash"] ?? "")));
@@ -159,6 +263,27 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
         ? (string)(document_reference_from_editor_path($resolved["relative"]) ?? "") : "";
     if ($source_reference == "" || !hash_equals(md5($source_reference), $model_hash))
         return (new ErrorResponse("InvalidParameter", "model_hash"));
+
+    $form_metadata = dabsic_form_form_metadata($resolved["absolute"]);
+    $initial_fields = [];
+    if ($operation === "start")
+    {
+        if (isset($form_metadata["fields"]["Student.SchoolPeriod"]))
+        {
+            $school_period = trim((string)($data["school_period"] ?? ""));
+            if (!preg_match('/^([0-9]{4})-([0-9]{4})$/D', $school_period, $period_match)
+                || (int)$period_match[2] !== (int)$period_match[1] + 1)
+                return (new ErrorResponse("InvalidParameter", "school_period"));
+            $initial_fields["Student.SchoolPeriod"] = $school_period;
+        }
+        if (isset($form_metadata["fields"]["Student.Month"]))
+        {
+            $entry_month = trim((string)($data["entry_month"] ?? ""));
+            if (!in_array($entry_month, ["September", "January", "April", "Other"], true))
+                return (new ErrorResponse("InvalidParameter", "entry_month"));
+            $initial_fields["Student.Month"] = $entry_month;
+        }
+    }
 
     $context_bindings = $data["context_bindings"] ?? [];
     $bundle = registration_form_document_bundle(
@@ -182,9 +307,7 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
     $form_output = dabsic_form_resolve_output($output_key, true, $id);
     if (!$form_output["ok"])
         return (new ErrorResponse($form_output["error"], $form_output["details"] ?? ""));
-    $form_metadata = dabsic_form_form_metadata($resolved["absolute"]);
-    $staff_role = dabsic_form_role_definition($form_metadata, "Etablissement") != NULL
-        ? "Etablissement" : "";
+    $staff_role = dabsic_form_staff_role($form_metadata);
 
     if ($operation === "start")
     {
@@ -215,6 +338,12 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
         $reset = dabsic_form_reset_output_values($form_output);
         if (!$reset["ok"])
             return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+        if (count($initial_fields))
+        {
+            $seeded = dabsic_form_write_output_values($form_output, $initial_fields);
+            if (!$seeded["ok"])
+                return (new ErrorResponse($seeded["error"], $seeded["details"] ?? ""));
+        }
         $workspace = [
             "version" => 1,
             "reference" => $resolved["relative"],
@@ -225,14 +354,100 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
             "signature_bindings" => $signature_bindings,
             "chain" => $chain_json,
             "staff_role" => $staff_role,
+            "initial_fields" => $initial_fields,
             "created_by" => isset($User["id"]) ? (int)$User["id"] : 0,
         ];
         $saved = dabsic_form_save_workspace($form_output, $workspace);
         if (!$saved["ok"])
+        {
+            dabsic_form_reset_output_values($form_output);
             return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
+        }
         add_log(EDITING_OPERATION, "Document workspace started for user $id: $source_reference", $id);
+
+        // Some administrative documents are already complete at creation time:
+        // no staff editor and no contributor has anything to fill in.  Their
+        // Dabsic model may opt into immediate freezing with Workflow.AutoFinalize.
+        // The signature remains an explicit act: after freezing, send the normal
+        // signature invitation immediately instead of showing an otherwise useless
+        // manual "Finaliser" step on the student's profile.
+        $workspace_roles = is_array($form_metadata["roles"] ?? NULL) ? $form_metadata["roles"] : [];
+        if (document_workflow_model_auto_finalize($resolved["absolute"])
+            && $staff_role == "" && !count($workspace_roles))
+        {
+            $workspace["released_at"] = date("Y-m-d H:i:s");
+            $workspace["auto_finalize"] = 1;
+            $saved = dabsic_form_save_workspace($form_output, $workspace);
+            if (!$saved["ok"])
+                return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
+
+            require_once (__DIR__."/doc.php");
+            $key = "start_".$model_hash;
+            $generated = _GenerateDoc(0, [
+                "doc_".$key => 1,
+                "docref_".$key => $source_reference,
+                "form_output" => $output_key,
+                "save_user_document" => $id,
+                "finalize_document" => 1,
+                "target_year" => $target_year,
+                "context_bindings" => document_context_bindings_json($context_bindings),
+            ], "POST", NULL, NULL);
+            if ($generated->is_error())
+            {
+                add_log(REPORT, "Immediate document finalization failed for $output_key: ".strval($generated), $id);
+                return ($generated);
+            }
+
+            $generated_instance = is_array($generated->value["document_instance"] ?? NULL)
+                ? $generated->value["document_instance"] : [];
+            $instance_id = trim((string)($generated_instance["id"] ?? ""));
+            if ($instance_id == "")
+                $instance_id = document_workflow_processed_instance_for_output($id, $output_key);
+
+            $signature_message = "";
+            if ($instance_id != "")
+            {
+                $signature_mail = document_workflow_send_initial_signature_requests($id, $instance_id);
+                if ($signature_mail->is_error())
+                {
+                    // The frozen instance already exists.  Do not report the whole
+                    // creation as failed (which would encourage a duplicate retry):
+                    // Albedo will retry the invitation and the profile exposes the
+                    // signature delivery error in the meantime.
+                    add_log(REPORT, "Immediate signature invitation failed for document instance $instance_id: ".strval($signature_mail), $id);
+                    $signature_message = " Le document est prêt à signer ; l'envoi du mail de signature sera retenté automatiquement.";
+                }
+                else if ((int)($signature_mail->value["sent"] ?? 0) > 0)
+                    $signature_message = " La demande de signature a été envoyée immédiatement.";
+            }
+
+            return (new ValueResponse([
+                "msg" => ($Dictionnary["DocumentAutoFinalized"] ?? "Document préparé automatiquement.").$signature_message,
+                "content" => "",
+                "instance_id" => $instance_id,
+            ]));
+        }
+
+        $review_url = "";
+        if ($staff_role != "")
+        {
+            $context_fields = $initial_fields;
+            if ($target_year >= 1 && $target_year <= 5)
+                $context_fields = array_merge($context_fields, [
+                    "Student.ChosenClass" => "EF".$target_year,
+                    "Student.CurrentYear" => (string)$target_year,
+                ]);
+            $review_url = "index.php?p=DabsicFormMenu".
+                "&file=".rawurlencode($resolved["relative"]).
+                "&output=".rawurlencode($output_key).
+                "&mode=docbuilder".
+                "&form_role=".rawurlencode($staff_role).
+                "&context_bindings=".rawurlencode(document_context_bindings_json($context_bindings)).
+                "&context_fields=".rawurlencode(document_context_fields_json($context_fields));
+        }
         return (new ValueResponse([
-            "msg" => $Dictionnary["DocumentWorkspaceStarted"] ?? "Document démarré."
+            "msg" => $Dictionnary["DocumentWorkspaceStarted"] ?? "Document démarré.",
+            "content" => $review_url,
         ]));
     }
 
@@ -247,11 +462,105 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
         || ($workspace_data["reference"] ?? "") !== $resolved["relative"])
         return (new ErrorResponse("DabsicFormChanged"));
 
+    if ($operation === "release")
+    {
+        if (!empty($workspace_data["released_at"]))
+            return (new ValueResponse([
+                "msg" => "Les demandes de complément ont déjà été envoyées."
+            ]));
+        $semantic_bindings = document_workflow_workspace_semantic_bindings($workspace_data);
+        $states = document_workflow_form_role_states(
+            $id, $output_key, $form_metadata["roles"] ?? [],
+            (int)($workspace_data["created_by"] ?? 0), $semantic_bindings
+        );
+        $sent_count = 0;
+        foreach ($states as $role => $state)
+        {
+            if (!empty($state["completed"]))
+                continue ;
+            $recipient_id = (int)($state["recipient_user_id"] ?? 0);
+            if ($recipient_id <= 0)
+            {
+                if (!empty($state["required"]))
+                    return (new ErrorResponse("DocumentRoleNoRecipient", (string)$role));
+                continue ;
+            }
+            $result = registration_form_create_document_invitation(
+                $id,
+                $workspace_data["reference"],
+                $model_hash,
+                $target_year,
+                document_title_from_file($resolved["absolute"], document_title_fallback($resolved["relative"])),
+                (int)($workspace_data["created_by"] ?? (int)$User["id"]),
+                $workspace_data["context_bindings"] ?? [],
+                $role,
+                $recipient_id
+            );
+            if (!$result["ok"])
+                return (new ErrorResponse($result["error"], $result["details"] ?? $role));
+            if (!empty($result["skipped"]))
+            {
+                if (!isset($workspace_data["skipped_roles"]) || !is_array($workspace_data["skipped_roles"]))
+                    $workspace_data["skipped_roles"] = [];
+                $workspace_data["skipped_roles"][(string)$role] = date("Y-m-d H:i:s");
+                continue ;
+            }
+            $recipient = $result["recipient"] ?? [];
+            $name = trim((string)($recipient["first_name"] ?? "")." ".(string)($recipient["family_name"] ?? ""));
+            $label = trim((string)($result["schema"]["document"]["label"] ?? ""));
+            $role_label = trim((string)($state["label"] ?? ""));
+            if ($role_label == "")
+                $role_label = (string)$role;
+            $title = sprintf(
+                $Dictionnary["DocumentFormRoleMailTitle"] ?? "Document à compléter : %s — rôle : %s",
+                $label != "" ? $label : "document", $role_label
+            );
+            $body = sprintf(
+                $Dictionnary["DocumentFormRoleMailContent"] ?? "Bonjour %s,\n\nL'établissement vous demande de compléter le document « %s » en tant que %s :\n%s\n\nLe lien est valable quatorze jours. Vous pouvez sauvegarder un brouillon avant la validation définitive.",
+                $name, $label != "" ? $label : "document", $role_label, $result["url"]
+            );
+            $mail = send_mail((string)($recipient["mail"] ?? ""), $title, $body);
+            if ($mail->is_error())
+            {
+                registration_form_revoke_token($result["token"]);
+                return ($mail);
+            }
+            ++$sent_count;
+        }
+        $workspace_data["released_at"] = date("Y-m-d H:i:s");
+        $workspace_data["auto_finalize"] = 1;
+        $saved = dabsic_form_save_workspace($form_output, $workspace_data);
+        if (!$saved["ok"])
+            return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
+        add_log(EDITING_OPERATION, "Document workspace released to contributors for user $id: $source_reference", $id);
+        return (new ValueResponse([
+            "msg" => $sent_count > 0
+                ? "Les parties à compléter ont été envoyées automatiquement aux personnes concernées."
+                : "Aucun formulaire externe n'était nécessaire ; le document poursuivra automatiquement son workflow."
+        ]));
+    }
+
     if ($operation === "reset")
     {
-        $reset = dabsic_form_reset_output_values($form_output);
+        $active_form_ids = [];
+        foreach (document_workflow_active_forms_for_output($id, $output_key) as $active_form)
+            $active_form_ids[] = (int)$active_form["id"];
+        // Resetting starts a new contribution cycle. Every old public link and
+        // its task must become historical before the shared values disappear.
+        if (!registration_form_revoke_rows($active_form_ids))
+            return (new ErrorResponse("CannotEdit", "document invitations"));
+        $reset = dabsic_form_reset_output_values_and_sessions($form_output, $output_key, "document workspace reset");
         if (!$reset["ok"])
             return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+        $workspace_initial_fields = is_array($workspace_data["initial_fields"] ?? NULL)
+            ? $workspace_data["initial_fields"] : [];
+        if (count($workspace_initial_fields))
+        {
+            $seeded = dabsic_form_write_output_values($form_output, $workspace_initial_fields);
+            if (!$seeded["ok"])
+                return (new ErrorResponse($seeded["error"], $seeded["details"] ?? ""));
+        }
+        unset($workspace_data["released_at"], $workspace_data["auto_finalize"], $workspace_data["skipped_roles"]);
         $saved = dabsic_form_save_workspace($form_output, $workspace_data);
         if (!$saved["ok"])
             return (new ErrorResponse($saved["error"], $saved["details"] ?? ""));
@@ -286,7 +595,7 @@ function ManageUserDocumentWorkspace($id, $data, $method, $output, $module)
                 return (new ErrorResponse("DocumentWorkspaceCannotAbandon"));
         }
 
-        $reset = dabsic_form_reset_output_values($form_output);
+        $reset = dabsic_form_reset_output_values_and_sessions($form_output, $output_key, "document workspace abandoned");
         if (!$reset["ok"])
             return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
         if (!dabsic_form_delete_workspace($form_output))
@@ -306,7 +615,7 @@ function SendUserDocumentForm($id, $data, $method, $output, $module)
     global $User;
 
     $id = (int)$id;
-    if (!is_director_for_student($id))
+    if (!can_manage_student_documents($id))
         forbidden();
     $target = db_select_one("* FROM user WHERE id = $id AND authority != -1");
     if ($target == NULL)
@@ -324,19 +633,31 @@ function SendUserDocumentForm($id, $data, $method, $output, $module)
     );
     if (!$result["ok"])
         return (new ErrorResponse($result["error"], $result["details"] ?? ""));
+    if (!empty($result["skipped"]))
+        return (new ValueResponse([
+            "msg" => "Aucun formulaire n'est nécessaire pour ce rôle : aucun champ n'est à compléter."
+        ]));
 
-    $name = trim(($target["first_name"] ?? "")." ".($target["family_name"] ?? ""));
+    $recipient = is_array($result["recipient"] ?? NULL) ? $result["recipient"] : $target;
+    $name = trim(($recipient["first_name"] ?? "")." ".($recipient["family_name"] ?? ""));
     $label = trim((string)($result["schema"]["document"]["label"] ?? ""));
+    $document_schema = $result["schema"]["document"] ?? [];
+    $form_role = trim((string)($document_schema["form_role"] ?? ""));
+    $role_label = trim((string)($document_schema["form_roles"][$form_role]["label"] ?? ""));
+    if ($role_label == "")
+        $role_label = $form_role;
     $title = sprintf(
-        $Dictionnary["DocumentFormMailTitle"] ?? "Document à compléter : %s",
-        $label != "" ? $label : ($Dictionnary["DocumentFormTitle"] ?? "document")
+        $Dictionnary["DocumentFormRoleMailTitle"] ?? "Document à compléter : %s — rôle : %s",
+        $label != "" ? $label : ($Dictionnary["DocumentFormTitle"] ?? "document"), $role_label
     );
     $body = sprintf(
-        $Dictionnary["DocumentFormMailContent"] ?? "Bonjour %s,\n\nL'établissement vous demande de compléter le formulaire suivant :\n%s\n\nLe lien est valable quatorze jours. Vous pouvez sauvegarder un brouillon avant la validation définitive.",
+        $Dictionnary["DocumentFormRoleMailContent"] ?? "Bonjour %s,\n\nL'établissement vous demande de compléter le document « %s » en tant que %s :\n%s\n\nLe lien est valable quatorze jours. Vous pouvez sauvegarder un brouillon avant la validation définitive.",
         $name,
+        $label != "" ? $label : ($Dictionnary["DocumentFormTitle"] ?? "document"),
+        $role_label,
         $result["url"]
     );
-    $sent = send_mail($target["mail"], $title, $body);
+    $sent = send_mail($recipient["mail"], $title, $body);
     if ($sent->is_error())
     {
         registration_form_revoke_token($result["token"]);
@@ -425,7 +746,9 @@ function SetUserProperties($id, $data, $method, $output, $module)
         bad_request();
 
     $is_self = is_me($id);
-    $identity_authority = is_identity_authority_for_user($id);
+    $relation_identity_authority = function_exists("can_manage_relation_administrative_user")
+        && can_manage_relation_administrative_user($id);
+    $identity_authority = is_identity_authority_for_user($id) || $relation_identity_authority;
     $action = isset($data["action"]) ? (string)$data["action"] : "";
     $administrative_authority = function_exists("can_manage_user_administrative_profile")
         && can_manage_user_administrative_profile($id);
@@ -478,11 +801,22 @@ function SetUserProperties($id, $data, $method, $output, $module)
         if (!in_array($field, $allowed, true))
             return (new ErrorResponse("InvalidParameter", $field));
 
+    $mail_marker = false;
+    if (isset($data["mail"]) && strcasecmp(trim((string)$data["mail"]), "nomail") == 0)
+    {
+        // Le marqueur est réservé aux personnes qui administrent réellement
+        // ce contact via une relation d'école. Le contact lui-même ne peut pas
+        // effacer son mail avec ce raccourci.
+        if (!$relation_identity_authority)
+            return (new ErrorResponse("InvalidParameter", "mail"));
+        $data["mail"] = "";
+        $mail_marker = true;
+    }
     if (isset($data["mail"]) && $data["mail"] == $mail)
         unset($data["mail"]);
     if (isset($data["birth_date"]))
         $data["birth_date"] = trim((string)$data["birth_date"]) == "" ? NULL : db_form_date($data["birth_date"]);
-    if (isset($data["mail"]) && trim((string)$data["mail"]) == "")
+    if (isset($data["mail"]) && trim((string)$data["mail"]) == "" && !$mail_marker)
         return (new ErrorResponse("InvalidParameter", "mail"));
     if (isset($data["mail"]))
     {
@@ -548,9 +882,20 @@ function SetUserLink($id, $data, $method, $output, $module)
 	else if (!is_my_director($id))
 	    forbidden();
 	
-	if (($request = handle_links(
-	    $id, $data[$link], "user", $link, false, $table, false, $left, $right))->is_error()
-	)
+	// parent_child est stocké dans le sens responsable -> élève.
+	// Depuis le profil d'un élève, l'utilisateur saisi est donc le parent
+	// (côté gauche) et l'élève courant est l'enfant (côté droit).
+	if ($link == "user")
+	    $request = handle_links(
+		$data[$link], $id, "user", "user", false,
+		$table, false, $left, $right
+	    );
+	else
+	    $request = handle_links(
+		$id, $data[$link], "user", $link, false,
+		$table, false, $left, $right
+	    );
+	if ($request->is_error())
 	    return ($request);
 
 	$user = fetch_users([$link], $id);
@@ -1010,6 +1355,14 @@ $Tab = [
 	    "logged_in",
 	    "GetFileDir",
 	],
+        "nfc_card" => [
+            "can_manage_user_credentials",
+            "DownloadNfcCard",
+        ],
+        "nfc_auto_context" => [
+            "logged_in",
+            "GetNfcAutoContext",
+        ],
 	"subscription_file" => [
 	    "is_director_for_student",
 	    "GetSubscriptionFileDir",
@@ -1027,6 +1380,18 @@ $Tab = [
 	"" => [
 	    "am_i_director",
 	    "SubscribeUser"
+	],
+        "nfc_card_owner" => [
+            "can_manage_user_credentials",
+            "CheckNfcCardOwner",
+        ],
+	"diploma" => [
+	    "can_generate_user_diploma",
+	    "GenerateUserDiploma",
+	],
+	"student_card" => [
+	    "can_generate_user_id_card",
+	    "GenerateUserIdCard",
 	],
 	"todolist" => [
 	    "is_me_or_admin",
@@ -1053,9 +1418,13 @@ $Tab = [
 	    "SetStatus",
 	],
 	"new_password" => [
-	    "is_me_or_admin",
+	    "can_manage_user_credentials",
 	    "RegeneratePassword"
 	],
+        "new_nfc_card" => [
+            "can_manage_user_credentials",
+            "RegenerateNfcCard",
+        ],
 	"new_contract" => [
 	    "only_admin",
 	    "GenerateScolarityContract",
@@ -1172,6 +1541,3 @@ $Tab = [
 	],
     ]
 ];
-
-
-

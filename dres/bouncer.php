@@ -66,6 +66,53 @@ function bouncer_resolve_target($requested)
     ]);
 }
 
+function bouncer_build_activity_for_current_user($id)
+{
+    global $User;
+
+    $activity = new FullActivity;
+    $options = [
+        "recursive" => false,
+        "only_user" => true,
+        "blist" => [
+            "activity_acquired_medal",
+            "activity_team_content",
+            "activity_medal",
+            "activity_support",
+            "activity_details",
+            "activity_texts",
+        ],
+    ];
+    if (is_array($User))
+        $options["user"] = $User;
+    if (!$activity->buildp((int)$id, $options))
+        return (NULL);
+    return ($activity);
+}
+
+function bouncer_activity_staff_access($activity)
+{
+    return (is_object($activity)
+        && ($activity->is_director || $activity->is_teacher || $activity->is_assistant));
+}
+
+function bouncer_activity_template_instances($id_template)
+{
+    $id_template = (int)$id_template;
+    if ($id_template <= 0)
+        return ([]);
+
+    return (db_select_all("
+        activity.id
+        FROM activity
+        WHERE activity.id_template = $id_template
+          AND activity.is_template = 0
+          AND activity.template_link = 1
+          AND activity.deleted IS NULL
+        ORDER BY activity.subject_appeir_date DESC, activity.id DESC
+    "));
+}
+
 chdir(__DIR__."/../");
 if (isset($_POST["language_select"]))
     $Language = $_POST["language_select"];
@@ -115,6 +162,62 @@ if ($type == "user" || $type == "users")
         forbidden();
     }
     render_file();
+}
+
+/*
+** Pièces comptables des organisations
+** ------------------------------------
+** Les logos et autres ressources d'une organisation conservent leur politique
+** historique. Le sous-dossier accounting/, en revanche, contient des factures
+** et justificatifs financiers : il est réservé aux responsables comptables de
+** l'école portée dans le chemin.
+*/
+if ($type == "organization" && isset($target[2]) && $target[2] == "accounting")
+{
+    if ($User == NULL)
+        authentication_required();
+    if (count($target) != 5 || !is_number($target[3]))
+        forbidden();
+
+    $id_school = (int)$target[3];
+    if ($id_school <= 0 || !is_billing_manager_for_school($id_school))
+        forbidden();
+
+    if (preg_match('/^(\d+)\.(pdf|png|jpg)$/i', $target[4], $match))
+    {
+        $id_entry = (int)$match[1];
+        $entry = db_select_one("
+            id, id_school
+            FROM organization_account_entry
+            WHERE id = $id_entry
+              AND id_school = $id_school
+              AND deleted IS NULL
+        ");
+        if ($entry == NULL)
+            not_found();
+        render_file();
+    }
+
+    if (preg_match('/^electronic-(\d+)\.(xml|pdf)$/i', $target[4], $match))
+    {
+        $organization = resolve_codename("organization", $target[1]);
+        if ($organization->is_error())
+            not_found();
+        $id_document = (int)$match[1];
+        $document = db_select_one("
+            id, id_school
+            FROM billing_electronic_document
+            WHERE id = $id_document
+              AND id_school = $id_school
+              AND direction = 'incoming'
+              AND buyer_organization_id = ".(int)$organization->value."
+              AND deleted IS NULL
+        ");
+        if ($document == NULL)
+            not_found();
+        render_file();
+    }
+    forbidden();
 }
 
 /*
@@ -172,63 +275,82 @@ if ($type == "quiz")
     render_file();
 }
 
+// Les feuilles de session contiennent la liste nominative des apprenants.
+// Le chemin numérique seul ne confère aucun droit de lecture.
+if ($type == "session")
+{
+    if (count($target) != 3 || !ctype_digit($target[1]) || $target[2] != "emargement.pdf")
+        forbidden();
+    if (!is_teacher_or_director_for_session((int)$target[1]))
+        forbidden();
+    render_file();
+}
+
 if ($type == "activity")
 {
     if (count($target) < 3)
         bad_request();
 
-    // Au cas où l'activité soit basée sur un template.
     $codename = $Database->real_escape_string($target[1]);
-
-    // Récupération de l'id de l'activité, template ou non.
-    if (!($direct = db_select_one("
+    $direct = db_select_one("
         activity.id, activity.is_template
-        FROM activity WHERE codename = '$codename'
-    ")))
+        FROM activity
+        WHERE activity.codename = '$codename'
+          AND activity.deleted IS NULL
+    ");
+    if ($direct == NULL)
         not_found();
 
-    if (($activity = new FullActivity)->build($direct["id"]) == false)
+    $activity = bouncer_build_activity_for_current_user((int)$direct["id"]);
+    if ($activity == NULL)
         not_found();
 
-    if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
+    // Une affectation directe sur la ressource demandee garde la priorite.
+    // FullActivity tient compte des utilisateurs, des laboratoires et de leurs
+    // niveaux d'autorite ; is_director couvre le responsable du cycle.
+    if (bouncer_activity_staff_access($activity))
         render_file();
 
-    if ($direct["is_template"])
-        $filter = " AND template.id = {$direct["id"]} ";
-    else
-        $filter = " AND activity.id = {$direct["id"]} ";
-
-    $instances = db_select_one("
-      activity.id FROM activity
-      LEFT JOIN team ON team.id_activity = activity.id
-      LEFT JOIN user_team ON team.id = user_team.id_team
-      LEFT JOIN activity as template ON activity.id_template = template.id
-      WHERE user_team.id_user = {$User["id"]}
-      $filter
-      ORDER BY activity.subject_appeir_date DESC
-    ");
-
-    if ($instances != NULL)
-        $id = $instances["id"];
-    else
-        $id = $codename;
-
-    if (($activity = new FullActivity)->build($id) == false)
-        not_found();
-
-    if (in_array($target[2], [
+    $activity_basename = basename($_GET["target"]);
+    if (in_array($activity_basename, [
         "icon.png", "icon.jpeg", "icon.jpg",
         "wallpaper.png", "wallpaper.jpeg", "wallpaper.jpg",
         "intro.mp4", "intro.ogv",
     ], true))
         render_file();
 
+    /*
+    ** Un fichier herite conserve physiquement le chemin du template. Le droit
+    ** d'acces, lui, appartient a l'instance. Pour une ressource de template,
+    ** on cherche donc une instance liee dans laquelle l'utilisateur est soit
+    ** encadrant, soit effectivement inscrit. Cette resolution remplace l'ancien
+    ** JOIN sur user_team, trop strict notamment pour les activites utilisant un
+    ** pool d'equipe de reference.
+    */
+    if (!empty($direct["is_template"]))
+    {
+        $registered_instance = NULL;
+        foreach (bouncer_activity_template_instances((int)$direct["id"]) as $instance)
+        {
+            $candidate = bouncer_build_activity_for_current_user((int)$instance["id"]);
+            if ($candidate == NULL)
+                continue ;
+            if (bouncer_activity_staff_access($candidate))
+                render_file();
+            if ($registered_instance == NULL
+                && $candidate->registered
+                && (int)$candidate->leader > 0)
+                $registered_instance = $candidate;
+        }
+        if ($registered_instance != NULL)
+            $activity = $registered_instance;
+    }
+
     if (isset($target[3], $target[4])
         && $target[3] == "ressource"
         && ($target[4] == "admin" || $target[4] == "private"))
         forbidden();
 
-    $activity_basename = basename($_GET["target"]);
     if (in_array($activity_basename, ["configuration.dab", "preaccess.dab", "satisfaction.dab", "rubric.dab"], true))
         not_found();
 
@@ -237,11 +359,13 @@ if ($type == "activity")
     // therefore satisfy the same prerequisite as pages/instance/subject.php.
     if (in_array($activity_basename, ["subject.pdf", "subject.txt", "subject.htm", "subject.html"], true)
         && $User != NULL
-        && !$activity->is_director && !$activity->is_teacher && !$activity->is_assistant
         && !activity_preaccess_can_read_subject($activity, (int)$User["id"]))
         forbidden();
 
-    if ($activity->registered == false || $activity->leader == 0)
+    // leader contient le statut user_team : 0 = invitation non acceptee,
+    // 1 = membre inscrit, 2 = responsable d'equipe. Les deux derniers ont
+    // donc acces au sujet ; une simple invitation ne suffit pas.
+    if ($activity->registered == false || (int)$activity->leader <= 0)
         forbidden();
 
     if ($activity->subject_appeir_date == NULL

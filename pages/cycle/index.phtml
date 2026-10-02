@@ -4,7 +4,11 @@ $id = try_get($_GET, "a", -1);
 $unique = $id != -1;
 ?>
 
-<div>
+<?php if ($unique) { ?>
+<div class="cycle_unique_page">
+<?php } ?>
+
+<div class="cycle_page_title">
     <?php if ($page == "cycle") { ?>
 	<h2 class="alignable_blocks"><?=$Dictionnary["Cycle"]; ?></h2>
     <?php } else { ?>
@@ -33,7 +37,8 @@ $unique = $id != -1;
 <?php if ($unique) { ?>
 
     <?php require ("display_cycle.phtml"); ?>
-    
+
+</div>
 <?php } else { ?>
 
     <?php if (am_i_director()) { ?>

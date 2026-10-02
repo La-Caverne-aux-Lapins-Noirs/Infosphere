@@ -54,6 +54,112 @@ function RenderConfigurationFields($id, $data, $method, $output, $module)
     ]));
 }
 
+
+function RenderConfigurationPersocBlacklist($id, $data, $method, $output, $module)
+{
+    return (new ValueResponse([
+        "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", $data)
+    ]));
+}
+
+function SaveConfigurationPersocBlacklist($id, $data, $method, $output, $module)
+{
+    $parsed = persoc_deadlist_parse_text($data["deadlist"] ?? "");
+    if (count($parsed["invalid"]))
+    {
+        $errors = [];
+        foreach (array_slice($parsed["invalid"], 0, 5) as $invalid)
+            $errors[] = "ligne ".((int)$invalid["line"])." : ".$invalid["value"];
+        if (count($parsed["invalid"]) > 5)
+            $errors[] = "+".(count($parsed["invalid"]) - 5)." autre(s)";
+        return (new ValueResponse([
+            "msg" => "Blacklist non enregistrée : entrée(s) invalide(s) — ".implode(" ; ", $errors),
+            "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", array_merge($data, [
+                "deadlist_input" => $data["deadlist"] ?? "",
+            ])),
+        ]));
+    }
+
+    $storage_error = NULL;
+    if (!persoc_deadlist_save_entries($parsed["entries"], $storage_error))
+        return (new ValueResponse([
+            "msg" => "Impossible d'enregistrer la blacklist Persoc : ".($storage_error ?? "erreur inconnue").".",
+            "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", array_merge($data, [
+                "deadlist_input" => $data["deadlist"] ?? "",
+            ])),
+        ]));
+
+    add_log(EDITING_OPERATION, "Persoc deadlist saved in configuration: ".count($parsed["entries"])." entries", 1, true);
+    $sync = persoc_deadlist_push($parsed["entries"]);
+    if (!$sync["ok"])
+    {
+        add_log(REPORT, "Persoc deadlist synchronization failed: ".$sync["error"], 1, true);
+        $msg = "Blacklist enregistrée dans la configuration de l'Infosphère, mais la synchronisation vers Distrans a échoué : ".$sync["error"].".";
+    }
+    else
+    {
+        add_log(EDITING_OPERATION, "Persoc deadlist synchronized to Distrans", 1, true);
+        $msg = "Blacklist Persoc enregistrée et synchronisée vers Distrans.";
+    }
+
+    return (new ValueResponse([
+        "msg" => $msg,
+        "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", []),
+    ]));
+}
+
+function SyncConfigurationPersocBlacklist($id, $data, $method, $output, $module)
+{
+    if (!persoc_deadlist_storage_initialized())
+        return (new ValueResponse([
+            "msg" => "La blacklist Persoc n'est pas encore initialisée dans la configuration. Enregistre-la ou importe d'abord celle de Distrans.",
+            "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", $data),
+        ]));
+
+    $entries = persoc_deadlist_local_entries();
+    $sync = persoc_deadlist_push($entries);
+    if (!$sync["ok"])
+    {
+        add_log(REPORT, "Persoc deadlist synchronization failed: ".$sync["error"], 1, true);
+        $msg = "Synchronisation Persoc/Distrans impossible : ".$sync["error"].".";
+    }
+    else
+    {
+        add_log(EDITING_OPERATION, "Persoc deadlist synchronized to Distrans", 1, true);
+        $msg = "Blacklist Persoc resynchronisée vers Distrans.";
+    }
+    return (new ValueResponse([
+        "msg" => $msg,
+        "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", $data),
+    ]));
+}
+
+function ImportConfigurationPersocBlacklist($id, $data, $method, $output, $module)
+{
+    $remote = persoc_deadlist_remote_state();
+    if (!$remote["ok"])
+    {
+        add_log(REPORT, "Persoc deadlist import failed: ".$remote["error"], 1, true);
+        return (new ValueResponse([
+            "msg" => "Import depuis Distrans impossible : ".$remote["error"].".",
+            "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", $data),
+        ]));
+    }
+
+    $storage_error = NULL;
+    if (!persoc_deadlist_save_entries($remote["entries"], $storage_error))
+        return (new ValueResponse([
+            "msg" => "Impossible d'enregistrer dans la configuration de l'Infosphère la blacklist reçue de Distrans : ".($storage_error ?? "erreur inconnue").".",
+            "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", $data),
+        ]));
+
+    add_log(EDITING_OPERATION, "Persoc deadlist imported from Distrans: ".count($remote["entries"])." entries", 1, true);
+    return (new ValueResponse([
+        "msg" => "Blacklist Persoc importée depuis Distrans (".count($remote["entries"])." entrée(s)).",
+        "content" => configuration_render_panel_content("persoc_blacklist_panel_content.php", []),
+    ]));
+}
+
 function RenderConfigurationOperations($id, $data, $method, $output, $module)
 {
     return (new ValueResponse([
@@ -118,6 +224,10 @@ $Tab = [
             "only_admin",
             "RenderConfigurationFields",
         ],
+        "persoc_blacklist" => [
+            "only_admin",
+            "RenderConfigurationPersocBlacklist",
+        ],
         "operations" => [
             "only_admin",
             "RenderConfigurationOperations",
@@ -139,6 +249,22 @@ $Tab = [
         "fields" => [
             "only_admin",
             "RenderConfigurationFields",
+        ],
+        "persoc_blacklist" => [
+            "only_admin",
+            "RenderConfigurationPersocBlacklist",
+        ],
+        "persoc_blacklist_save" => [
+            "only_admin",
+            "SaveConfigurationPersocBlacklist",
+        ],
+        "persoc_blacklist_sync" => [
+            "only_admin",
+            "SyncConfigurationPersocBlacklist",
+        ],
+        "persoc_blacklist_import" => [
+            "only_admin",
+            "ImportConfigurationPersocBlacklist",
         ],
         "operations" => [
             "only_admin",

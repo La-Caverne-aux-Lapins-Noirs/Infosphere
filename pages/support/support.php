@@ -80,6 +80,14 @@ if (is_array($support_preaccess_status)
 			<input type="button" value="Support +" onclick="support_set_asset_layout(<?=$support["id"]; ?>, 'support');" />
 			<input type="button" value="Intercom +" onclick="support_set_asset_layout(<?=$support["id"]; ?>, 'intercom');" />
 			<input type="button" value="Intercom ++" onclick="support_set_asset_layout(<?=$support["id"]; ?>, 'intercom_max');" />
+			<input
+			    type="button"
+			    id="support_asset_share_<?=$support["id"]; ?>"
+			    value="Partager"
+			    title="Sélectionne une ressource à partager"
+			    onclick="support_share_asset(<?=$support["id"]; ?>);"
+			    disabled
+			/>
 		    </div>
 		    <div class="support_asset_intercom_box" style="position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;">
 			<div

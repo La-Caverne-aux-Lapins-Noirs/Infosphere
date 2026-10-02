@@ -8,6 +8,9 @@ class CycleLayer extends Layer
     public $first_day = NULL;
     public $last_day = NULL;
     public $id_user_cycle = -1;
+    public $enrollment_mode = NULL;
+    public $user_cycle_fr_name = NULL;
+    public $user_cycle_en_name = NULL;
     public $cursus = []; // Y a t il une spécialité choisi au cursus?
     public $schools = []; // Les école associé au cycle (construit par FullProfile)
     
@@ -128,7 +131,7 @@ class CycleLayer extends Layer
 		    $sub->bonus_grade_d = $module->bonus_grade_d;
 		    $sub->bonus_grade_bonus = $module->bonus_grade_bonus;
 		}
-		$sub->cursus = explode(";", $mod["cursus"]);
+		$sub->cursus = explode(";", (string)($mod["cursus"] ?? ""));
 		$sub->acquired_credit = 0;
 		$sub->load_configuration($module->codename, $module->template_codename);
 		$sub->registered = $module->registered;

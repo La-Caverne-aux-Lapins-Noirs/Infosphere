@@ -1,6 +1,11 @@
 @include ".base_relance_suivi/base.dab"
 Title = "Relance pour absences répétées"
 
+[Workflow
+  QueueForPrint = 1
+  PrintRecipient = "Finance"
+]
+
 [FollowUp
   Reason = "Absences répétées"
   SupportProposal = "Un échange avec l'équipe pédagogique afin d'identifier l'origine des absences et les mesures permettant de rétablir une assiduité compatible avec la poursuite de la formation."

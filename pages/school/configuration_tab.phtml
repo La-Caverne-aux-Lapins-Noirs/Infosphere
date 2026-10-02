@@ -117,6 +117,7 @@ $school_registration_fields = [
                     Ces adresses sont utilisées par les différents workflows de l'établissement.
                     Si une boîte fonctionnelle n'est pas renseignée, le mail général de l'établissement est utilisé lorsque le workflow prévoit un repli.
                     La boîte « Archives des envois (CCI) » reçoit uniquement les copies cachées des documents qui activent explicitement l'archivage.
+                    La boîte « Facturation » reçoit en copie cachée les factures et avoirs envoyés depuis la page Facturation.
                 </p>
                 <?php if (!school_mailbox_table_available()) { ?>
                     <p class="school_admin_notice"><strong>Migration SQL requise :</strong> la table <code>school_mailbox</code> n'existe pas encore.</p>
@@ -150,6 +151,24 @@ $school_registration_fields = [
                         </label>
                     <?php } ?>
                 </div>
+            </section>
+
+            <section class="school_config_section school_config_section_wide">
+                <h4>Informations documentaires établissement</h4>
+                <p class="school_admin_notice">
+                    Les mentions « établissement d’enseignement supérieur privé », « organisme de formation » et « CFA »
+                    sont reconstruites automatiquement à partir des numéros administratifs ci-dessus.
+                    Utilise le champ complémentaire uniquement pour une mention propre à l’établissement.
+                    Le RIB et les mentions de la personne morale restent dans l’organisation liée.
+                </p>
+                <label>
+                    Informations légales complémentaires établissement
+                    <textarea name="document_information" placeholder="Mention complémentaire propre à l’établissement, facultative"><?=htmlspecialchars(try_get($school, "document_information", ""), ENT_QUOTES); ?></textarea>
+                </label>
+                <label>
+                    Mention d’exonération TVA pour les factures à 0 %
+                    <textarea name="vat_exemption_mention" placeholder="TVA exonérée — article 261-4-4°-a du CGI."><?=htmlspecialchars(try_get($school, "vat_exemption_mention", ""), ENT_QUOTES); ?></textarea>
+                </label>
             </section>
         </div>
 

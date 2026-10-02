@@ -1,19 +1,20 @@
 .userdiv
 {
-    height: 155px;
+    height: 110px;
     overflow: hidden;
-    min-width: 350px;
+    min-width: 250px;
     position: relative;
     text-align: left;
 }
 
 .userdiv h3
 {
-    height: 55px;
+    height: 86px;
     padding-left: 10px;
     font-size: medium;
-    width: 100%;
+    width: calc(100% - 115px);
     z-index: 1;
+    overflow: hidden;
 }
 
 .userdiv .left, .userdiv .right
@@ -76,3 +77,73 @@
     height: 19px;
 }
 
+.user-list-toolbar
+{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-bottom: 10px;
+}
+
+.user-list-toolbar h2
+{
+    margin: 0;
+}
+
+.user-list-search
+{
+    flex: 1 1 260px;
+    max-width: 560px;
+}
+
+.user-list-search input
+{
+    box-sizing: border-box;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid currentColor;
+    color: inherit;
+}
+
+.user-list-search input::placeholder
+{
+    color: inherit;
+    opacity: 0.65;
+}
+
+.user-list-filters
+{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.user-list-filters label
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.userdiv[hidden],
+.user-card-avatar-default[hidden],
+.user-card-avatar-photo[hidden]
+{
+    display: none !important;
+}
+
+.user-card-picture
+{
+    position: absolute;
+}
+
+.user-card-avatar-default,
+.user-card-avatar-photo
+{
+    position: absolute;
+    right: 0;
+    top: 0;
+}

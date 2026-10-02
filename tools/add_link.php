@@ -65,9 +65,10 @@ function add_link(
 	    if ($edited)
 	    {
 		$props_name = substr($props_name, 2);
-		$Database->query("
+		if ($Database->query("
                    UPDATE $table_name SET ".implode(" , ", $new_fields)." WHERE id = ".$check["id"]
-		);
+		) === false)
+		    return (new ErrorResponse("CannotEdit")); // @codeCoverageIgnore
 		return (new ValueResponse(array_merge(["id" => $check["id"]], $props)));
 	    }
 	    if ($strict)

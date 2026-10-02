@@ -70,6 +70,18 @@ foreach ($workflow_instances as $workflow_entry)
                 $workflow_school = count($workflow_schools) ? implode(", ", $workflow_schools) : "—";
                 $workflow_id = (string)($workflow_instance["Id"] ?? "");
                 $workflow_pdf = "/?p=DocumentWorkflowPdf&silent=1&owner=".(int)$workflow_entry["owner_user_id"]."&instance=".rawurlencode($workflow_id);
+                $workflow_delivery_status = strtolower(trim((string)($workflow_instance["DeliveryMailStatus"] ?? "")));
+                $workflow_delivery_accepted_at = trim((string)($workflow_instance["DeliveryAcceptedAt"] ?? ($workflow_instance["DeliveredAt"] ?? "")));
+                $workflow_delivery_confirmed_at = trim((string)($workflow_instance["DeliveryConfirmedAt"] ?? ""));
+                $workflow_delivery_to = trim((string)($workflow_instance["DeliveryAcceptedTo"] ?? ""));
+                if ($workflow_delivery_to == "")
+                {
+                    $workflow_delivery_addresses = document_workflow_delivery_addresses($workflow_instance);
+                    if (count($workflow_delivery_addresses))
+                        $workflow_delivery_to = implode(", ", $workflow_delivery_addresses);
+                }
+                if ($workflow_delivery_status == "" && $workflow_delivery_accepted_at != "")
+                    $workflow_delivery_status = "accepted_untracked";
             ?>
                 <tr>
                     <td><strong><?=htmlspecialchars($workflow_model, ENT_QUOTES); ?></strong><?php if ($workflow_year > 0) { ?><br /><small>EF<?=$workflow_year; ?></small><?php } ?></td>
@@ -81,8 +93,11 @@ foreach ($workflow_instances as $workflow_entry)
                         <?php if ($workflow_status === "Expired" && !empty($workflow_instance["ExpiredAt"])) { ?><br /><small>Périmé le <?=htmlspecialchars((string)$workflow_instance["ExpiredAt"], ENT_QUOTES); ?><?php if (($workflow_instance["PreviousStatus"] ?? "") != "") { ?> · ancien état : <?=htmlspecialchars((string)$workflow_instance["PreviousStatus"], ENT_QUOTES); ?><?php } ?></small><?php } ?>
                         <?php if (($workflow_instance["Error"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["Error"], ENT_QUOTES); ?></small><?php } ?>
                         <?php if (($workflow_instance["SealError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["SealError"], ENT_QUOTES); ?></small><?php } ?>
-                        <?php if ($workflow_status === "Completed" && !empty($workflow_instance["DeliveredAt"])) { ?><br /><small>Envoyé le <?=htmlspecialchars((string)$workflow_instance["DeliveredAt"], ENT_QUOTES); ?></small><?php } ?>
-                        <?php if (($workflow_instance["DeliveryError"] ?? "") != "") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["DeliveryError"], ENT_QUOTES); ?></small><?php } ?>
+                        <?php if ($workflow_status === "Completed" && $workflow_delivery_status === "delivered") { ?><br /><small>Remis au serveur du destinataire<?= $workflow_delivery_to != "" ? " (".htmlspecialchars($workflow_delivery_to, ENT_QUOTES).")" : ""; ?><?= $workflow_delivery_confirmed_at != "" ? " le ".htmlspecialchars($workflow_delivery_confirmed_at, ENT_QUOTES) : ""; ?></small><?php } ?>
+                        <?php if ($workflow_status === "Completed" && $workflow_delivery_status === "accepted") { ?><br /><small>Accepté par le service mail<?= $workflow_delivery_to != "" ? " pour ".htmlspecialchars($workflow_delivery_to, ENT_QUOTES) : ""; ?><?= $workflow_delivery_accepted_at != "" ? " le ".htmlspecialchars($workflow_delivery_accepted_at, ENT_QUOTES) : ""; ?> — livraison en attente</small><?php } ?>
+                        <?php if ($workflow_status === "Completed" && $workflow_delivery_status === "accepted_untracked") { ?><br /><small>Accepté par le service mail<?= $workflow_delivery_to != "" ? " pour ".htmlspecialchars($workflow_delivery_to, ENT_QUOTES) : ""; ?><?= $workflow_delivery_accepted_at != "" ? " le ".htmlspecialchars($workflow_delivery_accepted_at, ENT_QUOTES) : ""; ?> — ancien envoi non traçable</small><?php } ?>
+                        <?php if ($workflow_status === "Completed" && $workflow_delivery_status === "failed") { ?><br /><small>Échec de remise<?= $workflow_delivery_to != "" ? " vers ".htmlspecialchars($workflow_delivery_to, ENT_QUOTES) : ""; ?><?= trim((string)($workflow_instance["DeliveryMailError"] ?? "")) != "" ? " : ".htmlspecialchars((string)$workflow_instance["DeliveryMailError"], ENT_QUOTES) : ""; ?></small><?php } ?>
+                        <?php if (($workflow_instance["DeliveryError"] ?? "") != "" && $workflow_delivery_status !== "failed") { ?><br /><small><?=htmlspecialchars((string)$workflow_instance["DeliveryError"], ENT_QUOTES); ?></small><?php } ?>
                     </td>
                     <td class="document_workflow_actions">
                         <a href="<?=htmlspecialchars($workflow_pdf, ENT_QUOTES); ?>" target="_blank" rel="noopener">Voir le PDF</a>

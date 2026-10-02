@@ -1,5 +1,46 @@
 <?php
 
+function list_of_links_property_control($property, $value = "", $for_create = false)
+{
+    $codename = (string)($property["codename"] ?? "");
+    $label = (string)($property["name"] ?? $codename);
+    $type = (string)($property["type"] ?? "text");
+    $required = !empty($property["required"]) ? " required" : "";
+    $escaped_codename = htmlspecialchars($codename, ENT_QUOTES);
+    $escaped_label = htmlspecialchars($label, ENT_QUOTES);
+
+    if ($type === "select")
+    {
+        $options = is_array($property["options"] ?? NULL) ? $property["options"] : [];
+        $all_options = is_array($property["all_options"] ?? NULL) ? $property["all_options"] : $options;
+        $empty_label = (string)($property["empty_label"] ?? $label);
+        $suffix = (string)($property["unavailable_suffix"] ?? "");
+        $selected_value = (string)$value;
+        ?>
+        <select name="<?=$escaped_codename; ?>" title="<?=$escaped_label; ?>"<?=$required; ?>>
+            <option value="" <?=($selected_value === "" ? "selected" : ""); ?>><?=htmlspecialchars($empty_label, ENT_QUOTES); ?></option>
+            <?php foreach ($options as $option_value => $option_label) { ?>
+                <option value="<?=htmlspecialchars((string)$option_value, ENT_QUOTES); ?>" <?=($selected_value === (string)$option_value ? "selected" : ""); ?>><?=htmlspecialchars((string)$option_label, ENT_QUOTES); ?></option>
+            <?php } ?>
+            <?php if (!$for_create && $selected_value !== "" && !array_key_exists($selected_value, $options)) { ?>
+                <option value="<?=htmlspecialchars($selected_value, ENT_QUOTES); ?>" selected><?=htmlspecialchars((string)($all_options[$selected_value] ?? $selected_value).$suffix, ENT_QUOTES); ?></option>
+            <?php } ?>
+        </select>
+        <?php
+        return ;
+    }
+    ?>
+    <input
+        type="<?=htmlspecialchars($type, ENT_QUOTES); ?>"
+        style="position: relative;"
+        name="<?=$escaped_codename; ?>"
+        placeholder="<?=$escaped_label; ?>"
+        value="<?=htmlspecialchars((string)$value, ENT_QUOTES); ?>"
+        <?=$required; ?>
+    />
+    <?php
+}
+
 function list_of_links_extra_class($hook_name, $this_node_name, $elm)
 {
     if ($hook_name == "activity"
@@ -43,7 +84,11 @@ function single_link($params)
     else
 	$form_id .= $elm[$this_node_name];
     $form_id .= $extra_form_id;
-    $submit = "silent_submit(this, null, null, null, '$form_id')";
+    $delete_submit = "silent_submit(this, null, null, null, '$form_id')";
+    // Editing relation properties must not reuse the delete submit action.
+    // The old code passed $form_id as `toremove`, so a successful PUT removed
+    // the form carrying the linked element identity (name/codename) from the DOM.
+    $property_submit = "silent_submit(this)";
     $linked_id = isset($elm["id_{$this_node_name}"]) ? $elm["id_{$this_node_name}"] : $elm["id"];
 ?>
     <form
@@ -51,7 +96,7 @@ function single_link($params)
 	action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
 	id="<?=$form_id; ?>"
 	class="sublist_of_link<?=list_of_links_extra_class($hook_name, $this_node_name, $elm); ?>"
-	onsubmit="return <?=$submit; ?>;"
+	onsubmit="return <?=$delete_submit; ?>;"
     >
 	<input type="hidden" name="extra_form_id" value="<?=$extra_form_id; ?>" />
 	<div>
@@ -72,7 +117,7 @@ function single_link($params)
 	    <?php if (@$elm["inherit"] == false && @strlen($admin_func) && $admin_func($hook_id)) { ?>
 		<input
 		    type="button"
-		    onclick="<?=$submit; ?>;"
+		    onclick="<?=$delete_submit; ?>;"
 		    value="&#10007;"
 		    style="color: red;"
 		/>
@@ -83,19 +128,17 @@ function single_link($params)
 	<form
 	    method="put"
 	    action="api/<?=$hook_name; ?>/<?=$hook_id; ?>/<?=$this_node_name; ?>/<?=$linked_id; ?>"
-	    onsubmit="return <?=$submit; ?>;"
+	    onsubmit="return <?=$property_submit; ?>;"
 	    style="position: relative;"
 	>
 	    <?php $count = 0; ?>
 	    <?php foreach ($extra_properties as $epv) { ?>
 		<?php if (@strlen($epv["admin_func"]) == 0 || $epv["admin_func"]($hook_id)) { ?>
-		    <input
-			type="text"
-			style="position: relative;"
-			name="<?=$epv["codename"]; ?>"
-			placeholder="<?=$epv["name"]; ?>"
-			value="<?=isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : ""; ?>"
-		    />
+		    <?php list_of_links_property_control(
+			$epv,
+			isset($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : "",
+			false
+		    ); ?>
 		    <?php $count += 1; ?>
 		<?php } else { ?>
 		    <?=$epv["name"]; ?>: <?=@strlen($elm[$epv["codename"]]) ? $elm[$epv["codename"]] : "/"; ?><br />
@@ -110,7 +153,7 @@ function single_link($params)
 			  top: 0px;
 			  height: <?=20 * $count; ?>px;
 			  "
-		    onclick="<?=$submit; ?>"
+		    onclick="<?=$property_submit; ?>"
 		/>
 	    <?php } ?>
 	</form>
@@ -195,6 +238,13 @@ function list_of_links($params)
 		    placeholder="<?=htmlspecialchars($dictionary_label($placeholder), ENT_QUOTES); ?>"
 		    onkeypress="return event.keyCode != 13 ? true : <?=$submit; ?>;"
 		/>
+		<?php if (isset($extra_properties)) { ?>
+		    <?php foreach ($extra_properties as $epv) { ?>
+			<?php if (!empty($epv["on_create"]) && (@strlen($epv["admin_func"] ?? "") == 0 || $epv["admin_func"]($hook_id))) { ?>
+			    <?php list_of_links_property_control($epv, $epv["default"] ?? "", true); ?>
+			<?php } ?>
+		    <?php } ?>
+		<?php } ?>
 		<input
 		    type="button"
 		    onclick="<?=$submit; ?>;"

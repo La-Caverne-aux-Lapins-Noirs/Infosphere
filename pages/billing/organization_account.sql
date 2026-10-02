@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS `organization_account_entry` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_school` int(11) NOT NULL,
+  `id_organization` int(11) NOT NULL,
+  `movement_type` enum('debit','credit') NOT NULL,
+  `amount` int(11) NOT NULL,
+  `movement_date` datetime NOT NULL,
+  `label` varchar(255) NOT NULL,
+  `reference` varchar(255) NOT NULL DEFAULT '',
+  `comment` text DEFAULT NULL,
+  `document_name` varchar(255) DEFAULT NULL,
+  `document_path` varchar(512) DEFAULT NULL,
+  `id_actor` int(11) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `deleted` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_school` (`id_school`),
+  KEY `id_organization` (`id_organization`),
+  KEY `movement_type` (`movement_type`),
+  KEY `movement_date` (`movement_date`),
+  KEY `id_actor` (`id_actor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

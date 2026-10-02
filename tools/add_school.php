@@ -28,7 +28,11 @@ function add_school($codename, $icon, $lng)
     $activity = school_activity_updates($lng);
     if ($activity->is_error())
         return $activity;
+    $diploma_secret = diploma_school_secret_generate();
+    if ($diploma_secret == "")
+        return (new ErrorResponse("DiplomaSecretGenerationFailed"));
     $fields = [
+        "diploma_secret" => $diploma_secret,
         "id_organization" => $id_organization,
         "base_url" => $base_url == "" ? NULL : $base_url,
         "address" => trim((string)($lng["address"] ?? ($lng["school_address"] ?? ""))),
@@ -43,6 +47,8 @@ function add_school($codename, $icon, $lng)
         "formation_activity_region" => trim((string)($lng["formation_activity_region"] ?? "")),
         "alternation_registration_number" => trim((string)($lng["alternation_registration_number"] ?? "")),
         "alternation_registration_academy" => trim((string)($lng["alternation_registration_academy"] ?? "")),
+        "document_information" => trim((string)($lng["document_information"] ?? "")),
+        "vat_exemption_mention" => trim((string)($lng["vat_exemption_mention"] ?? "TVA exonérée — article 261-4-4°-a du CGI.")),
     ];
 
     $fields = array_merge($fields, school_activity_flags($fields), $activity->value);

@@ -2,14 +2,21 @@
     <h4>Envoyer un mail</h4>
     <p class="school_admin_notice">
         Le message est envoyé en copie cachée aux destinataires ayant une adresse mail renseignée.
+        Vous pouvez joindre plusieurs fichiers ; ils sont envoyés directement et ne sont pas conservés par Infosphère.
     </p>
-    <form method="post" action="/api/school/<?=$school["id"]; ?>/mail" onsubmit="return false;" class="school_admin_form">
+    <form method="post" enctype="multipart/form-data" data-direct-file-upload="1" action="/api/school/<?=$school["id"]; ?>/mail" onsubmit="return false;" class="school_admin_form">
         <label>
             Destinataires
             <select name="target">
                 <option value="all">Tout le monde</option>
-                <option value="staff">Personnel</option>
                 <option value="students">Élèves</option>
+                <option value="staff">Personnel</option>
+                <option value="secretariat">Secrétariat</option>
+                <option value="librarian">Bibliothèque</option>
+                <option value="director">Direction</option>
+                <option value="teacher">Enseignants</option>
+                <option value="accountant">Comptabilité</option>
+                <option value="commercial">Commercial</option>
             </select>
         </label>
         <label>
@@ -20,8 +27,13 @@
             Message
             <textarea name="content"></textarea>
         </label>
+        <label>
+            Pièces jointes
+            <input type="file" name="attachments[]" multiple />
+            <small>10 fichiers maximum, 20 Mo au total.</small>
+        </label>
         <div class="school_admin_actions">
-            <input type="button" onclick="silent_submitf(this.form, {after_success: refresh});" value="Envoyer" />
+            <input type="button" onclick="silent_submitf(this.form, {clear_form: true});" value="Envoyer" />
         </div>
     </form>
 </section>

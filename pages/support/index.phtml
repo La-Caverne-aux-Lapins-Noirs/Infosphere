@@ -127,6 +127,106 @@ require_once (__DIR__."/../error_net.php");
  var support_pending_callback = null;
  var support_asset_intercom_current = {};
  var support_asset_intercom_loading = {};
+ var support_asset_share_current = {};
+
+ function support_open_deep_link_asset(link)
+ {
+     if (!link || !link.click)
+         return ;
+     link.setAttribute("data-support-deep-link", "1");
+     try
+     {
+         link.click();
+     }
+     finally
+     {
+         link.removeAttribute("data-support-deep-link");
+     }
+ }
+
+ function support_set_share_asset(link)
+ {
+     let support_id = link && link.getAttribute ? link.getAttribute("data-support-id") : null;
+     let asset_id = link && link.getAttribute ? link.getAttribute("data-support-asset-id") : null;
+     let asset_type = link && link.getAttribute ? link.getAttribute("data-support-asset-type") : null;
+     let button;
+
+     if (!support_id)
+         return ;
+     button = document.getElementById("support_asset_share_" + support_id);
+     if (asset_id)
+         support_asset_share_current[support_id] = {id: asset_id, type: asset_type || ""};
+     else
+         delete support_asset_share_current[support_id];
+     if (!button)
+         return ;
+     button.disabled = !asset_id;
+     button.title = asset_id
+         ? (asset_type == "video" ? "Copier le lien vers cette vidéo" : "Copier le lien vers cette ressource")
+         : "Sélectionne une ressource à partager";
+ }
+
+ function support_asset_share_url(asset_id)
+ {
+     let url = new URL(window.location.href);
+
+     url.hash = "";
+     url.search = "";
+     url.searchParams.set("p", "SupportAssetMenu");
+     url.searchParams.set("a", String(asset_id));
+     return (url.toString());
+ }
+
+ async function support_share_asset(support_id)
+ {
+     let current = support_asset_share_current[support_id];
+     let button = document.getElementById("support_asset_share_" + support_id);
+     let url;
+     let copied = false;
+
+     if (!current || !current.id)
+         return (false);
+     url = support_asset_share_url(current.id);
+     try
+     {
+         if (navigator.clipboard && window.isSecureContext)
+         {
+             await navigator.clipboard.writeText(url);
+             copied = true;
+         }
+     }
+     catch (e) {}
+     if (!copied)
+     {
+         let node = document.createElement("textarea");
+
+         node.value = url;
+         node.style.position = "fixed";
+         node.style.left = "-10000px";
+         document.body.appendChild(node);
+         node.focus();
+         node.select();
+         try { copied = document.execCommand("copy"); }
+         catch (e) { copied = false; }
+         document.body.removeChild(node);
+     }
+     if (!copied)
+     {
+         window.prompt("Lien vers cette ressource :", url);
+         return (false);
+     }
+     if (button)
+     {
+         let old_value = button.value;
+
+         button.value = "Lien copié ✓";
+         window.setTimeout(function() {
+             if (button)
+                 button.value = old_value;
+         }, 1600);
+     }
+     return (false);
+ }
 
  function support_asset_layout_storage_key(support_id)
  {
@@ -227,6 +327,7 @@ require_once (__DIR__."/../error_net.php");
 
      if (!screen)
          return ;
+     support_set_share_asset(link);
      support_hide_next_asset_prompt(screen_id);
      support_stop_all_media();
      Array.prototype.forEach.call(document.getElementsByClassName("asset_link"), function(el) {
@@ -333,6 +434,7 @@ require_once (__DIR__."/../error_net.php");
 	 return ;
      let support_id = link.getAttribute("data-support-id");
 
+     support_set_share_asset(link);
      if (!asset_id || !support_id)
 	 return ;
      support_load_asset_intercom(asset_id, support_id);
@@ -386,14 +488,19 @@ require_once (__DIR__."/../error_net.php");
 	 null,
 	 null,
 	 function(success) {
-	     if (success)
-	     {
-		 support_loaded_panel[target] = true;
+	     if (!success)
+		 return ;
+
+	     support_loaded_panel[target] = true;
+	     // send_ajax invokes its success callback before filling `target`.
+	     // Delay DOM-dependent work until the response HTML has actually
+	     // been inserted (notably the support <video> and asset links).
+	     window.setTimeout(function() {
 		 if (page == 'support')
 		     support_prepare_asset_layout(panel);
-	     }
-	     if (success && callback)
-		 callback();
+		 if (callback)
+		     callback();
+	     }, 0);
 	 }
      );
  }
@@ -479,7 +586,7 @@ require_once (__DIR__."/../error_net.php");
 	   function() {
                let asset_link = document.getElementById("asset<?=$gid; ?>button");
                if (asset_link)
-                   asset_link.click();
+                   support_open_deep_link_asset(asset_link);
 	   }
        );
      <?php } ?>

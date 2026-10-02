@@ -16,10 +16,11 @@ else
     $not_too_late = $activity->subject_disappeir_date == NULL || $activity->subject_disappeir_date > now();
     $display_subject = true;
     $preaccess_status = ["configured" => false, "passed" => true, "quizzes" => [], "next" => NULL];
+    $subject_staff_access = $activity->is_director || $activity->is_teacher || $activity->is_assistant;
     if ($activity->current_subject == "")
 	$display_subject = false;
     $missing_medals = [];
-    if (!$activity->is_teacher)
+    if (!$subject_staff_access)
     {
 	if (!$activity->registered || $activity->leader <= 0)
 	    $display_subject = false;
@@ -78,7 +79,7 @@ else
 	<div style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large;" id="subject_error_box">
 	    <?php if ($activity->current_subject == "") { ?>
 		<i><?=$Dictionnary["SubjectNotAvailable"]; ?></i>
-	    <?php } else if (!$activity->registered && !$activity->is_assistant) { ?>
+	    <?php } else if (!$activity->registered && !$subject_staff_access) { ?>
 		<i><?=$Dictionnary["YouMustBeRegisteredToSee"]; ?></i>
 	    <?php } else if ($activity->teamable && $activity->user_team["canjoin"]) { ?>
 		<i><?=$Dictionnary["YouMustCompleteYourTeamToGetTheSubject"]; ?></i>

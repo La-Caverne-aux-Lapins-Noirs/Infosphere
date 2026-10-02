@@ -44,6 +44,9 @@ $cycle_convocation_ready = $cycle_start_date_label != ""
 ?>
 <section class="cycle_admin_card cycle_admin_documents">
     <h2><?=$Dictionnary["Documents"] ?? "Documents"; ?></h2>
+    <p><a class="button_link" href="/session_signin_download.php?scope=cycle&amp;id=<?=(int)$cycle["id"]; ?>">
+        <?=session_signin_escape($Dictionnary["SessionSignInCycleZip"]); ?>
+    </a></p>
     <p>Documents administratifs propres à ce cycle. Les feuilles d'émargement définitives signées sont archivées ici automatiquement et restent également dans le dossier documentaire de l'élève concerné.</p>
 
     <script>

@@ -1,125 +1,157 @@
+<div class="control_buttons calendar_toolbar">
 
-<div class="control_buttons">
+    <form
+        class="calendar_filter_form"
+        action="index.php?<?=unrollget(); ?>"
+        method="post"
+        onsubmit="
+            setCookie('filter_cycle', document.getElementById('filter_cycle').value);
+            return true;
+        "
+    >
+        <input type="hidden" name="action" value="filter" />
+        <label for="filter_cycle"><?=$Dictionnary["Cycle"]; ?></label>
+        <div class="calendar_filter_fields">
+            <input
+                type="text"
+                name="filter_cycle"
+                id="filter_cycle"
+                value="<?=isset($_COOKIE["filter_cycle"]) ? str_replace("XXXSEPARATORXXX", ";", $_COOKIE["filter_cycle"]) : ""; ?>"
+                placeholder="<?=$Dictionnary["Cycle"]; ?>"
+                onchange="setCookie('filter_cycle', this.value);"
+            />
+            <input
+                type="submit"
+                value="&#10003;"
+                title="Appliquer le filtre"
+            />
+        </div>
+    </form>
 
-    <div>
-	<form
-	    action="index.php?<?=unrollget(); ?>"
-	    method="post"
-	    onsubmit="
-		return setCookie('filter_cycle', document.getElementById('filter_cycle').value) &&
-		location.reload() && 0
-		;
-	    "
-	>
-	    <div style="float: left; padding-left: 10px;">
-		<input type="hidden" name="action" value="filter" />
-		<br /><br />
-		<?php
-		$cnt = 0;
-		$filters = [
-		    "filter_cycle" => "Cycle"
-		    /*
-		,
-		    "filter_room" => "Room",
-		    "filter_teacher" => "Teacher"
-		    */
-		];
-		foreach ($filters as $filter => $label)
-		{
-		?>
-		    <input
-			type="text"
-			name="<?=$filter; ?>"
-			id="<?=$filter; ?>"
-			value="<?=isset($_COOKIE[$filter]) ? str_replace("XXXSEPARATORXXX", ";",  $_COOKIE[$filter]) : ""; ?>"
-			placeholder="<?=$Dictionnary[$label]; ?>"
-			onchange="setCookie('<?=$filter; ?>', this.value);"
-		    />
-		<?php } ?>
-		<script>
-		</script>
-		<input
-		    type="button"
-		    onclick="
-			setCookie(
-				'filter_cycle',
-				document.getElementById('filter_cycle').value
-			);
-			location.reload();
-		    "
-		    value="&#10003;"
-		    style="width: 150px;"
-		/>
-	    </div>
-	</form>
-    </div>
+    <?php require (__DIR__."/external_calendar.phtml"); ?>
 
-    <div>
-	<form action="index.php?p=<?=$Position; ?>" method="post">
-	    <div style="float: right; padding-right: 10px;">
-		<input
-		    type="button"
-		    class="wide_button"
-		    style="height: 30px;"
-		    onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start - $one_week; ?>'"
-		    value="&#9668;"
-		/>
-		<br />
-		<input
-		    type="button"
-		    class="wide_button"
-		    style="height: 30px;"
-		    onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start + $one_week; ?>';"
-		    value="&#9658;"
-		/>
-	    </div>
-	    <div style="float: right; position: relative; width: 240px;">
-		<input
-		    type="week"
-		    name="start"
-		    style="position: absolute; top: 00px; left: 0px; height: 30px;"
-		    value="<?=datex("Y-\WW", $start); ?>"
-		/>
-		<input
-		    type="week"
-		    name="end"
-		    style="position: absolute; top: 30px; left: 0px; height: 30px;"
-		    value="<?=datex("Y-\WW", $end); ?>"
-		/>
-		<input
-		    type="submit"
-		    value="&#10003;"
-		    style="position: absolute; top: 00px; right: 0px; height: 60px; width: 60px;"
-		/>
-		<br />
-	    </div>
-	</form>
-	<?php if (is_teacher()) { ?>
-	    <form
-		action="index.php?p=<?=$Position; ?>"
-		method="post"
-		id="template_instance_form"
-	    >
-		<div style="float: right;">
-		    <input
-			type="hidden"
-			name="start"
-			value="<?=!$in_template ? $date0 : db_form_date(time()); ?>"
-		    />
-		    <input
-			type="hidden"
-			name="end"
-			value="<?=!$in_template ? db_form_date(date_to_timestamp($date0) + $one_week) : db_form_date(time() + $one_week); ?>"
-		    />
-		    <input
-			type="button"
-			id="filter_type"
-			value="<?=$in_template ? "Instance" : "Template"; ?>"
-			onclick="setCookie('filter_type', this.value); document.getElementById('template_instance_form').submit();"
-			style="width: 60px; height: 60px;"
-		    />
-		</div>
-	    </form>
-	<?php } ?>
+    <?php if (is_intranet_member_profile()) { ?>
+        <?php
+        // User public data normally already contains laboratories.  Calling
+        // get_user_laboratories() again when that key exists historically
+        // returns the complete user array, not the laboratory list.
+        if (isset($User["laboratories"]) && is_array($User["laboratories"]))
+            $calendar_laboratories = $User["laboratories"];
+        else
+            $calendar_laboratories = get_user_laboratories($User);
+
+        // print_control_buttons() explicitly imports $Language. Keep a safe
+        // fallback nevertheless, so this query can never degrade to `_name`.
+        $calendar_language = in_array($Language, ["fr", "en"], true) ? $Language : "fr";
+        $calendar_room_name_column = $calendar_language."_name";
+        $calendar_rooms = db_select_all("
+            id, codename, $calendar_room_name_column as name
+            FROM room
+            WHERE deleted IS NULL
+            ORDER BY COALESCE(NULLIF($calendar_room_name_column, ''), codename) ASC
+        ");
+        ?>
+        <details class="calendar_standalone_creator">
+            <summary title="Ajouter un événement personnel ou de laboratoire">+ Événement</summary>
+            <form
+                method="post"
+                action="/api/session"
+                onsubmit="return silent_submitf(this, {after_success: function () { window.location.reload(); }});"
+            >
+                <input type="text" name="name" placeholder="Nom de l'événement" required />
+                <select name="standalone_target" required>
+                    <option value="user:<?=(int)$User["id"]; ?>">Personnel</option>
+                    <?php foreach ($calendar_laboratories as $lab) { ?>
+                        <?php if ((int)$lab["authority"] < ASSISTANT) continue ; ?>
+                        <option value="laboratory:<?=(int)$lab["id"]; ?>">
+                            Laboratoire — <?=htmlspecialchars(trim((string)$lab["name"]) != "" ? $lab["name"] : $lab["codename"]); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <div class="calendar_standalone_time">
+                    <input type="date" name="day" value="<?=datex("Y-m-d", time()); ?>" required />
+                    <input type="time" name="begin" required />
+                    <input type="time" name="end" required />
+                </div>
+                <select name="room">
+                    <option value="">Sans salle</option>
+                    <?php foreach ($calendar_rooms as $room) { ?>
+                        <option value="<?=(int)$room["id"]; ?>">
+                            <?=htmlspecialchars(trim((string)$room["name"]) != "" ? $room["name"] : $room["codename"]); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <input type="submit" value="Créer" />
+            </form>
+        </details>
+    <?php } ?>
+
+    <div class="calendar_toolbar_spacer"></div>
+
+    <?php if (is_teacher()) { ?>
+        <form
+            class="calendar_template_form"
+            action="index.php?p=<?=$Position; ?>"
+            method="post"
+            id="template_instance_form"
+        >
+            <input
+                type="hidden"
+                name="start"
+                value="<?=!$in_template ? $date0 : db_form_date(time()); ?>"
+            />
+            <input
+                type="hidden"
+                name="end"
+                value="<?=!$in_template ? db_form_date(date_to_timestamp($date0) + $one_week) : db_form_date(time() + $one_week); ?>"
+            />
+            <input
+                type="button"
+                id="filter_type"
+                value="<?=$in_template ? "Instance" : "Template"; ?>"
+                onclick="setCookie('filter_type', this.value); document.getElementById('template_instance_form').submit();"
+                title="Basculer entre le modèle et les instances"
+            />
+        </form>
+    <?php } ?>
+
+    <form class="calendar_period_form" action="index.php?p=<?=$Position; ?>" method="post">
+        <div class="calendar_period_weeks">
+            <input
+                type="week"
+                name="start"
+                value="<?=datex("Y-\WW", $start); ?>"
+                title="Première semaine affichée"
+            />
+            <input
+                type="week"
+                name="end"
+                value="<?=datex("Y-\WW", $end); ?>"
+                title="Dernière semaine affichée"
+            />
+        </div>
+        <input
+            class="calendar_period_apply"
+            type="submit"
+            value="&#10003;"
+            title="Afficher cette période"
+        />
+    </form>
+
+    <div class="calendar_week_navigation">
+        <input
+            type="button"
+            class="wide_button"
+            onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start - $one_week; ?>'"
+            value="&#9668;"
+            title="Semaine précédente"
+        />
+        <input
+            type="button"
+            class="wide_button"
+            onclick="location.href='index.php?p=<?=$Position; ?>&amp;start=<?=$start + $one_week; ?>';"
+            value="&#9658;"
+            title="Semaine suivante"
+        />
     </div>
 </div>

@@ -356,6 +356,12 @@ function transform_prospect($id)
 
     if (($request = add_default_user_todolist($id))->is_error())
 	return ($request);
+    if (!UNIT_TEST)
+    {
+        $nfc = nfc_card_ensure_for_user($id);
+        if (!$nfc["ok"])
+            add_log(REPORT, "Cannot create NFC card file for activated user ".$user["codename"].": ".$nfc["error"], $id);
+    }
     refresh_user($id);
     send_subscribe_mail($user["id"], $user["codename"], $user["mail"], $password, $bddpassword);
     add_log(CRITICAL_USER_DATA, "Prospect ".$user["codename"]." transformed into user", $user["id"]);
@@ -365,15 +371,24 @@ function transform_prospect($id)
     ]));
 }
 
-function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = false, $profile_status = NULL)
+function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = false, $profile_status = NULL, $allow_empty_mail = false)
 {
     global $Database;
 
+    $mail = trim((string)$mail);
     if ($profile_status === NULL)
 	$profile_status = $fake ? "prospect" : "member";
     $profile_status = user_profile_status($profile_status);
     if (user_profile_status_is_fake($profile_status))
 	$fake = true;
+    // L'absence de mail n'est admise que pour un contact externe non actif.
+    // Tous les autres chemins d'inscription conservent l'obligation d'un mail.
+    $allow_empty_mail = $allow_empty_mail && $fake && $profile_status == "extern";
+    // Normaliser aussi ici le marqueur, au plus près de l'INSERT. Ainsi aucun
+    // autre appelant autorisé à créer un contact sans mail ne pourra stocker
+    // littéralement `nomail` par oubli de normalisation en amont.
+    if ($allow_empty_mail && strcasecmp($mail, "nomail") == 0)
+        $mail = "";
     if ($password == NULL && $fake == false)
 	$password = generate_password();
     $bddpassword = generate_password();
@@ -397,21 +412,29 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 	$local_salt = "";
     }
 
-    if (filter_var($mail, FILTER_VALIDATE_EMAIL) == false)
+    if ($mail == "")
+    {
+	if (!$allow_empty_mail)
+	    return (new ErrorResponse("BadMail", $mail));
+    }
+    else if (filter_var($mail, FILTER_VALIDATE_EMAIL) == false)
 	return (new ErrorResponse("BadMail", $mail));
 
     if (!INSTALLATION)
 	add_log(TRACE, "User $login is trying to subscribe", 0);
     $login = $Database->real_escape_string($login);
     $mail = $Database->real_escape_string($mail);
+    $duplicate_condition = "codename = '$login'";
+    if ($mail != "")
+	$duplicate_condition .= " OR mail = '$mail'";
     $user_query = $Database->query("
       SELECT codename, mail
       FROM user
-      WHERE codename = '$login' OR mail = '$mail'
+      WHERE $duplicate_condition
     ");    
     if (($usr = $user_query->fetch_assoc()) != NULL)
     {
-	if ($usr["codename"] == $login && $usr["mail"] == $mail)
+	if ($mail != "" && $usr["codename"] == $login && $usr["mail"] == $mail)
 	    return (new ErrorResponse("LoginAndMailUsed", $login." ".$mail));
 	if ($usr["codename"] == $login)
 	    return (new ErrorResponse("LoginUsed", $login));
@@ -435,6 +458,17 @@ function subscribe($login, $mail, $password = NULL, $cookie = true, $fake = fals
 
     if ($fake == false)
     {
+        if (!UNIT_TEST)
+        {
+            $nfc = nfc_card_ensure_for_user($new_user_id);
+            if (!$nfc["ok"])
+            {
+                // No external account has been created yet: keep subscribe() atomic
+                // from the caller point of view when local card provisioning fails.
+                $Database->query("DELETE FROM user WHERE id = '$new_user_id'");
+                return (new ErrorResponse($nfc["error"]));
+            }
+        }
 	create_distrans_user($usr, $password, $bddpassword, false);
 	$user_query = $Database->query("SELECT * FROM user WHERE id = '$new_user_id'");
 	$usr = $user_query->fetch_assoc();

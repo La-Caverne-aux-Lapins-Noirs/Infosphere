@@ -3,7 +3,7 @@ CREATE TABLE `configuration` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
   `codename` varchar(64) NOT NULL,
-  `value` varchar(1024) DEFAULT NULL -- 1024 pour les grosses clés
+  `value` varchar(8192) DEFAULT NULL -- 8192 pour les grosses clés
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `log` (

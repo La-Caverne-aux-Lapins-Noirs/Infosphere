@@ -15,21 +15,30 @@
 />
 <br />
 
-<input
-    type="tel"
-    name="phone"
-    style="color: black;"
-    placeholder="<?=$Dictionnary["Phone"]; ?>"
-    value="<?=isset($_POST["phone"]) ? $_POST["phone"] : ""; ?>"
-/>
+<span class="subscription_phone_field">
+    <input
+        type="tel"
+        name="phone"
+        data-phone-country-input
+        placeholder="<?=$Dictionnary["Phone"]; ?>"
+        value="<?=isset($_POST["phone"]) ? htmlspecialchars((string)$_POST["phone"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?>"
+    />
+    <span
+        class="subscription_phone_country"
+        data-phone-country-output
+        aria-live="polite"
+        title="Pays déduit de l'indicatif téléphonique"
+    >Pays du téléphone</span>
+</span>
 <br />
 
 <input
-    type="mail"
+    type="email"
     name="mail"
     id="mail"
-    placeholder="<?=$Dictionnary["Mail"]; ?>*"
+    placeholder="<?=$Dictionnary["Mail"]; ?><?=$relation_mode ? "" : "*"; ?>"
+    title="<?=$relation_mode ? "Facultatif : laissez vide si ce contact n'a pas d'adresse mail." : ""; ?>"
     value="<?=isset($_POST["mail"]) ? $_POST["mail"] : ""; ?>"
-    required
+    <?=$relation_mode ? "" : "required"; ?>
 />
 <br />

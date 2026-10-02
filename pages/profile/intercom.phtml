@@ -1,4 +1,4 @@
-<h4>Intercom</h4>
+<h4 style="height: 24px; line-height: 24px; margin: 0;">Intercom</h4>
 <?php $id_subject = (int)try_get($_GET, "ref", -1); ?>
 <?php if ($id_subject != -1) { ?>
     <script>
@@ -8,7 +8,7 @@
      );
     </script>
 <?php } ?>
-<?php $intercom = get_intercom("user", $user->id, $id_subject, $id_subject != -1); ?>
+<?php $intercom = get_intercom("user", $user->id, $id_subject, $id_subject != -1, NULL, NULL, (bool)(int)try_get($_GET, "show_hidden", 0)); ?>
 <?php $intercom["div"] = "user_intercom"; ?>
 <?php $intercom["base_url"] = intercom_api_url($intercom); ?>
 <?php $intercom["default_visibility"] = INTERCOM_PRIVATE; ?>
@@ -17,7 +17,7 @@
 <script>
  setTimeout(check_update, 5000, "<?=$intercom["div"]; ?>");
 </script>
-<div id="<?=$intercom["div"]; ?>" style="position: relative; min-height: 360px; height: 55vh; width: 100%;">
+<div id="<?=$intercom["div"]; ?>" style="position: relative; min-height: 360px; height: calc(100% - 24px); width: 100%; overflow: hidden; box-sizing: border-box;">
     <?php if ($id_subject == -1 || count($intercom["subjects"]) == 0) { ?>
 	<?php require_once ("./tools/template/intercom_subject_page.phtml"); ?>
     <?php } else { ?>

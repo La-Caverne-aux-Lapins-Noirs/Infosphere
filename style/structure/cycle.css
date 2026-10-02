@@ -94,6 +94,36 @@
 }
 
 /*
+** Unique cycle view: keep the page itself inside #body.  The selected tab is
+** the vertical scrolling viewport, rather than #body or nested student lists.
+*/
+
+.cycle_unique_page
+{
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.cycle_unique_page > .cycle_page_title
+{
+    flex: 0 0 auto;
+}
+
+.cycle_unique_page > .cycle_admin_page
+{
+    flex: 1 1 auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/*
 ** Tabs
 */
 
@@ -102,6 +132,25 @@
     height: calc(100vh - 220px);
     min-height: 640px;
     width: 100%;
+}
+
+.cycle_unique_page .cycle_admin_tabs
+{
+    height: auto;
+    min-height: 0;
+}
+
+.cycle_unique_page .cycle_admin_tabs .tabcontent
+{
+    overflow: auto;
+}
+
+.cycle_unique_page .cycle_admin_tabs .tabcontent > .cycle_admin_tab_content
+{
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    position: relative;
 }
 
 .cycle_admin_tabs .tablist
@@ -143,6 +192,17 @@
     flex-direction: column !important;
     height: calc(100% - 8px);
     overflow: hidden !important;
+}
+
+/*
+** The students tab is taller than one viewport once the management forms are
+** displayed.  Let it grow and let the tabpanel own the scroll.
+*/
+.cycle_unique_page .cycle_admin_tab_content > section.cycle_admin_students
+{
+    height: auto;
+    min-height: calc(100% - 8px);
+    overflow: visible !important;
 }
 
 /*
@@ -498,7 +558,8 @@
     margin-bottom: 8px;
 }
 
-.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="text"]
+.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="text"],
+.cycle_admin_page .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) select
 {
     box-sizing: border-box !important;
     min-width: 0 !important;
@@ -538,12 +599,21 @@
 
 .cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link)
 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) 40px !important;
+    /*
+    ** Ligne 1 : mode compact + noms FR / EN.
+    ** Ligne 2 : cursus + commentaire.
+    */
+    grid-template-columns: minmax(85px, 0.55fr) minmax(0, 1fr) minmax(0, 1fr) 40px !important;
+}
+
+.cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[name="commentaries"]
+{
+    grid-column: 2 / 4 !important;
 }
 
 .cycle_admin_students .list_of_link > form:not([id$="_form"]):not(.sublist_of_link) input[type="button"]
 {
-    grid-column: 3 !important;
+    grid-column: 4 !important;
     grid-row: 1 / span 2 !important;
 }
 
@@ -753,6 +823,27 @@
     }
 }
 
+@media (max-width: 900px)
+{
+    .cycle_unique_page
+    {
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+    }
+
+    .cycle_unique_page > .cycle_admin_page
+    {
+        flex: 0 0 auto;
+        overflow: visible;
+    }
+
+    .cycle_unique_page .cycle_admin_tabs
+    {
+        min-height: 70vh;
+    }
+}
+
 
 
 /*
@@ -949,6 +1040,168 @@
 
 .cycle_admin_students > .list_of_link
 {
-    flex: 0 0 260px !important;
-    max-height: 260px;
+    flex: 0 0 auto !important;
+    max-height: none;
+    overflow-y: visible !important;
+}
+
+/*
+** Export tab
+*/
+
+.cycle_admin_export_grid
+{
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: calc(100% - 8px);
+    padding: 0;
+    width: 100%;
+}
+
+.cycle_admin_export_card
+{
+    align-self: stretch;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.cycle_admin_export_card h2
+{
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+.cycle_admin_export_card > p
+{
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.cycle_admin_export_actions
+{
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-top: 10px;
+    padding-top: 0;
+    text-align: left;
+}
+
+.cycle_admin_timeline_export form
+{
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.cycle_admin_export_selector_header
+{
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.cycle_admin_export_selector_header > div
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cycle_admin_export_matter_list
+{
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    display: grid;
+    gap: 0 18px;
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+    margin-top: 10px;
+    max-height: 360px;
+    min-height: 80px;
+    overflow-y: auto;
+    padding: 8px 12px;
+}
+
+.cycle_admin_export_matter_list label
+{
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    display: flex;
+    gap: 7px;
+    line-height: 1.25;
+    min-width: 0;
+    padding: 7px 2px;
+}
+
+.cycle_admin_export_matter_list input[type="checkbox"]
+{
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.cycle_admin_export_matter_list span
+{
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.cycle_admin_legacy_export
+{
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.cycle_admin_legacy_export select
+{
+    max-width: 420px;
+    min-width: 240px;
+    width: min(100%, 420px);
+}
+
+.cycle_admin_export_template_link
+{
+    border-top: 1px solid rgba(0, 180, 0, 0.35);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-top: 14px;
+    padding-top: 12px;
+}
+
+@media (max-width: 1200px)
+{
+    .cycle_admin_export_matter_list
+    {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 700px)
+{
+    .cycle_admin_export_matter_list
+    {
+        grid-template-columns: 1fr;
+        max-height: none;
+    }
+
+    .cycle_admin_legacy_export select
+    {
+        min-width: 0;
+        width: 100%;
+    }
 }

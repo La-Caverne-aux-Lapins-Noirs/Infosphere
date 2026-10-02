@@ -836,3 +836,14 @@
     }
 
 }
+
+/* Les aperçus reconstruits sont affichés sur les cartes sombres. La règle
+ * historique enterprise_main_info leur donnait un fond sombre tout en gardant
+ * la couleur noire des champs de formulaire. */
+.enterprise_admin_page .enterprise_main_info textarea[readonly]
+{
+    background: rgba(0, 0, 0, 0.34) !important;
+    border-color: rgba(0, 255, 0, 0.24) !important;
+    color: #f7fff7 !important;
+    opacity: 1;
+}

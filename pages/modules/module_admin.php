@@ -1,6 +1,22 @@
 <?php
 $medal_size = 92 * 0.75;
 $edit_medal = true;
+
+// Une equipe sans utilisateur exploitable ne doit pas casser le panneau
+// d'administration. Cela peut notamment arriver avec de vieilles equipes
+// orphelines restant en base.
+$matter->team = array_values(array_filter($matter->team, function ($sub) {
+    if (!isset($sub["user"]) || !is_array($sub["user"]) || count($sub["user"]) == 0)
+	return (false);
+    $key = array_key_first($sub["user"]);
+    return ($key !== NULL
+	&& isset($sub["user"][$key])
+	&& is_array($sub["user"][$key])
+	&& isset($sub["user"][$key]["id"])
+	&& (int)$sub["user"][$key]["id"] > 0
+	&& isset($sub["user"][$key]["codename"]));
+}));
+
 $all_users = [];
 foreach ($matter->team as $sub)
     $all_users[] = $sub["user"][array_key_first($sub["user"])]["codename"];
@@ -18,6 +34,12 @@ $all_users = implode(";", $all_users);
 <br />
 
 <?php require (__DIR__."/matter_preaccess_admin.php"); ?>
+
+<?php if (is_teacher_or_director_for_activity($matter->id)) { ?>
+    <p><a class="button_link" href="/session_signin_download.php?scope=matter&amp;id=<?=(int)$matter->id; ?>">
+        <?=session_signin_escape($Dictionnary["SessionSignInMatterZip"]); ?>
+    </a></p>
+<?php } ?>
 
 <form
     method="put"
@@ -116,12 +138,7 @@ $all_users = implode(";", $all_users);
 	<?php $subuser = $sub["user"][array_key_first($sub["user"])]; ?>
 	<tr class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>" id="team<?=$sub["id"]; ?>">
 	    <td>
-		<form method="delete" action="/api/module/<?=$matter->id; ?>/registration">
-		    <input
-			type="hidden"
-			name="id_user"
-			value="<?=$subuser["id"]; ?>"
-		    />
+		<form method="delete" action="/api/module/<?=$matter->id; ?>/registration/<?=$subuser["id"]; ?>">
 		    <input
 			type="button"
 			onclick="window.confirm('<?=$Dictionnary["ConfirmDeletion"]; ?>') && silent_submitf(this, {toremove:'team<?=$sub["id"]; ?>'});"

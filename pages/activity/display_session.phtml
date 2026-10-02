@@ -1,4 +1,5 @@
 <?php
+global $Dictionnary;
 global $Configuration;
 global $BackgroundColor;
 global $Background;
@@ -136,6 +137,9 @@ $js = "silent_submit(this)";
 	</form>
 	<br />
 	<?php if (is_teacher_or_director_for_session($session->id)) { ?>
+	    <?php if (!$template) { ?>
+	        <?php require (__DIR__."/session_signin_controls.phtml"); ?>
+	    <?php } ?>
 	    <a class="button_link" href="/api/session/<?=$session->id; ?>/export">
 		<?=$Dictionnary["ExportDabsic"]; ?>
 	    </a>

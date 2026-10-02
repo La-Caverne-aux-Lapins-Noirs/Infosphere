@@ -32,3 +32,40 @@
 {
     background-color: rgba(48, 52, 50, 0.86);
 }
+
+/* Medal administration forms live on dark translucent panels.  Native form
+ * controls (especially <option> elements) do not reliably inherit the page
+ * foreground colour in Chromium, which can produce black text on black
+ * backgrounds.  Keep the fix local to the medal administration page. */
+.medal_admin_layout input:not([type="button"]):not([type="checkbox"]):not([type="hidden"]),
+.medal_admin_layout select,
+.medal_admin_layout textarea
+{
+    background-color: rgba(0, 0, 0, 0.88) !important;
+    color: #ffffff !important;
+    caret-color: #ffffff;
+    color-scheme: dark;
+}
+
+.medal_admin_layout select option,
+.medal_admin_layout select optgroup
+{
+    background-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+.medal_admin_layout input::placeholder,
+.medal_admin_layout textarea::placeholder
+{
+    color: rgba(255, 255, 255, 0.70) !important;
+}
+
+.medal_admin_layout input[type="file"]::file-selector-button
+{
+    background-color: rgba(0, 95, 0, 1.0);
+    color: #ffffff;
+    border: 1px solid rgba(120, 255, 120, 0.95);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+}

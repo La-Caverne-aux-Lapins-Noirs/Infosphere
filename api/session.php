@@ -6,7 +6,7 @@ require ("sessions.php");
 $Tab = [
     "GET" => [
 	"" => [
-	    "am_i_teacher",
+	    "can_view_session",
 	    "DisplaySession"
 	],
 	"export" => [
@@ -29,8 +29,12 @@ $Tab = [
 	]
     ],
     "POST" => [
+	"sign_in_sheet" => [
+	    "is_teacher_or_director_for_session",
+	    "GenerateSessionSignInSheet"
+	],
 	"" => [
-	    "am_i_teacher", // Ca devrait etre le prof de l'activité...
+	    "am_i_member",
 	    "AddSession"
 	],
 	"import" => [

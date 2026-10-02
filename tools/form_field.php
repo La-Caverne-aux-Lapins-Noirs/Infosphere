@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/internship_calendar.php");
+
 /*
 ** Shared interactive field contract
 ** ---------------------------------
@@ -10,7 +12,7 @@
 
 function form_field_common_types()
 {
-    return (["text", "textarea", "radio", "checkbox", "scale", "boolean_checkbox"]);
+    return (["text", "textarea", "radio", "checkbox", "scale", "boolean_checkbox", "internship_calendar"]);
 }
 
 function form_field_is_common_type($type)
@@ -157,6 +159,16 @@ function form_field_normalize_values(array $definition, $raw)
 {
     $definition = form_field_definition($definition);
     $type = $definition["type"];
+    if ($type === "internship_calendar")
+    {
+        $entry = is_array($raw) ? (count($raw) ? reset($raw) : "") : ($raw ?? "");
+        if (is_array($entry) || is_object($entry))
+            return ([]);
+        $entry = (string)$entry;
+        if (strlen($entry) > 262144)
+            return ([]);
+        return (trim($entry) === "" ? [] : [$entry]);
+    }
     if ($type === "boolean_checkbox")
     {
         $raw = is_array($raw) ? $raw : (($raw === NULL || $raw === "") ? [] : [$raw]);
@@ -206,6 +218,9 @@ function form_field_storage_value(array $definition, $raw)
 
 function form_field_is_answered(array $definition, $raw)
 {
+    $definition = form_field_definition($definition);
+    if ($definition["type"] === "internship_calendar")
+        return (internship_calendar_payload_has_work($raw));
     return (count(form_field_normalize_values($definition, $raw)) > 0);
 }
 
@@ -219,6 +234,11 @@ function form_field_display_values(array $definition, $raw)
 {
     $definition = form_field_definition($definition);
     $values = form_field_normalize_values($definition, $raw);
+    if ($definition["type"] === "internship_calendar")
+    {
+        $summary = internship_calendar_summary_from_payload($raw);
+        return ($summary === "" ? [] : [$summary]);
+    }
     if ($definition["type"] === "boolean_checkbox")
         return ([count($values) ? "Oui" : "Non"]);
     if (in_array($definition["type"], ["radio", "checkbox", "scale"], true))
@@ -270,6 +290,9 @@ function form_field_render(array $definition, $raw, array $options = [])
         $display = form_field_display_values($definition, $raw);
         return ('<div class="form-field-readonly-value">'.(count($display) ? form_field_h(implode(", ", $display)) : "—").'</div>');
     }
+
+    if ($type === "internship_calendar")
+        return (internship_calendar_render_editor($definition, $raw, $base_attributes));
 
     if ($type === "boolean_checkbox")
     {

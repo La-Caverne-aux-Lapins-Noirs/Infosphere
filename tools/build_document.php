@@ -2,6 +2,7 @@
 
 require_once (__DIR__."/dabsic_form.php");
 require_once (__DIR__."/document_hash.php");
+require_once (__DIR__."/school_activity.php");
 
 function build_document_list($value)
 {
@@ -116,7 +117,9 @@ function build_document_normalize_part($part)
 	return (new ErrorResponse("InvalidParameter", "document part"));
     }
 
-    if (is_string($part) && preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/', $part, $match))
+    // Field values may contain newlines (postal/legal addresses, free text).
+    // DOTALL keeps such key=value parts from falling through as file paths.
+    if (is_string($part) && preg_match('/^([a-zA-Z_][a-zA-Z0-9_\.]*)=(.*)$/s', $part, $match))
 	return (build_document_field_part($match[1], $match[2]));
     return (build_document_file_part($part));
 }
@@ -740,6 +743,7 @@ function document_builder_contract_context(array $student, $kind)
     $student_fields = document_builder_contract_person_fields($student);
     $parents = document_builder_fetch_legal_representatives($student["id"]);
     $financials = document_builder_fetch_relation_representatives($student["id"], "financial");
+    $emergencies = document_builder_fetch_relation_representatives($student["id"], "emergency");
 
     $ctx = [
 	"contract" => [
@@ -820,6 +824,23 @@ function document_builder_contract_context(array $student, $kind)
         $ctx["Signatories"]["Finance"] = $finance;
     }
 
+    // Comme pour Finance, une relation d'urgence explicite est prioritaire sur
+    // l'ancien bloc Emergency éventuellement conservé dans DocumentContext.
+    if (count($emergencies))
+    {
+        $emergency = $emergencies[0];
+        $emergency_is = "Other";
+        if (isset($parents[0]["id"]) && (int)$parents[0]["id"] == (int)$emergency["id"])
+            $emergency_is = "Legal1";
+        else if (isset($parents[1]["id"]) && (int)$parents[1]["id"] == (int)$emergency["id"])
+            $emergency_is = "Legal2";
+        else if (isset($financials[0]["id"]) && (int)$financials[0]["id"] == (int)$emergency["id"])
+            $emergency_is = "Finance";
+        $emergency_context = dabsic_pascalcase_array(document_builder_contract_person_fields($emergency));
+        $emergency_context["Is"] = $emergency_is;
+        $ctx["Emergency"] = $emergency_context;
+    }
+
     if (function_exists("user_identity_complete_signatory_context"))
         $ctx = user_identity_complete_signatory_context($ctx);
     return ($ctx);
@@ -867,6 +888,9 @@ function document_builder_person_context(array $user)
 
 function document_builder_financial_responsible(array $student)
 {
+    $financials = document_builder_fetch_relation_representatives($student["id"], "financial");
+    if (count($financials))
+	return ($financials[0]);
     $parents = document_builder_fetch_legal_representatives($student["id"]);
     if (count($parents))
 	return ($parents[0]);
@@ -888,10 +912,13 @@ function document_builder_school_context(array $school)
 	return ([]);
 
     $name = $school["name"] ?? ($school["fr_name"] ?? ($school["codename"] ?? ""));
-    $main_info = function_exists("school_main_info") ? school_main_info($school) : ($school["main_info"] ?? "");
+    $main_info = function_exists("enterprise_main_info")
+        ? enterprise_main_info($school)
+        : (function_exists("school_main_info") ? school_main_info($school) : ($school["main_info"] ?? ""));
     $school_info = function_exists("school_private_school_info") ? school_private_school_info($school) : ($school["school_info"] ?? "");
     $formation_info = function_exists("school_formation_info") ? school_formation_info($school) : ($school["formation_info"] ?? "");
     $alternation_info = function_exists("school_alternation_info") ? school_alternation_info($school) : ($school["alternation_info"] ?? "");
+    $activity_document_fields = school_activity_document_fields($school);
 
     return ([
 	"id" => $school["id"] ?? -1,
@@ -899,6 +926,8 @@ function document_builder_school_context(array $school)
 	"name" => $name,
 	"legal_name" => $school["legal_name"] ?? $name,
 	"address" => $school["address"] ?? "",
+	"training_address" => $school["school_address"] ?? ($school["address"] ?? ""),
+	"legal_address" => function_exists("enterprise_legal_address") ? enterprise_legal_address($school) : ($school["organization_address"] ?? ""),
 	"street" => $school["address"] ?? "",
 	"city" => $school["city"] ?? "",
 	"phone" => $school["phone"] ?? "",
@@ -909,9 +938,26 @@ function document_builder_school_context(array $school)
 	"is_school" => school_activity_flags($school)["is_school"],
         "is_of" => school_activity_flags($school)["is_of"],
         "is_cfa" => school_activity_flags($school)["is_cfa"],
+        "NDA" => $activity_document_fields["NDA"],
+        "UAI" => $activity_document_fields["UAI"],
+        "cfa_name" => $activity_document_fields["cfa_name"],
+        "executing_establishment_name" => $activity_document_fields["executing_establishment_name"],
+        "school_registration_number" => $activity_document_fields["school_registration_number"],
+        "school_registration_academy" => $activity_document_fields["school_registration_academy"],
+        "formation_activity_number" => $activity_document_fields["formation_activity_number"],
+        "formation_activity_region" => $activity_document_fields["formation_activity_region"],
+        "alternation_registration_number" => $activity_document_fields["alternation_registration_number"],
+        "alternation_registration_academy" => $activity_document_fields["alternation_registration_academy"],
 	"school_info" => $school_info,
 	"formation_info" => $formation_info,
 	"alternation_info" => $alternation_info,
+	"document_information" => $school["document_information"] ?? "",
+	"vat_exemption_mention" => $school["vat_exemption_mention"] ?? "",
+	"teacher_list" => function_exists("user_school_teacher_list")
+	    ? user_school_teacher_list((int)($school["id"] ?? 0)) : "",
+	"organization_main_info" => $main_info,
+	"organization_phone" => $school["organization_phone"] ?? "",
+	"organization_mail" => $school["organization_mail"] ?? "",
 	"main" => $main_info,
 	"school" => $school_info,
 	"formation" => $formation_info,
@@ -1164,6 +1210,9 @@ function build_user_contract($id_user, $kind = "ECL", array $extra_fields = [])
 	return ($ret);
     $student = $ret->value;
     $kind = strtoupper($kind);
+    $school = document_builder_student_school($student);
+    if (!is_array($school) || !count($school) || !school_activity_contract_kind_allowed($school, $kind))
+	return (new ErrorResponse("ContractModeUnavailable", $kind));
     $model = document_builder_find_model($kind, $Language);
     if ($model === NULL)
 	return (new ErrorResponse("MissingFile", "contract model: ".$kind));

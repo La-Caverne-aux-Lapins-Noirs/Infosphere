@@ -22,7 +22,8 @@ function fetch_teacher($id, $by_name = false, $table = "activity", $gather = fal
 	    $new = array_merge(
 		$new, fetch_teacher($activity["parent_activity"], $by_name, $table, false)
 	    );
-	if ($activity["id_template"] != -1)
+	if ($activity["id_template"] != -1
+	    && (!isset($activity["template_link"]) || $activity["template_link"]))
 	    $new = array_merge(
 		$new, fetch_teacher($activity["id_template"], $by_name, $table, true)
 	    );

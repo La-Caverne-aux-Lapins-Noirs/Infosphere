@@ -57,6 +57,8 @@ function edit_school($id, $data)
         "formation_activity_region",
         "alternation_registration_number",
         "alternation_registration_academy",
+        "document_information",
+        "vat_exemption_mention",
     ] as $field)
     {
         if (isset($data[$field]))

@@ -5,6 +5,7 @@ require_once (__DIR__."/document_context.php");
 require_once (__DIR__."/billing.php");
 require_once (__DIR__."/document_hash.php");
 require_once (__DIR__."/form_field.php");
+require_once (__DIR__."/internship_session_sync.php");
 
 /**
  * Output files accepted by the Dabsic form page.
@@ -55,6 +56,32 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
             "absolute_file" => $absolute_file,
             "authorized_root" => $user_root,
             "label" => $spec["label"]." - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
+            "create_parent" => true,
+            "private_user_output" => true,
+            "owner_user_id" => $id_prospect,
+        ]);
+    }
+
+
+    if (preg_match('/^prospect-admission:(domestic|foreign):([0-9]+)$/', (string)$key, $m))
+    {
+        $kind = (string)$m[1];
+        $id_prospect = (int)$m[2];
+        $prospect = document_context_user($id_prospect);
+        if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect" ||
+            empty($prospect["codename"]))
+            return (NULL);
+
+        $user_root = realpath($Configuration->UsersDir($prospect["codename"]));
+        if ($user_root === false || !is_dir($user_root))
+            return (NULL);
+        $directory = $user_root.DIRECTORY_SEPARATOR."admin/admission";
+        $absolute_file = $directory.DIRECTORY_SEPARATOR."attestation_admission_".$kind."_form.dab";
+
+        return ([
+            "absolute_file" => $absolute_file,
+            "authorized_root" => $user_root,
+            "label" => "Frais d'admission - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
             "create_parent" => true,
             "private_user_output" => true,
             "owner_user_id" => $id_prospect,
@@ -142,6 +169,21 @@ function dabsic_form_user_can_access_output($key)
     // Admission convocations use the same prospect-side authorization model
     // as the post-interview report.
     if (preg_match('/^prospect-convocation:(?:motivation-theory|practical):([0-9]+)$/', (string)$key, $m))
+    {
+        $prospect = document_context_user((int)$m[1]);
+        if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect")
+            return (false);
+        $school = document_context_first_school_for_user((int)$m[1]);
+        $id_school = is_array($school) ? (int)($school["id_school"] ?? -1) : -1;
+        return (
+            is_director_for_school($id_school) ||
+            is_secretariat_for_school($id_school) ||
+            is_commercial_for_school($id_school)
+        );
+    }
+
+
+    if (preg_match('/^prospect-admission:(?:domestic|foreign):([0-9]+)$/', (string)$key, $m))
     {
         $prospect = document_context_user((int)$m[1]);
         if (!is_array($prospect) || ($prospect["profile_status"] ?? "") != "prospect")
@@ -662,6 +704,35 @@ function dabsic_form_metadata_scalar_list($value)
     return ($out);
 }
 
+function dabsic_form_metadata_scalar($value, $fallback = "")
+{
+    if (is_array($value) || is_object($value) || $value === NULL)
+        return ((string)$fallback);
+    return (trim((string)$value));
+}
+
+function dabsic_form_metadata_boolean($value)
+{
+    return (!is_array($value) && !is_object($value) && !empty($value));
+}
+
+function dabsic_form_metadata_is_scalar_sequence($value)
+{
+    if (!is_array($value))
+        return (!is_object($value));
+    foreach ($value as $entry)
+        if (is_array($entry) || is_object($entry))
+            return (false);
+    return (true);
+}
+
+function dabsic_form_has_scalar_metadata(array $tree, $name)
+{
+    return (array_key_exists($name, $tree)
+        && !is_array($tree[$name])
+        && !is_object($tree[$name]));
+}
+
 function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$metadata)
 {
     foreach ($tree as $key => $child)
@@ -670,43 +741,64 @@ function dabsic_form_parse_group_fields(array $tree, $prefix, $group, array &$me
         if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $key) || !is_array($child))
             continue ;
         $path = $prefix == "" ? $key : $prefix.".".$key;
-        $is_field = array_key_exists("Label", $child)
-            || array_key_exists("Required", $child)
-            || array_key_exists("Default", $child)
-            || array_key_exists("Readonly", $child)
-            || array_key_exists("Type", $child)
-            || array_key_exists("Choices", $child)
-            || array_key_exists("ChoiceValues", $child);
+        // A business field is allowed to be named Label, Type, Default, etc.
+        // mergeconf then exposes that name as a nested array. Only scalar
+        // metadata (or a flat choice sequence) identifies the current node as
+        // a field; a nested scope bearing the same name must be traversed.
+        $is_field = dabsic_form_has_scalar_metadata($child, "Label")
+            || dabsic_form_has_scalar_metadata($child, "Required")
+            || dabsic_form_has_scalar_metadata($child, "Default")
+            || dabsic_form_has_scalar_metadata($child, "Readonly")
+            || dabsic_form_has_scalar_metadata($child, "ReadonlyIfPrefilled")
+            || dabsic_form_has_scalar_metadata($child, "RawLatex")
+            || dabsic_form_has_scalar_metadata($child, "Type")
+            || dabsic_form_has_scalar_metadata($child, "Points")
+            || dabsic_form_has_scalar_metadata($child, "Policy")
+            || dabsic_form_has_scalar_metadata($child, "Penalty")
+            || (array_key_exists("Choices", $child)
+                && dabsic_form_metadata_is_scalar_sequence($child["Choices"]))
+            || (array_key_exists("ChoiceValues", $child)
+                && dabsic_form_metadata_is_scalar_sequence($child["ChoiceValues"]));
         if ($is_field)
         {
             $field = dabsic_form_normalize_field($path);
             if ($field === NULL)
                 continue ;
-            $label = trim((string)($child["Label"] ?? $field));
+            $label = dabsic_form_metadata_scalar($child["Label"] ?? NULL, $field);
             if ($label == "")
                 $label = $field;
             $field_definition = [
                 "label" => $label,
                 "group" => (string)$group,
-                "required" => !empty($child["Required"]),
-                "default" => trim((string)($child["Default"] ?? "")),
+                "required" => dabsic_form_metadata_boolean($child["Required"] ?? false),
+                "default" => dabsic_form_metadata_scalar($child["Default"] ?? NULL),
                 // Readonly is a field-level presentation/access constraint.
                 // FormRole remains group-based, but a semantic context value
                 // can thus be displayed inside an otherwise editable group.
-                "readonly" => !empty($child["Readonly"]),
+                "readonly" => dabsic_form_metadata_boolean($child["Readonly"] ?? false),
+                // Public contributors may fill a missing configured value, but
+                // cannot overwrite identity/organisation data already known by
+                // Infosphere. Staff editors are intentionally unaffected.
+                "readonly_if_prefilled" => dabsic_form_metadata_boolean($child["ReadonlyIfPrefilled"] ?? false),
                 // Form values are plain text by default. RawLatex is an
                 // explicit, model-author-only escape hatch for the rare field
                 // whose stored value is intentionally TeX markup. Never set
                 // it on user-editable free-text fields.
-                "raw_latex" => !empty($child["RawLatex"]),
+                "raw_latex" => dabsic_form_metadata_boolean($child["RawLatex"] ?? false),
                 // Type only becomes authoritative for document forms when it
                 // was explicitly declared. Historical administrative fields
                 // without Type keep their dedicated heuristic renderer.
-                "type" => strtolower(trim((string)($child["Type"] ?? "text"))),
-                "type_explicit" => array_key_exists("Type", $child),
+                "type" => strtolower(dabsic_form_metadata_scalar($child["Type"] ?? NULL, "text")),
+                "type_explicit" => dabsic_form_has_scalar_metadata($child, "Type"),
                 "points" => is_numeric($child["Points"] ?? NULL) ? (float)$child["Points"] : NULL,
-                "policy" => trim((string)($child["Policy"] ?? "")),
+                "policy" => dabsic_form_metadata_scalar($child["Policy"] ?? NULL),
                 "penalty" => is_numeric($child["Penalty"] ?? NULL) ? (float)$child["Penalty"] : NULL,
+                // Virtual structured fields may refer to sibling Dabsic values.
+                // The browser value is only a transport envelope; the save path
+                // expands it back into the nested Dabsic tree.
+                "start_field" => dabsic_form_metadata_scalar($child["StartField"] ?? NULL),
+                "end_field" => dabsic_form_metadata_scalar($child["EndField"] ?? NULL),
+                "summary_field" => dabsic_form_metadata_scalar($child["SummaryField"] ?? NULL),
                 // Choices/ChoiceValues are paired sequences. Preserve their
                 // order and duplicates so malformed definitions can be rejected
                 // instead of being silently repaired during metadata parsing.
@@ -746,12 +838,33 @@ function dabsic_form_form_metadata($reference)
     if ($content === false)
         return (dabsic_form_empty_form_metadata());
 
+    // Form metadata is frequently inherited from a common @include (for
+    // example .base_relance_suivi/base.dab).  The old parser only inspected
+    // the leaf model, so such documents had a perfectly valid FormGroup in
+    // Dabsic but appeared to Infosphere as having no form at all.
+    $metadata_sources = dabsic_form_docbuilder_collect_sources($reference);
     $metadata = dabsic_form_empty_form_metadata();
+
     $group_scope = dabsic_form_extract_root_scope($content, "FormGroup");
+    $group_reference = $reference;
+    if ($group_scope === NULL)
+        foreach ($metadata_sources as $source_path => $source_content)
+        {
+            if ($source_path === realpath($reference)
+                || strtolower(pathinfo($source_path, PATHINFO_EXTENSION)) !== "dab")
+                continue ;
+            $candidate = dabsic_form_extract_root_scope($source_content, "FormGroup");
+            if ($candidate !== NULL)
+            {
+                $group_scope = $candidate;
+                $group_reference = $source_path;
+                break ;
+            }
+        }
     if ($group_scope !== NULL)
     {
         $command = "mergeconf";
-        foreach (dabsic_form_include_paths($reference) as $path)
+        foreach (dabsic_form_include_paths($group_reference) as $path)
             $command .= " -I ".escapeshellarg($path);
         $command .= " -if .dabsic -of .json";
         $process = dabsic_form_process($command, $group_scope."\n");
@@ -765,7 +878,7 @@ function dabsic_form_form_metadata($reference)
                 $group = (string)$group;
                 if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $group) || !is_array($tree))
                     continue ;
-                $label = trim((string)($tree["Label"] ?? $group));
+                $label = dabsic_form_metadata_scalar($tree["Label"] ?? NULL, $group);
                 if ($label == "")
                     $label = $group;
                 $metadata["groups"][$group] = [
@@ -774,6 +887,7 @@ function dabsic_form_form_metadata($reference)
                     "minimum_percent" => is_numeric($tree["MinimumPercent"] ?? NULL)
                         ? (float)$tree["MinimumPercent"] : NULL,
                     "medals" => dabsic_form_metadata_scalar_list($tree["Medals"] ?? []),
+                    "exclude_models" => dabsic_form_metadata_string_list($tree["ExcludeModels"] ?? []),
                 ];
                 $metadata["group_order"][] = $group;
                 $fields = isset($tree["Fields"]) && is_array($tree["Fields"])
@@ -784,10 +898,25 @@ function dabsic_form_form_metadata($reference)
     }
 
     $role_scope = dabsic_form_extract_root_scope($content, "FormRole");
+    $role_reference = $reference;
+    if ($role_scope === NULL)
+        foreach ($metadata_sources as $source_path => $source_content)
+        {
+            if ($source_path === realpath($reference)
+                || strtolower(pathinfo($source_path, PATHINFO_EXTENSION)) !== "dab")
+                continue ;
+            $candidate = dabsic_form_extract_root_scope($source_content, "FormRole");
+            if ($candidate !== NULL)
+            {
+                $role_scope = $candidate;
+                $role_reference = $source_path;
+                break ;
+            }
+        }
     if ($role_scope !== NULL)
     {
         $command = "mergeconf";
-        foreach (dabsic_form_include_paths($reference) as $path)
+        foreach (dabsic_form_include_paths($role_reference) as $path)
             $command .= " -I ".escapeshellarg($path);
         $command .= " -if .dabsic -of .json";
         $process = dabsic_form_process($command, $role_scope."\n");
@@ -801,12 +930,26 @@ function dabsic_form_form_metadata($reference)
                 $role = (string)$role;
                 if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $role) || !is_array($tree))
                     continue ;
-                $label = trim((string)($tree["Label"] ?? $role));
+                $label = dabsic_form_metadata_scalar($tree["Label"] ?? NULL, $role);
                 if ($label == "")
                     $label = $role;
                 $definition = [
                     "label" => $label,
-                    "required" => !empty($tree["Required"]),
+                    "required" => dabsic_form_metadata_boolean($tree["Required"] ?? false),
+                    "required_if_recipient" => dabsic_form_metadata_boolean($tree["RequiredIfRecipient"] ?? false),
+                    // Internal roles are editing views for staff. They never
+                    // create a public contribution or block the workflow.
+                    "internal" => dabsic_form_metadata_boolean($tree["Internal"] ?? false),
+                    "recipient" => dabsic_form_metadata_scalar($tree["Recipient"] ?? NULL),
+                    // If a declared recipient exists but cannot receive mail,
+                    // the document may explicitly delegate that contribution
+                    // to another semantic recipient (typically Student).
+                    "fallback_recipient" => dabsic_form_metadata_scalar($tree["FallbackRecipient"] ?? NULL),
+                    // ProfileScope means that fields under this Dabsic scope
+                    // are also persisted back to the real recipient profile.
+                    "profile_scope" => dabsic_form_metadata_scalar($tree["ProfileScope"] ?? NULL),
+                    "profile_scopes" => dabsic_form_metadata_string_list($tree["ProfileScopes"] ?? []),
+                    "depends_on" => dabsic_form_metadata_string_list($tree["DependsOn"] ?? []),
                     "read" => dabsic_form_metadata_string_list($tree["Read"] ?? []),
                     "edit" => dabsic_form_metadata_string_list($tree["Edit"] ?? []),
                     "validate" => dabsic_form_metadata_string_list($tree["Validate"] ?? []),
@@ -824,6 +967,14 @@ function dabsic_form_form_metadata($reference)
                 $definition["validate"] = array_values(array_filter($definition["validate"], function($group) use ($metadata) {
                     return (isset($metadata["groups"][$group]));
                 }));
+                $contribution_groups = array_unique(array_merge($definition["edit"], $definition["validate"]));
+                $definition["has_contribution"] = false;
+                foreach ($contribution_groups as $group)
+                    if (count($metadata["groups"][$group]["fields"] ?? []))
+                    {
+                        $definition["has_contribution"] = true;
+                        break ;
+                    }
                 $metadata["roles"][$role] = $definition;
             }
         }
@@ -836,6 +987,27 @@ function dabsic_form_role_definition(array $metadata, $role)
     $role = trim((string)$role);
     return (isset($metadata["roles"][$role]) && is_array($metadata["roles"][$role])
         ? $metadata["roles"][$role] : NULL);
+}
+
+
+function dabsic_form_staff_role(array $metadata)
+{
+    foreach (($metadata["roles"] ?? []) as $role => $definition)
+        if (is_array($definition) && !empty($definition["internal"]))
+            return ((string)$role);
+    // Compatibility with documents authored before Internal=1 existed.
+    return (dabsic_form_role_definition($metadata, "Etablissement") != NULL ? "Etablissement" : "");
+}
+
+function dabsic_form_role_has_contribution(array $definition)
+{
+    if (!empty($definition["internal"]))
+        return (false);
+    if (array_key_exists("has_contribution", $definition))
+        return (!empty($definition["has_contribution"]));
+    // Persisted invitations created before this metadata existed still carry
+    // their Edit/Validate ACLs. Preserve their workflow semantics.
+    return (count($definition["edit"] ?? []) > 0 || count($definition["validate"] ?? []) > 0);
 }
 
 function dabsic_form_role_groups(array $metadata, $role, $access = "read")
@@ -862,6 +1034,59 @@ function dabsic_form_role_fields(array $metadata, $role, $access = "read")
     return ($out);
 }
 
+function dabsic_form_field_value(array $values, $field, array $definition = [])
+{
+    $type = strtolower(trim((string)($definition["type"] ?? "")));
+    if ($type === "internship_calendar")
+        return (internship_calendar_payload_from_flat((string)$field, $definition, $values));
+    return (array_key_exists($field, $values) ? $values[$field] : "");
+}
+
+function dabsic_form_expand_virtual_fields(array $metadata, array $submitted, array $context)
+{
+    $values = $submitted;
+    $remove_prefixes = [];
+    $remove_fields = [];
+    foreach ($submitted as $field => $raw)
+    {
+        $definition = $metadata["fields"][$field] ?? NULL;
+        if (!is_array($definition) || strtolower(trim((string)($definition["type"] ?? ""))) !== "internship_calendar")
+            continue ;
+        $expanded = internship_calendar_expand_submission($field, $definition, $raw, $context);
+        if (!$expanded["ok"])
+            return ($expanded);
+        unset($values[$field]);
+        foreach ($expanded["values"] as $path => $value)
+            $values[$path] = $value;
+        $remove_prefixes[] = (string)$expanded["remove_prefix"];
+        $remove_fields[] = (string)$field;
+        if (trim((string)($expanded["summary_field"] ?? "")) !== "")
+            $remove_fields[] = (string)$expanded["summary_field"];
+    }
+    return ([
+        "ok" => true,
+        "values" => $values,
+        "remove_prefixes" => array_values(array_unique($remove_prefixes)),
+        "remove_fields" => array_values(array_unique($remove_fields)),
+    ]);
+}
+
+function dabsic_form_remove_virtual_storage(array $values, array $expanded)
+{
+    foreach (array_keys($values) as $path)
+    {
+        foreach (($expanded["remove_prefixes"] ?? []) as $prefix)
+            if (strncmp((string)$path, (string)$prefix, strlen((string)$prefix)) === 0)
+            {
+                unset($values[$path]);
+                continue 2;
+            }
+        if (in_array((string)$path, $expanded["remove_fields"] ?? [], true))
+            unset($values[$path]);
+    }
+    return ($values);
+}
+
 function dabsic_form_missing_required_fields(array $metadata, array $values, $role = "")
 {
     $groups = NULL;
@@ -875,7 +1100,7 @@ function dabsic_form_missing_required_fields(array $metadata, array $values, $ro
             continue ;
         if ($groups !== NULL && !isset($groups[$definition["group"] ?? ""]))
             continue ;
-        $value = array_key_exists($field, $values) ? $values[$field] : "";
+        $value = dabsic_form_field_value($values, $field, $definition);
         if (form_field_missing_required($definition, $value))
             $out[$field] = (string)($definition["label"] ?? $field);
     }
@@ -964,14 +1189,21 @@ function dabsic_form_discover_fields($requested_reference, $mode = "dabsic", $ch
     $fields = array_keys($field_set);
     natcasesort($fields);
     $fields = array_values($fields);
-    if (trim($process["stderr"]) !== "" && !count($fields))
+
+    // A DocBuilder model can declare its editable fields explicitly through
+    // FormGroup/FormRole.  In that case mergeconf may legitimately have no
+    // "missing variable" diagnostic to parse (and some deployed versions
+    // still emit harmless tree-lookup diagnostics such as "... School child
+    // -> (nil)").  Do not turn those diagnostics into a fatal error when the
+    // form contract itself already tells us which fields must be displayed.
+    $form_metadata = dabsic_form_form_metadata($reference["absolute"]);
+    if (trim($process["stderr"]) !== "" && !count($fields)
+        && !count($form_metadata["fields"] ?? []))
         return ([
             "ok" => false,
             "error" => "DabsicFormCannotExtractFields",
             "details" => dabsic_form_clean_diagnostic($process["stderr"])
         ]);
-
-    $form_metadata = dabsic_form_form_metadata($reference["absolute"]);
     if (count($form_metadata["field_errors"] ?? []))
     {
         $details = [];
@@ -1191,6 +1423,42 @@ function dabsic_form_reset_output_values(array $output)
         if ($file != "" && is_file($file) && !@unlink($file))
             return (["ok" => false, "error" => "DabsicFormCannotSave", "details" => $file]);
     return (["ok" => true]);
+}
+
+function dabsic_form_reset_output_values_and_sessions(array $output, $output_key, $reason = "reset")
+{
+    $files = [(string)($output["absolute"] ?? ""), dabsic_form_override_file($output)];
+    $backup = [];
+    foreach ($files as $file)
+    {
+        if ($file === "")
+            continue ;
+        $exists = is_file($file);
+        $content = $exists ? @file_get_contents($file) : "";
+        if ($exists && $content === false)
+            return (["ok" => false, "error" => "DabsicFormCannotReadOutput", "details" => $file]);
+        $backup[$file] = ["exists" => $exists, "content" => (string)$content];
+    }
+
+    $reset = dabsic_form_reset_output_values($output);
+    if (!$reset["ok"])
+        return ($reset);
+
+    $sync = internship_session_sync_deactivate_output($output_key, $reason);
+    if ($sync["ok"])
+        return (["ok" => true, "session_sync" => $sync]);
+
+    $restore_ok = true;
+    foreach ($backup as $file => $state)
+    {
+        if ($state["exists"])
+            $restore_ok = (@file_put_contents($file, $state["content"], LOCK_EX) === strlen($state["content"])) && $restore_ok;
+        else if (is_file($file))
+            $restore_ok = @unlink($file) && $restore_ok;
+    }
+    if (!$restore_ok)
+        add_log(REPORT, "Cannot restore Dabsic output after internship session lifecycle failure: ".(string)($output["relative"] ?? $output_key));
+    return ($sync);
 }
 
 function dabsic_form_write_output_values(array $output, array $values)
@@ -1478,6 +1746,74 @@ function dabsic_form_post_interview_financial_values($output_key, array $values)
     return (["ok" => true, "values" => $values]);
 }
 
+function dabsic_form_internship_derived_values(array $metadata, array $context)
+{
+    $calendar_field = "Internship.ScheduleCalendar";
+    $definition = $metadata["fields"][$calendar_field] ?? NULL;
+    if (!is_array($definition) || strtolower(trim((string)($definition["type"] ?? ""))) !== "internship_calendar")
+        return ([]);
+
+    if (array_key_exists($calendar_field, $context))
+        $raw = $context[$calendar_field];
+    else
+        $raw = internship_calendar_payload_from_flat($calendar_field, $definition, $context);
+
+    $morning_hours = 3.5;
+    $afternoon_hours = 3.5;
+    if (function_exists("internship_session_plan_settings"))
+    {
+        $settings = internship_session_plan_settings();
+        if (is_array($settings))
+        {
+            $morning_hours = internship_calendar_hours_between_times($settings["morning_start"], $settings["morning_end"], 3.5);
+            $afternoon_hours = internship_calendar_hours_between_times($settings["afternoon_start"], $settings["afternoon_end"], 3.5);
+        }
+    }
+    $metrics = internship_calendar_work_metrics($raw, $morning_hours, $afternoon_hours);
+    if ($metrics === NULL)
+        return ([]);
+
+    $out = [];
+    $put = function ($field, $value) use (&$out, $metadata) {
+        if (isset($metadata["fields"][$field]))
+            $out[$field] = (string)$value;
+    };
+    $put("Internship.DurationInDay", internship_calendar_format_number($metrics["days"], 2, true));
+    $put("Internship.HourPerDay", internship_calendar_format_number($metrics["hours_per_day"], 2, true));
+    $put("Internship.DayPerWeek", internship_calendar_format_number($metrics["days_per_week"], 2, true));
+    $put("Internship.DurationInHour", internship_calendar_format_number($metrics["hours"], 2, true));
+
+    $hourly_raw = $context["Internship.HourlyPayment"] ?? "";
+    $hourly = internship_calendar_decimal_value($hourly_raw);
+    if ($hourly !== NULL)
+    {
+        if ($hourly > 0)
+        {
+            $put("Internship.Paid", "Oui");
+            $put("Internship.TotalPayment", internship_calendar_format_number($metrics["hours"] * $hourly, 2, false));
+            $current_payment = trim((string)($context["Internship.Paiement"] ?? ""));
+            if ($current_payment === "" || strpos($current_payment, internship_calendar_payment_prefix()) === 0)
+                $put("Internship.Paiement", internship_calendar_payment_schedule($metrics, $hourly));
+        }
+        else
+        {
+            $put("Internship.Paid", "Non");
+            $put("Internship.TotalPayment", "0,00");
+            $current_payment = trim((string)($context["Internship.Paiement"] ?? ""));
+            if ($current_payment === "" || strpos($current_payment, internship_calendar_payment_prefix()) === 0)
+                $put("Internship.Paiement", "");
+        }
+    }
+    else
+    {
+        $put("Internship.TotalPayment", "");
+        $current_payment = trim((string)($context["Internship.Paiement"] ?? ""));
+        if (strpos($current_payment, internship_calendar_payment_prefix()) === 0)
+            $put("Internship.Paiement", "");
+    }
+    return ($out);
+}
+
 function dabsic_form_save($requested_reference, $output_key, $values, $overrides, $reference_hash, $output_hash, $output_exists, $overrides_hash, $overrides_exists, $mode = "dabsic", $chain = "", $trusted_user_document_id = NULL, $allow_partial = false, $form_role = "")
 {
     $discovery = dabsic_form_discover_fields($requested_reference, $mode, $chain);
@@ -1528,7 +1864,31 @@ function dabsic_form_save($requested_reference, $output_key, $values, $overrides
         $loaded_values = dabsic_form_load_output_values($output);
         if (!$loaded_values["ok"])
             return ($loaded_values);
-        $values = array_merge($loaded_values["values"], $submitted_values);
+
+        // Attendance duration and gratification are consequences of the
+        // authoritative stage calendar. They are recalculated server-side so
+        // a stale browser value (or a hand-edited request) cannot make the
+        // convention internally inconsistent.
+        $derived = dabsic_form_internship_derived_values(
+            $metadata,
+            array_merge($loaded_values["values"], $submitted_values)
+        );
+        foreach ($derived as $field => $value)
+            $submitted_values[$field] = $value;
+
+        // Expand virtual controls only after permission checking.  Their child
+        // paths are implementation details and must never need to appear in a
+        // FormRole declaration.  Existing children are replaced atomically so
+        // shortening/changing the date range cannot leave stale Dabsic days.
+        $virtual = dabsic_form_expand_virtual_fields(
+            $metadata,
+            $submitted_values,
+            array_merge($loaded_values["values"], $submitted_values)
+        );
+        if (!$virtual["ok"])
+            return ($virtual);
+        $base_values = dabsic_form_remove_virtual_storage($loaded_values["values"], $virtual);
+        $values = array_merge($base_values, $virtual["values"]);
         $build_fields = array_keys($values);
         $allow_partial = true;
     }
@@ -1673,6 +2033,13 @@ function dabsic_form_save($requested_reference, $output_key, $values, $overrides
         @unlink($override_file);
 
     clearstatcache(true, $output["absolute"]);
+
+    // Internship sessions are deliberately NOT materialized while the Dabsic
+    // form is still a draft.  The form remains freely editable until the
+    // document finalization path validates and freezes the convention.  Only
+    // that finalization path is allowed to synchronize ScheduleCalendar into
+    // session rows (see api/doc.php).
+
     $hash = hash("sha256", $built["content"]);
     $override_hash = count($overrides) ? hash("sha256", $override_content) : hash("sha256", "");
     flock($lock, LOCK_UN);

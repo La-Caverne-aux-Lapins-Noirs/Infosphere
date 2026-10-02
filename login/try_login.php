@@ -19,6 +19,7 @@ if ($SubscriptionSubmission
     {
         $PreservedSubscriptionUser = $preserved->value;
         $User = $PreservedSubscriptionUser;
+	$User["admin_mode"] = isset($_COOKIE["admin_mode"]) ? $_COOKIE["admin_mode"] : false;
     }
 }
 
@@ -34,18 +35,27 @@ function subscription_post_missing(array $fields)
 function validate_prospect_subscription_post()
 {
     $missing = subscription_post_missing([
-        "first_name", "family_name", "mail", "postal_code",
+        "first_name", "family_name", "mail",
         "current_class", "target_class", "target_entry", "school"
     ]);
     if (count($missing))
         return (new ErrorResponse("MissingField", implode(", ", $missing)));
 
-    if (!preg_match('/^[0-9]{5}$/', (string)$_POST["postal_code"]))
-        return (new ErrorResponse("InvalidParameter", "postal_code"));
-    $current_class = (int)$_POST["current_class"];
-    $target_class = (int)$_POST["target_class"];
-    $target_entry = (int)$_POST["target_entry"];
-    $school = (int)$_POST["school"];
+    // Les champs de sélection sont vérifiés après le contrôle de présence afin
+    // qu'une option laissée vide produise une erreur applicative propre, sans
+    // accès à une clé POST inexistante ni warning PHP.
+    $current_class = filter_var($_POST["current_class"] ?? NULL, FILTER_VALIDATE_INT);
+    $target_class = filter_var($_POST["target_class"] ?? NULL, FILTER_VALIDATE_INT);
+    $target_entry = filter_var($_POST["target_entry"] ?? NULL, FILTER_VALIDATE_INT);
+    $school = filter_var($_POST["school"] ?? NULL, FILTER_VALIDATE_INT);
+    if ($current_class === false)
+        return (new ErrorResponse("InvalidParameter", "current_class"));
+    if ($target_class === false)
+        return (new ErrorResponse("InvalidParameter", "target_class"));
+    if ($target_entry === false)
+        return (new ErrorResponse("InvalidParameter", "target_entry"));
+    if ($school === false)
+        return (new ErrorResponse("InvalidParameter", "school"));
     if ($current_class < -9 || $current_class > 9)
         return (new ErrorResponse("InvalidParameter", "current_class"));
     if ($target_class < 1 || $target_class > 7)
@@ -61,13 +71,13 @@ function validate_external_relation_subscription_post()
 {
     global $User;
 
-    $missing = subscription_post_missing(["first_name", "family_name", "mail", "relation_target"]);
+    $missing = subscription_post_missing(["first_name", "family_name", "relation_target"]);
     if (count($missing))
         return (new ErrorResponse("MissingField", implode(", ", $missing)));
     $target = (int)$_POST["relation_target"];
     if ($target <= 0 || db_select_one("id FROM user WHERE id = $target AND authority != -1") == NULL)
         return (new ErrorResponse("UserNotFound"));
-    if (!$User || (!am_i_commercial() && !is_identity_authority_for_user($target)))
+    if (!$User || !can_manage_user_relations($target))
         return (new ErrorResponse("InvalidParameter", "relation_target"));
     if (!count(user_relation_values($_POST["relation"] ?? [])))
         return (new ErrorResponse("MissingField", "relation"));
@@ -133,7 +143,9 @@ if (isset($_POST["logaction"]))
             $family_name = convert_to_codename($_POST["family_name"]);
             $_POST["login"] = "$first_name.$family_name";
         }
-        if (!isset($_POST["mail"]) || trim((string)$_POST["mail"]) == "")
+	if ($is_external_relation && (!isset($_POST["mail"]) || trim((string)$_POST["mail"]) == ""))
+            $_POST["mail"] = "nomail";
+        else if (!isset($_POST["mail"]) || trim((string)$_POST["mail"]) == "")
         {
             $Msg = new ErrorResponse("MissingField", "mail");
             $Position = "Subscribe";
@@ -165,7 +177,7 @@ if (isset($_POST["logaction"]))
                     {
                         $edits = [];
                         foreach ([
-                            "postal_code", "current_class", "target_class", "target_entry",
+                            "current_class", "target_class", "target_entry",
                             "first_name", "family_name", "phone",
                         ] as $field)
                             if (array_key_exists($field, $_POST))

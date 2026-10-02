@@ -3,6 +3,117 @@
     height: 90% !important;
 }
 
+.school_admin_block.school_diploma_block
+{
+    display: block;
+    max-width: none;
+    width: 100%;
+}
+
+.school_diploma_split
+{
+    align-items: start;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: 100%;
+}
+
+.school_diploma_settings,
+.school_diploma_editor
+{
+    min-width: 0;
+}
+
+.school_diploma_settings
+{
+    display: grid;
+    gap: 16px;
+}
+
+.school_diploma_header
+{
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.school_diploma_header h4,
+.school_diploma_header p
+{
+    margin: 0;
+}
+
+.school_diploma_header p
+{
+    margin-top: 6px;
+}
+
+.school_diploma_ready
+{
+    border: 1px solid;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    font-size: small;
+    padding: 5px 10px;
+}
+
+.school_diploma_status
+{
+    display: grid;
+    gap: 7px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.school_diploma_status span
+{
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 7px 9px;
+}
+
+.school_diploma_editor > h4
+{
+    margin: 0 0 10px;
+}
+
+.school_diploma_form
+{
+    display: grid;
+    gap: 12px;
+}
+
+.school_diploma_form > label
+{
+    display: grid;
+    gap: 6px;
+}
+
+/* The embedded source editor is the right half of the Diplômes tab. */
+.school_diploma_editor .dabsic-editor-page.is-embedded .dabsic-editor-surface
+{
+    height: 440px;
+    min-height: 370px;
+}
+
+
+/* Keep the textarea layer transparent: the Dabsic editor renders syntax
+ * highlighting in the <pre> layer directly underneath it. */
+.school_diploma_editor .dabsic-editor-input,
+.school_id_card_editor .dabsic-editor-input
+{
+    background: transparent;
+}
+
+@media (max-width: 1050px)
+{
+    .school_diploma_split
+    {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 .school_table tr > td
 {
     height: 20% !important;
@@ -503,6 +614,25 @@
     height: 90px;
 }
 
+.school_staff_toolbar
+{
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.school_staff_toolbar form
+{
+    margin: 0;
+}
+
+.school_staff_toolbar span
+{
+    opacity: 0.75;
+}
+
 .school_staff_columns
 {
     align-items: stretch;
@@ -924,5 +1054,907 @@ body.school_student_document_open
     {
         min-width: 0;
         width: 100%;
+    }
+}
+
+.school_diploma_render_preview,
+.school_id_card_render_preview
+{
+    display: grid;
+    gap: 7px;
+}
+
+.school_diploma_render_preview_header,
+.school_id_card_render_preview_header
+{
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.school_diploma_render_preview_header h4,
+.school_id_card_render_preview_header h4
+{
+    margin: 0;
+}
+
+.school_diploma_render_preview img,
+.school_id_card_render_preview img
+{
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    max-height: 220px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.school_id_card_sheet_builder
+{
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 18px;
+}
+
+.school_id_card_sheet_header
+{
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.school_id_card_sheet_header h4,
+.school_id_card_sheet_header p
+{
+    margin: 0;
+}
+
+.school_id_card_sheet_header p
+{
+    margin-top: 6px;
+}
+
+.school_id_card_sheet_geometry
+{
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    flex: 0 0 auto;
+    font-size: small;
+    padding: 5px 10px;
+}
+
+.school_id_card_sheet_form
+{
+    align-items: start;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+}
+
+.school_id_card_sheet_slots_panel,
+.school_id_card_sheet_students_panel
+{
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    box-sizing: border-box;
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.school_id_card_sheet_slots_panel
+{
+    align-self: start;
+}
+
+.school_id_card_sheet_panel_title
+{
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.school_id_card_sheet_select_actions
+{
+    display: flex;
+    gap: 6px;
+}
+
+.school_id_card_sheet_slots
+{
+    display: grid;
+    gap: 4px;
+    grid-template-columns: repeat(var(--sheet-columns, 2), minmax(0, 1fr));
+    margin-top: 4px;
+}
+
+.school_id_card_sheet_slot
+{
+    align-items: center;
+    aspect-ratio: 1.65 / 1;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 54px;
+    padding: 6px !important;
+}
+
+.school_id_card_sheet_slot strong
+{
+    font-size: 1.2em;
+}
+
+.school_id_card_sheet_slot span
+{
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.school_id_card_sheet_slot.is_used
+{
+    background: repeating-linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03),
+        rgba(255, 255, 255, 0.03) 7px,
+        rgba(255, 255, 255, 0.14) 7px,
+        rgba(255, 255, 255, 0.14) 14px
+    );
+    opacity: 0.62;
+    text-decoration: line-through;
+}
+
+.school_id_card_sheet_students
+{
+    align-content: start;
+    display: grid;
+    gap: 5px 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+}
+
+.school_id_card_sheet_students label
+{
+    align-items: center;
+    border-radius: 4px;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    padding: 5px 7px;
+}
+
+.school_id_card_sheet_students label span
+{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.school_id_card_sheet_students .school_id_card_sheet_student_name
+{
+    flex: 1 1 auto;
+}
+
+.school_id_card_sheet_students .school_id_card_sheet_study_year
+{
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 5px;
+    overflow: visible;
+}
+
+.school_id_card_sheet_students .school_id_card_sheet_study_year select
+{
+    min-width: 54px;
+}
+
+.school_id_card_sheet_students label:hover
+{
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.school_id_card_sheet_students small
+{
+    opacity: 0.6;
+}
+
+.school_id_card_sheet_counter
+{
+    font-size: small;
+    margin: 0;
+}
+
+.school_id_card_sheet_actions
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.school_id_card_sheet_overflow
+{
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    margin: 0;
+    padding: 7px 9px;
+}
+
+.school_id_card_sheet_overflow[hidden]
+{
+    display: none;
+}
+
+@media (max-width: 1250px)
+{
+    .school_id_card_sheet_students
+    {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1050px)
+{
+    .school_id_card_sheet_form
+    {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .school_id_card_sheet_slots_panel
+    {
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 700px)
+{
+    .school_id_card_sheet_students
+    {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.school_diploma_secret_field
+{
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    flex-wrap: wrap;
+}
+
+.school_diploma_secret_field input
+{
+    flex: 1 1 24em;
+    min-width: 18em;
+    font-family: monospace;
+}
+
+.school_diploma_secret_warning
+{
+    display: block;
+    margin-top: 0.35em;
+    font-weight: bold;
+}
+
+.school_diploma_font_manager
+{
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    display: grid;
+    gap: 12px;
+    margin-top: 4px;
+    padding-top: 14px;
+}
+
+.school_diploma_font_manager > header h4,
+.school_diploma_font_manager > header p,
+.school_diploma_font_assignment_header h5
+{
+    margin: 0;
+}
+
+.school_diploma_font_manager > header p
+{
+    margin-top: 5px;
+}
+
+.school_diploma_font_upload
+{
+    align-items: end;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.school_diploma_font_upload label
+{
+    display: grid;
+    gap: 5px;
+}
+
+.school_diploma_font_library
+{
+    display: grid;
+    gap: 6px;
+}
+
+.school_diploma_font_resource
+{
+    align-items: center;
+    border: 1px solid rgba(127, 127, 127, 0.28);
+    border-radius: 6px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    padding: 8px 10px;
+}
+
+.school_diploma_font_resource > div
+{
+    min-width: 0;
+}
+
+.school_diploma_font_resource strong,
+.school_diploma_font_resource small
+{
+    display: block;
+}
+
+.school_diploma_font_resource strong
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.school_diploma_font_resource > span
+{
+    opacity: 0.75;
+    white-space: nowrap;
+}
+
+.school_diploma_font_assignments
+{
+    border-top: 1px solid rgba(127, 127, 127, 0.24);
+    display: grid;
+    gap: 12px;
+    padding-top: 12px;
+}
+
+.school_diploma_font_assignment_header
+{
+    align-items: end;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.school_diploma_font_assignment_header > label
+{
+    display: grid;
+    flex: 0 1 260px;
+    gap: 4px;
+}
+
+.school_diploma_font_assignment_grid
+{
+    display: grid;
+    gap: 8px 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.school_diploma_font_assignment_grid label
+{
+    display: grid;
+    gap: 4px;
+}
+
+.school_diploma_font_assignment_grid label > span
+{
+    font-size: 0.88em;
+    opacity: 0.85;
+}
+
+.school_diploma_font_assignment_grid select,
+.school_diploma_font_assignment_header select
+{
+    box-sizing: border-box;
+    max-width: 100%;
+    width: 100%;
+}
+
+@media (max-width: 700px)
+{
+    .school_diploma_font_upload,
+    .school_diploma_font_assignment_grid,
+    .school_diploma_font_resource
+    {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .school_diploma_font_assignment_header
+    {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .school_diploma_font_assignment_header > label
+    {
+        flex-basis: auto;
+    }
+}
+
+.school_config_section label.school_activity_readonly,
+.school_create_panel label.school_activity_readonly
+{
+    opacity: 0.58;
+}
+
+.school_config_section input[readonly][name],
+.school_create_panel input[readonly][name]
+{
+    cursor: not-allowed;
+}
+
+/* NFC browser controls shared by the school card and student-list views. */
+.school_id_card_nfc_reader
+{
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    margin-top: 20px;
+    padding-top: 18px;
+}
+
+.school_nfc_browser_status
+{
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(0, 255, 0, 0.18);
+    border-radius: 5px;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: small;
+    margin: 8px 0 12px;
+    max-height: 14em;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    width: 100%;
+}
+
+.school_nfc_browser_status.error
+{
+    font-weight: bold;
+}
+
+/* School responsibilities ------------------------------------------------- */
+.school_member_card
+{
+    position: relative;
+}
+
+.school_member_fire_form
+{
+    height: 26px;
+    margin: 0 !important;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 26px !important;
+    z-index: 2;
+}
+
+.school_member_fire_badge
+{
+    align-items: center;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 15px;
+    height: 26px;
+    justify-content: center;
+    min-height: 26px !important;
+    min-width: 26px !important;
+    opacity: 0.42;
+    padding: 0 !important;
+    position: relative;
+    width: 26px !important;
+}
+
+.school_member_fire_badge.active
+{
+    border-color: rgba(255, 90, 50, 0.85);
+    opacity: 1;
+}
+
+.school_member_fire_badge.active::after
+{
+    background: #ff4a3d;
+    content: "";
+    height: 2px;
+    left: 3px;
+    position: absolute;
+    top: 11px;
+    transform: rotate(-45deg);
+    width: 20px;
+}
+
+.school_member_fire_badge:disabled
+{
+    cursor: default;
+}
+
+.school_member_fire_badge_demo
+{
+    flex: 0 0 26px;
+    pointer-events: none;
+}
+
+.school_responsibility_hint
+{
+    align-items: center;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    display: flex;
+    font-size: 0.84em;
+    gap: 8px;
+    margin: 8px 0 12px;
+    padding: 7px 9px;
+}
+
+.school_referents_panel
+{
+    margin-top: 16px;
+}
+
+.school_referents_header h4,
+.school_referents_header p
+{
+    margin: 0;
+}
+
+.school_referents_header p
+{
+    font-size: 0.85em;
+    margin-top: 4px;
+    opacity: 0.72;
+}
+
+.school_referents_grid
+{
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    margin-top: 12px;
+}
+
+.school_referent_card
+{
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(0, 255, 0, 0.14);
+    border-radius: 8px;
+    min-width: 0;
+    padding: 9px;
+}
+
+.school_referent_card h5
+{
+    font-size: 0.88em;
+    line-height: 1.25em;
+    margin: 0 0 8px;
+    min-height: 2.5em;
+}
+
+.school_referent_members
+{
+    grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+}
+
+.school_responsibility_member_card
+{
+    max-width: 110px;
+}
+
+.school_responsibility_member_card .school_member_avatar,
+.school_responsibility_member_card .school_member_avatar img
+{
+    height: 64px !important;
+    width: 64px !important;
+}
+
+.school_root_referents
+{
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(0, 255, 0, 0.12);
+    border-radius: 8px;
+    margin: 10px 0 14px;
+    padding: 10px 12px;
+}
+
+.school_root_referents h4
+{
+    margin: 0 0 8px;
+}
+
+.school_root_referents_grid
+{
+    display: grid;
+    gap: 5px 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.school_root_referent
+{
+    display: grid;
+    font-size: 0.84em;
+    gap: 5px;
+    grid-template-columns: minmax(180px, 1.3fr) minmax(100px, 0.7fr);
+    min-width: 0;
+}
+
+.school_root_referent_label
+{
+    font-weight: bold;
+}
+
+.school_root_referent_people
+{
+    min-width: 0;
+}
+
+.school_root_referent_people em
+{
+    opacity: 0.55;
+}
+
+@media (max-width: 1200px)
+{
+    .school_referents_grid
+    {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+    }
+    .school_root_referents_grid
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px)
+{
+    .school_referents_grid
+    {
+        grid-template-columns: 1fr;
+    }
+    .school_root_referent
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+.school_responsibility_create
+{
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    margin-top: 12px;
+    padding: 8px 10px;
+}
+
+.school_responsibility_create summary
+{
+    cursor: pointer;
+    font-size: 0.88em;
+    font-weight: bold;
+}
+
+.school_responsibility_create form
+{
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(180px, 1.4fr) minmax(130px, 0.8fr) minmax(180px, 1.2fr) auto auto auto;
+    margin-top: 10px;
+}
+
+.school_responsibility_create label
+{
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82em;
+    gap: 3px;
+}
+
+.school_responsibility_create .school_responsibility_checkbox
+{
+    align-items: center;
+    flex-direction: row;
+    min-height: 32px;
+    white-space: nowrap;
+}
+
+.school_responsibility_create_help
+{
+    font-size: 0.78em;
+    margin: 7px 0 0;
+    opacity: 0.65;
+}
+
+.school_referent_card_header
+{
+    align-items: flex-start;
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+}
+
+.school_referent_card_header h5
+{
+    flex: 1 1 auto;
+}
+
+.school_responsibility_scope
+{
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    flex: 0 0 auto;
+    font-size: 0.67em;
+    line-height: 1.4em;
+    opacity: 0.55;
+    padding: 1px 5px;
+}
+
+.school_responsibility_scope.custom
+{
+    border-color: rgba(0, 255, 0, 0.25);
+    opacity: 0.8;
+}
+
+.school_responsibility_definition_delete
+{
+    flex: 0 0 auto;
+    margin: 0 !important;
+    width: auto !important;
+}
+
+.school_responsibility_definition_delete button
+{
+    min-height: 22px !important;
+    min-width: 22px !important;
+    padding: 0 5px !important;
+}
+
+.school_student_responsibilities
+{
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 16px;
+    padding-top: 10px;
+}
+
+.school_student_responsibilities > h4
+{
+    margin: 0;
+}
+
+@media (max-width: 1400px)
+{
+    .school_responsibility_create form
+    {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 760px)
+{
+    .school_responsibility_create form
+    {
+        grid-template-columns: 1fr;
+    }
+}
+/* Responsibilities: compact two-column editor in the Personnel tab. */
+.school_referents_panel .school_referents_grid
+{
+    display: grid;
+    gap: 8px 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.school_referents_panel .school_referent_card
+{
+    align-items: start;
+    column-gap: 8px;
+    display: grid;
+    grid-template-areas:
+        "heading add"
+        "members members";
+    grid-template-columns: minmax(120px, 0.67fr) minmax(0, 1fr);
+    padding: 6px 8px;
+    row-gap: 4px;
+}
+
+.school_referents_panel .school_referent_card_header
+{
+    grid-area: heading;
+    min-width: 0;
+}
+
+.school_referents_panel .school_referent_card_header h5
+{
+    font-size: 0.80em;
+    line-height: 1.15em;
+    margin: 0;
+    min-height: 0;
+}
+
+.school_referents_panel .school_responsibility_scope
+{
+    font-size: 0.61em;
+    padding: 0 4px;
+}
+
+.school_referents_panel .school_responsibility_add_form
+{
+    align-items: center;
+    display: grid;
+    gap: 4px;
+    grid-area: add;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.school_referents_panel .school_responsibility_add_form input[type="text"]
+{
+    min-width: 0;
+    width: 100%;
+}
+
+.school_referents_panel .school_referent_members
+{
+    grid-area: members;
+    margin-top: 0;
+    min-width: 0;
+}
+
+.school_list_responsibilities
+{
+    display: inline-block;
+    font-size: 0.76em;
+    line-height: 1.25em;
+    margin-top: 3px;
+    opacity: 0.78;
+}
+
+@media (max-width: 1000px)
+{
+    .school_referents_panel .school_referents_grid
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px)
+{
+    .school_referents_panel .school_referent_card
+    {
+        grid-template-areas:
+            "heading"
+            "add"
+            "members";
+        grid-template-columns: 1fr;
     }
 }

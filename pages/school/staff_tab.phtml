@@ -10,9 +10,42 @@ $school_staff_roles = [
     ["field" => "librarian", "label" => "Bibliothèque", "admin" => "is_director_for_school"],
     ["field" => "accountant", "label" => "Comptabilité", "admin" => "is_director_for_school"],
 ];
+$school_responsibility_definitions = school_responsibility_definitions((int)$school["id"]);
+$school_referent_definitions = array_filter(
+    $school_responsibility_definitions,
+    static function($definition) { return ($definition["codename"] ?? "") !== "FIRE_SAFETY"; }
+);
+$can_manage_school_responsibilities = is_director_for_school($school["id"]);
 $school_inclusion_charter = get_inclusion_charter_document_source();
 $can_generate_inclusion_charter = $school_inclusion_charter !== NULL && is_director_for_school($school["id"]);
+$school_rectorate_teacher_list = get_rectorate_teacher_list_document_source();
+$can_generate_rectorate_teacher_list = $school_rectorate_teacher_list !== NULL && is_director_for_school($school["id"]);
 ?>
+
+<?php if ($can_generate_rectorate_teacher_list) { ?>
+<div class="school_staff_toolbar">
+    <form method="post" action="/api/doc/0/generate" target="_blank">
+        <input type="hidden" name="doc_school_rectorate_teachers" value="1" />
+        <input
+            type="hidden"
+            name="docref_school_rectorate_teachers"
+            value="<?=htmlspecialchars($school_rectorate_teacher_list["reference"], ENT_QUOTES); ?>"
+        />
+        <input
+            type="hidden"
+            name="context_bindings"
+            value="<?=htmlspecialchars(json_encode(["School" => $school["codename"]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>"
+        />
+        <input type="submit" value="Exporter la liste rectorat des enseignants" />
+    </form>
+    <span>Liste réglementaire des enseignants rattachés à l’établissement.</span>
+</div>
+<?php } ?>
+
+<div class="school_responsibility_hint">
+    <span class="school_member_fire_badge active school_member_fire_badge_demo" aria-hidden="true"><span>🔥</span></span>
+    <span>La flamme barrée indique une personne désignée pour la sécurité incendie. Un directeur peut cliquer sur l’icône d’une fiche pour attribuer ou retirer cette responsabilité.</span>
+</div>
 
 <div class="school_staff_columns">
     <?php foreach ($school_staff_roles as $role) { ?>
@@ -20,8 +53,9 @@ $can_generate_inclusion_charter = $school_inclusion_charter !== NULL && is_direc
         $field = $role["field"];
         $can_manage = @strlen($role["admin"]) && $role["admin"]($school["id"]);
         ?>
-        <section class="school_admin_card school_staff_column">
+        <section class="school_admin_card school_staff_column" data-nfc-container>
             <h4><?=$role["label"]; ?></h4>
+            <pre class="school_nfc_browser_status" data-nfc-status hidden></pre>
             <?php school_admin_member_add_form($school["id"], $field, $role["label"], $can_manage); ?>
             <div class="school_member_cards">
                 <?php if (!count($school[$field])) { ?>
@@ -31,6 +65,8 @@ $can_generate_inclusion_charter = $school_inclusion_charter !== NULL && is_direc
                         <?php
                         $actions = [];
                         $member_id = school_admin_member_id($member, $field);
+                        if (($nfc_action = school_admin_member_nfc_program_action($member, $field)) !== NULL)
+                            $actions[] = $nfc_action;
                         if ($can_generate_inclusion_charter && $member_id > 0)
                             $actions[] = [
                                 "class" => "school_member_document_button",
@@ -46,6 +82,85 @@ $can_generate_inclusion_charter = $school_inclusion_charter !== NULL && is_direc
         </section>
     <?php } ?>
 </div>
+
+<section class="school_admin_card school_referents_panel">
+    <div class="school_referents_header">
+        <div>
+            <h4>Référents et responsabilités</h4>
+            <p>Responsabilités transversales de l’établissement. Une même personne peut cumuler plusieurs responsabilités.</p>
+        </div>
+    </div>
+
+    <?php if ($can_manage_school_responsibilities) { ?>
+        <details class="school_responsibility_create">
+            <summary>Créer une responsabilité propre à l’établissement</summary>
+            <form
+                method="put"
+                action="api/school/<?=(int)$school["id"]; ?>/responsibility_definition"
+                onsubmit="return silent_submitf(this, {after_success: refresh});"
+            >
+                <label>
+                    <span>Nom</span>
+                    <input type="text" name="fr_name" required placeholder="Ex. Responsable matériel" />
+                </label>
+                <label>
+                    <span>Codename</span>
+                    <input type="text" name="codename" placeholder="Automatique si vide" />
+                </label>
+                <label>
+                    <span>Nom anglais</span>
+                    <input type="text" name="en_name" placeholder="Optionnel" />
+                </label>
+                <label class="school_responsibility_checkbox">
+                    <input type="checkbox" name="student_assignable" value="1" />
+                    <span>Attribuable aux élèves</span>
+                </label>
+                <input type="submit" value="Créer" />
+            </form>
+            <p class="school_responsibility_create_help">Les responsabilités intégrées sont globales. Celles créées ici appartiennent uniquement à cet établissement et peuvent être supprimées sans perdre leur historique.</p>
+        </details>
+    <?php } ?>
+
+    <div class="school_referents_grid">
+        <?php foreach ($school_referent_definitions as $definition) { ?>
+            <?php $members = $school["responsibility"][(int)$definition["id"]] ?? []; ?>
+            <section class="school_referent_card">
+                <div class="school_referent_card_header">
+                    <h5><?=htmlspecialchars($definition["label"], ENT_QUOTES); ?></h5>
+                    <?php if (!empty($definition["builtin"])) { ?>
+                        <span class="school_responsibility_scope">Globale</span>
+                    <?php } else { ?>
+                        <span class="school_responsibility_scope custom">École</span>
+                        <?php school_responsibility_delete_definition_form(
+                            $school["id"],
+                            $definition,
+                            $can_manage_school_responsibilities
+                        ); ?>
+                    <?php } ?>
+                </div>
+                <?php school_responsibility_add_form(
+                    $school["id"],
+                    $definition,
+                    $can_manage_school_responsibilities
+                ); ?>
+                <div class="school_member_cards school_referent_members">
+                    <?php if (!count($members)) { ?>
+                        <p class="school_empty_people">Non désigné.</p>
+                    <?php } else { ?>
+                        <?php foreach ($members as $member) { ?>
+                            <?php school_responsibility_member_card(
+                                $school["id"],
+                                $definition,
+                                $member,
+                                $can_manage_school_responsibilities
+                            ); ?>
+                        <?php } ?>
+                    <?php } ?>
+                </div>
+            </section>
+        <?php } ?>
+    </div>
+</section>
 
 <?php if ($can_generate_inclusion_charter) { ?>
 <form

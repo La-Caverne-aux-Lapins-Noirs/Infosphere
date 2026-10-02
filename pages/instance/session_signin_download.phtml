@@ -1,0 +1,90 @@
+<?php
+
+chdir(__DIR__."/../..");
+require_once ("language.php");
+require_once ("tools/index.php");
+load_constants();
+require_once ("login/index.php");
+
+$scope = (string)($_GET["scope"] ?? "");
+$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+if (!$id || !is_intranet_member_profile())
+{
+    http_response_code(403);
+    exit ("Accès refusé.");
+}
+if (!session_signin_schema_ready())
+{
+    http_response_code(503);
+    exit ("Les tables SQL de l'émargement de session doivent être installées.");
+}
+if ($scope === "session")
+{
+    if (!is_teacher_or_director_for_session($id))
+    {
+        http_response_code(403);
+        exit ("Accès refusé.");
+    }
+    $pdf = session_signin_pdf_path($id);
+    if (!$pdf || !is_file($pdf))
+    {
+        http_response_code(404);
+        exit ("PDF non généré.");
+    }
+    header("Content-Type: application/pdf");
+    header("Content-Disposition: attachment; filename=emargement_session_".$id.".pdf");
+    header("Content-Length: ".filesize($pdf));
+    header("Cache-Control: private, no-store");
+    readfile($pdf);
+    exit ;
+}
+if ($scope === "cycle")
+    $allowed = is_director_for_cycle($id);
+else if ($scope === "matter")
+    $allowed = is_teacher_or_director_for_activity($id);
+else
+    $allowed = false;
+if (!$allowed)
+{
+    http_response_code(403);
+    exit ("Accès refusé.");
+}
+if (!class_exists("ZipArchive"))
+{
+    http_response_code(503);
+    exit ("L'extension ZIP de PHP est nécessaire.");
+}
+$items = session_signin_archive_items($scope, $id);
+if (!$items)
+{
+    http_response_code(404);
+    exit ("Aucun PDF d'émargement n'a encore été généré pour cette sélection.");
+}
+$tmp = tempnam(sys_get_temp_dir(), "session_signin_zip_");
+$zip = new ZipArchive;
+if (!$tmp || $zip->open($tmp, ZipArchive::OVERWRITE) !== true)
+{
+    http_response_code(500);
+    exit ("Impossible de créer l'archive.");
+}
+foreach ($items as $item)
+    if (!$zip->addFile($item["path"], $item["name"]))
+    {
+        $zip->close();
+        @unlink($tmp);
+        http_response_code(500);
+        exit ("Impossible d'ajouter un PDF à l'archive.");
+    }
+if (!$zip->close() || !is_file($tmp))
+{
+    @unlink($tmp);
+    http_response_code(500);
+    exit ("Impossible de finaliser l'archive.");
+}
+header("Content-Type: application/zip");
+header("Content-Disposition: attachment; filename=emargements_".$scope."_".$id.".zip");
+header("Content-Length: ".filesize($tmp));
+header("Cache-Control: private, no-store");
+readfile($tmp);
+@unlink($tmp);
+exit ;

@@ -9,7 +9,7 @@ function JuryCleanData($data)
 {
     foreach ([
         "codename", "mail", "first_name", "family_name",
-        "nickname", "phone", "titles", "note", "fr_name", "en_name",
+        "nickname", "phone", "titles", "note", "fr_name", "en_name", "diploma_text",
         "code", "fr_description", "en_description", "skills",
         "id_school", "id_title", "start_date", "end_date", "start_time",
         "end_time", "jury_arrival_time", "id_session_manager", "session", "jury"
@@ -253,7 +253,8 @@ function AddJuryTitle($id, $data, $method, $output, $module)
     $code = $Database->real_escape_string($data["code"] ?? "");
     $fr = $Database->real_escape_string($data["fr_name"] ?? $codename);
     $en = $Database->real_escape_string($data["en_name"] ?? ($data["fr_name"] ?? $codename));
-    if ($Database->query("INSERT INTO `title` (codename, code, fr_name, en_name) VALUES ('$codename_sql', '$code', '$fr', '$en')") == false)
+    $diploma_text = $Database->real_escape_string($data["diploma_text"] ?? "");
+    if ($Database->query("INSERT INTO `title` (codename, code, fr_name, en_name, diploma_text) VALUES ('$codename_sql', '$code', '$fr', '$en', '$diploma_text')") == false)
         return (new ErrorResponse("CannotAdd"));
     $id_title = (int)$Database->insert_id;
     if (($ret = CertificationHandleSubmittedSkillLinks($id_title, $data))->is_error())
@@ -271,7 +272,7 @@ function EditJuryTitle($id, $data, $method, $output, $module)
     $title = $ret->value;
     $data = JuryCleanData($data);
     $fields = [];
-    foreach (["code", "fr_name", "en_name"] as $field)
+    foreach (["code", "fr_name", "en_name", "diploma_text"] as $field)
         if (isset($data[$field]))
             $fields[$field] = $data[$field];
     if (count($fields))

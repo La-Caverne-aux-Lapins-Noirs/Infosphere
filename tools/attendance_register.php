@@ -126,10 +126,8 @@ function attendance_register_school_context(array $school)
     // school.address ; contrairement à address, elle ne retombe pas sur
     // organization.address lorsqu'elle est vide.
     $context["training_address"] = trim((string)($full["school_address"] ?? ""));
-    $context["NDA"] = trim((string)($full["formation_activity_number"] ?? ""));
-    $context["UAI"] = trim((string)($full["uai"] ?? ""));
-    $context["cfa_name"] = trim((string)($full["cfa_name"] ?? ""));
-    $context["executing_establishment_name"] = trim((string)($full["executing_establishment_name"] ?? ""));
+    foreach (school_activity_document_fields($full) as $field => $value)
+	$context[$field] = trim((string)$value);
 
     $directors = $full["director"] ?? [];
     if (is_array($directors) && isset($directors[0]) && is_array($directors[0]))
@@ -680,6 +678,13 @@ function attendance_register_halfday_result(array $status, $period, $day, $cutof
             "justified" => $marker == "A"
                 && attendance_register_activity_evidence_is_justified($evidence),
         ]);
+
+    // halfday_presence_build() porte la règle commune de validation par les
+    // journaux de connexion (2 h le matin comme l'après-midi). Si cette règle
+    // conclut déjà à une présence, la feuille d'émargement doit la reprendre
+    // au lieu d'appliquer ensuite son ancien seuil proportionnel.
+    if ((string)try_get($status, "status", "") === "present")
+        return (["marker" => "P", "justified" => false]);
 
     // Sans activité de référence (journée de projet, autre demi-journée ou
     // activité de journée complète), on utilise le temps réellement constaté.

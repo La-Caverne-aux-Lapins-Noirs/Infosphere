@@ -18,6 +18,24 @@
 
     <div>
 	<h3><?=$Dictionnary["AdministrateActivity"]; ?></h3>
+	<?php if ($activity->unique_session
+	    && is_teacher_or_director_for_session($activity->unique_session->id)) { ?>
+	    <?php if (session_signin_schema_ready()) { ?>
+		<?php
+		$session_signin_session = $activity->unique_session;
+		require (__DIR__."/../activity/session_signin_controls.phtml");
+		unset($session_signin_session);
+		?>
+		<?php if (session_signin_teacher_is_assigned($activity->unique_session->id, $User["id"])) { ?>
+		    <div id="session_teacher_presence_button">
+			<?php session_signin_teacher_button($activity->id, $activity->unique_session->id); ?>
+		    </div>
+		<?php } ?>
+		<?php session_signin_admin_presence_controls($activity->id, $activity->unique_session->id); ?>
+	    <?php } else { ?>
+		<p>Les tables SQL de l’émargement de session doivent être installées.</p>
+	    <?php } ?>
+	<?php } ?>
 
 	<p>
 	    <?=$Dictionnary["ClickToGetCode"]; ?><br />
@@ -255,4 +273,3 @@
 	</form>
     </div>
 </div>
-

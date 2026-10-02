@@ -18,7 +18,7 @@ function halfday_presence_periods_for_day($day)
             "name" => "AM",
             "begin" => $day + 8 * 60 * 60,
             "end" => $day + 13 * 60 * 60,
-            "threshold" => 3 * 60 * 60,
+            "threshold" => 2 * 60 * 60,
         ],
         1 => [
             "name" => "PM",
@@ -171,7 +171,7 @@ function halfday_presence_build($users, $start, $days, $cycle_id = NULL)
     $has_halfday_logs = halfday_presence_table_available();
     $logs = halfday_presence_load_log_durations($ids, $start, $days);
     $activities = halfday_presence_load_activity_status($ids, $start, $days, $cycle_id);
-    $now = now();
+    $now = function_exists("user_log_now") ? user_log_now() : now();
     $out = [];
 
     foreach ($ids as $uid)

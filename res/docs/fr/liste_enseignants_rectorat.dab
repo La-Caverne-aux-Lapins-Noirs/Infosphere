@@ -1,0 +1,56 @@
+Document = "TeacherList"
+Title = "Liste annuelle des enseignants - Rectorat"
+
+[Contexts
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "Établissement"
+    Required = 1
+  ]
+  [Report
+    Type = "rectorate_teachers"
+    Prefix = "Report"
+    Label = "Données annuelles des enseignants"
+    Required = 1
+    InferFrom = "School"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Direction"
+    Required = 0
+    InferFrom = "School"
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Liste annuelle des enseignants - Rectorat [@PageCounter]
+  Left]
+  Right = [Text($,Right)
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  [#Variable;School.MainInfo]
+
+  [#Variable;School.SchoolInfo]
+
+  [#Variable;School.Phone] [#Variable;School.Mail]
+
+  \par\vspace{0.15cm}
+  Liste annuelle des personnels enseignants — article R. 913-27 du code de l'éducation.
+Footer]
+
+[TeacherList
+  Heading = "Liste annuelle des personnes exerçant des fonctions d’enseignement"
+  LegalReference = "l’article R. 913-27 du code de l’éducation"
+  Introduction = "Cette liste est établie pour la transmission annuelle au rectorat des personnes exerçant des fonctions d’enseignement dans l’établissement."
+  VolumeNote = "Le volume horaire est calculé à partir des sessions planifiées dans l’Infosphère pour l’année scolaire indiquée, en tenant compte des affectations directes aux activités et des affectations explicites aux sessions. Il doit être vérifié si la planification n’est pas complète."
+  AttachmentsNote = "Les justificatifs permettant d’établir que chaque personne remplit les conditions requises pour enseigner sont à joindre séparément à la transmission annuelle. Le programme des cours fait également l’objet de la transmission prévue pour les établissements d’enseignement supérieur privés."
+]

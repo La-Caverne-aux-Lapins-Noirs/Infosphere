@@ -19,3 +19,62 @@
     width: 100px;
     height: 100px;
 }
+
+/* Medal page workspace: keep the whole page between the two fixed menus. */
+#medal_toolbar
+{
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+#medal_toolbar h2
+{
+    line-height: 30px;
+}
+
+#medal_toolbar .searchbar > input
+{
+    height: 24px;
+    font-size: 14px;
+    line-height: 22px;
+    padding: 0px 4px;
+}
+
+#medal_toolbar input[type="submit"],
+#medal_toolbar input[type="button"]
+{
+    height: 24px;
+}
+
+#medal_workspace
+{
+    height: calc(100% - 30px);
+}
+
+/* Without the teacher/editor workspace, the medal list uses the same free height. */
+#medallist
+{
+    height: calc(100% - 30px);
+}
+
+#medal_workspace #medallist
+{
+    height: 100%;
+}
+
+/* Fill each row instead of leaving the remainder of the fixed 390px cards empty. */
+#medallist
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
+    align-content: start;
+}
+
+#medallist > .medal_box
+{
+    width: 100%;
+    display: table;
+}

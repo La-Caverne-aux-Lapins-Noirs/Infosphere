@@ -62,7 +62,7 @@ Adresse précise du lieu de déroulement du stage: [#ShortLine;[#Variable;Intern
 ## Organisation et calendrier
 
 [@Size;3]
-[@Indent][#Variable;Internship.Schedule]
+[@InternshipCalendar;Internship.ScheduleCalendar]
 
 ## Compétences à acquérir
 

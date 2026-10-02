@@ -10,6 +10,17 @@ function refresh_user_value($user, $fields, $default = "")
     return ($default);
 }
 
+function refresh_user_mail($user)
+{
+    $mail = trim((string)refresh_user_value($user, "mail", ""));
+    // `nomail` est uniquement un marqueur de saisie administratif. Une
+    // ancienne ligne ayant conservé ce marqueur doit être vue partout comme
+    // une absence d'adresse, notamment par les contextes DocBuilder.
+    if (strcasecmp($mail, "nomail") == 0)
+        return ("");
+    return ($mail);
+}
+
 function refresh_user_bool($user, $fields, $default = false)
 {
     $value = refresh_user_value($user, $fields, $default);
@@ -76,8 +87,8 @@ function refresh_user_fields($user)
 	"use_name" => refresh_user_value($source, "use_name", ""),
 	"family_name" => refresh_user_family_name($source),
 	"gender" => refresh_user_value($source, ["gender", "sex"], ""),
-	"mail" => refresh_user_value($source, "mail", ""),
-	"courriel" => refresh_user_value($source, "mail", ""),
+	"mail" => refresh_user_mail($source),
+	"courriel" => refresh_user_mail($source),
 	"phone" => refresh_user_value($source, "phone", ""),
 	"address" => refresh_user_value($source, ["address", "street_name"], ""),
 	"city" => refresh_user_value($source, "city", ""),
@@ -110,8 +121,8 @@ function refresh_user_fields($user)
 	"is" => refresh_user_value($source, "is", ""),
 	"first_name" => refresh_user_first_name($source),
 	"family_name" => refresh_user_family_name($source),
-	"mail" => refresh_user_value($source, "mail", ""),
-	"courriel" => refresh_user_value($source, "mail", ""),
+	"mail" => refresh_user_mail($source),
+	"courriel" => refresh_user_mail($source),
 	"phone" => refresh_user_value($source, "phone", ""),
 	"address" => refresh_user_value($source, ["address", "street_name"], ""),
 	"jury" => (user_profile_status($user["profile_status"] ?? "") == "jury"),

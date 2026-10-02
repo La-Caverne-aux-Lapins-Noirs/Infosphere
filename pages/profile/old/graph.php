@@ -71,7 +71,7 @@ $info["start_date"] = $now - $duration;
 <div class="final_box" style="width: 100%; height: <?=$h + 1; ?>px; overflow-x: hidden; overflow-y: hidden; background-color: gray !important;">
     <?php
     $max = 21;
-    $now = date_to_timestamp(db_form_date(now(), true));
+    $now = date_to_timestamp(db_form_date(user_log_now(), true));
     for ($i = $max; $i >= 0; --$i)
     {
 	$duration = get_student_log($user, $now - $one_day * $i);

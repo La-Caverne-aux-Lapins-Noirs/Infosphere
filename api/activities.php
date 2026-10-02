@@ -240,7 +240,7 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 
     if ($method == "DELETE")
     {
-	if ($data["action"] == "team")
+	if (($data["action"] ?? "") == "team")
 	{
 	    if ($SUBID != -1)
 		$id_team = " AND team.id = ".(int)$SUBID;
@@ -255,10 +255,17 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	}
 	else
 	{
-	    if ($SUBID == -1)
-		bad_request();
+	    // La route canonique est /registration/<id_user>, mais l'ancien
+	    // formulaire d'administration envoyait id_user dans le corps.
+	    // Accepter les deux formes evite un Bad Request et conserve la
+	    // compatibilite avec d'anciens appels AJAX encore affiches.
+	    if ($SUBID != -1)
+		$target_user = $SUBID;
+	    else if (isset($data["id_user"]) && trim((string)$data["id_user"]) != "")
+		$target_user = $data["id_user"];
 	    else
-		$user_teams = [["id_user" => (int)$SUBID]];
+		bad_request();
+	    $user_teams = [["id_user" => $target_user]];
 	}
 	foreach ($user_teams as $ut)
 	{
@@ -268,7 +275,10 @@ function SetActivityRegistration($id, $data, $method, $output, $module)
 	}
 	
 	if ($module != "instance")
-	    return ($ret);
+	    return (new ValueResponse([
+		"msg" => (string)$ret,
+		"content" => ""
+	    ]));
 	// Renouvellement de la liste - faute d'avoir l'information equipe/membre
 	($activity = new FullActivity)->build($id);
 	ob_start();

@@ -1,6 +1,35 @@
 (function () {
     "use strict";
 
+    var cancelForm = document.getElementById("registration-event-cancel-form");
+    if (cancelForm) {
+        var cancelButton = cancelForm.querySelector("[data-event-cancel]");
+        var cancelMessage = cancelForm.querySelector(".registration-event-cancel-message");
+        if (cancelButton)
+            cancelButton.addEventListener("click", async function () {
+                if (!window.confirm("Annuler votre inscription à cet évènement ?"))
+                    return;
+                cancelButton.disabled = true;
+                try {
+                    var body = new URLSearchParams();
+                    body.set("token", cancelForm.getAttribute("data-token") || "");
+                    var response = await fetch(cancelForm.getAttribute("data-url"), {
+                        method: "POST",
+                        headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
+                        body: body.toString()
+                    });
+                    var packet = await response.json();
+                    if (!response.ok || !packet || packet.result !== "ok")
+                        throw new Error(packet && packet.msg ? packet.msg.replace(/<[^>]+>/g, "") : response.statusText);
+                    window.location.reload();
+                } catch (error) {
+                    if (cancelMessage)
+                        cancelMessage.textContent = error && error.message ? error.message : "Erreur réseau.";
+                    cancelButton.disabled = false;
+                }
+            });
+    }
+
     var form = document.getElementById("registration-form");
     if (!form)
         return;
@@ -9,6 +38,9 @@
     var message = document.getElementById("registration-form-message");
     var saving = false;
     var signatureStates = {};
+    var paraphSection = form.querySelector(".registration-paraph");
+    var paraphState = null;
+    var showExistingParaph = null;
     var baseline = "";
 
     function htmlToText(value) {
@@ -46,10 +78,15 @@
         Object.keys(signatureStates).forEach(function (group) {
             signatures[group] = {
                 drawn: signatureStates[group].drawn,
-                deleted: signatureStates[group].deleted
+                deleted: signatureStates[group].deleted,
+                useProfile: signatureStates[group].useProfile
             };
         });
-        return JSON.stringify({values: fieldValues(), signatures: signatures});
+        return JSON.stringify({
+            values: fieldValues(),
+            signatures: signatures,
+            paraph: paraphState ? {drawn: paraphState.drawn, editing: paraphState.editing} : null
+        });
     }
 
     function setMessage(text, success) {
@@ -71,6 +108,7 @@
             canvas: canvas,
             drawn: false,
             deleted: false,
+            useProfile: false,
             drawing: false,
             last: null,
             existing: section.getAttribute("data-existing") === "1"
@@ -95,6 +133,11 @@
             canvas.setPointerCapture(event.pointerId);
             state.drawing = true;
             state.deleted = false;
+            state.useProfile = false;
+            section.classList.remove("is-profile-signature");
+            var profileStatus = section.querySelector("[data-profile-signature-status]");
+            if (profileStatus)
+                profileStatus.textContent = "";
             state.last = position(event);
         });
 
@@ -132,9 +175,126 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
             state.drawn = false;
             state.deleted = state.existing;
+            state.useProfile = false;
+            section.classList.remove("is-profile-signature");
+            var profileStatus = section.querySelector("[data-profile-signature-status]");
+            if (profileStatus)
+                profileStatus.textContent = "";
             updateState();
         });
+
+        var useProfileButton = section.querySelector("[data-use-profile-signature]");
+        if (useProfileButton)
+            useProfileButton.addEventListener("click", function () {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                state.drawn = false;
+                state.deleted = false;
+                state.useProfile = true;
+                section.classList.add("is-profile-signature");
+                var profileStatus = section.querySelector("[data-profile-signature-status]");
+                if (profileStatus)
+                    profileStatus.textContent = "Signature enregistrée sélectionnée.";
+                updateState();
+            });
     });
+
+    if (paraphSection) {
+        var paraphCanvas = paraphSection.querySelector("canvas");
+        var paraphContext = paraphCanvas.getContext("2d");
+        var paraphExistingBox = paraphSection.querySelector("[data-paraph-existing-box]");
+        var paraphEditor = paraphSection.querySelector("[data-paraph-editor]");
+        var paraphCurrent = paraphSection.querySelector("[data-paraph-current]");
+        var paraphReplace = paraphSection.querySelector("[data-replace-paraph]");
+        var paraphClear = paraphSection.querySelector("[data-clear-paraph]");
+        var paraphCancel = paraphSection.querySelector("[data-cancel-paraph]");
+        paraphState = {
+            canvas: paraphCanvas,
+            existing: paraphSection.getAttribute("data-paraph-existing") === "1",
+            drawn: false,
+            drawing: false,
+            editing: paraphSection.getAttribute("data-paraph-existing") !== "1",
+            last: null,
+            lastDataUrl: ""
+        };
+        paraphContext.lineWidth = 3;
+        paraphContext.lineCap = "round";
+        paraphContext.lineJoin = "round";
+        paraphContext.strokeStyle = "#000000";
+
+        function paraphPosition(event) {
+            var rect = paraphCanvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - rect.left) * paraphCanvas.width / Math.max(1, rect.width),
+                y: (event.clientY - rect.top) * paraphCanvas.height / Math.max(1, rect.height)
+            };
+        }
+
+        function clearParaphCanvas() {
+            paraphContext.clearRect(0, 0, paraphCanvas.width, paraphCanvas.height);
+            paraphState.drawn = false;
+            paraphState.drawing = false;
+            paraphState.last = null;
+        }
+
+        function showParaphEditor() {
+            paraphState.editing = true;
+            if (paraphExistingBox)
+                paraphExistingBox.hidden = true;
+            if (paraphEditor)
+                paraphEditor.hidden = false;
+            clearParaphCanvas();
+            updateState();
+        }
+
+        showExistingParaph = function () {
+            paraphState.editing = false;
+            if (paraphExistingBox)
+                paraphExistingBox.hidden = false;
+            if (paraphEditor)
+                paraphEditor.hidden = true;
+            clearParaphCanvas();
+            updateState();
+        };
+
+        paraphCanvas.addEventListener("pointerdown", function (event) {
+            event.preventDefault();
+            paraphCanvas.setPointerCapture(event.pointerId);
+            paraphState.drawing = true;
+            paraphState.last = paraphPosition(event);
+        });
+        paraphCanvas.addEventListener("pointermove", function (event) {
+            var point;
+            if (!paraphState.drawing)
+                return;
+            event.preventDefault();
+            point = paraphPosition(event);
+            paraphContext.beginPath();
+            paraphContext.moveTo(paraphState.last.x, paraphState.last.y);
+            paraphContext.lineTo(point.x, point.y);
+            paraphContext.stroke();
+            paraphState.last = point;
+            paraphState.drawn = true;
+            updateState();
+        });
+        function stopParaphDrawing(event) {
+            if (!paraphState.drawing)
+                return;
+            paraphState.drawing = false;
+            try { paraphCanvas.releasePointerCapture(event.pointerId); } catch (ignore) {}
+            updateState();
+        }
+        paraphCanvas.addEventListener("pointerup", stopParaphDrawing);
+        paraphCanvas.addEventListener("pointercancel", stopParaphDrawing);
+        if (paraphClear)
+            paraphClear.addEventListener("click", function () {
+                clearParaphCanvas();
+                updateState();
+            });
+        if (paraphReplace)
+            paraphReplace.addEventListener("click", showParaphEditor);
+        if (paraphCancel)
+            paraphCancel.addEventListener("click", showExistingParaph);
+    }
 
     function canvasBlob(canvas) {
         return new Promise(function (resolve, reject) {
@@ -150,13 +310,27 @@
     function acceptCurrentState() {
         Object.keys(signatureStates).forEach(function (group) {
             var state = signatureStates[group];
-            if (state.drawn)
+            if (state.drawn || state.useProfile)
                 state.existing = true;
             if (state.deleted)
                 state.existing = false;
             state.drawn = false;
             state.deleted = false;
+            state.useProfile = false;
         });
+        if (paraphState && paraphState.drawn) {
+            paraphState.lastDataUrl = paraphState.canvas.toDataURL("image/png");
+            paraphState.existing = true;
+            paraphSection.classList.add("is-existing");
+            if (paraphCurrent) {
+                paraphCurrent.src = paraphState.lastDataUrl;
+                paraphCurrent.hidden = false;
+            }
+            if (paraphCancel)
+                paraphCancel.hidden = false;
+            if (showExistingParaph)
+                showExistingParaph();
+        }
         baseline = snapshot();
         updateState();
     }
@@ -196,6 +370,12 @@
                     var blob = await canvasBlob(state.canvas);
                     body.append("signature[" + signatureKey(group) + "]", blob, "signature.png");
                 }
+                if (group === "DocumentSignature" && state.useProfile)
+                    body.append("reuse_profile_signature", "1");
+            }
+            if (paraphState && paraphState.drawn) {
+                var paraphBlob = await canvasBlob(paraphState.canvas);
+                body.append("paraph", paraphBlob, "paraph.png");
             }
             body.append("delete_signatures", JSON.stringify(deleted));
             if (finalize && consent && consent.checked)
@@ -217,6 +397,10 @@
             acceptCurrentState();
             setMessage(packet.msg || "Enregistré.", true);
 
+            if (packet.redirect) {
+                window.location.href = packet.redirect;
+                return;
+            }
             if (packet.completed) {
                 window.location.reload();
                 return;
@@ -232,6 +416,32 @@
             saving = false;
             updateState();
         }
+    }
+
+    if (window.InfosphereInternshipCalendar)
+        window.InfosphereInternshipCalendar.attach(form, "data-registration-field", function (hidden) {
+            hidden.dispatchEvent(new Event("input", {bubbles: true}));
+        });
+
+    var eventSession = form.querySelector("[data-event-session]");
+    var eventTeam = form.querySelector("[data-event-team]");
+    function syncEventTeams() {
+        if (!eventSession || !eventTeam)
+            return;
+        var selectedSession = eventSession.value;
+        var selectedOption = eventTeam.options[eventTeam.selectedIndex];
+        Array.prototype.forEach.call(eventTeam.options, function (option) {
+            var optionSession = option.getAttribute("data-event-session");
+            var visible = !optionSession || (selectedSession && optionSession === selectedSession);
+            option.hidden = !visible;
+            option.disabled = !visible;
+        });
+        if (selectedOption && selectedOption.disabled)
+            eventTeam.value = "new";
+    }
+    if (eventSession && eventTeam) {
+        eventSession.addEventListener("change", syncEventTeams);
+        syncEventTeams();
     }
 
     baseline = snapshot();

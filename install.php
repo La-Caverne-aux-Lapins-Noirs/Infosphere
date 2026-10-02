@@ -48,6 +48,109 @@ function install_exec($command, &$output, &$return_value)
     return (true);
 }
 
+function install_php_timezone_configuration(&$warnings)
+{
+    $timezone = infosphere_system_timezone_name();
+    if ($timezone == "")
+    {
+        install_append_warning(
+            $warnings,
+            "Cannot determine the system timezone; configure PHP date.timezone manually."
+        );
+        return (false);
+    }
+
+    $version = PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;
+    $content = "; Managed by Infosphere installer.\n".
+        "; Keep PHP wall-clock time aligned with the host system.\n".
+        "date.timezone = ".$timezone."\n";
+    $fallback_dir = "res/install/php";
+    $fallback = $fallback_dir."/99-infosphere-timezone.ini";
+    @mkdir($fallback_dir, 0775, true);
+    if (!install_write_file_if_different($fallback, $content))
+    {
+        install_append_warning($warnings, "Cannot write ".$fallback.".");
+        return (false);
+    }
+
+    $base = "/etc/php/".$version;
+    $targets = [];
+    foreach (["apache2", "cli", "fpm"] as $sapi)
+    {
+        $conf_dir = $base."/".$sapi."/conf.d";
+        if (is_dir($conf_dir))
+            $targets[$sapi] = $conf_dir."/99-infosphere-timezone.ini";
+    }
+    if (!count($targets))
+    {
+        install_append_warning(
+            $warnings,
+            "No PHP ".$version." conf.d directory was found. Copy ".$fallback.
+            " into the conf.d directory of the PHP SAPI used by Infosphere and set date.timezone = ".$timezone."."
+        );
+        return (false);
+    }
+
+    $success = true;
+    $written = [];
+    foreach ($targets as $sapi => $target)
+    {
+        if ((!file_exists($target) && !is_writable(dirname($target)))
+            || (file_exists($target) && !is_writable($target)))
+        {
+            install_append_warning(
+                $warnings,
+                "Cannot write ".$target.". Install it manually with: sudo install -m 0644 ".
+                $fallback." ".$target
+            );
+            $success = false;
+            continue ;
+        }
+        if (!install_write_file_if_different($target, $content))
+        {
+            install_append_warning($warnings, "Cannot write ".$target.".");
+            $success = false;
+            continue ;
+        }
+        @chmod($target, 0644);
+        $written[$sapi] = $target;
+    }
+
+    if (isset($written["apache2"]))
+    {
+        if (function_exists("posix_geteuid") && posix_geteuid() == 0)
+        {
+            $out = [];
+            $ret = 0;
+            install_exec("systemctl reload apache2 2>&1", $out, $ret);
+            if ($ret != 0)
+            {
+                $out = [];
+                install_exec("service apache2 reload 2>&1", $out, $ret);
+            }
+            if ($ret != 0)
+            {
+                install_append_warning($warnings, "PHP timezone was configured for Apache, but Apache could not be reloaded automatically.");
+                $success = false;
+            }
+        }
+        else
+            install_append_warning($warnings, "PHP timezone configuration was written for Apache; reload Apache manually to apply it.");
+    }
+
+    if (isset($written["fpm"]) && function_exists("posix_geteuid") && posix_geteuid() == 0)
+    {
+        $service = "php".$version."-fpm";
+        $out = [];
+        $ret = 0;
+        install_exec("systemctl reload ".escapeshellarg($service)." 2>&1", $out, $ret);
+        if ($ret != 0)
+            install_append_warning($warnings, "PHP timezone was configured for FPM, but ".$service." could not be reloaded automatically.");
+    }
+
+    return ($success);
+}
+
 function install_apache_hls_configuration(&$warnings)
 {
     $content = "<IfModule mod_mime.c>\n".
@@ -320,6 +423,7 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
         ('mailgun_sender', '{$_POST["admin_mail"]}'),
         ('welcome_note', NULL),
         ('mail_password', NULL),
+        ('persoc_deadlist', NULL),
         ('style', 'default');
 	");
     $t = "<?php // @codeCoverageIgnoreStart\n".'$version = "0.1";'."\n// @codeCoverageIgnoreEnd\n";
@@ -348,9 +452,21 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
 	$ErrorMsg = $out;
 	goto Formular;
     }
+    install_php_timezone_configuration($InstallWarnings);
     install_hls_support($InstallWarnings);
 }
     
+if (isset($_POST["setup_timezone"]) && file_exists("version.php"))
+{
+    if (($json = json_decode(file_get_contents("./database.json"), true)) != NULL)
+    {
+        if ($json["password"] == $_POST["password"])
+            install_php_timezone_configuration($InstallWarnings);
+        else
+            $ErrorMsg = "BadInstall";
+    }
+}
+
 if (isset($_POST["setup_hls"]) && file_exists("version.php"))
 {
     if (($json = json_decode(file_get_contents("./database.json"), true)) != NULL)
@@ -412,6 +528,7 @@ if (file_exists("version.php"))
 		    <br />
 		    <form method="post" action="install.php">
 			<input type="password" name="password" placeholder="Database password" />
+			<input type="submit" name="setup_timezone" value="Install / refresh PHP timezone" />
 			<input type="submit" name="setup_hls" value="Install / refresh HLS support" />
 			<input type="submit" name="destroy" value="Destroy infosphere" />
 		    </form>

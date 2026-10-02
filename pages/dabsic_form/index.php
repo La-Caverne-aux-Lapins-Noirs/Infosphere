@@ -142,6 +142,15 @@ $dabsic_form_post_interview_finalized = false;
 $dabsic_form_post_interview_sent_at = "";
 $dabsic_form_post_interview_sent_to = "";
 $dabsic_form_post_interview_sent_bcc = "";
+$dabsic_form_admission_prospect_id = 0;
+$dabsic_form_admission_document = "";
+$dabsic_form_admission_queue_for_print = false;
+if ($dabsic_form_error === "" && preg_match('/^prospect-admission:(domestic|foreign):([0-9]+)$/', $dabsic_form_output_key, $m))
+{
+    $dabsic_form_admission_prospect_id = (int)$m[2];
+    $dabsic_form_admission_document = "admission:".(string)$m[1];
+    $dabsic_form_admission_queue_for_print = !empty($_GET["queue_for_print"]);
+}
 if ($dabsic_form_error === "" && preg_match('/^post-interview-report:([0-9]+)$/', $dabsic_form_output_key, $m))
 {
     $dabsic_form_post_interview_prospect_id = (int)$m[1];
@@ -205,12 +214,13 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
 
 <style>
 <?php require (__DIR__."/style.css"); ?>
+<?php require (__DIR__."/../../style/internship_calendar.css"); ?>
 </style>
 
 <div class="dabsic-form-page">
     <div class="dabsic-form-header">
         <div>
-            <h2><?=$Dictionnary["DabsicFormTitle"]; ?></h2>
+            <h2><?=$dabsic_form_admission_prospect_id > 0 ? "Attestation d’admission — frais" : $Dictionnary["DabsicFormTitle"]; ?></h2>
             <?php if ($dabsic_form_discovery["ok"]) { ?>
                 <div class="dabsic-form-path-line" title="<?=htmlspecialchars($dabsic_form_discovery["reference"]["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
                     <span><?=$Dictionnary["DabsicFormReference"]; ?></span>
@@ -254,6 +264,9 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
             data-finalize-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report" : ""; ?>"
             data-signature-url="<?=$dabsic_form_post_interview_prospect_id > 0 ? "/api/prospect/".$dabsic_form_post_interview_prospect_id."/interview_report_signature" : ""; ?>"
             data-report-finalized="<?=$dabsic_form_post_interview_finalized ? "1" : "0"; ?>"
+            data-admission-generate-url="<?=$dabsic_form_admission_prospect_id > 0 ? "/api/prospect/".$dabsic_form_admission_prospect_id."/document" : ""; ?>"
+            data-admission-document="<?=htmlspecialchars($dabsic_form_admission_document, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+            data-admission-queue-for-print="<?=$dabsic_form_admission_queue_for_print ? "1" : "0"; ?>"
             data-confirm-finalize="Valider ce compte rendu, générer le PDF signé et tamponné, puis l'envoyer au prospect ?"
             data-confirm-save="<?=htmlspecialchars($Dictionnary["DabsicFormConfirmSave"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
             data-unsaved-warning="<?=htmlspecialchars($Dictionnary["DabsicEditorUnsavedWarning"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
@@ -290,7 +303,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                     <legend><?=htmlspecialchars((string)$group["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></legend>
                     <?php foreach (($group["fields"] ?? []) as $field) {
                         $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
-                        $value = $dabsic_form_values[$field] ?? "";
+                        $value = dabsic_form_field_value($dabsic_form_values, $field, $definition);
                         $field_editable = $group["editable"] && empty($definition["readonly"]);
                     ?>
                         <div class="dabsic-form-field<?=$field_editable ? "" : " is-readonly"; ?>">
@@ -301,6 +314,10 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                             ?>
                                 <?php if (form_field_is_common_type($field_type)) { ?>
                                     <?=form_field_render($definition, $value, [
+                                        // Radios need a shared HTML name so the browser enforces
+                                        // the single-choice semantic.  Values are still collected
+                                        // through data-dabsic-field by the AJAX workflow.
+                                        "name" => "dabsic[".$field."]",
                                         "attributes" => ["data-dabsic-field" => $field],
                                     ]); ?>
                                 <?php } else if ($field_type === "billing_template") { ?>
@@ -366,7 +383,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                             <legend><?=htmlspecialchars((string)$group["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></legend>
                             <?php foreach (($group["fields"] ?? []) as $field) {
                                 $definition = $dabsic_form_metadata["fields"][$field] ?? ["label" => $field, "required" => false];
-                                $value = $dabsic_form_values[$field] ?? "";
+                                $value = dabsic_form_field_value($dabsic_form_values, $field, $definition);
                             ?>
                                 <div class="dabsic-form-field is-readonly">
                                     <span><?=htmlspecialchars((string)$definition["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span>
@@ -378,6 +395,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                 </details>
             <?php } ?>
 
+            <?php if ($dabsic_form_admission_prospect_id <= 0) { ?>
             <fieldset class="dabsic-form-group dabsic-form-overrides">
                 <legend><?=$Dictionnary["DabsicFormOverrides"]; ?></legend>
                 <p class="dabsic-form-overrides-help"><?=$Dictionnary["DabsicFormOverridesHelp"]; ?></p>
@@ -392,6 +410,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                 </div>
                 <button id="dabsic-form-override-add" class="dabsic-form-override-add" type="button">+ <?=$Dictionnary["DabsicFormAddOverride"]; ?></button>
             </fieldset>
+            <?php } ?>
 
             <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
                 <fieldset
@@ -445,6 +464,9 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                     <?php if ($dabsic_form_post_interview_prospect_id > 0) { ?>
                         — la validation apposera la signature de la personne ayant conduit l'entretien et le tampon de l'école, puis enverra le PDF.
                     <?php } ?>
+                    <?php if ($dabsic_form_admission_prospect_id > 0) { ?>
+                        — le montant exigible est calculé automatiquement ; renseignez uniquement l’état du règlement et, si nécessaire, le montant partiel versé.
+                    <?php } ?>
                 </span>
                 <div class="dabsic-form-action-buttons">
                     <input id="dabsic-form-save" class="dabsic-form-save" type="submit" value="<?=$Dictionnary["Save"]; ?>" disabled />
@@ -452,11 +474,15 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                         <input id="dabsic-form-preview" class="dabsic-form-preview" type="button" value="Prévisualiser le PDF (sans envoi)" />
                         <input id="dabsic-form-finalize" class="dabsic-form-finalize" type="button" value="<?=$dabsic_form_post_interview_finalized ? "Compte rendu déjà envoyé" : "Valider, générer et envoyer"; ?>" <?=$dabsic_form_post_interview_finalized ? "disabled" : ""; ?> />
                     <?php } ?>
+                    <?php if ($dabsic_form_admission_prospect_id > 0) { ?>
+                        <input id="dabsic-form-admission-generate" class="dabsic-form-finalize" type="button" value="<?=$dabsic_form_admission_queue_for_print ? "Générer et ajouter à l’impression" : "Générer l’attestation"; ?>" />
+                    <?php } ?>
                 </div>
             </div>
         </form>
 
         <script>
+        <?php require (__DIR__."/../../script/internship_calendar.js"); ?>
         <?php require (__DIR__."/script.js"); ?>
         </script>
     <?php } ?>

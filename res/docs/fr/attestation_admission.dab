@@ -1,7 +1,52 @@
-Document = "AdmissionCertificate"
-TitleQualifier = ""
+@include ".base_letter/base.dab"
+Title = "Attestation d'admission"
+
+[Letter
+  ' L'attestation reste un document administratif, mais utilise désormais
+  ' exactement le même moteur de mise en page que les courriers.
+  BodyGap = "4cm"
+  BodyLeft = "1cm"
+  BodyRight = "1cm"
+
+  DateX = "13cm"
+  DateY = "8.2cm"
+]
+
+[School
+  Name = ""
+  Address = ""
+  City = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  BirthDate = ""
+  BirthPlace = ""
+  Nationality = ""
+  Gender = ""
+]
 
 [Admission
+  TargetClass = ""
+  TargetYearLabel = ""
+  EntryDate = ""
+  EntryLabel = ""
+  SchoolYear = ""
+  ProspectRegistrationDate = ""
+  RequiredAmount = ""
+  PaidAmount = ""
+  PaymentState = ""
+  PaymentConfirmed = 0
+  IssuePlace = ""
+  IssueDate = ""
+  Reference = ""
   AutomaticSignature = 0
 ]
 
@@ -23,7 +68,7 @@ TitleQualifier = ""
   [Director
     Type = "director"
     Prefix = "Director"
-    Label = "Directeur signataire"
+    Label = "Direction signataire"
     Required = 1
     Signatory = "Director"
     InferFrom = "School"
@@ -33,7 +78,6 @@ TitleQualifier = ""
 [Signatures
   [Director
     Required = 1
-    Role = "Directeur(trice)"
   ]
 ]
 
@@ -44,3 +88,27 @@ TitleQualifier = ""
 [FormRole
   @insert "res/docs/fr/.forms/admission_roles.dab"
 ]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Attestation d'admission
+  Left]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.Address]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Subject = [Text($,LetterSubject)
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;Admission.IssuePlace;!=;;Fait à [#Variable;Admission.IssuePlace], ;]le [#Variable;Admission.IssueDate]
+LetterDate]
+
+{Content
+  @insert txt ($) "attestation_admission.txt"
+}

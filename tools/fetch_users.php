@@ -1,6 +1,6 @@
 <?php
 
-function fetch_users($attr = [], $id = -1)
+function fetch_users($attr = [], $id = -1, $include_banished = NULL)
 {
     global $Database;
 
@@ -26,8 +26,11 @@ function fetch_users($attr = [], $id = -1)
 	    $id = [$id];
     }
 
+    if ($include_banished === NULL)
+        $include_banished = is_admin();
+
     $select = " WHERE password != '' AND profile_status = 'member' ";
-    $select .= is_admin() ? "" : " AND authority != ".BANISHED." ";
+    $select .= $include_banished ? "" : " AND authority != ".BANISHED." ";
     $select .= $id == -1  ? "" : " AND id IN (".implode(", ", $id).") ";
 
     $forge = unroll($attr, SELECT, ["cycle", "school", "user"]);
@@ -48,7 +51,7 @@ function fetch_users($attr = [], $id = -1)
 	    if (isset($fnd["cycle"]))
 		$students[$i]["cycle"] = get_user_promotions($students[$i]);
 	    if (isset($fnd["user"]))
-		$students[$i]["user"] = get_user_children($students[$i]);
+		$students[$i]["user"] = get_user_parents($students[$i]);
 	    if (isset($fnd["school"]))
 		$students[$i]["school"] = get_user_school($students[$i]);
 	}

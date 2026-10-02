@@ -1,39 +1,36 @@
-[Beneficiaire
-  Label = "Bénéficiaire"
-  {Read
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
-  {Edit
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
-  {Validate
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
+[Pilotage
+  Label = "Administration / pilotage"
+  Internal = 1
+  Recipient = "Generator"
+  {Read "Stagiaire", "Entreprise", "Etablissement", "Stage"}
+  {Edit "Stagiaire", "Entreprise", "Etablissement", "Stage"}
+  {Validate "Stagiaire", "Entreprise", "Etablissement", "Stage"}
 ]
+
+[Stagiaire
+  Label = "Stagiaire"
+  Required = 1
+  Recipient = "Student"
+  ProfileScope = "Student"
+  Read = "Stagiaire"
+  Edit = "Stagiaire"
+  Validate = "Stagiaire"
+]
+
+[Entreprise
+  Label = "Organisme d’accueil / tuteur"
+  Required = 1
+  Recipient = "CompanyTutor"
+  {Read "Entreprise", "Stage"}
+  {Edit "Entreprise", "Stage"}
+  {Validate "Entreprise", "Stage"}
+]
+
 [Etablissement
-  Label = "Établissement"
-  {Read
-    "Etablissement",
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
-  {Edit
-    "Etablissement",
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
-  {Validate
-    "Etablissement",
-    "Stagiaire",
-    "Entreprise",
-    "Stage"
-  }
+  Label = "Établissement / référent"
+  Required = 1
+  Recipient = "SchoolTutor"
+  Read = "Etablissement"
+  Edit = "Etablissement"
+  Validate = "Etablissement"
 ]

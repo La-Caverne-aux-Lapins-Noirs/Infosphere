@@ -461,11 +461,18 @@
 }
 
 .certification_skill_links_field,
+.certification_diploma_text_field,
 .certification_skill_picker,
 .jury_form_actions,
 .jury_skill_row .jury_field,
 .jury_skill_add_form .jury_field:nth-child(n+2) {
     grid-column: 1 / -1;
+}
+
+.certification_diploma_text_field textarea {
+    box-sizing: border-box;
+    min-height: 72px;
+    width: 100%;
 }
 
 .jury_linked_skill_list {

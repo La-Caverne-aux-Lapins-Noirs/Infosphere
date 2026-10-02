@@ -1,5 +1,22 @@
 <?php
 
+function calendar_standalone_activity(array $row)
+{
+    global $User;
+
+    $parent = session_standalone_parent($row);
+    $session = new FullSession;
+    $session->build($row, $parent, $User, true);
+    $session->parent = $parent;
+
+    $activity = new stdClass;
+    $activity->unique_session = $session;
+    $activity->current_subject = true;
+    $activity->standalone_session = true;
+    return ($activity);
+}
+
+
 // Debut et fin indique une etendue dans la base de donnée
 // Matin et soir indique les points de départ et fin d'affichage seulement
 // Debut et fin DOIVENT etre entre matin et soir
@@ -17,15 +34,41 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
 
     $sessions = [];
     $total_len = ($evening - $morning) / $slotsize;
+    $uid = isset($User["id"]) ? (int)$User["id"] : -1;
+    $school_visibility_sql = "";
+    if (session_school_schema_ready())
+        $school_visibility_sql = "
+                      OR EXISTS (
+                          SELECT 1
+                          FROM session_school AS calendar_session_school
+                          LEFT JOIN user_school AS calendar_user_school
+                            ON calendar_user_school.id_school = calendar_session_school.id_school
+                           AND calendar_user_school.id_user = $uid
+                          WHERE calendar_session_school.id_session = session.id
+                            AND calendar_user_school.id IS NOT NULL
+                      )";
     $sesstmp = db_select_all("
-        session.id as id, id_activity
+        DISTINCT session.*
         FROM session
         LEFT JOIN activity ON session.id_activity = activity.id
+        LEFT JOIN user_laboratory AS calendar_laboratory
+          ON calendar_laboratory.id_laboratory = session.id_laboratory
+         AND calendar_laboratory.id_user = $uid
         WHERE session.begin_date >= '".db_form_date($start)."'
           AND session.end_date <= '".db_form_date($end)."'
           AND session.deleted IS NULL
-          AND activity.deleted IS NULL
-	  ");
+          AND (
+              (session.id_activity > 0 AND activity.deleted IS NULL)
+              OR (
+                  COALESCE(session.id_activity, 0) <= 0
+                  AND (
+                      session.id_user = $uid
+                      OR calendar_laboratory.id IS NOT NULL
+                      $school_visibility_sql
+                  )
+              )
+          )
+    ");
     $blist = [
 	"activity_acquired_medal",
 	"activity_team_content",
@@ -36,6 +79,16 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
     ];
     foreach ($sesstmp as $sess)
     {
+        if (session_is_standalone($sess))
+        {
+            if (!isset($User["id"]) || !session_is_visible_to_user($sess, (int)$User["id"]))
+                continue ;
+            $sessions[] = calendar_standalone_activity($sess);
+            continue ;
+        }
+        if (!session_has_activity($sess))
+            continue ;
+
 	($s = new FullActivity)->buildp(
 	    $sess["id_activity"], [
 		"recursive" => false,
@@ -43,6 +96,8 @@ function collect_activities($start, $end, $wlist, $morning, $evening, $slotsize,
 		"only_user" => true,
 		"blist" => $blist,
 	]);
+        if (!$s)
+            continue ;
 	($module = new FullActivity)->buildp(
 	    $s->parent_activity, [
 		"recursive" => false,

@@ -10,7 +10,10 @@ $allow_edit = is_admin() || $user == $User;
 
 if (isset($_GET["modules"]) && (is_admin() || $user->id == $User["id"]))
 {
-    $user = get_full_profile($user, [], true, false);
+    // Le bulletin ne conserve ensuite que les matières auxquelles l'élève est
+    // effectivement inscrit. Ne pas charger toutes les matières des cycles :
+    // cela multiplie inutilement les FullActivity et les calculs présence/rendu.
+    $user = get_full_profile($user, [], true, true);
     require_once (__DIR__."/report/request.php");
     return ;
 }
@@ -29,6 +32,64 @@ $user = get_full_profile($user, [
     "activity_details",
 ], true);
 $cache = json_decode($user->cache);
+
+$profile_can_view_cycle_composition = false;
+$profile_cycle_composition = [];
+
+// La composition technique d'un trimestre est une information interne :
+// elle est visible par les membres non étudiants d'une école commune avec
+// l'utilisateur consulté (et, naturellement, par l'administration globale).
+if (is_admin())
+{
+    $profile_can_view_cycle_composition = true;
+}
+else if (isset($User["id"]) && (int)$User["id"] > 0)
+{
+    $viewer_id = (int)$User["id"];
+    $profile_user_id = (int)$user->id;
+    $student_authority = user_school_student_authority_sql();
+    $profile_can_view_cycle_composition = db_select_one("
+        viewer_school.id as id
+        FROM user_school as viewer_school
+        INNER JOIN user_school as profile_school
+          ON profile_school.id_school = viewer_school.id_school
+        INNER JOIN school
+          ON school.id = viewer_school.id_school
+        WHERE viewer_school.id_user = $viewer_id
+          AND profile_school.id_user = $profile_user_id
+          AND viewer_school.authority <> $student_authority
+          AND school.deleted IS NULL
+    ") !== NULL;
+}
+
+if ($profile_can_view_cycle_composition)
+{
+    $profile_cycle_ids = [];
+    foreach ($user->sublayer as $profile_cycle)
+        if ((int)$profile_cycle->id > 0)
+            $profile_cycle_ids[(int)$profile_cycle->id] = (int)$profile_cycle->id;
+
+    if (count($profile_cycle_ids))
+    {
+        $profile_cycle_rows = db_select_all("
+            cycle.id as id,
+            COALESCE(
+                NULLIF(template_cycle.{$Language}_name, ''),
+                NULLIF(template_cycle.codename, ''),
+                NULLIF(cycle.{$Language}_name, ''),
+                cycle.codename
+            ) as composition_name
+            FROM cycle
+            LEFT JOIN cycle as template_cycle
+              ON template_cycle.id = cycle.id_template
+             AND template_cycle.deleted IS NULL
+            WHERE cycle.id IN (".implode(",", $profile_cycle_ids).")
+        ");
+        foreach ($profile_cycle_rows as $profile_cycle_row)
+            $profile_cycle_composition[(int)$profile_cycle_row["id"]] =
+                trim((string)$profile_cycle_row["composition_name"]);
+    }
+}
 
 /*
 ** Il faut faire un systeme de calcul d'"implication", basé sur les logs,
@@ -126,9 +187,15 @@ $cache = json_decode($user->cache);
 	</td><td style="overflow: auto;">
 	    <?php
 	    $panel = [
-		$Dictionnary["PersonnalInformations"] => __DIR__."/data.phtml",
+		$Dictionnary["Informations"] => __DIR__."/data.phtml",
 		$Dictionnary["Files"] => __DIR__."/files.phtml"
 	    ];
+	    if (can_manage_user_relations((int)$user->id)
+		|| can_manage_user_credentials((int)$user->id)
+		|| can_generate_user_diploma((int)$user->id)
+		|| can_generate_user_id_card((int)$user->id)
+		|| (is_admin() && (int)$user->id != 1))
+		$panel[$Dictionnary["ProfileAdministration"] ?? "Admin"] = __DIR__."/admin.phtml";
 	    if (is_director_for_student($user->id))
 		$panel[$Dictionnary["Logs"]] = __DIR__."/logs.phtml";
 	    tabpanel($panel, $Position.$user->id."datafiles", $Dictionnary["PersonnalInformations"]);
@@ -175,8 +242,29 @@ $cache = json_decode($user->cache);
 	// qu'après le milieu de journée.
 	$_GET["e"] = now() + 24 * 60 * 60;
 	$_GET["s"] = now() - 14 * 24 * 60 * 60;
+	$profile_stats_custom_period = false;
+	if (isset($_GET["profile_stats_start"], $_GET["profile_stats_end"]))
+	{
+	    $profile_stats_parse_date = function ($value)
+	    {
+		if (!is_string($value) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', $value))
+		    return (NULL);
+		$date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'));
+		return ($date !== false && $date->format('Y-m-d') === $value ? $date->getTimestamp() : NULL);
+	    };
+	    $profile_stats_from = $profile_stats_parse_date($_GET["profile_stats_start"]);
+	    $profile_stats_to = $profile_stats_parse_date($_GET["profile_stats_end"]);
+	    if ($profile_stats_from !== NULL && $profile_stats_to !== NULL
+		&& $profile_stats_to >= $profile_stats_from
+		&& $profile_stats_to - $profile_stats_from < 730 * 86400)
+	    {
+		$_GET["s"] = $profile_stats_from;
+		$_GET["e"] = $profile_stats_to + 86400;
+		$profile_stats_custom_period = true;
+	    }
+	}
 	?>
-	<td class="stats" style="height: 50%">
+	<td class="stats" data-profile-stats-user="<?=(int)$user->id; ?>" style="height: 50%">
 	    <?php
 	    $panel = [
 		$Dictionnary["ActivityLogs"] => __DIR__."/activity_logs.phtml",
@@ -189,9 +277,12 @@ $cache = json_decode($user->cache);
 	    if (function_exists("support_progress_can_view_user") &&
 		support_progress_can_view_user($user->id))
 		$panel["Supports vus"] = __DIR__."/support_progress.phtml";
+	    $panel["#"] = __DIR__."/stats_period.phtml";
+	    // Ne pas rouvrir le réglage au chargement du profil : le suivi reste l'onglet d'accueil.
+	    echo '<script>localStorage.removeItem('.json_encode($Position.$user->id."graphes").');</script>';
 	    tabpanel($panel, $Position.$user->id."graphes", $Dictionnary["ActivityLogs"], "smallertext", "profile_data");
 	    ?>
 	</td>
     </tr>
 </table>
-
+<script><?php require (__DIR__."/script.js"); ?></script>

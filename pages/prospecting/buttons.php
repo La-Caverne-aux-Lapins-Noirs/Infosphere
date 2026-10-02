@@ -56,8 +56,8 @@
             <option value="contract:CFA">Contrat CFA</option>
         </optgroup>
         <optgroup label="Attestations">
-            <option value="admission:domestic" title="Attestation d’admission définitive — étudiant français">Admission FR</option>
-            <option value="admission:foreign" title="Attestation d’admission définitive — étudiant étranger">Admission</option>
+            <option value="admission:domestic" title="Attestation d’admission — étudiant français">Admission FR</option>
+            <option value="admission:foreign" title="Attestation d’admission — étudiant étranger">Admission</option>
         </optgroup>
         <optgroup label="Convocations d’admission">
             <option value="convocation:motivation-theory" title="Convocation à l’entretien de motivation et au test théorique">Entretien + test théorique</option>

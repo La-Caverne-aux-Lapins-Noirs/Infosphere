@@ -123,9 +123,12 @@ function prospecting_table_fields()
                 $registration = isset($p["registration_date"])
                     ? prospecting_campaign_registration_editor($p)
                     : "";
+                $events = function_exists("communication_event_prospect_badges")
+                    ? communication_event_prospect_badges($id) : "";
                 return (
                     "<a target='_blank' href='?p=ProfileMenu&amp;a=$id'>$a $b</a>".
-                    ($registration != "" ? "<div class='prospect_registration_date'>$registration</div>" : "")
+                    ($registration != "" ? "<div class='prospect_registration_date'>$registration</div>" : "").
+                    $events
                 );
             },
             "cell_class" => "dynamic_table_name prospect_identity_cell"

@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/dabsic_form.php");
+
 function admission_certificate_target_classes()
 {
     return ([
@@ -24,6 +26,60 @@ function admission_certificate_year_label($year)
     ];
     return ($labels[(int)$year] ?? ((int)$year."e année"));
 }
+
+
+function admission_certificate_gender_code($value)
+{
+    $gender = strtolower(trim((string)$value));
+    if (in_array($gender, ["f", "female", "femme", "madame", "mme"], true))
+        return ("f");
+    if (in_array($gender, ["m", "male", "homme", "monsieur", "mr", "m."], true))
+        return ("m");
+    return ("");
+}
+
+function admission_certificate_gender_value($value)
+{
+    $gender = admission_certificate_gender_code($value);
+    if ($gender == "f")
+        return ("female");
+    if ($gender == "m")
+        return ("male");
+    return ("neutral");
+}
+
+function admission_certificate_director_role_label(array $director)
+{
+    $gender = admission_certificate_gender_code(refresh_user_value($director, ["gender", "sex"], ""));
+
+    if ($gender == "f")
+        return ("Directrice");
+    if ($gender == "m")
+        return ("Directeur");
+    return ("Direction");
+}
+
+function admission_certificate_normalize_payment_state($value)
+{
+    $value = strtolower(trim((string)$value));
+    if (in_array($value, ["1", "full", "paid", "complete", "integral", "intégral", "integrale", "intégrale", "yes", "oui"], true))
+        return ("full");
+    if (in_array($value, ["partial", "partiel", "partielle"], true))
+        return ("partial");
+    if (in_array($value, ["0", "none", "unpaid", "not-paid", "non", "no", "absent", "aucun"], true))
+        return ("none");
+    return ("");
+}
+
+function admission_certificate_option_paid_amount_cents(array $options)
+{
+    if (array_key_exists("paid_amount_cents", $options) && $options["paid_amount_cents"] !== "")
+        return ((int)$options["paid_amount_cents"]);
+    if (array_key_exists("paid_amount", $options))
+        return (billing_amount_to_cents($options["paid_amount"]));
+    return (NULL);
+}
+
 
 function admission_certificate_entry_specs()
 {
@@ -195,7 +251,8 @@ function admission_certificate_director(array $school, array $options = [])
 
     $context = document_builder_person_context($director);
     $context["identity"] = document_builder_name($director);
-    $context["role"] = document_builder_director_role($director)." de ".($school["name"] ?? ($school["codename"] ?? "l’école"));
+    $context["gender"] = admission_certificate_gender_value(refresh_user_value($director, ["gender", "sex"], ""));
+    $context["role"] = admission_certificate_director_role_label($director)." de ".($school["name"] ?? ($school["codename"] ?? "l’établissement"));
 
     $school_codename = $school["codename"] ?? "";
     $signature = document_builder_director_document_path($director, $school_codename, "signature");
@@ -249,6 +306,152 @@ function admission_certificate_reference(array $prospect, array $school, $entry_
     return ("ADM-".$school_code."-".$year."-".str_pad((string)((int)$prospect["id"]), 5, "0", STR_PAD_LEFT));
 }
 
+function admission_certificate_required_amount(array $prospect, $is_foreign, array $options = [])
+{
+    $target_class = (int)($prospect["target_class"] ?? 0);
+    $classes = admission_certificate_target_classes();
+    if (!isset($classes[$target_class]))
+        return (new ErrorResponse("InvalidParameter", "target_class"));
+
+    if (($ret = admission_certificate_school_for_prospect($prospect, $options))->is_error())
+        return ($ret);
+    $school = $ret->value;
+
+    if (($ret = admission_certificate_tariff($school, $classes[$target_class]["year"], $options))->is_error())
+        return ($ret);
+    $amounts = billing_admission_amounts($ret->value, !empty($is_foreign));
+    $required = (int)($amounts["due_at_registration_cents"] ?? 0);
+    if ($required <= 0)
+        return (new ErrorResponse("InvalidParameter", "billing tariff amounts"));
+
+    return (new ValueResponse([
+        "cents" => $required,
+        "formatted" => billing_euros($required),
+    ]));
+}
+
+function admission_certificate_form_output_key($id_prospect, $is_foreign)
+{
+    return ("prospect-admission:".(!empty($is_foreign) ? "foreign" : "domestic").":".(int)$id_prospect);
+}
+
+function admission_certificate_start($id_prospect, $is_foreign, $queue_for_print = false)
+{
+    global $Language;
+
+    $id_prospect = (int)$id_prospect;
+    if ($id_prospect <= 0)
+        return (new ErrorResponse("InvalidParameter", "prospect"));
+    if (($ret = document_builder_full_student($id_prospect))->is_error())
+        return ($ret);
+    $prospect = $ret->value;
+    if (($prospect["profile_status"] ?? "") != "prospect")
+        return (new ErrorResponse("InvalidParameter", "user is not a prospect"));
+
+    if (($amount = admission_certificate_required_amount($prospect, $is_foreign))->is_error())
+        return ($amount);
+
+    $model = document_builder_find_model("attestation_admission", $Language);
+    if ($model === NULL)
+        return (new ErrorResponse("MissingFile", "admission certificate model"));
+
+    $root = realpath(dabsic_editor_project_root());
+    $model_absolute = realpath($model);
+    if ($root === false || $model_absolute === false || !dabsic_editor_path_is_inside($model_absolute, $root))
+        return (new ErrorResponse("InvalidFile", "admission certificate model"));
+    $relative_model = str_replace(
+        DIRECTORY_SEPARATOR,
+        "/",
+        substr($model_absolute, strlen(rtrim($root, DIRECTORY_SEPARATOR)) + 1)
+    );
+
+    $output_key = admission_certificate_form_output_key($id_prospect, $is_foreign);
+    if (!dabsic_form_user_can_access_output($output_key))
+        return (new ErrorResponse("PermissionDenied"));
+    $output = dabsic_form_resolve_output($output_key, true);
+    if (!$output["ok"])
+        return (new ErrorResponse($output["error"], $output["details"] ?? ""));
+
+    // Chaque génération repart d'un formulaire vierge : le seul champ
+    // prérempli doit être le montant exigible calculé depuis le tarif.
+    $reset = dabsic_form_reset_output_values($output);
+    if (!$reset["ok"])
+        return (new ErrorResponse($reset["error"], $reset["details"] ?? ""));
+
+    $bindings = ["Student" => (string)$id_prospect];
+    $fields = ["Admission.RequiredAmount" => $amount->value["formatted"]];
+    $url = "index.php?p=DabsicFormMenu".
+        "&file=".rawurlencode($relative_model).
+        "&output=".rawurlencode($output_key).
+        "&mode=docbuilder".
+        "&form_role=AdmissionGeneration".
+        "&context_bindings=".rawurlencode(document_context_bindings_json($bindings)).
+        "&context_fields=".rawurlencode(document_context_fields_json($fields)).
+        "&queue_for_print=".(!empty($queue_for_print) ? "1" : "0");
+
+    return (new ValueResponse([
+        "msg" => "Formulaire de génération de l’attestation ouvert.",
+        "content" => $url,
+    ]));
+}
+
+function admission_certificate_form_options($id_prospect, $is_foreign, $output_key)
+{
+    $expected = admission_certificate_form_output_key($id_prospect, $is_foreign);
+    if (!hash_equals($expected, trim((string)$output_key)))
+        return (new ErrorResponse("InvalidParameter", "form_output"));
+    if (!dabsic_form_user_can_access_output($expected))
+        return (new ErrorResponse("PermissionDenied"));
+
+    $output = dabsic_form_resolve_output($expected, false);
+    if (!$output["ok"])
+        return (new ErrorResponse($output["error"], $output["details"] ?? ""));
+    if (empty($output["exists"]))
+        return (new ErrorResponse("MissingParameter", "admission form"));
+    $loaded = dabsic_form_load_output_values($output);
+    if (!$loaded["ok"])
+        return (new ErrorResponse($loaded["error"], $loaded["details"] ?? ""));
+
+    $values = $loaded["values"] ?? [];
+    $state = admission_certificate_normalize_payment_state($values["Admission.PaymentState"] ?? "");
+    if ($state == "")
+        return (new ErrorResponse("MissingParameter", "Admission.PaymentState"));
+
+    $paid = trim((string)($values["Admission.PaidAmount"] ?? ""));
+    if ($state == "partial" && $paid == "")
+        return (new ErrorResponse("MissingParameter", "Admission.PaidAmount"));
+
+    return (new ValueResponse([
+        "payment_state" => $state,
+        "paid_amount" => $paid,
+    ]));
+}
+
+function admission_certificate_preview_required_amounts(array $prospect, array $options = [])
+{
+    $target_class = (int)($prospect["target_class"] ?? 0);
+    $classes = admission_certificate_target_classes();
+    if (!isset($classes[$target_class]))
+        return ([]);
+
+    $ret = admission_certificate_school_for_prospect($prospect, $options);
+    if (!is_object($ret) || $ret->is_error() || !is_array($ret->value))
+        return ([]);
+    $school = $ret->value;
+
+    $ret = admission_certificate_tariff($school, $classes[$target_class]["year"], $options);
+    if (!is_object($ret) || $ret->is_error() || !is_array($ret->value))
+        return ([]);
+    $template = $ret->value;
+
+    $domestic = billing_admission_amounts($template, false);
+    $foreign = billing_admission_amounts($template, true);
+    return ([
+        "domestic" => billing_euros((int)($domestic["due_at_registration_cents"] ?? 0)),
+        "foreign" => billing_euros((int)($foreign["due_at_registration_cents"] ?? 0)),
+    ]);
+}
+
 function admission_certificate_context(array $prospect, array $options = [])
 {
     if (!array_key_exists("is_foreign", $options) && !array_key_exists("foreign", $options))
@@ -288,9 +491,38 @@ function admission_certificate_context(array $prospect, array $options = [])
     $foreign_supplement = (int)($admission_amounts["foreign_advance_cents"] ?? 0);
     $required_amount = (int)($admission_amounts["due_at_registration_cents"] ?? 0);
     $paid_amount = admission_certificate_paid_amount((int)$prospect["id"], (int)$school["id"]);
-    $payment_confirmed = array_key_exists("payment_confirmed", $options)
-        ? !empty($options["payment_confirmed"])
-        : ($required_amount > 0 && $paid_amount >= $required_amount);
+    $payment_state = admission_certificate_normalize_payment_state($options["payment_state"] ?? "");
+    $option_paid_amount = admission_certificate_option_paid_amount_cents($options);
+
+    if ($payment_state == "full")
+    {
+        $paid_amount = $required_amount;
+        $payment_confirmed = true;
+    }
+    else if ($payment_state == "partial")
+    {
+        if ($option_paid_amount === NULL || $option_paid_amount <= 0)
+            return (new ErrorResponse("MissingParameter", "paid_amount"));
+        if ($required_amount > 0 && $option_paid_amount >= $required_amount)
+            return (new ErrorResponse("InvalidParameter", "paid_amount: partial payment must be lower than the amount due"));
+        $paid_amount = $option_paid_amount;
+        $payment_confirmed = false;
+    }
+    else if ($payment_state == "none")
+    {
+        $paid_amount = 0;
+        $payment_confirmed = false;
+    }
+    else
+    {
+        if ($required_amount > 0 && $paid_amount >= $required_amount)
+            $payment_state = "full";
+        else if ($paid_amount > 0)
+            $payment_state = "partial";
+        else
+            $payment_state = "none";
+        $payment_confirmed = ($payment_state == "full");
+    }
 
     $entry_stamp = admission_certificate_entry_date($prospect, $options);
     if ($entry_stamp === NULL)
@@ -301,6 +533,7 @@ function admission_certificate_context(array $prospect, array $options = [])
 
     $student = document_builder_person_context($prospect);
     $student["identity"] = document_builder_name($prospect);
+    $student["gender"] = admission_certificate_gender_value($student["gender"] ?? ($prospect["gender"] ?? ""));
     $birth_stamp = admission_certificate_parse_date($student["birth_date"] ?? ($prospect["birth_date"] ?? NULL));
     $student["birth_date"] = $birth_stamp === NULL ? "" : datex("d/m/Y", $birth_stamp);
     $student["birth_place"] = $student["birth_place"] ?? ($prospect["birth_place"] ?? ($prospect["birth_city"] ?? ""));
@@ -338,6 +571,7 @@ function admission_certificate_context(array $prospect, array $options = [])
             "foreign_supplement" => billing_euros($foreign_supplement),
             "required_amount" => billing_euros($required_amount),
             "paid_amount" => billing_euros($paid_amount),
+            "payment_state" => $payment_state,
             "payment_confirmed" => $payment_confirmed ? 1 : 0,
             "issue_place" => $options["issue_place"] ?? admission_certificate_school_city($school),
             "issue_date" => datex("d/m/Y", $issue_stamp),
@@ -363,8 +597,7 @@ function build_admission_certificate($id_prospect, array $options = [])
         return ($ret);
     $context_data = $ret->value;
 
-    $definitive = !array_key_exists("definitive", $options) || !empty($options["definitive"]);
-    $model_name = $options["model"] ?? ($definitive ? "attestation_admission_definitive" : "attestation_admission");
+    $model_name = $options["model"] ?? "attestation_admission";
     $model = document_builder_find_model($model_name, $Language);
     if ($model === NULL)
         return (new ErrorResponse("MissingFile", "admission certificate model: ".$model_name));
@@ -375,7 +608,7 @@ function build_admission_certificate($id_prospect, array $options = [])
     if (($ret = generate_dabsic($context_data, $context_file))->is_error())
         return ($ret);
 
-    $output_name = $options["output"] ?? (datex("Ymd_His")."_attestation_admission".($definitive ? "_definitive" : "").".pdf");
+    $output_name = $options["output"] ?? (datex("Ymd_His")."_attestation_admission.pdf");
     if (!preg_match('/^[a-zA-Z0-9_\-.]+$/', $output_name))
         return (new ErrorResponse("InvalidParameter", "output"));
     $output = $document_dir.$output_name;

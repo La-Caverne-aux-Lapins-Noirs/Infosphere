@@ -1,13 +1,3 @@
-<input
-    type="text"
-    pattern="[0-9]{5}"
-    name="postal_code"
-    placeholder="<?=$Dictionnary["PostalCode"]; ?>"
-    <?=pf("postal_code"); ?>
-    required
-/>
-<br />
-
 <select name="current_class" required>
     <?php if ($Language == "fr") { ?>
     <option value=""><?=$Dictionnary["CurrentClass"]; ?></option>
@@ -49,11 +39,14 @@
     <option value="2" <?=pselected("target_entry", 2); ?>><?=$Dictionnary["StartOfApril"]; ?></option>
 </select>
 <select name="school" required>
-    <?php $posted_school = isset($_POST["school"]) ? (int)$_POST["school"] : 0; ?>
+    <?php
+    $posted_school = isset($_POST["school"]) ? (int)$_POST["school"] : 0;
+    $last_school = is_array($User) ? (string)($User["last_school"] ?? "") : "";
+    ?>
     <?php foreach (fetch_school() as $school) { ?>
     <option
         value="<?=$school["id"]; ?>"
-        <?php if ($posted_school > 0 ? $posted_school == (int)$school["id"] : ($User && $school["codename"] == $User["last_school"])) { ?>
+        <?php if ($posted_school > 0 ? $posted_school == (int)$school["id"] : ($last_school != "" && $school["codename"] == $last_school)) { ?>
             selected
         <?php } ?>
     >

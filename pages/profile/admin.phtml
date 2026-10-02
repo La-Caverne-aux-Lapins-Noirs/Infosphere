@@ -1,0 +1,464 @@
+<?php
+$profile_admin_user_id = (int)$user->id;
+$can_manage_profile_relations = can_manage_user_relations($profile_admin_user_id);
+$can_manage_profile_credentials = can_manage_user_credentials($profile_admin_user_id);
+$can_manage_profile_account = is_admin() && $profile_admin_user_id != 1;
+$can_generate_profile_diploma = can_generate_user_diploma($profile_admin_user_id);
+$can_generate_profile_id_card = can_generate_user_id_card($profile_admin_user_id);
+
+if (!$can_manage_profile_relations
+    && !$can_manage_profile_credentials
+    && !$can_manage_profile_account
+    && !$can_generate_profile_diploma
+    && !$can_generate_profile_id_card)
+    return ;
+
+$profile_account_user = nfc_card_user($profile_admin_user_id);
+if ($profile_account_user == NULL)
+    return ;
+$profile_account_authority = (int)($profile_account_user["authority"] ?? USER);
+$profile_relations = $can_manage_profile_relations
+    ? fetch_user_relation_summary($profile_admin_user_id)
+    : ["responsible_by" => [], "responsible_for" => []];
+$profile_relation_candidates = $can_manage_profile_relations
+    ? user_relation_candidate_parents($profile_admin_user_id)
+    : [];
+$profile_nfc_eligible = $can_manage_profile_credentials
+    && nfc_card_user_is_eligible($profile_account_user);
+$profile_diploma_schools = $can_generate_profile_diploma
+    ? diploma_director_schools_for_user($profile_admin_user_id)
+    : [];
+$profile_diploma_titles = $can_generate_profile_diploma
+    ? fetch_certification_titles()
+    : [];
+$profile_diploma_ready = false;
+$profile_diploma_issue_date = "";
+$profile_diploma_default_promotion = $can_generate_profile_diploma
+    ? diploma_default_promotion_year($profile_admin_user_id)
+    : diploma_promotion_year();
+$profile_diploma_nickname = trim((string)($user->nickname ?? ""));
+foreach ($profile_diploma_schools as &$profile_diploma_school)
+{
+    $profile_diploma_school["diploma_status"] = diploma_school_status($profile_diploma_school);
+    $profile_diploma_school["diploma_issue_date"] = diploma_default_issue_date(
+        $profile_admin_user_id, (int)$profile_diploma_school["id"]
+    );
+    if ($profile_diploma_issue_date == ""
+        && $profile_diploma_school["diploma_status"]["ready"])
+        $profile_diploma_issue_date = $profile_diploma_school["diploma_issue_date"];
+    $profile_diploma_ready = $profile_diploma_ready || $profile_diploma_school["diploma_status"]["ready"];
+}
+unset($profile_diploma_school);
+$profile_id_card_schools = $can_generate_profile_id_card
+    ? id_card_director_schools_for_user($profile_admin_user_id)
+    : [];
+$profile_id_card_ready = false;
+$profile_id_card_default_study_year = "";
+$profile_id_card_max_study_year = 5;
+$profile_existing_id_cards = [];
+foreach ($profile_id_card_schools as &$profile_id_card_school)
+{
+    $profile_id_card_school["id_card_status"] = id_card_school_status($profile_id_card_school);
+    $profile_id_card_school["study_year"] = id_card_user_current_course(
+        $profile_admin_user_id, (int)$profile_id_card_school["id"]
+    );
+    $profile_id_card_ready = $profile_id_card_ready || $profile_id_card_school["id_card_status"]["ready"];
+    if ($profile_id_card_default_study_year == ""
+        && $profile_id_card_school["id_card_status"]["ready"])
+        $profile_id_card_default_study_year = (string)$profile_id_card_school["study_year"];
+    if ((int)$profile_id_card_school["study_year"] > $profile_id_card_max_study_year)
+        $profile_id_card_max_study_year = (int)$profile_id_card_school["study_year"];
+    $profile_id_card_path = id_card_absolute_path(id_card_output_path($profile_account_user, $profile_id_card_school));
+    if (is_file($profile_id_card_path))
+        $profile_existing_id_cards[] = [
+            "school" => $profile_id_card_school,
+            "filename" => basename($profile_id_card_path),
+        ];
+}
+unset($profile_id_card_school);
+?>
+
+<?php if ($can_manage_profile_relations) { ?>
+    <fieldset class="profile_admin_section profile_user_relations">
+        <legend><b><?=$Dictionnary["Relations"] ?? "Relations"; ?></b></legend>
+        <?php if (count($profile_relations["responsible_by"])) { ?>
+            <h4><?=$Dictionnary["ResponsibleContacts"] ?? "Responsables / contacts"; ?></h4>
+            <ul>
+                <?php foreach ($profile_relations["responsible_by"] as $relation_user) { ?>
+                    <li>
+                        <div class="profile_user_relation_item">
+                            <span>
+                                <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
+                                    <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
+                                </a>
+                                <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
+                                <?php if (count($relation_labels)) { ?>
+                                    <span class="profile_user_relation_tags">
+                                        <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                                    </span>
+                                <?php } ?>
+                            </span>
+                            <form
+                                class="profile_user_relation_remove"
+                                method="delete"
+                                action="/api/user/<?=$profile_admin_user_id; ?>/relation/<?=(int)$relation_user["id"]; ?>"
+                                onsubmit="return false;"
+                            >
+                                <input
+                                    type="button"
+                                    value="×"
+                                    title="<?=$Dictionnary["RemoveRelation"] ?? "Supprimer cette relation"; ?>"
+                                    onclick="if (confirm('<?=addslashes($Dictionnary["RemoveRelationConfirm"] ?? "Supprimer cette relation ?"); ?>')) silent_submitf(this.parentNode, {after_success: refresh});"
+                                />
+                            </form>
+                        </div>
+                        <form method="put" action="/api/user/<?=$profile_admin_user_id; ?>/relation" onsubmit="return false;" class="profile_user_relation_update">
+                            <input
+                                type="hidden"
+                                name="parent"
+                                value="<?=htmlspecialchars($relation_user["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                            />
+                            <div class="profile_user_relation_types">
+                                <?php $current_relation_values = user_relation_values($relation_user["relation"] ?? ""); ?>
+                                <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
+                                            value="1"
+                                            <?=in_array($relation_name, $current_relation_values, true) ? "checked" : ""; ?>
+                                        />
+                                        <?=htmlspecialchars($definition["label"]); ?>
+                                    </label>
+                                <?php } ?>
+                            </div>
+                            <input type="button" value="<?=$Dictionnary["Update"] ?? "Mettre à jour"; ?>" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
+                        </form>
+                    </li>
+                <?php } ?>
+            </ul>
+        <?php } ?>
+
+        <?php if (count($profile_relations["responsible_for"])) { ?>
+            <h4><?=$Dictionnary["ResponsibleFor"] ?? "Responsable de"; ?></h4>
+            <ul>
+                <?php foreach ($profile_relations["responsible_for"] as $relation_user) { ?>
+                    <li>
+                        <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
+                            <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
+                        </a>
+                        <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
+                        <?php if (count($relation_labels)) { ?>
+                            <span class="profile_user_relation_tags">
+                                <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
+                            </span>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
+            </ul>
+        <?php } ?>
+
+        <div class="profile_user_relation_editor">
+            <h4><?=$Dictionnary["AddResponsibleContact"] ?? "Ajouter un responsable / contact"; ?></h4>
+            <?php if (count($profile_relation_candidates)) { ?>
+                <form method="put" action="/api/user/<?=$profile_admin_user_id; ?>/relation" onsubmit="return false;">
+                    <select name="parent">
+                        <?php foreach ($profile_relation_candidates as $candidate) { ?>
+                            <option value="<?=htmlspecialchars($candidate["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
+                                <?=htmlspecialchars(user_relation_display_name($candidate)); ?>
+                                (<?=htmlspecialchars($candidate["codename"]); ?>)
+                            </option>
+                        <?php } ?>
+                    </select>
+                    <div class="profile_user_relation_types">
+                        <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
+                                    value="1"
+                                />
+                                <?=htmlspecialchars($definition["label"]); ?>
+                            </label>
+                        <?php } ?>
+                    </div>
+                    <p class="profile_user_relation_editor_notice">
+                        <?=$Dictionnary["RelationDestinationNotice"] ?? "La relation définit sa destination dans Infosphere et peut cumuler plusieurs rôles."; ?>
+                    </p>
+                    <input type="button" value="<?=$Dictionnary["Add"] ?? "Ajouter"; ?>" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
+                </form>
+            <?php } else { ?>
+                <p class="profile_user_relation_editor_notice">
+                    <?=$Dictionnary["NoRelationCandidate"] ?? "Aucun autre compte actif de cette école n'est disponible."; ?>
+                </p>
+            <?php } ?>
+        </div>
+    </fieldset>
+<?php } ?>
+
+<?php if ($can_generate_profile_diploma) { ?>
+    <fieldset class="profile_admin_section profile_diploma_section">
+        <legend><b><?=$Dictionnary["Diplomas"] ?? "Diplômes"; ?></b></legend>
+        <p class="profile_diploma_notice">
+            <?=$Dictionnary["GenerateDiplomaHelp"] ?? "Générez le diplôme d'une certification enregistrée pour cet élève."; ?>
+        </p>
+
+        <?php if (!count($profile_diploma_titles)) { ?>
+            <p class="profile_diploma_warning"><?=$Dictionnary["DiplomaNoCertification"] ?? "Aucune certification active n'est enregistrée."; ?></p>
+        <?php } else if (!$profile_diploma_ready) { ?>
+            <p class="profile_diploma_warning"><?=$Dictionnary["DiplomaNoReadySchool"] ?? "Aucune école commune ne possède une configuration de diplôme complète."; ?></p>
+        <?php } ?>
+
+        <form method="post" action="/api/user/<?=$profile_admin_user_id; ?>/diploma" class="profile_diploma_form" onsubmit="return false;">
+            <label>
+                <?=$Dictionnary["School"] ?? "École"; ?>
+                <select name="id_school" onchange="var d=this.form.elements['issue_date']; if (d && d.dataset.edited != '1') d.value=this.options[this.selectedIndex].dataset.issueDate || '';">
+                    <?php foreach ($profile_diploma_schools as $profile_diploma_school) { ?>
+                        <option value="<?=(int)$profile_diploma_school["id"]; ?>" data-issue-date="<?=htmlspecialchars($profile_diploma_school["diploma_issue_date"] ?? "", ENT_QUOTES); ?>" <?=$profile_diploma_school["diploma_status"]["ready"] ? "" : "disabled"; ?>>
+                            <?=htmlspecialchars($profile_diploma_school["name"] ?? $profile_diploma_school["codename"]); ?>
+                            — <?=$profile_diploma_school["diploma_status"]["ready"]
+                                ? ($Dictionnary["DiplomaReady"] ?? "prêt")
+                                : ($Dictionnary["DiplomaMissing"] ?? "configuration incomplète"); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <?=$Dictionnary["Certification"] ?? "Certification"; ?>
+                <select name="id_title">
+                    <?php foreach ($profile_diploma_titles as $profile_diploma_title) { ?>
+                        <option value="<?=(int)$profile_diploma_title["id"]; ?>">
+                            <?=htmlspecialchars(diploma_certification_name($profile_diploma_title)); ?>
+                            <?php if (trim((string)($profile_diploma_title["code"] ?? "")) != "") { ?>
+                                (<?=htmlspecialchars($profile_diploma_title["code"]); ?>)
+                            <?php } ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </label>
+            <div class="profile_diploma_options">
+                <label>
+                    <?=$Dictionnary["DiplomaPromotionYear"] ?? "Promotion"; ?>
+                    <input
+                        type="number"
+                        name="promotion_year"
+                        min="1900"
+                        max="2200"
+                        value="<?=(int)$profile_diploma_default_promotion; ?>"
+                    />
+                    <small><?=$Dictionnary["DiplomaPromotionYearHelp"] ?? "Par défaut : année de fin du dernier cycle terminé, hors cycle 20 (hors année). Vous pouvez la modifier pour les cas particuliers."; ?></small>
+                </label>
+                <label class="profile_diploma_checkbox">
+                    <input
+                        type="checkbox"
+                        name="include_nickname"
+                        value="1"
+                        <?=$profile_diploma_nickname == "" ? "disabled" : ""; ?>
+                    />
+                    <span>
+                        <?=$Dictionnary["DiplomaIncludeNickname"] ?? "Afficher le pseudo sur le diplôme"; ?>
+                        <?php if ($profile_diploma_nickname != "") { ?>
+                            <small>« <?=htmlspecialchars($profile_diploma_nickname, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?> »</small>
+                        <?php } else { ?>
+                            <small><?=$Dictionnary["DiplomaNoNickname"] ?? "Aucun pseudo n'est renseigné pour cet élève."; ?></small>
+                        <?php } ?>
+                    </span>
+                </label>
+            </div>
+            <label>
+                <?=$Dictionnary["DiplomaIssueDate"] ?? "Date de délivrance"; ?>
+                <input
+                    type="date"
+                    name="issue_date"
+                    value="<?=htmlspecialchars($profile_diploma_issue_date, ENT_QUOTES); ?>"
+                    oninput="this.dataset.edited='1';"
+                />
+                <small><?=$Dictionnary["DiplomaIssueDateHelp"] ?? "Préremplie avec la fin du dernier cycle ; vous pouvez la modifier avant génération."; ?></small>
+            </label>
+            <small><?=$Dictionnary["DiplomaStoredAs"] ?? "Le fichier est créé dans les fichiers admin sous le nom français de la certification suivi de .png."; ?></small>
+            <input
+                type="button"
+                value="<?=$Dictionnary["GenerateDiploma"] ?? "Générer le diplôme"; ?>"
+                <?=(!$profile_diploma_ready || !count($profile_diploma_titles)) ? "disabled" : ""; ?>
+                onclick="if (confirm('<?=addslashes($Dictionnary["GenerateDiplomaConfirm"] ?? "Générer ou remplacer ce diplôme ?"); ?>')) silent_submitf(this.form, {after_success: refresh});"
+            />
+        </form>
+
+        <?php
+        $profile_existing_diplomas = [];
+        foreach ($profile_diploma_titles as $profile_diploma_title)
+        {
+            $profile_diploma_path = diploma_absolute_path(diploma_output_path($profile_account_user, $profile_diploma_title));
+            if (is_file($profile_diploma_path))
+                $profile_existing_diplomas[] = basename($profile_diploma_path);
+        }
+        ?>
+        <?php if (count($profile_existing_diplomas)) { ?>
+            <div class="profile_diploma_existing">
+                <b><?=$Dictionnary["GeneratedDiplomas"] ?? "Diplômes générés"; ?></b>
+                <ul>
+                    <?php foreach ($profile_existing_diplomas as $profile_existing_diploma) { ?>
+                        <li><?=htmlspecialchars($profile_existing_diploma); ?></li>
+                    <?php } ?>
+                </ul>
+            </div>
+        <?php } ?>
+    </fieldset>
+<?php } ?>
+
+<?php if ($can_generate_profile_id_card) { ?>
+    <fieldset class="profile_admin_section profile_student_card_section">
+        <legend><b><?=$Dictionnary["StudentCards"] ?? "Cartes"; ?></b></legend>
+        <p class="profile_diploma_notice">
+            <?=$Dictionnary["GenerateStudentCardHelp"] ?? "Générez la carte étudiante de cet élève à partir de la configuration de son école."; ?>
+        </p>
+
+        <?php if (!$profile_id_card_ready) { ?>
+            <p class="profile_diploma_warning"><?=$Dictionnary["IdCardNoReadySchool"] ?? "Aucune école commune ne possède une configuration de carte complète."; ?></p>
+        <?php } ?>
+
+        <form method="post" action="/api/user/<?=$profile_admin_user_id; ?>/student_card" class="profile_diploma_form" onsubmit="return false;">
+            <label>
+                <?=$Dictionnary["School"] ?? "École"; ?>
+                <select name="id_school" onchange="var y=this.form.elements.study_year; if (y) y.value=this.options[this.selectedIndex].dataset.studyYear || '';">
+                    <?php foreach ($profile_id_card_schools as $profile_id_card_school) { ?>
+                        <option
+                            value="<?=(int)$profile_id_card_school["id"]; ?>"
+                            data-study-year="<?=htmlspecialchars((string)$profile_id_card_school["study_year"], ENT_QUOTES); ?>"
+                            <?=$profile_id_card_school["id_card_status"]["ready"] ? "" : "disabled"; ?>
+                        >
+                            <?=htmlspecialchars($profile_id_card_school["name"] ?? $profile_id_card_school["codename"], ENT_QUOTES); ?>
+                            — <?=$profile_id_card_school["id_card_status"]["ready"]
+                                ? ($Dictionnary["IdCardReady"] ?? "prêt")
+                                : ($Dictionnary["IdCardMissing"] ?? "configuration incomplète"); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <?=$Dictionnary["IdCardStudyYear"] ?? "Année d'étude"; ?>
+                <select name="study_year">
+                    <option value="">—</option>
+                    <?php for ($profile_study_year = 1; $profile_study_year <= $profile_id_card_max_study_year; ++$profile_study_year) { ?>
+                        <option value="<?=$profile_study_year; ?>" <?=$profile_id_card_default_study_year === (string)$profile_study_year ? "selected" : ""; ?>>
+                            <?=$profile_study_year; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <small><?=$Dictionnary["IdCardStudyYearHelp"] ?? "Préremplie avec l'année déduite du cursus ; vous pouvez la corriger avant génération."; ?></small>
+            </label>
+            <small><?=$Dictionnary["IdCardStoredAs"] ?? "Le fichier est créé dans les fichiers admin de l'élève au format PNG."; ?></small>
+            <input
+                type="button"
+                value="<?=$Dictionnary["GenerateStudentCard"] ?? "Générer la carte étudiante"; ?>"
+                <?=$profile_id_card_ready ? "" : "disabled"; ?>
+                onclick="if (confirm('<?=addslashes($Dictionnary["GenerateStudentCardConfirm"] ?? "Générer ou remplacer cette carte ?"); ?>')) silent_submitf(this.form, {after_success: refresh});"
+            />
+        </form>
+
+        <?php if (count($profile_existing_id_cards)) { ?>
+            <div class="profile_diploma_existing">
+                <b><?=$Dictionnary["GeneratedStudentCards"] ?? "Cartes générées"; ?></b>
+                <ul>
+                    <?php foreach ($profile_existing_id_cards as $profile_existing_id_card) { ?>
+                        <li>
+                            <?=htmlspecialchars($profile_existing_id_card["school"]["name"] ?? $profile_existing_id_card["school"]["codename"], ENT_QUOTES); ?>
+                            — <?=htmlspecialchars($profile_existing_id_card["filename"], ENT_QUOTES); ?>
+                        </li>
+                    <?php } ?>
+                </ul>
+            </div>
+        <?php } ?>
+    </fieldset>
+<?php } ?>
+
+<?php if ($can_manage_profile_credentials || $can_manage_profile_account) { ?>
+    <fieldset class="profile_admin_section profile_account_administration">
+        <legend><b><?=$Dictionnary["Account"] ?? "Compte"; ?></b></legend>
+
+        <?php if ($can_manage_profile_account) { ?>
+            <div class="profile_admin_action">
+                <label for="profile_account_status_<?=$profile_admin_user_id; ?>"><b><?=$Dictionnary["Status"]; ?></b></label>
+                <form
+                    onsubmit="return false;"
+                    method="<?=$profile_account_user["deleted"] == NULL ? "delete" : "put"; ?>"
+                    action="/api/user/<?=$profile_admin_user_id; ?>"
+                >
+                    <select id="profile_account_status_<?=$profile_admin_user_id; ?>" name="deleted" onchange="silent_submit(this.parentNode);">
+                        <option value="0" <?=$profile_account_user["deleted"] == NULL ? "selected" : ""; ?>><?=$Dictionnary["ActiveAccount"]; ?></option>
+                        <option value="1" <?=$profile_account_user["deleted"] != NULL ? "selected" : ""; ?>><?=$Dictionnary["BannedAccount"]; ?></option>
+                    </select>
+                </form>
+            </div>
+
+            <div class="profile_admin_action">
+                <label for="profile_account_authority_<?=$profile_admin_user_id; ?>"><b><?=$Dictionnary["Authority"]; ?></b></label>
+                <form onsubmit="return false;" method="put" action="/api/user/<?=$profile_admin_user_id; ?>">
+                    <input type="hidden" name="action" value="set_status" />
+                    <select id="profile_account_authority_<?=$profile_admin_user_id; ?>" name="authority" onchange="silent_submit(this.parentNode);">
+                        <option value="<?=USER; ?>" <?=$profile_account_authority === USER ? "selected" : ""; ?>><?=$Dictionnary["User"]; ?></option>
+                        <option value="<?=ADMINISTRATOR; ?>" <?=$profile_account_authority === ADMINISTRATOR ? "selected" : ""; ?>><?=$Dictionnary["Administrator"]; ?></option>
+                    </select>
+                </form>
+            </div>
+        <?php } ?>
+
+        <?php if ($can_manage_profile_credentials && $profile_admin_user_id != 1) { ?>
+            <div class="profile_admin_action">
+                <span>
+                    <b><?=$Dictionnary["Password"] ?? "Mot de passe"; ?></b><br />
+                    <small><?=$Dictionnary["RegeneratePasswordNotice"] ?? "Un nouveau mot de passe sera généré et envoyé à l'utilisateur."; ?></small>
+                </span>
+                <form onsubmit="return false;" method="put" action="/api/user/<?=$profile_admin_user_id; ?>">
+                    <input type="hidden" name="action" value="new_password" />
+                    <input
+                        type="button"
+                        onclick="if (confirm('<?=addslashes($Dictionnary["RegeneratePasswordConfirm"] ?? "Régénérer le mot de passe de cet utilisateur ?"); ?>')) silent_submit(this.parentNode);"
+                        value="<?=$Dictionnary["RegeneratePassword"]; ?>"
+                    />
+                </form>
+            </div>
+
+            <div class="profile_admin_action profile_nfc_card" data-nfc-container>
+                <span class="profile_nfc_summary">
+                    <b><?=$Dictionnary["NfcCard"]; ?></b><br />
+                    <small>
+                        <?=$profile_nfc_eligible
+                            ? (($nfc_info = nfc_card_info_for_user($profile_admin_user_id))["exists"]
+                                ? $Dictionnary["NfcCardReady"]
+                                : $Dictionnary["NfcCardWillBeCreated"])
+                            : $Dictionnary["NfcCardUnavailable"]; ?>
+                    </small>
+                </span>
+                <?php if ($profile_nfc_eligible) { ?>
+                    <div class="profile_nfc_actions">
+                        <a class="profile_admin_button" href="/api/user/<?=$profile_admin_user_id; ?>/nfc_card">
+                            &#x1F4E5; <?=$Dictionnary["DownloadNfcCard"]; ?>
+                        </a>
+                        <button
+                            type="button"
+                            class="profile_admin_button"
+                            onclick="infosphere_nfc_program(this, <?=$profile_admin_user_id; ?>);"
+                        >&#x1F4F3; <?=$Dictionnary["ProgramNfcCardBrowser"] ?? "Programmer la carte"; ?></button>
+                        <button
+                            type="button"
+                            class="profile_admin_button"
+                            onclick="infosphere_nfc_read(this, <?=$profile_admin_user_id; ?>);"
+                        >&#x1F50E; <?=$Dictionnary["ReadNfcCardBrowser"] ?? "Lire une carte"; ?></button>
+                        <form onsubmit="return false;" method="put" action="/api/user/<?=$profile_admin_user_id; ?>">
+                            <input type="hidden" name="action" value="new_nfc_card" />
+                            <input
+                                type="button"
+                                onclick="if (confirm('<?=addslashes($Dictionnary["RegenerateNfcCardConfirm"]); ?>')) silent_submit(this.parentNode);"
+                                value="&#x21BB; <?=$Dictionnary["RegenerateNfcCard"]; ?>"
+                            />
+                        </form>
+                    </div>
+                    <pre class="profile_nfc_browser_status" data-nfc-status hidden></pre>
+                <?php } ?>
+            </div>
+        <?php } ?>
+
+
+    </fieldset>
+<?php } ?>

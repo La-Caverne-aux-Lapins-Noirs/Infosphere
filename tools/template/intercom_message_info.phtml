@@ -44,7 +44,10 @@ if (!isset($message["report_count"]))
 
 
 <?php
-$intercom_moderation_action = intercom_api_url_html($intercom, $message["id"]);
+$intercom_moderation_action = intercom_api_url_html($intercom, $message["id"], [
+    "page" => $subject["page"],
+    "page_size" => $subject["page_size"],
+]);
 $intercom_moderation_js = "silent_submitf(this, {tofill: '".$intercom["div"]."_msg'});";
 ?>
 <div

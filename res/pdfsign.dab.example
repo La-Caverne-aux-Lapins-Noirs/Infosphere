@@ -1,10 +1,11 @@
-' Copier vers dres/school/<codename>/pdfsign.dab puis adapter Nick.\n' Chaque école possède ainsi son propre certificat/cachet et sa propre TSA.
+' Ce fichier est créé automatiquement dans dres/school/<codename>/pdfsign.dab.
+' Ne le copier manuellement que pour surcharger les valeurs automatiques.
 ' Les secrets restent hors de ce fichier : on ne stocke que leurs chemins.
 Enabled = 1
 Binary = "pdfsign"
 Store = "/var/lib/pdfsign/nss"
 StorePasswordFile = "/var/lib/pdfsign/store-password"
-Nick = "EFRITS document seal"
+Nick = "SCHOOL document seal"
 Reason = "Infosphere document workflow"
 RequireTrusted = 0
 ' Facultatif : URL d'une TSA RFC 3161. Vide = pas d'horodatage détaché.

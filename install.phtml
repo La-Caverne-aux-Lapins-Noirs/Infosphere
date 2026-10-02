@@ -96,6 +96,10 @@
 		    - Some softwares from the TechnoCore suite could be exploited by Infosphere
 		    to keep track of students using a school it infrastructure.
 		    <br />
+		    - Infosphere requires PHP to use the same timezone as the host system.
+		    The installer generates a <b>99-infosphere-timezone.ini</b> file for the
+		    current PHP version and installs it for Apache, CLI and FPM when permitted.
+		    <br />
 		    - For optimized HLS support videos, the installer tries to write
 		    <b>/etc/apache2/conf-available/infosphere-hls.conf</b>, enable it,
 		    and download <b>script/ext/hls.min.js</b>. If the web server user cannot

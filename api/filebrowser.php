@@ -36,6 +36,21 @@ function RenameFileBrowserEntry($id, $data, $method, $output, $module)
     ));
 }
 
+function CreateFileBrowserEntry($id, $data, $method, $output, $module)
+{
+    if (!is_array($data))
+        bad_request();
+    return (path_browser_transfer_create(
+        $data["page"] ?? "",
+        $data["id"] ?? -1,
+        $data["type"] ?? "",
+        $data["language"] ?? "",
+        $data["directory"] ?? "",
+        $data["name"] ?? "",
+        $data["kind"] ?? ""
+    ));
+}
+
 $Tab = [
     "GET" => [
         "export" => [
@@ -47,6 +62,10 @@ $Tab = [
         "rename" => [
             "logged_in",
             "RenameFileBrowserEntry"
+        ],
+        "create" => [
+            "logged_in",
+            "CreateFileBrowserEntry"
         ]
     ]
 ];

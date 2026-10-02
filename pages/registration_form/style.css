@@ -130,6 +130,27 @@
     margin-top: 8px;
 }
 
+/* The EFRITS theme gives all text a white foreground, while native <button>
+ * controls otherwise keep their browser-default white background.  Signature
+ * actions therefore became white-on-white.  Keep the signing controls explicit
+ * and readable independently from the active school theme. */
+.registration-signature button,
+.registration-paraph button {
+    padding: 7px 11px;
+    border: 1px solid #5b6875;
+    border-radius: 4px;
+    background: #2c343c !important;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+.registration-signature button:hover,
+.registration-signature button:focus,
+.registration-paraph button:hover,
+.registration-paraph button:focus {
+    background: #3b4651 !important;
+}
+
 .registration-signature-consent {
     display: flex;
     align-items: flex-start;
@@ -189,8 +210,15 @@
 }
 
 #registration-finalize {
-    background: #17692d;
-    color: #fff;
+    border: 1px solid #2e9a4c !important;
+    background: #17692d !important;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+#registration-finalize:hover,
+#registration-finalize:focus {
+    background: #1f7d38 !important;
 }
 
 @media (max-width: 760px) {
@@ -267,4 +295,67 @@
 
 .registration-form-field .form-field-choice input {
     width: auto;
+}
+
+.registration-signature-profile-choice
+{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0.5rem 0 0.8rem 0;
+}
+.registration-signature.is-profile-signature canvas
+{
+    opacity: 0.35;
+}
+.registration-signature-profile-choice [data-profile-signature-status]
+{
+    font-weight: 600;
+}
+
+.registration-paraph {
+    margin: 22px 0 8px;
+    padding: 14px;
+    border: 1px solid rgba(95, 190, 100, 0.5);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.44);
+}
+
+.registration-paraph h3 {
+    margin: 0 0 5px;
+    color: #8bd58f;
+}
+
+.registration-paraph p {
+    margin: 4px 0 10px;
+}
+
+.registration-paraph canvas {
+    display: block;
+    width: min(360px, 100%);
+    height: auto;
+    aspect-ratio: 18 / 7;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #fff;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.registration-paraph-current {
+    display: block;
+    width: auto;
+    max-width: min(260px, 100%);
+    max-height: 100px;
+    padding: 6px;
+    border: 1px solid #4d9d68;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.registration-paraph-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
 }

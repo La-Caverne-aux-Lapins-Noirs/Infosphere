@@ -98,3 +98,16 @@ La période de congé est située entre les trimestres. Les congés durent d'une
 [@Size;2]
 Le premier trimestre de chaque formation est plus long d’une (1) semaine -
 la période d’Hyperespace est prolongée d’autant.
+
+[#IfC;School.TeacherList;!=;;
+[#IfC;Ecole;==;1;
+### Liste des enseignants
+;
+### Liste des formateurs
+]
+
+[@Size;2]
+[@Columns;4;
+[#Variable;School.TeacherList]
+]
+]

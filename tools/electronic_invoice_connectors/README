@@ -1,0 +1,11 @@
+Electronic invoicing connectors
+===============================
+
+Each PHP file in this directory may define one or more classes extending
+BillingElectronicInvoiceConnector and register an instance with
+billing_einvoice_register_connector().
+
+The accounting core must stay provider-neutral: provider URLs, authentication,
+status mappings and transport quirks belong here, not in billing tables or UI.
+Secrets should preferably be referenced from the connector configuration rather
+than stored directly in school.electronic_invoice_connector_configuration_json.

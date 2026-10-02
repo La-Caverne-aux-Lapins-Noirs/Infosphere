@@ -1343,3 +1343,40 @@ td
     position: fixed;
     z-index: 10020;
 }
+
+.prospect_event_badges {
+    margin-top: .25em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2em;
+}
+.prospect_event_badge {
+    display: inline-block;
+    max-width: 100%;
+    padding: .12em .4em;
+    border-radius: .35em;
+    background: rgba(90, 90, 90, .10);
+    font-size: .78em;
+    line-height: 1.25;
+}
+
+
+.prospect_event_entry {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .08em;
+    max-width: 100%;
+}
+.prospect_event_context,
+.prospect_event_interests {
+    display: block;
+    max-width: 100%;
+    font-size: .72em;
+    line-height: 1.25;
+    opacity: .78;
+    overflow-wrap: anywhere;
+}
+.prospect_event_interests {
+    opacity: .68;
+}

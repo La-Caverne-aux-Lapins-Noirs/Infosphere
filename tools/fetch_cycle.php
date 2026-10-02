@@ -84,6 +84,9 @@ function fetch_cycle($type = "cycle", $id = -1, $by_name = false, $fulluser = fa
             user.id as id_user,
             user.codename as codename,
             user_cycle.hidden as hidden,
+            user_cycle.enrollment_mode as enrollment_mode,
+            user_cycle.fr_name as fr_name,
+            user_cycle.en_name as en_name,
 	    user_cycle.cursus as cursus,
 	    user_cycle.commentaries as commentaries
             FROM user_cycle

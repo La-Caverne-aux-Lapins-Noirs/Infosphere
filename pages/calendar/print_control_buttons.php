@@ -6,6 +6,7 @@ function print_control_buttons($start, $end)
     global $one_week;
     global $Position;
     global $Dictionnary;
+    global $Language;
     global $rcnf;
     global $reference;
     global $date0;

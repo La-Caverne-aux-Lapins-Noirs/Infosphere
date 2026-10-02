@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/school_activity.php");
+
 function document_source_roots()
 {
     global $Configuration;
@@ -285,7 +287,7 @@ function document_source_sort_descriptors(&$documents)
     });
 }
 
-function get_contract_document_sources()
+function get_contract_document_sources($school = NULL)
 {
     $contracts = [];
 
@@ -298,11 +300,29 @@ function get_contract_document_sources()
                 continue ;
             $descriptor = document_source_descriptor($source, $doc);
             if ($descriptor !== NULL)
+            {
+                if (is_array($school))
+                {
+                    $file = document_reference_to_path($descriptor["reference"]);
+                    if (!school_activity_contract_file_allowed($school, $file))
+                        continue ;
+                }
                 $contracts[] = $descriptor;
+            }
         }
     }
     document_source_sort_descriptors($contracts);
     return ($contracts);
+}
+
+function get_rectorate_teacher_list_document_source()
+{
+    foreach (get_document_sources() as $source => $docs)
+        foreach ($docs["documents"] as $doc)
+            if (mb_strtolower(basename($doc)) === "liste_enseignants_rectorat.dab")
+                if (($descriptor = document_source_descriptor($source, $doc)) !== NULL)
+                    return ($descriptor);
+    return (NULL);
 }
 
 function get_inclusion_charter_document_source()
@@ -363,6 +383,12 @@ function get_payment_reminder_document_source()
     return ($sources["relance_paiement_retard.dab"] ?? NULL);
 }
 
+function get_organization_payment_reminder_document_source()
+{
+    $sources = get_document_sources_by_basenames(["relance_paiement_financeur.dab"]);
+    return ($sources["relance_paiement_financeur.dab"] ?? NULL);
+}
+
 function get_payment_schedule_document_source()
 {
     $sources = get_document_sources_by_basenames(["echeancier_paiements.dab"]);
@@ -385,9 +411,9 @@ function get_cycle_result_document_sources()
     return ($out);
 }
 
-function get_student_document_sources()
+function get_student_document_sources($school = NULL)
 {
-    $documents = get_contract_document_sources();
+    $documents = get_contract_document_sources($school);
     $charter = get_inclusion_charter_document_source();
     if ($charter !== NULL)
     {

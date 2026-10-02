@@ -10,6 +10,12 @@ Title = "Bulletin"
     Auto = "Owner"
     Required = 1
   ]
+  [Financial
+    Type = "user"
+    Prefix = "People.Tutor"
+    Label = "Responsable financier / destinataire"
+    InferFrom = "Student"
+  ]
   [School
     Type = "school"
     Prefix = "School"
@@ -25,92 +31,22 @@ Title = "Bulletin"
     Bulletin de fin de trimestre
   Left]
   Right = [Text($,Right)
-    [@Image;[#Variable;Company.Logo];width=3cm;height=2cm]
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
   Right]
 ]
 
 Footer = [Text($,Footer)
+  [@Center;
   [@Size;0]
   $(School.MainInfo)
   $(School.SchoolInfo)
   $(School.FormationInfo)
   $(School.AlternationInfo)
   $(School.Phone) $(School.Mail)
+  ]
 Footer]
-
-'TOUT CE QU'IL Y A EN DESSOUS DOIT ETRE AJOUTE DYNAMIQUEMENT
-
-[School
-  Name = "EFRITS"
-  Title = "Etablissement d'enseignement supérieur privé"
-  Address = [Text($,Address)
-    32a Avenue Pierre Sémard
-    94200 Ivry-sur-Seine
-  Address]
-]
-
-[People
-  [Student
-    Id = "9400025"
-    INE = "6416a4aze"
-    BirthDate = "36 Fubrance 2042"
-    Role = "Elève"
-    Identity = "Student STUDENT"
-    PreviousFlames = 10
-  ]
-  [Tutor
-    Role = "Responsable légal"
-    Identity = "Tutor TUTOR"
-    Address = "42 Avenue du Boulevard des Rues\\\\68000 Colmar"
-  ]
-  [Director
-    Role = "Directeur"
-    Identity = "Jason Brillante"
-    'Signature = @"jason.brillante.png"
-    'Initials = @"jason.brillante.initials.png"
-  ]
-]
-
-[Cycle
-  Code = "EF6E"
-  Year = 6
-  Trimester = 5
-  Start = "01/01/1970"
-  End = "01/04/1970"
-  Comment = [Text($,Comment)
-    Super cycle.
-  Comment]
-  {Modules
-    [
-      Code = "GFX-01B-XXX"
-      Name = "Programmation graphique"
-      Comment = [Text($,Comment)
-        Super élève.
-      Comment]
-      Grade = "C"
-      [Flames
-        Min = 10
-        Max = 12
-        Result = 8
-      ]
-      [Activities
-        Attendance = 8
-        NonAttendance = 4
-        Unregistered = 6
-      ]
-      [Exam
-        Attendance = 8
-        NonAttendance = 4
-        Unregistered = 6
-      ]
-      [Work
-        Delivered = 6
-        Undelivered = 4
-        Unregistered = 1
-      ]
-    ]
-  }
-]
 
 [FormGroup
   @insert "res/docs/fr/.forms/report_groups.dab"

@@ -1,8 +1,24 @@
 <?php
+require_once (__DIR__."/../../tools/report_card.php");
+
 if (!isset($cycle_stack))
     $cycle_stack = $user->merged_sublayers;
 $curcycle = ($cyc = $cycle_stack[array_key_first($cycle_stack)])->matters;
 $merged_cycles = $cyc->cycles;
+
+$profile_cycle_composition_labels = [];
+if (!empty($profile_can_view_cycle_composition))
+{
+    foreach ($merged_cycles as $profile_cycle_id)
+    {
+        $profile_cycle_id = (int)$profile_cycle_id;
+        if (!isset($profile_cycle_composition[$profile_cycle_id]))
+            continue ;
+        $profile_cycle_label = trim((string)$profile_cycle_composition[$profile_cycle_id]);
+        if ($profile_cycle_label != "" && !in_array($profile_cycle_label, $profile_cycle_composition_labels, true))
+            $profile_cycle_composition_labels[] = $profile_cycle_label;
+    }
+}
 
 $profile_object_name = static function ($object) {
     $name = trim((string)$object->name);
@@ -83,6 +99,12 @@ foreach ($curcycle as $module) {
 <table><tr><td>
     <p style="text-align: left; font-size: small; padding-left: 20px">
 	<br />
+	<?php if (count($profile_cycle_composition_labels)) { ?>
+	    <?=implode(" + ", array_map(static function ($label) {
+		return (htmlspecialchars($label, ENT_QUOTES, "UTF-8"));
+	    }, $profile_cycle_composition_labels)); ?>
+	    <br />
+	<?php } ?>
 	<b><?=$Dictionnary["Credits"]."</b> : $cur_credit / ($min_credit - $max_credit)"; ?>
 	    <?php $first_time = true; ?>
 	    <?php $cursus = ""; ?>
@@ -111,7 +133,22 @@ foreach ($curcycle as $module) {
 	foreach ($curcycle as $module)
 	    $modules[] = $module->id;
 	?>
-	<form method="post" action="<?=unrollurl(["silent" => 1, "modules" => implode(",", $modules), "id_cycle" => implode(",", $merged_cycles)]); ?>" target="_blank">
+    <?php
+    $report_card_period = report_card_period_key($cyc, $merged_cycles);
+    $report_card_existing = count(report_card_existing_paths(
+        (string)$user->codename,
+        $report_card_period,
+        $cyc
+    )) > 0;
+    ?>
+	<form
+        method="post"
+        action="<?=unrollurl(["silent" => 1, "modules" => implode(",", $modules), "id_cycle" => implode(",", $merged_cycles)]); ?>"
+        target="_blank"
+        data-report-card-exists="<?=$report_card_existing ? "1" : "0"; ?>"
+        onsubmit="var existed=this.getAttribute('data-report-card-exists')==='1'; if (existed && !confirm('Un bulletin existe déjà pour ce trimestre. Voulez-vous le remplacer ?')) return false; this.elements.replace_report_card.value=existed?'1':'0'; this.setAttribute('data-report-card-exists','1'); return true;"
+    >
+        <input type="hidden" name="replace_report_card" value="0" />
 	    <input
 		type="submit"
 		value="<?=$Dictionnary["GenerateReportCard"]; ?>"
@@ -302,7 +339,7 @@ $neutral = "255, 255, 255, 0.0";
 			    <?=$activity->name ?: $activity->codename; ?>
 			</a>
 		    </td><td>
-			<?php if ($activity->type != -1) { ?>
+			<?php if ($activity->type != -1 && isset($ActivityType[$activity->type])) { ?>
 			    <?=$Dictionnary[$ActivityType[$activity->type]["codename"]]; ?>
 			<?php } else { ?>
 			    /

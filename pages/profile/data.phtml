@@ -3,10 +3,6 @@ $can_edit_identity = is_identity_authority_for_user($user->id);
 $can_manage_administrative_profile = can_manage_user_administrative_profile((int)$user->id);
 $can_edit_nickname = is_me($user->id) || $can_edit_identity;
 $can_edit_visibility = $can_edit_nickname;
-$can_manage_profile_relations = can_manage_user_relations((int)$user->id);
-$profile_relation_candidates = $can_manage_profile_relations
-    ? user_relation_candidate_parents((int)$user->id)
-    : [];
 $can_view_identity = can_view_user_identity($user->id) || $can_manage_administrative_profile;
 if ($user->visibility == HIDDEN && !$can_view_identity)
     return ;
@@ -43,20 +39,7 @@ $fields = [
 .profile_administrative_invitation { margin-top: 0.9em; padding-top: 0.8em; border-top: 1px solid rgba(160, 160, 160, 0.45); text-align: center; }
 .profile_administrative_invitation form { display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; flex-wrap: wrap; }
 .profile_administrative_invitation select { min-width: 90px; }
-.profile_user_relations { margin: 0.5em 0; padding: 0.6em 0.8em; border: 1px solid #aaa; border-radius: 4px; }
-.profile_user_relations h4 { margin: 0.45em 0 0.25em; }
-.profile_user_relations ul { margin: 0.2em 0 0.6em; padding-left: 1.5em; }
-.profile_user_relation_tags { display: block; font-size: x-small; opacity: 0.8; }
-.profile_user_relation_item { display: flex; align-items: center; gap: 0.45em; }
-.profile_user_relation_item > span { flex: 1; min-width: 0; }
-.profile_user_relation_remove { display: inline-block; margin: 0; }
-.profile_user_relation_remove input { color: darkred; font-weight: bold; }
-.profile_user_relation_editor { margin-top: 0.8em; padding-top: 0.7em; border-top: 1px solid rgba(160, 160, 160, 0.45); }
-.profile_user_relation_editor form { display: flex; flex-direction: column; gap: 0.55em; }
-.profile_user_relation_editor select { width: 100%; }
-.profile_user_relation_types { display: flex; flex-wrap: wrap; gap: 0.35em 1em; font-size: x-small; }
-.profile_user_relation_types label { white-space: nowrap; }
-.profile_user_relation_editor_notice { margin: 0.25em 0; font-size: x-small; opacity: 0.8; }
+.profile_console_access { margin: 0.5em 0; padding: 0.6em 0.8em; border: 1px solid #aaa; border-radius: 4px; }
 </style>
 <form method="put" onsubmit="return <?=$js; ?>" action="/api/user/<?=$user->id; ?>/properties">
     <table>
@@ -103,6 +86,124 @@ $fields = [
         <br /><p style="text-align: center;"><input type="button" style="width: 150px;" onclick="<?=$js; ?>" value="&#10003;" /></p>
     <?php } ?>
 </form>
+<?php if (is_me($user->id)) {
+    $console_tokens = console_token_list((int)$user->id);
+?>
+    <br />
+    <fieldset class="profile_console_access">
+        <legend><b><?=htmlspecialchars($Dictionnary["ConsoleAccess"] ?? "Accès terminal"); ?></b></legend>
+        <p class="profile_administrative_notice">
+            <?=htmlspecialchars($Dictionnary["ConsoleAccessHelp"] ?? "Créez un jeton dédié pour un client texte."); ?>
+        </p>
+        <p style="text-align: center;">
+            <input
+                id="profile-console-token-name"
+                type="text"
+                maxlength="80"
+                value="Terminal"
+                placeholder="<?=htmlspecialchars($Dictionnary["ConsoleTokenName"] ?? "Nom du client", ENT_QUOTES); ?>"
+                style="width: 220px;"
+            />
+            <input
+                type="button"
+                value="<?=htmlspecialchars($Dictionnary["ConsoleTokenCreate"] ?? "Créer un jeton", ENT_QUOTES); ?>"
+                onclick="profileConsoleCreateToken();"
+            />
+        </p>
+        <div id="profile-console-token-result" hidden style="margin: 0.75em auto; max-width: 720px; text-align: center;">
+            <p><b><?=htmlspecialchars($Dictionnary["ConsoleTokenCreated"] ?? "Jeton créé. Copiez-le maintenant."); ?></b></p>
+            <input id="profile-console-token-value" type="text" readonly style="width: 78%; font-family: monospace;" />
+            <input
+                type="button"
+                value="<?=htmlspecialchars($Dictionnary["ConsoleTokenCopy"] ?? "Copier", ENT_QUOTES); ?>"
+                onclick="profileConsoleCopyToken();"
+            />
+        </div>
+        <?php if (count($console_tokens)) { ?>
+            <h4 style="text-align: center;"><?=htmlspecialchars($Dictionnary["ConsoleTokenActive"] ?? "Jetons actifs"); ?></h4>
+            <table style="width: 100%;">
+                <tr>
+                    <th><?=htmlspecialchars($Dictionnary["ConsoleTokenName"] ?? "Nom du client"); ?></th>
+                    <th><?=htmlspecialchars($Dictionnary["ConsoleTokenLastUsed"] ?? "Dernière utilisation"); ?></th>
+                    <th></th>
+                </tr>
+                <?php foreach ($console_tokens as $console_token) { ?>
+                    <tr>
+                        <td><?=htmlspecialchars((string)$console_token["name"]); ?></td>
+                        <td style="text-align: center;">
+                            <?=htmlspecialchars($console_token["last_used_at"]
+                                ? human_date($console_token["last_used_at"], true)
+                                : ($Dictionnary["ConsoleTokenNeverUsed"] ?? "Jamais")); ?>
+                        </td>
+                        <td style="text-align: right;">
+                            <input
+                                type="button"
+                                value="<?=htmlspecialchars($Dictionnary["ConsoleTokenRevoke"] ?? "Révoquer", ENT_QUOTES); ?>"
+                                onclick="profileConsoleRevokeToken(<?=(int)$console_token["id"]; ?>);"
+                            />
+                        </td>
+                    </tr>
+                <?php } ?>
+            </table>
+        <?php } ?>
+    </fieldset>
+    <script>
+    async function profileConsoleCreateToken()
+    {
+        var name = document.getElementById("profile-console-token-name").value.trim() || "Terminal";
+        try
+        {
+            var response = await fetch("/api/console/0/token", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({name: name})
+            });
+            var packet = await response.json();
+            if (!response.ok || packet.result !== "ok")
+                throw new Error(packet.msg || ("HTTP " + response.status));
+            document.getElementById("profile-console-token-value").value = packet.token || "";
+            document.getElementById("profile-console-token-result").hidden = false;
+        }
+        catch (error)
+        {
+            alert(error.message || error);
+        }
+    }
+
+    async function profileConsoleCopyToken()
+    {
+        var input = document.getElementById("profile-console-token-value");
+        input.focus();
+        input.select();
+        if (navigator.clipboard && window.isSecureContext)
+            await navigator.clipboard.writeText(input.value);
+        else
+            document.execCommand("copy");
+    }
+
+    async function profileConsoleRevokeToken(id)
+    {
+        if (!confirm(<?=json_encode($Dictionnary["ConsoleTokenRevokeConfirm"] ?? "Révoquer ce jeton ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+            return ;
+        try
+        {
+            var response = await fetch("/api/console/" + encodeURIComponent(id) + "/token", {
+                method: "DELETE",
+                credentials: "same-origin"
+            });
+            var packet = await response.json();
+            if (!response.ok || packet.result !== "ok")
+                throw new Error(packet.msg || ("HTTP " + response.status));
+            window.location.reload();
+        }
+        catch (error)
+        {
+            alert(error.message || error);
+        }
+    }
+    </script>
+<?php } ?>
 <?php
 $id_profile_user = (int)$user->id;
 // Relire la ligne user directement : le FullProfile peut avoir été construit
@@ -206,148 +307,32 @@ if ($can_view_administrative)
             <?php }
         } ?>
         <?php if ($can_send_administrative_form) { ?>
+            <?php
+                $profile_contract_invitation = $profile_status == "prospect" && !$is_relation_administrative_profile;
+                $profile_registration_kinds = $profile_contract_invitation
+                    ? registration_form_kinds_for_user($user->id) : [];
+            ?>
             <div class="profile_administrative_invitation">
-                <form method="put" action="/api/user/<?=$user->id; ?>/registration" onsubmit="return silent_submit(this);">
-                    <?php if ($profile_status == "prospect" && !$is_relation_administrative_profile) { ?>
-                        <label>
-                            <?=$Dictionnary["RegistrationFormKind"] ?? "Type de contrat"; ?>
-                            <select name="kind">
-                                <?php foreach (registration_form_kinds() as $kind) { ?>
-                                    <option value="<?=htmlspecialchars($kind, ENT_QUOTES); ?>"><?=$kind; ?></option>
-                                <?php } ?>
-                            </select>
-                        </label>
-                    <?php } else { ?>
-                        <input type="hidden" name="kind" value="<?=registration_form_profile_kind(); ?>" />
-                    <?php } ?>
-                    <input type="button"
-                        value="<?=$Dictionnary["SendAdministrativeForm"] ?? "✉ Envoyer le formulaire"; ?>"
-                        onclick="confirm('<?=htmlspecialchars($Dictionnary["AdministrativeFormConfirmSend"] ?? "Envoyer un formulaire administratif à cette personne ?", ENT_QUOTES); ?>') && silent_submit(this);" />
-                </form>
-            </div>
-        <?php } ?>
-    </fieldset>
-<?php } ?>
-
-<?php
-$profile_relations = fetch_user_relation_summary((int)$user->id);
-if (count($profile_relations["responsible_by"])
-    || count($profile_relations["responsible_for"])
-    || $can_manage_profile_relations)
-{
-?>
-    <br />
-    <fieldset class="profile_user_relations">
-        <legend><b>Relations</b></legend>
-        <?php if (count($profile_relations["responsible_by"])) { ?>
-            <h4>Responsables / contacts</h4>
-            <ul>
-                <?php foreach ($profile_relations["responsible_by"] as $relation_user) { ?>
-                    <li>
-                        <div class="profile_user_relation_item">
-                            <span>
-                                <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
-                                    <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
-                                </a>
-                                <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
-                                <?php if (count($relation_labels)) { ?>
-                                    <span class="profile_user_relation_tags">
-                                        <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
-                                    </span>
-                                <?php } ?>
-                            </span>
-                            <?php if ($can_manage_profile_relations) { ?>
-                                <form
-                                    class="profile_user_relation_remove"
-                                    method="delete"
-                                    action="/api/user/<?=$user->id; ?>/relation/<?=(int)$relation_user["id"]; ?>"
-                                    onsubmit="return false;"
-                                >
-                                    <input
-                                        type="button"
-                                        value="×"
-                                        title="Supprimer cette relation"
-                                        onclick="if (confirm('Supprimer cette relation ?')) silent_submitf(this.parentNode, {after_success: refresh});"
-                                    />
-                                </form>
-                            <?php } ?>
-                        </div>
-                        <?php if ($can_manage_profile_relations) { ?>
-                            <form method="put" action="/api/user/<?=$user->id; ?>/relation" onsubmit="return false;" style="margin: 0.35em 0 0.8em;">
-                                <input type="hidden" name="parent" value="<?=(int)$relation_user["id"]; ?>" />
-                                <div class="profile_user_relation_types">
-                                    <?php $current_relation_values = user_relation_values($relation_user["relation"] ?? ""); ?>
-                                    <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
-                                                value="1"
-                                                <?=in_array($relation_name, $current_relation_values, true) ? "checked" : ""; ?>
-                                            />
-                                            <?=htmlspecialchars($definition["label"]); ?>
-                                        </label>
-                                    <?php } ?>
-                                </div>
-                                <input type="button" value="Mettre à jour" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
-                            </form>
-                        <?php } ?>
-                    </li>
-                <?php } ?>
-            </ul>
-        <?php } ?>
-        <?php if (count($profile_relations["responsible_for"])) { ?>
-            <h4>Responsable de</h4>
-            <ul>
-                <?php foreach ($profile_relations["responsible_for"] as $relation_user) { ?>
-                    <li>
-                        <a href="?p=ProfileMenu&amp;a=<?=(int)$relation_user["id"]; ?>">
-                            <?=htmlspecialchars(user_relation_display_name($relation_user)); ?>
-                        </a>
-                        <?php $relation_labels = user_relation_labels($relation_user["relation"] ?? ""); ?>
-                        <?php if (count($relation_labels)) { ?>
-                            <span class="profile_user_relation_tags">
-                                <?=htmlspecialchars(implode(" · ", $relation_labels)); ?>
-                            </span>
-                        <?php } ?>
-                    </li>
-                <?php } ?>
-            </ul>
-        <?php } ?>
-        <?php if ($can_manage_profile_relations) { ?>
-            <div class="profile_user_relation_editor">
-                <h4>Ajouter un responsable / contact</h4>
-                <?php if (count($profile_relation_candidates)) { ?>
-                    <form method="put" action="/api/user/<?=$user->id; ?>/relation" onsubmit="return false;">
-                        <select name="parent">
-                            <?php foreach ($profile_relation_candidates as $candidate) { ?>
-                                <option value="<?=htmlspecialchars($candidate["codename"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
-                                    <?=htmlspecialchars(user_relation_display_name($candidate)); ?>
-                                    (<?=htmlspecialchars($candidate["codename"]); ?>)
-                                </option>
-                            <?php } ?>
-                        </select>
-                        <div class="profile_user_relation_types">
-                            <?php foreach (user_relation_definitions() as $relation_name => $definition) { ?>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        name="relation_<?=htmlspecialchars($relation_name, ENT_QUOTES); ?>"
-                                        value="1"
-                                    />
-                                    <?=htmlspecialchars($definition["label"]); ?>
-                                </label>
-                            <?php } ?>
-                        </div>
-                        <p class="profile_user_relation_editor_notice">
-                            La relation définit sa destination dans Infosphere et peut cumuler plusieurs rôles.
-                        </p>
-                        <input type="button" value="Ajouter" onclick="silent_submitf(this.parentNode, {after_success: refresh});" />
-                    </form>
+                <?php if ($profile_contract_invitation && !count($profile_registration_kinds)) { ?>
+                    <p class="profile_administrative_notice">Aucun type de contrat n'est activé pour l'établissement de ce prospect.</p>
                 <?php } else { ?>
-                    <p class="profile_user_relation_editor_notice">
-                        Aucun autre compte actif de cette école n'est disponible.
-                    </p>
+                    <form method="put" action="/api/user/<?=$user->id; ?>/registration" onsubmit="return silent_submit(this);">
+                        <?php if ($profile_contract_invitation) { ?>
+                            <label>
+                                <?=$Dictionnary["RegistrationFormKind"] ?? "Type de contrat"; ?>
+                                <select name="kind">
+                                    <?php foreach ($profile_registration_kinds as $kind) { ?>
+                                        <option value="<?=htmlspecialchars($kind, ENT_QUOTES); ?>"><?=$kind; ?></option>
+                                    <?php } ?>
+                                </select>
+                            </label>
+                        <?php } else { ?>
+                            <input type="hidden" name="kind" value="<?=registration_form_profile_kind(); ?>" />
+                        <?php } ?>
+                        <input type="button"
+                            value="<?=$Dictionnary["SendAdministrativeForm"] ?? "✉ Envoyer le formulaire"; ?>"
+                            onclick="confirm('<?=htmlspecialchars($Dictionnary["AdministrativeFormConfirmSend"] ?? "Envoyer un formulaire administratif à cette personne ?", ENT_QUOTES); ?>') && silent_submit(this);" />
+                    </form>
                 <?php } ?>
             </div>
         <?php } ?>

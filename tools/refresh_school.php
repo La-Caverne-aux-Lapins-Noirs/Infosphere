@@ -307,10 +307,18 @@ function refresh_school($school)
     $legal_name = $school["legal_name"] ?? $name;
     $legal_address = $school["organization_address"] ?? "";
     $school_address = $school["address"] ?? $legal_address;
+    $legal_address = function_exists("enterprise_legal_address")
+    ? enterprise_legal_address($school) : ($school["organization_address"] ?? "");
+    $school_address = $school["school_address"] ?? ($school["address"] ?? $legal_address);
     $main_info = function_exists("enterprise_main_info") ? enterprise_main_info($school) : school_main_info($school);
     $school_info = school_private_school_info($school);
     $formation_info = school_formation_info($school);
     $alternation_info = school_alternation_info($school);
+    $activity_document_fields = school_activity_document_fields($school);
+    $document_information = trim((string)($school["document_information"] ?? ""));
+    $vat_exemption_mention = trim((string)($school["vat_exemption_mention"] ?? ""));
+    $teacher_list = function_exists("user_school_teacher_list")
+        ? user_school_teacher_list((int)($school["id"] ?? 0)) : "";
 
     $organization_dabsic = [
 	"id" => $school["id_organization"] ?? -1,
@@ -328,6 +336,7 @@ function refresh_school($school)
 	"SIRET" => $school["siret"] ?? "",
 	"registration_registry" => $school["registration_registry"] ?? "",
 	"registration_number" => $school["registration_number"] ?? "",
+	"share_capital" => $school["share_capital"] ?? "",
 	"billing_information" => $school["organization_billing_information"] ?? "",
 	"RIB" => $school["organization_billing_information"] ?? "",
 	"main_info" => $main_info,
@@ -352,10 +361,10 @@ function refresh_school($school)
 	"base_url" => $school["base_url"] ?? "",
 
 	"SIRET" => $school["siret"] ?? "",
-	"NDA" => $school["formation_activity_number"] ?? "",
-	"UAI" => $school["uai"] ?? "",
-	"cfa_name" => $school["cfa_name"] ?? "",
-	"executing_establishment_name" => $school["executing_establishment_name"] ?? "",
+	"NDA" => $activity_document_fields["NDA"],
+	"UAI" => $activity_document_fields["UAI"],
+	"cfa_name" => $activity_document_fields["cfa_name"],
+	"executing_establishment_name" => $activity_document_fields["executing_establishment_name"],
 	"representative" => "",
 	"role" => "",
 	"tutor" => [
@@ -371,16 +380,23 @@ function refresh_school($school)
         "is_cfa" => school_activity_flags($school)["is_cfa"],
 
 	"organization" => $organization_dabsic,
+	"organization_main_info" => $main_info,
+	"organization_phone" => $school["organization_phone"] ?? "",
+	"organization_mail" => $school["organization_mail"] ?? "",
+	"organization_legal_address" => $legal_address,
 	"main_info" => $main_info,
 	"school_info" => $school_info,
 	"formation_info" => $formation_info,
 	"alternation_info" => $alternation_info,
-	"school_registration_number" => $school["school_registration_number"] ?? "",
-	"school_registration_academy" => $school["school_registration_academy"] ?? "",
-	"formation_activity_number" => $school["formation_activity_number"] ?? "",
-	"formation_activity_region" => $school["formation_activity_region"] ?? "",
-	"alternation_registration_number" => $school["alternation_registration_number"] ?? "",
-	"alternation_registration_academy" => $school["alternation_registration_academy"] ?? "",
+	"document_information" => $document_information,
+	"vat_exemption_mention" => $vat_exemption_mention,
+	"teacher_list" => $teacher_list,
+	"school_registration_number" => $activity_document_fields["school_registration_number"],
+	"school_registration_academy" => $activity_document_fields["school_registration_academy"],
+	"formation_activity_number" => $activity_document_fields["formation_activity_number"],
+	"formation_activity_region" => $activity_document_fields["formation_activity_region"],
+	"alternation_registration_number" => $activity_document_fields["alternation_registration_number"],
+	"alternation_registration_academy" => $activity_document_fields["alternation_registration_academy"],
 
 	// Compatibilité avec les anciens noms courts.
 	"main" => $main_info,

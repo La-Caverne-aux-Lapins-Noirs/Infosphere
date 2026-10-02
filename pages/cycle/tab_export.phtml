@@ -1,0 +1,85 @@
+<?php
+$timeline_matters = cycle_timeline_matter_rows($cycle["id"]);
+$timeline_form_id = "cycle_timeline_export_".(int)$cycle["id"];
+?>
+
+<div class="cycle_admin_export_grid">
+    <section class="cycle_admin_card cycle_admin_export_card">
+        <h2><?=$Dictionnary["ExportDabsic"]; ?></h2>
+        <p><?=$Dictionnary["ExportDabsicHelp"]; ?></p>
+        <div class="cycle_admin_export_actions">
+            <a class="button_link" href="/api/<?=$page; ?>/<?=$cycle["id"]; ?>/export">
+                <?=$Dictionnary["ExportDabsic"]; ?>
+            </a>
+        </div>
+    </section>
+
+    <section class="cycle_admin_card cycle_admin_export_card cycle_admin_timeline_export">
+        <h2><?=$Dictionnary["ExportTimeline"]; ?></h2>
+        <p><?=$Dictionnary["ExportTimelineHelp"]; ?></p>
+
+        <form id="<?=$timeline_form_id; ?>" method="post" action="/api/<?=$page; ?>/<?=$cycle["id"]; ?>/timeline">
+            <input type="hidden" name="matter_filter" value="1" />
+
+            <div class="cycle_admin_export_selector_header">
+                <strong><?=$Dictionnary["Matters"]; ?></strong>
+                <div>
+                    <input
+                        type="button"
+                        value="<?=$Dictionnary["CheckAll"]; ?>"
+                        onclick="document.querySelectorAll('#<?=$timeline_form_id; ?> input[name=&quot;matter[]&quot;]').forEach(function(n){n.checked=true;});"
+                    />
+                    <input
+                        type="button"
+                        value="<?=$Dictionnary["UncheckAll"]; ?>"
+                        onclick="document.querySelectorAll('#<?=$timeline_form_id; ?> input[name=&quot;matter[]&quot;]').forEach(function(n){n.checked=false;});"
+                    />
+                </div>
+            </div>
+
+            <div class="cycle_admin_export_matter_list">
+                <?php foreach ($timeline_matters as $matter) { ?>
+                    <?php
+                    $matter_name = trim((string)$matter["name"]);
+                    $matter_label = (string)$matter["codename"];
+                    if ($matter_name != "" && $matter_name != $matter_label)
+                        $matter_label .= " — ".$matter_name;
+                    ?>
+                    <label>
+                        <input type="checkbox" name="matter[]" value="<?=(int)$matter["id"]; ?>" checked />
+                        <span><?=htmlspecialchars($matter_label, ENT_QUOTES); ?></span>
+                    </label>
+                <?php } ?>
+            </div>
+
+            <div class="cycle_admin_export_actions">
+                <input type="submit" value="<?=$Dictionnary["ExportTimeline"]; ?>" />
+            </div>
+        </form>
+    </section>
+
+    <section class="cycle_admin_card cycle_admin_export_card">
+        <h2><?=$Dictionnary["OtherExports"]; ?></h2>
+        <form class="cycle_admin_legacy_export" method="post" action="index.php?<?=unrollget(["silent" => 1, "export" => 1]); ?>">
+            <input type="hidden" name="action" value="export_activity" />
+            <input type="hidden" name="cycle" value="<?=$cycle["id"]; ?>" />
+
+            <select name="format">
+                <option value="sketch"><?=$Dictionnary["Sketch"]; ?></option>
+                <option value="detailed_sketch"><?=$Dictionnary["DetailedSketch"]; ?></option>
+                <option value="syllabus"><?=$Dictionnary["Syllabus"]; ?></option>
+            </select>
+
+            <input type="submit" value="<?=$Dictionnary["Export"]; ?>" />
+        </form>
+
+        <?php if ($page == "cycle" && $cycle["id_template"] != -1 && $cycle["id_template"] != NULL) { ?>
+            <div class="cycle_admin_export_template_link">
+                <strong><?=$Dictionnary["Template"]; ?></strong>
+                <a href="index.php?p=CycleTemplateMenu&amp;a=<?=$cycle["id_template"]; ?>">
+                    <?=$cycle["codename_template"]; ?>
+                </a>
+            </div>
+        <?php } ?>
+    </section>
+</div>

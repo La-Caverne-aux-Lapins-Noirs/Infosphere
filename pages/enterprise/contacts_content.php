@@ -3,6 +3,7 @@ $role_labels = [
     "contact" => $Dictionnary["EnterpriseContact"] ?? "Contact",
     "representative" => $Dictionnary["EnterpriseRepresentative"] ?? "Représentant",
     "tutor" => $Dictionnary["EnterpriseTutor"] ?? "Tuteur",
+    "billing" => $Dictionnary["EnterpriseBillingContact"] ?? "Facturation",
 ];
 $contact_candidates = enterprise_contact_candidates($enterprise["id"]);
 $contact_datalist_id = "enterprise_contact_users_".(int)$enterprise["id"];

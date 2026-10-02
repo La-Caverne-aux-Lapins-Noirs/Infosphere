@@ -1,6 +1,7 @@
 <?php
 
 require ("cycles.php");
+require_once (__DIR__."/../tools/document_sources.php");
 
 
 function cycle_file_root($id)
@@ -96,14 +97,66 @@ function RemoveCycleFile($id, $data, $method, $output, $module)
     return (GetCycleFileDir($id, $data, "GET", $output, $module, "FileRemoved"));
 }
 
+
+function GetCycleStudentResultLetter($id, $data, $method, $output, $module)
+{
+    if ($id == -1 || !isset($data["student"]))
+        bad_request();
+
+    $id = (int)$id;
+    $uid = (int)$data["student"];
+    if ($uid <= 0)
+        bad_request();
+
+    $linked = db_select_one("
+        id
+        FROM user_cycle
+        WHERE id_cycle = $id
+          AND id_user = $uid
+    ");
+    if ($linked == NULL)
+        not_found();
+
+    $result = student_correspondence_cycle_result($uid, $id);
+    if (!is_array($result))
+        return (new ValueResponse(["available" => false]));
+
+    $documents = get_cycle_result_document_sources();
+    $source = $documents[$result["kind"]] ?? NULL;
+    if (!is_array($source) || empty($source["reference"]))
+        return (new ValueResponse(["available" => false]));
+
+    $labels = student_correspondence_result_labels();
+    return (new ValueResponse([
+        "available" => true,
+        "kind" => (string)$result["kind"],
+        "flames" => (int)$result["flames"],
+        "label" => (string)($labels[$result["kind"]] ?? "Courrier"),
+        "reference" => (string)$source["reference"],
+    ]));
+}
+
+
 $Tab = [
     "GET" => [
 	"" => [
 	    "everybody",
 	    "DisplayCycles",
 	],
+        "export" => [
+            "is_director_for_cycle",
+            "ExportCycleTemplate",
+        ],
+        "timeline" => [
+            "is_director_for_cycle",
+            "ExportCycleTimeline",
+        ],
     ],
     "POST" => [
+        "timeline" => [
+            "is_director_for_cycle",
+            "ExportCycleTimeline",
+        ],
 	"" => [
 	    "am_i_director",
 	    "AddCycle",
@@ -123,6 +176,10 @@ $Tab = [
 	"attendance-register" => [
 	    "is_director_for_cycle",
 	    "GenerateAttendanceRegister",
+	],
+	"result-letter" => [
+	    "is_director_for_cycle",
+	    "GetCycleStudentResultLetter",
 	],
         "attendance-register-workflow" => [
             "is_director_for_cycle",

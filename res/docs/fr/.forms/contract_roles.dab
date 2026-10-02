@@ -1,37 +1,84 @@
-[Beneficiaire
-  Label = "Bénéficiaire"
+[Etablissement
+  Label = "Établissement"
+  Internal = 1
+  Recipient = "Generator"
   {Read
+    "Etablissement",
     "Apprenant",
     "ResponsableFinancier",
-    "ResponsablesLegaux",
+    "ResponsableLegal1",
+    "ResponsableLegal2",
     "ContactUrgence",
+    "Paiement",
+    "Bibliotheque",
+    "DroitImage",
     "ParametresContrat"
   }
   {Edit
+    "Etablissement",
     "Apprenant",
     "ResponsableFinancier",
-    "ResponsablesLegaux",
+    "ResponsableLegal1",
+    "ResponsableLegal2",
     "ContactUrgence",
+    "Paiement",
+    "Bibliotheque",
+    "DroitImage",
     "ParametresContrat"
   }
   {Validate
+    "Etablissement",
     "Apprenant",
     "ResponsableFinancier",
-    "ResponsablesLegaux",
+    "ResponsableLegal1",
+    "ResponsableLegal2",
     "ContactUrgence",
+    "Paiement",
+    "Bibliotheque",
+    "DroitImage",
     "ParametresContrat"
   }
 ]
 
-[Etablissement
-  Label = "Établissement"
-  {Read
-    "Etablissement"
-  }
-  {Edit
-    "Etablissement"
-  }
-  {Validate
-    "Etablissement"
-  }
+[Apprenant
+  Label = "Apprenant"
+  Required = 1
+  Recipient = "Student"
+  {ProfileScopes "Student", "Emergency"}
+  {Read "Apprenant", "ContactUrgence", "DroitImage"}
+  {Edit "Apprenant", "ContactUrgence", "DroitImage"}
+  {Validate "Apprenant", "ContactUrgence", "DroitImage"}
+]
+
+[ResponsableFinancier
+  Label = "Responsable financier"
+  Required = 1
+  Recipient = "Finance"
+  FallbackRecipient = "Student"
+  {ProfileScopes "Finance"}
+  {Read "ResponsableFinancier", "Paiement", "Bibliotheque"}
+  {Edit "ResponsableFinancier", "Paiement", "Bibliotheque"}
+  {Validate "ResponsableFinancier", "Paiement", "Bibliotheque"}
+]
+
+[ResponsableLegal1
+  Label = "Premier responsable légal"
+  RequiredIfRecipient = 1
+  Recipient = "Legal1"
+  FallbackRecipient = "Student"
+  {ProfileScopes "Legal1"}
+  Read = "ResponsableLegal1"
+  Edit = "ResponsableLegal1"
+  Validate = "ResponsableLegal1"
+]
+
+[ResponsableLegal2
+  Label = "Second responsable légal"
+  RequiredIfRecipient = 1
+  Recipient = "Legal2"
+  FallbackRecipient = "Student"
+  {ProfileScopes "Legal2"}
+  Read = "ResponsableLegal2"
+  Edit = "ResponsableLegal2"
+  Validate = "ResponsableLegal2"
 ]

@@ -14,14 +14,30 @@
   Label = "Établissement"
   {Read
     "Admission",
+    "FraisAdmission",
     "Direction"
   }
   {Edit
     "Admission",
+    "FraisAdmission",
     "Direction"
   }
   {Validate
     "Admission",
+    "FraisAdmission",
     "Direction"
+  }
+]
+
+[AdmissionGeneration
+  Label = "Génération de l'attestation d'admission"
+  {Read
+    "FraisAdmission"
+  }
+  {Edit
+    "FraisAdmission"
+  }
+  {Validate
+    "FraisAdmission"
   }
 ]

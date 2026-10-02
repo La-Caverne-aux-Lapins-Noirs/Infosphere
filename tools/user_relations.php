@@ -117,8 +117,38 @@ function can_assign_user_relation_parent($id_child, $id_parent)
     $schools = user_relation_management_school_ids($id_child);
     if (!count($schools))
         return (false);
+
+    // Un parent déjà relié à l'utilisateur doit rester modifiable même s'il
+    // s'agit d'un contact externe. Les comptes externes n'ont volontairement
+    // ni user_school, ni mot de passe actif : leur imposer les critères
+    // ci-dessous rendait impossible la modification d'une relation existante
+    // depuis le profil et provoquait un Forbidden dans SetUserRelation().
+    if (db_select_one("
+        parent_child.id
+        FROM parent_child
+        INNER JOIN user ON user.id = parent_child.id_parent
+        WHERE parent_child.id_parent = $id_parent
+          AND parent_child.id_child = $id_child
+          AND user.deleted IS NULL
+          AND user.authority != ".BANISHED."
+    ") != NULL)
+        return (true);
+
+    // Pour créer une nouvelle relation vers un compte déjà existant, conserver
+    // en revanche la règle historique : le parent doit être un membre actif
+    // d'une des écoles que l'opérateur est autorisé à administrer.
     $school_ids = implode(",", array_map("intval", $schools));
-    return (db_select_one("\n        user.id\n        FROM user\n        INNER JOIN user_school ON user_school.id_user = user.id\n        WHERE user.id = $id_parent\n          AND user.deleted IS NULL\n          AND user.authority != ".BANISHED."\n          AND user.profile_status = 'member'\n          AND user.password != ''\n          AND user_school.id_school IN ($school_ids)\n    ") != NULL);
+    return (db_select_one("
+        user.id
+        FROM user
+        INNER JOIN user_school ON user_school.id_user = user.id
+        WHERE user.id = $id_parent
+          AND user.deleted IS NULL
+          AND user.authority != ".BANISHED."
+          AND user.profile_status = 'member'
+          AND user.password != ''
+          AND user_school.id_school IN ($school_ids)
+    ") != NULL);
 }
 
 function user_relation_request_values(array $data)
@@ -128,6 +158,99 @@ function user_relation_request_values(array $data)
         if (!empty($data["relation_".$name]) && !in_array($name, $relations, true))
             $relations[] = $name;
     return ($relations);
+}
+
+/*
+ * A contact externe peut parfaitement posséder un accès à l'Infosphère sans
+ * devenir un membre de l'école. C'est précisément le cas d'un parent auquel
+ * on autorise un Log as : lui donner profile_status = 'member' serait faux
+ * fonctionnellement et pourrait lui faire hériter de comportements réservés
+ * aux membres. On active donc uniquement ses identifiants de connexion.
+ */
+function user_relation_enable_external_login($id_user)
+{
+    global $Database;
+    global $Configuration;
+    global $Dictionnary;
+
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return (new ErrorResponse("UserNotFound"));
+
+    $user = db_select_one("
+        *
+        FROM user
+        WHERE id = $id_user
+          AND deleted IS NULL
+          AND authority != ".BANISHED."
+    ");
+    if ($user == NULL)
+        return (new ErrorResponse("UserNotFound"));
+
+    // Déjà authentifiable : rien à faire, quel que soit son statut métier.
+    if (trim((string)($user["password"] ?? "")) != "")
+        return (new Response);
+
+    // Ne jamais transformer implicitement un prospect, un juré, etc.
+    if (($user["profile_status"] ?? "") != "extern")
+        return (new ErrorResponse("CannotEdit"));
+    if (!filter_var((string)($user["mail"] ?? ""), FILTER_VALIDATE_EMAIL))
+        return (new ErrorResponse("BadMail", (string)($user["mail"] ?? "")));
+
+    $password = generate_password();
+    if (($material = build_user_password_material($password))->is_error())
+        return ($material);
+    $material = $material->value;
+
+    $hash = $Database->real_escape_string($material["hash"]);
+    $salt = $Database->real_escape_string($material["salt"]);
+    $local_salt = $Database->real_escape_string($material["local_salt"]);
+    if ($Database->query("
+        UPDATE user
+        SET password = '$hash',
+            salt = '$salt',
+            local_salt = '$local_salt',
+            cache = '{}'
+        WHERE id = $id_user
+          AND profile_status = 'extern'
+          AND password = ''
+          AND deleted IS NULL
+    ") === false || $Database->affected_rows != 1)
+        return (new ErrorResponse("CannotUpdate"));
+
+    $domain = @$Configuration->Properties["domain"];
+    $content = sprintf(
+        $Dictionnary["RelationLoginActivatedContent"]
+            ?? "Bonjour,\n\nUn accès à l'Infosphère %s vient de vous être ouvert.\nVotre identifiant est %s et votre mot de passe est \"%s\".\n\nCordialement\nAlbedo",
+        $domain,
+        (string)$user["codename"],
+        $password
+    );
+    $mail = send_mail(
+        (string)$user["mail"],
+        $Dictionnary["RelationLoginActivatedTitle"] ?? "Accès à l'Infosphère",
+        $content
+    );
+    if ($mail->is_error())
+    {
+        // Sans remise du mot de passe, ne pas laisser derrière nous un compte
+        // dont personne ne connaît les identifiants.
+        $Database->query("
+            UPDATE user
+            SET password = '', salt = '', local_salt = '', cache = '{}'
+            WHERE id = $id_user
+              AND profile_status = 'extern'
+              AND password = '$hash'
+        ");
+        return ($mail);
+    }
+
+    add_log(
+        CRITICAL_USER_DATA,
+        "External relation account ".$user["codename"]." enabled for login",
+        $id_user
+    );
+    return (new Response);
 }
 
 function user_relation_set_existing_parent($id_child, $id_parent, $relations)
@@ -141,6 +264,16 @@ function user_relation_set_existing_parent($id_child, $id_parent, $relations)
     $relation = user_relation_value($relations);
     if ($relation == "")
         return (new ErrorResponse("MissingField", "relation"));
+
+    // Autoriser un Log as sans identifiants serait une permission inutilisable.
+    // Pour un contact externe existant, l'activation est donc automatique.
+    if (user_relation_has($relation, "log_as"))
+    {
+        $activation = user_relation_enable_external_login($id_parent);
+        if ($activation->is_error())
+            return ($activation);
+    }
+
     return (add_link(
         $id_parent,
         $id_child,
@@ -180,6 +313,8 @@ function create_external_user_relation($id_child, array $data)
     $id_child = (int)$id_child;
     if ($id_child <= 0 || db_select_one("id FROM user WHERE id = $id_child AND authority != -1") == NULL)
         return (new ErrorResponse("UserNotFound"));
+    if (!can_manage_user_relations($id_child))
+        return (new ErrorResponse("CannotEdit"));
 
     $relations = user_relation_values($data["relation"] ?? []);
     if (!count($relations))
@@ -189,20 +324,39 @@ function create_external_user_relation($id_child, array $data)
     $family_name = trim((string)($data["family_name"] ?? ""));
     $mail = trim((string)($data["mail"] ?? ""));
     $phone = trim((string)($data["phone"] ?? ""));
-    if ($first_name == "" || $family_name == "" || $mail == "")
-        return (new ErrorResponse("MissingField", "first_name, family_name, mail"));
+    if ($first_name == "" || $family_name == "")
+        return (new ErrorResponse("MissingField", "first_name, family_name"));
+
+    // Sur le formulaire administratif d'ajout d'une relation, une omission
+    // du mail équivaut au marqueur historique `nomail`. Une valeur non vide
+    // continue en revanche de passer par la validation stricte de subscribe().
+    if ($mail == "")
+        $mail = "nomail";
+
+    // `nomail` est un marqueur réservé à la création administrative d'une
+    // relation. Il n'est jamais stocké : l'absence de mail est représentée
+    // par une chaîne vide afin qu'aucun document ou envoi ne puisse reprendre
+    // accidentellement le marqueur comme s'il s'agissait d'une adresse.
+    $without_mail = strcasecmp($mail, "nomail") == 0;
+    if ($without_mail)
+    {
+        if (user_relation_has($relations, "log_as"))
+            return (new ErrorResponse("BadMail", "nomail (Log as)"));
+        $mail = "";
+    }
 
     $login = build_named_user_login($first_name, $family_name);
-    $request = subscribe($login, $mail, NULL, false, true, "extern");
+    $request = subscribe($login, $mail, NULL, false, true, "extern", $without_mail);
     if ($request->is_error())
         return ($request);
     $external = $request->value;
     $id_parent = (int)$external["id"];
 
     $request = set_user_data($id_parent, [
-        "first_name" => strtolower($first_name),
-        "family_name" => strtolower($family_name),
+        "first_name" => $first_name,
+        "family_name" => $family_name,
         "phone" => $phone,
+        "visibility" => HIDDEN,
     ]);
     if ($request->is_error())
     {
@@ -215,6 +369,29 @@ function create_external_user_relation($id_child, array $data)
     {
         $Database->query("DELETE FROM user WHERE id = $id_parent AND profile_status = 'extern' AND password = ''");
         return (new ErrorResponse("CannotRegister"));
+    }
+
+    // Une délégation Log as n'a de sens que si le contact peut réellement se
+    // connecter. Les contacts externes restent des profils externes, mais on
+    // active automatiquement leurs identifiants lorsque cette permission est
+    // demandée dès la création de la relation.
+    if (user_relation_has($relation, "log_as"))
+    {
+        $activation = user_relation_enable_external_login($id_parent);
+        if ($activation->is_error())
+        {
+            $Database->query("
+                DELETE FROM parent_child
+                WHERE id_parent = $id_parent AND id_child = $id_child
+            ");
+            $Database->query("
+                DELETE FROM user
+                WHERE id = $id_parent
+                  AND profile_status = 'extern'
+                  AND password = ''
+            ");
+            return ($activation);
+        }
     }
 
     add_log(EDITING_OPERATION,
@@ -296,7 +473,10 @@ function can_send_user_administrative_form($id_user)
     if (!logged_in())
         return (false);
     $user = db_select_one("profile_status, mail FROM user WHERE id = $id_user AND authority != -1");
-    if ($user == NULL || trim((string)($user["mail"] ?? "")) == "")
+    if ($user == NULL)
+        return (false);
+    $mail = trim((string)($user["mail"] ?? ""));
+    if ($mail == "" || strcasecmp($mail, "nomail") == 0)
         return (false);
     $status = $user["profile_status"] ?? "";
     if (user_relation_is_administrative_contact($id_user))

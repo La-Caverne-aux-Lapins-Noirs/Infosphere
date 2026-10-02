@@ -123,8 +123,20 @@ if ($MODULE == "intercom")
             $DATA[$key] = $_GET[$key];
 }
 
-// On s'authentifie
-require_once ("login/index.php");
+// On s'authentifie. Les jetons de console sont volontairement cantonnés
+// au module console : un jeton terminal ne devient pas une session web/API générale.
+$console_auth = console_token_authenticate_request();
+if ($console_auth !== NULL)
+{
+    if ($console_auth->is_error())
+        authentication_required();
+    if ($MODULE != "console")
+        forbidden();
+    $User = $console_auth->value;
+    $OriginalUser = $User;
+}
+else
+    require_once ("login/index.php");
 
 $LOG_COMPOSITION = $MODULE.$ID;
 
@@ -165,6 +177,16 @@ if ($request->is_error())
 }
 else if ($request instanceof ValueResponse)
 {
+    // Les reponses HTTP de l'API sont toujours des paquets JSON. Certaines
+    // fonctions metier renvoient cependant un ValueResponse scalaire
+    // (par exemple "" apres une desinscription reussie). En PHP 8+, tenter
+    // ensuite d'ecrire $request->value["content"] sur une chaine provoque
+    // un TypeError et transforme une operation pourtant reussie en HTTP 500.
+    // Normaliser les valeurs scalaires permet de conserver le contrat
+    // {result,msg,content} de l'API.
+    if (!is_array($request->value))
+	$request->value = ["content" => $request->value];
+
     if (isset($request->value["filename"]))
     {
         $content_type = $request->value["content_type"] ?? "application/octet-stream";

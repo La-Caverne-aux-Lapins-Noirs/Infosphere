@@ -19,7 +19,7 @@ $relation_target_name = "";
 
 if ($relation_mode)
 {
-    if (!logged_in() || (!is_commercial() && !is_identity_authority_for_user($relation_target)))
+    if (!can_manage_user_relations($relation_target))
     {
         echo "<p>Vous n'êtes pas autorisé à ajouter une relation à cet utilisateur.</p>";
         return ;
@@ -42,6 +42,66 @@ if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$rela
  input[type="checkbox"]
  {
      width: 35px !important;
+ }
+
+ /* Les champs mail avaient fini par hériter du texte blanc du thème sombre. */
+ #fullpage_form input[type="mail"],
+ #fullpage_form input[type="email"]
+ {
+     background-color: white !important;
+     color: black !important;
+     -webkit-text-fill-color: black !important;
+     caret-color: black !important;
+ }
+
+ #fullpage_form input[type="mail"]:-webkit-autofill,
+ #fullpage_form input[type="email"]:-webkit-autofill
+ {
+     -webkit-text-fill-color: black !important;
+ }
+
+ .subscription_phone_field
+ {
+     box-sizing: border-box;
+     display: inline-flex;
+     gap: 7px;
+     height: 35px;
+     margin: 0 0 25px;
+     vertical-align: top;
+     width: 50%;
+ }
+
+ #fullpage_form .subscription_phone_field > input
+ {
+     box-sizing: border-box;
+     flex: 1 1 auto;
+     height: 35px;
+     margin: 0 !important;
+     min-width: 0;
+     width: auto !important;
+     color: black !important;
+ }
+
+ .subscription_phone_country
+ {
+     box-sizing: border-box;
+     flex: 0 0 220px;
+     height: 35px;
+     overflow: hidden;
+     padding: 0 8px;
+     border: 1px solid #777;
+     background: white;
+     color: black;
+     font-size: 15px;
+     line-height: 33px;
+     text-align: center;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+ }
+
+ .subscription_phone_country_empty
+ {
+     color: #666;
  }
  label
  {
@@ -101,6 +161,152 @@ if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$rela
      flex: 0 0 auto;
      margin: 0;
  }
+
+ <?php if ($relation_mode) { ?>
+ #fullpage_form h2
+ {
+     position: static !important;
+     box-sizing: border-box;
+     width: min(820px, calc(100% - 32px)) !important;
+     height: auto !important;
+     margin: 18px auto 14px !important;
+     font-size: 28px !important;
+     line-height: 1.2 !important;
+ }
+
+ .subscription_relation_body
+ {
+     box-sizing: border-box;
+     width: min(820px, calc(100% - 32px));
+     margin: 0 auto 42px;
+     text-align: left;
+ }
+
+ .subscription_relation_identity
+ {
+     display: grid;
+     grid-template-columns: repeat(2, minmax(0, 1fr));
+     gap: 10px 14px;
+ }
+
+ .subscription_relation_identity > br,
+ .subscription_relation_body > br
+ {
+     display: none;
+ }
+
+ #fullpage_form .subscription_relation_identity > .subscription_phone_field
+ {
+     height: 42px;
+     margin: 0 !important;
+     width: 100% !important;
+ }
+
+ #fullpage_form .subscription_relation_identity > .subscription_phone_field > input
+ {
+     height: 42px !important;
+     padding: 0 10px;
+     font-size: 20px !important;
+     line-height: 40px !important;
+     text-align: left !important;
+ }
+
+ #fullpage_form .subscription_relation_identity > .subscription_phone_field > .subscription_phone_country
+ {
+     flex-basis: 160px;
+     height: 42px;
+     font-size: 13px;
+     line-height: 40px;
+ }
+
+ #fullpage_form .subscription_relation_identity > input,
+ #fullpage_form .subscription_relation_identity > select
+ {
+     box-sizing: border-box;
+     width: 100% !important;
+     height: 42px !important;
+     margin: 0 !important;
+     padding: 0 10px;
+     font-size: 20px !important;
+     line-height: 40px !important;
+     text-align: left !important;
+ }
+
+ #fullpage_form .subscription_relation_fieldset
+ {
+     box-sizing: border-box;
+     width: 100% !important;
+     max-width: none;
+     margin: 14px 0 !important;
+     padding: 12px 16px 10px;
+ }
+
+ #fullpage_form .subscription_relation_option
+ {
+     width: 100% !important;
+     height: auto !important;
+     margin: 5px 0 !important;
+     font-size: 16px !important;
+     line-height: 1.3 !important;
+ }
+
+ #fullpage_form .subscription_relation_option input[type="checkbox"]
+ {
+     width: 18px !important;
+     height: 18px !important;
+     margin: 0 !important;
+ }
+
+ #fullpage_form .subscription_relation_body > textarea
+ {
+     box-sizing: border-box;
+     display: block;
+     width: 100% !important;
+     height: 105px !important;
+     margin: 0 0 10px !important;
+     padding: 7px 9px;
+     font-size: 12px !important;
+     line-height: 1.25 !important;
+     text-align: left !important;
+ }
+
+ #fullpage_form #accept_privacy_relation
+ {
+     width: 20px !important;
+     height: 20px !important;
+     margin: 2px 8px 12px 0 !important;
+     vertical-align: top;
+ }
+
+ #fullpage_form label[for="accept_privacy_relation"]
+ {
+     width: calc(100% - 38px) !important;
+     height: auto !important;
+     margin: 0 0 12px !important;
+     font-size: 16px !important;
+     line-height: 1.3 !important;
+     vertical-align: top;
+ }
+
+ #fullpage_form .subscription_relation_body > input[type="submit"]
+ {
+     box-sizing: border-box;
+     display: block;
+     width: 100% !important;
+     height: 42px !important;
+     margin: 2px 0 0 !important;
+     font-size: 20px !important;
+     line-height: 40px !important;
+ }
+
+ @media (max-width: 650px)
+ {
+     .subscription_relation_identity
+     {
+         grid-template-columns: 1fr;
+     }
+ }
+ <?php } ?>
 </style>
 <script>
  function check_repeat(rep, ori)
@@ -120,13 +326,14 @@ if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$rela
      return true;
  }
 </script>
+<script src="script/phone_country.js"></script>
 <form
     id="fullpage_form"
     method="POST"
     <?php if (!$prospect && !$relation_mode) { ?>
         action="index.php?p=<?=$PreviousPosition; ?>"
     <?php } else { ?>
-        action="<?=unrollurl(); ?>"
+    action="<?=unrollurl(); ?>"
     <?php } ?>
     <?=$relation_mode ? 'onsubmit="return check_relation_selection(this);"' : ''; ?>
 >
@@ -147,15 +354,21 @@ if (!$Configuration->Properties["subscription_possible"] && !$prospect && !$rela
         <h2><?=$Dictionnary["Subscribe"]; ?></h2>
         <input type="hidden" name="logaction" value="subscribe" />
     <?php } ?>
-
-    <p>
-        <?php require_once (__DIR__."/common.phtml"); ?>
-        <?php if ($relation_mode) { ?>
+    <?php if ($relation_mode) { ?>
+        <div class="subscription_relation_body">
+            <div class="subscription_relation_identity">
+                <?php require_once (__DIR__."/common.phtml"); ?>
+            </div>
             <?php require_once (__DIR__."/relation.phtml"); ?>
-        <?php } else if ($prospect) { ?>
-            <?php require_once (__DIR__."/prospect.phtml"); ?>
-        <?php } else { ?>
-            <?php require_once (__DIR__."/user.phtml"); ?>
-        <?php } ?>
-    </p>
+        </div>
+    <?php } else { ?>
+        <p>
+            <?php require_once (__DIR__."/common.phtml"); ?>
+            <?php if ($prospect) { ?>
+                <?php require_once (__DIR__."/prospect.phtml"); ?>
+            <?php } else { ?>
+                <?php require_once (__DIR__."/user.phtml"); ?>
+            <?php } ?>
+        </p>
+    <?php } ?>
 </form>

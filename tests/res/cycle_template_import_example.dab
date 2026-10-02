@@ -1,0 +1,87 @@
+Format = "CycleTemplate"
+Version = 1
+
+[Cycle
+  Codename = "EF4-GAME-T1"
+  Cycle = 4
+  Objective = 100
+  [Fr
+    Name = "Spécialisation jeu vidéo - trimestre 1"
+  ]
+]
+
+[Calendar
+  [Activity01
+    Codename = "ALG-01A-TPE-000"
+    Type = "PracticalWork"
+    [Fr
+      Name = "Travaux pratiques 1"
+    ]
+    [Sessions
+      [Morning
+        Week = 0
+        Day = "Monday"
+        Begin = "09:00"
+        End = "12:00"
+      ]
+    ]
+  ]
+
+  [Activity02
+    Codename = "GAME-01A-PRJ-000"
+    Type = "Project"
+    [Fr
+      Name = "Projet de spécialisation"
+    ]
+    [Sessions
+      [Kickoff
+        Week = 1
+        Day = "Tuesday"
+        Begin = "14:00"
+        Duration = "03:30"
+      ]
+    ]
+  ]
+
+  [Activity03
+    Codename = "ALG-01A-DEF-000"
+    Type = "DemoMeeting"
+    [Fr
+      Name = "Soutenance"
+    ]
+    [Sessions
+      [Defense
+        Week = 4
+        Day = "Friday"
+        Begin = "09:00"
+        End = "17:00"
+        [AppointmentSlots
+          [Candidate01
+            Begin = "09:00"
+            End = "09:30"
+          ]
+          [Candidate02
+            Begin = "09:30"
+            End = "10:00"
+          ]
+        ]
+      ]
+    ]
+  ]
+]
+
+[Matters
+  [Matter01
+    Codename = "ALG-01A"
+    [Fr
+      Name = "Algorithmique"
+    ]
+  ]
+
+  [Matter02
+    Codename = "GAME-01A"
+    [Fr
+      Name = "Gameplay"
+    ]
+  ]
+]

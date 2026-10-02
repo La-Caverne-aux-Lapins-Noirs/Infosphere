@@ -1,16 +1,41 @@
-<div>
-    <h2 class="alignable_blocks"><?=$Dictionnary["Members"]; ?></h2>
+<?php
+$user_list_can_show_banned = am_i_director();
+?>
+<div class="user-list-toolbar">
+    <h2><?=$Dictionnary["Members"]; ?></h2>
     <form
-	class="alignable_blocks searchbar"
-	method="get"
-	onsubmit="return use_search('/api/user', this, 'userlist');"
+        class="searchbar user-list-search"
+        method="get"
+        onsubmit="userListApplyFilters(); return false;"
     >
-	<input
-	    type="text"
-	    id="searchbar"
-	    placeholder="<?=$Dictionnary["Search"]; ?>"
-	/>
+        <input
+            type="search"
+            id="searchbar"
+            placeholder="<?=$Dictionnary["Search"]; ?>"
+            autocomplete="off"
+            oninput="userListApplyFilters();"
+        />
     </form>
+    <div class="user-list-filters">
+        <?php if ($user_list_can_show_banned) { ?>
+            <label>
+                <input
+                    type="checkbox"
+                    id="user-list-show-banned"
+                    onchange="userListApplyFilters();"
+                />
+                <?=$Dictionnary["ShowBannedUsers"] ?? "Afficher les utilisateurs bannis"; ?>
+            </label>
+        <?php } ?>
+        <label>
+            <input
+                type="checkbox"
+                id="user-list-photo-only"
+                onchange="userListApplyFilters();"
+            />
+            <?=$Dictionnary["UserListPhotoOnly"] ?? "Photos uniquement"; ?>
+        </label>
+    </div>
 </div>
 
 <?php if (am_i_director()) { ?>
@@ -19,14 +44,15 @@
 
 <div class="fullscreen scrollable" id="userlist">
     <?php
-    foreach (fetch_users() as $user)
+    foreach (fetch_users([], -1, $user_list_can_show_banned) as $user)
     {
-	if ($user["deleted"] != NULL)
-	    continue ;
-	if (@$user["have_password"])
-	    require ("display_user.phtml");
-	else if (am_i_director())
-	    require ("display_user.phtml");
+        $user_list_is_banned = $user["deleted"] != NULL || (int)$user["authority"] === BANISHED;
+        if ($user_list_is_banned && !$user_list_can_show_banned)
+            continue ;
+        if (@$user["have_password"])
+            require ("display_user.phtml");
+        else if (am_i_director())
+            require ("display_user.phtml");
     }
     ?>
 </div>
@@ -35,12 +61,58 @@
   </td><td class="formular_slot">
       <?php $alerts = retrieve_alerts(); ?>
       <?php if (isset($alerts["hand"])) { ?>
-	  <br />
-	  <h3><?=$Dictionnary["Warning"]; ?></h3>
-	  <br /><?=$Dictionnary["HandIsRequiredAndCannotBeReached"]; ?><br />
+          <br />
+          <h3><?=$Dictionnary["Warning"]; ?></h3>
+          <br /><?=$Dictionnary["HandIsRequiredAndCannotBeReached"]; ?><br />
       <?php } else { ?>
-	  <?php require ("add_user.phtml"); ?>
+          <?php require ("add_user.phtml"); ?>
       <?php } ?>
   </td></tr></table>
 <?php } ?>
-  
+
+<script>
+function userListNormalize(value)
+{
+    value = (value || "").toString().toLocaleLowerCase();
+    if (typeof value.normalize === "function")
+        value = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return value.trim();
+}
+
+function userListSetPhotoOnly(card, enabled)
+{
+    var avatar = card.querySelector(".user-card-avatar-default");
+    var photo = card.querySelector(".user-card-avatar-photo");
+
+    if (avatar)
+        avatar.hidden = enabled;
+    if (photo)
+        photo.hidden = !enabled;
+}
+
+function userListApplyFilters()
+{
+    var search = document.getElementById("searchbar");
+    var banned = document.getElementById("user-list-show-banned");
+    var photo = document.getElementById("user-list-photo-only");
+    var query = userListNormalize(search ? search.value : "");
+    var showBanned = banned ? banned.checked : false;
+    var photoOnly = photo ? photo.checked : false;
+
+    document.querySelectorAll("#userlist .userdiv").forEach(function(card) {
+        var cardSearch = userListNormalize(card.getAttribute("data-user-search") || card.textContent);
+        var isBanned = card.getAttribute("data-user-banned") === "1";
+        var visible = (!isBanned || showBanned) && (!query || cardSearch.indexOf(query) !== -1);
+
+        card.hidden = !visible;
+        userListSetPhotoOnly(card, photoOnly);
+    });
+}
+
+(function() {
+    var list = document.getElementById("userlist");
+    userListApplyFilters();
+    if (list && window.MutationObserver)
+        new MutationObserver(userListApplyFilters).observe(list, {childList: true, subtree: false});
+})();
+</script>

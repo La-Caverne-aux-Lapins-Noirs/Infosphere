@@ -1,4 +1,4 @@
-<?php if (!is_director_for_student($user->id)) return ; ?>
+<?php if (!can_manage_student_documents($user->id)) return ; ?>
 <?php
 require_once (__DIR__."/../../tools/document_sources.php");
 require_once (__DIR__."/../../tools/document_context_schema.php");
@@ -24,6 +24,12 @@ foreach (get_document_sources() as $source => $docs)
             "hash" => md5($reference),
             "contexts" => document_context_schema_public(document_context_model_schema($editor_path)),
             "form_roles" => $form_metadata["roles"] ?? [],
+            "staff_form" => dabsic_form_staff_role($form_metadata) != "",
+            // Contract models declare these fields in their FormGroup metadata.
+            // Asking for them here makes the launcher define the contract period
+            // before any external contributor receives a form.
+            "start_school_period" => isset($form_metadata["fields"]["Student.SchoolPeriod"]),
+            "start_entry_month" => isset($form_metadata["fields"]["Student.Month"]),
         ];
     }
 }
@@ -35,15 +41,36 @@ $documentation_school = NULL;
 $documentation_school_ref = document_context_first_school_for_user((int)$user->id);
 if (is_array($documentation_school_ref) && isset($documentation_school_ref["id_school"]))
     $documentation_school = fetch_school((int)$documentation_school_ref["id_school"]);
-$documentation_context_fields_for_year = function ($year) {
+$documentation_context_fields_for_year = function ($year, array $initial_fields = []) {
     $year = (int)$year;
-    if ($year < 1 || $year > 5)
-        return ([]);
-    return ([
-        "Student.ChosenClass" => "EF".$year,
-        "Student.CurrentYear" => (string)$year,
-    ]);
+    $fields = [];
+    if ($year >= 1 && $year <= 5)
+        $fields = [
+            "Student.ChosenClass" => "EF".$year,
+            "Student.CurrentYear" => (string)$year,
+        ];
+    foreach ($initial_fields as $key => $value)
+        if (is_string($key) && is_scalar($value) && trim((string)$value) != "")
+            $fields[$key] = (string)$value;
+    return ($fields);
 };
+
+$documentation_school_period_year = (int)date("Y");
+if ((int)date("n") < 9)
+    --$documentation_school_period_year;
+$documentation_default_school_period = $documentation_school_period_year."-".($documentation_school_period_year + 1);
+$documentation_entry_months = [0 => "September", 1 => "January", 2 => "April"];
+// $user is a FullProfile/Layer here and does not expose user.target_entry.
+// Reading an unknown property deliberately triggers Layer::__get()'s debug warning,
+// so retrieve this admission datum directly from the user row instead.
+$documentation_target_entry = db_select_one(
+    "target_entry FROM user WHERE id = ".intval($user->id)
+);
+$documentation_target_entry = is_array($documentation_target_entry)
+    && $documentation_target_entry["target_entry"] !== NULL
+    ? (int)$documentation_target_entry["target_entry"]
+    : 0;
+$documentation_default_entry_month = $documentation_entry_months[$documentation_target_entry] ?? "September";
 
 $documentation_root = document_builder_documentation_file_root();
 $documentation_dir = $Configuration->UsersDir($user->codename).$documentation_root."/";
@@ -131,7 +158,7 @@ foreach (document_workflow_visible_instances(1000) as $documentation_entry)
         && (string)($documentation_source["Type"] ?? "") === "AttendanceRegisterCampaign")
         continue ;
     $documentation_status = (string)($documentation_instance["Status"] ?? "");
-    if (in_array($documentation_status, ["Completed", "Expired"], true))
+    if ($documentation_status === "Expired")
         continue ;
     $documentation_reference = (string)($documentation_instance["Model"] ?? "");
     $documentation_year = (int)($documentation_instance["TargetYear"] ?? 0);
@@ -145,9 +172,7 @@ foreach ($documentation_models as $documentation_model)
     for ($documentation_year = 0; $documentation_year <= 5; ++$documentation_year)
     {
         $documentation_key = $documentation_model["hash"].":".$documentation_year;
-        if (isset($documentation_pending_keys[$documentation_key])
-            || isset($documentation_finalize_keys[$documentation_key])
-            || isset($documentation_active_keys[$documentation_key]))
+        if (isset($documentation_active_keys[$documentation_key]))
             continue ;
         $documentation_output = "user-document:".(int)$user->id.":".$documentation_model["hash"].":".$documentation_year;
         $documentation_output_ref = dabsic_form_resolve_output($documentation_output, false, (int)$user->id);
@@ -165,17 +190,31 @@ foreach ($documentation_models as $documentation_model)
             $documentation_context_bindings = [];
         $documentation_roles = is_array($documentation_model["form_roles"] ?? NULL)
             ? $documentation_model["form_roles"] : [];
+        $documentation_workspace_creator_id = (int)($documentation_workspace_data["created_by"] ?? 0);
+        $documentation_role_states = document_workflow_form_role_states(
+            (int)$user->id,
+            $documentation_output,
+            $documentation_roles,
+            $documentation_workspace_creator_id
+        );
         $documentation_required_roles = [];
-        foreach ($documentation_roles as $documentation_role => $documentation_role_definition)
-            if (!empty($documentation_role_definition["required"]))
+        foreach ($documentation_role_states as $documentation_role => $documentation_role_state)
+            if (!empty($documentation_role_state["required"]) && empty($documentation_role_state["completed"]))
                 $documentation_required_roles[] = (string)$documentation_role;
+        $documentation_staff_role = trim((string)($documentation_workspace_data["staff_role"] ?? ""));
+        if ($documentation_staff_role == "")
+            $documentation_staff_role = dabsic_form_staff_role(["roles" => $documentation_roles]);
+        $documentation_initial_fields = is_array($documentation_workspace_data["initial_fields"] ?? NULL)
+            ? $documentation_workspace_data["initial_fields"] : [];
         $documentation_review_url = "index.php?p=DabsicFormMenu".
             "&file=".rawurlencode($documentation_model["editor_path"]).
             "&output=".rawurlencode($documentation_output).
             "&mode=docbuilder".
-            "&form_role=Etablissement".
+            "&form_role=".rawurlencode($documentation_staff_role).
             "&context_bindings=".rawurlencode(document_context_bindings_json($documentation_context_bindings)).
-            "&context_fields=".rawurlencode(document_context_fields_json($documentation_context_fields_for_year($documentation_year)));
+            "&context_fields=".rawurlencode(document_context_fields_json(
+                $documentation_context_fields_for_year($documentation_year, $documentation_initial_fields)
+            ));
         $documentation_workspaces[] = [
             "label" => $documentation_model["label"],
             "reference" => $documentation_model["reference"],
@@ -185,15 +224,43 @@ foreach ($documentation_models as $documentation_model)
             "output" => $documentation_output,
             "context_bindings" => $documentation_context_bindings,
             "roles" => $documentation_roles,
+            "role_states" => $documentation_role_states,
             "required_roles" => $documentation_required_roles,
             "review_url" => $documentation_review_url,
             "has_output" => !empty($documentation_output_ref["exists"]),
             "mtime" => !empty($documentation_output_ref["exists"])
                 ? (@filemtime($documentation_output_ref["absolute"]) ?: $documentation_workspace["mtime"])
                 : $documentation_workspace["mtime"],
-            "created_by" => (int)($documentation_workspace_data["created_by"] ?? 0),
+            "created_by" => $documentation_workspace_creator_id,
+            "staff_role" => $documentation_staff_role,
+            "released" => !empty($documentation_workspace_data["released_at"]),
+            "released_at" => (string)($documentation_workspace_data["released_at"] ?? ""),
+            "initial_fields" => $documentation_initial_fields,
         ];
     }
+
+// A multi-party document has one workspace/output but one user_form audit row
+// per role.  The workspace row already aggregates every role state, so showing
+// those individual rows as documents makes one convention appear several times.
+// Keep standalone invitations visible, but suppress role rows whenever their
+// canonical workspace is present.
+$documentation_workspace_outputs = [];
+foreach ($documentation_workspaces as $documentation_workspace)
+    $documentation_workspace_outputs[(string)($documentation_workspace["output"] ?? "")] = true;
+$documentation_pending_forms = array_values(array_filter(
+    $documentation_pending_forms,
+    function ($documentation_form) use ($documentation_workspace_outputs) {
+        $output = (string)($documentation_form["document_output"] ?? "");
+        return ($output == "" || !isset($documentation_workspace_outputs[$output]));
+    }
+));
+$documentation_finalize_forms = array_values(array_filter(
+    $documentation_finalize_forms,
+    function ($documentation_form) use ($documentation_workspace_outputs) {
+        $output = (string)($documentation_form["document_output"] ?? "");
+        return ($output == "" || !isset($documentation_workspace_outputs[$output]));
+    }
+));
 
 $documentation_actor_ids = [];
 foreach ($documentation_pending_forms as $documentation_form)
@@ -271,6 +338,82 @@ if (count($documentation_actor_ids))
     margin-top: 4px;
     font-size: .82em;
     font-style: italic;
+}
+.profile_documentation .document-role-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin: 0 0 8px;
+    padding: 6px;
+    border: 1px solid rgba(0, 255, 0, .25);
+}
+.profile_documentation .document-role-actions > strong {
+    flex: 0 0 100%;
+}
+.profile_documentation .document-role-complete {
+    color: #00a000;
+}
+.profile_documentation .document-role-waiting {
+    color: #8a6500;
+}
+.profile_documentation .document_workflow_action_row .document_workflow_actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+}
+.profile_documentation .document_workflow_action_row .document_workflow_actions > form,
+.profile_documentation .document_workflow_action_row .document_workflow_actions > .profile_documentation_action,
+.profile_documentation .document_workflow_action_row .document_workflow_actions > input,
+.profile_documentation .document_workflow_action_row .document_workflow_actions > .document-role-actions {
+    flex: 0 1 205px;
+    width: 205px;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+.profile_documentation .document_workflow_action_row .document_workflow_actions > .document-role-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    width: 215px;
+    flex-basis: 215px;
+}
+.profile_documentation .document_workflow_action_row .document-role-actions > strong,
+.profile_documentation .document_workflow_action_row .document-role-actions > form {
+    flex: none;
+    width: 100%;
+    margin: 0;
+}
+.profile_documentation .document_workflow_action_row .document-action-status {
+    flex-basis: 100%;
+}
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document_workflow_actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 215px));
+    grid-auto-rows: minmax(260px, auto);
+    align-items: stretch;
+    gap: 8px;
+}
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document_workflow_actions > .document-role-actions {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    margin: 0;
+}
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document_workflow_actions > .document-workspace-general-actions {
+    background-color: #e8f3e8;
+}
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document-role-actions > .profile_documentation_action,
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document-role-actions > input {
+    width: 100%;
+}
+.profile_documentation .document_workflow_action_row.document_workflow_workspace .document_workflow_actions > .document-action-status {
+    grid-column: 1 / -1;
 }
 </style>
 <script>
@@ -484,9 +627,29 @@ function profile_documentation_context_autofill(form)
         });
 }
 
+function profile_documentation_refresh_start_fields(form)
+{
+    var option = profile_documentation_selected_model(form);
+    var fieldset = form.querySelector('[data-document-start-fields]');
+    if (!fieldset)
+        return;
+    var schoolRow = fieldset.querySelector('[data-start-school-period-row]');
+    var entryRow = fieldset.querySelector('[data-start-entry-month-row]');
+    var schoolControl = form.querySelector('[name="school_period"]');
+    var entryControl = form.querySelector('[name="entry_month"]');
+    var school = !!option && option.getAttribute('data-start-school-period') === '1';
+    var entry = !!option && option.getAttribute('data-start-entry-month') === '1';
+    fieldset.style.display = school || entry ? '' : 'none';
+    if (schoolRow) schoolRow.style.display = school ? '' : 'none';
+    if (entryRow) entryRow.style.display = entry ? '' : 'none';
+    if (schoolControl) { schoolControl.disabled = !school; schoolControl.required = school; }
+    if (entryControl) { entryControl.disabled = !entry; entryControl.required = entry; }
+}
+
 function profile_documentation_refresh_contexts(form, reset)
 {
     var option = profile_documentation_selected_model(form);
+    profile_documentation_refresh_start_fields(form);
     var target = form.querySelector('[data-document-contexts]');
     var list = form.querySelector('[data-document-context-list]');
     var buttons = form.querySelector('[data-document-context-buttons]');
@@ -622,7 +785,7 @@ function profile_documentation_set_action_busy(form, button, busy)
     return true;
 }
 
-function profile_documentation_submit_action(form, button, afterSuccess)
+function profile_documentation_submit_action(form, button, afterSuccess, afterComplete)
 {
     if (!profile_documentation_set_action_busy(form, button, true))
         return false;
@@ -636,9 +799,11 @@ function profile_documentation_submit_action(form, button, afterSuccess)
             else
                 profile_documentation_set_action_busy(form, button, false);
         },
-        after_complete: function (success) {
+        after_complete: function (success, result, msg, content, parameter) {
             if (!success)
                 profile_documentation_set_action_busy(form, button, false);
+            if (afterComplete)
+                afterComplete(success, result, msg, content, parameter);
         }
     });
 }
@@ -648,12 +813,37 @@ function profile_documentation_start(form, button)
     var option = profile_documentation_selected_model(form);
     if (!option || !option.value)
         return false;
+    if (form.reportValidity && !form.reportValidity())
+        return false;
     if (!profile_documentation_validate_contexts(form))
         return false;
     form.querySelector('[name="document_file"]').value = option.getAttribute('data-form-file') || '';
     form.querySelector('[name="model_hash"]').value = option.getAttribute('data-form-hash') || '';
     form.querySelector('[name="context_bindings"]').value = JSON.stringify(profile_documentation_context_bindings(form));
-    return profile_documentation_submit_action(form, button);
+
+    // Staff-side forms should be completable immediately from the profile.
+    // Open the tab synchronously (to avoid popup blockers), then point it to
+    // the Dabsic form only once the workspace has actually been created.
+    var completionWindow = option.getAttribute('data-staff-form') === '1'
+        ? window.open('about:blank', '_blank') : null;
+    if (completionWindow)
+        completionWindow.document.write('<p>Création du document…</p>');
+
+    return profile_documentation_submit_action(
+        form,
+        button,
+        function (result, msg, content) {
+            if (completionWindow && content)
+                completionWindow.location.replace(content);
+            else if (completionWindow)
+                completionWindow.close();
+            return profile_documentation_refresh_workflow(true);
+        },
+        function (success) {
+            if (!success && completionWindow)
+                completionWindow.close();
+        }
+    );
 }
 
 function profile_documentation_reset_workspace(form, button)
@@ -741,6 +931,15 @@ function profile_documentation_remind(form, button)
     return profile_documentation_submit_action(form, button);
 }
 
+function profile_documentation_redeliver(form, button)
+{
+    if (!window.confirm("Renvoyer la version définitive par e-mail ? Une nouvelle copie sera réellement soumise au service d'envoi."))
+        return false;
+    return profile_documentation_submit_action(form, button, function () {
+        return profile_documentation_refresh_workflow(true);
+    });
+}
+
 function profile_documentation_expire(form, button)
 {
     if (!window.confirm(<?=json_encode($Dictionnary["DocumentExpireConfirm"] ?? "Faire périmer cette demande de document ?", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
@@ -751,6 +950,30 @@ function profile_documentation_expire(form, button)
             row.remove();
         return profile_documentation_refresh_workflow(true);
     });
+}
+
+function profile_documentation_reopen(form, button)
+{
+    if (!window.confirm(<?=json_encode($Dictionnary["DocumentReopenConfirm"] ?? "Rouvrir ce document ? Ses signatures actuelles deviendront obsolètes et devront être recueillies à nouveau après modification.", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>))
+        return false;
+    var completionWindow = window.open('about:blank', '_blank');
+    if (completionWindow)
+        completionWindow.document.write('<p>Réouverture du document…</p>');
+    return profile_documentation_submit_action(
+        form,
+        button,
+        function (result, msg, content) {
+            if (completionWindow && content)
+                completionWindow.location.replace(content);
+            else if (completionWindow)
+                completionWindow.close();
+            return profile_documentation_refresh_workflow(true);
+        },
+        function (success) {
+            if (!success && completionWindow)
+                completionWindow.close();
+        }
+    );
 }
 
 function profile_documentation_complete_task(form, button)
@@ -765,10 +988,12 @@ function profile_documentation_finalize(form, button)
     if (!profile_documentation_set_action_busy(form, button, true))
         return false;
     var refreshPromise = null;
-    var target = window.open('about:blank', '_blank');
     if (button)
         button.value = <?=json_encode($Dictionnary["Generating"] ?? "Génération…", JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
 
+    // Finalization is a workflow transition, not a preview action.  The frozen
+    // PDF will be exposed by the document workflow/signature actions; opening a
+    // blank tab here only leaves a useless popup while the request is running.
     fetch(form.getAttribute('action'), {
         method: (form.getAttribute('method') || 'POST').toUpperCase(),
         credentials: 'same-origin',
@@ -784,19 +1009,10 @@ function profile_documentation_finalize(form, button)
         if (!response.ok)
             throw new Error(response.statusText || 'Erreur de génération.');
         return response.blob();
-    }).then(function (blob) {
-        var pdf = new Blob([blob], {type: 'application/pdf'});
-        var url = URL.createObjectURL(pdf);
-        if (target)
-            target.location.href = url;
-        else
-            window.open(url, '_blank', 'noopener');
-        window.setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    }).then(function () {
         refreshPromise = profile_documentation_refresh_workflow(true);
         window.setTimeout(profile_documentation_refresh_generated_files, 1200);
     }).catch(function (error) {
-        if (target)
-            target.close();
         var message = error && error.message ? error.message : 'Erreur de génération.';
         if (typeof set_error_div === 'function')
             set_error_div(message, false);
@@ -859,7 +1075,6 @@ function profile_open_generated_letter(result, msg, content, parameter)
                 <col class="profile_documentation_col_author" />
                 <col class="profile_documentation_col_date" />
                 <col class="profile_documentation_col_expiration" />
-                <col class="profile_documentation_col_actions" />
             </colgroup>
             <thead>
                 <tr>
@@ -868,7 +1083,6 @@ function profile_open_generated_letter(result, msg, content, parameter)
                     <th><?=$Dictionnary["Author"] ?? "Auteur"; ?></th>
                     <th><?=$Dictionnary["LastUpdate"] ?? "Dernière mise à jour"; ?></th>
                     <th><?=$Dictionnary["Expiration"] ?? "Expiration"; ?></th>
-                    <th><?=$Dictionnary["Actions"] ?? "Actions"; ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -885,13 +1099,15 @@ function profile_open_generated_letter(result, msg, content, parameter)
                     <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
                     <td><?=htmlspecialchars((string)($documentation_form["last_saved_at"] ?: $documentation_form["created_at"] ?? "—"), ENT_QUOTES); ?></td>
                     <td><?=htmlspecialchars((string)($documentation_form["expires_at"] ?? "—"), ENT_QUOTES); ?></td>
-                    <td class="document_workflow_actions">
+                </tr>
+                <tr class="document_workflow_action_row">
+                    <td colspan="5"><div class="document_workflow_actions">
                         <form method="post" action="/api/doc/0/expire" onsubmit="return false;">
                             <input type="hidden" name="kind" value="form" />
                             <input type="hidden" name="form_id" value="<?=(int)($documentation_form["id"] ?? 0); ?>" />
                             <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
                         </form>
-                    </td>
+                    </div></td>
                 </tr>
             <?php } ?>
             <?php foreach ($documentation_finalize_forms as $documentation_form) {
@@ -906,18 +1122,35 @@ function profile_open_generated_letter(result, msg, content, parameter)
                 $documentation_reference = (string)($documentation_form["document_reference"] ?? "");
                 $documentation_source_reference = (string)($documentation_form["document_source_reference"] ?? "");
                 $documentation_output = (string)($documentation_form["document_output"] ?? "");
-                $documentation_tasks = is_array($documentation_form["document_tasks"] ?? NULL) ? $documentation_form["document_tasks"] : [];
-                $documentation_task_progress = is_array($documentation_form["document_task_progress"] ?? NULL)
-                    ? $documentation_form["document_task_progress"] : ["completed" => 0, "total" => 0, "pending" => []];
+                $documentation_tasks = [];
+                $documentation_role_states = document_workflow_form_role_states(
+                    (int)$user->id,
+                    $documentation_output,
+                    document_workflow_form_role_definitions($documentation_form),
+                    (int)($documentation_form["id_creator"] ?? 0)
+                );
+                foreach ($documentation_role_states as $documentation_role_state)
+                    if (!empty($documentation_role_state["required"]))
+                        $documentation_tasks[] = [
+                            "id" => (int)($documentation_role_state["form"]["id"] ?? 0),
+                            "task_action" => "fill",
+                            "role" => (string)$documentation_role_state["role"],
+                            "role_label" => (string)$documentation_role_state["label"],
+                            "id_assignee_user" => (int)$documentation_role_state["recipient_user_id"],
+                            "required" => 1,
+                            "status" => !empty($documentation_role_state["completed"]) ? "completed" : "pending",
+                        ];
+                $documentation_task_progress = document_task_progress($documentation_tasks, "fill");
                 $documentation_pending_tasks = $documentation_task_progress["pending"] ?? [];
                 $documentation_ready_to_finalize = count($documentation_pending_tasks) == 0;
                 $documentation_model_metadata = document_workflow_document_form_model_metadata($documentation_form);
+                $documentation_staff_role = dabsic_form_staff_role($documentation_model_metadata);
                 $documentation_current_values = document_workflow_document_form_current_values($documentation_form);
                 $documentation_review_url = "index.php?p=DabsicFormMenu".
                     "&file=".rawurlencode($documentation_reference).
                     "&output=".rawurlencode($documentation_output).
                     "&mode=docbuilder".
-                    "&form_role=Etablissement".
+                    "&form_role=".rawurlencode($documentation_staff_role).
                     "&context_bindings=".rawurlencode((string)$documentation_context_bindings).
                     "&context_fields=".rawurlencode(document_context_fields_json($documentation_context_fields_for_year($documentation_year)));
                 $documentation_finalize_hash = "completed_".(int)$documentation_form["id"];
@@ -946,7 +1179,9 @@ function profile_open_generated_letter(result, msg, content, parameter)
                     <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
                     <td><?=htmlspecialchars((string)($documentation_form["completed_at"] ?? "—"), ENT_QUOTES); ?></td>
                     <td>—</td>
-                    <td class="document_workflow_actions">
+                </tr>
+                <tr class="document_workflow_action_row document_workflow_attention">
+                    <td colspan="5"><div class="document_workflow_actions">
                         <?php if ($documentation_reference != "" && $documentation_output != "") { ?>
                             <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_review_url, ENT_QUOTES); ?>" target="_blank" rel="noopener"><?=$Dictionnary["ReviewDocument"] ?? "Vérifier et compléter"; ?></a>
                         <?php } ?>
@@ -996,7 +1231,7 @@ function profile_open_generated_letter(result, msg, content, parameter)
                             <input type="hidden" name="form_id" value="<?=(int)($documentation_form["id"] ?? 0); ?>" />
                             <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
                         </form>
-                    </td>
+                    </div></td>
                 </tr>
             <?php } ?>
             <?php foreach ($documentation_active_instances as $documentation_entry) {
@@ -1009,6 +1244,7 @@ function profile_open_generated_letter(result, msg, content, parameter)
                 $documentation_status = (string)($documentation_instance["Status"] ?? "");
                 $documentation_status_labels = [
                     "AwaitingSignature" => ($Dictionnary["DocumentAwaitingSignature"] ?? "En attente de signature"),
+                    "Completed" => ($Dictionnary["DocumentCompleted"] ?? "Terminé"),
                     "Signed" => ($Dictionnary["DocumentSigned"] ?? "Signatures recueillies"),
                     "Sealed" => ($Dictionnary["DocumentSealed"] ?? "Scellé"),
                     "Error" => ($Dictionnary["Error"] ?? "Erreur"),
@@ -1020,6 +1256,22 @@ function profile_open_generated_letter(result, msg, content, parameter)
                         $documentation_signature_tasks[] = $documentation_task;
                 $documentation_signature_task_progress = document_task_progress($documentation_signature_tasks, "sign");
                 $documentation_signature_progress = document_workflow_signature_progress($documentation_instance);
+                $documentation_reopenable = document_workflow_output_for_instance(
+                    (int)$user->id,
+                    (string)($documentation_instance["Id"] ?? "")
+                ) != "";
+                $documentation_delivery_status = strtolower(trim((string)($documentation_instance["DeliveryMailStatus"] ?? "")));
+                $documentation_delivery_accepted_at = trim((string)($documentation_instance["DeliveryAcceptedAt"] ?? ($documentation_instance["DeliveredAt"] ?? "")));
+                $documentation_delivery_confirmed_at = trim((string)($documentation_instance["DeliveryConfirmedAt"] ?? ""));
+                $documentation_delivery_to = trim((string)($documentation_instance["DeliveryAcceptedTo"] ?? ""));
+                if ($documentation_delivery_to == "")
+                {
+                    $documentation_delivery_addresses = document_workflow_delivery_addresses($documentation_instance);
+                    if (count($documentation_delivery_addresses))
+                        $documentation_delivery_to = implode(", ", $documentation_delivery_addresses);
+                }
+                if ($documentation_delivery_status == "" && $documentation_delivery_accepted_at != "")
+                    $documentation_delivery_status = "accepted_untracked";
             ?>
                 <tr>
                     <td><strong><?=htmlspecialchars($documentation_entry["display_label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></strong><?php if ($documentation_year > 0) { ?><br /><small>EF<?=$documentation_year; ?></small><?php } ?></td>
@@ -1027,6 +1279,12 @@ function profile_open_generated_letter(result, msg, content, parameter)
                         <?=htmlspecialchars($documentation_status_labels[$documentation_status] ?? $documentation_status, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>
                         <?php if ((int)$documentation_signature_progress["total"] > 0) { ?>
                             <br /><small><?=(int)$documentation_signature_progress["signed"]; ?>/<?=(int)$documentation_signature_progress["total"]; ?> signatures obligatoires recueillies</small>
+                            <?php if (($documentation_instance["SealError"] ?? "") != "") { ?>
+                                <br /><small class="document_workflow_error">Scellement : <?=htmlspecialchars((string)$documentation_instance["SealError"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small>
+                            <?php } ?>
+                            <?php if (($documentation_instance["PrintQueueError"] ?? "") != "") { ?>
+                                <br /><small class="document_workflow_error">Impression : <?=htmlspecialchars((string)$documentation_instance["PrintQueueError"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small>
+                            <?php } ?>
                             <?php if (count($documentation_signature_task_progress["pending"] ?? [])) { ?>
                                 <ul class="document_task_list">
                                 <?php foreach ($documentation_signature_task_progress["pending"] as $documentation_signature_task) {
@@ -1041,11 +1299,28 @@ function profile_open_generated_letter(result, msg, content, parameter)
                                 </ul>
                             <?php } ?>
                         <?php } ?>
+                        <?php if ($documentation_status === "Completed") { ?>
+                            <?php if ($documentation_delivery_status === "delivered") { ?>
+                                <br /><small class="document-role-complete">✓ Version définitive<?=(int)$documentation_signature_progress["total"] > 0 ? " signée" : ""; ?> remise au serveur mail du destinataire<?= $documentation_delivery_to != "" ? " (".htmlspecialchars($documentation_delivery_to, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8").")" : ""; ?><?php if ($documentation_delivery_confirmed_at != "") { ?> le <?=htmlspecialchars($documentation_delivery_confirmed_at, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php } ?></small>
+                            <?php } else if ($documentation_delivery_status === "failed") { ?>
+                                <br /><small class="document_workflow_error">⚠ Le service mail n'a pas pu remettre la version définitive<?= $documentation_delivery_to != "" ? " à ".htmlspecialchars($documentation_delivery_to, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?><?= trim((string)($documentation_instance["DeliveryMailError"] ?? "")) != "" ? " : ".htmlspecialchars((string)$documentation_instance["DeliveryMailError"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?></small>
+                            <?php } else if ($documentation_delivery_status === "accepted") { ?>
+                                <br /><small>⌛ Version définitive<?=(int)$documentation_signature_progress["total"] > 0 ? " signée" : ""; ?> acceptée par le service mail<?= $documentation_delivery_to != "" ? " pour ".htmlspecialchars($documentation_delivery_to, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?><?php if ($documentation_delivery_accepted_at != "") { ?> le <?=htmlspecialchars($documentation_delivery_accepted_at, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php } ?> — remise au serveur du destinataire en attente de confirmation.</small>
+                            <?php } else if ($documentation_delivery_status === "accepted_untracked") { ?>
+                                <br /><small>⌛ Version définitive<?=(int)$documentation_signature_progress["total"] > 0 ? " signée" : ""; ?> acceptée par le service mail<?= $documentation_delivery_to != "" ? " pour ".htmlspecialchars($documentation_delivery_to, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") : ""; ?><?php if ($documentation_delivery_accepted_at != "") { ?> le <?=htmlspecialchars($documentation_delivery_accepted_at, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php } ?> — cet ancien envoi ne possède pas d'identifiant Mailgun permettant de confirmer sa livraison.</small>
+                            <?php } else if (($documentation_instance["DeliveryError"] ?? "") != "") { ?>
+                                <br /><small class="document_workflow_error">⚠ Envoi de la version définitive non abouti : <?=htmlspecialchars((string)$documentation_instance["DeliveryError"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></small>
+                            <?php } else { ?>
+                                <br /><small>Version définitive<?=(int)$documentation_signature_progress["total"] > 0 ? " signée" : ""; ?> terminée — envoi par e-mail en attente.</small>
+                            <?php } ?>
+                        <?php } ?>
                     </td>
                     <td><?=htmlspecialchars($documentation_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
                     <td><?=htmlspecialchars((string)($documentation_instance["CreatedAt"] ?? "—"), ENT_QUOTES); ?></td>
                     <td>—</td>
-                    <td class="document_workflow_actions">
+                </tr>
+                <tr class="document_workflow_action_row">
+                    <td colspan="5"><div class="document_workflow_actions">
                         <?php if ($documentation_status === "AwaitingSignature" && count($documentation_signature_task_progress["pending"] ?? [])) { ?>
                             <form method="post" action="/api/doc/0/remind" onsubmit="return false;">
                                 <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
@@ -1078,13 +1353,28 @@ function profile_open_generated_letter(result, msg, content, parameter)
                                 </form>
                             <?php } ?>
                         <?php } ?>
+                        <?php if ($documentation_status === "Completed"
+                            && in_array($documentation_delivery_status, ["failed", "accepted_untracked"], true)) { ?>
+                        <form method="post" action="/api/doc/0/redeliver" onsubmit="return false;">
+                            <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                            <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
+                            <input type="button" value="Renvoyer le PDF par e-mail" onclick="return profile_documentation_redeliver(this.form, this);" />
+                        </form>
+                        <?php } ?>
+                        <?php if ($documentation_reopenable) { ?>
+                        <form method="post" action="/api/doc/0/reopen" onsubmit="return false;">
+                            <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                            <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
+                            <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentReopen"] ?? "Rouvrir et modifier", ENT_QUOTES); ?>" onclick="return profile_documentation_reopen(this.form, this);" />
+                        </form>
+                        <?php } ?>
                         <form method="post" action="/api/doc/0/expire" onsubmit="return false;">
                             <input type="hidden" name="kind" value="instance" />
                             <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
                             <input type="hidden" name="instance_id" value="<?=htmlspecialchars((string)($documentation_instance["Id"] ?? ""), ENT_QUOTES); ?>" />
                             <input class="document-expire-button" type="button" value="<?=htmlspecialchars($Dictionnary["DocumentExpireRequest"] ?? "Faire périmer", ENT_QUOTES); ?>" onclick="return profile_documentation_expire(this.form, this);" />
                         </form>
-                    </td>
+                    </div></td>
                 </tr>
             <?php } ?>
             <?php foreach ($documentation_workspaces as $documentation_workspace) {
@@ -1093,8 +1383,8 @@ function profile_open_generated_letter(result, msg, content, parameter)
                 if ($documentation_workspace_creator_name == "")
                     $documentation_workspace_creator_name = (string)($documentation_workspace_creator["codename"] ?? "—");
                 $documentation_workspace_bindings = document_context_bindings_json($documentation_workspace["context_bindings"]);
-                $documentation_workspace_has_recipient = isset($documentation_workspace["roles"]["Beneficiaire"]);
-                $documentation_workspace_has_staff = isset($documentation_workspace["roles"]["Etablissement"]);
+                $documentation_workspace_role_states = is_array($documentation_workspace["role_states"] ?? NULL)
+                    ? $documentation_workspace["role_states"] : [];
                 $documentation_workspace_can_finalize = count($documentation_workspace["required_roles"]) == 0;
                 $documentation_workspace_hash = "workspace_".$documentation_workspace["hash"]."_".(int)$documentation_workspace["year"];
             ?>
@@ -1111,20 +1401,27 @@ function profile_open_generated_letter(result, msg, content, parameter)
                     <td><?=htmlspecialchars($documentation_workspace_creator_name, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></td>
                     <td><?=$documentation_workspace["mtime"] ? date("Y-m-d H:i:s", $documentation_workspace["mtime"]) : "—"; ?></td>
                     <td>—</td>
-                    <td class="document_workflow_actions">
-                        <?php if ($documentation_workspace_has_staff) { ?>
-                            <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_workspace["review_url"], ENT_QUOTES); ?>" target="_blank" rel="noopener"><?=$Dictionnary["ReviewDocument"] ?? "Vérifier et compléter"; ?></a>
+                </tr>
+                <tr class="document_workflow_action_row document_workflow_workspace">
+                    <td colspan="5"><div class="document_workflow_actions">
+                        <div class="document-role-actions document-workspace-general-actions">
+                            <strong>Document</strong>
+                        <?php if (trim((string)($documentation_workspace["staff_role"] ?? "")) != "") { ?>
+                            <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_workspace["review_url"], ENT_QUOTES); ?>" target="_blank" rel="noopener">Modifier librement le document</a>
                         <?php } ?>
-                        <?php if ($documentation_workspace_has_recipient) { ?>
-                            <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_form" onsubmit="return false;">
-                                <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
-                                <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
-                                <input type="hidden" name="document_label" value="<?=htmlspecialchars($documentation_workspace["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
-                                <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
-                                <input type="hidden" name="context_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
-                                <input type="hidden" name="form_role" value="Beneficiaire" />
-                                <input type="button" value="<?=htmlspecialchars($Dictionnary["SendDocumentForm"] ?? "Envoyer le formulaire", ENT_QUOTES); ?>" onclick="return profile_documentation_send_workspace(this.form, this);" />
-                            </form>
+                        <?php if (count($documentation_workspace_role_states)) { ?>
+                            <?php if (empty($documentation_workspace["released"])) { ?>
+                                <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_workspace" onsubmit="return false;">
+                                    <input type="hidden" name="operation" value="release" />
+                                    <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                    <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                                    <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                                    <input type="hidden" name="context_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                    <input type="button" value="Envoyer aux destinataires" onclick="return profile_documentation_send_workspace(this.form, this);" />
+                                </form>
+                            <?php } else { ?>
+                                <span class="document-role-complete">✓ Parties envoyées automatiquement<?=trim((string)$documentation_workspace["released_at"]) != "" ? " — ".htmlspecialchars((string)$documentation_workspace["released_at"], ENT_QUOTES) : ""; ?></span>
+                            <?php } ?>
                         <?php } ?>
                         <?php if ($documentation_workspace_can_finalize) { ?>
                             <form method="post" action="/api/doc/0/generate" onsubmit="return false;">
@@ -1156,7 +1453,58 @@ function profile_open_generated_letter(result, msg, content, parameter)
                             <input type="hidden" name="context_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
                             <input type="button" value="<?=htmlspecialchars($Dictionnary["DocumentWorkspaceAbandon"] ?? "Abandonner", ENT_QUOTES); ?>" onclick="return profile_documentation_abandon_workspace(this.form, this);" />
                         </form>
-                    </td>
+                        </div>
+                        <?php foreach ($documentation_workspace_role_states as $documentation_role => $documentation_role_state) {
+                            $documentation_role_completed = !empty($documentation_role_state["completed"]);
+                            $documentation_role_dependencies = !empty($documentation_role_state["dependencies_satisfied"]);
+                            $documentation_role_recipient = (int)($documentation_role_state["recipient_user_id"] ?? 0);
+                            $documentation_role_editor_url = "index.php?p=DabsicFormMenu".
+                                "&file=".rawurlencode($documentation_workspace["editor_path"]).
+                                "&output=".rawurlencode($documentation_workspace["output"]).
+                                "&mode=docbuilder".
+                                "&form_role=".rawurlencode($documentation_role).
+                                "&context_bindings=".rawurlencode($documentation_workspace_bindings ?: "{}").
+                                "&context_fields=".rawurlencode(document_context_fields_json(
+                                    $documentation_context_fields_for_year(
+                                        $documentation_workspace["year"],
+                                        is_array($documentation_workspace["initial_fields"] ?? NULL)
+                                            ? $documentation_workspace["initial_fields"] : []
+                                    )
+                                )) ;
+                        ?>
+                            <div class="document-role-actions">
+                                <strong><?=htmlspecialchars((string)$documentation_role_state["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php if (trim((string)($documentation_role_state["recipient_name"] ?? "")) != "") { ?> — <?=htmlspecialchars((string)$documentation_role_state["recipient_name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?><?php } ?></strong>
+                                <?php if ($documentation_role_completed) { ?>
+                                    <span class="document-role-complete">✓ <?=$Dictionnary["DocumentRoleCompleted"] ?? "Contribution terminée"; ?></span>
+                                <?php } else if (!$documentation_role_dependencies) { ?>
+                                    <span class="document-role-waiting">⏳ <?=$Dictionnary["DocumentRoleDependencyPending"] ?? "Étape précédente requise"; ?></span>
+                                <?php } else { ?>
+                                    <a class="profile_documentation_action document-review-button" href="<?=htmlspecialchars($documentation_role_editor_url, ENT_QUOTES); ?>" target="_blank" rel="noopener"><?=htmlspecialchars("Compléter à la place de ".(trim((string)($documentation_role_state["recipient_name"] ?? "")) != "" ? (string)$documentation_role_state["recipient_name"] : (string)$documentation_role_state["label"]), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></a>
+                                    <form method="post" action="/api/doc/0/task" onsubmit="return false;">
+                                        <input type="hidden" name="owner_user_id" value="<?=(int)$user->id; ?>" />
+                                        <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                        <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                                        <input type="hidden" name="document_label" value="<?=htmlspecialchars($documentation_workspace["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                        <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                                        <input type="hidden" name="context_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                        <input type="hidden" name="form_role" value="<?=htmlspecialchars($documentation_role, ENT_QUOTES); ?>" />
+                                        <input type="button" value="<?=htmlspecialchars("Valider à la place de ".(trim((string)($documentation_role_state["recipient_name"] ?? "")) != "" ? (string)$documentation_role_state["recipient_name"] : (string)$documentation_role_state["label"]), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" onclick="return profile_documentation_complete_task(this.form, this);" />
+                                    </form>
+                                    <?php if (!empty($documentation_workspace["released"]) && $documentation_role_recipient > 0) { ?>
+                                        <form method="put" action="/api/user/<?=(int)$user->id; ?>/document_form" onsubmit="return false;">
+                                            <input type="hidden" name="document_file" value="<?=htmlspecialchars($documentation_workspace["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                            <input type="hidden" name="model_hash" value="<?=htmlspecialchars($documentation_workspace["hash"], ENT_QUOTES); ?>" />
+                                            <input type="hidden" name="document_label" value="<?=htmlspecialchars($documentation_workspace["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                            <input type="hidden" name="target_year" value="<?=(int)$documentation_workspace["year"]; ?>" />
+                                            <input type="hidden" name="context_bindings" value="<?=htmlspecialchars($documentation_workspace_bindings ?: "{}", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>" />
+                                            <input type="hidden" name="form_role" value="<?=htmlspecialchars($documentation_role, ENT_QUOTES); ?>" />
+                                            <input type="button" value="Renvoyer" onclick="return profile_documentation_send_workspace(this.form, this);" />
+                                        </form>
+                                    <?php } ?>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                    </div></td>
                 </tr>
             <?php } ?>
             </tbody>
@@ -1200,6 +1548,9 @@ function profile_open_generated_letter(result, msg, content, parameter)
                         value="<?=htmlspecialchars($model["reference"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
                         data-form-hash="<?=htmlspecialchars($model["hash"], ENT_QUOTES); ?>"
                         data-form-file="<?=htmlspecialchars($model["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                        data-staff-form="<?=!empty($model["staff_form"]) ? "1" : "0"; ?>"
+                        data-start-school-period="<?=!empty($model["start_school_period"]) ? "1" : "0"; ?>"
+                        data-start-entry-month="<?=!empty($model["start_entry_month"]) ? "1" : "0"; ?>"
                         data-contexts="<?=htmlspecialchars(json_encode($model["contexts"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
                     ><?=htmlspecialchars($model["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></option>
                 <?php } ?>
@@ -1212,6 +1563,24 @@ function profile_open_generated_letter(result, msg, content, parameter)
                     <option value="<?=$year; ?>">EF<?=$year; ?></option>
                 <?php } ?>
             </select><br />
+
+            <fieldset data-document-start-fields style="display: none; margin-top: 8px;">
+                <legend>Paramètres du contrat</legend>
+                <div data-start-school-period-row>
+                    <label>Année scolaire / période de scolarité</label><br />
+                    <input type="text" name="school_period" value="<?=htmlspecialchars($documentation_default_school_period, ENT_QUOTES); ?>"
+                        pattern="[0-9]{4}-[0-9]{4}" placeholder="2026-2027" style="width: 100%;" />
+                </div>
+                <div data-start-entry-month-row style="margin-top: 6px;">
+                    <label>Rentrée</label><br />
+                    <select name="entry_month" style="width: 100%;">
+                        <option value="September" <?=$documentation_default_entry_month === "September" ? "selected" : ""; ?>>Septembre</option>
+                        <option value="January" <?=$documentation_default_entry_month === "January" ? "selected" : ""; ?>>Janvier</option>
+                        <option value="April" <?=$documentation_default_entry_month === "April" ? "selected" : ""; ?>>Avril</option>
+                        <option value="Other" <?=$documentation_default_entry_month === "Other" ? "selected" : ""; ?>>Autre</option>
+                    </select>
+                </div>
+            </fieldset>
 
             <fieldset data-document-contexts style="display: none; margin-top: 8px;">
                 <legend>Contexte du document</legend>
@@ -1242,6 +1611,7 @@ function profile_open_generated_letter(result, msg, content, parameter)
     $fbid = "documentation_file_browser";
     $locked_path = $documentation_root;
     $path_browser_can_cd = true;
+    $path_browser_dabsic_editor = true;
     $nocd = false;
     $file_browser_height = "260px";
     require ("./tools/template/path_browser.phtml");

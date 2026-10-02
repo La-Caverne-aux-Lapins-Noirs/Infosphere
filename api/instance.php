@@ -2,6 +2,94 @@
 
 require ("activities.php");
 
+function DeclareSessionTeacherPresence($id, $data, $method, $output, $module)
+{
+    global $SUBID, $User, $Database, $Dictionnary;
+
+    if ($id <= 0 || $SUBID <= 0 || !is_array($User) || !is_intranet_member_profile())
+	bad_request();
+    if (!session_signin_schema_ready())
+	return (new ErrorResponse("CannotExecute", "Les tables SQL de l'émargement de session doivent être installées."));
+    $session = db_select_one("* FROM session WHERE id = ".(int)$SUBID." AND id_activity = ".(int)$id." AND deleted IS NULL");
+    if (!$session)
+	not_found();
+    if (!session_signin_teacher_is_assigned($SUBID, $User["id"]))
+	forbidden();
+    $begin = date_to_timestamp($session["begin_date"]);
+    $end = date_to_timestamp($session["end_date"]);
+    if (!$begin || !$end || !period($begin - 10 * 60, $end))
+	return (new ErrorResponse("SessionTeacherPresencePeriod"));
+
+    $uid = (int)$User["id"];
+    $today = datex("Y-m-d");
+    if (!$Database->query("
+	INSERT INTO session_teacher_presence (id_session, id_user, attendance_day, declared_at)
+	VALUES (".(int)$SUBID.", $uid, '$today', NOW())
+	ON DUPLICATE KEY UPDATE id_user = id_user
+    "))
+	return (new ErrorResponse("CannotEdit"));
+
+    ob_start();
+    session_signin_teacher_button((int)$id, (int)$SUBID);
+    return (new ValueResponse([
+	"msg" => $Dictionnary["SessionTeacherPresenceRecorded"],
+	"content" => ob_get_clean(),
+    ]));
+}
+
+function SetSessionTeacherPresenceAdmin($id, $data, $method, $output, $module)
+{
+    global $SUBID, $User, $Database;
+
+    if ($id <= 0 || $SUBID <= 0 || !is_array($User) || !is_admin())
+        forbidden();
+    if (!session_signin_schema_ready())
+        return (new ErrorResponse("CannotExecute", "Les tables SQL de l'émargement de session doivent être installées."));
+
+    $session = db_select_one("* FROM session WHERE id = ".(int)$SUBID." AND id_activity = ".(int)$id." AND deleted IS NULL");
+    if (!$session)
+        not_found();
+    $id_teacher = (int)($data["teacher"] ?? 0);
+    $attendance_day = trim((string)($data["attendance_day"] ?? ""));
+    $present = (int)($data["present"] ?? 0) === 1;
+    if ($id_teacher <= 0 || !session_signin_teacher_is_assigned((int)$SUBID, $id_teacher))
+        return (new ErrorResponse("CannotExecute", "Ce formateur n'est pas affecté à cette session."));
+    if (!in_array($attendance_day, session_signin_attendance_days($session), true))
+        return (new ErrorResponse("CannotExecute", "Le jour de présence ne fait pas partie de cette session."));
+
+    $id_session = (int)$SUBID;
+    $pdf = session_signin_pdf_path($id_session);
+    if ($pdf && is_file($pdf) && !@unlink($pdf))
+        return (new ErrorResponse("CannotExecute", "Le PDF existant ne peut pas être invalidé. Corrige ses permissions avant de modifier la présence."));
+    if ($present)
+    {
+        if (!$Database->query("
+            INSERT INTO session_teacher_presence (id_session, id_user, attendance_day, declared_at)
+            VALUES ($id_session, $id_teacher, '$attendance_day', NOW())
+            ON DUPLICATE KEY UPDATE declared_at = declared_at
+        "))
+            return (new ErrorResponse("CannotEdit"));
+    }
+    else if (!$Database->query("
+        DELETE FROM session_teacher_presence
+        WHERE id_session = $id_session AND id_user = $id_teacher
+          AND attendance_day = '$attendance_day'
+    "))
+        return (new ErrorResponse("CannotEdit"));
+
+    if (!$Database->query("
+        UPDATE session
+        SET signin_generated_at = NULL, signin_id_actor = NULL, signin_sha256 = NULL
+        WHERE id = $id_session
+    "))
+        return (new ErrorResponse("CannotEdit"));
+
+    add_log(EDITING_OPERATION,
+        "Session teacher presence #$id_session / user #$id_teacher / $attendance_day set to ".($present ? "present" : "absent"),
+        (int)$User["id"]);
+    return (new ValueResponse(["msg" => $present ? "Présence formateur enregistrée." : "Présence formateur retirée."]));
+}
+
 function SetPresenceDeclaration($id, $data, $method, $output, $module)
 {
     global $SUBID;
@@ -378,6 +466,14 @@ $Tab = [
     ],
     "POST" => [],
     "PUT" => [
+	"teacher_presence_admin" => [
+	    "logged_in",
+	    "SetSessionTeacherPresenceAdmin",
+	],
+	"teacher_presence" => [
+	    "logged_in",
+	    "DeclareSessionTeacherPresence",
+	],
 	"declare" => [
 	    "is_leader_or_assistant_for_activity",
 	    "SetPresenceDeclaration",
@@ -426,4 +522,3 @@ $Tab = [
 	],
     ],
 ];
-

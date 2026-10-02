@@ -3,7 +3,7 @@
     <head>
 	<meta charset="utf8" />
 	<?php foreach (glob("./style/structure/*.css") as $css) { ?>
-	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>?<?=filemtime($css); ?>" />
 	<?php } ?>
 
 	<?php if ($Position == "MedalsMenu") { ?>
@@ -12,13 +12,13 @@
 	
 	<?php if (isset($Configuration->Properties["style"])) { ?>
 	    <?php foreach (glob("./style/{$Configuration->Properties["style"]}/*.css") as $css) { ?>
-		<link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+		<link rel="stylesheet" type="text/css" href="<?=$css; ?>?<?=filemtime($css); ?>" />
 	    <?php } ?>
 	<?php } ?>
 	<?php $school_from_url = get_school_from_url(); ?>
 	<?php $current_school_style = $school_from_url !== NULL ? $school_from_url["codename"] : (isset($User["last_school"]) ? $User["last_school"] : get_school_name_from_url()); ?>
 	<?php foreach (glob("./style/$current_school_style/*.css") as $css) { ?>
-	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>" />
+	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>?<?=filemtime($css); ?>" />
 	<?php } ?>
 	<?php if (($icon = school_favicon_path($current_school_style, false)) != "") { ?>
 	    <link rel="icon" type="image/png" href="<?=$icon; ?>?<?=filemtime($icon); ?>" />
@@ -154,7 +154,7 @@
 	</div>
 
 	
-	<div id="debugbox" style="display: <?=isset($DebugLog) && $DebugLog != "" ? "block" : "none" ?>;" onclick="this.style.display = 'none';">
+	<div id="debugbox" style="display: <?=isset($DebugLog) && $DebugLog != "" ? "block" : "none" ?>;" ondblclick="this.style.display = 'none';">
 	    <?=str_replace("\n", "<br />", @$DebugLog); ?>
 	</div>
 

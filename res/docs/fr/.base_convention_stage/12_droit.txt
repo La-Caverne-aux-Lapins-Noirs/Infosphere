@@ -24,6 +24,6 @@ compétente.
 [@Indent]
 
 [@Size;5]
-[@Indent]Fait à [#Variable;Internship.SigningCity], le [#Variable;Internship.SigningDate], en trois exemplaires, un pour chaque partie.
+[@Indent]Fait à [#ShortLine;[#Variable;Internship.SigningCity]], le [#ShortLine;[#Variable;Internship.SigningDate]], en trois exemplaires, un pour chaque partie.
 
 [@Indent]

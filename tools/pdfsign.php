@@ -18,33 +18,93 @@ function pdfsign_configuration_path($school_codename)
     return ($Configuration->SchoolsDir($school_codename)."pdfsign.dab");
 }
 
+function pdfsign_default_configuration($school_codename)
+{
+    return ([
+        "Enabled" => true,
+        "Binary" => "pdfsign",
+        "Store" => "/var/lib/pdfsign/nss",
+        "StorePasswordFile" => "/var/lib/pdfsign/store-password",
+        "Nick" => strtoupper(trim((string)$school_codename))." document seal",
+        "Reason" => "Infosphere document workflow",
+        "RequireTrusted" => false,
+        "TimestampUrl" => "",
+        "TimestampCaFile" => "",
+        "TimestampCaPath" => "",
+    ]);
+}
+
+function pdfsign_configuration_dabsic(array $configuration)
+{
+    $quote = function ($value) {
+        return ('"'.str_replace(["\\", "\"", "\r", "\n"], ["\\\\", "\\\"", "\\r", "\\n"], (string)$value).'"');
+    };
+    return (
+        "' Generated automatically by Infosphere from the school codename.\n".
+        "' Edit only when this school uses a different PdfSign infrastructure.\n".
+        "Enabled = ".(!empty($configuration["Enabled"]) ? "1" : "0")."\n".
+        "Binary = ".$quote($configuration["Binary"])."\n".
+        "Store = ".$quote($configuration["Store"])."\n".
+        "StorePasswordFile = ".$quote($configuration["StorePasswordFile"])."\n".
+        "Nick = ".$quote($configuration["Nick"])."\n".
+        "Reason = ".$quote($configuration["Reason"])."\n".
+        "RequireTrusted = ".(!empty($configuration["RequireTrusted"]) ? "1" : "0")."\n".
+        "TimestampUrl = ".$quote($configuration["TimestampUrl"])."\n".
+        "TimestampCaFile = ".$quote($configuration["TimestampCaFile"])."\n".
+        "TimestampCaPath = ".$quote($configuration["TimestampCaPath"])."\n"
+    );
+}
+
+function pdfsign_create_default_configuration($school_codename, $file, array $configuration)
+{
+    $directory = dirname((string)$file);
+    if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory))
+        return (false);
+
+    // fopen(..., "x") is atomic: simultaneous Albedo/web requests cannot
+    // overwrite each other's configuration. If another request won the race,
+    // simply use the file it created.
+    $handle = @fopen($file, "x");
+    if ($handle === false)
+        return (is_file($file));
+
+    $content = pdfsign_configuration_dabsic($configuration);
+    $written = 0;
+    $length = strlen($content);
+    while ($written < $length)
+    {
+        $ret = @fwrite($handle, substr($content, $written));
+        if ($ret === false || $ret === 0)
+            break ;
+        $written += $ret;
+    }
+    @fclose($handle);
+    if ($written != $length)
+    {
+        @unlink($file);
+        return (false);
+    }
+    @chmod($file, 0640);
+    return (true);
+}
+
 function pdfsign_configuration($school_codename)
 {
     static $configurations = [];
     $school_codename = trim((string)$school_codename);
     if (isset($configurations[$school_codename]))
         return ($configurations[$school_codename]);
-    $configuration = [
-        "Enabled" => false,
-        "Binary" => "pdfsign",
-        "Store" => "/var/lib/pdfsign/nss",
-        "StorePasswordFile" => "/var/lib/pdfsign/store-password",
-        "Nick" => "",
-        "Reason" => "Infosphere document workflow",
-        "RequireTrusted" => false,
-        "TimestampUrl" => "",
-        "TimestampCaFile" => "",
-        "TimestampCaPath" => "",
-    ];
+    $configuration = pdfsign_default_configuration($school_codename);
     $file = pdfsign_configuration_path($school_codename);
     if ($file === NULL)
     {
         $configuration["ConfigurationError"] = "MissingSchool";
         return ($configurations[$school_codename] = $configuration);
     }
-    if (!is_file($file))
+    if (!is_file($file)
+        && !pdfsign_create_default_configuration($school_codename, $file, $configuration))
     {
-        $configuration["ConfigurationError"] = "MissingSchoolConfiguration";
+        $configuration["ConfigurationError"] = "CannotCreateSchoolConfiguration";
         return ($configurations[$school_codename] = $configuration);
     }
     $loaded = load_configuration($file, [], true);

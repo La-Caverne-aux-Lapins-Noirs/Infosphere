@@ -119,3 +119,327 @@
 {
     background: rgba(90, 90, 90, 0.45);
 }
+
+.profile_admin_section
+{
+    margin: 0.7em;
+    padding: 0.7em 0.9em;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+}
+
+.profile_stats_period_form,
+.profile_stats_period form
+{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6em;
+}
+
+.profile_stats_period_message
+{
+    font-size: 0.85em;
+}
+
+.profile_user_relations h4
+{
+    margin: 0.45em 0 0.25em;
+}
+
+.profile_user_relations ul
+{
+    margin: 0.2em 0 0.6em;
+    padding-left: 1.5em;
+}
+
+.profile_user_relation_tags
+{
+    display: block;
+    font-size: x-small;
+    opacity: 0.8;
+}
+
+.profile_user_relation_item,
+.profile_admin_action,
+.profile_nfc_actions
+{
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+}
+
+.profile_user_relation_item > span,
+.profile_admin_action > span,
+.profile_admin_action > label
+{
+    flex: 1;
+    min-width: 0;
+}
+
+.profile_user_relation_remove,
+.profile_admin_action form,
+.profile_nfc_actions form
+{
+    display: inline-block;
+    margin: 0;
+}
+
+.profile_user_relation_remove input
+{
+    color: darkred;
+    font-weight: bold;
+}
+
+.profile_user_relation_update
+{
+    margin: 0.35em 0 0.8em;
+}
+
+.profile_user_relation_editor
+{
+    margin-top: 0.8em;
+    padding-top: 0.7em;
+    border-top: 1px solid rgba(160, 160, 160, 0.45);
+}
+
+.profile_user_relation_editor form,
+.profile_user_relation_update
+{
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+}
+
+.profile_user_relation_editor select
+{
+    width: 100%;
+}
+
+.profile_user_relation_types
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35em 1em;
+    font-size: x-small;
+}
+
+.profile_user_relation_types label
+{
+    white-space: nowrap;
+}
+
+.profile_user_relation_editor_notice
+{
+    margin: 0.25em 0;
+    font-size: x-small;
+    opacity: 0.8;
+}
+
+.profile_admin_action
+{
+    justify-content: space-between;
+    padding: 0.65em 0;
+    border-bottom: 1px solid rgba(160, 160, 160, 0.35);
+}
+
+.profile_admin_action:last-child
+{
+    border-bottom: 0;
+}
+
+.profile_admin_action select
+{
+    min-width: 175px;
+}
+
+.profile_nfc_actions
+{
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.profile_nfc_card
+{
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.profile_nfc_actions > .profile_admin_button,
+.profile_nfc_actions > form
+{
+    flex: 1 1 270px;
+}
+
+.profile_nfc_actions > .profile_admin_button
+{
+    align-items: center;
+    background-color: darkgreen;
+    border: 2px solid black;
+    border-radius: 5px;
+    color: white !important;
+    cursor: pointer;
+    display: flex;
+    font: inherit;
+    justify-content: center;
+    min-height: 24px;
+    padding: 1px 6px;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.4s;
+}
+
+.profile_nfc_actions > button.profile_admin_button:disabled
+{
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.profile_nfc_actions input[type="button"]
+{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.profile_admin_button
+{
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 3px 8px;
+    border: 1px solid #777;
+    border-radius: 2px;
+    background: #eee;
+    text-decoration: none;
+}
+
+.profile_diploma_notice,
+.profile_diploma_warning
+{
+    margin: 0.35em 0 0.75em;
+}
+
+.profile_diploma_warning
+{
+    color: #d06060;
+    font-weight: bold;
+}
+
+.profile_diploma_form
+{
+    display: grid;
+    gap: 0.7em;
+}
+
+.profile_diploma_form label
+{
+    display: grid;
+    gap: 0.25em;
+}
+
+.profile_diploma_form select,
+.profile_diploma_form input[type="button"]
+{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.profile_diploma_existing
+{
+    border-top: 1px solid rgba(160, 160, 160, 0.35);
+    margin-top: 0.9em;
+    padding-top: 0.7em;
+}
+
+.profile_diploma_existing ul
+{
+    margin: 0.35em 0 0;
+    padding-left: 1.4em;
+}
+
+.profile_diploma_options
+{
+    display: grid;
+    gap: 0.7em;
+    grid-template-columns: minmax(150px, 0.45fr) minmax(220px, 1fr);
+}
+
+.profile_diploma_options input[type="number"]
+{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.profile_diploma_form label.profile_diploma_checkbox
+{
+    align-items: center;
+    display: flex;
+    gap: 0.55em;
+}
+
+.profile_diploma_checkbox > input
+{
+    flex: 0 0 auto;
+}
+
+.profile_diploma_checkbox > span
+{
+    display: grid;
+    gap: 0.15em;
+}
+
+@media (max-width: 700px)
+{
+    .profile_diploma_options
+    {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profile_nfc_actions > button.profile_admin_button
+{
+    flex: 1 1 270px;
+    box-sizing: border-box;
+}
+
+.profile_nfc_browser_status
+{
+    width: 100%;
+    max-height: 12em;
+    box-sizing: border-box;
+    margin: 8px 0 0 0;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    font: inherit;
+    font-size: small;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.035);
+}
+
+.profile_nfc_browser_status.error
+{
+    font-weight: bold;
+}
+
+
+/* diploma form: force legible native fields */
+.profile_diploma_form input[type="date"],
+.profile_diploma_form input[type="number"],
+.profile_diploma_form input[name="promotion"],
+.profile_diploma_form input[name="promo"],
+.profile_diploma_form input[name="promotion_year"],
+.profile_diploma_form input[name="issue_date"]
+{
+    background: #fff !important;
+    border: 1px solid #777 !important;
+    box-sizing: border-box;
+    color: #111 !important;
+    -webkit-text-fill-color: #111 !important;
+    color-scheme: light;
+    min-height: 2.2em;
+    padding: 0.3em 0.45em;
+    width: 100%;
+}

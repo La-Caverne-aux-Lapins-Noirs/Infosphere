@@ -9,11 +9,15 @@ CREATE TABLE IF NOT EXISTS `title` (
   `code` varchar(255) COLLATE utf8_bin NOT NULL DEFAULT '',
   `fr_name` tinytext DEFAULT NULL,
   `en_name` tinytext DEFAULT NULL,
+  `diploma_text` text COLLATE utf8_bin DEFAULT NULL,
   `deleted` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 ALTER TABLE `title`
   ADD COLUMN IF NOT EXISTS `code` varchar(255) COLLATE utf8_bin NOT NULL DEFAULT '' AFTER `codename`;
+
+ALTER TABLE `title`
+  ADD COLUMN IF NOT EXISTS `diploma_text` text COLLATE utf8_bin DEFAULT NULL AFTER `en_name`;
 
 CREATE TABLE IF NOT EXISTS `user_title` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

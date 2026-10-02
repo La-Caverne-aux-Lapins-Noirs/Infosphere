@@ -264,10 +264,12 @@ function export_activity_description_session($session_id)
     $session = db_select_one("
         session.*,
         activity.codename as activity_codename,
-        laboratory.codename as laboratory_codename
+        laboratory.codename as laboratory_codename,
+        user.codename as user_codename
         FROM session
         LEFT JOIN activity ON activity.id = session.id_activity
         LEFT JOIN laboratory ON laboratory.id = session.id_laboratory
+        LEFT JOIN user ON user.id = session.id_user
         WHERE session.id = $session_id
     ");
     if ($session == NULL)
@@ -282,6 +284,8 @@ function export_activity_description_session($session_id)
 	    $key = "activity";
 	else if ($key == "laboratory_codename")
 	    $key = "laboratory";
+        else if ($key == "user_codename")
+            $key = "user";
 	if (export_activity_description_is_date_key($key))
 	    export_activity_description_add_date($out, $key, $value);
 	else

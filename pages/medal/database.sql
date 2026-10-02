@@ -3,6 +3,7 @@ CREATE TABLE `medal` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
   `codename` varchar(255) NOT NULL,
+  UNIQUE KEY `medal_codename` (`codename`),
   `deleted` datetime DEFAULT NULL,
   `hidden` datetime DEFAULT NULL COMMENT 'Cache la médaille du menu médaille. Utile pour dépréciser une médaille sans la supprimer.',
 

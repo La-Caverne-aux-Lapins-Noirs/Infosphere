@@ -9,7 +9,7 @@
 	    <label for="file"><?=$Dictionnary["File"]; ?></label><br />
 	    <input id="path2" type="hidden" name="path" value="" />
 	    <input type="hidden" name="show_hidden_entries" value="1" />
-            <input type="hidden" name="path_browser_dabsic_editor" value="<?=is_admin() ? 1 : 0; ?>" />
+            <input type="hidden" name="path_browser_dabsic_editor" value="<?=am_i_teacher() ? 1 : 0; ?>" />
 	    <input
 		type="file"
 		name="file"
@@ -26,7 +26,7 @@
 	$path = "";
 	$target = $Configuration->DocDir();
 	$show_hidden_entries = true;
-        $path_browser_dabsic_editor = is_admin();
+        $path_browser_dabsic_editor = am_i_teacher();
 	require ("./tools/template/path_browser.phtml");
 	?>
     </div>

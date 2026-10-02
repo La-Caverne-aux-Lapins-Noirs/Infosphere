@@ -16,6 +16,7 @@ function dabsic_editor_component($file, array $options = [])
         "show_path" => true,
         "autofocus" => true,
         "save_url" => "/api/dabsic/0/save",
+        "save_method" => "POST",
         "extra_fields" => [],
         "extensions" => dabsic_editor_editable_extensions(),
     ], $options);
@@ -47,6 +48,10 @@ function dabsic_editor_component($file, array $options = [])
     if ($extra === false)
         $extra = "{}";
 
+    $save_method = strtoupper(trim((string)$options["save_method"]));
+    if (!in_array($save_method, ["POST", "PUT", "PATCH"], true))
+        $save_method = "POST";
+
     if (!$style_loaded)
     {
         $style_loaded = true;
@@ -64,6 +69,7 @@ function dabsic_editor_component($file, array $options = [])
         data-editor-mode="<?=htmlspecialchars($mode, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
         data-hash="<?=htmlspecialchars($hash, ENT_QUOTES, "UTF-8"); ?>"
         data-save-url="<?=htmlspecialchars((string)$options["save_url"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+        data-save-method="<?=htmlspecialchars($save_method, ENT_QUOTES, "UTF-8"); ?>"
         data-extra-fields="<?=htmlspecialchars($extra, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
         data-autofocus="<?=$options["autofocus"] ? "1" : "0"; ?>"
         data-confirm-save="<?=htmlspecialchars($Dictionnary["DabsicEditorConfirmSave"] ?? "Save changes?", ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"

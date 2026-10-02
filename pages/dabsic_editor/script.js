@@ -1083,7 +1083,7 @@
 
         function save() {
             var contentToSave;
-            var body;
+            var payload;
 
             if (saving || !isDirty())
                 return;
@@ -1091,14 +1091,15 @@
                 return;
 
             contentToSave = input.value;
-            body = new FormData();
-            body.append("file", root.getAttribute("data-file") || "");
-            body.append("content", contentToSave);
-            body.append("hash", baselineHash);
+            payload = {
+                file: root.getAttribute("data-file") || "",
+                content: contentToSave,
+                hash: baselineHash
+            };
             try {
                 var extra = JSON.parse(root.getAttribute("data-extra-fields") || "{}");
                 Object.keys(extra).forEach(function (key) {
-                    body.append(key, extra[key]);
+                    payload[key] = extra[key];
                 });
             } catch (error) {
                 setMessage(label("context-error", "Contexte d’édition invalide."), "error");
@@ -1110,9 +1111,10 @@
             updateDirtyState();
 
             fetch(root.getAttribute("data-save-url"), {
-                method: "POST",
+                method: root.getAttribute("data-save-method") || "POST",
                 credentials: "same-origin",
-                body: body
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
             }).then(function (response) {
                 return response.text().then(function (text) {
                     var packet = null;

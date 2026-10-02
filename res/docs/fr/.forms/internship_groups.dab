@@ -31,15 +31,19 @@
       ]
       [CurrentCurriculum
         Label = "Formation suivie"
+        Readonly = 1
       ]
       [CurrentYear
         Label = "Année de formation"
+        Readonly = 1
       ]
       [Codename
         Label = "Nom de code"
+        Readonly = 1
       ]
       [Id
         Label = "Identifiant interne"
+        Readonly = 1
       ]
     ]
     [Internship
@@ -61,32 +65,41 @@
     [Company
       [LegalName
         Label = "Raison sociale"
+        ReadonlyIfPrefilled = 1
       ]
       [LegalAddress
         Label = "Adresse du siège"
+        ReadonlyIfPrefilled = 1
       ]
       [SIRET
         Label = "SIRET"
+        ReadonlyIfPrefilled = 1
       ]
       [Phone
         Label = "Téléphone de l’organisme"
+        ReadonlyIfPrefilled = 1
       ]
       [Courriel
         Label = "Courriel de l’organisme"
+        ReadonlyIfPrefilled = 1
       ]
     ]
     [CompanyTutor
       [FirstName
         Label = "Prénom du représentant / tuteur"
+        ReadonlyIfPrefilled = 1
       ]
       [FamilyName
         Label = "Nom du représentant / tuteur"
+        ReadonlyIfPrefilled = 1
       ]
       [Mail
         Label = "Courriel du représentant / tuteur"
+        ReadonlyIfPrefilled = 1
       ]
       [Phone
         Label = "Téléphone du représentant / tuteur"
+        ReadonlyIfPrefilled = 1
       ]
     ]
     [Internship
@@ -103,32 +116,41 @@
     [School
       [LegalName
         Label = "Raison sociale"
+        ReadonlyIfPrefilled = 1
       ]
       [LegalAddress
         Label = "Adresse du siège"
+        ReadonlyIfPrefilled = 1
       ]
       [SIRET
         Label = "SIRET"
+        ReadonlyIfPrefilled = 1
       ]
       [Phone
         Label = "Téléphone"
+        ReadonlyIfPrefilled = 1
       ]
       [Courriel
         Label = "Courriel"
+        ReadonlyIfPrefilled = 1
       ]
     ]
     [SchoolTutor
       [FirstName
         Label = "Prénom du représentant / référent"
+        ReadonlyIfPrefilled = 1
       ]
       [FamilyName
         Label = "Nom du représentant / référent"
+        ReadonlyIfPrefilled = 1
       ]
       [Mail
         Label = "Courriel du représentant / référent"
+        ReadonlyIfPrefilled = 1
       ]
       [Phone
         Label = "Téléphone du représentant / référent"
+        ReadonlyIfPrefilled = 1
       ]
     ]
     [Internship
@@ -168,16 +190,20 @@
         Required = 1
       ]
       [DurationInDay
+        Type = "computed"
         Label = "Nombre total de jours de présence"
         Required = 1
       ]
       [HourPerDay
-        Label = "Heures par jour"
+        Type = "computed"
+        Label = "Heures par jour (rythme habituel)"
       ]
       [DayPerWeek
-        Label = "Jours par semaine"
+        Type = "computed"
+        Label = "Jours par semaine (rythme habituel)"
       ]
       [DurationInHour
+        Type = "computed"
         Label = "Nombre total d’heures de présence"
         Required = 1
       ]
@@ -185,10 +211,18 @@
         Label = "Adresse précise du lieu du stage"
         Required = 1
       ]
-      [Schedule
-        Type = "textarea"
-        Label = "Temps complet / partiel, horaires, jours travaillés et calendrier détaillé"
+      [ScheduleCalendar
+        Type = "internship_calendar"
+        Label = "Calendrier détaillé du stage"
         Required = 1
+        StartField = "Internship.StartDate"
+        EndField = "Internship.EndDate"
+        SummaryField = "Internship.Schedule"
+      ]
+      [Schedule
+        Type = "computed"
+        Label = "Résumé du calendrier"
+        Readonly = 1
       ]
       [Paid
         Type = "radio"
@@ -201,6 +235,7 @@
         Label = "Gratification horaire (euros)"
       ]
       [TotalPayment
+        Type = "computed"
         Label = "Gratification totale prévisionnelle (euros)"
       ]
       [Paiement

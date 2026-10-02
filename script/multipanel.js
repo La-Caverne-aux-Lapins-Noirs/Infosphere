@@ -241,8 +241,46 @@ function support_stop_all_media()
 	    support_media_reset_player(media);
 }
 
+function support_video_request_play(video, allow_muted_fallback = false)
+{
+    let promise;
+
+    try
+    {
+        promise = video.play();
+    }
+    catch (e)
+    {
+        promise = null;
+    }
+    if (!promise || typeof promise.catch != "function")
+        return ;
+    promise.catch(function(error) {
+        // First try normal playback with sound. Only use muted autoplay when
+        // the browser explicitly rejects playback for lack of user gesture.
+        if (!allow_muted_fallback || !video.paused || !error || error.name != "NotAllowedError")
+            return ;
+        video.muted = true;
+        video._infosphere_deep_link_muted = true;
+        try
+        {
+            let retry = video.play();
+            if (retry && typeof retry.catch == "function")
+                retry.catch(function() {});
+        }
+        catch (e) {}
+    });
+}
+
 function support_video_play(video, asset, hls_asset, asset_id = null, link = null, screen_id = null)
 {
+    let deep_link = link && link.getAttribute && link.getAttribute("data-support-deep-link") == "1";
+
+    if (!deep_link && video._infosphere_deep_link_muted)
+    {
+        video.muted = false;
+        video._infosphere_deep_link_muted = false;
+    }
     support_video_reset_player(video);
     support_hide_next_asset_prompt(screen_id);
     video._infosphere_progress_asset_id = asset_id;
@@ -264,7 +302,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null, link = nul
     {
 	video.src = hls_asset;
 	video.load();
-	video.play();
+	support_video_request_play(video, deep_link);
 	return ;
     }
 
@@ -278,7 +316,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null, link = nul
 	video._infosphere_hls.loadSource(hls_asset);
 	video._infosphere_hls.attachMedia(video);
 	video._infosphere_hls.on(Hls.Events.MANIFEST_PARSED, function() {
-	    video.play();
+	    support_video_request_play(video, deep_link);
 	});
 	return ;
     }
@@ -289,7 +327,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null, link = nul
 	src.type = media_type_from_path(asset, "video");
     }
     video.load();
-    video.play();
+    support_video_request_play(video, deep_link);
 }
 
 function switch_asset(link, screen, type, asset, hls_asset = "")

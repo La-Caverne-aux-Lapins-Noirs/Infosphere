@@ -15,7 +15,7 @@
     {
 	$home_total_hours += get_student_log(
 	    $User,
-	    now() - $home_log_day * 60 * 60 * 24,
+	    user_log_now() - $home_log_day * 60 * 60 * 24,
 	    user_log_valid_activity_types()
 	) / (60 * 60);
     }
@@ -71,7 +71,7 @@
 <p style="text-align: center;">
     <br />
     <?php
-    $today_time = get_student_log($User, now(), user_log_valid_activity_types());
+    $today_time = get_student_log($User, user_log_now(), user_log_valid_activity_types());
     ?>
     Aujourd'hui, vous avez travaillé <?=(int)($today_time / 60.0 / 60.0); ?> heures, <?=(int)(($today_time / 60.0) % 60); ?> minutes et <?=(int)($today_time % 60); ?> secondes.
     <?php if (($wai = where_am_i()) != []) { ?>

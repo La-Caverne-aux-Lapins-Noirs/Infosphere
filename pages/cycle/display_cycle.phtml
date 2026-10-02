@@ -1,4 +1,6 @@
 <?php
+require_once (__DIR__."/../../tools/cycle_enrollment.php");
+
 $can_edit_cycle = is_director_for_cycle($cycle["id"]);
 
 $cycle_language_fields = [
@@ -27,24 +29,14 @@ if ($page == "cursus")
     ];
 }
 
-$cycle_user_extra_properties = [
-    [
-	"name" => $Dictionnary["Curriculum"],
-	"codename" => "cursus",
-	"admin_func" => "is_director_for_cycle",
-    ],
-    [
-	"name" => $Dictionnary["GeneralComment"],
-	"codename" => "commentaries",
-	"admin_func" => "is_director_for_cycle",
-    ]
-];
+$cycle_user_extra_properties = cycle_user_link_extra_properties($cycle["id"]);
 
 $cycle_tab_students = $Dictionnary["Students"];
 $cycle_tab_matters = isset($Dictionnary["Matters"]) ? $Dictionnary["Matters"] : "Matières";
 $cycle_tab_configuration = isset($Dictionnary["Configuration"]) ? $Dictionnary["Configuration"] : "Configuration";
 $cycle_tab_logs = isset($Dictionnary["Logs"]) ? $Dictionnary["Logs"] : "Logs";
 $cycle_tab_documents = isset($Dictionnary["Documents"]) ? $Dictionnary["Documents"] : "Documents";
+$cycle_tab_export = $Dictionnary["Exportation"] ?? "Exportation";
 
 $cycle_tabs = [];
 if ($page == "cycle")
@@ -54,6 +46,8 @@ $cycle_tabs[$cycle_tab_configuration] = __DIR__."/tab_configuration.phtml";
 $cycle_tabs[$cycle_tab_logs] = __DIR__."/tab_logs.phtml";
 if ($page == "cycle" && $can_edit_cycle)
     $cycle_tabs[$cycle_tab_documents] = __DIR__."/tab_documents.phtml";
+if ($can_edit_cycle)
+    $cycle_tabs[$cycle_tab_export] = __DIR__."/tab_export.phtml";
 
 $cycle_default_tab = ($page == "cycle") ? $cycle_tab_students : $cycle_tab_matters;
 ?>

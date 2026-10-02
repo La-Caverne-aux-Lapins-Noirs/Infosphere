@@ -581,6 +581,75 @@
     align-items: center;
     margin-bottom: 10px;
 }
+
+.configuration-persoc-blacklist-card textarea {
+    width: 100%;
+    min-height: 360px;
+    resize: vertical;
+    border: 1px solid rgba(0, 0, 0, 0.36);
+    border-radius: 8px;
+    padding: 9px;
+    background: #fff;
+    color: #111;
+    font-family: monospace;
+    line-height: 1.35;
+}
+.configuration-persoc-blacklist-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+.configuration-persoc-blacklist-form > label {
+    display: grid;
+    gap: 7px;
+}
+.configuration-persoc-status {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.configuration-persoc-status-ok {
+    background: rgba(0, 110, 0, 0.82);
+}
+.configuration-persoc-status-warning {
+    background: rgba(155, 92, 0, 0.88);
+}
+.configuration-persoc-status-error {
+    background: rgba(145, 0, 0, 0.88);
+}
+.configuration-persoc-warning {
+    border-color: rgba(255, 185, 0, 0.48);
+    background: rgba(120, 72, 0, 0.58);
+}
+.configuration-persoc-stats {
+    margin: 12px 0;
+}
+.configuration-persoc-actions,
+.configuration-persoc-secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.configuration-persoc-actions {
+    justify-content: flex-end;
+}
+.configuration-persoc-secondary-actions {
+    margin-top: 10px;
+}
+.configuration-persoc-secondary-actions form {
+    margin: 0;
+}
+.configuration-persoc-remote-list {
+    margin-top: 12px;
+}
+.configuration-persoc-remote-list summary {
+    cursor: pointer;
+}
+
 @media (max-width: 1320px) {
     .configuration-log-filters {
         grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));

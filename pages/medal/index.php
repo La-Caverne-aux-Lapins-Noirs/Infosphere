@@ -3,7 +3,7 @@
     <?php return ; ?>
 <?php } ?>
 <?php $medals = fetch_medal(); ?>
-<div>
+<div id="medal_toolbar">
     <h2 class="alignable_blocks"><?=$Dictionnary["Medals"]; ?></h2>
     <?php if (am_i_teacher()) { ?>
 	<a class="alignable_blocks" href="index.php?p=FunctionMenu&amp;pp=MedalsMenu">
@@ -22,7 +22,6 @@
 	/>
     </form>
 </div>
-<br />
 <?php if (am_i_teacher()) { ?>
    
     <script>
@@ -56,7 +55,7 @@
 <?php } ?>
 
 <?php if (am_i_teacher()) { ?>
-    <table class="afullscreen medal_admin_layout"><tr><td class="formular_slot" style="width: 65%;">
+    <table class="afullscreen medal_admin_layout" id="medal_workspace"><tr><td class="formular_slot" style="width: 65%;">
 <?php } ?>
 <div class="fullscreen scrollable" id="medallist">
     <?php require_once ("list_medal.phtml"); ?>

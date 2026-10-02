@@ -204,19 +204,20 @@ function document_print_existing_task_by_key($task_key)
     return (db_select_one("* FROM document_task WHERE task_key = '$key' AND task_action = 'print'"));
 }
 
-function document_print_queue_content($content, $filename, $label, array $context = [])
+function document_print_queue_content_for_actor($actor_user_id, $content, $filename, $label, array $context = [])
 {
-    global $User;
-
+    $actor_user_id = (int)$actor_user_id;
     if (!is_string($content) || substr($content, 0, 4) !== "%PDF")
         return (new ErrorResponse("InvalidParameter", "print PDF"));
     if (!document_print_table_available())
         return (new ErrorResponse("MissingTable", "document_task"));
+    if ($actor_user_id <= 0)
+        return (new ErrorResponse("PermissionDenied", "document print actor"));
     $owner_user_id = (int)($context["owner_user_id"] ?? ($context["user_id"] ?? 0));
     if ($owner_user_id <= 0)
         return (new ErrorResponse("InvalidParameter", "print owner"));
     $context["owner_user_id"] = $owner_user_id;
-    if (!document_print_current_user_can_manage_context($context))
+    if (!document_print_user_can_manage_context($actor_user_id, $context))
         return (new ErrorResponse("PermissionDenied", "document print context"));
 
     $label = trim((string)$label);
@@ -277,8 +278,9 @@ function document_print_queue_content($content, $filename, $label, array $contex
         "prospect_user_id" => (int)($context["prospect_user_id"] ?? 0),
         "billing_entry_id" => (int)($context["billing_entry_id"] ?? 0),
         "book_user_id" => (int)($context["book_user_id"] ?? 0),
+        "recipient_user_id" => (int)($context["recipient_user_id"] ?? 0),
         "recipient_label" => trim((string)($context["recipient_label"] ?? "")),
-        "created_by_user" => (int)($User["id"] ?? 0),
+        "created_by_user" => $actor_user_id,
     ];
     $task = document_task_create(
         $task_key,
@@ -305,6 +307,19 @@ function document_print_queue_content($content, $filename, $label, array $contex
     ]));
 }
 
+function document_print_queue_content($content, $filename, $label, array $context = [])
+{
+    global $User;
+
+    return (document_print_queue_content_for_actor(
+        (int)($User["id"] ?? 0),
+        $content,
+        $filename,
+        $label,
+        $context
+    ));
+}
+
 function document_print_queue_file($file, $label, array $context = [])
 {
     if (!is_string($file) || !is_file($file))
@@ -313,6 +328,49 @@ function document_print_queue_file($file, $label, array $context = [])
     if ($content === false)
         return (new ErrorResponse("CannotReadFile", "print PDF file"));
     return (document_print_queue_content($content, basename($file), $label, $context));
+}
+
+/**
+ * Expire older pending print obligations for one or more semantic sources.
+ * Completed/expired tasks remain untouched as history.  The currently queued
+ * replacement may be excluded by id.
+ */
+function document_print_expire_pending_sources($owner_user_id, array $source_keys, $except_task_id = 0)
+{
+    $owner_user_id = (int)$owner_user_id;
+    $except_task_id = (int)$except_task_id;
+    $source_keys = array_values(array_unique(array_filter(array_map(function($key) {
+        return (trim((string)$key));
+    }, $source_keys), function($key) {
+        return ($key !== "");
+    })));
+    if ($owner_user_id <= 0 || !count($source_keys) || !document_print_table_available())
+        return (true);
+
+    $rows = db_select_all("*
+        FROM document_task
+        WHERE id_owner_user = $owner_user_id
+          AND task_action = 'print'
+          AND status = 'pending'
+        ORDER BY id ASC
+    ");
+    foreach ($rows as $row)
+    {
+        $id = (int)($row["id"] ?? 0);
+        if ($id <= 0 || $id === $except_task_id)
+            continue ;
+        $metadata = document_task_metadata($row);
+        if (!in_array(trim((string)($metadata["source_key"] ?? "")), $source_keys, true))
+            continue ;
+
+        // The queue copy is no longer useful once its obligation is superseded.
+        $file = document_print_file_for_task($row);
+        if (!$file->is_error() && is_file($file->value))
+            @unlink($file->value);
+        if (!document_task_expire_id($id))
+            return (false);
+    }
+    return (true);
 }
 
 function document_print_task_context(array $task)
@@ -326,6 +384,7 @@ function document_print_task_context(array $task)
         "prospect_user_id" => (int)($metadata["prospect_user_id"] ?? 0),
         "billing_entry_id" => (int)($metadata["billing_entry_id"] ?? 0),
         "book_user_id" => (int)($metadata["book_user_id"] ?? 0),
+        "recipient_user_id" => (int)($metadata["recipient_user_id"] ?? 0),
     ]);
 }
 

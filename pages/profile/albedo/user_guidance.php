@@ -117,6 +117,29 @@ function user_albedo_generate_medal_icon($codename)
     return ($status == 0 && file_exists($icon));
 }
 
+function user_albedo_update_medal_definition($existing, $command_sql, $type)
+{
+    global $Database;
+
+    if (!is_array($existing) || (int)try_get($existing, "id", 0) <= 0)
+        return (NULL);
+
+    $updates = [];
+    $tags = trim((string)try_get($existing, "tags", ""));
+    if ($tags == "")
+        $updates[] = "tags = 'albedo'";
+    else if (!in_array("albedo", array_map("trim", explode(",", $tags)), true))
+        $updates[] = "tags = '".$Database->real_escape_string($tags.",albedo")."'";
+    if (!isset($existing["type"]) || $existing["type"] === NULL || !is_between((int)$existing["type"], 0, 2))
+        $updates[] = "type = $type";
+    if (trim((string)try_get($existing, "command", "")) == "")
+        $updates[] = "command = '$command_sql'";
+    if (count($updates)
+        && $Database->query("UPDATE medal SET ".implode(", ", $updates)." WHERE id = ".((int)$existing["id"])) === NULL)
+        return (NULL);
+    return ((int)$existing["id"]);
+}
+
 function user_albedo_ensure_medal($codename, $fr_name, $fr_description, $en_name = NULL, $en_description = NULL, $positive = true)
 {
     global $Database;
@@ -127,36 +150,32 @@ function user_albedo_ensure_medal($codename, $fr_name, $fr_description, $en_name
     $type = $positive ? 0 : 1;
     $command = user_albedo_default_medal_command($codename);
     $command_sql = $Database->real_escape_string($command);
-    $existing = db_select_one("id, tags, type, command FROM medal WHERE codename = '$codename_sql'");
+    $existing = db_select_one("\n        id, tags, type, command\n        FROM medal\n        WHERE codename = '$codename_sql'\n        ORDER BY id ASC\n    ");
     if ($existing != NULL)
     {
-        $updates = [];
-        $tags = trim((string)try_get($existing, "tags", ""));
-        if ($tags == "")
-            $updates[] = "tags = 'albedo'";
-        else if (!in_array("albedo", array_map("trim", explode(",", $tags)), true))
-            $updates[] = "tags = '".$Database->real_escape_string($tags.",albedo")."'";
-        if (!isset($existing["type"]) || $existing["type"] === NULL || !is_between((int)$existing["type"], 0, 2))
-            $updates[] = "type = $type";
-        if (trim((string)try_get($existing, "command", "")) == "")
-            $updates[] = "command = '$command_sql'";
-        if (count($updates))
-            $Database->query("UPDATE medal SET ".implode(", ", $updates)." WHERE id = ".((int)$existing["id"]));
-        user_albedo_generate_medal_icon($codename);
-        return ((int)$existing["id"]);
+        $id = user_albedo_update_medal_definition($existing, $command_sql, $type);
+        if ($id != NULL)
+            user_albedo_generate_medal_icon($codename);
+        return ($id);
     }
 
-    $fr_name = $Database->real_escape_string($fr_name);
-    $fr_description = $Database->real_escape_string($fr_description);
-    $en_name = $Database->real_escape_string($en_name === NULL ? $fr_name : $en_name);
-    $en_description = $Database->real_escape_string($en_description === NULL ? $fr_description : $en_description);
-    $Database->query("
-        INSERT INTO medal
-        (codename, tags, type, command, fr_name, fr_description, en_name, en_description)
-        VALUES
-        ('$codename_sql', 'albedo', $type, '$command_sql', '$fr_name', '$fr_description', '$en_name', '$en_description')
-    ");
-    $id = (int)$Database->insert_id;
+    $fr_name_sql = $Database->real_escape_string($fr_name);
+    $fr_description_sql = $Database->real_escape_string($fr_description);
+    $en_name_sql = $Database->real_escape_string($en_name === NULL ? $fr_name : $en_name);
+    $en_description_sql = $Database->real_escape_string($en_description === NULL ? $fr_description : $en_description);
+    if ($Database->query("\n        INSERT INTO medal\n        (codename, tags, type, command, fr_name, fr_description, en_name, en_description)\n        VALUES\n        ('$codename_sql', 'albedo', $type, '$command_sql', '$fr_name_sql', '$fr_description_sql', '$en_name_sql', '$en_description_sql')\n    ") === NULL)
+    {
+        // medal.codename est UNIQUE. Si un autre processus vient de créer la
+        // définition entre le SELECT et l'INSERT, on réutilise simplement la
+        // ligne qu'il a créée au lieu d'inventer une nouvelle médaille.
+        $existing = db_select_one("\n            id, tags, type, command\n            FROM medal\n            WHERE codename = '$codename_sql'\n            ORDER BY id ASC\n        ");
+        $id = user_albedo_update_medal_definition($existing, $command_sql, $type);
+        if ($id == NULL)
+            return (NULL);
+    }
+    else
+        $id = (int)$Database->insert_id;
+
     user_albedo_generate_medal_icon($codename);
     return ($id);
 }
@@ -178,12 +197,22 @@ function user_albedo_award_medal($id_user, $medal, $positive = true)
         return (false);
 
     $result = $positive ? 1 : -1;
-    $existing = db_select_one("\n        id FROM user_medal\n        WHERE id_user = $id_user\n          AND id_medal = $id_medal\n          AND id_activity = -1\n          AND id_team = -1\n          AND id_user_team = -1\n    ");
+    $existing = db_select_one("\n        id FROM user_medal\n        WHERE id_user = $id_user\n          AND id_medal = $id_medal\n          AND id_activity = -1\n          AND id_team = -1\n          AND id_user_team = -1\n        ORDER BY insert_date DESC, id DESC\n    ");
     if ($existing != NULL)
-        return (false);
+    {
+        $id_user_medal = (int)$existing["id"];
+        if ($Database->query("\n            UPDATE user_medal\n            SET result = $result,\n                strength = 2,\n                insert_date = NOW()\n            WHERE id = $id_user_medal\n        ") === NULL)
+            return (false);
 
-    $Database->query("\n        INSERT INTO user_medal\n        (id_user, id_medal, id_activity, id_team, id_user_team, result, strength)\n        VALUES\n        ($id_user, $id_medal, -1, -1, -1, $result, 2)\n    ");
-    return ($Database->affected_rows != 0);
+        // Les anciennes versions d'Albedo ont pu laisser plusieurs lignes pour
+        // la même alerte. On les compacte à la volée en gardant la plus récente.
+        $Database->query("\n            DELETE FROM user_medal\n            WHERE id_user = $id_user\n              AND id_medal = $id_medal\n              AND id_activity = -1\n              AND id_team = -1\n              AND id_user_team = -1\n              AND id != $id_user_medal\n        ");
+        return (true);
+    }
+
+    if ($Database->query("\n        INSERT INTO user_medal\n        (id_user, id_medal, id_activity, id_team, id_user_team, result, strength)\n        VALUES\n        ($id_user, $id_medal, -1, -1, -1, $result, 2)\n    ") === NULL)
+        return (false);
+    return (true);
 }
 
 function user_albedo_private_message($id_user, $title, $message)
@@ -227,7 +256,10 @@ function user_albedo_trigger($student, $condition_key, $severity, $score, $detai
         }
     }
 
-    if ($medal != NULL && user_albedo_date_old_enough($state["last_medal_date"], 3650))
+    // Une médaille Albedo représente l'alerte courante, pas un trophée historique.
+    // Lorsqu'une alerte doit remonter de nouveau, on rafraîchit donc la même
+    // attribution au rythme du cooldown au lieu de créer une autre définition.
+    if ($medal != NULL && user_albedo_date_old_enough($state["last_medal_date"], $cooldown_days))
     {
         if (user_albedo_award_medal($id_user, $medal, $positive_medal))
         {
@@ -306,9 +338,11 @@ function user_albedo_progress_metrics($id_user)
 function user_albedo_work_hours($id_user)
 {
     $id_user = (int)$id_user;
-    $since = user_albedo_sql_date_days_ago(USER_ALBEDO_WORK_DAYS - 1);
+    $clock = function_exists("user_log_now") ? user_log_now() : now();
+    $since = db_form_date($clock - (USER_ALBEDO_WORK_DAYS - 1) * 60 * 60 * 24, true);
+    $until = db_form_date($clock + 60 * 60 * 24, true);
     $types = function_exists("user_log_valid_activity_types") ? implode(",", user_log_valid_activity_types()) : "0,1,2";
-    $row = db_select_one("\n        SUM(duration) as duration\n        FROM user_log\n        WHERE id_user = $id_user\n          AND type IN ($types)\n          AND log_date >= '$since'\n          AND log_date < DATE_ADD(CURDATE(), INTERVAL 1 DAY)\n    ");
+    $row = db_select_one("\n        SUM(duration) as duration\n        FROM user_log\n        WHERE id_user = $id_user\n          AND type IN ($types)\n          AND log_date >= '$since'\n          AND log_date < '$until'\n    ");
     return (((int)try_get($row, "duration", 0)) / (60 * 60));
 }
 

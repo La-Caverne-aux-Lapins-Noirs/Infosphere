@@ -1,5 +1,113 @@
 <?php
 
+function infosphere_timezone_is_valid($timezone)
+{
+    $timezone = trim((string)$timezone);
+    if ($timezone == "")
+        return (false);
+    try
+    {
+        new DateTimeZone($timezone);
+    }
+    catch (Exception $e)
+    {
+        return (false);
+    }
+    return (true);
+}
+
+function infosphere_timezones_equivalent($left, $right)
+{
+    if (!infosphere_timezone_is_valid($left) || !infosphere_timezone_is_valid($right))
+        return (false);
+    if ((string)$left === (string)$right)
+        return (true);
+
+    try
+    {
+        $left_timezone = new DateTimeZone((string)$left);
+        $right_timezone = new DateTimeZone((string)$right);
+        $year = (int)gmdate("Y");
+        foreach ([
+            gmmktime(12, 0, 0, 1, 15, $year),
+            gmmktime(12, 0, 0, 7, 15, $year),
+            gmmktime(12, 0, 0, 1, 15, $year + 1),
+            gmmktime(12, 0, 0, 7, 15, $year + 1),
+        ] as $timestamp)
+        {
+            $date = new DateTimeImmutable("@".$timestamp);
+            if ($left_timezone->getOffset($date) != $right_timezone->getOffset($date))
+                return (false);
+        }
+    }
+    catch (Exception $e)
+    {
+        return (false);
+    }
+    return (true);
+}
+
+function infosphere_system_timezone_name()
+{
+    static $timezone = NULL;
+
+    if ($timezone !== NULL)
+        return ($timezone);
+    $timezone = "";
+
+    $localtime = @realpath("/etc/localtime");
+    $prefix = "/usr/share/zoneinfo/";
+    if (is_string($localtime) && strpos($localtime, $prefix) === 0)
+    {
+        $candidate = substr($localtime, strlen($prefix));
+        if (infosphere_timezone_is_valid($candidate))
+            return ($timezone = $candidate);
+    }
+
+    if (is_readable("/etc/timezone"))
+    {
+        $candidate = trim((string)@file_get_contents("/etc/timezone"));
+        if (infosphere_timezone_is_valid($candidate))
+            return ($timezone = $candidate);
+    }
+    return ($timezone);
+}
+
+function infosphere_timezone_status()
+{
+    global $InfospherePHPTimezoneAtStartup;
+
+    $system = infosphere_system_timezone_name();
+    $startup = isset($InfospherePHPTimezoneAtStartup)
+        ? (string)$InfospherePHPTimezoneAtStartup
+        : (string)date_default_timezone_get();
+    $configured = trim((string)ini_get("date.timezone"));
+    $effective = (string)date_default_timezone_get();
+    $expected = $system != "" ? $system : $startup;
+
+    return ([
+        "system" => $system,
+        "expected" => $expected,
+        "configured" => $configured,
+        "startup" => $startup,
+        "effective" => $effective,
+        "ini_file" => (string)(php_ini_loaded_file() ?: ""),
+        "startup_matches_system" => $system == "" || infosphere_timezones_equivalent($startup, $system),
+        "effective_matches_system" => $system == "" || infosphere_timezones_equivalent($effective, $system),
+    ]);
+}
+
+// Infosphere stores local wall-clock values as UTC-like timestamps.  Its
+// historical now() implementation therefore requires PHP to use the same
+// timezone as the host system.  Keep the application operational even when a
+// package upgrade resets PHP to UTC, while preserving the startup value so an
+// administrator can be warned about the underlying configuration mismatch.
+$InfospherePHPTimezoneAtStartup = (string)date_default_timezone_get();
+$InfosphereSystemTimezone = infosphere_system_timezone_name();
+if ($InfosphereSystemTimezone != ""
+    && !infosphere_timezones_equivalent($InfospherePHPTimezoneAtStartup, $InfosphereSystemTimezone))
+    @date_default_timezone_set($InfosphereSystemTimezone);
+
 $date0 = "1970-01-01 00:00:00"; // date("Y-m-d H:i:s", 0);
 $NoLocalisation = new DateTimeZone("Etc/UTC");
 

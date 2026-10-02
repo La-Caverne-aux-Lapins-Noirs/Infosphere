@@ -29,11 +29,29 @@ Title = "Facture"
   ]
 ]
 
+[InvoiceLayout
+  TopMargin = "1cm"
+  BottomMargin = "2cm"
+  HeaderHeight = "1cm"
+  HeaderGap = "0.45cm"
+  FooterHeight = "2cm"
+  FooterRuleGap = "0.12cm"
+
+  ' Même géométrie d'enveloppe que les courriers administratifs.
+  FromX = "2cm"
+  FromY = "2.5cm"
+  FromWidth = "7.5cm"
+  TargetX = "11.5cm"
+  TargetY = "5cm"
+  TargetWidth = "7cm"
+  BodyGap = "4cm"
+
+  ' Le cadre de paiement reste au-dessus de l'en-pied légal.
+  PaymentBottomGap = "0.45cm"
+  PaymentBodyGap = "0.25cm"
+]
+
 [Header
-  Left = [Text($,Left)
-    [@Size;5]
-    [#Variable;School.LegalName]
-  Left]
   Right = [Text($,Right)
     [@IfC;School.DocumentLogo;!=;;
       [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
@@ -43,14 +61,15 @@ Title = "Facture"
 
 Footer = [Text($,Footer)
   [@Size;0]
-  $(School.MainInfo)
   $(School.SchoolInfo)
   $(School.FormationInfo)
   $(School.AlternationInfo)
-  $(School.Phone) $(School.Mail)
+  $(School.DocumentInformation)
+  $(School.OrganizationMainInfo)
+  $(School.OrganizationPhone) $(School.OrganizationMail)
 Footer]
 
-BillingInformation = [].School.RIB
+BillingInformation = [].School.RIBDetails
 
 [FormGroup
   @insert "res/docs/fr/.forms/invoice_groups.dab"

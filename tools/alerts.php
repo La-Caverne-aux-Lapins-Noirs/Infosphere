@@ -10,6 +10,22 @@ function retrieve_alerts()
     if (!am_i_director())
 	return (NULL);
     $alert = [];
+
+    if (virtual_now_original_user_is_admin())
+    {
+        $timezone = infosphere_timezone_status();
+        if (!$timezone["startup_matches_system"])
+        {
+            $php_timezone = $timezone["startup"] != "" ? $timezone["startup"] : "(non défini)";
+            $system_timezone = $timezone["system"] != "" ? $timezone["system"] : "(inconnu)";
+            $ini_file = $timezone["ini_file"] != "" ? $timezone["ini_file"] : "php.ini";
+            $alert["timezone"] =
+                "<span class=\"blink\">Fuseau horaire PHP incorrect.</span> ".
+                "PHP démarre en <b>".htmlspecialchars($php_timezone)."</b> alors que le système est en <b>".htmlspecialchars($system_timezone)."</b>. ".
+                "Infosphere a réaligné son exécution courante, mais la configuration PHP doit être corrigée dans <code>".htmlspecialchars($ini_file)."</code>.";
+        }
+    }
+
     if ((disk_free_space("./") / disk_total_space("./")) <= 0.2)
     {
 	$alert["space"] = $Dictionnary["DiskFull"]." : ".intval(disk_free_space("./") / disk_total_space("./") * 100)."% ".$Dictionnary["remaining"].". (".(sprintf("%.1f", disk_free_space("./") / 1e9))."Go)";

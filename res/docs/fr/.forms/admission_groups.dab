@@ -43,9 +43,6 @@
       [ProspectRegistrationDate
         Label = "Date d'enregistrement de la candidature"
       ]
-      [RequiredAmount
-        Label = "Montant exigible à l'admission"
-      ]
       [PaymentConfirmed
         Label = "Paiement enregistré"
       ]
@@ -65,23 +62,53 @@
   ]
 ]
 
+
+[FraisAdmission
+  Label = "Frais d'admission"
+  [Fields
+    [Admission
+      [RequiredAmount
+        Label = "Montant exigible à l'admission"
+        Required = 1
+        Readonly = 1
+      ]
+      [PaymentState
+        Label = "État du règlement"
+        Type = "radio"
+        Required = 1
+        {Choices
+          "Non réglé",
+          "Partiellement réglé",
+          "Réglé intégralement"
+        }
+        {ChoiceValues
+          "none",
+          "partial",
+          "full"
+        }
+      ]
+      [PaidAmount
+        Label = "Montant déjà réglé (uniquement si paiement partiel)"
+      ]
+    ]
+  ]
+]
+
 [Direction
   Label = "Direction"
   [Fields
-    [Signatories
-      [Director
-        [Identity
-          Label = "Direction / représentant de l'établissement"
-        ]
-        [Role
-          Label = "Qualité du représentant de l'établissement"
-        ]
-        [Mail
-          Label = "Courriel du représentant de l'établissement"
-        ]
-        [Signature
-          Label = "Signature du représentant de l'établissement"
-        ]
+    [Director
+      [Identity
+        Label = "Direction / représentant de l'établissement"
+      ]
+      [Role
+        Label = "Qualité du représentant de l'établissement"
+      ]
+      [Mail
+        Label = "Courriel du représentant de l'établissement"
+      ]
+      [Signature
+        Label = "Signature du représentant de l'établissement"
       ]
     ]
   ]

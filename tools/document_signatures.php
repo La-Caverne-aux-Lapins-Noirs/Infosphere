@@ -86,7 +86,23 @@ function document_signature_parse_scope($file, $scope_name)
             continue ;
         }
         if ($in_scope && $current_slot !== NULL && preg_match('/^Required\s*=\s*(.*?)\s*$/D', $trim, $m))
+        {
             $slots[$current_slot]['required'] = document_signature_bool(trim($m[1], "\"'"), true);
+            continue ;
+        }
+        if ($in_scope && $current_slot !== NULL && preg_match('/^Role\s*=\s*(.*?)\s*$/D', $trim, $m))
+        {
+            $role_label = trim((string)$m[1]);
+            if (strlen($role_label) >= 2)
+            {
+                $first = $role_label[0];
+                $last = $role_label[strlen($role_label) - 1];
+                if (($first === '"' && $last === '"') || ($first === "'" && $last === "'"))
+                    $role_label = substr($role_label, 1, -1);
+            }
+            if ($role_label !== '')
+                $slots[$current_slot]['role_label'] = $role_label;
+        }
     }
     return ($slots);
 }

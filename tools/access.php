@@ -188,19 +188,42 @@ function is_assistant_for_team($id, $activity = NULL)
     return ($activity->is_assistant);
 }
 
+function can_view_session($id)
+{
+    global $User;
+
+    if (!is_intranet_member_profile() || !is_array($User))
+        return (false);
+    $id = (int)$id;
+    $session = db_select_one("id, id_activity, id_user, id_laboratory FROM session WHERE id = $id AND deleted IS NULL");
+    if ($session == NULL)
+        return (false);
+    if (session_is_standalone($session))
+        return (session_is_visible_to_user($session, (int)$User["id"]) || session_standalone_can_manage($session));
+
+    // Preserve the historical GET policy for pedagogical sessions: any
+    // teacher could open the session detail endpoint.
+    return (am_i_teacher());
+}
+
 function is_assistant_for_session($id)
 {
-    global $Database;
     global $User;
-    
+
     if (!is_intranet_member_profile())
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
+        return (true);
     $id = (int)$id;
-    if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
-	return (false);
-    $ida = $ida["id_activity"];
+    $session = db_select_one("id, id_activity, id_user, id_laboratory FROM session WHERE id = $id AND deleted IS NULL");
+    if ($session == NULL)
+        return (false);
+    if (session_is_standalone($session))
+        return (session_standalone_can_manage($session));
+
+    $ida = (int)$session["id_activity"];
+    if ($ida <= 0)
+        return (false);
     ($activity = new FullActivity)->build($ida, false, false);
     $teachers = function_exists("fetch_session_teachers")
         ? fetch_session_teachers($id, true, true, $ida, $activity)
@@ -210,17 +233,20 @@ function is_assistant_for_session($id)
 
 function is_teacher_or_director_for_session($id)
 {
-    global $Database;
-    global $User;
-    
     if (!is_intranet_member_profile())
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
+        return (true);
     $id = (int)$id;
-    if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
-	return (false);
-    $ida = $ida["id_activity"];
+    $session = db_select_one("id, id_activity, id_user, id_laboratory FROM session WHERE id = $id AND deleted IS NULL");
+    if ($session == NULL)
+        return (false);
+    if (session_is_standalone($session))
+        return (session_standalone_can_manage($session));
+
+    $ida = (int)$session["id_activity"];
+    if ($ida <= 0)
+        return (false);
     ($activity = new FullActivity)->build($ida, false, false);
     $teachers = function_exists("fetch_session_teachers")
         ? fetch_session_teachers($id, true, true, $ida, $activity)
@@ -238,17 +264,27 @@ function is_teacher_or_director_for_activity($id)
 
 function is_teacher_for_session($id)
 {
-    global $Database;
-    global $User;
-    
     if (!is_intranet_member_profile())
-	return (false);
+        return (false);
     if (is_admin())
-	return (true);
+        return (true);
     $id = (int)$id;
-    if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
-	return (false);
-    $ida = $ida["id_activity"];
+    $session = db_select_one("id, id_activity, id_user, id_laboratory FROM session WHERE id = $id AND deleted IS NULL");
+    if ($session == NULL)
+        return (false);
+    if (session_is_standalone($session))
+    {
+        if (session_standalone_kind($session) === "laboratory")
+            return (session_laboratory_authority(
+                (int)$GLOBALS["User"]["id"],
+                session_reference_id($session, "id_laboratory")
+            ) >= TEACHER || am_i_director());
+        return (am_i_director());
+    }
+
+    $ida = (int)$session["id_activity"];
+    if ($ida <= 0)
+        return (false);
     ($activity = new FullActivity)->build($ida, false, false);
     $teachers = function_exists("fetch_session_teachers")
         ? fetch_session_teachers($id, true, true, $ida, $activity)
@@ -463,6 +499,35 @@ function is_director_for_student($id, $big_admin = true)
     return (false);
 }
 
+function can_export_student_logs($id)
+{
+    global $User;
+
+    $id = (int)$id;
+    if ($id <= 0 || !logged_in() || !$User)
+        return (false);
+    // Require an actual student enrollment, including for global administrators.
+    if (!count(user_school_ids($id, "STUDENT")))
+        return (false);
+    return (is_admin() || is_director_for_student($id, false));
+}
+
+function can_manage_student_documents($id)
+{
+    global $User;
+
+    if (is_director_for_student($id))
+        return (true);
+    if (!$User)
+        return (false);
+    if (($student = resolve_codename("user", $id))->is_error())
+        return (false);
+    foreach (user_school_ids($student->value, "STUDENT") as $id_school)
+        if (is_commercial_for_school($id_school))
+            return (true);
+    return (false);
+}
+
 function is_me_or_director_for_student($id)
 {
     if (is_me($id))
@@ -495,16 +560,52 @@ function can_edit_user_profile($id)
     return (can_view_user_identity($id));
 }
 
+// Password and NFC credentials are more sensitive than ordinary profile data.
+// A school director/secretariat may manage them only for a non-administrator
+// attached to one of their own schools; global administrators remain the
+// operational fallback for every account.
+function can_manage_user_credentials($id)
+{
+    global $User;
+
+    if (!logged_in())
+        return (false);
+    if (!$User || ($target = resolve_codename("user", $id, "codename", true))->is_error())
+        return (false);
+
+    $target = $target->value;
+    if (!is_array($target)
+        || (int)($target["id"] ?? 0) <= 1
+        || trim((string)($target["password"] ?? "")) == ""
+        || (string)($target["profile_status"] ?? "") !== "member"
+        || ($target["deleted"] ?? NULL) !== NULL)
+        return (false);
+    if (is_admin())
+        return (true);
+    if ((int)($target["authority"] ?? USER) >= ADMINISTRATOR)
+        return (false);
+
+    foreach (user_school_ids((int)$target["id"]) as $id_school)
+        if (is_director_for_school($id_school)
+            || is_secretariat_for_school($id_school))
+            return (true);
+    return (false);
+}
+
 function is_director_for_session($id)
 {
-    global $Database;
-    global $User;
-    
     if (is_admin())
-	return (true);
-    if (($ida = db_select_one("id_activity FROM session WHERE id = $id")) == NULL)
-	return (false);
-    $ida = $ida["id_activity"];
+        return (true);
+    $id = (int)$id;
+    $session = db_select_one("id, id_activity, id_user, id_laboratory FROM session WHERE id = $id AND deleted IS NULL");
+    if ($session == NULL)
+        return (false);
+    if (session_is_standalone($session))
+        return (am_i_director());
+
+    $ida = (int)$session["id_activity"];
+    if ($ida <= 0)
+        return (false);
     ($activity = new FullActivity)->build($ida, false, false);
     return ($activity->is_director);
 }
@@ -528,6 +629,28 @@ function is_director_for_school($id_school)
     if (is_admin())
         return (true);
     return (user_has_school_authority($User["id"], "DIRECTOR", $id_school));
+}
+
+function can_identify_school_nfc_card($id_school)
+{
+    global $User;
+
+    $id_school = (int)$id_school;
+    if (!logged_in() || !$User || $id_school <= 0)
+        return (false);
+    if (is_admin())
+        return (true);
+
+    $student_authority = user_school_student_authority_sql();
+    return (db_select_one("
+        user_school.id as id
+        FROM user_school
+        LEFT JOIN school ON school.id = user_school.id_school
+        WHERE user_school.id_user = ".((int)$User["id"])."
+          AND user_school.id_school = $id_school
+          AND user_school.authority <> $student_authority
+          AND school.deleted IS NULL
+    ") !== NULL);
 }
 
 function is_secretariat_for_school($id_school)

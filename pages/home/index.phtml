@@ -11,7 +11,7 @@
     for ($home_log_day = 0; $home_log_day < 14; ++$home_log_day)
         $wavg += get_student_log(
             $User,
-            now() - $home_log_day * 60 * 60 * 24,
+            user_log_now() - $home_log_day * 60 * 60 * 24,
             user_log_valid_activity_types()
         ) / (60 * 60);
     [$aavg, $amin, $amax] = get_last_activities_report($User);
@@ -97,7 +97,7 @@
 		</td>
 	    <?php } ?>
 	</td><td>
-	    <div><?php require_once ("intercom.php"); ?></div>
+	    <div id="home_intercom_box"><?php require_once ("intercom.php"); ?></div>
 	</td>
 	</tr>
     </table>

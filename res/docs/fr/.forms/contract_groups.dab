@@ -1,7 +1,6 @@
 [Apprenant
   Label = "Apprenant"
   [Fields
-    [Signatories
       [Student
         [FirstName
           Label = "Prénom de l'apprenant"
@@ -57,15 +56,6 @@
         [ChosenSpecialty
           Label = "Spécialité choisie"
         ]
-        [SchoolPeriod
-          Label = "Période de scolarité"
-        ]
-        [Day
-          Label = "Jour de rentrée"
-        ]
-        [OtherMonthDay
-          Label = "Autre date de rentrée"
-        ]
         [Resubscribe
           Label = "Réinscription"
         ]
@@ -79,14 +69,12 @@
           Label = "Qualité de l'apprenant"
         ]
       ]
-    ]
   ]
 ]
 
 [ResponsableFinancier
   Label = "Responsable financier"
   [Fields
-    [Signatories
       [Finance
         [Identity
           Label = "Responsable financier"
@@ -134,12 +122,11 @@
           Label = "Qualité du responsable financier"
         ]
       ]
-    ]
   ]
 ]
 
-[ResponsablesLegaux
-  Label = "Responsables légaux"
+[ResponsableLegal1
+  Label = "Premier responsable légal"
   [Fields
     [Legal1
       [FirstName
@@ -182,6 +169,12 @@
         Label = "Envoyer les bulletins au premier responsable légal"
       ]
     ]
+  ]
+]
+
+[ResponsableLegal2
+  Label = "Second responsable légal"
+  [Fields
     [Legal2
       [FirstName
         Label = "Prénom du second responsable légal"
@@ -246,9 +239,76 @@
   ]
 ]
 
+
+[Paiement
+  Label = "Modalités de paiement"
+  {ExcludeModels "contrat_of_alternance.dab", "contrat_cfa.dab"}
+  [Fields
+    [FirstPaiement
+      Type = "radio"
+      {Choices "Comptant", "En deux fois"}
+      {ChoiceValues "1", "2"}
+      Label = "Premier versement"
+      Required = 1
+    ]
+    [Paiement
+      Type = "radio"
+      {Choices "Comptant", "En deux fois", "En quatre fois", "En douze fois"}
+      {ChoiceValues "1", "2", "4", "12"}
+      Label = "Règlement des frais de formation"
+      Required = 1
+    ]
+  ]
+]
+
+[Bibliotheque
+  Label = "Bibliothèque"
+  [Fields
+    [Library
+      Type = "radio"
+      {Choices "Oui", "Non"}
+      {ChoiceValues "1", "0"}
+      Label = "Adhésion au programme de partage de livres"
+      Required = 1
+    ]
+  ]
+]
+
+[DroitImage
+  Label = "Droit à l'image"
+  [Fields
+    [Photo
+      Type = "radio"
+      {Choices "J'autorise", "Je n'autorise pas"}
+      {ChoiceValues "1", "0"}
+      Label = "Autorisation de droit à l'image"
+      Required = 1
+    ]
+  ]
+]
+
 [ParametresContrat
   Label = "Paramètres du contrat"
   [Fields
+    [Student
+      [SchoolPeriod
+        Label = "Année scolaire / période de scolarité"
+        Required = 1
+      ]
+      [Month
+        Type = "radio"
+        {Choices "Septembre", "Janvier", "Avril", "Autre"}
+        {ChoiceValues "September", "January", "April", "Other"}
+        Label = "Rentrée"
+        Required = 1
+      ]
+      [Day
+        Label = "Jour de rentrée"
+      ]
+      [OtherMonthDay
+        Label = "Autre date de rentrée"
+      ]
+    ]
     [Certification
       Label = "Certification préparée"
     ]
@@ -264,7 +324,6 @@
 [Etablissement
   Label = "Établissement"
   [Fields
-    [Signatories
       [Director
         [Identity
           Label = "Direction / représentant de l'établissement"
@@ -272,11 +331,7 @@
         [Role
           Label = "Qualité du représentant de l'établissement"
         ]
-        [Signature
-          Label = "Signature du représentant de l'établissement"
-        ]
       ]
-    ]
     [Identification
       Label = "Identification de l'établissement"
     ]

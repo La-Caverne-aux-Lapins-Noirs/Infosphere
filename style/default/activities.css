@@ -247,6 +247,30 @@ b
     outline: none;
 }
 
+.path_browser_background_menu
+{
+    color: white;
+    background-color: rgba(20, 20, 20, 0.98);
+    border: 1px solid #54D76F;
+    border-radius: 4px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.85);
+    overflow: hidden;
+}
+
+.path_browser_background_menu_item
+{
+    color: white;
+    background: transparent;
+}
+
+.path_browser_background_menu_item:hover,
+.path_browser_background_menu_item:focus
+{
+    color: white;
+    background-color: rgba(0, 145, 55, 1);
+    outline: none;
+}
+
 .button_link
 {
     color: lightgray;

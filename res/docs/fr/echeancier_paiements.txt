@@ -1,0 +1,41 @@
+Le présent échéancier récapitule le financement de l'année de formation en cours à la date du [#Variable;PaymentSchedule.GeneratedDate]. Le payeur indiqué sur chaque ligne précise si l'échéance relève du responsable financier ou d'un financeur tiers.
+[@IfC;PaymentSchedule.CurrentYear;!=;;Année de formation concernée : **[#Variable;PaymentSchedule.CurrentYear]**
+]
+
+\small
+[@Table;5;
+| Échéance | Libellé | Code facture | Montant | Situation |
+|:--|:--|:--|--:|:--|
+[@IfC;PaymentSchedule.Row01;!=;;| [#Variable;PaymentSchedule.Date01] | [#Variable;PaymentSchedule.Label01] | [#Variable;PaymentSchedule.Invoice01] | [#Variable;PaymentSchedule.Amount01] | [#Variable;PaymentSchedule.Situation01] |
+][@IfC;PaymentSchedule.Row02;!=;;| [#Variable;PaymentSchedule.Date02] | [#Variable;PaymentSchedule.Label02] | [#Variable;PaymentSchedule.Invoice02] | [#Variable;PaymentSchedule.Amount02] | [#Variable;PaymentSchedule.Situation02] |
+][@IfC;PaymentSchedule.Row03;!=;;| [#Variable;PaymentSchedule.Date03] | [#Variable;PaymentSchedule.Label03] | [#Variable;PaymentSchedule.Invoice03] | [#Variable;PaymentSchedule.Amount03] | [#Variable;PaymentSchedule.Situation03] |
+][@IfC;PaymentSchedule.Row04;!=;;| [#Variable;PaymentSchedule.Date04] | [#Variable;PaymentSchedule.Label04] | [#Variable;PaymentSchedule.Invoice04] | [#Variable;PaymentSchedule.Amount04] | [#Variable;PaymentSchedule.Situation04] |
+][@IfC;PaymentSchedule.Row05;!=;;| [#Variable;PaymentSchedule.Date05] | [#Variable;PaymentSchedule.Label05] | [#Variable;PaymentSchedule.Invoice05] | [#Variable;PaymentSchedule.Amount05] | [#Variable;PaymentSchedule.Situation05] |
+][@IfC;PaymentSchedule.Row06;!=;;| [#Variable;PaymentSchedule.Date06] | [#Variable;PaymentSchedule.Label06] | [#Variable;PaymentSchedule.Invoice06] | [#Variable;PaymentSchedule.Amount06] | [#Variable;PaymentSchedule.Situation06] |
+][@IfC;PaymentSchedule.Row07;!=;;| [#Variable;PaymentSchedule.Date07] | [#Variable;PaymentSchedule.Label07] | [#Variable;PaymentSchedule.Invoice07] | [#Variable;PaymentSchedule.Amount07] | [#Variable;PaymentSchedule.Situation07] |
+][@IfC;PaymentSchedule.Row08;!=;;| [#Variable;PaymentSchedule.Date08] | [#Variable;PaymentSchedule.Label08] | [#Variable;PaymentSchedule.Invoice08] | [#Variable;PaymentSchedule.Amount08] | [#Variable;PaymentSchedule.Situation08] |
+][@IfC;PaymentSchedule.Row09;!=;;| [#Variable;PaymentSchedule.Date09] | [#Variable;PaymentSchedule.Label09] | [#Variable;PaymentSchedule.Invoice09] | [#Variable;PaymentSchedule.Amount09] | [#Variable;PaymentSchedule.Situation09] |
+][@IfC;PaymentSchedule.Row10;!=;;| [#Variable;PaymentSchedule.Date10] | [#Variable;PaymentSchedule.Label10] | [#Variable;PaymentSchedule.Invoice10] | [#Variable;PaymentSchedule.Amount10] | [#Variable;PaymentSchedule.Situation10] |
+][@IfC;PaymentSchedule.Row11;!=;;| [#Variable;PaymentSchedule.Date11] | [#Variable;PaymentSchedule.Label11] | [#Variable;PaymentSchedule.Invoice11] | [#Variable;PaymentSchedule.Amount11] | [#Variable;PaymentSchedule.Situation11] |
+][@IfC;PaymentSchedule.Row12;!=;;| [#Variable;PaymentSchedule.Date12] | [#Variable;PaymentSchedule.Label12] | [#Variable;PaymentSchedule.Invoice12] | [#Variable;PaymentSchedule.Amount12] | [#Variable;PaymentSchedule.Situation12] |
+][@IfC;PaymentSchedule.Row13;!=;;| [#Variable;PaymentSchedule.Date13] | [#Variable;PaymentSchedule.Label13] | [#Variable;PaymentSchedule.Invoice13] | [#Variable;PaymentSchedule.Amount13] | [#Variable;PaymentSchedule.Situation13] |
+][@IfC;PaymentSchedule.Row14;!=;;| [#Variable;PaymentSchedule.Date14] | [#Variable;PaymentSchedule.Label14] | [#Variable;PaymentSchedule.Invoice14] | [#Variable;PaymentSchedule.Amount14] | [#Variable;PaymentSchedule.Situation14] |
+][@IfC;PaymentSchedule.Row15;!=;;| [#Variable;PaymentSchedule.Date15] | [#Variable;PaymentSchedule.Label15] | [#Variable;PaymentSchedule.Invoice15] | [#Variable;PaymentSchedule.Amount15] | [#Variable;PaymentSchedule.Situation15] |
+][@IfC;PaymentSchedule.Row16;!=;;| [#Variable;PaymentSchedule.Date16] | [#Variable;PaymentSchedule.Label16] | [#Variable;PaymentSchedule.Invoice16] | [#Variable;PaymentSchedule.Amount16] | [#Variable;PaymentSchedule.Situation16] |
+][@IfC;PaymentSchedule.Row17;!=;;| [#Variable;PaymentSchedule.Date17] | [#Variable;PaymentSchedule.Label17] | [#Variable;PaymentSchedule.Invoice17] | [#Variable;PaymentSchedule.Amount17] | [#Variable;PaymentSchedule.Situation17] |
+][@IfC;PaymentSchedule.Row18;!=;;| [#Variable;PaymentSchedule.Date18] | [#Variable;PaymentSchedule.Label18] | [#Variable;PaymentSchedule.Invoice18] | [#Variable;PaymentSchedule.Amount18] | [#Variable;PaymentSchedule.Situation18] |
+][@IfC;PaymentSchedule.Row19;!=;;| [#Variable;PaymentSchedule.Date19] | [#Variable;PaymentSchedule.Label19] | [#Variable;PaymentSchedule.Invoice19] | [#Variable;PaymentSchedule.Amount19] | [#Variable;PaymentSchedule.Situation19] |
+][@IfC;PaymentSchedule.Row20;!=;;| [#Variable;PaymentSchedule.Date20] | [#Variable;PaymentSchedule.Label20] | [#Variable;PaymentSchedule.Invoice20] | [#Variable;PaymentSchedule.Amount20] | [#Variable;PaymentSchedule.Situation20] |
+][@IfC;PaymentSchedule.Row21;!=;;| [#Variable;PaymentSchedule.Date21] | [#Variable;PaymentSchedule.Label21] | [#Variable;PaymentSchedule.Invoice21] | [#Variable;PaymentSchedule.Amount21] | [#Variable;PaymentSchedule.Situation21] |
+][@IfC;PaymentSchedule.Row22;!=;;| [#Variable;PaymentSchedule.Date22] | [#Variable;PaymentSchedule.Label22] | [#Variable;PaymentSchedule.Invoice22] | [#Variable;PaymentSchedule.Amount22] | [#Variable;PaymentSchedule.Situation22] |
+][@IfC;PaymentSchedule.Row23;!=;;| [#Variable;PaymentSchedule.Date23] | [#Variable;PaymentSchedule.Label23] | [#Variable;PaymentSchedule.Invoice23] | [#Variable;PaymentSchedule.Amount23] | [#Variable;PaymentSchedule.Situation23] |
+][@IfC;PaymentSchedule.Row24;!=;;| [#Variable;PaymentSchedule.Date24] | [#Variable;PaymentSchedule.Label24] | [#Variable;PaymentSchedule.Invoice24] | [#Variable;PaymentSchedule.Amount24] | [#Variable;PaymentSchedule.Situation24] |
+];Wide;15,32,17,16,20]
+\normalsize
+
+**Montant prévu pour l'année : [#Variable;PaymentSchedule.CurrentTotal]**  
+**Déjà versé sur l'année : [#Variable;PaymentSchedule.CurrentPaid]**  
+**Reste à financer sur l'année : [#Variable;PaymentSchedule.CurrentRemaining]**\newline
+[@IfC;PaymentSchedule.PriorRemaining;!=;;**Solde antérieur restant dû : [#Variable;PaymentSchedule.PriorRemaining]**  
+]
+**Total restant à financer pour la scolarité : [#Variable;PaymentSchedule.TotalRemaining]**

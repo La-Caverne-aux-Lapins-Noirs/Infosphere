@@ -36,6 +36,12 @@ function fetch_school($id = -1)
        organization.siret as siret,
        organization.registration_registry as registration_registry,
        organization.registration_number as registration_number,
+       organization.share_capital as share_capital,
+       organization.head_office_address_line1 as head_office_address_line1,
+       organization.head_office_address_line2 as head_office_address_line2,
+       organization.head_office_zipcode as head_office_zipcode,
+       organization.head_office_city as head_office_city,
+       organization.head_office_country as head_office_country,
        organization.billing_information as organization_billing_information,
        COALESCE(NULLIF(school.address, ''), NULLIF(organization.address, ''), '') as address,
        COALESCE(NULLIF(school.phone, ''), NULLIF(organization.phone, ''), '') as phone,
@@ -118,8 +124,21 @@ function fetch_school($id = -1)
 	   AND user.deleted IS NULL
 	   AND user.profile_status != 'jury'
 	   ");
-	if ($id != "")
-	    break ;
+
+        // Responsibilities are needed by the detailed school page only.
+        // Do not multiply queries when fetch_school() is used merely to list
+        // all schools elsewhere in the application.
+        if ($id != "")
+        {
+            // Responsibilities are cumulative and deliberately separate from
+            // the structural user_school authority. This also allows a student
+            // to be designated for fire safety without turning them into staff.
+            $v["responsibility"] = school_responsibility_members((int)$v["id"]);
+            $v["responsibilities_by_user"] = school_responsibility_codes_by_user((int)$v["id"]);
+            foreach (["user", "director", "secretariat", "commercial", "librarian", "accountant", "teacher"] as $people_field)
+                school_responsibility_attach_to_members($v[$people_field], $v["responsibilities_by_user"]);
+            break ;
+        }
     }
     return ($id == "" ? $out : (count($out) ? $out[0] : []));
 }

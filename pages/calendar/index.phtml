@@ -40,6 +40,19 @@ $alt_colors = [
     <?php print_control_buttons($start, $end, $wlist); ?>
 </div>
 
+<?php
+$calendar_standalone_edit = NULL;
+if (isset($_GET["session"]) && can_view_session((int)$_GET["session"]))
+{
+    $calendar_standalone_edit = new FullSession;
+    if ($calendar_standalone_edit->build_session((int)$_GET["session"]) === false
+        || !$calendar_standalone_edit->standalone)
+        $calendar_standalone_edit = NULL;
+}
+if ($calendar_standalone_edit != NULL)
+    require (__DIR__."/standalone_session_editor.phtml");
+?>
+
 <script>
  function enlarge_work(wat, id)
  {

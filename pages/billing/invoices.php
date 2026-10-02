@@ -3,6 +3,11 @@
 require_once (__DIR__."/../../tools/document_print.php");
 
 $invoices = billing_fetch_issued_invoices();
+$billing_invoice_schools = billing_fetch_managed_schools();
+$billing_invoice_organizations = billing_fetch_organizations();
+$billing_invoice_students = billing_fetch_students(true);
+$billing_invoice_vat_rates = billing_vat_rates();
+$billing_invoice_types = billing_invoice_types();
 
 function billing_invoice_page_e($str)
 {
@@ -42,6 +47,8 @@ function billing_invoice_page_status_label($invoice)
 
     switch ($invoice["status_key"] ?? "issued")
     {
+    case "draft":
+        return ($Dictionnary["BillingInvoiceDraft"] ?? "Brouillon");
     case "credit_note":
         return ($Dictionnary["BillingCreditNoteIssued"]);
     case "deleted":
@@ -61,6 +68,8 @@ function billing_invoice_page_status_class($invoice)
 {
     switch ($invoice["status_key"] ?? "issued")
     {
+    case "draft":
+        return ("billing_invoice_status_draft");
     case "credit_note":
         return ("billing_invoice_status_credit_note");
     case "deleted":
@@ -94,20 +103,45 @@ function billing_invoice_page_render_status($invoice)
         billing_invoice_page_e($status).$details."</span>");
 }
 
-function billing_invoice_page_render_student($invoice)
+function billing_invoice_page_render_party($invoice)
 {
-    return ("<a href='index.php?p=ProfileMenu&amp;a=".(int)$invoice["id_user"]."'>".
-        billing_invoice_page_e(billing_invoice_page_student_name($invoice))."</a><br />".
-        "<small>".billing_invoice_page_e($invoice["codename"])."</small>");
+    global $Dictionnary;
+
+    $student = billing_entry_student_name($invoice);
+    $organization = billing_entry_organization_name($invoice);
+    $html = "";
+    if ($organization != "")
+    {
+        $html .= "<strong>".billing_invoice_page_e($organization)."</strong>";
+        if (!empty($invoice["organization_codename"]))
+            $html .= "<br /><small>".billing_invoice_page_e($invoice["organization_codename"])."</small>";
+    }
+    if ($student != "")
+    {
+        if ($html != "")
+            $html .= "<br /><small>".billing_invoice_page_e($Dictionnary["Student"] ?? "Bénéficiaire")." : ";
+        else
+            $html .= "<small>";
+        $html .= "<a href='index.php?p=ProfileMenu&amp;a=".(int)$invoice["id_user"]."'>".
+            billing_invoice_page_e($student)."</a></small>";
+    }
+    return ($html == "" ? "—" : $html);
 }
+
+function billing_invoice_page_party_raw($invoice)
+{
+    return (trim(
+        billing_entry_organization_name($invoice)." ".
+        billing_entry_student_name($invoice)." ".
+        (string)($invoice["organization_codename"] ?? "")." ".
+        (string)($invoice["codename"] ?? "")
+    ));
+}
+
 
 function billing_invoice_page_render_reference($invoice)
 {
-    $ref = trim((string)($invoice["invoice_reference"] ?? ""));
-
-    if ($ref == "")
-        $ref = billing_invoice_missing_reference();
-    return (billing_invoice_page_e($ref));
+    return (billing_invoice_page_e(billing_invoice_document_reference($invoice)));
 }
 
 function billing_invoice_page_render_copy($invoice)
@@ -117,8 +151,34 @@ function billing_invoice_page_render_copy($invoice)
     $path = billing_invoice_relative_path($invoice);
     if ($path == "")
         return ("<span class='billing_invoice_no_copy'>—</span>");
+    $owner = billing_entry_document_owner_codename($invoice);
     return ("<span class='billing_invoice_copy_path' title='".billing_invoice_page_e($Dictionnary["InvoiceCopySavedIn"])."'>".
-        billing_invoice_page_e($invoice["codename"]."/".$path)."</span>");
+        billing_invoice_page_e(($owner != "" ? $owner."/" : "").$path)."</span>");
+}
+
+function billing_invoice_page_render_draft_actions($invoice)
+{
+    global $Dictionnary;
+
+    $id = (int)$invoice["id"];
+    $reference = billing_next_invoice_reference();
+    return (
+        "<div class='billing_invoice_action_stack'>".
+        "<a class='billing_invoice_view_link' target='_blank' href='/api/billing/$id/invoice'>".
+            billing_invoice_page_e($Dictionnary["ViewDraftInvoice"] ?? "Voir brouillon")."</a>".
+        "<form class='billing_company_draft_issue' method='put' action='/api/billing/$id/send' onsubmit='return false;'>".
+            "<input type='text' name='invoice_reference' maxlength='128' value='".billing_invoice_page_e($reference)."' />".
+            "<button type='button' data-issue-action='send' onclick='return billing_invoice_page_issue_company_draft(this);'>".
+                billing_invoice_page_e($Dictionnary["SendInvoice"] ?? "Émettre et envoyer")."</button>".
+            "<button type='button' data-issue-action='mark_sent' onclick='return billing_invoice_page_issue_company_draft(this);'>".
+                billing_invoice_page_e($Dictionnary["BillingMarkInvoiceSent"] ?? "Marquer émise")."</button>".
+        "</form>".
+        "<form method='delete' action='/api/billing/$id/entry' onsubmit='return false;'>".
+            "<button type='button' onclick='return billing_invoice_page_delete_company_draft(this);'>".
+                billing_invoice_page_e($Dictionnary["Delete"] ?? "Supprimer")."</button>".
+        "</form>".
+        "</div>"
+    );
 }
 
 function billing_invoice_page_render_actions($invoice)
@@ -128,6 +188,9 @@ function billing_invoice_page_render_actions($invoice)
     $is_external = billing_is_external_invoice($invoice);
     $is_credit_note = billing_is_credit_note($invoice);
     $has_pdf = billing_invoice_existing_file_path($invoice) != "";
+    if (empty($invoice["sent_date"]) && !$is_credit_note && !$is_external)
+        return (billing_invoice_page_render_draft_actions($invoice));
+
     $html = "<div class='billing_invoice_action_stack'>";
 
     if ($is_external && !$has_pdf)
@@ -149,13 +212,28 @@ function billing_invoice_page_render_actions($invoice)
                 "</form>";
     }
 
+    $outstanding = max(0, (int)$invoice["amount"] - (int)($invoice["covered_amount"] ?? 0));
+    if (!$is_credit_note && empty($invoice["deleted"]) && !empty($invoice["sent_date"]) &&
+        (int)($invoice["id_organization"] ?? 0) > 0 && $outstanding > 0)
+    {
+        $reference = billing_invoice_document_reference($invoice);
+        $html .= "<button type='button' class='billing_invoice_payment_button'".
+            " data-id-organization='".(int)$invoice["id_organization"]."'".
+            " data-id-school='".(int)$invoice["id_school"]."'".
+            " data-reference='".billing_invoice_page_e($reference)."'".
+            " data-amount='".billing_invoice_page_e(number_format($outstanding / 100, 2, '.', ''))."'".
+            " onclick='return billing_invoice_page_open_payment(this);'>".
+            billing_invoice_page_e($Dictionnary["RegisterPayment"] ?? "Paiement reçu")."</button>";
+    }
+
     $capacity = max(0, (int)($invoice["credit_capacity"] ?? 0));
     if (!$is_credit_note && empty($invoice["deleted"]) && $capacity > 0)
     {
         $reference = billing_invoice_document_reference($invoice);
         $capacity_input = number_format($capacity / 100, 2, '.', '');
         $html .= "<button type='button' class='billing_invoice_credit_note_button'".
-            " data-id-user='".(int)$invoice["id_user"]."'".
+            " data-id-user='".(int)($invoice["id_user"] ?? 0)."'".
+            " data-id-organization='".(int)($invoice["id_organization"] ?? 0)."'".
             " data-related-entry-id='".(int)$invoice["id"]."'".
             " data-reference='".billing_invoice_page_e($reference)."'".
             " data-credit-capacity='".billing_invoice_page_e($capacity_input)."'".
@@ -184,7 +262,7 @@ $fields = [
         "label" => $Dictionnary["Reference"],
         "type" => "text",
         "width" => "125px",
-        "raw" => fn($i) => trim((string)$i["invoice_reference"]) ?: billing_invoice_missing_reference(),
+        "raw" => fn($i) => billing_invoice_document_reference($i),
         "render" => fn($i) => billing_invoice_page_render_reference($i),
         "copyable" => true,
     ],
@@ -217,12 +295,12 @@ $fields = [
         ),
     ],
     [
-        "name" => "student",
-        "label" => $Dictionnary["Student"],
+        "name" => "party",
+        "label" => $Dictionnary["BillingClientBeneficiary"] ?? "Client / bénéficiaire",
         "type" => "text",
-        "width" => "170px",
-        "raw" => fn($i) => billing_invoice_page_student_name($i)." ".$i["codename"]." ".$i["mail"],
-        "render" => fn($i) => billing_invoice_page_render_student($i),
+        "width" => "190px",
+        "raw" => fn($i) => billing_invoice_page_party_raw($i),
+        "render" => fn($i) => billing_invoice_page_render_party($i),
         "cell_class" => "billing_invoice_student",
     ],
     [
@@ -265,7 +343,7 @@ $fields = [
         "type" => "text",
         "width" => "110px",
         "raw" => fn($i) => $i["sent_date"],
-        "render" => fn($i) => billing_invoice_page_datetime_label($i["sent_date"]),
+        "render" => fn($i) => empty($i["sent_date"]) ? "—" : billing_invoice_page_datetime_label($i["sent_date"]),
     ],
     [
         "name" => "due_date",
@@ -281,6 +359,7 @@ $fields = [
         "type" => "select",
         "width" => "145px",
         "options" => [
+            "draft" => $Dictionnary["BillingInvoiceDraft"] ?? "Brouillon",
             "issued" => $Dictionnary["BillingInvoiceIssuedOnly"],
             "credit_note" => $Dictionnary["BillingCreditNoteIssued"],
             "partial" => $Dictionnary["BillingInvoicePartial"],
@@ -297,7 +376,7 @@ $fields = [
         "label" => $Dictionnary["InvoiceCopySavedIn"],
         "type" => "text",
         "width" => "280px",
-        "raw" => fn($i) => $i["codename"]."/".billing_invoice_relative_path($i),
+        "raw" => fn($i) => billing_entry_document_owner_codename($i)."/".billing_invoice_relative_path($i),
         "render" => fn($i) => billing_invoice_page_render_copy($i),
         "copyable" => true,
         "cell_class" => "billing_invoice_copy",
@@ -313,23 +392,73 @@ $fields = [
 ];
 ?>
 
-<h2 class="alignable_blocks billing_title"><?=$Dictionnary["BillingInvoices"]; ?></h2>
-<input
-    type="button"
-    class="alignable_blocks"
-    value="<?=$Dictionnary["Billing"]; ?>"
-    onclick="document.location='index.php?p=BillingMenu';"
-/>
-<input
-    type="button"
-    class="alignable_blocks"
-    value="<?=$Dictionnary["BillingTemplates"]; ?>"
-    onclick="document.location='index.php?p=BillingTemplateMenu';"
-/>
-
-<style><?php require (__DIR__."/style.css"); ?></style>
-
-<div class="fullscreen scrollable" id="billing_invoice_panel">
+<div id="billing_invoice_panel" class="billing_embedded_panel">
+    <section class="billing_company_invoice_creator">
+        <h3><?=$Dictionnary["BillingNewOrganizationInvoice"] ?? "Nouvelle facture entreprise"; ?></h3>
+        <form method="post" action="/api/billing/-1/entry" onsubmit="return false;">
+            <label>
+                <span><?=$Dictionnary["School"] ?? "École"; ?></span>
+                <select name="id_school" required>
+                    <?php foreach ($billing_invoice_schools as $school) { ?>
+                        <option value="<?=(int)$school["id"]; ?>"><?=billing_invoice_page_e($school["name"] ?: $school["codename"]); ?></option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <span><?=$Dictionnary["BillingCustomerOrganization"] ?? "Client / organisation"; ?></span>
+                <select name="id_organization" required>
+                    <option value="">—</option>
+                    <?php foreach ($billing_invoice_organizations as $organization) {
+                        $organization_name = $organization["localized_name"] ?: ($organization["name"] ?: ($organization["legal_name"] ?: $organization["codename"]));
+                        if (billing_organization_payer_kind($organization) !== "direct")
+                            $organization_name .= " — ".billing_organization_payer_kind_label($organization); ?>
+                        <option value="<?=(int)$organization["id"]; ?>"><?=billing_invoice_page_e($organization_name); ?></option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <span><?=$Dictionnary["BillingOptionalBeneficiary"] ?? "Bénéficiaire étudiant (facultatif)"; ?></span>
+                <select name="id_user">
+                    <option value="0">—</option>
+                    <?php foreach ($billing_invoice_students as $student) { ?>
+                        <?php $student_name = trim(($student["first_name"] ?? "")." ".($student["family_name"] ?? "")); ?>
+                        <option value="<?=(int)$student["id"]; ?>"><?=billing_invoice_page_e(($student_name != "" ? $student_name : $student["codename"])." — ".$student["codename"]); ?></option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label class="billing_company_invoice_label">
+                <span><?=$Dictionnary["BillingLabel"] ?? "Libellé"; ?></span>
+                <input type="text" name="label" maxlength="255" required placeholder="Prestation d'enseignement" />
+            </label>
+            <label>
+                <span><?=$Dictionnary["BillingAmountHT"] ?? "Montant HT"; ?></span>
+                <input type="text" name="amount" required placeholder="0.00" />
+            </label>
+            <label>
+                <span><?=$Dictionnary["BillingVAT"] ?? "TVA"; ?></span>
+                <select name="vat_rate">
+                    <?php foreach ($billing_invoice_vat_rates as $rate => $label) { ?>
+                        <option value="<?=$rate; ?>"><?=billing_invoice_page_e($label); ?></option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <span><?=$Dictionnary["BillingInvoiceType"] ?? "Facturation"; ?></span>
+                <select name="invoice_type">
+                    <?php foreach ($billing_invoice_types as $key => $label) { ?>
+                        <option value="<?=billing_invoice_page_e($key); ?>"><?=billing_invoice_page_e($label); ?></option>
+                    <?php } ?>
+                </select>
+            </label>
+            <label>
+                <span><?=$Dictionnary["DueDate"] ?? "Échéance"; ?></span>
+                <input type="date" name="due_date" value="<?=date('Y-m-d'); ?>" required />
+            </label>
+            <button type="button" onclick="return billing_invoice_page_create_company_invoice(this);">
+                <?=$Dictionnary["BillingCreateDraft"] ?? "Créer le brouillon"; ?>
+            </button>
+        </form>
+    </section>
     <p class="billing_invoice_hint"><?=$Dictionnary["BillingInvoicesHint"]; ?></p>
     <?php render_dynamic_table("billing_invoice_table", $fields, $invoices); ?>
 </div>
@@ -337,6 +466,7 @@ $fields = [
 <dialog id="billing_invoice_credit_note_dialog" class="billing_invoice_credit_note_dialog">
     <form method="post" action="/api/billing/-1/credit_note" onsubmit="return false;">
         <input type="hidden" name="id_user" />
+        <input type="hidden" name="id_organization" />
         <input type="hidden" name="related_entry_id" />
         <h3><?=$Dictionnary["BillingPrepareCreditNote"]; ?></h3>
         <p>
@@ -364,7 +494,79 @@ $fields = [
     </form>
 </dialog>
 
+<dialog id="billing_invoice_payment_dialog" class="billing_invoice_credit_note_dialog">
+    <form method="post" action="/api/billing/-1/payment" onsubmit="return false;">
+        <input type="hidden" name="id_organization" />
+        <input type="hidden" name="id_school" />
+        <h3><?=$Dictionnary["RegisterPayment"] ?? "Paiement reçu"; ?></h3>
+        <p>
+            <?=$Dictionnary["BillingInvoice"] ?? "Facture"; ?> :
+            <strong data-payment-reference></strong>
+        </p>
+        <label>
+            <span><?=$Dictionnary["EuroAmount"] ?? "Montant"; ?></span>
+            <input type="text" name="amount" required />
+        </label>
+        <label>
+            <span><?=$Dictionnary["BillingMovementDate"] ?? "Date"; ?></span>
+            <input type="date" name="payment_date" value="<?=date('Y-m-d'); ?>" required />
+        </label>
+        <label>
+            <span><?=$Dictionnary["TransferReference"] ?? "Référence du virement"; ?></span>
+            <input type="text" name="transfer_reference" maxlength="255" />
+        </label>
+        <input type="hidden" name="comment" />
+        <div class="billing_invoice_credit_note_dialog_actions">
+            <button type="button" onclick="this.closest('dialog').close();"><?=$Dictionnary["Cancel"]; ?></button>
+            <button type="button" onclick="return billing_invoice_page_submit_payment(this);">
+                <?=$Dictionnary["RegisterPayment"] ?? "Paiement reçu"; ?>
+            </button>
+        </div>
+    </form>
+</dialog>
+
 <script>
+function billing_invoice_page_refresh()
+{
+    window.location.href = "index.php?p=BillingInvoiceMenu";
+}
+
+function billing_invoice_page_create_company_invoice(button)
+{
+    let form = button.closest("form");
+    if (!form || (form.reportValidity && !form.reportValidity()))
+        return (false);
+    return (silent_submitf(form, {after_success: billing_invoice_page_refresh}));
+}
+
+function billing_invoice_page_issue_company_draft(button)
+{
+    let form = button.closest("form");
+    if (!form)
+        return (false);
+    let reference = form.querySelector('[name="invoice_reference"]');
+    if (!reference || !reference.value.trim())
+    {
+        if (reference)
+            reference.focus();
+        return (false);
+    }
+    let match = form.action.match(/\/billing\/([0-9]+)\//);
+    if (!match)
+        return (false);
+    let action = button.getAttribute("data-issue-action") || "send";
+    form.action = "/api/billing/" + match[1] + "/" + action;
+    return (silent_submitf(form, {after_success: billing_invoice_page_refresh}));
+}
+
+function billing_invoice_page_delete_company_draft(button)
+{
+    let form = button.closest("form");
+    if (!form || !window.confirm("Supprimer ce brouillon ?"))
+        return (false);
+    return (silent_submitf(form, {after_success: billing_invoice_page_refresh}));
+}
+
 function billing_invoice_page_open_credit_note(button)
 {
     let dialog = document.getElementById("billing_invoice_credit_note_dialog");
@@ -372,6 +574,7 @@ function billing_invoice_page_open_credit_note(button)
         return (false);
     let form = dialog.querySelector("form");
     form.querySelector("[name='id_user']").value = button.getAttribute("data-id-user") || "";
+    form.querySelector("[name='id_organization']").value = button.getAttribute("data-id-organization") || "";
     form.querySelector("[name='related_entry_id']").value = button.getAttribute("data-related-entry-id") || "";
     form.querySelector("[name='amount']").value = button.getAttribute("data-credit-capacity") || "";
     form.querySelector("[name='credit_date']").value = "<?=date('Y-m-d'); ?>";
@@ -402,8 +605,46 @@ function billing_invoice_page_submit_credit_note(button)
         after_success: function()
         {
             dialog.close();
-            let url = "index.php?p=BillingMenu" + (hidden ? "&show_hidden=1" : "") + "#billing_table" + id_user;
-            window.location.href = url;
+            window.location.reload();
+        }
+    }));
+}
+
+function billing_invoice_page_open_payment(button)
+{
+    let dialog = document.getElementById("billing_invoice_payment_dialog");
+    if (!dialog)
+        return (false);
+    let form = dialog.querySelector("form");
+    let reference = button.getAttribute("data-reference") || "";
+    form.querySelector("[name='id_organization']").value = button.getAttribute("data-id-organization") || "";
+    form.querySelector("[name='id_school']").value = button.getAttribute("data-id-school") || "";
+    form.querySelector("[name='amount']").value = button.getAttribute("data-amount") || "";
+    form.querySelector("[name='payment_date']").value = "<?=date('Y-m-d'); ?>";
+    form.querySelector("[name='transfer_reference']").value = reference;
+    form.querySelector("[name='comment']").value = "Règlement facture " + reference;
+    dialog.querySelector("[data-payment-reference]").textContent = reference;
+    if (typeof dialog.showModal === "function")
+        dialog.showModal();
+    else
+        dialog.setAttribute("open", "open");
+    form.querySelector("[name='amount']").focus();
+    return (false);
+}
+
+function billing_invoice_page_submit_payment(button)
+{
+    let form = button.closest("form");
+    let dialog = form ? form.closest("dialog") : null;
+    if (!form || !dialog)
+        return (false);
+    if (form.reportValidity && !form.reportValidity())
+        return (false);
+    return (silent_submitf(form, {
+        after_success: function()
+        {
+            dialog.close();
+            window.location.reload();
         }
     }));
 }

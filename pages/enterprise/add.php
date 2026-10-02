@@ -7,6 +7,9 @@
     <input type="text" name="name" placeholder="Nom courant" required /><br />
     <input type="text" name="legal_name" placeholder="<?=$Dictionnary["LegalName"]; ?>" /><br />
     <input type="text" name="siret" placeholder="SIRET" /><br />
+    <input type="text" name="registration_registry" placeholder="Registre d'immatriculation, ex : RCS de Créteil" /><br />
+    <input type="text" name="registration_number" placeholder="Numéro d'immatriculation, ex : 909 292 773" /><br />
+    <input type="text" name="share_capital" placeholder="Capital social, ex : 1 000 €" /><br />
     <input type="text" name="phone" placeholder="<?=$Dictionnary["Phone"]; ?>" /><br />
     <input type="mail" name="mail" placeholder="<?=$Dictionnary["Mail"]; ?>" /><br />
     <input type="text" name="website" placeholder="Site web" /><br />

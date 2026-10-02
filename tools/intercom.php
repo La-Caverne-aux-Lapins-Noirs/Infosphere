@@ -14,6 +14,9 @@ function intercom_api_url($intercom, $id_subject = NULL, $parameters = [])
 	$parameters["div"] = $intercom["div"];
     if (isset($intercom["short_name"]) && $intercom["short_name"])
 	$parameters["short_name"] = 1;
+    if (isset($intercom["show_hidden"]) && $intercom["show_hidden"]
+        && !array_key_exists("show_hidden", $parameters))
+	$parameters["show_hidden"] = 1;
     if (count($parameters))
 	$url .= "?".http_build_query($parameters);
     return ($url);
@@ -668,9 +671,83 @@ function intercom_mark_subject_read($id_subject)
     global $User;
 
     $id_subject = (int)$id_subject;
-    $Database->query("\n        UPDATE message_user\n        SET view_date = NOW()\n        WHERE id_user = {$User["id"]}\n          AND id_message = $id_subject\n    ");
+    $Database->query("
+        UPDATE message_user
+        SET view_date = NOW()
+        WHERE id_user = {$User["id"]}
+          AND id_message = $id_subject
+    ");
     if ($Database->affected_rows == 0)
-	$Database->query("\n            INSERT INTO message_user (id_user, id_message, view_date)\n            VALUES ({$User["id"]}, $id_subject, NOW())\n        ");
+        $Database->query("
+            INSERT INTO message_user (id_user, id_message, view_date)
+            VALUES ({$User["id"]}, $id_subject, NOW())
+        ");
+}
+
+function intercom_subject_id_from_message($id_message)
+{
+    $id_message = (int)$id_message;
+    $message = db_select_one("
+        id, id_message
+        FROM message
+        WHERE id = $id_message
+    ");
+    if ($message == NULL)
+        return (NULL);
+    if ($message["id_message"] === NULL)
+        return ((int)$message["id"]);
+    return ((int)$message["id_message"]);
+}
+
+function intercom_mark_message_subject_read($id_message)
+{
+    $id_subject = intercom_subject_id_from_message($id_message);
+    if ($id_subject === NULL)
+        return (new ErrorResponse("NotFound"));
+
+    $subject = db_select_one("
+        *
+        FROM message
+        WHERE id = $id_subject
+          AND id_message IS NULL
+    ");
+    if ($subject == NULL)
+        return (new ErrorResponse("NotFound"));
+    if (!intercom_subject_visible($subject))
+        return (new ErrorResponse("IntercomDenied"));
+
+    intercom_mark_subject_read($id_subject);
+    return (new ValueResponse($id_subject));
+}
+
+function intercom_mark_context_read($misc_type, $id_misc)
+{
+    global $User;
+
+    $misc_type = intercom_escape($misc_type);
+    $id_misc = (int)$id_misc;
+    $labs = [];
+    foreach (get_user_laboratories($User)["laboratories"] as $lab)
+        $labs[(int)$lab["id"]] = true;
+
+    foreach (db_select_all("
+        *
+        FROM message
+        WHERE misc_type = '$misc_type'
+          AND id_misc = $id_misc
+          AND id_message IS NULL
+        ORDER BY id ASC
+    ") as $subject)
+    {
+        if (!intercom_subject_visible($subject))
+            continue ;
+        if (!is_admin()
+            && $subject["id_laboratory"] !== NULL
+            && !isset($labs[(int)$subject["id_laboratory"]]))
+            continue ;
+        intercom_mark_subject_read((int)$subject["id"]);
+    }
+    return (new ValueResponse(true));
 }
 
 function sort_by_last_message($a, $b)
@@ -689,6 +766,7 @@ function get_intercomf($misc_type, $id_misc, $conf = [])
 	"recursive" => false,
 	"page" => 0,
 	"page_size" => 10,
+	"show_hidden" => false,
     ];
     $cnf = array_merge($cnf, $conf);
     return (get_intercom(
@@ -696,7 +774,8 @@ function get_intercomf($misc_type, $id_misc, $conf = [])
 	$cnf["id_subject"],
 	$cnf["recursive"],
 	$cnf["page"],
-	$cnf["page_size"]
+	$cnf["page_size"],
+	$cnf["show_hidden"]
     ));
 }
 
@@ -1051,135 +1130,203 @@ function intercom_set_message_moderation($id_message, $moderated)
     return (new ValueResponse(["msg" => $moderated ? "MessageModerated" : "MessageRestored"]));
 }
 
-function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false, $page = NULL, $page_size = NULL)
+function get_intercom($misc_type, $id_misc, $id_subject = -1, $recursive = false, $page = NULL, $page_size = NULL, $show_hidden = false)
 {
     global $User;
-    global $Database;
 
     $misc_type = intercom_escape($misc_type);
     $id_misc = (int)$id_misc;
     $id_subject = (int)$id_subject;
+    $can_moderate = intercom_can_moderate_context($misc_type, $id_misc);
+    $show_hidden = (bool)$show_hidden && $can_moderate;
     $subject_filter = $id_subject != -1 ? " AND message.id = $id_subject " : "";
+    $hidden_subject_filter = $show_hidden ? "" : "
+        AND NOT EXISTS (
+            SELECT 1
+            FROM message_report AS hidden_subject
+            WHERE hidden_subject.id_message = message.id
+              AND hidden_subject.status = -1
+        )
+    ";
 
     if ($page === NULL || $page_size === NULL)
     {
-	$page = 0;
-	$page_size = 10;
+        $page = 0;
+        $page_size = 10;
     }
     $page = (int)$page;
     $page_size = max(1, (int)$page_size);
 
     if ($page < 0)
     {
-	if ($id_subject != -1)
-	    $cnt = db_select_one("\n                COUNT(*) as cnt\n                FROM message\n                WHERE message.id_message = $id_subject\n            ")["cnt"];
-	else
-	    $cnt = db_select_one("\n                COUNT(*) as cnt\n                FROM message\n                WHERE message.misc_type = '$misc_type'\n                  AND message.id_misc = $id_misc\n                  AND message.id_message IS NULL\n                  $subject_filter\n            ")["cnt"];
-	$page = (int)($cnt / $page_size);
-	if ($cnt % $page_size == 0 && $page > 0)
-	    $page -= 1;
+        if ($id_subject != -1)
+            $cnt = db_select_one("
+                COUNT(*) as cnt
+                FROM message
+                WHERE message.id_message = $id_subject
+            ")["cnt"];
+        else
+            $cnt = db_select_one("
+                COUNT(*) as cnt
+                FROM message
+                WHERE message.misc_type = '$misc_type'
+                  AND message.id_misc = $id_misc
+                  AND message.id_message IS NULL
+                  $subject_filter
+                  $hidden_subject_filter
+            ")["cnt"];
+        $page = (int)($cnt / $page_size);
+        if ($cnt % $page_size == 0 && $page > 0)
+            $page -= 1;
     }
     $offset = $page * $page_size;
     $pagesql = " LIMIT $offset, $page_size ";
 
-    $view_join = "\n        LEFT JOIN (\n            SELECT id_message, MAX(view_date) as view_date\n            FROM message_user\n            WHERE id_user = {$User["id"]}\n            GROUP BY id_message\n        ) as message_user\n          ON message_user.id_message = message.id\n    ";
+    $view_join = "
+        LEFT JOIN (
+            SELECT id_message, MAX(view_date) as view_date
+            FROM message_user
+            WHERE id_user = {$User["id"]}
+            GROUP BY id_message
+        ) as message_user
+          ON message_user.id_message = message.id
+    ";
 
-    $subjectsx = db_select_all("\n        message.*, message_user.view_date\n        FROM message\n        $view_join\n        WHERE message.misc_type = '$misc_type'\n          AND message.id_misc = $id_misc\n          AND message.id_message IS NULL\n          $subject_filter\n        ORDER BY COALESCE((\n            SELECT MAX(child.post_date)\n            FROM message as child\n            WHERE child.id_message = message.id\n        ), message.post_date) DESC\n        $pagesql\n    ");
+    $subjectsx = db_select_all("
+        message.*, message_user.view_date
+        FROM message
+        $view_join
+        WHERE message.misc_type = '$misc_type'
+          AND message.id_misc = $id_misc
+          AND message.id_message IS NULL
+          $subject_filter
+          $hidden_subject_filter
+        ORDER BY COALESCE((
+            SELECT MAX(child.post_date)
+            FROM message as child
+            WHERE child.id_message = message.id
+        ), message.post_date) DESC
+        $pagesql
+    ");
 
     if ($id_subject != -1 && $recursive)
-	$nbr_post = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE message.id_message = $id_subject\n        ")["cnt"];
+        $nbr_post = db_select_one("
+            COUNT(*) as cnt
+            FROM message
+            WHERE message.id_message = $id_subject
+        ")["cnt"];
     else
-	$nbr_post = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE message.misc_type = '$misc_type'\n              AND message.id_misc = $id_misc\n              AND message.id_message IS NULL\n              $subject_filter\n        ")["cnt"];
+        $nbr_post = db_select_one("
+            COUNT(*) as cnt
+            FROM message
+            WHERE message.misc_type = '$misc_type'
+              AND message.id_misc = $id_misc
+              AND message.id_message IS NULL
+              $subject_filter
+              $hidden_subject_filter
+        ")["cnt"];
 
     $labs = [];
     foreach (get_user_laboratories($User)["laboratories"] as $lab)
-	$labs[$lab["id"]] = true;
+        $labs[$lab["id"]] = true;
 
-    $content_hash = "";
+    $content_hash = "show_hidden=".(int)$show_hidden.";";
     $subjects = [];
     foreach ($subjectsx as $subject)
     {
-	if (!intercom_subject_visible($subject))
-	    continue ;
-	if (!is_admin()
-	    && $subject["id_laboratory"] !== NULL
-	    && !isset($labs[$subject["id_laboratory"]]))
-	    continue ;
+        if (!intercom_subject_visible($subject))
+            continue ;
+        if (!is_admin()
+            && $subject["id_laboratory"] !== NULL
+            && !isset($labs[$subject["id_laboratory"]]))
+            continue ;
 
-	$id_parent = (int)$subject["id"];
-	$subject["message"] = ($offset == 0) ? [$subject] : [];
-	if ($recursive)
-	{
-	    $subject["message"] = array_merge($subject["message"], db_select_all("\n                *\n                FROM message\n                WHERE id_message = $id_parent\n                ORDER BY post_date ASC\n                $pagesql\n            "));
-	    intercom_mark_subject_read($id_parent);
-	}
-	$subject["nbr_message"] = db_select_one("\n            COUNT(*) as cnt\n            FROM message\n            WHERE id_message = $id_parent\n        ")["cnt"];
-	if ($subject["nbr_message"])
-	{
-	    $subject["last_post"] = db_select_one("\n                id, post_date, id_user\n                FROM message\n                WHERE id_message = $id_parent\n                ORDER BY post_date DESC, id DESC\n            ");
-	    $subject["last_message_id"] = (int)$subject["last_post"]["id"];
-	}
-	else
-	{
-	    $subject["last_post"] = [
-		"id" => $subject["id"],
-		"id_user" => $subject["id_user"],
-		"post_date" => $subject["post_date"],
-	    ];
-	    $subject["last_message_id"] = (int)$subject["id"];
-	}
+        $id_parent = (int)$subject["id"];
+        $subject["message"] = ($offset == 0) ? [$subject] : [];
+        if ($recursive)
+        {
+            $subject["message"] = array_merge($subject["message"], db_select_all("
+                *
+                FROM message
+                WHERE id_message = $id_parent
+                ORDER BY post_date ASC
+                $pagesql
+            "));
+            intercom_mark_subject_read($id_parent);
+        }
+        $subject["nbr_message"] = db_select_one("
+            COUNT(*) as cnt
+            FROM message
+            WHERE id_message = $id_parent
+        ")["cnt"];
+        if ($subject["nbr_message"])
+        {
+            $subject["last_post"] = db_select_one("
+                id, post_date, id_user
+                FROM message
+                WHERE id_message = $id_parent
+                ORDER BY post_date DESC, id DESC
+            ");
+            $subject["last_message_id"] = (int)$subject["last_post"]["id"];
+        }
+        else
+        {
+            $subject["last_post"] = [
+                "id" => $subject["id"],
+                "id_user" => $subject["id_user"],
+                "post_date" => $subject["post_date"],
+            ];
+            $subject["last_message_id"] = (int)$subject["id"];
+        }
 
-	$content_hash .= $subject["id"]."/".$subject["nbr_message"]."/".$subject["last_post"]["post_date"]."/".$subject["last_message_id"];
-	if (!$recursive)
-	    if (function_exists("intercom_prepare_message_for_display"))
-	    {
-	    	foreach ($subject["message"] as &$message)
-	    		intercom_prepare_message_for_display($message);
-	    	unset($message);
-	    	intercom_prepare_message_for_display($subject);
-        intercom_filter_hidden_messages_for_viewer($subject);
-    /* intercom_hidden_root_subject_filter */
-    if (isset($subject["is_moderated"]) && $subject["is_moderated"]
-        && (!isset($subject["can_moderate"]) || !$subject["can_moderate"]))
-        continue ;
-	    }
+        $content_hash .= $subject["id"]."/".$subject["nbr_message"]."/".$subject["last_post"]["post_date"]."/".$subject["last_message_id"];
+        if (!$recursive && function_exists("intercom_prepare_message_for_display"))
+        {
+            foreach ($subject["message"] as &$message)
+                intercom_prepare_message_for_display($message);
+            unset($message);
+            intercom_prepare_message_for_display($subject);
+            intercom_filter_hidden_messages_for_viewer($subject);
+        }
 
-	    $content_hash .=
-	    	$subject["id"]."/".
-	    	$subject["nbr_message"]."/".
-	    	$subject["last_post"]["post_date"]."/".
-	    	$subject["last_message_id"]."/".
-	    	(isset($subject["is_moderated"]) && $subject["is_moderated"] ? 1 : 0)."/".
-	    	(isset($subject["reported_by_user"]) && $subject["reported_by_user"] ? 1 : 0)."/".
-	    	(isset($subject["report_count"]) ? (int)$subject["report_count"] : 0);
-	    if (!$recursive)
-	    	$content_hash .= "/".$subject["view_date"];
-	    foreach ($subject["message"] as $message)
-	    	$content_hash .=
-	    	    "/".$message["id"].".".
-	    	    (isset($message["is_moderated"]) && $message["is_moderated"] ? 1 : 0).".".
-	    	    (isset($message["reported_by_user"]) && $message["reported_by_user"] ? 1 : 0).".".
-	    	    (isset($message["report_count"]) ? (int)$message["report_count"] : 0);
+        $content_hash .=
+            $subject["id"]."/".
+            $subject["nbr_message"]."/".
+            $subject["last_post"]["post_date"]."/".
+            $subject["last_message_id"]."/".
+            (isset($subject["is_moderated"]) && $subject["is_moderated"] ? 1 : 0)."/".
+            (isset($subject["reported_by_user"]) && $subject["reported_by_user"] ? 1 : 0)."/".
+            (isset($subject["report_count"]) ? (int)$subject["report_count"] : 0);
+        if (!$recursive)
+            $content_hash .= "/".$subject["view_date"];
+        foreach ($subject["message"] as $message)
+            $content_hash .=
+                "/".$message["id"].".".
+                (isset($message["is_moderated"]) && $message["is_moderated"] ? 1 : 0).".".
+                (isset($message["reported_by_user"]) && $message["reported_by_user"] ? 1 : 0).".".
+                (isset($message["report_count"]) ? (int)$message["report_count"] : 0);
 
-	$subject["page"] = $page;
-	$subject["page_size"] = $page_size;
-	$subject["on_last_page"] = ($offset + $page_size) >= $subject["nbr_message"];
-	$subject["page_count"] = max(1, (int)ceil(max(1, (int)$subject["nbr_message"]) / $page_size));
-	$subjects[] = $subject;
+        $subject["page"] = $page;
+        $subject["page_size"] = $page_size;
+        $subject["on_last_page"] = ($offset + $page_size) >= $subject["nbr_message"];
+        $subject["page_count"] = max(1, (int)ceil(max(1, (int)$subject["nbr_message"]) / $page_size));
+        $subjects[] = $subject;
     }
 
     uasort($subjects, "sort_by_last_message");
     $subjects = array_values($subjects);
 
     return ([
-	"id_misc" => $id_misc,
-	"misc_type" => $misc_type,
-	"name" => intercom_context_name($misc_type, $id_misc),
-	"subjects" => $subjects,
-	"content_hash" => hash("md5", $content_hash),
-	"page" => $page,
-	"page_size" => $page_size,
-	"on_last_page" => ($offset + $page_size) >= $nbr_post,
+        "id_misc" => $id_misc,
+        "misc_type" => $misc_type,
+        "name" => intercom_context_name($misc_type, $id_misc),
+        "subjects" => $subjects,
+        "content_hash" => hash("md5", $content_hash),
+        "page" => $page,
+        "page_size" => $page_size,
+        "on_last_page" => ($offset + $page_size) >= $nbr_post,
+        "can_moderate" => $can_moderate,
+        "show_hidden" => $show_hidden,
     ]);
 }
 
@@ -1345,6 +1492,7 @@ function intercom_display($table, $id_misc, $public = false, $ref = -1, $labs = 
 	"recursive" => $ref != -1,
 	"page" => try_get($_GET, "page", 0),
 	"page_size" => 10,
+	"show_hidden" => (bool)(int)try_get($_GET, "show_hidden", 0),
     ]);
     if ($ref != -1 && count($intercom["subjects"]) == 0)
     {

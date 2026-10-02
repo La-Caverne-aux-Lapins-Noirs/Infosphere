@@ -101,4 +101,21 @@ class FormFieldTest extends XTestCase
         dabsic_form_flatten_values(["Form" => ["Languages" => ["c", "cpp"]]], "", $flat);
         $this->assertSame($flat["Form.Languages"], ["c", "cpp"]);
     }
+
+    public function testDabsicGroupParserAcceptsFieldsNamedLikeMetadata()
+    {
+        $metadata = dabsic_form_empty_form_metadata();
+        $metadata["groups"]["Facture"] = ["fields" => []];
+        dabsic_form_parse_group_fields([
+            "Invoice" => [
+                "Reference" => ["Label" => "Numéro de facture"],
+                "Label" => ["Label" => "Désignation"],
+            ],
+        ], "", "Facture", $metadata);
+
+        $this->assertArrayHasKey("Invoice.Reference", $metadata["fields"]);
+        $this->assertArrayHasKey("Invoice.Label", $metadata["fields"]);
+        $this->assertArrayNotHasKey("Invoice", $metadata["fields"]);
+        $this->assertSame("Désignation", $metadata["fields"]["Invoice.Label"]["label"]);
+    }
 }

@@ -322,21 +322,186 @@ function document_generation_task_plan($merged)
 }
 
 
-function document_generation_keep_dab($merged)
+function document_generation_workflow_recipient_contexts($value)
 {
-    $root = dirname(__DIR__);
-    $directory = $root."/dres/debug/documents";
+    if ($value === NULL)
+        return ([]);
+    if (!is_array($value))
+        $value = [$value];
+    $out = [];
+    foreach ($value as $recipient)
+    {
+        if (is_array($recipient))
+            continue ;
+        $recipient = trim((string)$recipient);
+        if ($recipient == "" || in_array($recipient, $out, true))
+            continue ;
+        $out[] = $recipient;
+    }
+    return ($out);
+}
+
+function document_generation_workflow_options($merged)
+{
+    if (!is_file($merged))
+        return ([]);
+    $loaded = load_configuration($merged, [], false);
+    if ($loaded->is_error() || !is_array($loaded->value))
+        return ([]);
+    $workflow = $loaded->value["Workflow"] ?? [];
+    if (!is_array($workflow))
+        return ([]);
+    $explicit_delivery = array_key_exists("DeliveryRecipients", $workflow);
+    return ([
+        "queue_for_print" => !empty($workflow["QueueForPrint"]),
+        "print_recipient" => trim((string)($workflow["PrintRecipient"] ?? "")),
+        "require_pdf_sign" => !empty($workflow["RequirePdfSign"]),
+        // Optional semantic context names receiving the final immutable PDF.
+        // When present, this replaces the historical implicit owner/signatory
+        // delivery set instead of extending it.
+        "delivery_explicit" => $explicit_delivery,
+        "delivery_recipients" => $explicit_delivery
+            ? document_generation_workflow_recipient_contexts($workflow["DeliveryRecipients"])
+            : [],
+    ]);
+}
+
+
+function document_generation_debug_directory()
+{
+    $root = dirname(__DIR__)."/dres/debug/document_generation";
+    $directory = $root."/last";
+
+    if (!is_dir($root) && !@mkdir($root, 0770, true) && !is_dir($root))
+        return (NULL);
+    // The directory may contain Dabsic contexts with personal data. It is for
+    // local server diagnostics only, never a downloadable dres resource.
+    $htaccess = $root."/.htaccess";
+    if (!is_file($htaccess))
+        @file_put_contents($htaccess, "Require all denied\n");
 
     if (!is_dir($directory) && !@mkdir($directory, 0770, true) && !is_dir($directory))
         return (NULL);
-    if (!is_file($merged))
+    foreach (glob($directory."/*") ?: [] as $entry)
+        if (is_file($entry) || is_link($entry))
+            @unlink($entry);
+    return ($directory);
+}
+
+function document_generation_debug_safe_name($value)
+{
+    $value = preg_replace('/[^A-Za-z0-9_.-]+/', '_', basename((string)$value));
+    $value = trim((string)$value, '._-');
+    return ($value == "" ? "input.dab" : $value);
+}
+
+function document_generation_debug_snapshot(
+    array $files,
+    array $temporary_files,
+    $merged,
+    array $merge_fields,
+    $merge_command,
+    $docbuilder_command,
+    array $processes = []
+)
+{
+    $directory = document_generation_debug_directory();
+    if ($directory === NULL)
         return (NULL);
 
-    $name = pathinfo($merged, PATHINFO_FILENAME);
-    $target = $directory."/".$name.".dab";
-    if (!@copy($merged, $target))
-        return (NULL);
-    return ($target);
+    $repo_root = realpath(dirname(__DIR__));
+    $temporary = array_fill_keys(array_map('strval', $temporary_files), true);
+    $reproduction_files = [];
+    $manifest = [];
+    $manifest[] = "Date: ".date('c');
+    $manifest[] = "Repository: ".($repo_root ?: dirname(__DIR__));
+    $manifest[] = "";
+    $manifest[] = "Inputs:";
+
+    foreach (array_values($files) as $index => $file)
+    {
+        $file = (string)$file;
+        $real = realpath($file);
+        $exists = is_file($file);
+        $readable = $exists && is_readable($file);
+        $size = $exists ? @filesize($file) : false;
+        $hash = $readable ? @hash_file('sha256', $file) : false;
+        $manifest[] = sprintf(
+            "%02d  exists=%s readable=%s size=%s sha256=%s temporary=%s  %s",
+            $index + 1,
+            $exists ? 'yes' : 'NO',
+            $readable ? 'yes' : 'NO',
+            $size === false ? '?' : (string)$size,
+            $hash === false ? '-' : $hash,
+            isset($temporary[$file]) ? 'yes' : 'no',
+            $file
+        );
+
+        // Repository document models often use relative @include directives;
+        // keep those on their original path for the reproduction command.
+        $inside_repo = $real !== false && $repo_root !== false &&
+            ($real === $repo_root || str_starts_with($real, $repo_root.'/'));
+        if (!$readable || $inside_repo)
+        {
+            $reproduction_files[] = $file;
+            continue ;
+        }
+
+        $target = $directory.'/input-'.sprintf('%02d', $index + 1).'-'.
+            document_generation_debug_safe_name($file);
+        if (@copy($file, $target))
+        {
+            @chmod($target, 0660);
+            $reproduction_files[] = $target;
+        }
+        else
+            $reproduction_files[] = $file;
+    }
+
+    $debug_merged = $directory.'/merged.dab';
+    if (is_file($merged) && @copy($merged, $debug_merged))
+        @chmod($debug_merged, 0660);
+    else
+        $debug_merged = $directory.'/reproduced-merged.dab';
+
+    $reproduce_merge = document_generation_mergeconf_command(
+        $reproduction_files,
+        $merge_fields,
+        $directory.'/reproduced-merged.dab'
+    );
+    $reproduce_docbuilder = document_generation_docbuilder_command(
+        is_file($directory.'/merged.dab') ? $directory.'/merged.dab' : $directory.'/reproduced-merged.dab',
+        $directory.'/reproduced.pdf',
+        false,
+        $directory.'/reproduced.sha256'
+    );
+
+    $manifest[] = "";
+    $manifest[] = "Merge command used by the web request:";
+    $manifest[] = $merge_command;
+    $manifest[] = "";
+    $manifest[] = "DocBuilder command used by the web request:";
+    $manifest[] = $docbuilder_command;
+    $manifest[] = "";
+    $manifest[] = "Reproduction commands from the shell:";
+    $manifest[] = $reproduce_merge;
+    $manifest[] = $reproduce_docbuilder;
+    @file_put_contents($directory.'/manifest.txt', implode("\n", $manifest)."\n");
+    @chmod($directory.'/manifest.txt', 0660);
+
+    $script = "#!/bin/sh\nset -eu\n".
+        $reproduce_merge."\n".
+        $reproduce_docbuilder."\n";
+    @file_put_contents($directory.'/reproduce.sh', $script);
+    @chmod($directory.'/reproduce.sh', 0700);
+
+    $process_text = document_generation_full_process_output($processes);
+    if ($process_text != "")
+    {
+        @file_put_contents($directory.'/process-output.txt', $process_text."\n");
+        @chmod($directory.'/process-output.txt', 0660);
+    }
+    return ($directory);
 }
 
 function document_generation_debug_file($file)
@@ -357,18 +522,16 @@ function document_generation_debug_file($file)
 
 function document_generation_debug_report($docbuilder_command, array $temporary_files, $merged)
 {
-    $out = "\n\n===== DEBUG GENERATION DOCUMENT =====\n";
-    $out .= "Appel prévu à DocBuilder :\n".$docbuilder_command."\n";
-    $out .= "\nFichiers de contexte hors dépôt :\n";
-
-    foreach (array_values(array_unique($temporary_files)) as $file)
-        $out .= document_generation_debug_file($file);
-
-    // Le Dabsic fusionné peut être très volumineux. Le recopier intégralement
-    // dans la réponse HTTP repoussait la fin de stderr hors de la réponse
-    // visible. Il est conservé séparément et son chemin suffit ici.
+    // This string is returned to the browser on generation failure. Never dump
+    // the temporary contexts here: they can contain addresses, birth dates,
+    // identifiers and other personal data, and their volume used to bury the
+    // actual DocBuilder error in the notification box. Raw process output is
+    // already written to the PHP error log by document_generation_*_error().
+    $out = "\n\n===== DIAGNOSTIC GENERATION DOCUMENT =====\n";
+    $out .= "Commande DocBuilder :\n".$docbuilder_command."\n";
+    $out .= "Contextes temporaires : ".count(array_unique($temporary_files))." fichier(s), contenu masqué.\n";
     $out .= "Fichier Dabsic fusionné : ".$merged."\n";
-    $out .= "===== FIN DEBUG GENERATION DOCUMENT =====";
+    $out .= "===== FIN DIAGNOSTIC GENERATION DOCUMENT =====";
     return ($out);
 }
 
@@ -444,18 +607,48 @@ function document_generation_staff_request_allowed(array $data)
 {
     global $User;
 
-    if (am_i_teacher())
-        return (true);
     if (!is_array($User))
         return (false);
     $refs = document_generation_request_references($data);
-    if (!count($refs))
-        return (false);
     $basenames = array_map(function($reference) {
         $split = explode(":", (string)$reference, 2);
         return (basename(count($split) == 2 ? $split[1] : $split[0]));
     }, $refs);
     $bindings = document_generation_request_context_bindings($data);
+
+    // The rectorate export is a school-level regulatory personnel document.
+    // Keep it director-only even though ordinary document generation is
+    // available to teachers, and scope the permission to the semantic School
+    // context rather than trusting a UI-only restriction.
+    if (in_array("liste_enseignants_rectorat.dab", $basenames, true))
+    {
+        if (count($basenames) !== 1)
+            return (false);
+        $id_school = isset($bindings["School"])
+            ? document_context_school_id($bindings["School"]) : NULL;
+        return ($id_school !== NULL && (int)$id_school > 0
+            && is_director_for_school((int)$id_school));
+    }
+
+    $current_user_id = (int)($User["id"] ?? 0);
+    $administrator_account = false;
+    if ($current_user_id > 0)
+    {
+        $administrator_row = db_select_one(
+            "id, authority FROM user WHERE id = $current_user_id AND authority != -1"
+        );
+        $administrator_account = is_array($administrator_row)
+            && ((int)$administrator_row["id"] === 1
+                || (int)$administrator_row["authority"] === ADMINISTRATOR);
+    }
+
+    if ($administrator_account || am_i_teacher() || am_i_director())
+        return (true);
+    if (isset($data["save_user_document"])
+        && can_manage_student_documents((int)$data["save_user_document"]))
+        return (true);
+    if (!count($refs))
+        return (false);
 
     // Librarians can compose the overdue-book reminder from the generic
     // Documents page. The BookLoan semantic context resolves the borrower and
@@ -481,10 +674,13 @@ function document_generation_staff_request_allowed(array $data)
         ));
     }
 
-    // Billing staff may only use the dedicated late-payment reminder model
-    // through this extra permission. Other generic document generation keeps
-    // the historical teacher restriction.
-    if (count($basenames) === 1 && $basenames[0] === "relance_paiement_retard.dab")
+    // Billing staff may only use dedicated billing documents through this
+    // extra permission. Other generic document generation keeps the historical
+    // teacher restriction.
+    if (count($basenames) === 1 && in_array($basenames[0], [
+        "relance_paiement_retard.dab",
+        "echeancier_paiements.dab",
+    ], true))
     {
         $id_student = (int)($bindings["Student"] ?? 0);
         $school_id = $id_student > 0 ? document_print_school_id_for_user($id_student) : 0;
@@ -538,6 +734,58 @@ function document_generation_staff_request_allowed(array $data)
     return (false);
 }
 
+function document_generation_contract_school_id(array $bindings)
+{
+    if (isset($bindings["School"]) && trim((string)$bindings["School"]) != "")
+    {
+        $id_school = document_context_school_id($bindings["School"]);
+        if ($id_school != NULL && (int)$id_school > 0)
+            return ((int)$id_school);
+    }
+    foreach (["Student", "User", "Owner"] as $context)
+    {
+        if (!isset($bindings[$context]) || trim((string)$bindings[$context]) == "")
+            continue ;
+        $id_user = document_context_user_id($bindings[$context]);
+        if ($id_user == NULL || (int)$id_user <= 0)
+            continue ;
+        $school = document_context_first_school_for_user((int)$id_user);
+        if (is_array($school) && (int)($school["id_school"] ?? 0) > 0)
+            return ((int)$school["id_school"]);
+    }
+    return (0);
+}
+
+/** Empty string means allowed; otherwise returns the blocked activity mode. */
+function document_generation_blocked_contract_mode(array $selected_documents, $context_bindings)
+{
+    $modes = [];
+    foreach ($selected_documents as $document)
+    {
+        $mode = school_activity_contract_file_mode($document["file"] ?? "");
+        if ($mode !== NULL)
+            $modes[$mode] = true;
+    }
+    if (!count($modes))
+        return ("");
+
+    $bindings = $context_bindings;
+    if (is_string($bindings))
+        $bindings = json_decode($bindings, true);
+    if (!is_array($bindings))
+        $bindings = [];
+    $id_school = document_generation_contract_school_id($bindings);
+    if ($id_school <= 0)
+        return ((string)array_key_first($modes));
+    $school = fetch_school($id_school);
+    if ($school instanceof ErrorResponse || !is_array($school))
+        return ((string)array_key_first($modes));
+    foreach (array_keys($modes) as $mode)
+        if (!school_activity_mode_allowed($school, $mode))
+            return ($mode);
+    return ("");
+}
+
 function _GenerateDoc($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
@@ -550,6 +798,9 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $temporary_files = [];
     $form_output_key = isset($data["form_output"]) ? (string)$data["form_output"] : "";
     $save_user_document = isset($data["save_user_document"]) ? (int)$data["save_user_document"] : 0;
+    $mail_payment_schedule = !empty($data["mail_payment_schedule"]);
+    $mail_payment_student_id = 0;
+    $mail_payment_finance_id = 0;
     $finalize_document = !empty($data["finalize_document"]);
     $blank_document = !empty($data["blank_document"]);
     $target_year = isset($data["target_year"]) ? (int)$data["target_year"] : 0;
@@ -571,6 +822,11 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $selected_document_reference = "";
     $selected_document_file = "";
     $selected_documents = [];
+    // The internship calendar is detected and validated from the document
+    // form before rendering.  Keep that decision: ordinary user documents
+    // must never be reparsed later merely to discover that they are not
+    // internship agreements.
+    $internship_calendar_applicable = false;
 
     // Contexts are semantic: the same Student/School/etc. binding can feed
     // several selected models, even when those models expose the value under
@@ -598,11 +854,18 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             $selected_document_file = $file;
         }
     }
+    if ($mail_payment_schedule && (count($selected_documents) != 1 ||
+        basename((string)($selected_documents[0]["file"] ?? "")) !== "echeancier_paiements.dab"))
+        return (new ErrorResponse("InvalidParameter", "mail_payment_schedule"));
     if ($finalize_document && count($selected_documents) != 1)
         return (new ErrorResponse("InvalidParameter", "document model"));
+    $blocked_contract_mode = document_generation_blocked_contract_mode($selected_documents, $context_bindings);
+    if ($blocked_contract_mode != "")
+        return (new ErrorResponse("ContractModeUnavailable", strtoupper($blocked_contract_mode)));
 
     unset(
         $data["action"], $data["form_output"], $data["save_user_document"],
+        $data["mail_payment_schedule"],
         $data["finalize_document"], $data["blank_document"], $data["target_year"],
         $data["signature_bindings"], $data["context_bindings"],
         $data["queue_for_print"], $data["print_context_type"],
@@ -626,9 +889,34 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         unset($data["fields"]);
     }
 
+    // The payment schedule is financial data: rebuild its values from the
+    // database at generation time instead of trusting hidden fields rendered
+    // when the billing page was opened.  This also prevents an already-open
+    // page from sending an obsolete row layout after the document template
+    // changes.
+    if (count($selected_documents) === 1 &&
+        basename((string)($selected_documents[0]["file"] ?? "")) === "echeancier_paiements.dab")
+    {
+        $bindings = document_generation_request_context_bindings([
+            "context_bindings" => $context_bindings,
+        ]);
+        $id_schedule_student = (int)($bindings["Student"] ?? 0);
+        if ($id_schedule_student > 0)
+        {
+            $fields = array_values(array_filter($fields, function ($field) {
+                return (!str_starts_with((string)$field, "PaymentSchedule."));
+            }));
+            foreach (billing_payment_schedule_document_fields($id_schedule_student) as $name => $value)
+                $fields[] = "PaymentSchedule.".$name."=".$value;
+        }
+    }
+
     $document_chain = [];
     $blank_preserved_chain = [];
     $missing_contexts = [];
+    // Semantic user contexts resolved for this model. Workflow.DeliveryRecipients
+    // refers to these names (Student, Finance, Legal1, ...), not raw user ids.
+    $document_context_users = [];
     foreach ($selected_documents as $selected_document)
     {
         $context_bundle = document_context_model_bundle(
@@ -655,6 +943,37 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         $missing_contexts = array_merge($missing_contexts, $context_bundle["missing"]);
         foreach ($context_bundle["signature_bindings"] as $slot => $source)
             $signature_bindings[$slot] = $source;
+        foreach (($context_bundle["schema"] ?? []) as $context_name => $definition)
+        {
+            if (!isset($context_bundle["resolved"][$context_name]))
+                continue ;
+            $context_user_id = document_context_signatory_user_id(
+                $definition,
+                $context_bundle["resolved"][$context_name]["value"] ?? ""
+            );
+            if ($context_user_id !== NULL && $context_user_id > 0)
+                $document_context_users[$context_name] = (int)$context_user_id;
+        }
+
+        if ($mail_payment_schedule)
+        {
+            foreach (["Student" => "student", "Finance" => "finance"] as $context_name => $target)
+            {
+                if (!isset($context_bundle["schema"][$context_name]) ||
+                    !isset($context_bundle["resolved"][$context_name]))
+                    continue ;
+                $id_user = document_context_signatory_user_id(
+                    $context_bundle["schema"][$context_name],
+                    $context_bundle["resolved"][$context_name]["value"] ?? ""
+                );
+                if ($id_user === NULL || $id_user <= 0)
+                    continue ;
+                if ($target === "student")
+                    $mail_payment_student_id = (int)$id_user;
+                else
+                    $mail_payment_finance_id = (int)$id_user;
+            }
+        }
     }
     $missing_contexts = array_values(array_unique($missing_contexts));
     if (count($missing_contexts) && !$blank_document)
@@ -662,6 +981,14 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             "MissingField",
             "Contexts.".implode(", Contexts.", $missing_contexts)
         ));
+
+    if ($mail_payment_schedule)
+    {
+        if ($mail_payment_student_id <= 0 || $mail_payment_finance_id <= 0)
+            return (new ErrorResponse("CannotSendMail"));
+        if (!is_billing_manager_for_user($mail_payment_student_id))
+            forbidden();
+    }
 
     if ($blank_document)
     {
@@ -678,22 +1005,39 @@ function _GenerateDoc($id, $data, $method, $output, $module)
             ));
     }
     else if (count($document_chain))
+    {
+        // A workflow signature must be an explicit act.  The profile identity
+        // may contain a reusable handwritten signature, but it must not be
+        // injected in the PDF before the corresponding signature task has
+        // actually been completed.  This applies to previews as well as the
+        // immutable PDF shown to signatories.
+        $workflow_collects_signatures = $save_user_document > 0
+            && $selected_document_file != ""
+            && count(document_signature_model_slots($selected_document_file)) > 0;
         document_context_apply_chain(
             $fields,
             $document_chain,
             $context_files,
-            $temporary_files
+            $temporary_files,
+            ["suppress_signatory_signatures" => $workflow_collects_signatures]
         );
+    }
 
     // Generation metadata is a fact of the produced document, not an operator
     // choice. Keep it in a normal Dabsic scope so models can use it without a
     // mergeconf transformation. A blank template deliberately has no date.
     if (!$blank_document)
     {
+        $school_year_start = (int)date("Y");
+        if ((int)date("n") < 9)
+            --$school_year_start;
         $generation_context = document_context_data_scope_file("Generation", [
             "date" => date("d/m/Y"),
             "time" => date("H:i"),
             "datetime" => date("d/m/Y H:i"),
+            "school_period" => $school_year_start."-".($school_year_start + 1),
+            "school_year_start" => (string)$school_year_start,
+            "school_year_end" => (string)($school_year_start + 1),
         ], $temporary_files);
         if ($generation_context != NULL)
             $context_files[] = $generation_context;
@@ -731,12 +1075,25 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     {
         if ($selected_document_file != "")
         {
-            $required_roles = document_workflow_required_model_roles($selected_document_file);
-            if (count($required_roles) && document_workflow_completed_form_for_output($save_user_document, $form_output_key) == NULL)
+            $form_metadata = dabsic_form_form_metadata($selected_document_file);
+            $workspace_semantic = [];
+            if (isset($form_output) && $form_output["ok"])
+            {
+                $workspace = dabsic_form_load_workspace($form_output);
+                if ($workspace["ok"] && $workspace["exists"])
+                    $workspace_semantic = document_workflow_workspace_semantic_bindings($workspace["data"]);
+            }
+            if (!document_workflow_workspace_required_roles_complete(
+                $save_user_document, $form_output_key, $form_metadata["roles"] ?? [],
+                document_workflow_actor_id(), $workspace_semantic
+            ))
+            {
+                $required_roles = document_workflow_required_model_roles($selected_document_file);
                 return (new ErrorResponse(
                     "DocumentRequiredTasks",
                     implode(", ", array_values($required_roles))
                 ));
+            }
         }
         $pending_tasks = document_workflow_pending_required_form_tasks($save_user_document, $form_output_key);
         if (count($pending_tasks))
@@ -756,6 +1113,18 @@ function _GenerateDoc($id, $data, $method, $output, $module)
                 "DocumentRequiredFields",
                 implode("\n", array_values($missing_fields))
             ));
+        if (isset($form_output) && !empty($form_output["exists"]))
+        {
+            $calendar_validation = internship_session_validate_output($form_output_key, $form_output["absolute"]);
+            $internship_calendar_applicable = !empty($calendar_validation["applicable"]);
+            if ($internship_calendar_applicable && !$calendar_validation["ok"])
+                return (new ErrorResponse(
+                    "InvalidParameter",
+                    "Calendrier de stage : ".implode(" ; ", $calendar_validation["errors"] ?? ["invalide"])
+                ));
+            if (!empty($calendar_validation["warnings"]))
+                add_log(TRACE, "Internship calendar finalization warnings: ".implode(" ; ", $calendar_validation["warnings"]), $save_user_document);
+        }
     }
 
     // A Dabsic form may carry explicit mergeconf overrides in a protected
@@ -794,8 +1163,28 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $merge_fields = document_builder_append_dabsic_hash_field_strings($fields, "");
     $merge_command = document_generation_mergeconf_command($files, $merge_fields, $merged);
     $docbuilder_command = document_generation_docbuilder_command($merged, $pdf, $blank_document, $hash_file);
+    // Catch missing/unreadable top-level Dabsic inputs before mergeconf. This
+    // turns the otherwise opaque "config -> (nil)" error into an actionable
+    // path and snapshots the inputs while Apache's PrivateTmp still exists.
+    $invalid_inputs = [];
+    foreach ($files as $input_file)
+        if (!is_file($input_file) || !is_readable($input_file))
+            $invalid_inputs[] = (string)$input_file;
+    if (count($invalid_inputs))
+    {
+        $debug_directory = document_generation_debug_snapshot(
+            $files, $temporary_files, $merged, $merge_fields,
+            $merge_command, $docbuilder_command, []
+        );
+        $details = "Entrée(s) Dabsic absente(s) ou illisible(s) :\n".implode("\n", $invalid_inputs);
+        if ($debug_directory !== NULL)
+            $details .= "\nDiagnostic conservé : ".$debug_directory;
+        foreach ($temporary_files as $temporary_file)
+            @unlink($temporary_file);
+        return (new ErrorResponse("DocumentGenerationFailed", $details));
+    }
+
     $merge_process = document_generation_run_command($merge_command);
-    $kept_dab = document_generation_keep_dab($merged);
     if ($merge_process["status"] != 0 || !file_exists($merged))
     {
         $processes = [
@@ -804,11 +1193,14 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         $details = document_generation_process_combined_error($processes);
         $raw_output = document_generation_full_process_output($processes);
         if ($raw_output != "")
-            $details .= "\n\n===== SORTIE COMPLÈTE DES PROCESSUS =====\n".$raw_output.
-                "\n===== FIN SORTIE COMPLÈTE DES PROCESSUS =====";
+            document_generation_log_raw_output("full failure", $raw_output);
+        $debug_directory = document_generation_debug_snapshot(
+            $files, $temporary_files, $merged, $merge_fields,
+            $merge_command, $docbuilder_command, $processes
+        );
         $details .= document_generation_debug_report($docbuilder_command, $temporary_files, $merged);
-        if ($kept_dab !== NULL)
-            $details .= "\nFichier Dabsic conservé : ".$kept_dab;
+        if ($debug_directory !== NULL)
+            $details .= "\nDiagnostic conservé : ".$debug_directory;
         @unlink($hash_file);
         @unlink($pdf);
         foreach ($temporary_files as $temporary_file)
@@ -828,11 +1220,14 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         $details = document_generation_process_combined_error($processes);
         $raw_output = document_generation_full_process_output($processes);
         if ($raw_output != "")
-            $details .= "\n\n===== SORTIE COMPLÈTE DES PROCESSUS =====\n".$raw_output.
-                "\n===== FIN SORTIE COMPLÈTE DES PROCESSUS =====";
+            document_generation_log_raw_output("full failure", $raw_output);
+        $debug_directory = document_generation_debug_snapshot(
+            $files, $temporary_files, $merged, $merge_fields,
+            $merge_command, $docbuilder_command, $processes
+        );
         $details .= document_generation_debug_report($docbuilder_command, $temporary_files, $merged);
-        if ($kept_dab !== NULL)
-            $details .= "\nFichier Dabsic conservé : ".$kept_dab;
+        if ($debug_directory !== NULL)
+            $details .= "\nDiagnostic conservé : ".$debug_directory;
         // Conserver le Dabsic fusionné afin de pouvoir le tester
         // directement avec mergeconf/docbuilder après un échec.
         @unlink($pdf);
@@ -850,36 +1245,223 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     $saved_document = "";
     $document_instance = NULL;
     $task_plan = document_generation_task_plan($merged);
+    $workflow_options = document_generation_workflow_options($merged);
     if ($finalize_document && $save_user_document > 0)
     {
-        if (!is_director_for_student($save_user_document))
+        if (!can_manage_student_documents($save_user_document))
             forbidden();
         if ($selected_document_reference == "" || $selected_document_file == "")
             return (new ErrorResponse("InvalidParameter", "document model"));
-        $document_instance = document_workflow_create_frozen_instance(
-            $save_user_document,
-            $selected_document_reference,
-            $selected_document_file,
-            $target_year,
-            $signature_bindings,
-            $content,
-            $task_plan,
-            ["resolved_dabsic_hash" => $resolved_dabsic_hash]
-        );
-        if ($document_instance->is_error())
-            return ($document_instance);
+
+        $finalization_lock = NULL;
         if ($form_output_key != "")
         {
-            $instance_id = (string)($document_instance->value["id"] ?? "");
-            if ($instance_id != "" && !document_workflow_mark_document_form_processed(
-                $save_user_document,
-                $form_output_key,
-                $instance_id
-            ))
-                add_log(REPORT, "Cannot mark completed document form as processed for instance ".$instance_id, $save_user_document);
-            $workspace_output = dabsic_form_resolve_output($form_output_key, false, $save_user_document);
-            if ($workspace_output["ok"] && !dabsic_form_delete_workspace($workspace_output))
-                add_log(REPORT, "Cannot remove completed document workspace for instance ".$instance_id, $save_user_document);
+            $finalization_lock = document_workflow_acquire_finalization_lock(
+                $save_user_document, $form_output_key
+            );
+            if ($finalization_lock === NULL)
+                return (new ErrorResponse("CannotEdit", "document finalization lock"));
+        }
+
+        try
+        {
+            $already_finalized = false;
+            if ($form_output_key != "")
+            {
+                // Finalization is one-shot per logical document output, not per
+                // contribution/role row.  Check for an existing active instance
+                // while holding the output lock before looking at form state.
+                // This also covers the case where the PDF was frozen correctly
+                // but marking one or more user_form rows as processed failed.
+                $existing_instance_id = document_workflow_processed_instance_for_output(
+                    $save_user_document, $form_output_key
+                );
+                if ($existing_instance_id != "")
+                {
+                    $existing = document_workflow_find_instance($save_user_document, $existing_instance_id);
+                    if ($existing->is_error())
+                        return ($existing);
+                    $existing_data = $existing->value["data"];
+                    $document_instance = new ValueResponse([
+                        "id" => $existing_instance_id,
+                        "status" => (string)($existing_data["Status"] ?? ""),
+                        "hash" => (string)($existing_data["FrozenHash"] ?? ""),
+                        "directory" => $existing->value["directory"],
+                        "pdf" => $existing->value["directory"].(string)($existing_data["FrozenFile"] ?? "frozen.pdf"),
+                        "metadata" => $existing->value["file"],
+                        "existing" => true,
+                    ]);
+                    $already_finalized = true;
+                }
+                else if (document_workflow_completed_form_for_output($save_user_document, $form_output_key) == NULL
+                    && document_workflow_active_workspace_for_output(
+                        $save_user_document,
+                        $form_output_key,
+                        md5($selected_document_reference),
+                        $target_year,
+                        $selected_document_reference
+                    ) == NULL)
+                {
+                    // A workspace-only document (no recipient FormRole) has no
+                    // completed user_form row by design.  Its still-active
+                    // workspace is the durable proof that this output is allowed
+                    // to enter finalization.  Keep the historical fallback only
+                    // when neither a contribution nor a matching workspace exists.
+                    $existing_instance_id = document_workflow_recent_processed_instance_for_output(
+                        $save_user_document, $form_output_key
+                    );
+                    if ($existing_instance_id == "")
+                        return (new ErrorResponse("InvalidParameter", "document already finalized"));
+                    $existing = document_workflow_find_instance($save_user_document, $existing_instance_id);
+                    if ($existing->is_error())
+                        return ($existing);
+                    $existing_data = $existing->value["data"];
+                    $document_instance = new ValueResponse([
+                        "id" => $existing_instance_id,
+                        "status" => (string)($existing_data["Status"] ?? ""),
+                        "hash" => (string)($existing_data["FrozenHash"] ?? ""),
+                        "directory" => $existing->value["directory"],
+                        "pdf" => $existing->value["directory"].(string)($existing_data["FrozenFile"] ?? "frozen.pdf"),
+                        "metadata" => $existing->value["file"],
+                        "existing" => true,
+                    ]);
+                    $already_finalized = true;
+                }
+            }
+
+            if (!$already_finalized)
+            {
+                $delivery_explicit = !empty($workflow_options["delivery_explicit"]);
+                if ($delivery_explicit)
+                {
+                    $delivery_users = [];
+                    if (!count($workflow_options["delivery_recipients"] ?? []))
+                        return (new ErrorResponse(
+                            "InvalidParameter",
+                            "Workflow.DeliveryRecipients"
+                        ));
+                    foreach (($workflow_options["delivery_recipients"] ?? []) as $delivery_context)
+                    {
+                        if ($delivery_context === "Owner")
+                            $delivery_id = (int)$save_user_document;
+                        else
+                            $delivery_id = (int)($document_context_users[$delivery_context] ?? 0);
+                        // A typo or a non-person context in the document model must
+                        // never silently turn a letter into an undelivered document.
+                        if ($delivery_id <= 0)
+                            return (new ErrorResponse(
+                                "InvalidParameter",
+                                "Workflow.DeliveryRecipients.".$delivery_context
+                            ));
+                        // Keep the intended recipient even when their mailbox is
+                        // missing/invalid. The delivery pass will then expose a
+                        // DeliveryError instead of silently pretending the letter
+                        // had nobody to receive it.
+                        $delivery_users[] = $delivery_id;
+                    }
+                }
+                else
+                {
+                    // Legacy/default behaviour: beneficiary plus form recipients;
+                    // signatories are added later by the delivery layer.
+                    $delivery_users = [$save_user_document];
+                    if ($form_output_key != "")
+                        foreach (document_workflow_active_forms_for_output($save_user_document, $form_output_key) as $delivery_form)
+                        {
+                            $delivery_document = document_workflow_document_form_metadata($delivery_form);
+                            foreach (["recipient_user_id", "primary_recipient_user_id"] as $delivery_field)
+                            {
+                                $delivery_id = (int)($delivery_document[$delivery_field] ?? 0);
+                                if ($delivery_id > 0 && document_workflow_user_can_receive_form($delivery_id))
+                                    $delivery_users[] = $delivery_id;
+                            }
+                        }
+                }
+                $delivery_users = array_values(array_unique(array_map("intval", $delivery_users)));
+
+                // Freeze the document first, but defer task publication until the
+                // internship calendar (when present) has been synchronized. Draft
+                // saves never create sessions: this is the single activation point.
+                $document_instance = document_workflow_create_frozen_instance(
+                    $save_user_document,
+                    $selected_document_reference,
+                    $selected_document_file,
+                    $target_year,
+                    $signature_bindings,
+                    $content,
+                    $task_plan,
+                    [
+                        "resolved_dabsic_hash" => $resolved_dabsic_hash,
+                        "delivery_users" => $delivery_users,
+                        "delivery_explicit" => $delivery_explicit,
+                        // Keep the exact resolved Dabsic that produced the PDF shown
+                        // to signatories.  Once every signature/paraph is collected,
+                        // the final visible PDF is rebuilt from this immutable source
+                        // with only Signature/Initials overlays added.
+                        "resolved_dabsic_file" => $merged,
+                        "source_context" => [
+                            "type" => "UserDocument",
+                            "output" => $form_output_key,
+                            "model_hash" => md5($selected_document_reference),
+                            "target_year" => $target_year,
+                        ],
+                        "queue_for_print" => !empty($workflow_options["queue_for_print"])
+                            || $queue_for_print,
+                        "print_recipient" => (string)($workflow_options["print_recipient"] ?? ""),
+                        "require_pdf_sign" => !empty($workflow_options["require_pdf_sign"]),
+                    ],
+                    false
+                );
+                if ($document_instance->is_error())
+                    return ($document_instance);
+
+                $session_sync = ["ok" => true, "applicable" => false];
+                if ($internship_calendar_applicable && $form_output_key != ""
+                    && isset($form_output) && !empty($form_output["exists"]))
+                    // ScheduleCalendar belongs to the complementary form and was
+                    // already validated above.  Do not feed the fully resolved
+                    // DocBuilder input back to load_configuration(): that file is a
+                    // rendering artifact, and unrelated documents must not enter the
+                    // internship synchronizer at all.
+                    $session_sync = internship_session_sync_output(
+                        $form_output_key, $form_output["absolute"]
+                    );
+                if (!$session_sync["ok"])
+                {
+                    if (!document_workflow_discard_unpublished_instance($document_instance->value))
+                        add_log(REPORT,
+                            "Cannot discard provisional document instance after internship session synchronization failure.",
+                            $save_user_document);
+                    return (new ErrorResponse(
+                        $session_sync["error"] ?? "CannotEdit",
+                        $session_sync["details"] ?? "internship sessions"
+                    ));
+                }
+
+                $published_tasks = document_workflow_publish_instance_tasks($document_instance->value);
+                if ($published_tasks->is_error())
+                    add_log(REPORT,
+                        "Cannot materialize document obligations after finalization: ".strval($published_tasks),
+                        $save_user_document);
+
+                if ($form_output_key != "")
+                {
+                    $instance_id = (string)($document_instance->value["id"] ?? "");
+                    if ($instance_id != "" && !document_workflow_mark_document_form_processed(
+                        $save_user_document,
+                        $form_output_key,
+                        $instance_id
+                    ))
+                        add_log(REPORT, "Cannot mark completed document form as processed for instance ".$instance_id, $save_user_document);
+                    $workspace_output = dabsic_form_resolve_output($form_output_key, false, $save_user_document);
+                    if ($workspace_output["ok"] && !dabsic_form_delete_workspace($workspace_output))
+                        add_log(REPORT, "Cannot remove completed document workspace for instance ".$instance_id, $save_user_document);
+                }
+            }
+        }
+        finally
+        {
+            document_workflow_release_finalization_lock($finalization_lock);
         }
     }
 
@@ -887,7 +1469,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     // that explicitly request it without entering the document workflow.
     if ($save_user_document > 0 && !$finalize_document)
     {
-        if (!is_director_for_student($save_user_document))
+        if (!can_manage_student_documents($save_user_document))
             forbidden();
         $target_user = db_select_one("codename FROM user WHERE id = $save_user_document AND authority != -1");
         if ($target_user == NULL || !isset($target_user["codename"]))
@@ -913,7 +1495,7 @@ function _GenerateDoc($id, $data, $method, $output, $module)
     }
 
     $print_task = NULL;
-    if ($queue_for_print && !$blank_document)
+    if ($queue_for_print && !$blank_document && !$finalize_document)
     {
         if ((int)$print_context["owner_user_id"] <= 0)
             return (new ErrorResponse("InvalidParameter", "print owner"));
@@ -941,6 +1523,24 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         }
     }
 
+    if ($mail_payment_schedule)
+    {
+        $mail = billing_send_payment_schedule_document(
+            $mail_payment_student_id,
+            $mail_payment_finance_id,
+            $output_filename,
+            $content
+        );
+        if (!is_array($mail) || isset($mail["error"]))
+        {
+            @unlink($hash_file);
+            @unlink($pdf);
+            foreach ($temporary_files as $temporary_file)
+                @unlink($temporary_file);
+            return (new ErrorResponse($mail["error"] ?? "CannotSendMail"));
+        }
+    }
+
     // Le Dabsic fusionné est volontairement conservé dans /tmp pour
     // permettre sa vérification manuelle, même après une génération réussie.
     @unlink($hash_file);
@@ -956,6 +1556,12 @@ function _GenerateDoc($id, $data, $method, $output, $module)
         document_generation_log_raw_output("docbuilder stdout", $build_process["stdout"]);
     if (trim($build_process["stderr"]) != "")
         document_generation_log_raw_output("docbuilder stderr", $build_process["stderr"]);
+
+    if ($mail_payment_schedule)
+        return (new ValueResponse([
+            "msg" => $Dictionnary["BillingPaymentScheduleSent"] ?? "Échéancier envoyé par mail.",
+            "saved_document" => $saved_document,
+        ]));
 
     return (new ValueResponse([
         "filename" => $output_filename,
@@ -1113,14 +1719,36 @@ function ExpireDocRequest($id, $data, $method, $output, $module)
     ]));
 }
 
+function ReopenDocRequest($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $ret = document_workflow_reopen_instance(
+        $data["owner_user_id"] ?? 0,
+        $data["instance_id"] ?? ""
+    );
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["DocumentReopened"] ?? "Document rouvert : les anciennes signatures sont désormais obsolètes.",
+        "content" => (string)($ret->value["content"] ?? ""),
+    ]));
+}
+
 function CompleteDocTask($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
 
-    $ret = document_workflow_complete_form_role_as_staff(
-        $data["form_id"] ?? 0,
-        $data["role"] ?? ""
-    );
+    if ((int)($data["form_id"] ?? 0) > 0)
+        $ret = document_workflow_complete_form_role_as_staff(
+            $data["form_id"],
+            $data["role"] ?? ""
+        );
+    else
+        $ret = document_workflow_complete_workspace_role_as_staff(
+            $data["owner_user_id"] ?? 0,
+            $data
+        );
     if ($ret->is_error())
         return ($ret);
     return (new ValueResponse([
@@ -1141,6 +1769,23 @@ function RemindDocSignatures($id, $data, $method, $output, $module)
     return (new ValueResponse([
         "msg" => $sent > 1 ? "$sent demandes de signature envoyées." : ($sent == 1 ? "Demande de signature envoyée." : "Aucune signature en attente."),
         "sent" => $sent,
+    ]));
+}
+
+function RedeliverDoc($id, $data, $method, $output, $module)
+{
+    $ret = document_workflow_retry_delivery(
+        $data["owner_user_id"] ?? 0,
+        $data["instance_id"] ?? ""
+    );
+    if ($ret->is_error())
+        return ($ret);
+    return (new ValueResponse([
+        "msg" => !empty($ret->value["accepted"])
+            ? "Le document a été remis au service d'envoi. Le statut de livraison sera vérifié automatiquement."
+            : "La nouvelle tentative d'envoi n'a pas abouti pour tous les destinataires.",
+        "accepted" => !empty($ret->value["accepted"]),
+        "failed" => $ret->value["failed"] ?? [],
     ]));
 }
 
@@ -1204,6 +1849,10 @@ $Tab = [
 	    "am_i_teacher",
 	    "ExpireDocRequest",
 	],
+	"reopen" => [
+	    "am_i_teacher",
+	    "ReopenDocRequest",
+	],
 	"task" => [
 	    "am_i_teacher",
 	    "CompleteDocTask",
@@ -1211,6 +1860,10 @@ $Tab = [
         "remind" => [
             "logged_in",
             "RemindDocSignatures",
+        ],
+        "redeliver" => [
+            "am_i_teacher",
+            "RedeliverDoc",
         ]
     ],
     "DELETE" => [

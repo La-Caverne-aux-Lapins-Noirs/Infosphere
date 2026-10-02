@@ -164,7 +164,8 @@ $js = "silent_submit(this)";
 		    </form>
 		<?php } ?>
 		
-	    <?php } ?>    
+	    <?php } ?>
+
 	    <br />
 
 	    <?php $Background = !$Background; ?>
@@ -240,6 +241,30 @@ $js = "silent_submit(this)";
 		<?php single_field_form($page, $module, "estimated_work_duration", "EstimatedWorkDuration"); ?>
 		<?php single_field_form($page, $module, "automatic_correction_frequency", "AutomaticCorrectionFrequency", -1); ?>
 
+	    <?php if ($module->parent_activity != -1 && in_array($module->type_name, ["MiniProject", "Project", "Product", "Rush"], true)) { ?>
+		<form
+		    method="post"
+		    action="/api/<?=$page; ?>/<?=$module->id; ?>/scrum"
+		    onsubmit="return silent_submitf(this, {after_success: function () { list_activities(<?=$module->parent_activity; ?>); }});"
+		    class="weekday_selector"
+		>
+		    <label><?=$Dictionnary["Scrum"]; ?></label>
+		    <select name="sprint_weeks" title="<?=$Dictionnary["ScrumSprintLength"]; ?>">
+			<option value="1">1 <?=$Dictionnary["ScrumWeek"]; ?></option>
+			<option value="2">2 <?=$Dictionnary["ScrumWeeks"]; ?></option>
+			<option value="3">3 <?=$Dictionnary["ScrumWeeks"]; ?></option>
+		    </select>
+		    <input type="time" name="scrum_begin" value="14:00" required title="<?=$Dictionnary["ScrumDailyWindowBegin"]; ?>" />
+		    <span>→</span>
+		    <input type="time" name="scrum_end" value="18:00" required title="<?=$Dictionnary["ScrumDailyWindowEnd"]; ?>" />
+		    <input
+			type="button"
+			value="<?=$Dictionnary["CreateScrumCascade"]; ?>"
+			onclick="return silent_submitf(this.parentNode, {after_success: function () { list_activities(<?=$module->parent_activity; ?>); }});"
+		    />
+		</form>
+	    <?php } ?>
+
 	    <?php } ?>
 
 	    <br />
@@ -268,7 +293,6 @@ $js = "silent_submit(this)";
 		/>
 	    </form>
 	    <div class="final_box">
-
 		<form
 		    action="/api/activity/<?=$module->id; ?>/todolist"
 		    method="put"

@@ -2,7 +2,7 @@
 require_once (__DIR__."/../../tools/document_sources.php");
 
 $directors = $school["director"] ?? [];
-$contracts = get_contract_document_sources();
+$contracts = get_contract_document_sources($school);
 $default_director_id = 0;
 foreach ($directors as $director)
 {

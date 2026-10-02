@@ -81,6 +81,12 @@ $js = "silent_submit(this, '$fbid$language');";
     data-path-browser-language="<?=htmlspecialchars((string)$language, ENT_QUOTES); ?>"
     data-path-browser-rename-url="/api/filebrowser/0/rename"
     data-path-browser-rename-prompt="<?=htmlspecialchars($Dictionnary["PathBrowserRenamePrompt"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-path-browser-create-url="/api/filebrowser/0/create"
+    data-path-browser-create-file-label="<?=htmlspecialchars($Dictionnary["PathBrowserCreateFile"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-path-browser-create-directory-label="<?=htmlspecialchars($Dictionnary["PathBrowserCreateDirectory"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-path-browser-create-file-prompt="<?=htmlspecialchars($Dictionnary["PathBrowserCreateFilePrompt"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-path-browser-create-directory-prompt="<?=htmlspecialchars($Dictionnary["PathBrowserCreateDirectoryPrompt"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-path-browser-dabsic-editor="<?=$path_browser_dabsic_editor ? 1 : 0; ?>"
     <?php if (isset($file_browser_height)) { ?>
 	   style="height: <?=$file_browser_height; ?>; overflow: auto;"
            <?php unset($file_browser_height); ?>

@@ -263,6 +263,99 @@ function path_browser_transfer_rename($page, $id, $type, $language, $relative, $
     ]));
 }
 
+function path_browser_transfer_validate_created_file_name($name)
+{
+    $name = path_browser_transfer_validate_new_name($name);
+    if ($name === NULL || substr($name, 0, 1) === ".")
+        return (NULL);
+
+    $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    if (in_array($extension, ["php", "phtml", "phar", "cgi", "pl", "sh"], true))
+        return (NULL);
+    return ($name);
+}
+
+function path_browser_transfer_resolve_directory($context, $page, $id, $relative)
+{
+    $relative = path_browser_transfer_normalize_relative($relative);
+    if ($relative === NULL)
+        forbidden();
+
+    if ($page === "user")
+        path_browser_transfer_authorize_user_path(
+            $id,
+            $relative,
+            $context["kind"],
+            $context["prefix"],
+            true
+        );
+
+    $root = path_browser_transfer_real_root($context["root"]);
+    if ($relative === "")
+        $absolute = $root;
+    else
+    {
+        $absolute = realpath($root.DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relative));
+        if ($absolute === false)
+            not_found();
+        if ($absolute !== $root && strncmp($absolute, $root.DIRECTORY_SEPARATOR, strlen($root) + 1) !== 0)
+            forbidden();
+        $candidate = $root.DIRECTORY_SEPARATOR.str_replace("/", DIRECTORY_SEPARATOR, $relative);
+        if (is_link($candidate) || realpath($candidate) !== $absolute)
+            forbidden();
+    }
+
+    if (!is_dir($absolute) || !is_readable($absolute) || !is_writable($absolute))
+        forbidden();
+    return (["absolute" => $absolute, "relative" => $relative]);
+}
+
+function path_browser_transfer_create($page, $id, $type, $language, $directory, $name, $kind)
+{
+    $context = path_browser_transfer_context($page, $id, $type, $language);
+    $kind = strtolower(trim((string)$kind));
+    if (!in_array($kind, ["file", "directory"], true))
+        return (new ErrorResponse("InvalidParameter", "kind"));
+
+    if ($kind === "file")
+        $name = path_browser_transfer_validate_created_file_name($name);
+    else
+    {
+        $name = path_browser_transfer_validate_new_name($name);
+        if ($name !== NULL && substr($name, 0, 1) === ".")
+            $name = NULL;
+    }
+    if ($name === NULL)
+        return (new ErrorResponse("PathBrowserInvalidName"));
+
+    $resolved = path_browser_transfer_resolve_directory($context, $page, $id, $directory);
+    $target = $resolved["absolute"].DIRECTORY_SEPARATOR.$name;
+    if (file_exists($target) || is_link($target))
+        return (new ErrorResponse("PathBrowserNameAlreadyExists"));
+
+    if ($kind === "directory")
+    {
+        $created = new_directory($target."/index.php");
+        if ($created->is_error())
+            return (new ErrorResponse("PathBrowserCreateFailed"));
+    }
+    else
+    {
+        $handle = @fopen($target, "x");
+        if ($handle === false)
+            return (new ErrorResponse("PathBrowserCreateFailed"));
+        fclose($handle);
+        @chmod($target, 0640);
+    }
+
+    $relative = ($resolved["relative"] === "" ? "" : $resolved["relative"]."/").$name;
+    return (new ValueResponse([
+        "name" => $name,
+        "relative" => $relative,
+        "kind" => $kind
+    ]));
+}
+
 function path_browser_transfer_add_directory_to_zip($zip, $absolute, $archive)
 {
     $archive = trim(str_replace("\\", "/", $archive), "/");

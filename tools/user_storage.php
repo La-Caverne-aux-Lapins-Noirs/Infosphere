@@ -35,6 +35,36 @@ function user_storage_actor_id()
     return ((int)$actor["id"]);
 }
 
+/*
+** Identité actuellement incarnée. Contrairement à user_storage_actor_id(),
+** celle-ci suit $User pendant un "log as". Les droits administratifs d'une
+** école doivent être évalués avec cette identité, sinon un administrateur
+** connecté en tant qu'élève conserve ses droits sur admin/.
+*/
+function user_storage_current_user_id()
+{
+    global $User;
+
+    if (!isset($User) || !is_array($User) || !isset($User["id"]))
+        return (0);
+    return ((int)$User["id"]);
+}
+
+function user_storage_current_user_is_admin()
+{
+    $id = user_storage_current_user_id();
+
+    if ($id <= 0)
+        return (false);
+
+    // On conserve le comportement de secours historique du compte #1.
+    if ($id == 1)
+        return (true);
+
+    // Sans argument, is_admin() porte bien sur le $User courant.
+    return (function_exists("is_admin") && is_admin());
+}
+
 function user_storage_configuration_bool($name, $default = false)
 {
     global $Configuration;
@@ -84,7 +114,8 @@ function user_storage_actor_is_owner($id_user)
 
 function user_storage_actor_has_student_school_role($id_user, $role)
 {
-    $actor_id = user_storage_actor_id();
+    // Les rôles d'école suivent l'identité actuellement incarnée.
+    $actor_id = user_storage_current_user_id();
     if ($actor_id <= 0)
         return (false);
 
@@ -94,16 +125,43 @@ function user_storage_actor_has_student_school_role($id_user, $role)
     return (false);
 }
 
+function user_storage_actor_has_school_staff_role_for_user($id_user)
+{
+    // Même règle ici : un "log as" élève ne doit pas conserver les rôles
+    // d'école de l'administrateur réel.
+    $actor_id = user_storage_current_user_id();
+    if ($actor_id <= 0)
+        return (false);
+
+    /*
+    ** Le dossier admin appartient à l'établissement, pas à un rôle précis.
+    ** Dès lors que l'acteur et l'utilisateur cible appartiennent à une même
+    ** école active, n'importe quel rôle autre que STUDENT donne accès.
+    **
+    ** Cela couvre notamment DIRECTOR, SECRETARIAT, COMMERCIAL, TEACHER,
+    ** LIBRARIAN et ACCOUNTANT, tout en empêchant un élève d'obtenir cet accès
+    ** simplement parce qu'il partage l'école avec l'utilisateur cible.
+    */
+    foreach (user_school_ids((int)$id_user) as $id_school)
+    {
+        $schools = user_school_authorities($actor_id, (int)$id_school);
+        if (!isset($schools[(int)$id_school]))
+            continue ;
+        foreach ($schools[(int)$id_school] as $authority => $enabled)
+            if ($enabled && normalize_school_authority($authority) != "STUDENT")
+                return (true);
+    }
+    return (false);
+}
+
 function user_storage_can_manage_admin_space($id_user)
 {
-    if (user_storage_actor_is_admin())
+    // admin/ suit le compte actuellement incarné, pas $OriginalUser.
+    if (user_storage_current_user_is_admin())
         return (true);
 
-    // Politique historique du dossier admin : la direction du cursus de
-    // l'élève peut le gérer.
-    return (user_storage_actor_has_student_school_role(
-        (int)$id_user,
-        "DIRECTOR"
+    return (user_storage_actor_has_school_staff_role_for_user(
+        (int)$id_user
     ));
 }
 

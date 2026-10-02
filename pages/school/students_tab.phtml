@@ -1,6 +1,7 @@
 <?php
 require_once (__DIR__."/user_cards.php");
 require_once (__DIR__."/../../tools/document_sources.php");
+require_once (__DIR__."/../../tools/dabsic_form.php");
 
 if (!function_exists("school_student_contract_default_year"))
 {
@@ -34,7 +35,14 @@ if (!function_exists("school_student_contract_default_year"))
 }
 
 $can_manage_students = is_director_for_school($school["id"]);
-$student_documents = get_student_document_sources();
+$school_student_responsibilities = array_filter(
+    school_responsibility_definitions((int)$school["id"]),
+    static function($definition) {
+        return !empty($definition["student_assignable"])
+            && ($definition["codename"] ?? "") !== "FIRE_SAFETY";
+    }
+);
+$student_documents = get_student_document_sources($school);
 $can_generate_contracts = is_teacher() && count($student_documents);
 $student_followup_documents = get_student_followup_document_sources();
 $can_generate_followup = is_teacher() && count($student_followup_documents);
@@ -78,12 +86,60 @@ if ((int)$default_director_id <= 0)
     $default_director_id = "";
 ?>
 
-<section class="school_admin_card school_students_panel">
+<style>
+.school_students_header_actions {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+.school_students_header_actions input[type="button"],
+.school_students_header_actions input[type="submit"] {
+    width: auto !important;
+}
+.school_timeline_export_form {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+    margin: 0;
+}
+.school_timeline_export_form > span {
+    font-size: 0.82em;
+    opacity: 0.72;
+}
+.school_timeline_export_form input[type="number"] {
+    box-sizing: border-box;
+    width: 76px !important;
+}
+</style>
+
+<section class="school_admin_card school_students_panel" data-nfc-container>
     <div class="school_students_header">
         <h4>Élèves</h4>
-        <span><?=count($school["user"]); ?> élève(s)</span>
+        <div class="school_students_header_actions">
+            <span><?=count($school["user"]); ?> élève(s)</span>
+            <?php if ($can_manage_students) { ?>
+                <form
+                    class="school_timeline_export_form"
+                    method="post"
+                    action="/api/school/<?=(int)$school["id"]; ?>/student_timeline"
+                    target="_blank"
+                    title="<?=$Dictionnary["SchoolTimelineExportHelp"] ?? "Exporter la frise historique des étudiants au format Excel"; ?>"
+                >
+                    <span><?=$Dictionnary["SchoolTimelinePeriod"] ?? "Période"; ?></span>
+                    <input type="number" name="start_year" min="1900" max="2200" step="1" placeholder="<?=$Dictionnary["SchoolTimelineAuto"] ?? "auto"; ?>" aria-label="<?=$Dictionnary["SchoolTimelineStartYear"] ?? "Année de début"; ?>" />
+                    <span>→</span>
+                    <input type="number" name="end_year" min="1900" max="2200" step="1" placeholder="<?=$Dictionnary["SchoolTimelineAuto"] ?? "auto"; ?>" aria-label="<?=$Dictionnary["SchoolTimelineEndYear"] ?? "Année de fin"; ?>" />
+                    <input type="submit" value="<?=$Dictionnary["SchoolTimelineExport"] ?? "Exporter la frise"; ?>" />
+                </form>
+            <?php } ?>
+        </div>
     </div>
+    <pre class="school_nfc_browser_status" data-nfc-status hidden></pre>
     <?php school_admin_member_add_form($school["id"], "user", "élève", $can_manage_students); ?>
+    <div class="school_responsibility_hint">
+        <span class="school_member_fire_badge active school_member_fire_badge_demo" aria-hidden="true"><span>🔥</span></span>
+        <span>La flamme barrée signale un élève désigné pour la sécurité incendie. Les directeurs peuvent cliquer sur l’icône pour modifier cette responsabilité.</span>
+    </div>
 
     <div class="school_student_cards">
         <?php if (!count($school["user"])) { ?>
@@ -94,6 +150,8 @@ if ((int)$default_director_id <= 0)
                 $student_id = school_admin_member_id($member, "user");
                 $student_codename = $member["codename"] ?? (string)$student_id;
                 $actions = [];
+                if (($nfc_action = school_admin_member_nfc_program_action($member, "user")) !== NULL)
+                    $actions[] = $nfc_action;
                 if ($can_generate_contracts && $student_id > 0)
                 {
                     $default_year = school_student_contract_default_year($student_id, $school["id"]);
@@ -116,6 +174,45 @@ if ((int)$default_director_id <= 0)
             <?php } ?>
         <?php } ?>
     </div>
+
+    <?php if (count($school_student_responsibilities)) { ?>
+        <section class="school_student_responsibilities">
+            <h4>Responsabilités attribuables aux élèves</h4>
+            <div class="school_referents_grid">
+                <?php foreach ($school_student_responsibilities as $definition) { ?>
+                    <?php $members = $school["responsibility"][(int)$definition["id"]] ?? []; ?>
+                    <section class="school_referent_card">
+                        <div class="school_referent_card_header">
+                            <h5><?=htmlspecialchars($definition["label"], ENT_QUOTES); ?></h5>
+                            <?php if (empty($definition["builtin"])) { ?>
+                                <span class="school_responsibility_scope custom">École</span>
+                            <?php } ?>
+                        </div>
+                        <?php school_responsibility_add_form(
+                            $school["id"],
+                            $definition,
+                            $can_manage_students,
+                            "Ajouter un élève (codename)"
+                        ); ?>
+                        <div class="school_member_cards school_referent_members">
+                            <?php if (!count($members)) { ?>
+                                <p class="school_empty_people">Non désigné.</p>
+                            <?php } else { ?>
+                                <?php foreach ($members as $member) { ?>
+                                    <?php school_responsibility_member_card(
+                                        $school["id"],
+                                        $definition,
+                                        $member,
+                                        $can_manage_students
+                                    ); ?>
+                                <?php } ?>
+                            <?php } ?>
+                        </div>
+                    </section>
+                <?php } ?>
+            </div>
+        </section>
+    <?php } ?>
 </section>
 
 <?php if ($can_generate_contracts) { ?>
@@ -167,7 +264,14 @@ if ((int)$default_director_id <= 0)
                     <select data-document-reference required>
                         <option value="">Choisir un modèle</option>
                         <?php foreach ($student_documents as $contract) { ?>
-                            <option value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>">
+                            <?php $contract_form_metadata = dabsic_form_form_metadata($contract["editor_path"]); ?>
+                            <option
+                                value="<?=htmlspecialchars($contract["reference"], ENT_QUOTES); ?>"
+                                data-editor-path="<?=htmlspecialchars($contract["editor_path"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                data-model-hash="<?=htmlspecialchars(md5($contract["reference"]), ENT_QUOTES); ?>"
+                                data-document-label="<?=htmlspecialchars($contract["label"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                                data-workflow="<?=count($contract_form_metadata["roles"] ?? []) ? "1" : "0"; ?>"
+                            >
                                 <?=htmlspecialchars($contract["label"], ENT_QUOTES); ?>
                             </option>
                         <?php } ?>
@@ -203,7 +307,18 @@ if ((int)$default_director_id <= 0)
                 <button type="submit" class="school_student_document_submit">
                     Générer le document
                 </button>
+                <button type="button" class="school_student_document_submit" onclick="return school_student_document_start_workflow(this.form);">
+                    Démarrer le workflow multipartite
+                </button>
             </footer>
+        </form>
+        <form id="school_student_document_workflow_form" method="put" action="/api/user/0/document_workspace" hidden>
+            <input type="hidden" name="operation" value="start" />
+            <input type="hidden" name="document_file" value="" />
+            <input type="hidden" name="model_hash" value="" />
+            <input type="hidden" name="document_label" value="" />
+            <input type="hidden" name="target_year" value="" />
+            <input type="hidden" name="context_bindings" value="{}" />
         </form>
     </section>
 </div>
@@ -271,6 +386,44 @@ function school_student_document_prepare(form)
 
     window.setTimeout(school_student_document_close, 0);
     return true;
+}
+
+function school_student_document_start_workflow(form)
+{
+    var select = form.querySelector('[data-document-reference]');
+    var option = select.options[select.selectedIndex];
+    var student = form.querySelector('[data-document-student-id]').value;
+    var year = parseInt(form.querySelector('[data-document-year]').value, 10);
+    var director = form.querySelector('[data-document-director]').value;
+    if (!option || option.value == '' || student == '' || !Number.isInteger(year) || year < 1 || year > 5)
+        return false;
+    if (option.getAttribute('data-workflow') != '1')
+    {
+        window.alert('Ce modèle ne définit aucun rôle de contribution et ne peut être utilisé qu\'en génération directe.');
+        return false;
+    }
+
+    var bindings = {
+        School: <?=json_encode($school["codename"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+        Student: student
+    };
+    if (director != '')
+        bindings.Director = director;
+
+    var workflow = document.getElementById('school_student_document_workflow_form');
+    workflow.action = '/api/user/' + encodeURIComponent(student) + '/document_workspace';
+    workflow.querySelector('[name="document_file"]').value = option.getAttribute('data-editor-path') || '';
+    workflow.querySelector('[name="model_hash"]').value = option.getAttribute('data-model-hash') || '';
+    workflow.querySelector('[name="document_label"]').value = option.getAttribute('data-document-label') || option.textContent.trim();
+    workflow.querySelector('[name="target_year"]').value = String(year);
+    workflow.querySelector('[name="context_bindings"]').value = JSON.stringify(bindings);
+    return silent_submitf(workflow, {
+        after_success: function (result, message, content) {
+            school_student_document_close();
+            if (content)
+                window.location.href = content;
+        }
+    });
 }
 
 (function () {

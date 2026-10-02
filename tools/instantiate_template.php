@@ -138,7 +138,12 @@ function insert_activity($act, $parent, $codename, $sdate, $template = false)
            VALUES
              ($actid, '$begin_date', '$end_date', $maximum_subscription)
 	");
-	if ($act->slot_duration != -1)
+	// Progressive/team-based activities must be left empty here: Albedo opens
+	// their slots once the linked teams are known. Pre-generating a single layer
+	// prevented team_based_slot_opening from sizing the slots correctly.
+	if ($act->slot_duration != -1
+	    && !$act->progressive_slot_opening
+	    && !$act->team_based_slot_opening)
 	    @generate_slots($Database->last_id, datex("H:i", $act->slot_duration), 1);
 	$last_session = $Database->insert_id;
 	foreach ($sess->room as $room)

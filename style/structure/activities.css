@@ -407,6 +407,28 @@ h1
     cursor: pointer;
 }
 
+.path_browser_background_menu
+{
+    position: fixed;
+    z-index: 10000;
+    min-width: 170px;
+    box-sizing: border-box;
+}
+
+.path_browser_background_menu_item
+{
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 100% !important;
+    height: 32px !important;
+    padding: 5px 12px;
+    border: 0;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
 .file_browser .filename
 {
     display: block;

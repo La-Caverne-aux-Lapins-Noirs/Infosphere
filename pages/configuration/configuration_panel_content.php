@@ -6,6 +6,9 @@ $visible_configuration = [];
 $hidden_configuration = [];
 foreach ($configuration_rows as $configuration_row)
 {
+    // Dedicated editor: avoid exposing the large Persoc list twice.
+    if (($configuration_row["codename"] ?? "") == persoc_deadlist_configuration_codename())
+        continue ;
     if (configuration_row_hidden($configuration_row))
         $hidden_configuration[] = $configuration_row;
     else

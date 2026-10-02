@@ -12,8 +12,26 @@ function dabsic_editor_register_access_resolver($resolver)
 
 function dabsic_editor_user_can_access($requested, $for_write = false)
 {
+    global $Configuration;
+
     if (is_admin())
         return (true);
+
+    // The Documents file browser is writable by teachers. Grant the editor
+    // the same right for editable files stored in the documents directory.
+    if (function_exists("am_i_teacher") && am_i_teacher() && is_object($Configuration))
+    {
+        $relative = dabsic_editor_normalize_requested_path($requested);
+        $project_root = dabsic_editor_project_root();
+        $doc_root = realpath($Configuration->DocDir());
+        if ($relative !== NULL && $project_root !== false && $doc_root !== false)
+        {
+            $absolute = realpath($project_root.DIRECTORY_SEPARATOR.$relative);
+            if ($absolute !== false && is_file($absolute) &&
+                dabsic_editor_path_is_inside($absolute, $doc_root))
+                return (true);
+        }
+    }
     foreach ((array)($GLOBALS["DabsicEditorAccessResolvers"] ?? []) as $resolver)
         if (is_callable($resolver) && $resolver($requested, (bool)$for_write))
             return (true);

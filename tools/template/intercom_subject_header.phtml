@@ -1,16 +1,70 @@
-<span
-    title="<?=htmlentities($Dictionnary["Channel"]." ".ucfirst($intercom["name"])); ?>"
-    style="
-        display: inline-block;
-        max-width: min(100%, calc(100% - 170px));
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        vertical-align: middle;
-    "
->
-    <?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
-</span>
+<?php
+$intercom_mark_all_url = intercom_api_url_html($intercom, NULL, [
+    "page" => $intercom["page"],
+    "page_size" => $intercom["page_size"],
+]);
+$intercom_mark_all_js = "silent_submitf(this, {tofill: '".$intercom["div"]."'});";
+$intercom_hidden_toggle_url = NULL;
+$intercom_hidden_toggle_label = NULL;
+if (isset($intercom["can_moderate"]) && $intercom["can_moderate"])
+{
+    $intercom_hidden_toggle_url = intercom_api_url_html($intercom, NULL, [
+        "page" => 0,
+        "page_size" => $intercom["page_size"],
+        "show_hidden" => isset($intercom["show_hidden"]) && $intercom["show_hidden"] ? 0 : 1,
+    ]);
+    $intercom_hidden_toggle_label =
+        isset($intercom["show_hidden"]) && $intercom["show_hidden"]
+        ? ($Dictionnary["HideHiddenIntercomTopics"] ?? "Cacher les sujets masqués")
+        : ($Dictionnary["ShowHiddenIntercomTopics"] ?? "Montrer les sujets masqués")
+    ;
+}
+?>
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 100%; padding: 0 175px 0 4px; min-width: 0;">
+    <span
+        title="<?=htmlentities($Dictionnary["Channel"]." ".ucfirst($intercom["name"])); ?>"
+        style="
+            display: inline-block;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;"
+    >
+        <?=$Dictionnary["Channel"]; ?> <?=ucfirst($intercom["name"]); ?>
+    </span>
+    <form
+        method="post"
+        action="<?=$intercom_mark_all_url; ?>"
+        onsubmit="return <?=$intercom_mark_all_js; ?>"
+        style="display: inline-block; margin: 0; flex: 0 0 auto;"
+    >
+        <input type="hidden" name="action" value="<?=$intercom["misc_type"]; ?>" />
+        <input type="hidden" name="intercom_action" value="read_all" />
+        <input
+            type="button"
+            onclick="<?=$intercom_mark_all_js; ?>"
+            value="<?=htmlentities($Dictionnary["MarkAllIntercomTopicsRead"] ?? "Tout marquer comme lu"); ?>"
+            style="height: 26px; font-size: x-small; padding: 0 6px;"
+        />
+    </form>
+    <?php if ($intercom_hidden_toggle_url !== NULL) { ?>
+        <form
+            method="get"
+            action="<?=$intercom_hidden_toggle_url; ?>"
+            onsubmit="return <?=$intercom_mark_all_js; ?>"
+            style="display: inline-block; margin: 0; flex: 0 0 auto;"
+        >
+            <input
+                type="button"
+                onclick="<?=$intercom_mark_all_js; ?>"
+                value="<?=htmlentities($intercom_hidden_toggle_label); ?>"
+                style="height: 26px; font-size: x-small; padding: 0 6px;"
+            />
+        </form>
+    <?php } ?>
+</div>
 
 <?php
 $pbrowser = $intercom;

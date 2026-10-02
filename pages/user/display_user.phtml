@@ -1,8 +1,24 @@
-<?php $Authorities = ["User", "Administrator"]; ?>
+<?php
+global $Configuration;
+
+$user_list_is_banned = $user["deleted"] != NULL || (int)$user["authority"] === BANISHED;
+$user_list_search = implode(" ", [
+    "#".(int)$user["id"],
+    $user["codename"] ?? "",
+    $user["nickname"] ?? "",
+    $user["first_name"] ?? "",
+    $user["family_name"] ?? "",
+]);
+$user_list_photo = $Configuration->UsersDir().$user["codename"]."/admin/photo.png";
+$user_list_photo_src = file_exists($user_list_photo) ? $user_list_photo : "res/no_avatar.png";
+?>
 <div
     id="<?=$user["codename"]; ?>"
-    class="alignable_blocks userdiv<?=is_admin() && $user["id"] != 1 ? " userdiv_admin" : ""; ?>"
-    <?php if ($user["deleted"] != NULL) { ?>
+    class="alignable_blocks userdiv"
+    data-user-search="<?=htmlspecialchars($user_list_search, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+    data-user-banned="<?=$user_list_is_banned ? "1" : "0"; ?>"
+    <?=$user_list_is_banned ? "hidden" : ""; ?>
+    <?php if ($user_list_is_banned) { ?>
         style="opacity: 0.8; background-color: darkgray;"
     <?php } ?>
 >
@@ -18,7 +34,7 @@
                 <?php } ?>
             <?php } ?>
             <?php if ($user["authority"] != 0) { ?>
-                <br /><i><?=$Dictionnary[$Authorities[$user["authority"]]]; ?></i>
+                <br /><i><?=$user["authority"] == BANISHED ? ($Dictionnary["Banished"] ?? "Banni") : $Dictionnary["Administrator"]; ?></i>
             <?php } ?>
             <br />
             <?php if ($user["id"] != 1) { ?>
@@ -27,59 +43,19 @@
         </span>
     </h3>
 
-    <div class="_200wpx _100hpx topright">
-        <div class="right">
+    <div class="_200wpx _100hpx topright user-card-picture">
+        <div class="right user-card-avatar-default">
             <?php display_avatar($user, 100); ?>
+        </div>
+        <div class="right user-card-avatar-photo" hidden>
+            <a href="<?=profile($user["id"]); ?>">
+                <img
+                    src="<?=htmlspecialchars($user_list_photo_src, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                    alt=""
+                    style="width: 100px; height: 100px; border-radius: 10px;"
+                />
+            </a>
         </div>
     </div>
 
-    <?php if (is_admin() && $user["id"] != 1) { ?>
-        <div class="band _50hpx smalltext _100top">
-            <form
-                onsubmit="return false;"
-                method="<?=$user["deleted"] == NULL ? "delete" : "put"; ?>"
-                action="api/user/<?=$user["id"]; ?>"
-                class="left"
-                style="position: absolute; top: -10px;"
-            >
-                <?=$Dictionnary["Status"]; ?>:
-                <select name="deleted" onchange="silent_submit(this.parentNode);">
-                    <option value="0" <?=$user["deleted"] == NULL ? "selected" : ""; ?>>
-                        <?=$Dictionnary["ActiveAccount"]; ?>
-                    </option>
-                    <option value="1" <?=$user["deleted"] != NULL ? "selected" : ""; ?>>
-                        <?=$Dictionnary["BannedAccount"]; ?>
-                    </option>
-                </select>
-            </form>
-
-            <form
-                onsubmit="return false;"
-                method="put"
-                action="api/user/<?=$user["id"]; ?>"
-                class="left"
-                style="position: absolute; top: 10px;"
-            >
-                <?=$Dictionnary["Authority"]; ?>:
-                <input type="hidden" name="action" value="set_status" />
-                <select name="authority" onchange="silent_submit(this.parentNode);">
-                    <?php foreach ($Authorities as $i => $s) { ?>
-                        <option value="<?=$i; ?>" <?=$i == $user["authority"] ? "selected" : ""; ?>>
-                            <?=$Dictionnary[$s]; ?>
-                        </option>
-                    <?php } ?>
-                </select>
-            </form>
-
-            <form onsubmit="return false;" method="put" action="api/user/<?=$user["id"]; ?>" class="right">
-                <input type="hidden" name="action" value="new_password" />
-                <input
-                    type="button"
-                    onclick="silent_submit(this.parentNode);"
-                    style="width: 100%;"
-                    value="<?=$Dictionnary["RegeneratePassword"]; ?>"
-                />
-            </form>
-        </div>
-    <?php } ?>
 </div>

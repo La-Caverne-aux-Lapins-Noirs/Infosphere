@@ -177,11 +177,23 @@ CREATE TABLE `session` (
   KEY `id_team` (`id_team`),
   `id_user` int(11) DEFAULT NULL,
   KEY `id_user` (`id_user`),
+  `name` varchar(255) DEFAULT NULL COMMENT 'Nom local des sessions sans activité',
+  `source_type` varchar(32) DEFAULT NULL COMMENT 'Origine génératrice de la session (NULL = manuelle)',
+  KEY `source_type` (`source_type`),
+  `source_id` varchar(96) DEFAULT NULL COMMENT 'Identifiant stable de la source, par exemple une instance documentaire',
+  KEY `source_id` (`source_id`),
+  `source_key` varchar(96) DEFAULT NULL COMMENT 'Identifiant stable de cette occurrence dans la source',
+  UNIQUE KEY `session_source_occurrence` (`source_type`, `source_id`, `source_key`),
   `begin_date` datetime DEFAULT NULL,
   KEY `begin_date` (`begin_date`),
   `end_date` datetime DEFAULT NULL,
   KEY `end_date` (`end_date`),
-  `maximum_subscription` int(11) DEFAULT NULL
+  `maximum_subscription` int(11) DEFAULT NULL,
+  `signin_generated_at` datetime DEFAULT NULL,
+  `signin_id_actor` int(11) DEFAULT NULL,
+  `signin_morning_end` char(5) NOT NULL DEFAULT '13:00',
+  `signin_afternoon_start` char(5) NOT NULL DEFAULT '14:00',
+  `signin_sha256` char(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `session_room` (
@@ -191,6 +203,16 @@ CREATE TABLE `session_room` (
   KEY `id_session` (`id_session`),
   `id_room` int(11) NOT NULL,
   KEY `id_room` (`id_room`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE `session_school` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `id_session` int(11) NOT NULL,
+  KEY `id_session` (`id_session`),
+  `id_school` int(11) NOT NULL,
+  KEY `id_school` (`id_school`),
+  UNIQUE KEY `session_school_unique` (`id_session`, `id_school`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `session_teacher` (
@@ -204,6 +226,15 @@ CREATE TABLE `session_teacher` (
   KEY `id_laboratory` (`id_laboratory`),
   UNIQUE KEY `session_user` (`id_session`, `id_user`),
   UNIQUE KEY `session_laboratory` (`id_session`, `id_laboratory`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `session_teacher_presence` (
+  `id_session` int(11) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `attendance_day` date NOT NULL,
+  `declared_at` datetime NOT NULL,
+  PRIMARY KEY (`id_session`, `id_user`, `attendance_day`),
+  KEY `id_user` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `activity_skill` (

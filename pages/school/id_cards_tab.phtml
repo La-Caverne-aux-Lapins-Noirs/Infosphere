@@ -1,0 +1,338 @@
+<?php
+require_once (__DIR__."/../../tools/dabsic_editor_component.php");
+
+$id_card_configuration_reference = id_card_school_configuration_path($school, false);
+$id_card_configuration_path = id_card_school_configuration_path($school, true);
+if (!is_readable($id_card_configuration_path))
+    id_card_write_atomic($id_card_configuration_path, id_card_school_default_configuration($school));
+
+$id_card_status = id_card_school_status($school);
+$id_card_status_items = [
+    "generator" => $Dictionnary["IdCardGenerator"] ?? "Moteur de génération PHP/GD",
+    "configuration" => $Dictionnary["IdCardConfigurationFile"] ?? "Configuration Dabsic",
+    "background" => $Dictionnary["IdCardBackground"] ?? "Fond de carte",
+    "logo" => $Dictionnary["SchoolDocumentLogo"] ?? "Logo de l'école",
+];
+$id_card_background_absolute = id_card_school_background_path($school, true);
+$id_card_background_version = is_file($id_card_background_absolute) ? filemtime($id_card_background_absolute) : 0;
+$id_card_sheet_layout = id_card_school_sheet_layout($school);
+if (!is_array($id_card_sheet_layout))
+    $id_card_sheet_layout = ["columns" => 2, "rows" => 5, "capacity" => 10];
+$id_card_student_authority = user_school_authority_sql("STUDENT");
+$id_card_sheet_students = db_select_all("
+    user.id as id, user.codename as codename, user.first_name as first_name,
+    user.family_name as family_name, user.nickname as nickname
+    FROM user_school
+    LEFT JOIN user ON user.id = user_school.id_user
+    WHERE user_school.id_school = ".((int)$school["id"])."
+      AND user_school.authority = ".$id_card_student_authority."
+      AND user.deleted IS NULL
+      AND user.profile_status = 'member'
+    ORDER BY user.family_name ASC, user.first_name ASC, user.codename ASC
+");
+?>
+<section class="school_admin_card school_admin_block school_diploma_block school_id_card_block">
+    <div class="school_diploma_split school_id_card_split">
+        <div class="school_diploma_settings school_id_card_settings">
+            <header class="school_diploma_header school_id_card_header">
+                <div>
+                    <h4><?=$Dictionnary["SchoolIdCardConfiguration"] ?? "Configuration des cartes étudiantes"; ?></h4>
+                    <p class="school_admin_notice">
+                        <?=$Dictionnary["SchoolIdCardConfigurationHelp"] ?? "Ce modèle commun à l'école définit l'apparence des cartes étudiantes générées par le moteur intégré."; ?>
+                    </p>
+                </div>
+                <span class="school_diploma_ready <?=$id_card_status["ready"] ? "is_ready" : "is_missing"; ?>">
+                    <?=$id_card_status["ready"]
+                        ? ($Dictionnary["IdCardReady"] ?? "Prêt")
+                        : ($Dictionnary["IdCardMissing"] ?? "Configuration incomplète"); ?>
+                </span>
+            </header>
+
+            <div class="school_diploma_status school_id_card_status">
+                <?php foreach ($id_card_status_items as $key => $label) { ?>
+                    <span class="<?=$id_card_status[$key] ? "is_ready" : "is_missing"; ?>">
+                        <?=$id_card_status[$key] ? "✓" : "×"; ?> <?=htmlspecialchars($label); ?>
+                    </span>
+                <?php } ?>
+            </div>
+
+            <?php if ($id_card_status["generator"]) { ?>
+                <section class="school_id_card_render_preview">
+                    <div class="school_id_card_render_preview_header">
+                        <h4><?=$Dictionnary["IdCardPreview"] ?? "Aperçu"; ?></h4>
+                        <button type="button" onclick="schoolIdCardRefreshPreview(<?=(int)$school["id"]; ?>);">
+                            <?=$Dictionnary["RefreshPreview"] ?? "Actualiser"; ?>
+                        </button>
+                    </div>
+                    <img
+                        id="school-id-card-preview-<?=(int)$school["id"]; ?>"
+                        src="/api/school/<?=(int)$school["id"]; ?>/id_card_preview?rev=<?=max((int)@filemtime($id_card_configuration_path), (int)$id_card_background_version); ?>"
+                        alt="<?=$Dictionnary["IdCardPreview"] ?? "Aperçu de la carte étudiante"; ?>"
+                    />
+                    <small><?=$Dictionnary["IdCardPreviewHelp"] ?? "L'aperçu utilise des données fictives pour l'élève et l'avatar par défaut, afin que chaque zone reste visible."; ?></small>
+                </section>
+            <?php } ?>
+
+            <form method="put" action="/api/school/<?=$school["id"]; ?>/id_card" class="school_admin_form school_diploma_form school_id_card_form" onsubmit="return false;">
+                <label>
+                    <?=$Dictionnary["IdCardBackground"] ?? "Fond de carte"; ?> (.png, .jpg, .jpeg, .webp)
+                    <input type="file" name="id_card_background" accept="image/png,image/jpeg,image/webp" onchange="this.form.querySelector('.school_id_card_background_save').disabled = !this.files.length;" />
+                    <small><?=$Dictionnary["IdCardBackgroundHelp"] ?? "Déposez l'image de fond de la carte. La disposition des éléments (photo, logo, textes) se règle dans le fichier Dabsic à droite."; ?></small>
+                </label>
+                <p class="school_admin_notice">
+                    <?=$Dictionnary["IdCardGenerationPlace"] ?? "La génération d'une carte individuelle s'effectue ensuite depuis le profil de l'élève. Le moteur sait aussi générer des planches entières de cartes avec emplacements sautés, prête pour l'étape suivante."; ?>
+                </p>
+                <div class="school_admin_actions">
+                    <input class="school_id_card_background_save" type="button" value="<?=$Dictionnary["IdCardSaveBackground"] ?? "Enregistrer le fond"; ?>" onclick="silent_submitf(this.form, {after_success: refresh});" disabled />
+                </div>
+            </form>
+        </div>
+
+        <div class="school_diploma_editor school_id_card_editor">
+            <h4><?=$Dictionnary["IdCardConfigurationFile"] ?? "Configuration Dabsic"; ?></h4>
+            <?php dabsic_editor_component($id_card_configuration_reference, [
+                "embedded" => true,
+                "show_title" => false,
+                "show_path" => true,
+                "autofocus" => false,
+                "save_url" => "/api/school/".(int)$school["id"]."/id_card",
+                "save_method" => "PUT",
+                "extensions" => ["dab"],
+            ]); ?>
+        </div>
+    </div>
+
+    <?php if (is_director_for_school((int)$school["id"])) { ?>
+        <section class="school_id_card_nfc_reader" data-nfc-container>
+            <header class="school_id_card_sheet_header">
+                <div>
+                    <h4><?=$Dictionnary["NfcIdentifyCard"] ?? "Identifier une carte NFC"; ?></h4>
+                    <p class="school_admin_notice">
+                        <?=$Dictionnary["NfcIdentifyCardHelp"] ?? "Présentez une carte trouvée au lecteur : Infosphère indiquera si elle est valide et, lorsqu'elle est connue, à quel utilisateur elle appartient."; ?>
+                    </p>
+                </div>
+                <button type="button" onclick="infosphere_nfc_identify(this, <?=(int)$school["id"]; ?>);">
+                    🔎 <?=$Dictionnary["NfcIdentifyCardButton"] ?? "Lire et identifier"; ?>
+                </button>
+            </header>
+            <pre class="school_nfc_browser_status" data-nfc-status hidden></pre>
+        </section>
+    <?php } ?>
+
+    <section class="school_id_card_sheet_builder">
+        <header class="school_id_card_sheet_header">
+            <div>
+                <h4><?=$Dictionnary["IdCardSheet"] ?? "Planche d'étiquettes"; ?></h4>
+                <p class="school_admin_notice">
+                    <?=$Dictionnary["IdCardSheetHelp"] ?? "Sélectionnez les élèves à imprimer et marquez les étiquettes déjà consommées. Elles resteront vides afin de pouvoir réutiliser une feuille entamée."; ?>
+                </p>
+            </div>
+            <span class="school_id_card_sheet_geometry">
+                <?=((int)$id_card_sheet_layout["columns"]); ?> × <?=((int)$id_card_sheet_layout["rows"]); ?>
+                · <?=((int)$id_card_sheet_layout["capacity"]); ?> <?=$Dictionnary["IdCardSheetSlots"] ?? "emplacements"; ?>
+            </span>
+        </header>
+
+        <form
+            class="school_id_card_sheet_form"
+            method="post"
+            action="/api/school/<?=(int)$school["id"]; ?>/id_card_sheet"
+            target="_blank"
+            onsubmit="return schoolIdCardPrepareSheet(this);"
+        >
+            <input type="hidden" name="skip" value="" data-id-card-sheet-skip />
+
+            <div class="school_id_card_sheet_slots_panel">
+                <div class="school_id_card_sheet_panel_title">
+                    <strong><?=$Dictionnary["IdCardSheetUsedSlots"] ?? "Étiquettes déjà utilisées"; ?></strong>
+                    <button type="button" onclick="schoolIdCardResetSheetSlots(this.form);">
+                        <?=$Dictionnary["IdCardSheetResetSlots"] ?? "Tout remettre libre"; ?>
+                    </button>
+                </div>
+                <small><?=$Dictionnary["IdCardSheetUsedSlotsHelp"] ?? "Cliquez sur une case correspondant à une étiquette absente ou déjà imprimée sur la feuille physique."; ?></small>
+                <div
+                    class="school_id_card_sheet_slots"
+                    style="--sheet-columns: <?=max(1, (int)$id_card_sheet_layout["columns"]); ?>;"
+                >
+                    <?php for ($slot = 1; $slot <= (int)$id_card_sheet_layout["capacity"]; ++$slot) { ?>
+                        <button
+                            type="button"
+                            class="school_id_card_sheet_slot"
+                            data-id-card-slot="<?=$slot; ?>"
+                            aria-pressed="false"
+                            onclick="schoolIdCardToggleSheetSlot(this);"
+                        >
+                            <strong><?=$slot; ?></strong>
+                            <span data-id-card-slot-state><?=$Dictionnary["IdCardSheetFree"] ?? "Libre"; ?></span>
+                        </button>
+                    <?php } ?>
+                </div>
+            </div>
+
+            <div class="school_id_card_sheet_students_panel">
+                <div class="school_id_card_sheet_panel_title">
+                    <strong><?=$Dictionnary["IdCardSheetStudents"] ?? "Élèves à imprimer"; ?></strong>
+                    <span class="school_id_card_sheet_select_actions">
+                        <button type="button" onclick="schoolIdCardSelectSheetStudents(this.form, true);">
+                            <?=$Dictionnary["SelectAll"] ?? "Tout sélectionner"; ?>
+                        </button>
+                        <button type="button" onclick="schoolIdCardSelectSheetStudents(this.form, false);">
+                            <?=$Dictionnary["SelectNone"] ?? "Aucun"; ?>
+                        </button>
+                    </span>
+                </div>
+                <div class="school_id_card_sheet_students">
+                    <?php if (!count($id_card_sheet_students)) { ?>
+                        <p><?=$Dictionnary["IdCardSheetNoSchoolStudents"] ?? "Aucun élève n'est rattaché à cette école."; ?></p>
+                    <?php } else { ?>
+                        <?php foreach ($id_card_sheet_students as $student) { ?>
+                            <?php
+                            $student_name = trim((string)($student["first_name"] ?? "")." ".(string)($student["family_name"] ?? ""));
+                            if ($student_name == "")
+                                $student_name = trim((string)($student["nickname"] ?? $student["codename"] ?? ""));
+                            $student_study_year = id_card_user_current_course((int)$student["id"], (int)$school["id"]);
+                            $student_study_year_max = max(5, (int)$student_study_year);
+                            ?>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    name="students[]"
+                                    value="<?=(int)$student["id"]; ?>"
+                                    onchange="schoolIdCardRefreshSheetState(this.form);"
+                                />
+                                <span class="school_id_card_sheet_student_name"><?=htmlspecialchars($student_name); ?> <small>#<?=(int)$student["id"]; ?></small></span>
+                                <span class="school_id_card_sheet_study_year">
+                                    <small><?=$Dictionnary["IdCardStudyYear"] ?? "Année d'étude"; ?></small>
+                                    <select name="study_years[<?=(int)$student["id"]; ?>]" title="<?=$Dictionnary["IdCardStudyYear"] ?? "Année d'étude"; ?>">
+                                        <option value="">—</option>
+                                        <?php for ($study_year = 1; $study_year <= $student_study_year_max; ++$study_year) { ?>
+                                            <option value="<?=$study_year; ?>" <?=$student_study_year === (string)$study_year ? "selected" : ""; ?>><?=$study_year; ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </span>
+                            </label>
+                        <?php } ?>
+                    <?php } ?>
+                </div>
+                <p class="school_id_card_sheet_counter" data-id-card-sheet-counter></p>
+                <p class="school_id_card_sheet_overflow" data-id-card-sheet-overflow hidden>
+                    <?=$Dictionnary["IdCardSheetTooManySelectedHelp"] ?? "Il y a plus de cartes sélectionnées que d'étiquettes libres sur cette feuille."; ?>
+                </p>
+                <div class="school_admin_actions school_id_card_sheet_actions">
+                    <button
+                        type="submit"
+                        name="sheet_output"
+                        value="print"
+                        data-id-card-sheet-generate
+                        <?=$id_card_status["ready"] ? "" : "disabled"; ?>
+                    ><?=$Dictionnary["IdCardOpenSheet"] ?? "Ouvrir la planche pour impression"; ?></button>
+                    <button
+                        type="submit"
+                        name="sheet_output"
+                        value="download"
+                        data-id-card-sheet-generate
+                        <?=$id_card_status["ready"] ? "" : "disabled"; ?>
+                    ><?=$Dictionnary["IdCardDownloadSheet"] ?? "Télécharger le PNG"; ?></button>
+                </div>
+            </div>
+        </form>
+    </section>
+</section>
+
+<script>
+function schoolIdCardRefreshPreview(id)
+{
+    var image = document.getElementById("school-id-card-preview-" + id);
+    if (!image)
+        return;
+    var base = image.src.split("?")[0];
+    image.src = base + "?rev=" + Date.now();
+}
+
+function schoolIdCardRefreshSheetState(form)
+{
+    if (!form)
+        return;
+    var slots = Array.from(form.querySelectorAll("[data-id-card-slot]"));
+    var used = slots.filter(function (slot) { return slot.classList.contains("is_used"); });
+    var selected = Array.from(form.querySelectorAll('input[name="students[]"]:checked'));
+    var free = Math.max(0, slots.length - used.length);
+    var skip = used.map(function (slot) { return slot.getAttribute("data-id-card-slot"); });
+    var skipInput = form.querySelector("[data-id-card-sheet-skip]");
+    if (skipInput)
+        skipInput.value = skip.join(",");
+
+    var counter = form.querySelector("[data-id-card-sheet-counter]");
+    if (counter)
+        counter.textContent = selected.length + " carte(s) sélectionnée(s) · " + free + " emplacement(s) libre(s)";
+
+    var overflow = selected.length > free;
+    var overflowMessage = form.querySelector("[data-id-card-sheet-overflow]");
+    if (overflowMessage)
+        overflowMessage.hidden = !overflow;
+    var schoolReady = <?=json_encode((bool)$id_card_status["ready"]); ?>;
+    form.querySelectorAll("[data-id-card-sheet-generate]").forEach(function (submit) {
+        submit.disabled = !schoolReady || selected.length === 0 || overflow;
+    });
+}
+
+function schoolIdCardToggleSheetSlot(button)
+{
+    if (!button)
+        return;
+    var used = !button.classList.contains("is_used");
+    button.classList.toggle("is_used", used);
+    button.setAttribute("aria-pressed", used ? "true" : "false");
+    var state = button.querySelector("[data-id-card-slot-state]");
+    if (state)
+        state.textContent = used
+            ? <?=json_encode($Dictionnary["IdCardSheetUsed"] ?? "Utilisée", JSON_UNESCAPED_UNICODE); ?>
+            : <?=json_encode($Dictionnary["IdCardSheetFree"] ?? "Libre", JSON_UNESCAPED_UNICODE); ?>;
+    schoolIdCardRefreshSheetState(button.form);
+}
+
+function schoolIdCardResetSheetSlots(form)
+{
+    if (!form)
+        return;
+    form.querySelectorAll("[data-id-card-slot]").forEach(function (slot) {
+        slot.classList.remove("is_used");
+        slot.setAttribute("aria-pressed", "false");
+        var state = slot.querySelector("[data-id-card-slot-state]");
+        if (state)
+            state.textContent = <?=json_encode($Dictionnary["IdCardSheetFree"] ?? "Libre", JSON_UNESCAPED_UNICODE); ?>;
+    });
+    schoolIdCardRefreshSheetState(form);
+}
+
+function schoolIdCardSelectSheetStudents(form, checked)
+{
+    if (!form)
+        return;
+    form.querySelectorAll('input[name="students[]"]').forEach(function (input) {
+        input.checked = checked;
+    });
+    schoolIdCardRefreshSheetState(form);
+}
+
+function schoolIdCardPrepareSheet(form)
+{
+    schoolIdCardRefreshSheetState(form);
+    var selected = form.querySelectorAll('input[name="students[]"]:checked').length;
+    var used = form.querySelectorAll("[data-id-card-slot].is_used").length;
+    var capacity = form.querySelectorAll("[data-id-card-slot]").length;
+    return (selected > 0 && selected <= Math.max(0, capacity - used));
+}
+
+(function () {
+    var block = document.querySelector(".school_id_card_block");
+    if (!block)
+        return;
+    var sheetForm = block.querySelector(".school_id_card_sheet_form");
+    if (sheetForm)
+        schoolIdCardRefreshSheetState(sheetForm);
+    block.addEventListener("dabsic-editor-saved", function () {
+        schoolIdCardRefreshPreview(<?=(int)$school["id"]; ?>);
+    });
+})();
+</script>

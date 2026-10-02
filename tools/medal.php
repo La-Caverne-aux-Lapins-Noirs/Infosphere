@@ -16,7 +16,7 @@ function medal_resolve_or_create($codename, $source = "")
         return (["ok" => false, "error" => "InvalidParameter", "details" => $codename]);
 
     $escaped = $Database->real_escape_string($codename);
-    $existing = db_select_one("id FROM medal WHERE codename = '$escaped'");
+    $existing = db_select_one("id FROM medal WHERE codename = '$escaped' ORDER BY id ASC");
     if (is_array($existing))
         return (["ok" => true, "id" => (int)$existing["id"], "created" => false]);
 
@@ -29,7 +29,7 @@ function medal_resolve_or_create($codename, $source = "")
     ") === NULL)
     {
         // Concurrent creators are harmless: prefer the medal that now exists.
-        $existing = db_select_one("id FROM medal WHERE codename = '$escaped'");
+        $existing = db_select_one("id FROM medal WHERE codename = '$escaped' ORDER BY id ASC");
         if (!is_array($existing))
             return (["ok" => false, "error" => "CannotCreateMedal", "details" => $codename]);
         return (["ok" => true, "id" => (int)$existing["id"], "created" => false]);

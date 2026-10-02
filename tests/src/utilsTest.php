@@ -4,6 +4,13 @@ require_once ("xtestcase.php");
 
 class UtilsTest extends XTestCase
 {
+    public function testTimezoneAliasesAndDstRules()
+    {
+        $this->assertTrue(infosphere_timezones_equivalent("UTC", "Etc/UTC"));
+        $this->assertFalse(infosphere_timezones_equivalent("UTC", "Europe/Paris"));
+        $this->assertFalse(infosphere_timezones_equivalent("Not/A-Timezone", "Europe/Paris"));
+    }
+
     public function testWeekDayToTimestamp()
     {
 	$this->assertEquals(weekday_to_timestamp(1, 1, "00:00"), 0);

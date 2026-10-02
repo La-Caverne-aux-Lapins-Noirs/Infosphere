@@ -32,6 +32,11 @@ Title = "Échéancier des paiements"
 
 [PaymentSchedule
   GeneratedDate = ""
+  CurrentYear = ""
+  CurrentTotal = ""
+  CurrentPaid = ""
+  CurrentRemaining = ""
+  PriorRemaining = ""
   TotalRemaining = ""
   Line01 = ""
   Line02 = ""
@@ -90,6 +95,21 @@ Title = "Échéancier des paiements"
         [GeneratedDate
           Label = "Date d'édition"
           Required = 1
+        ]
+        [CurrentYear
+          Label = "Année de formation concernée"
+        ]
+        [CurrentTotal
+          Label = "Montant prévu pour l'année"
+        ]
+        [CurrentPaid
+          Label = "Déjà versé sur l'année"
+        ]
+        [CurrentRemaining
+          Label = "Reste à régler sur l'année"
+        ]
+        [PriorRemaining
+          Label = "Solde antérieur restant dû"
         ]
         [TotalRemaining
           Label = "Total restant à régler"
@@ -208,7 +228,7 @@ Target = [Text($,Target)
 Target]
 
 Subject = [Text($,LetterSubject)
-  Objet : Échéancier des paiements restant à effectuer — [#Variable;Student.Identity]
+  Objet : Échéancier de financement de la scolarité — [#Variable;Student.Identity]
 LetterSubject]
 
 Date = [Text($,LetterDate)
@@ -216,34 +236,5 @@ Date = [Text($,LetterDate)
 LetterDate]
 
 {Content
-  [Text($,Content)
-    Le présent échéancier récapitule les sommes restant à régler à la date du [#Variable;PaymentSchedule.GeneratedDate].\par
-    \par
-    [@IfC;PaymentSchedule.Line01;!=;;[#Variable;PaymentSchedule.Line01]\par]
-    [@IfC;PaymentSchedule.Line02;!=;;[#Variable;PaymentSchedule.Line02]\par]
-    [@IfC;PaymentSchedule.Line03;!=;;[#Variable;PaymentSchedule.Line03]\par]
-    [@IfC;PaymentSchedule.Line04;!=;;[#Variable;PaymentSchedule.Line04]\par]
-    [@IfC;PaymentSchedule.Line05;!=;;[#Variable;PaymentSchedule.Line05]\par]
-    [@IfC;PaymentSchedule.Line06;!=;;[#Variable;PaymentSchedule.Line06]\par]
-    [@IfC;PaymentSchedule.Line07;!=;;[#Variable;PaymentSchedule.Line07]\par]
-    [@IfC;PaymentSchedule.Line08;!=;;[#Variable;PaymentSchedule.Line08]\par]
-    [@IfC;PaymentSchedule.Line09;!=;;[#Variable;PaymentSchedule.Line09]\par]
-    [@IfC;PaymentSchedule.Line10;!=;;[#Variable;PaymentSchedule.Line10]\par]
-    [@IfC;PaymentSchedule.Line11;!=;;[#Variable;PaymentSchedule.Line11]\par]
-    [@IfC;PaymentSchedule.Line12;!=;;[#Variable;PaymentSchedule.Line12]\par]
-    [@IfC;PaymentSchedule.Line13;!=;;[#Variable;PaymentSchedule.Line13]\par]
-    [@IfC;PaymentSchedule.Line14;!=;;[#Variable;PaymentSchedule.Line14]\par]
-    [@IfC;PaymentSchedule.Line15;!=;;[#Variable;PaymentSchedule.Line15]\par]
-    [@IfC;PaymentSchedule.Line16;!=;;[#Variable;PaymentSchedule.Line16]\par]
-    [@IfC;PaymentSchedule.Line17;!=;;[#Variable;PaymentSchedule.Line17]\par]
-    [@IfC;PaymentSchedule.Line18;!=;;[#Variable;PaymentSchedule.Line18]\par]
-    [@IfC;PaymentSchedule.Line19;!=;;[#Variable;PaymentSchedule.Line19]\par]
-    [@IfC;PaymentSchedule.Line20;!=;;[#Variable;PaymentSchedule.Line20]\par]
-    [@IfC;PaymentSchedule.Line21;!=;;[#Variable;PaymentSchedule.Line21]\par]
-    [@IfC;PaymentSchedule.Line22;!=;;[#Variable;PaymentSchedule.Line22]\par]
-    [@IfC;PaymentSchedule.Line23;!=;;[#Variable;PaymentSchedule.Line23]\par]
-    [@IfC;PaymentSchedule.Line24;!=;;[#Variable;PaymentSchedule.Line24]\par]
-    \par
-    **Total restant à régler : [#Variable;PaymentSchedule.TotalRemaining]**
-  Content]
+  @insert txt ($) "echeancier_paiements.txt"
 }

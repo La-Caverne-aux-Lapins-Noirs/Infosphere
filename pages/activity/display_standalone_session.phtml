@@ -1,0 +1,44 @@
+<?php
+$can_manage = session_standalone_can_manage([
+    "id" => $session->id,
+    "id_activity" => $session->id_activity,
+    "id_user" => $session->id_user,
+    "id_laboratory" => $session->id_laboratory,
+]);
+?>
+<div class="standalone_session_panel">
+    <h3><?=htmlspecialchars((string)$session->name); ?></h3>
+    <p>
+        <?=htmlspecialchars(session_standalone_owner_label([
+            "id" => $session->id,
+            "id_activity" => $session->id_activity,
+            "id_user" => $session->id_user,
+            "id_laboratory" => $session->id_laboratory,
+        ])); ?>
+    </p>
+    <p>
+        <?=datex("d/m/Y H:i", $session->begin_date); ?>
+        -
+        <?=datex("H:i", $session->end_date); ?>
+    </p>
+    <?php if (count($session->room)) { ?>
+        <p>
+            <?php foreach ($session->room as $room) { ?>
+                <?=htmlspecialchars((string)$room["name"]); ?><br />
+            <?php } ?>
+        </p>
+    <?php } ?>
+
+    <?php if ($can_manage) { ?>
+        <form method="put" action="/api/session/<?=$session->id; ?>" onsubmit="return silent_submit(this);">
+            <input type="text" name="name" value="<?=htmlspecialchars((string)$session->name, ENT_QUOTES); ?>" required />
+            <input type="date" name="day" value="<?=datex("Y-m-d", $session->begin_date); ?>" required />
+            <input type="time" name="begin" value="<?=datex("H:i", $session->begin_date); ?>" required />
+            <input type="time" name="end" value="<?=datex("H:i", $session->end_date); ?>" required />
+            <input type="button" onclick="silent_submit(this.form);" value="&#10003;" />
+        </form>
+        <form method="delete" action="/api/session/<?=$session->id; ?>" onsubmit="return silent_submit(this);">
+            <input type="button" class="delete_wide" onclick="silent_submit(this.form);" value="&#10007;" />
+        </form>
+    <?php } ?>
+</div>

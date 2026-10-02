@@ -25,6 +25,27 @@ function break_template_link($activity, $template = false)
     if (($template = db_select_one("* FROM activity WHERE id = $activity->id_template")) == NULL)
 	return (new ErrorResponse("NotAnId", $activity->id_template, "Activity Template"));
 
+    // Les professeurs sont une liaison heritee du template tant que le lien est
+    // actif. Lorsqu'on casse ce lien, on materialise les affectations directes
+    // du template sur l'instance afin que son equipe pedagogique ne disparaisse
+    // pas. Les affectations deja posees localement restent prioritaires.
+    $Database->query("
+        INSERT INTO activity_teacher
+          (id_activity, id_user, id_laboratory, teacher_pay, assistant_pay)
+        SELECT
+          {$activity->id}, source.id_user, source.id_laboratory,
+          source.teacher_pay, source.assistant_pay
+        FROM activity_teacher as source
+        WHERE source.id_activity = {$activity->id_template}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM activity_teacher as local_teacher
+              WHERE local_teacher.id_activity = {$activity->id}
+                AND local_teacher.id_user <=> source.id_user
+                AND local_teacher.id_laboratory <=> source.id_laboratory
+          )
+    ");
+
     $values["template_link"] = false;
     foreach ($instance as $field => $val)
     {

@@ -1,4 +1,4 @@
-<?php if (am_i_director_of($fetch["school"]) && count($fetch["user"]) == 0) { ?>
+<?php if (am_i_director_of($fetch["school"]) || is_group_admin($fetch["id"])) { ?>
     <h2><?=$Dictionnary["AddAMember"]; ?></h2><br />
     <form method="post" action="<?=unrollurl(); ?>" enctype="multipart/form-data">
 	<input type="hidden" name="action" value="add_group_member" />
