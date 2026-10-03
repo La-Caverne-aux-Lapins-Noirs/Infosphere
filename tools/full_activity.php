@@ -1,5 +1,8 @@
 <?php
 
+require_once (__DIR__."/activity_delivery.php");
+
+
 function select_right_elem(&$vis, $field)
 {
     global $Language;
@@ -740,11 +743,12 @@ class FullActivity extends Response
                       WHERE user_team.id_team = {$team["id"]} AND user_team.id_user > 0 $limit
 		      ", "id");
 		    $this->nbr_students += count($team["user"]);
+		    $delivery_work_filter = activity_delivery_visible_work_sql("pickedup_work");
 		    $team["work"] = db_select_all("
                       *
                       FROM pickedup_work
                       WHERE id_team = {$team["id"]}
-			AND (status IS NULL OR status != 'automatic_correction')
+                        AND $delivery_work_filter
                       ORDER BY pickedup_date DESC
 		      ");
 		    // user_team est construit avant l'enrichissement de $this->team.

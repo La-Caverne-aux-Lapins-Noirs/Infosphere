@@ -144,6 +144,7 @@ require_once ("retrieve_authority.php");
 require_once ("am_i_teacher.php");
 require_once ("am_i_assistant.php");
 require_once ("am_i_member.php");
+require_once ("activity_delivery.php");
 require_once ("full_session.php");
 require_once ("full_activity.php");
 require_once ("quiz_entrypoint.php");

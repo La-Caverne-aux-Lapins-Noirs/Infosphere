@@ -1,5 +1,8 @@
 <?php
 
+require_once (__DIR__."/activity_delivery.php");
+
+
 class FullSession
 {
     public $id;
@@ -172,10 +175,12 @@ class FullSession
                   WHERE user_team.id_team = {$team["id"]}
                   ", "id");
                 $this->nbr_students += count($team["user"]);
+                $delivery_work_filter = activity_delivery_visible_work_sql("pickedup_work");
                 $team["work"] = db_select_all("
                   *
                   FROM pickedup_work
                   WHERE id_team = {$team["id"]}
+                    AND $delivery_work_filter
                   ORDER BY pickedup_date DESC
                   ");
                 if ($this->registered == false)

@@ -19,6 +19,17 @@
 	    <?php require ("single_team_presence.php"); ?>
 	</section>
 
+	<?php $team_delivery_status = activity_delivery_team_status($activity->pickup_date, $cteam["work"] ?? []); ?>
+	<?php if ($team_delivery_status != "pending") { ?>
+	    <div style="display: inline-flex; align-items: center; min-height: 35px; font-weight: bold; white-space: nowrap;">
+		<?php if ($team_delivery_status == "delivered") { ?>
+		    <span style="color: green;">✓ <?=$Dictionnary["WorkDelivered"]; ?></span>
+		<?php } else { ?>
+		    <span style="color: red;">✗ <?=$Dictionnary["NoWork"]; ?></span>
+		<?php } ?>
+	    </div>
+	<?php } ?>
+
 	<div style="flex: 1 1 300px; min-height: 35px; text-align: right;">
 	    <?php
 	    if ($activity->is_assistant)

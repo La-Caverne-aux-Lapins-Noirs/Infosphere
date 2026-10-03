@@ -1,22 +1,28 @@
-<?php $columns = ($page == "cycle") ? 7 : 4; ?>
+<?php
+$columns = 5;
+if ($page == "cycle")
+    $columns += 4; // dates, modèle, étudiants
+$columns += 1; // actions / responsables
+?>
 <tr>
     <th class="tiny_column">#</th>
-    <th class="wide_column"><?=$Dictionnary["CodeName"]; ?></th>
-    <th class="small_column"><?=$Dictionnary["Credits"]; ?></th>
+    <th class="cycle_list_name_column"><?=$Dictionnary["CodeName"]; ?></th>
+    <th class="cycle_list_credit_column"><?=$Dictionnary["Credits"]; ?></th>
     <?php if ($page == "cycle") { ?>
-	<th class="small_column"><?=$Dictionnary["FirstWeekDate"]; ?></th>
-	<th class="small_column"><?=$Dictionnary["LastDayDate"]; ?></th>
+        <th class="cycle_list_date_column"><?=$Dictionnary["FirstWeekDate"]; ?></th>
+        <th class="cycle_list_date_column"><?=$Dictionnary["LastDayDate"]; ?></th>
+        <th class="cycle_list_template_column"><?=$Dictionnary["Template"]; ?></th>
     <?php } ?>
-    <th class="medium_column"><?=$Dictionnary["CycleNumber"]; ?></th>
+    <th class="cycle_list_number_column"><?=$Dictionnary["CycleNumber"]; ?></th>
     <?php if ($page == "cycle") { ?>
-	<th class="small_column"><?=$Dictionnary["HowManyStudents"]; ?></th>
+        <th class="cycle_list_count_column"><?=$Dictionnary["HowManyStudents"]; ?></th>
     <?php } ?>
-    <th class="small_column"><?=$Dictionnary["HowManyInstances"]; ?></th>
+    <th class="cycle_list_count_column"><?=$Dictionnary["Activities"]; ?></th>
     <?php if (!am_i_director()) { ?>
-	<th class="medium_column"><?=$Dictionnary["Director(s)"]; ?></th>
+        <th class="cycle_list_people_column"><?=$Dictionnary["Director(s)"]; ?></th>
     <?php } else { ?>
-	<th class="edit_column">
-	    <img src="./res/cog.png" />
-	</th>
+        <th class="cycle_list_actions_column <?=$page == "cursus" ? "cycle_list_actions_column_template" : "cycle_list_actions_column_instance"; ?>">
+            <img src="./res/cog.png" />
+        </th>
     <?php } ?>
 </tr>

@@ -70,6 +70,8 @@ foreach ($work as $wk)
 	$tlog = " - ".$wk["team_name"]." (".$wk["leader"]["codename"].")";
     foreach ($wk["work"] as $wkx)
     {
+	if (!isset($wkx["repository"]) || trim((string)$wkx["repository"]) == "")
+	    continue ;
 	$repo = $wkx["repository"];
 	$ret = pathinfo($wkx["repository"], PATHINFO_EXTENSION);
 	if ($ret == "")

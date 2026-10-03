@@ -1,46 +1,51 @@
-<?php $URL = unrollurl(["a" => $content["id"]]); ?>
+<?php
+$URL = unrollurl(["a" => $content["id"]]);
+$cycle_codename = (string)$content["codename"];
+$cycle_name = trim((string)($content["name"] ?? ""));
+?>
 
 <td <?=clickable($URL); ?>><?=$content["id"]; ?></td>
-<td>
-    <b><?=$content["codename"]; ?></b><br />
-    <?=@$content["name"]; ?>
+<td class="cycle_list_name" <?=clickable($URL); ?>>
+    <button
+        type="button"
+        class="cycle_list_codename"
+        title="Copier <?=$cycle_codename; ?>"
+        onclick="event.stopPropagation(); cycle_copy_codename(this, <?=htmlspecialchars(json_encode($cycle_codename), ENT_QUOTES); ?>);"
+    ><?=htmlspecialchars($cycle_codename); ?></button><?php if ($cycle_name != "" && $cycle_name != $cycle_codename) { ?><span class="cycle_list_name_separator"> — </span><span class="cycle_list_pretty_name"><?=htmlspecialchars($cycle_name); ?></span><?php } ?>
 </td>
-<td>
-    <?=$content["min_credit"]; ?> - <?=$content["max_credit"]; ?> / <?=$content["objective"]; ?>
+<td class="cycle_list_credits" <?=clickable($URL); ?>>
+    <?=$content["min_credit"]; ?>–<?=$content["max_credit"]; ?> / <?=$content["objective"]; ?>
 </td>
 <?php if ($content["is_template"] == 0) { ?>
-    <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["first_day"]); ?></td>
-    <td <?=clickable($URL); ?>><?=datex("d/m/Y", $content["last_day"]); ?></td>
+    <td class="cycle_list_date" <?=clickable($URL); ?>><?=datex("d/m/Y", $content["first_day"]); ?></td>
+    <td class="cycle_list_date" <?=clickable($URL); ?>><?=datex("d/m/Y", $content["last_day"]); ?></td>
+    <td class="cycle_list_template">
+        <?php if (($content["id_template"] ?? -1) != -1 && ($content["id_template"] ?? NULL) !== NULL && trim((string)($content["codename_template"] ?? "")) != "") { ?>
+            <a
+                href="index.php?p=CycleTemplateMenu&amp;a=<?=(int)$content["id_template"]; ?>"
+                title="<?=htmlspecialchars((string)$content["codename_template"], ENT_QUOTES); ?>"
+            ><?=htmlspecialchars((string)$content["codename_template"]); ?></a>
+        <?php } else { ?>
+            <span class="cycle_list_empty">—</span>
+        <?php } ?>
+    </td>
 <?php } ?>
-<td <?=clickable($URL); ?>><?=$content["cycle"]; ?> (<?=$Dictionnary["Year"]; ?> <?=floor($content["cycle"] / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$content["cycle"] % 4 + 1; ?>)</td>
+<td class="cycle_list_number" <?=clickable($URL); ?>>
+    <span class="cycle_list_number_value"><?=$content["cycle"]; ?></span>
+    <span class="cycle_list_number_detail">(<?=$Dictionnary["Year"]; ?> <?=floor($content["cycle"] / 4) + 1; ?>, <?=$Dictionnary["Cycle"]; ?> <?=$content["cycle"] % 4 + 1; ?>)</span>
+</td>
 <?php if ($page == "cycle") { ?>
-    <td <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
+    <td class="cycle_list_count" <?=clickable($URL); ?>><?=count($content["user"]); ?></td>
 <?php } ?>
-<td <?=clickable($URL); ?>><?=count($content["activity"]); ?></td>
+<td class="cycle_list_count" <?=clickable($URL); ?>><?=count($content["activity"]); ?></td>
 <?php if (!am_i_director()) { ?>
-    <td>
-	<h5><?=$Dictionnary["Teacher"]; ?></h5>
-	<?php foreach ($content["teacher"] as $teacher) { ?>
-	    <?php $dest = $teacher["codename"][0] != "#" ? "Profile" : "Laboratories"; ?>
-	    <a href="index.php?p=<?=$dest; ?>Menu&amp;a=<?=$teacher["id"]; ?>">
-		<?=$teacher["codename"]; ?>
-	    </a>
-	<?php } ?>
-	<?php if ($page == "cursus") { ?>
-	    <?php if (count($content["instance"])) { ?>
-		<h5><?=$Dictionnary["CycleInstances"]; ?></h5>
-		<?php foreach ($content["instance"] as $instance) { ?>
-		    <a href="index.php?p=CycleMenu&amp;a=<?=$instance["id"]; ?>">
-			<?=$instance["codename"]; ?>
-		    </a>
-		<?php } ?>
-	    <?php } ?>
-	<?php } else if ($content["id_template"] != -1) { ?>
-	    <h5><?=$Dictionnary["Template"]; ?></h5>
-	    <a href="index.php?p=CycleTemplateMenu&amp;a=<?=$content["id_template"]; ?>">
-		<?=$content["codename_template"]; ?>
-	    </a>
-	<?php } ?>
+    <td class="cycle_list_people">
+        <?php foreach ($content["teacher"] as $teacher) { ?>
+            <?php $dest = $teacher["codename"][0] != "#" ? "Profile" : "Laboratories"; ?>
+            <a href="index.php?p=<?=$dest; ?>Menu&amp;a=<?=$teacher["id"]; ?>">
+                <?=$teacher["codename"]; ?>
+            </a>
+        <?php } ?>
     </td>
 <?php } else { ?>
     <?php require ("edit_cycle.phtml"); ?>

@@ -4,6 +4,88 @@ $id = try_get($_GET, "a", -1);
 $unique = $id != -1;
 ?>
 
+<script>
+function cycle_copy_codename(button, codename)
+{
+    var copied = function () {
+        if (!button)
+            return ;
+        var previous = button.getAttribute("data-copy-label") || button.textContent;
+        button.setAttribute("data-copy-label", previous);
+        button.classList.add("cycle_list_codename_copied");
+        window.setTimeout(function () {
+            button.classList.remove("cycle_list_codename_copied");
+        }, 700);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText)
+    {
+        navigator.clipboard.writeText(codename).then(copied).catch(function () {
+            cycle_copy_codename_fallback(codename);
+            copied();
+        });
+        return ;
+    }
+    cycle_copy_codename_fallback(codename);
+    copied();
+}
+
+function cycle_copy_codename_fallback(codename)
+{
+    var input = document.createElement("textarea");
+    input.value = codename;
+    input.style.position = "fixed";
+    input.style.left = "-10000px";
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(input);
+}
+
+function cycle_wildcard_regexp(value)
+{
+    var escaped = value.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    escaped = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
+    return (new RegExp("^" + escaped + "$", "i"));
+}
+
+function cycle_list_search(form)
+{
+    var input = form.querySelector("#searchbar");
+    var value = input ? input.value.trim() : "";
+    var rows = document.querySelectorAll("#cyclelist tr[data-cycle-search]");
+    var wildcard = value.indexOf("*") != -1 || value.indexOf("?") != -1;
+    var regexp = wildcard && value != "" ? cycle_wildcard_regexp(value) : null;
+    var plain = value.toLocaleLowerCase();
+
+    rows.forEach(function (row) {
+        var codename = (row.getAttribute("data-cycle-codename") || "").toLocaleLowerCase();
+        var name = (row.getAttribute("data-cycle-name") || "").toLocaleLowerCase();
+        var visible = value == "";
+        if (!visible && regexp)
+            visible = regexp.test(codename) || regexp.test(name);
+        else if (!visible)
+            visible = codename.indexOf(plain) != -1 || name.indexOf(plain) != -1;
+        row.style.display = visible ? "" : "none";
+    });
+    return (false);
+}
+
+function cycle_list_export(form)
+{
+    var format = form.elements["format"].value;
+    if (format != "dabsic" && format != "timeline")
+        return (true);
+
+    var module = form.getAttribute("data-cycle-module");
+    var id = form.getAttribute("data-cycle-id");
+    var endpoint = format == "dabsic" ? "export" : "timeline";
+    window.location.href = "/api/" + module + "/" + id + "/" + endpoint;
+    return (false);
+}
+</script>
+
 <?php if ($unique) { ?>
 <div class="cycle_unique_page">
 <?php } ?>
@@ -23,12 +105,13 @@ $unique = $id != -1;
 	<form
 	    class="alignable_blocks searchbar"
 	    method="get"
-	    onsubmit="return use_search('/api/<?=$page; ?>', this, 'cyclelist');"
+	    onsubmit="return cycle_list_search(this);"
 	>
 	    <input
 		type="text"
 		id="searchbar"
-		placeholder="<?=$Dictionnary["Search"]; ?>"
+		placeholder="<?=$Dictionnary["Search"]; ?> (*, ?)"
+                oninput="cycle_list_search(this.form);"
 	    />
 	</form>
     <?php } ?>

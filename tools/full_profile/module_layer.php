@@ -1,5 +1,8 @@
 <?php
 
+require_once (__DIR__."/../activity_delivery.php");
+
+
 class ModuleLayer extends Layer
 {
     public $LAYER = "MODULE";
@@ -309,13 +312,18 @@ class ModuleLayer extends Layer
 		    else
 		    {
 			$sub->work->add($activity->pickup_date, 1);
-			$sub->archive = db_select_one("
+			$archive_filter = activity_delivery_archive_sql("pickedup_work");
+			$archive = db_select_one("
                            repository, pickedup_date FROM pickedup_work
                            WHERE id_team = {$activity->user_team["id"]}
+                             AND $archive_filter
                            ORDER BY pickedup_date DESC
 			   ");
-			$sub->pickedup_date = $sub->archive["pickedup_date"];
-			$sub->archive = $sub->archive["repository"];
+			if ($archive != NULL)
+			{
+			    $sub->pickedup_date = $archive["pickedup_date"];
+			    $sub->archive = $archive["repository"];
+			}
 		    }
 		}
 	    }

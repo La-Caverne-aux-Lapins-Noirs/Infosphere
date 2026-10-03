@@ -63,12 +63,18 @@ function try_insert(
     }
 
     $icon_file = "";
-    if ($icon != "" && $icon_dir != "")
+    $icon_is_empty = $icon === "" || $icon === NULL
+        || (is_array($icon) && count($icon) == 0);
+    if (!$icon_is_empty && $icon_dir != "")
     {
 	$icon_file = $icon_dir."icon.png";
 	if (($ndir = new_directory($icon_file))->is_error())
 	    return ($ret);
-	if (file_exists($icon))
+
+	// A file input serialized by gather_form() is an array. In particular,
+	// an empty optional file input is [], which must never be passed to
+	// file_exists() on PHP 8 (TypeError).
+	if (is_string($icon) && file_exists($icon))
 	{
 	    // Si le fichier existe: c'est certainement un upload via POST.
 	    if (($msg = upload_png($icon, $icon_file, [100, 100], MINIMUM_PICTURE_SIZE))->is_error())
@@ -76,11 +82,20 @@ function try_insert(
 	}
 	else
 	{
-	    // Si le fichier n'existe pas: c'est un upload via AJAX, avec le fichier b64.
-	    if (isset($icon[0]["content"]))
-		$icon = base64_decode($icon[0]["content"]);
+	    // Sinon: upload via AJAX, avec contenu base64.
+	    if (is_array($icon))
+	    {
+		if (!isset($icon[0]["content"]) || !is_string($icon[0]["content"]))
+		    return (new ErrorResponse("BadFileFormat"));
+		$icon = base64_decode($icon[0]["content"], true);
+	    }
+	    else if (is_string($icon))
+		$icon = base64_decode($icon, true);
 	    else
-		$icon = base64_decode($icon);
+		return (new ErrorResponse("BadFileFormat"));
+
+	    if ($icon === false)
+		return (new ErrorResponse("BadFileFormat"));
 	    if (file_put_contents($icon_file, $icon) === false)
 		return (new ErrorResponse("CannotWritePngFile"));
 	    if (imagecreatefrompng($icon_file) === false)

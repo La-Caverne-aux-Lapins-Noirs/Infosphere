@@ -392,8 +392,31 @@ $neutral = "255, 255, 255, 0.0";
 		    <?php } else { ?>
 			<td style="background-color: white;"><?=$Dictionnary["SingleSubscribed"]; ?></td>
 		    <?php } ?>
-		    <td>
-			/
+		    <?php
+		    $delivery_style = "";
+		    $delivery_word = "";
+		    if ($activity->work->cumulated > 0)
+		    {
+			$delivery_style = "background-color: green; color: white;";
+			$delivery_word = $Dictionnary["WorkDelivered"];
+		    }
+		    else if ($activity->nowork->cumulated > 0)
+		    {
+			$delivery_style = "background-color: red; color: black;";
+			$delivery_word = $Dictionnary["NoWork"];
+		    }
+		    ?>
+		    <td style="<?=$delivery_style; ?> font-weight: bold;">
+			<?php if ($delivery_word != "" && $activity->work->cumulated > 0
+			          && !empty($activity->archive)
+			          && (is_admin() || (int)$user->id === (int)$User["id"])) { ?>
+			    <a href="<?=$activity->archive; ?>" style="color: inherit;">
+				<?=$delivery_word; ?><?php if (!empty($activity->pickedup_date)) { ?>
+				(<?=human_date($activity->pickedup_date); ?>)<?php } ?>
+			    </a>
+			<?php } else { ?>
+			    <?=$delivery_word; ?>
+			<?php } ?>
 		    </td></tr>
 		<?php } ?>
 	    </table>

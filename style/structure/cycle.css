@@ -1205,3 +1205,287 @@
         width: 100%;
     }
 }
+
+/*
+** Compact cycle/template list
+*/
+
+#cyclelist
+{
+    overflow-x: hidden;
+}
+
+.cycle_list_table
+{
+    table-layout: fixed;
+    width: 100%;
+}
+
+.cycle_list_table th,
+.cycle_list_table td
+{
+    box-sizing: border-box;
+    min-width: 0 !important;
+    overflow: hidden;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.cycle_list_table th
+{
+    height: 38px;
+}
+
+.cycle_list_name_column
+{
+    width: 18%;
+}
+
+.cycle_list_credit_column
+{
+    width: 105px;
+}
+
+.cycle_list_date_column
+{
+    width: 88px;
+}
+
+.cycle_list_template_column
+{
+    width: 70px;
+}
+
+.cycle_list_number_column
+{
+    width: 118px;
+}
+
+.cycle_list_count_column
+{
+    width: 58px;
+}
+
+.cycle_list_people_column
+{
+    width: 150px;
+}
+
+.cycle_list_actions_column_template
+{
+    width: 430px;
+}
+
+.cycle_list_actions_column_instance
+{
+    width: 230px;
+}
+
+.cycle_list_actions_column img
+{
+    height: 26px;
+    width: 26px;
+}
+
+.cycle_list_name
+{
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.cycle_list_codename
+{
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit !important;
+    cursor: copy;
+    display: inline !important;
+    font: inherit;
+    font-weight: bold;
+    height: auto !important;
+    margin: 0 !important;
+    max-width: 52%;
+    overflow: hidden;
+    padding: 0 !important;
+    text-align: left;
+    text-decoration: underline dotted;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    white-space: nowrap;
+    width: auto !important;
+}
+
+.cycle_list_codename_copied
+{
+    opacity: 0.55;
+}
+
+.cycle_list_name_separator,
+.cycle_list_pretty_name
+{
+    white-space: nowrap;
+}
+
+.cycle_list_pretty_name
+{
+    opacity: 0.9;
+}
+
+.cycle_list_date,
+.cycle_list_count,
+.cycle_list_credits,
+.cycle_list_number,
+.cycle_list_template
+{
+    text-align: center;
+    white-space: nowrap;
+}
+
+.cycle_list_template a
+{
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cycle_list_empty
+{
+    opacity: 0.45;
+}
+
+.cycle_list_number_detail
+{
+    font-size: 0.78em;
+    opacity: 0.75;
+}
+
+.cycle_list_actions
+{
+    overflow: visible !important;
+    padding: 3px 4px !important;
+}
+
+.cycle_list_actions_inner
+{
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    justify-content: flex-start;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.cycle_list_actions form
+{
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 3px;
+    margin: 0;
+    min-width: 0;
+}
+
+.cycle_list_actions input,
+.cycle_list_actions select
+{
+    box-sizing: border-box;
+    font-size: 0.82em;
+    height: 25px;
+    margin: 0;
+    min-width: 0;
+    padding-bottom: 1px;
+    padding-top: 1px;
+}
+
+.cycle_list_instantiate_form input[type="date"]
+{
+    width: 118px;
+}
+
+.cycle_list_instantiate_form input[type="text"]
+{
+    width: 82px;
+}
+
+.cycle_list_instantiate_form input[type="button"]
+{
+    width: 72px;
+}
+
+.cycle_list_export_form select
+{
+    width: 105px;
+}
+
+.cycle_list_export_form input[type="submit"]
+{
+    width: 58px;
+}
+
+.cycle_list_done_form label
+{
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 2px;
+    margin: 0;
+    width: auto;
+}
+
+.cycle_list_done_form input[type="checkbox"]
+{
+    height: auto;
+    width: auto;
+}
+
+.cycle_list_done_form span
+{
+    display: none;
+}
+
+.cycle_list_delete_form input[type="button"]
+{
+    color: red;
+    width: 28px;
+}
+
+@media (max-width: 1450px)
+{
+    .cycle_list_actions_column_template
+    {
+        width: 385px;
+    }
+
+    .cycle_list_actions_column_instance
+    {
+        width: 215px;
+    }
+
+    .cycle_list_name_column
+    {
+        width: 16%;
+    }
+
+    .cycle_list_number_detail
+    {
+        display: none;
+    }
+
+    .cycle_list_number_column
+    {
+        width: 55px;
+    }
+
+    .cycle_list_instantiate_form input[type="date"]
+    {
+        width: 108px;
+    }
+
+    .cycle_list_instantiate_form input[type="text"]
+    {
+        width: 70px;
+    }
+}

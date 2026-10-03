@@ -1,16 +1,23 @@
-<table class="content_table">
+<table class="content_table cycle_list_table">
     <?php require ("head_cycle.phtml"); ?>
     <?php if (count($cycles = fetch_cycle($page, $id, false, false, true)) == 0) { ?>
-	<tr><td colspan="<?=$columns; ?>"><?=$Dictionnary["NoCycle"]; ?></td></tr>
+        <tr><td colspan="<?=$columns; ?>"><?=$Dictionnary["NoCycle"]; ?></td></tr>
     <?php } else { ?>
-	<?php $cnt = 0; ?>
-	<?php foreach ($cycles as $content) { ?>
-	    <tr
-		class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>"
-		style="<?=$content["done"] ? "background-color: black; color: white;" : ""; ?>"
-	    >
-		<?php require ("list_cycle_line.phtml"); ?>
-	    </tr>
-	<?php }?>
+        <?php $cnt = 0; ?>
+        <?php foreach ($cycles as $content) { ?>
+            <?php
+            $cycle_search_name = trim((string)($content["name"] ?? ""));
+            $cycle_search_text = trim((string)$content["codename"]." ".$cycle_search_name);
+            ?>
+            <tr
+                class="content_<?=$cnt++ % 2 ? "even" : "odd"; ?>"
+                data-cycle-search="<?=htmlspecialchars($cycle_search_text, ENT_QUOTES); ?>"
+                data-cycle-codename="<?=htmlspecialchars((string)$content["codename"], ENT_QUOTES); ?>"
+                data-cycle-name="<?=htmlspecialchars($cycle_search_name, ENT_QUOTES); ?>"
+                style="<?=$content["done"] ? "background-color: black; color: white;" : ""; ?>"
+            >
+                <?php require ("list_cycle_line.phtml"); ?>
+            </tr>
+        <?php }?>
     <?php } ?>
 </table>
