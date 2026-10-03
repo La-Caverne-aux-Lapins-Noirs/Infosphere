@@ -39,6 +39,33 @@
 .correction-actions input[type="file"] { flex:1 1 340px; min-width:220px; }
 .correction-actions select { flex:0 1 260px; min-width:160px; }
 .correction-actions button { background:rgba(0,90,0,.9); color:white; cursor:pointer; }
+.correction-upload-status {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:-2px 0 10px;
+    padding:8px 10px;
+    border:1px solid rgba(0,220,0,.28);
+    border-radius:9px;
+    background:rgba(0,0,0,.72);
+}
+.correction-upload-status[hidden] { display:none; }
+.correction-upload-status details { max-width:55%; }
+.correction-upload-status details ul {
+    max-height:140px;
+    overflow:auto;
+    margin:5px 0 0;
+    padding-left:20px;
+}
+.correction-upload-status button {
+    margin-left:auto;
+    padding:5px 8px;
+    border:1px solid rgba(0,220,0,.3);
+    border-radius:6px;
+    background:rgba(0,90,0,.9);
+    color:white;
+    cursor:pointer;
+}
 
 #correction-catalog {
     display:flex;

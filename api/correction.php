@@ -151,6 +151,14 @@ function CorrectionCreate($id, $data, $method, $output, $module)
     }
     else
         bad_request();
+
+    // Les transferts massifs utilisent une requête par fichier. Éviter de
+    // reconstruire et renvoyer tout le catalogue pour chaque fichier : le
+    // navigateur le rafraîchit une seule fois à la fin du lot.
+    if (($action == "upload" || $action == "upload_tree") &&
+        (($data["response"] ?? "") == "minimal"))
+        return (new ValueResponse(["msg" => "Saved"]));
+
     $response = CorrectionDisplay(-1, [], "GET", $output, $module);
     $response->value["msg"] = "Saved";
     return ($response);

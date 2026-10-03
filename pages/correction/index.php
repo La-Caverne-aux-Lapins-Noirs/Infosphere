@@ -25,7 +25,7 @@ require_once (__DIR__."/style.php");
                 <input type="hidden" name="action" value="rollback" />
                 <button type="submit" class="danger">Restaurer la génération précédente</button>
             </form>
-            <form class="correction-upload" method="post" enctype="multipart/form-data" data-direct-file-upload="1" action="/api/correction" onsubmit="return silent_submit(this, 'correction-catalog');">
+            <form class="correction-upload" method="post" enctype="multipart/form-data" data-direct-file-upload="1" action="/api/correction" onsubmit="return correctionUploadForm(this);">
                 <input type="hidden" name="action" value="upload" />
                 <select name="id_category" required>
                     <?php foreach (correction_categories() as $category) { ?>
@@ -193,77 +193,224 @@ function correctionTreeAllowedUploadName(name) {
     return name !== ".htaccess" && name !== ".user.ini";
 }
 
-function correctionTreeUploadFiles(categoryId, files) {
-    var accepted = [];
-    var transfer = new DataTransfer();
-    var form;
-    var input;
+var correctionUploadConcurrency = 4;
+var correctionUploadActive = false;
+var correctionUploadRetry = null;
 
-    if (categoryId <= 0 || !files || !files.length)
-        return false;
-    Array.prototype.forEach.call(files, function (file) {
-        if (correctionTreeAllowedUploadName(file.name)) {
-            accepted.push(file);
-            transfer.items.add(file);
+function correctionUploadStatusBox() {
+    var box = document.getElementById("correction-upload-status");
+    var actions;
+
+    if (box)
+        return box;
+    actions = document.querySelector(".correction-actions");
+    if (!actions)
+        return null;
+    box = document.createElement("div");
+    box.id = "correction-upload-status";
+    box.className = "correction-upload-status";
+    box.hidden = true;
+    actions.insertAdjacentElement("afterend", box);
+    return box;
+}
+
+function correctionUploadStatus(total, done, failed, running, complete) {
+    var box = correctionUploadStatusBox();
+    var summary;
+    var retry;
+
+    if (!box)
+        return;
+    box.hidden = false;
+    box.innerHTML = "";
+    summary = document.createElement("span");
+    summary.textContent = complete
+        ? "Mise en ligne terminée : " + (done - failed) + " / " + total + " réussi(s)"
+        : "Mise en ligne : " + done + " / " + total +
+            (running ? " · " + running + " en cours" : "");
+    box.appendChild(summary);
+    if (failed) {
+        summary.appendChild(document.createTextNode(" · " + failed + " échec(s)"));
+        if (complete && correctionUploadRetry && correctionUploadRetry.items.length) {
+            var details = document.createElement("details");
+            var detailSummary = document.createElement("summary");
+            var list = document.createElement("ul");
+
+            detailSummary.textContent = "Détails des échecs";
+            details.appendChild(detailSummary);
+            correctionUploadRetry.items.forEach(function (item) {
+                var line = document.createElement("li");
+                line.textContent = (item.path || item.file.name) + " : " +
+                    (item.error || "Échec de l’import");
+                list.appendChild(line);
+            });
+            details.appendChild(list);
+            box.appendChild(details);
+
+            retry = document.createElement("button");
+            retry.type = "button";
+            retry.textContent = "Réessayer les échecs";
+            retry.onclick = function () {
+                var pending = correctionUploadRetry;
+                correctionUploadRetry = null;
+                correctionUploadRun(pending.categoryId, pending.items);
+            };
+            box.appendChild(retry);
         }
+    }
+}
+
+function correctionUploadError(packet, fallback) {
+    if (packet && packet.msg)
+        return packet.msg;
+    return fallback || "Échec de l’import";
+}
+
+function correctionUploadOne(categoryId, item) {
+    var form = new FormData();
+
+    form.append("action", "upload_tree");
+    form.append("id_category", categoryId);
+    form.append("response", "minimal");
+    form.append("file[]", item.file, item.file.name);
+    form.append("relative_path[]", item.path || item.file.name);
+    return fetch("/api/correction", {
+        method: "POST",
+        body: form,
+        credentials: "same-origin"
+    }).then(function (response) {
+        return response.json().then(function (packet) {
+            if (!response.ok || packet.result !== "ok")
+                throw new Error(correctionUploadError(packet, item.path));
+            return packet;
+        });
+    });
+}
+
+function correctionUploadPool(categoryId, items, concurrency, state) {
+    var next = 0;
+
+    function worker() {
+        var item;
+        if (next >= items.length)
+            return Promise.resolve();
+        item = items[next++];
+        state.running++;
+        correctionUploadStatus(state.total, state.done, state.failed.length,
+            state.running, false);
+        return correctionUploadOne(categoryId, item)
+            .catch(function (error) {
+                item.error = error && error.message ? error.message : "Échec de l’import";
+                state.failed.push(item);
+            })
+            .then(function () {
+                state.running--;
+                state.done++;
+                correctionUploadStatus(state.total, state.done, state.failed.length,
+                    state.running, false);
+                return worker();
+            });
+    }
+
+    var workers = [];
+    var count = Math.min(concurrency, items.length);
+    for (var i = 0; i < count; ++i)
+        workers.push(worker());
+    return Promise.all(workers);
+}
+
+function correctionRefreshCatalog() {
+    return fetch("/api/correction", {credentials: "same-origin"})
+        .then(function (response) { return response.json(); })
+        .then(function (packet) {
+            var root;
+            if (packet.result !== "ok")
+                throw new Error(correctionUploadError(packet, "Impossible de rafraîchir le catalogue"));
+            root = document.getElementById("correction-catalog");
+            if (root && typeof packet.content === "string")
+                root.innerHTML = packet.content;
+            correctionClearStaleDebug();
+            correctionRestoreActiveTab();
+        });
+}
+
+function correctionUploadRun(categoryId, entries) {
+    var accepted = [];
+    var regular = [];
+    var libraries = [];
+    var state;
+
+    if (correctionUploadActive) {
+        alert("Une mise en ligne est déjà en cours.");
+        return false;
+    }
+    (entries || []).forEach(function (item) {
+        if (!item || !item.file || !correctionTreeAllowedUploadName(item.file.name))
+            return;
+        item.error = null;
+        accepted.push(item);
+        if (/\.so$/i.test(item.file.name))
+            libraries.push(item);
+        else
+            regular.push(item);
     });
     if (!accepted.length) {
         alert("Aucun fichier importable n’a été trouvé.");
         return false;
     }
 
-    form = document.createElement("form");
-    form.method = "post";
-    form.action = "/api/correction";
-    form.enctype = "multipart/form-data";
-    form.setAttribute("data-direct-file-upload", "1");
-    form.innerHTML =
-        '<input type="hidden" name="action" value="upload" />' +
-        '<input type="hidden" name="id_category" value="' + categoryId + '" />';
-    input = document.createElement("input");
-    input.type = "file";
-    input.name = "file[]";
-    input.multiple = true;
-    input.files = transfer.files;
-    form.appendChild(input);
-    document.body.appendChild(form);
+    state = {total: accepted.length, done: 0, running: 0, failed: []};
+    correctionUploadActive = true;
+    correctionUploadRetry = null;
+    correctionUploadStatus(state.total, 0, 0, 0, false);
 
-    silent_submitf(form, {
-        tofill: "correction-catalog",
-        after_success: function () {
-            form.remove();
-            correctionRestoreActiveTab();
-        }
+    // Les ressources et Dabsic peuvent être transférés en parallèle. Les .so
+    // restent séquentiels afin de préserver la détection des evaluate_* dupliqués.
+    correctionUploadPool(categoryId, regular, correctionUploadConcurrency, state)
+        .then(function () {
+            return correctionUploadPool(categoryId, libraries, 1, state);
+        })
+        .then(function () {
+            correctionUploadRetry = state.failed.length
+                ? {categoryId: categoryId, items: state.failed.slice()}
+                : null;
+            return correctionRefreshCatalog();
+        })
+        .catch(function (error) {
+            alert(error && error.message ? error.message : "Échec de l’import");
+        })
+        .then(function () {
+            correctionUploadActive = false;
+            correctionUploadStatus(state.total, state.done, state.failed.length, 0, true);
+        });
+    return true;
+}
+
+function correctionUploadForm(form) {
+    var input = form.querySelector('input[type="file"]');
+    var category = form.querySelector('[name="id_category"]');
+    var files;
+
+    if (!input || !category)
+        return false;
+    files = Array.prototype.map.call(input.files || [], function (file) {
+        return {file: file, path: file.name};
     });
+    if (correctionUploadRun(parseInt(category.value, 10) || 0, files))
+        input.value = "";
+    return false;
+}
+
+function correctionTreeUploadFiles(categoryId, files) {
+    var entries = Array.prototype.map.call(files || [], function (file) {
+        return {file: file, path: file.name};
+    });
+    correctionUploadRun(categoryId, entries);
     return false;
 }
 
 function correctionTreeUploadEntries(categoryId, files) {
-    var form = new FormData();
-    var accepted = 0;
-
-    form.append("action", "upload_tree");
-    form.append("id_category", categoryId);
-    files.forEach(function (item) {
-        if (!correctionTreeAllowedUploadName(item.file.name))
-            return;
-        form.append("file[]", item.file, item.file.name);
-        form.append("relative_path[]", item.path || item.file.name);
-        accepted++;
-    });
-    if (!accepted) {
-        alert("Le dossier ne contient aucun fichier importable.");
-        return false;
-    }
-    fetch("/api/correction", {method: "POST", body: form, credentials: "same-origin"})
-        .then(function (response) { return response.json(); })
-        .then(function (packet) {
-            if (packet.result !== "ok")
-                throw new Error(packet.msg || "Échec de l’import");
-            document.getElementById("correction-catalog").innerHTML = packet.content;
-            correctionRestoreActiveTab();
-        })
-        .catch(function (error) { alert(error.message); });
+    correctionUploadRun(categoryId, files);
     return false;
 }
 

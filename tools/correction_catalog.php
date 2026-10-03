@@ -131,9 +131,32 @@ function correction_ensure_category_path($base_category_id, $relative_directory)
         if ($row == NULL)
         {
             $ename = $Database->real_escape_string($part);
-            if ($Database->query("INSERT INTO correction_category (id_parent, codename, name) VALUES ($parent, '$ecode', '$ename')") == NULL)
-                return (["ok" => false, "error" => "CannotCreateDirectory"]);
-            $parent = (int)$Database->insert_id;
+            if ($Database->query(
+                "INSERT INTO correction_category (id_parent, codename, name) " .
+                "VALUES ($parent, '$ecode', '$ename')"
+            ) === false)
+            {
+                // Plusieurs uploads d'un même dossier peuvent arriver en
+                // parallèle. Si un autre worker vient de créer la catégorie,
+                // reprendre cette ligne au lieu d'échouer sur la contrainte
+                // UNIQUE (id_parent, codename).
+                $res = $Database->query(
+                    "SELECT id, deleted FROM correction_category " .
+                    "WHERE id_parent = $parent AND codename = '$ecode' " .
+                    "ORDER BY deleted IS NULL DESC LIMIT 1"
+                );
+                $row = $res == NULL ? NULL : $res->fetch_assoc();
+                if ($row == NULL)
+                    return (["ok" => false, "error" => "CannotCreateDirectory"]);
+                $parent = (int)$row['id'];
+                if ($row['deleted'] !== NULL)
+                    $Database->query(
+                        "UPDATE correction_category SET name = '$ename', deleted = NULL " .
+                        "WHERE id = $parent"
+                    );
+            }
+            else
+                $parent = (int)$Database->insert_id;
         }
         else
         {
