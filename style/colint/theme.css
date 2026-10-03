@@ -1,0 +1,1052 @@
+/*
+ * Infosphere — Colint School visual theme
+ * ---------------------------------------
+ * Presentational override: application work-area geometry is preserved; only
+ * the footer layout is corrected so its menu cannot run under the login block.
+ * V3 keeps Infosphere's dense information architecture intact while adapting
+ * Colint School's black / white / yellow identity into a flatter, more editorial
+ * application skin. Yellow is used at several alpha levels so large controls keep
+ * the identity without becoming solid colour slabs. Fixed-size separators still
+ * favour inset shadows over layout-affecting borders.
+ */
+
+:root {
+    --colint-yellow: #ffd21a;
+    --colint-yellow-rgb: 255, 210, 26;
+    --colint-yellow-08: rgba(var(--colint-yellow-rgb), 0.08);
+    --colint-yellow-14: rgba(var(--colint-yellow-rgb), 0.14);
+    --colint-yellow-22: rgba(var(--colint-yellow-rgb), 0.22);
+    --colint-yellow-36: rgba(var(--colint-yellow-rgb), 0.36);
+    --colint-yellow-58: rgba(var(--colint-yellow-rgb), 0.58);
+    --colint-yellow-soft: rgba(var(--colint-yellow-rgb), 0.34);
+    --colint-yellow-pale: rgba(var(--colint-yellow-rgb), 0.11);
+    --colint-ink: #111111;
+    --colint-ink-soft: #2a2a28;
+    --colint-paper: #f4f3ee;
+    --colint-white: #ffffff;
+    --colint-line: #171717;
+    --colint-muted: #686762;
+    --colint-muted-line: #d7d5cc;
+    --colint-surface-line: rgba(17, 17, 17, 0.16);
+    --colint-danger: #b82020;
+    --colint-success: #24733c;
+    --colint-shadow: rgba(17, 17, 17, 0.08);
+    --colint-scroll-thumb: #77756f;
+    --colint-scroll-track: #e6e3d9;
+}
+
+/* Base -------------------------------------------------------------------- */
+
+html,
+body {
+    background: var(--colint-paper);
+}
+
+body {
+    color: var(--colint-ink);
+    background-image: none !important;
+}
+
+*,
+*::before,
+*::after {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+}
+
+/*
+ * Do not force a foreground colour on every descendant. A global `* {color}`
+ * made legacy dark surfaces inherit black-on-black text. Base text inherits from
+ * body; dark surfaces below explicitly switch their descendants to white.
+ */
+
+a,
+a:active,
+a:visited {
+    color: var(--colint-ink);
+    text-decoration-color: var(--colint-yellow);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+a:hover {
+    color: #000000;
+    text-decoration-color: #000000;
+}
+
+b,
+strong {
+    color: var(--colint-ink);
+    text-shadow: none !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--colint-ink);
+    font-weight: 800;
+    letter-spacing: -0.012em;
+}
+
+h1,
+h2 {
+    text-transform: uppercase;
+}
+
+hr {
+    border-color: var(--colint-line);
+}
+
+::selection {
+    background: var(--colint-yellow);
+    color: var(--colint-ink);
+}
+
+/* Inputs and buttons ------------------------------------------------------ */
+
+select,
+textarea,
+input[type="text"],
+input[type="week"],
+input[type="datetime_local"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+input[type="phone"],
+input[type="tel"],
+input[type="mail"],
+input[type="email"],
+input[type="password"],
+option {
+    color: var(--colint-ink);
+    background: var(--colint-white);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-muted-line);
+}
+
+select:focus,
+textarea:focus,
+input:focus {
+    outline: 3px solid var(--colint-yellow);
+    outline-offset: 1px;
+}
+
+input[type="submit"],
+input[type="button"],
+button,
+.button_link,
+.button_paragraph,
+.modulebutton,
+.instance_button {
+    cursor: pointer;
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow) !important;
+    border: 0 !important;
+    border-radius: 2px !important;
+    box-shadow: none;
+    font-weight: 800;
+    text-shadow: none !important;
+    transition: background-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover,
+button:hover,
+.button_link:hover,
+.button_paragraph:hover,
+.modulebutton:hover,
+.instance_button:hover {
+    color: var(--colint-white) !important;
+    background: var(--colint-ink) !important;
+    box-shadow: inset 0 -3px 0 var(--colint-yellow);
+}
+
+input[type="submit"]:active,
+input[type="button"]:active,
+button:active,
+.button_link:active,
+.button_paragraph:active,
+.modulebutton:active,
+.instance_button:active {
+    box-shadow: inset 0 0 0 1px var(--colint-ink);
+}
+
+input[type="button"].admin {
+    background: var(--colint-ink) !important;
+    color: var(--colint-yellow) !important;
+}
+
+.delete_button,
+#down_edit_formular .delete_round,
+#down_edit_formular .delete_wide {
+    background: var(--colint-white) !important;
+    color: var(--colint-danger) !important;
+    border: 0 !important;
+    box-shadow: inset 0 0 0 1px var(--colint-danger) !important;
+}
+
+/* Main navigation -------------------------------------------------------- */
+
+#head {
+    background: var(--colint-white);
+    border-bottom: 0;
+    box-shadow: inset 0 -3px 0 var(--colint-yellow);
+}
+
+#foot {
+    background: var(--colint-ink);
+    border-top: 0;
+    box-shadow: inset 0 3px 0 var(--colint-yellow);
+}
+
+#foot *,
+#foot .menu a div,
+#foot .menubartext span {
+    color: var(--colint-white);
+    text-shadow: none;
+}
+
+#foot select,
+#foot input[type="text"],
+#foot input[type="password"] {
+    background: var(--colint-white);
+    color: var(--colint-ink);
+}
+
+.menu a {
+    text-decoration: none;
+}
+
+.menu a div {
+    color: var(--colint-ink);
+    background: transparent;
+    border-bottom: 4px solid transparent;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+#head.menu a div:hover {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-pale);
+    border-bottom-color: var(--colint-yellow);
+}
+
+#head.menu .current_page > div {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-pale) !important;
+    border-bottom-color: var(--colint-yellow);
+}
+
+#foot .menu a div:hover,
+#foot .menu .current_page > div {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow) !important;
+}
+
+#clock {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border-left: 0;
+    box-shadow: inset 1px 0 0 rgba(17, 17, 17, 0.28);
+    font-weight: 800;
+    text-shadow: none;
+}
+
+#clock:hover {
+    color: var(--colint-white);
+    background: var(--colint-ink);
+}
+
+.menubartext span,
+.menu b {
+    text-shadow: none !important;
+}
+
+#logo img {
+    filter: none;
+}
+
+/* Scrollbars ------------------------------------------------------------- */
+
+.scrollable,
+.tinyscrollbar,
+.tinyscroll,
+.tabcontent,
+.doclist,
+.click_list {
+    scrollbar-color: var(--colint-scroll-thumb) var(--colint-scroll-track);
+}
+
+::-webkit-scrollbar-track,
+.tinyscroll::-webkit-scrollbar-track {
+    background: var(--colint-scroll-track);
+}
+
+::-webkit-scrollbar-thumb,
+.tinyscroll::-webkit-scrollbar-thumb {
+    background: var(--colint-scroll-thumb);
+    border: 2px solid var(--colint-scroll-track);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover,
+.tinyscroll::-webkit-scrollbar-thumb:hover {
+    background: var(--colint-yellow);
+}
+
+::-webkit-scrollbar-thumb:active,
+.tinyscroll::-webkit-scrollbar-thumb:active {
+    background: var(--colint-ink);
+}
+
+/* Reusable surfaces ------------------------------------------------------ */
+
+.formular_slot,
+.prettybox,
+.panel,
+.main_data_profile,
+.userdiv,
+.roomdiv,
+.module_menubar,
+.module_tab,
+.resume_module,
+.support_screen,
+.support_add_formular,
+.activity_tab,
+.full_box_with_title,
+.tabcontent,
+.medal_box,
+.profile_medal_box,
+.profile_single_medal_box,
+.file_browser,
+#activity_tab td > div,
+#home_table tr td > div,
+#activity_table tr td > div {
+    color: var(--colint-ink);
+    background: var(--colint-white) !important;
+    border: 0 !important;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line),
+        0 1px 2px var(--colint-shadow);
+    backdrop-filter: none !important;
+}
+
+#home_table tr td > div:hover,
+#activity_table tr td > div:hover,
+.userdiv:hover,
+.medal_box:hover,
+.doclist div:hover {
+    background: var(--colint-yellow-pale) !important;
+}
+
+.content_even {
+    background: var(--colint-white) !important;
+}
+
+.content_odd {
+    background: #f0eee6 !important;
+}
+
+.content_even:hover,
+.content_odd:hover {
+    background: var(--colint-yellow-pale) !important;
+}
+
+.lightbackground {
+    background: var(--colint-yellow-pale) !important;
+}
+
+/* Home ------------------------------------------------------------------- */
+
+#quote {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border: 0;
+    box-shadow: inset 4px 0 0 var(--colint-ink);
+    font-weight: 800;
+}
+
+#home_table h1,
+#home_table h2,
+#home_table h3,
+#home_table h4,
+#home_table h5,
+#activity_table h1,
+#activity_table h2,
+#activity_table h3,
+#activity_table h4,
+#activity_table h5 {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+#powerbox {
+    background: #fff0f0 !important;
+    border-color: transparent !important;
+    box-shadow: inset 4px 0 0 var(--colint-danger),
+        inset 0 0 0 1px rgba(184, 32, 32, 0.18) !important;
+}
+
+/* Tabs ------------------------------------------------------------------- */
+
+.tablist div {
+    color: var(--colint-ink);
+    background: var(--colint-white);
+    border: 0;
+    border-radius: 0 !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    transition: background-color 0.14s ease, color 0.14s ease;
+    backdrop-filter: none;
+}
+
+.tablist div:hover {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-soft);
+}
+
+.tablist div.selected {
+    color: var(--colint-ink);
+    background: var(--colint-yellow) !important;
+    border-color: transparent;
+    box-shadow: inset 0 -3px 0 var(--colint-ink);
+}
+
+.tablist div:active {
+    color: var(--colint-white);
+    background: var(--colint-ink);
+}
+
+/* Tables and lists ------------------------------------------------------- */
+
+.content_table {
+    background: var(--colint-white);
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.content_table th {
+    color: var(--colint-white);
+    background: var(--colint-ink);
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.content_table td {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--colint-muted-line);
+}
+
+.content_table tr:hover td {
+    background: var(--colint-yellow-pale);
+}
+
+.entry {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--colint-muted-line);
+}
+
+#activity_tab .entry:hover,
+.click_list > div:hover {
+    background: var(--colint-yellow-pale);
+}
+
+.click_list > div {
+    background: var(--colint-white);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+/* Activities / module editor -------------------------------------------- */
+
+#activity_tab > tr > td {
+    border-left-color: var(--colint-line);
+}
+
+#activity_tab td > div *,
+#activity_tab td > div a {
+    color: var(--colint-ink);
+}
+
+.form_entry > div > label,
+.date_entry > div > label {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-soft);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.edit_formular td > div {
+    background: var(--colint-paper) !important;
+}
+
+.download_button,
+.link_button {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.download_button:hover,
+.link_button:hover {
+    background: var(--colint-ink);
+    color: var(--colint-white);
+}
+
+.file_browser > .icon {
+    border-bottom-color: var(--colint-line);
+}
+
+.file_browser .filename {
+    color: var(--colint-white);
+    text-shadow: 0 1px 2px #000000;
+}
+
+.rollbutton {
+    color: var(--colint-ink) !important;
+    background: linear-gradient(to right, transparent, var(--colint-yellow)) !important;
+    border-right-color: var(--colint-line) !important;
+    border-radius: 0 !important;
+}
+
+/* Modules / supports ----------------------------------------------------- */
+
+.module_menubar,
+.resume_module,
+.support_screen,
+.support_add_formular,
+.activity_tab {
+    background: var(--colint-white) !important;
+}
+
+.modulebutton,
+.modulebutton a {
+    color: var(--colint-ink) !important;
+}
+
+.module_button {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.activity_material li,
+.medalscroll > div {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-pale);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+    backdrop-filter: none;
+}
+
+.asset_link,
+.asset_link *,
+.module_link,
+.module_link * {
+    color: var(--colint-ink);
+}
+
+.asset_link.selected,
+.asset_link.selected *,
+.module_link.selected,
+.module_link.selected * {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-soft);
+    font-weight: 800;
+}
+
+.module_link.notsubscribed,
+.module_link.notsubscribed * {
+    color: var(--colint-muted);
+}
+
+.outline .outlinee p,
+.outline h2,
+.outline a {
+    color: var(--colint-ink);
+    background: var(--colint-yellow-pale);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-muted-line);
+}
+
+.bout,
+.bin {
+    color: var(--colint-ink);
+    background: var(--colint-white);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.bin {
+    background: var(--colint-yellow-soft);
+    box-shadow: inset 4px 0 0 var(--colint-yellow),
+        inset 0 0 0 1px var(--colint-surface-line);
+}
+
+/* Grades keep their semantic medal colours, but lose the green theme glow. */
+.resume_module .grade_a,
+.resume_module .grade_b,
+.resume_module .grade_c,
+.resume_module .grade_d {
+    color: var(--colint-ink);
+}
+
+/* Calendar --------------------------------------------------------------- */
+
+.calendar,
+.calendar th,
+.calendar tr,
+.calendar td {
+    border-color: var(--colint-muted-line);
+}
+
+.calendar th {
+    color: var(--colint-white);
+    background: var(--colint-ink);
+}
+
+.calendar_project_container {
+    background: var(--colint-white);
+    backdrop-filter: none;
+}
+
+.weektop {
+    border-top-color: var(--colint-yellow) !important;
+}
+
+.today {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    font-weight: 800;
+}
+
+.calendar_activity {
+    border-color: transparent;
+    box-shadow: inset 0 -3px 0 var(--colint-ink);
+}
+
+/* Documents -------------------------------------------------------------- */
+
+.doclist div {
+    color: var(--colint-ink);
+    background: var(--colint-white);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-muted-line);
+    backdrop-filter: none;
+}
+
+.doclist div.selected {
+    background: var(--colint-yellow-soft);
+    border-color: transparent;
+    box-shadow: inset 5px 0 0 var(--colint-yellow),
+        inset 0 0 0 1px var(--colint-surface-line);
+}
+
+/* Profiles / users ------------------------------------------------------- */
+
+.profile_data {
+    color: var(--colint-ink);
+    background: var(--colint-white);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.profile_data * {
+    color: var(--colint-ink);
+}
+
+.school_profile_icon {
+    background-color: var(--colint-white);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line),
+        0 0 0 3px var(--colint-yellow);
+}
+
+.userdiv h3 {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border-bottom: 0;
+    box-shadow: inset 0 -3px 0 rgba(17, 17, 17, 0.22);
+}
+
+.userdiv .sublist_of_link div {
+    background: var(--colint-paper);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--colint-muted-line);
+}
+
+.userdiv .sublist_of_link div a {
+    color: var(--colint-ink);
+}
+
+/* Medals ----------------------------------------------------------------- */
+
+.medal_box {
+    border-color: var(--colint-line) !important;
+}
+
+.medal_scrollbar {
+    background: var(--colint-ink);
+}
+
+.medal_scrollbar_cursor {
+    background: var(--colint-yellow);
+    border: 0;
+    border-radius: 0;
+}
+
+/* Intercom --------------------------------------------------------------- */
+
+.intercom_subjects th {
+    color: var(--colint-white);
+    background: var(--colint-ink);
+    text-transform: uppercase;
+}
+
+.intercom_subjects td {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--colint-muted-line);
+}
+
+.intercom_subjects tr:hover td {
+    background: var(--colint-yellow-pale);
+}
+
+/* Status and utility surfaces ------------------------------------------- */
+
+#debugbox {
+    color: var(--colint-white);
+    background: rgba(17, 17, 17, 0.96);
+    border: 0;
+    box-shadow: inset 0 0 0 3px var(--colint-yellow),
+        0 8px 24px rgba(0, 0, 0, 0.20);
+}
+
+.db_bug_div {
+    color: var(--colint-white);
+    background: var(--colint-danger);
+    border-color: transparent;
+}
+
+#error_message {
+    color: var(--colint-white);
+    border: 0;
+    box-shadow: inset 0 0 0 2px var(--colint-ink);
+}
+
+#error_message p,
+#error_message p * {
+    color: var(--colint-white);
+    font-weight: 800;
+}
+
+.cog {
+    filter: none;
+}
+
+/* Loading screen --------------------------------------------------------- */
+
+#loading_screen1,
+#loading_screen2 {
+    background: var(--colint-yellow);
+    border-color: transparent;
+    box-shadow: inset 0 -3px 0 var(--colint-ink);
+}
+
+#loading_logo {
+    filter: none;
+}
+
+/* Secondary navigation / filters ---------------------------------------- */
+
+.submenu,
+.path_browser,
+.planning_filters,
+.asset_menubar {
+    background: var(--colint-white);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+}
+
+.submenutr > td:first-of-type,
+.submenutd {
+    background: var(--colint-white);
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--colint-muted-line);
+}
+
+.submenutd a {
+    color: var(--colint-ink);
+    text-decoration-color: var(--colint-yellow);
+}
+
+.full_box_with_title > h4 {
+    color: var(--colint-ink);
+    background: var(--colint-yellow);
+    border-bottom: 0;
+    box-shadow: inset 0 -3px 0 rgba(17, 17, 17, 0.22);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.full_box_with_title > div {
+    background: var(--colint-white);
+}
+
+.modulebutton:hover a {
+    color: var(--colint-white) !important;
+}
+
+
+/* V3 density-preserving refinements -------------------------------------- */
+
+/*
+ * The activity editor uses full-height button columns. Solid yellow on every
+ * row becomes visually overwhelming, so these navigation controls use alpha
+ * levels instead. The inline `color: white` is the legacy selected-state flag.
+ */
+#down_edit_formular .languages_buttons,
+#down_edit_formular .categories_buttons,
+#down_edit_formular .ressources_buttons {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-22) !important;
+    box-shadow: inset 4px 0 0 var(--colint-yellow-58) !important;
+}
+
+#down_edit_formular .languages_buttons:hover,
+#down_edit_formular .categories_buttons:hover,
+#down_edit_formular .ressources_buttons:hover {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-36) !important;
+    box-shadow: inset 4px 0 0 var(--colint-yellow) !important;
+}
+
+#down_edit_formular .languages_buttons[style*="color: white"],
+#down_edit_formular .categories_buttons[style*="color: white"],
+#down_edit_formular .ressources_buttons[style*="color: white"] {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-58) !important;
+    box-shadow: inset 0 -3px 0 var(--colint-ink) !important;
+}
+
+/* Newer Intercom navigation: remove the inherited translucent green skin. */
+.intercom_nav_item {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-14) !important;
+    border: 0 !important;
+    box-shadow: inset 3px 0 0 var(--colint-yellow-58),
+        inset 0 0 0 1px var(--colint-surface-line) !important;
+}
+
+.intercom_nav_item:hover {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-22) !important;
+    box-shadow: inset 3px 0 0 var(--colint-yellow),
+        inset 0 0 0 1px var(--colint-surface-line) !important;
+}
+
+.intercom_nav_item.active,
+.intercom_nav_item.selected,
+.intercom_nav_item[aria-current="page"] {
+    color: var(--colint-ink) !important;
+    background: var(--colint-yellow-36) !important;
+    box-shadow: inset 4px 0 0 var(--colint-ink),
+        inset 0 0 0 1px var(--colint-surface-line) !important;
+}
+
+.intercom_report_nav_item {
+    background: rgba(184, 32, 32, 0.08) !important;
+    box-shadow: inset 3px 0 0 rgba(184, 32, 32, 0.60),
+        inset 0 0 0 1px rgba(184, 32, 32, 0.20) !important;
+}
+
+.intercom_report_nav_item:hover {
+    background: rgba(184, 32, 32, 0.14) !important;
+}
+
+.intercom_nav_title,
+.intercom_nav_subtitle {
+    color: var(--colint-ink) !important;
+    text-shadow: none !important;
+}
+
+/*
+ * Footer: reserve real space for the language chooser and login block instead
+ * of letting the absolutely-positioned menu run underneath the user identity.
+ * This changes only the footer's layout; the application's dense work areas are
+ * untouched. Font size and horizontal padding adapt just enough to keep every
+ * back-office entry on one line at ordinary desktop widths.
+ */
+#foot {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) max-content;
+    align-items: stretch;
+}
+
+#foot > form {
+    grid-column: 1;
+    width: 150px;
+    min-width: 0;
+}
+
+#foot > form > select {
+    width: 142px;
+    box-sizing: border-box;
+}
+
+#foot > .menu {
+    grid-column: 2;
+    position: static;
+    left: auto;
+    right: auto;
+    width: auto;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+#foot > .menu > a {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+#foot > .menu > a > div {
+    float: none;
+    margin-left: 0;
+    padding-left: clamp(3px, 0.42vw, 7px);
+    padding-right: clamp(3px, 0.42vw, 7px);
+    font-size: clamp(10px, 0.72vw, 13px);
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+#foot > .loginout {
+    grid-column: 3;
+    position: static;
+    float: none;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+#foot > .loginout form,
+#foot > .loginout p {
+    margin: 0;
+    height: 50px;
+}
+
+#foot > .loginout p {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    line-height: 1;
+}
+
+#foot > .loginout p span {
+    top: auto;
+    font-size: 13px;
+}
+
+#foot > .loginout input[type="submit"] {
+    flex: 0 0 40px;
+}
+
+/* Contrast safety --------------------------------------------------------- */
+
+#foot *,
+.content_table th *,
+.calendar th *,
+.intercom_subjects th *,
+#debugbox *,
+.db_bug_div *,
+#error_message * {
+    color: inherit;
+}
+
+.content_table th,
+.calendar th,
+.intercom_subjects th,
+#debugbox,
+.db_bug_div,
+#error_message {
+    color: var(--colint-white);
+}
+
+/*
+ * Visual separators are deliberately drawn with inset shadows instead of
+ * borders on fixed-size application containers. They therefore do not alter
+ * the content box and cannot create a scrollbar merely by adding a theme.
+ */
+.formular_slot,
+.prettybox,
+.panel,
+.main_data_profile,
+.userdiv,
+.roomdiv,
+.module_menubar,
+.module_tab,
+.resume_module,
+.support_screen,
+.support_add_formular,
+.activity_tab,
+.full_box_with_title,
+.tabcontent,
+.medal_box,
+.profile_medal_box,
+.profile_single_medal_box,
+.file_browser,
+.submenu,
+.path_browser,
+.planning_filters,
+.asset_menubar {
+    border-width: 0 !important;
+}
+
+/* Intercom, including the older inline-styled message templates ---------- */
+
+.intercom_message {
+    background: var(--colint-white) !important;
+    border: 0 !important;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line) !important;
+}
+
+.intercom_message:hover {
+    background: var(--colint-yellow-pale) !important;
+}
+
+.intercom_subject_list > div:nth-of-type(3) {
+    color: var(--colint-ink);
+    background: var(--colint-yellow) !important;
+    border: 0;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px var(--colint-surface-line);
+    font-weight: 800;
+}
+
+.intercom_messages > div:nth-of-type(2) {
+    background: var(--colint-paper);
+    border: 0;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px var(--colint-muted-line) !important;
+}
