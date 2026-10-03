@@ -403,14 +403,6 @@ class FullActivity extends Response
 	select_right_elem($this, "subject");
 	select_right_elem($this, "configuration");
 
-	if ($this->current_configuration !== NULL && file_exists($this->current_configuration))
-	{
-	    if (($out = generate_subject($this->current_configuration, $this)) != NULL)
-		$this->current_subject = $out;
-	    else
-		$this->current_configuration = NULL;
-	}
-	
 	$this->medal = [];
 	$this->support = [];
 	$this->teacher = [];
@@ -998,6 +990,16 @@ class FullActivity extends Response
 	    $this->teamable = false;
 	if ($this->max_team_size == 1)
 	    $this->teamable = false;
+
+	// Le sujet dynamique dépend du contexte résolu (école, cycle, équipe,
+	// laboratoire et session). Le générer seulement une fois ces données chargées.
+	if ($this->current_configuration !== NULL && file_exists($this->current_configuration))
+	{
+	    if (($out = generate_subject($this->current_configuration, $this)) != NULL)
+		$this->current_subject = $out;
+	    else
+		$this->current_configuration = NULL;
+	}
 	
 	// Si on ne veut pas les sous activités...
 	if ($recursive == false)
