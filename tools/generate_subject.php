@@ -83,7 +83,6 @@ function subject_context_activity_laboratory($id_activity)
           AND activity_teacher.id_laboratory > 0
           AND laboratory.deleted IS NULL
         ORDER BY activity_teacher.id
-        LIMIT 1
     ");
     return ((int)($row["id_laboratory"] ?? 0));
 }
@@ -319,6 +318,13 @@ function subject_context_include_paths($cnf, $act, array $school)
         $Configuration->_ConfigurationDir(),
         $Configuration->ActivitiesDir($act->codename, ""),
     ];
+    // Subject files may @insert/@push reusable exercises from the correction
+    // catalogue.  That catalogue is independent from activity resources and
+    // must therefore be an explicit mergeconf include root.
+    if (function_exists("correction_root_dir"))
+        $paths[] = correction_root_dir();
+    else
+        $paths[] = dirname(__DIR__)."/dres/corrections";
     if (!empty($act->template_codename))
         $paths[] = $Configuration->ActivitiesDir($act->template_codename, "");
     if (($school["codename"] ?? "") != "")
@@ -337,13 +343,21 @@ function generate_subject($cnf, $act)
     global $Configuration;
     global $Language;
 
+    $act->subject_generation_error = NULL;
     if (!is_file($cnf))
+    {
+        $act->subject_generation_error = "Configuration file not found: ".$cnf;
         return (NULL);
+    }
 
     $personal_activity_dir =
         $Configuration->UsersDir($User["codename"])."perso/{$act->codename}/";
-    if (new_directory($personal_activity_dir)->is_error())
+    $directory_result = new_directory($personal_activity_dir);
+    if ($directory_result->is_error())
+    {
+        $act->subject_generation_error = (string)$directory_result;
         return (NULL);
+    }
 
     $laboratory = subject_context_laboratory($cnf, $act);
     $school = subject_context_school($act, $laboratory);
@@ -385,7 +399,10 @@ function generate_subject($cnf, $act)
     $instance = $personal_activity_dir."instance.dab";
     $generated = generate_dabsic($data, $instance);
     if ($generated->is_error())
+    {
+        $act->subject_generation_error = (string)$generated;
         return (NULL);
+    }
 
     $outfile = $personal_activity_dir."subject.pdf";
     $command = "docbuilder";
@@ -398,8 +415,13 @@ function generate_subject($cnf, $act)
     $ret = run_command($command);
     if (($ret["exit_code"] ?? 1) !== 0 || !is_file($outfile))
     {
-        add_log(REPORT, "Subject generation failed for {$act->codename}: ".
-            trim((string)($ret["stderr"] ?? "")));
+        $stderr = trim((string)($ret["stderr"] ?? ""));
+        $stdout = trim((string)($ret["stdout"] ?? ""));
+        $details = $stderr != "" ? $stderr : $stdout;
+        if ($details == "")
+            $details = "DocBuilder exited with code ".(string)($ret["exit_code"] ?? "unknown");
+        $act->subject_generation_error = $details;
+        add_log(REPORT, "Subject generation failed for {$act->codename}: ".$details);
         return (NULL);
     }
     return ($outfile);

@@ -123,6 +123,7 @@ class FullActivity extends Response
     public $automatic_correction_frequency = NULL;
     public $configuration = NULL;
     public $current_configuration = NULL;
+    public $subject_generation_error = NULL;
     public $subject = NULL;
     public $current_subject = NULL;
     public $ressource = NULL;
@@ -998,7 +999,7 @@ class FullActivity extends Response
 	    if (($out = generate_subject($this->current_configuration, $this)) != NULL)
 		$this->current_subject = $out;
 	    else
-		$this->current_configuration = NULL;
+		$this->current_subject = NULL;
 	}
 	
 	// Si on ne veut pas les sous activités...

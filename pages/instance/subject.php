@@ -79,6 +79,15 @@ else
 	<div style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large;" id="subject_error_box">
 	    <?php if ($activity->current_subject == "") { ?>
 		<i><?=$Dictionnary["SubjectNotAvailable"]; ?></i>
+                <?php if ($subject_staff_access && !empty($activity->subject_generation_error)) { ?>
+                    <pre
+                        style="font-size: 13px; text-align: left; white-space: pre-wrap; margin: 20px; padding: 12px; overflow: auto;"
+                    ><?=htmlspecialchars(
+                        $activity->subject_generation_error,
+                        ENT_QUOTES | ENT_SUBSTITUTE,
+                        "UTF-8"
+                    ); ?></pre>
+                <?php } ?>
 	    <?php } else if (!$activity->registered && !$subject_staff_access) { ?>
 		<i><?=$Dictionnary["YouMustBeRegisteredToSee"]; ?></i>
 	    <?php } else if ($activity->teamable && $activity->user_team["canjoin"]) { ?>
