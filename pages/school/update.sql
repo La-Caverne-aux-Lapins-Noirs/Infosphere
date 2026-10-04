@@ -63,3 +63,22 @@ CREATE TABLE IF NOT EXISTS `user_school_responsibility` (
   KEY `id_deleter` (`id_deleter`),
   KEY `user_school_responsibility_active` (`id_user`, `id_school`, `id_school_responsibility`, `deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `school_technocore_configuration` (
+  `id_school` int(11) NOT NULL,
+  PRIMARY KEY (`id_school`),
+  `function_prefix` varchar(64) NOT NULL DEFAULT '',
+  `function_suffix` varchar(64) NOT NULL DEFAULT '',
+  `macro_prefix` varchar(64) NOT NULL DEFAULT '',
+  `macro_suffix` varchar(64) NOT NULL DEFAULT '',
+  `putchar_name` varchar(128) NOT NULL DEFAULT '',
+  `default_evaluation_enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `default_evaluation_cleanliness` tinyint(1) NOT NULL DEFAULT 1,
+  `default_evaluation_norm` tinyint(1) NOT NULL DEFAULT 0,
+  `default_evaluation_make` tinyint(1) NOT NULL DEFAULT 1,
+  `default_evaluation_check` tinyint(1) NOT NULL DEFAULT 1,
+  `default_evaluation_install` tinyint(1) NOT NULL DEFAULT 0,
+  `id_actor` int(11) DEFAULT NULL,
+  KEY `id_actor` (`id_actor`),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

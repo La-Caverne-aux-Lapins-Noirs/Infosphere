@@ -1,0 +1,147 @@
+<?php
+$technocore = school_technocore_configuration((int)$school["id"]);
+$technocore_table = school_technocore_table_available();
+$technocore_preview_error = NULL;
+$technocore_preview = NULL;
+if ($technocore_table && !empty($technocore["configured"]))
+    $technocore_preview = school_technocore_profile_dabsic($school, $technocore_preview_error);
+$resolved_putchar = school_technocore_resolved_putchar($technocore);
+?>
+
+<div class="school_admin_tab_grid">
+    <form
+        method="put"
+        action="/api/school/<?=$school["id"]; ?>/technocore"
+        class="school_admin_card school_admin_form school_admin_block school_admin_full_block"
+        onsubmit="return silent_submitf(this, {after_success: refresh});"
+    >
+        <div class="school_config_columns">
+            <section class="school_config_section school_config_section_wide">
+                <h4>Conventions de code</h4>
+                <p class="school_admin_notice">
+                    Cette configuration est injectée par l'Infosphère dans les sujets DocBuilder
+                    et dans les corrections Evaluator. Les profils présents dans Scolaire restent
+                    des profils de travail ; ils ne constituent pas la configuration de production.
+                </p>
+                <?php if (!$technocore_table) { ?>
+                    <p class="school_admin_notice">
+                        <strong>Migration SQL requise :</strong>
+                        la table <code>school_technocore_configuration</code> n'existe pas encore.
+                    </p>
+                <?php } ?>
+                <div class="school_admin_legal_grid school_admin_legal_grid_compact">
+                    <label>
+                        Préfixe des fonctions
+                        <input
+                            type="text"
+                            name="function_prefix"
+                            maxlength="64"
+                            placeholder="ef"
+                            value="<?=htmlspecialchars((string)$technocore["function_prefix"], ENT_QUOTES); ?>"
+                        />
+                    </label>
+                    <label>
+                        Suffixe des fonctions
+                        <input
+                            type="text"
+                            name="function_suffix"
+                            maxlength="64"
+                            placeholder=""
+                            value="<?=htmlspecialchars((string)$technocore["function_suffix"], ENT_QUOTES); ?>"
+                        />
+                    </label>
+                    <label>
+                        Préfixe des macros
+                        <input
+                            type="text"
+                            name="macro_prefix"
+                            maxlength="64"
+                            placeholder="EF"
+                            value="<?=htmlspecialchars((string)$technocore["macro_prefix"], ENT_QUOTES); ?>"
+                        />
+                    </label>
+                    <label>
+                        Suffixe des macros
+                        <input
+                            type="text"
+                            name="macro_suffix"
+                            maxlength="64"
+                            placeholder=""
+                            value="<?=htmlspecialchars((string)$technocore["macro_suffix"], ENT_QUOTES); ?>"
+                        />
+                    </label>
+                    <label>
+                        Fonction d'affichage d'un caractère
+                        <input
+                            type="text"
+                            name="putchar_name"
+                            maxlength="128"
+                            placeholder="<?=htmlspecialchars($resolved_putchar, ENT_QUOTES); ?>"
+                            value="<?=htmlspecialchars((string)$technocore["putchar_name"], ENT_QUOTES); ?>"
+                        />
+                        <small>
+                            Vide : construite automatiquement avec le préfixe et le suffixe de fonction.
+                        </small>
+                    </label>
+                </div>
+            </section>
+
+            <section class="school_config_section school_config_section_wide">
+                <h4>Évaluation automatique par défaut</h4>
+                <p class="school_admin_notice">
+                    Ce socle s'applique lorsqu'un sujet n'a pas défini explicitement l'équivalent
+                    dans son scope. Une configuration explicite dans l'activité reste prioritaire.
+                </p>
+                <?php
+                $toggles = [
+                    "default_evaluation_enabled" => "Activer le socle automatique",
+                    "default_evaluation_cleanliness" => "Propreté du rendu",
+                    "default_evaluation_norm" => "Norme de présentation",
+                    "default_evaluation_make" => "Makefile",
+                    "default_evaluation_check" => "Exiger la règle check",
+                    "default_evaluation_install" => "Exiger la règle install",
+                ];
+                ?>
+                <div class="school_admin_legal_grid school_admin_legal_grid_compact">
+                    <?php foreach ($toggles as $field => $label) { ?>
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="<?=$field; ?>"
+                                value="1"
+                                <?=!empty($technocore[$field]) ? "checked" : ""; ?>
+                            />
+                            <?=$label; ?>
+                        </label>
+                    <?php } ?>
+                </div>
+            </section>
+
+            <section class="school_config_section school_config_section_wide">
+                <h4>Profil Dabsic injecté</h4>
+                <?php if (empty($technocore["configured"])) { ?>
+                    <p class="school_admin_notice">
+                        Aucun profil TechnoCore n'a encore été enregistré pour cette école.
+                        Les sujets et corrections qui utilisent les conventions d'école ne peuvent
+                        pas être construits de manière fiable tant que ce profil n'est pas défini.
+                    </p>
+                <?php } else if ($technocore_preview !== NULL) { ?>
+                    <pre><?=htmlspecialchars($technocore_preview, ENT_QUOTES); ?></pre>
+                <?php } else { ?>
+                    <p class="school_admin_notice">
+                        <?=htmlspecialchars((string)$technocore_preview_error, ENT_QUOTES); ?>
+                    </p>
+                <?php } ?>
+            </section>
+        </div>
+
+        <div class="school_admin_actions">
+            <input
+                type="button"
+                onclick="silent_submitf(this.form, {after_success: refresh});"
+                value="<?=$Dictionnary["Save"]; ?>"
+                <?=$technocore_table ? "" : "disabled"; ?>
+            />
+        </div>
+    </form>
+</div>

@@ -310,21 +310,6 @@ function subject_context_team($act)
     return (array_values(array_unique($team)));
 }
 
-function subject_context_school_profile(array $school)
-{
-    $codename = strtolower(trim((string)($school["codename"] ?? "")));
-    if ($codename == "" || !preg_match('/^[a-z0-9_-]+$/', $codename))
-        return ("");
-
-    if (function_exists("correction_root_dir"))
-        $root = correction_root_dir();
-    else
-        $root = dirname(__DIR__)."/dres/corrections";
-
-    $profile = rtrim($root, "/")."/ressources/schools/".$codename."/configuration.dab";
-    return (is_file($profile) ? $profile : "");
-}
-
 function subject_context_include_paths($cnf, $act, array $school)
 {
     global $Configuration;
@@ -420,16 +405,28 @@ function generate_subject($cnf, $act)
         return (NULL);
     }
 
+    // Technical school conventions must be parsed before the subject itself:
+    // reusable Dabsic resources can resolve FunctionPrefix, PutChar, ... while
+    // they are being loaded.  The normal Infosphere instance stays last so
+    // contextual activity/matter/front-page data can still override defaults.
+    $school_profile = "";
+    if ((int)($school["id"] ?? 0) > 0)
+    {
+        $school_profile = $personal_activity_dir."school-technocore.dab";
+        $profile_error = NULL;
+        if (!school_technocore_write_profile($school, $school_profile, $profile_error))
+        {
+            $act->subject_generation_error = $profile_error ??
+                "Cannot build school TechnoCore profile";
+            return (NULL);
+        }
+    }
+
     $outfile = $personal_activity_dir."subject.pdf";
     $command = "docbuilder";
     foreach (subject_context_include_paths($cnf, $act, $school) as $path)
         $command .= " -I ".escapeshellarg($path);
 
-    // Seed school-specific technical conventions before loading the subject.
-    // Reusable resources such as programs/print/putchar.c resolve names like
-    // [].PutChar while the subject itself is being parsed, so loading this
-    // profile after the subject would be too late.
-    $school_profile = subject_context_school_profile($school);
     if ($school_profile != "")
         $command .= " -i ".escapeshellarg($school_profile);
 

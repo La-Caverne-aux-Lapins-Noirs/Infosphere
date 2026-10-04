@@ -76,6 +76,25 @@ function EditSchool($id, $data, $method, $output, $module)
     return (new ValueResponse(["msg" => $Dictionnary["Edited"]]));
 }
 
+function EditSchoolTechnoCore($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+    global $User;
+
+    $school = fetch_school((int)$id);
+    if (!is_array($school) || !isset($school["id"]))
+        return (new ErrorResponse("InvalidParameter", "school"));
+
+    $ret = school_technocore_save((int)$id, $data, (int)($User["id"] ?? 0));
+    if ($ret->is_error())
+        return ($ret);
+
+    add_log(EDITING_OPERATION, "School TechnoCore configuration edited", (int)$id);
+    return (new ValueResponse([
+        "msg" => $Dictionnary["Edited"] ?? "Modifié",
+    ]));
+}
+
 function PreviewSchoolDiploma($id, $data, $method, $output, $module)
 {
     $school = fetch_school((int)$id);
@@ -616,6 +635,10 @@ $Tab = [
 	"" => [
 	    "is_director_for_school",
 	    "EditSchool",
+	],
+	"technocore" => [
+	    "is_director_for_school",
+	    "EditSchoolTechnoCore",
 	],
 	"diploma" => [
 	    "is_director_for_school",

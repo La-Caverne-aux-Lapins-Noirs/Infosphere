@@ -37,6 +37,7 @@ require_once ("get_activity.php");
 require_once ("minihtml.php");
 require_once ("get_user_school.php");
 require_once ("school_responsibility.php");
+require_once ("school_technocore.php");
 require_once ("apicall.php");
 require_once ("list_of_links.php");
 require_once ("inside_link.php");

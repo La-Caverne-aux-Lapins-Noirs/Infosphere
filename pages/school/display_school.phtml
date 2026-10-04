@@ -5,7 +5,10 @@ $school_tabs = [
 // Diploma configuration contains the school's cryptographic generation secret.
 // Keep the whole tab out of pages rendered for ordinary teachers.
 if (is_director_for_school((int)$school["id"]))
+{
+    $school_tabs["TechnoCore"] = __DIR__."/technocore_tab.phtml";
     $school_tabs[$Dictionnary["Diplomas"] ?? "Diplômes"] = __DIR__."/diplomas_tab.phtml";
+}
 if (communication_event_can_manage_school((int)$school["id"]))
     $school_tabs["Evènements coms"] = __DIR__."/communication_events_tab.phtml";
 $school_tabs += [
