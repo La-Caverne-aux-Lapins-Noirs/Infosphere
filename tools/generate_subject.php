@@ -351,6 +351,16 @@ function generate_subject($cnf, $act)
         return (NULL);
     }
 
+    // DocBuilder does not load Evaluator's /etc/technocore/configuration.dab.
+    // Supply the production defaults before school conventions and exercises,
+    // including when no school was selected. Never depend on Scolaire here.
+    $runtime_profile = __DIR__."/../res/technocore/configuration.dab";
+    if (!is_readable($runtime_profile))
+    {
+        $act->subject_generation_error = "TechnoCore runtime profile not found: ".$runtime_profile;
+        return (NULL);
+    }
+
     $personal_activity_dir =
         $Configuration->UsersDir($User["codename"])."perso/{$act->codename}/";
     $directory_result = new_directory($personal_activity_dir);
@@ -427,6 +437,7 @@ function generate_subject($cnf, $act)
     foreach (subject_context_include_paths($cnf, $act, $school) as $path)
         $command .= " -I ".escapeshellarg($path);
 
+    $command .= " -i ".escapeshellarg($runtime_profile);
     if ($school_profile != "")
         $command .= " -i ".escapeshellarg($school_profile);
 

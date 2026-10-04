@@ -1,0 +1,20 @@
+' Production defaults for subject generation, owned by Infosphere.
+' Load before the generated school profile, the subject and instance.dab.
+'
+' DocBuilder resolves evaluation expressions too, even though it does not run
+' them. RootDir describes the standard Evaluator installation, not Infosphere's
+' local correction upload directory. Keep the trailing slash.
+'
+' Evaluator itself loads /etc/technocore/configuration.dab on its own machine.
+' Do not prepend this file to its activity.dab: that would override node-local
+' paths after Evaluator has already configured its include search path.
+'
+' School conventions and DefaultEvaluation come from school-technocore.dab.
+
+RootDir = "/var/lib/technocore/"
+
+[AuthorizedFunctions
+  __errno_location
+  __stack_chk_fail
+  __assert_fail
+]
