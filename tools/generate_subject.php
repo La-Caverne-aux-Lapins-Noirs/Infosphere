@@ -287,6 +287,7 @@ function subject_context_school($act, array $laboratory)
     $school = fetch_school($id_school);
     if (is_array($school))
     {
+        $context["codename"] = (string)($school["codename"] ?? ($context["codename"] ?? ""));
         $context["FR"] = (string)($school["fr_name"] ?? ($context["name"] ?? ""));
         $context["EN"] = (string)($school["en_name"] ?? ($context["name"] ?? ""));
     }
@@ -307,6 +308,21 @@ function subject_context_team($act)
     if (!count($team) && is_array($User) && ($User["codename"] ?? "") != "")
         $team[] = $User["codename"];
     return (array_values(array_unique($team)));
+}
+
+function subject_context_school_profile(array $school)
+{
+    $codename = strtolower(trim((string)($school["codename"] ?? "")));
+    if ($codename == "" || !preg_match('/^[a-z0-9_-]+$/', $codename))
+        return ("");
+
+    if (function_exists("correction_root_dir"))
+        $root = correction_root_dir();
+    else
+        $root = dirname(__DIR__)."/dres/corrections";
+
+    $profile = rtrim($root, "/")."/ressources/schools/".$codename."/configuration.dab";
+    return (is_file($profile) ? $profile : "");
 }
 
 function subject_context_include_paths($cnf, $act, array $school)
@@ -408,6 +424,15 @@ function generate_subject($cnf, $act)
     $command = "docbuilder";
     foreach (subject_context_include_paths($cnf, $act, $school) as $path)
         $command .= " -I ".escapeshellarg($path);
+
+    // Seed school-specific technical conventions before loading the subject.
+    // Reusable resources such as programs/print/putchar.c resolve names like
+    // [].PutChar while the subject itself is being parsed, so loading this
+    // profile after the subject would be too late.
+    $school_profile = subject_context_school_profile($school);
+    if ($school_profile != "")
+        $command .= " -i ".escapeshellarg($school_profile);
+
     $command .= " -i ".escapeshellarg($cnf);
     $command .= " -i ".escapeshellarg($instance);
     $command .= " -o ".escapeshellarg($outfile);
