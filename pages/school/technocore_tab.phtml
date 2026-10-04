@@ -1,9 +1,9 @@
 <?php
 $technocore = school_technocore_configuration((int)$school["id"]);
-$technocore_table = school_technocore_table_available();
+$technocore_column = school_technocore_column_available();
 $technocore_preview_error = NULL;
 $technocore_preview = NULL;
-if ($technocore_table && !empty($technocore["configured"]))
+if ($technocore_column && !empty($technocore["configured"]))
     $technocore_preview = school_technocore_profile_dabsic($school, $technocore_preview_error);
 $resolved_putchar = school_technocore_resolved_putchar($technocore);
 ?>
@@ -23,10 +23,10 @@ $resolved_putchar = school_technocore_resolved_putchar($technocore);
                     et dans les corrections Evaluator. Les profils présents dans Scolaire restent
                     des profils de travail ; ils ne constituent pas la configuration de production.
                 </p>
-                <?php if (!$technocore_table) { ?>
+                <?php if (!$technocore_column) { ?>
                     <p class="school_admin_notice">
                         <strong>Migration SQL requise :</strong>
-                        la table <code>school_technocore_configuration</code> n'existe pas encore.
+                        le champ <code>school.technocore_configuration_json</code> n'existe pas encore.
                     </p>
                 <?php } ?>
                 <div class="school_admin_legal_grid school_admin_legal_grid_compact">
@@ -140,7 +140,7 @@ $resolved_putchar = school_technocore_resolved_putchar($technocore);
                 type="button"
                 onclick="silent_submitf(this.form, {after_success: refresh});"
                 value="<?=$Dictionnary["Save"]; ?>"
-                <?=$technocore_table ? "" : "disabled"; ?>
+                <?=$technocore_column ? "" : "disabled"; ?>
             />
         </div>
     </form>

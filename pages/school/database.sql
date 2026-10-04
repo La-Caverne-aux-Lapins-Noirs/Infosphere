@@ -23,6 +23,7 @@ CREATE TABLE `school` (
   `vat_exemption_mention` varchar(512) NOT NULL DEFAULT 'TVA exonérée — article 261-4-4°-a du CGI.',
   `phone` varchar(16) NOT NULL DEFAULT '',
   `mail` text NOT NULL DEFAULT '',
+  `technocore_configuration_json` longtext NOT NULL DEFAULT '{}',
   `diploma_secret` varchar(128) DEFAULT NULL,
   `electronic_invoice_connector_key` varchar(64) NOT NULL DEFAULT '',
   `electronic_invoice_connector_enabled` tinyint(1) NOT NULL DEFAULT 0,
@@ -36,6 +37,9 @@ CREATE TABLE `school` (
   `electronic_invoice_payment_reporting` tinyint(1) NOT NULL DEFAULT 0
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+ALTER TABLE `school`
+  ADD COLUMN IF NOT EXISTS `technocore_configuration_json` longtext NOT NULL DEFAULT '{}' AFTER `mail`;
 
 ALTER TABLE `school`
   ADD COLUMN IF NOT EXISTS `uai` varchar(16) NOT NULL DEFAULT '' AFTER `address`,
@@ -193,21 +197,3 @@ CREATE TABLE `school_mailbox` (
   UNIQUE KEY `school_mailbox_purpose` (`id_school`, `purpose`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-CREATE TABLE `school_technocore_configuration` (
-  `id_school` int(11) NOT NULL,
-  PRIMARY KEY (`id_school`),
-  `function_prefix` varchar(64) NOT NULL DEFAULT '',
-  `function_suffix` varchar(64) NOT NULL DEFAULT '',
-  `macro_prefix` varchar(64) NOT NULL DEFAULT '',
-  `macro_suffix` varchar(64) NOT NULL DEFAULT '',
-  `putchar_name` varchar(128) NOT NULL DEFAULT '',
-  `default_evaluation_enabled` tinyint(1) NOT NULL DEFAULT 1,
-  `default_evaluation_cleanliness` tinyint(1) NOT NULL DEFAULT 1,
-  `default_evaluation_norm` tinyint(1) NOT NULL DEFAULT 0,
-  `default_evaluation_make` tinyint(1) NOT NULL DEFAULT 1,
-  `default_evaluation_check` tinyint(1) NOT NULL DEFAULT 1,
-  `default_evaluation_install` tinyint(1) NOT NULL DEFAULT 0,
-  `id_actor` int(11) DEFAULT NULL,
-  KEY `id_actor` (`id_actor`),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

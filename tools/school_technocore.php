@@ -4,20 +4,28 @@
  * School-level TechnoCore conventions used by both DocBuilder and Evaluator.
  *
  * Scolaire may keep local profiles for authoring/tests, but production
- * configuration is stored in Infosphere so the same reusable subject can be
- * rendered and evaluated with the conventions of the school that uses it.
+ * configuration is stored directly on the school row as JSON so the same
+ * reusable subject can be rendered and evaluated with the conventions of the
+ * school that uses it.
  */
 
-function school_technocore_table_available()
+function school_technocore_column_available()
 {
-    return (function_exists("db_get_tables") &&
-        in_array("school_technocore_configuration", db_get_tables(), true));
+    static $available = NULL;
+
+    if ($available !== NULL)
+        return ($available);
+    if (!function_exists("db_select_rows"))
+        return (false);
+    $available = in_array("technocore_configuration_json", db_select_rows("school"), true);
+    return ($available);
 }
 
 function school_technocore_defaults()
 {
     return ([
         "configured" => false,
+        "configuration_error" => NULL,
         "function_prefix" => "",
         "function_suffix" => "",
         "macro_prefix" => "",
@@ -34,22 +42,61 @@ function school_technocore_defaults()
 
 function school_technocore_configuration($id_school)
 {
-    $defaults = school_technocore_defaults();
+    $configuration = school_technocore_defaults();
     $id_school = (int)$id_school;
-    if ($id_school <= 0 || !school_technocore_table_available())
-        return ($defaults);
+    if ($id_school <= 0)
+        return ($configuration);
+    if (!school_technocore_column_available())
+    {
+        $configuration["configuration_error"] =
+            "school.technocore_configuration_json column is missing";
+        return ($configuration);
+    }
 
-    $row = db_select_one("*
-        FROM school_technocore_configuration
-        WHERE id_school = $id_school");
+    $row = db_select_one("technocore_configuration_json
+        FROM school
+        WHERE id = $id_school");
     if (!is_array($row))
-        return ($defaults);
+        return ($configuration);
 
-    foreach ($defaults as $field => $value)
-        if ($field != "configured" && array_key_exists($field, $row))
-            $defaults[$field] = $row[$field];
-    $defaults["configured"] = true;
-    return ($defaults);
+    $raw = trim((string)($row["technocore_configuration_json"] ?? ""));
+    if ($raw == "" || $raw == "{}")
+        return ($configuration);
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded))
+    {
+        $configuration["configuration_error"] =
+            "Invalid JSON in school.technocore_configuration_json";
+        return ($configuration);
+    }
+
+    foreach (["function_prefix", "function_suffix", "macro_prefix", "macro_suffix", "putchar_name"] as $field)
+        if (array_key_exists($field, $decoded))
+            $configuration[$field] = (string)$decoded[$field];
+
+    $evaluation = isset($decoded["default_evaluation"]) && is_array($decoded["default_evaluation"])
+        ? $decoded["default_evaluation"]
+        : [];
+    $evaluation_fields = [
+        "enabled" => "default_evaluation_enabled",
+        "cleanliness" => "default_evaluation_cleanliness",
+        "norm" => "default_evaluation_norm",
+        "make" => "default_evaluation_make",
+        "check" => "default_evaluation_check",
+        "install" => "default_evaluation_install",
+    ];
+    foreach ($evaluation_fields as $json_field => $field)
+    {
+        if (array_key_exists($json_field, $evaluation))
+            $configuration[$field] = !empty($evaluation[$json_field]) ? 1 : 0;
+        // Accept an older/hand-written flat representation as a harmless fallback.
+        else if (array_key_exists($field, $decoded))
+            $configuration[$field] = !empty($decoded[$field]) ? 1 : 0;
+    }
+
+    $configuration["configured"] = true;
+    return ($configuration);
 }
 
 function school_technocore_bool($data, $field, $default = false)
@@ -92,11 +139,10 @@ function school_technocore_save($id_school, array $data, $id_actor = 0)
     global $Database;
 
     $id_school = (int)$id_school;
-    $id_actor = (int)$id_actor;
     if ($id_school <= 0)
         return (new ErrorResponse("InvalidParameter", "school"));
-    if (!school_technocore_table_available())
-        return (new ErrorResponse("CannotEdit", "school_technocore_configuration table is missing"));
+    if (!school_technocore_column_available())
+        return (new ErrorResponse("CannotEdit", "school.technocore_configuration_json column is missing"));
 
     $function_prefix = school_technocore_component($data["function_prefix"] ?? "");
     $function_suffix = school_technocore_component($data["function_suffix"] ?? "");
@@ -109,57 +155,35 @@ function school_technocore_save($id_school, array $data, $id_actor = 0)
         $putchar_name === false)
         return (new ErrorResponse("InvalidParameter", "TechnoCore identifier"));
 
-    $fields = [
+    $payload = [
+        "version" => 1,
         "function_prefix" => $function_prefix,
         "function_suffix" => $function_suffix,
         "macro_prefix" => $macro_prefix,
         "macro_suffix" => $macro_suffix,
         "putchar_name" => $putchar_name,
-        "default_evaluation_enabled" => school_technocore_bool($data, "default_evaluation_enabled", true),
-        "default_evaluation_cleanliness" => school_technocore_bool($data, "default_evaluation_cleanliness", true),
-        "default_evaluation_norm" => school_technocore_bool($data, "default_evaluation_norm", false),
-        "default_evaluation_make" => school_technocore_bool($data, "default_evaluation_make", true),
-        "default_evaluation_check" => school_technocore_bool($data, "default_evaluation_check", true),
-        "default_evaluation_install" => school_technocore_bool($data, "default_evaluation_install", false),
+        "default_evaluation" => [
+            "enabled" => school_technocore_bool($data, "default_evaluation_enabled", false) != 0,
+            "cleanliness" => school_technocore_bool($data, "default_evaluation_cleanliness", false) != 0,
+            "norm" => school_technocore_bool($data, "default_evaluation_norm", false) != 0,
+            "make" => school_technocore_bool($data, "default_evaluation_make", false) != 0,
+            "check" => school_technocore_bool($data, "default_evaluation_check", false) != 0,
+            "install" => school_technocore_bool($data, "default_evaluation_install", false) != 0,
+        ],
     ];
+    $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false)
+        return (new ErrorResponse("CannotEdit", "school TechnoCore configuration JSON"));
 
-    $quoted = [];
-    foreach (["function_prefix", "function_suffix", "macro_prefix", "macro_suffix", "putchar_name"] as $field)
-        $quoted[$field] = "'".$Database->real_escape_string($fields[$field])."'";
-
-    $sql = "INSERT INTO school_technocore_configuration (
-        id_school, function_prefix, function_suffix, macro_prefix, macro_suffix,
-        putchar_name, default_evaluation_enabled, default_evaluation_cleanliness,
-        default_evaluation_norm, default_evaluation_make, default_evaluation_check,
-        default_evaluation_install, id_actor, updated_at
-    ) VALUES (
-        $id_school,
-        {$quoted["function_prefix"]}, {$quoted["function_suffix"]},
-        {$quoted["macro_prefix"]}, {$quoted["macro_suffix"]}, {$quoted["putchar_name"]},
-        {$fields["default_evaluation_enabled"]},
-        {$fields["default_evaluation_cleanliness"]},
-        {$fields["default_evaluation_norm"]},
-        {$fields["default_evaluation_make"]},
-        {$fields["default_evaluation_check"]},
-        {$fields["default_evaluation_install"]},
-        ".($id_actor > 0 ? $id_actor : "NULL").", NOW()
-    ) ON DUPLICATE KEY UPDATE
-        function_prefix = VALUES(function_prefix),
-        function_suffix = VALUES(function_suffix),
-        macro_prefix = VALUES(macro_prefix),
-        macro_suffix = VALUES(macro_suffix),
-        putchar_name = VALUES(putchar_name),
-        default_evaluation_enabled = VALUES(default_evaluation_enabled),
-        default_evaluation_cleanliness = VALUES(default_evaluation_cleanliness),
-        default_evaluation_norm = VALUES(default_evaluation_norm),
-        default_evaluation_make = VALUES(default_evaluation_make),
-        default_evaluation_check = VALUES(default_evaluation_check),
-        default_evaluation_install = VALUES(default_evaluation_install),
-        id_actor = VALUES(id_actor),
-        updated_at = NOW()";
-
-    if (!$Database->query($sql))
+    $json = $Database->real_escape_string($json);
+    if (!$Database->query("UPDATE school
+        SET technocore_configuration_json = '$json'
+        WHERE id = $id_school"))
         return (new ErrorResponse("CannotEdit", "school TechnoCore configuration"));
+
+    // The regular school API log already records the acting user. Keep the
+    // actor out of the configuration payload: it is configuration, not audit data.
+    unset($id_actor);
     return (new Response);
 }
 
@@ -186,13 +210,18 @@ function school_technocore_profile_dabsic(array $school, &$error = NULL)
         $error = "Invalid school";
         return (NULL);
     }
-    if (!school_technocore_table_available())
+    if (!school_technocore_column_available())
     {
-        $error = "school_technocore_configuration table is missing";
+        $error = "school.technocore_configuration_json column is missing";
         return (NULL);
     }
 
     $configuration = school_technocore_configuration($id_school);
+    if (!empty($configuration["configuration_error"]))
+    {
+        $error = $configuration["configuration_error"];
+        return (NULL);
+    }
     if (empty($configuration["configured"]))
     {
         $error = "TechnoCore configuration is not configured for school ".
