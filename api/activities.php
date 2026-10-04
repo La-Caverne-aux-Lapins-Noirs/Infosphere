@@ -1180,6 +1180,9 @@ function render_activity_subject_browser($page, $id, $activity, $language, $wrap
 	    <br />
 	</p>
     <?php } ?>
+    <?php if (is_file($root."configuration.dab")) { ?>
+        <?=render_activity_subject_dependencies($root."configuration.dab"); ?>
+    <?php } ?>
 <?php if ($wrap) { ?>
 </div>
 <?php } ?>

@@ -326,3 +326,21 @@ b
         inset 0 0 0 2px rgba(160, 255, 170, 1),
         0 0 8px rgba(0, 255, 45, 0.75);
 }
+
+.activity_subject_dependencies
+{
+    border: 1px solid gray;
+    border-radius: 3px;
+}
+
+.activity_subject_dependencies_ok
+{
+    background-color: rgba(80, 180, 80, 0.15);
+    border-color: green;
+}
+
+.activity_subject_dependencies_error
+{
+    background-color: rgba(220, 100, 60, 0.15);
+    border-color: #b04020;
+}

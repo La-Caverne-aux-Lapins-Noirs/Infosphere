@@ -58,6 +58,7 @@ require_once ("dabsic_editor.php");
 require_once ("path_browser_transfer.php");
 require_once ("form_field.php");
 require_once ("dabsic_form.php");
+require_once ("activity_subject_dependencies.php");
 
 require_once ("authentication/hash_method.php");
 require_once ("console_token.php");

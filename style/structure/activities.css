@@ -723,3 +723,41 @@ h1
 {
     cursor: grabbing;
 }
+
+.activity_subject_dependencies
+{
+    box-sizing: border-box;
+    display: block;
+    width: calc(100% - 10px);
+    margin: 8px 5px;
+    padding: 8px 10px;
+    line-height: 1.35em;
+}
+
+.activity_subject_dependencies summary
+{
+    cursor: pointer;
+}
+
+.activity_subject_dependencies > span,
+.activity_subject_dependencies > small
+{
+    display: block;
+    margin-top: 3px;
+}
+
+.activity_subject_dependencies ul
+{
+    margin: 7px 0 3px 20px;
+    padding: 0;
+}
+
+.activity_subject_dependencies li
+{
+    margin: 2px 0;
+}
+
+.activity_subject_dependencies li span
+{
+    margin-left: 5px;
+}
