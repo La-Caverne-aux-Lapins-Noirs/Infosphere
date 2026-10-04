@@ -469,11 +469,30 @@ function correction_normalize_relative_path($path)
 function correction_parse_dabsic_references($content)
 {
     $references = [];
-    foreach (dabsic_dependency_static_references($content, ["dab", "dabsic"]) as $reference)
+    $content = (string)$content;
+
+    // Le catalogue ne contient pas seulement les fichiers Dabsic. Un sujet peut
+    // aussi incorporer une ressource avec @insert (C, texte, image, etc.). Ces
+    // fichiers doivent faire partie de la génération synchronisée exactement
+    // comme les .dab dont ils dépendent.
+    foreach (dabsic_dependency_static_references($content, []) as $reference)
+    {
+        // Une chaîne suivie d'une concaténation n'est que le début d'un chemin
+        // calculé, par exemple "test_" # [#Eval].Name # ".c". On ne peut pas
+        // déterminer cette dépendance sans exécuter la configuration : ne pas
+        // la transformer en faux fichier manquant.
+        $offset = (int)($reference["offset"] ?? 0) + (int)($reference["length"] ?? 0);
+        $length = strlen($content);
+        while ($offset < $length && preg_match('/\s/', $content[$offset]))
+            ++$offset;
+        if ($offset < $length && $content[$offset] == '#')
+            continue ;
+
         $references[] = [
             "directive" => $reference["directive"],
             "requested_path" => $reference["requested_path"],
         ];
+    }
     return ($references);
 }
 
@@ -487,7 +506,7 @@ function correction_resolve_dabsic_reference($source_path, $requested_path, $ass
     $prefer_relative = preg_match('#^(\\./|\\.\\./)#', $requested_path);
     $candidates = $prefer_relative ? [$relative, $rooted] : [$rooted, $relative];
     foreach (array_values(array_unique(array_filter($candidates, function ($path) { return ($path !== NULL && $path !== ''); }))) as $candidate)
-        if (isset($assets_by_path[$candidate]) && $assets_by_path[$candidate]['kind'] == 'dabsic')
+        if (isset($assets_by_path[$candidate]))
             return ($candidate);
     return (NULL);
 }
