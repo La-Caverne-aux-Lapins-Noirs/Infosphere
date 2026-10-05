@@ -18,6 +18,18 @@
 // Appelé par une crontab.
 if (!isset($argv[1]) || !isset($argv[2]))
     exit ;
+
+// Une exécution bloquée ne doit jamais permettre à la crontab d'empiler une
+// nouvelle instance toutes les deux minutes. Le descripteur reste ouvert
+// pendant toute la durée du processus et libère automatiquement le verrou à
+// sa terminaison, y compris en cas de crash.
+$AlbedoLock = @fopen(rtrim(sys_get_temp_dir(), "/")."/infosphere-albedo.lock", "c");
+if ($AlbedoLock === false || !flock($AlbedoLock, LOCK_EX | LOCK_NB))
+    exit ;
+@ftruncate($AlbedoLock, 0);
+@fwrite($AlbedoLock, (string)getmypid()."\n");
+@fflush($AlbedoLock);
+
 $albedo = 1;
 $_POST["silent"] = 1;
 

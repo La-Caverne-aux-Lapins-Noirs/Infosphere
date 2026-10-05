@@ -338,35 +338,160 @@ function subject_context_include_paths($cnf, $act, array $school)
     return (array_values(array_unique($out)));
 }
 
-function generate_subject($cnf, $act)
+function subject_generation_remove_tree($path)
 {
-    global $User;
+    if ($path == "" || !file_exists($path))
+        return ;
+    if (!is_dir($path) || is_link($path))
+    {
+        @unlink($path);
+        return ;
+    }
+    foreach (scandir($path) ?: [] as $entry)
+    {
+        if ($entry == "." || $entry == "..")
+            continue ;
+        subject_generation_remove_tree(rtrim($path, "/")."/".$entry);
+    }
+    @rmdir($path);
+}
+
+function subject_generation_work_directory($act)
+{
+    $prefix = rtrim(sys_get_temp_dir(), "/")."/infosphere_subject_".
+        preg_replace('/[^A-Za-z0-9_.-]/', '_', (string)($act->codename ?? "activity"))."_";
+    try
+    {
+        $suffix = bin2hex(random_bytes(8));
+    }
+    catch (Throwable $exception)
+    {
+        $suffix = uniqid("", true);
+    }
+    $directory = $prefix.$suffix;
+    if (!@mkdir($directory, 0700, true))
+        return (NULL);
+    return (rtrim($directory, "/")."/");
+}
+
+function subject_generation_configuration_mtime($cnf)
+{
+    $mtime = @filemtime($cnf);
+    return ($mtime === false ? 0 : (int)$mtime);
+}
+
+function subject_generation_is_fresh($cnf, $outfile)
+{
+    if (!is_file($outfile))
+        return (false);
+    $configuration_mtime = subject_generation_configuration_mtime($cnf);
+    $subject_mtime = @filemtime($outfile);
+    if ($subject_mtime === false)
+        return (false);
+    return ($configuration_mtime <= (int)$subject_mtime);
+}
+
+function subject_generation_metadata_path($act)
+{
     global $Configuration;
     global $Language;
 
-    $act->subject_generation_error = NULL;
-    if (!is_file($cnf))
-    {
-        $act->subject_generation_error = "Configuration file not found: ".$cnf;
-        return (NULL);
-    }
+    return ($Configuration->ActivitiesDir($act->codename, $Language)."subject.meta.json");
+}
 
-    // DocBuilder does not load Evaluator's /etc/technocore/configuration.dab.
-    // Supply the production defaults before school conventions and exercises,
-    // including when no school was selected. Never depend on Scolaire here.
+function subject_generation_read_metadata($cnf, $act)
+{
+    $file = subject_generation_metadata_path($act);
+    if (!is_file($file))
+        return (NULL);
+    $data = json_decode((string)@file_get_contents($file), true);
+    if (!is_array($data))
+        return (NULL);
+
+    $configuration = realpath($cnf);
+    if ($configuration === false)
+        $configuration = $cnf;
+    if (($data["configuration"] ?? "") !== $configuration)
+        return (NULL);
+    if ((int)($data["configuration_mtime"] ?? -1)
+        !== subject_generation_configuration_mtime($cnf))
+        return (NULL);
+    if (!array_key_exists("personalized", $data))
+        return (NULL);
+    return ($data);
+}
+
+function subject_generation_write_metadata($cnf, $act, array $metadata)
+{
+    $file = subject_generation_metadata_path($act);
+    $directory_result = new_directory($file);
+    if ($directory_result->is_error())
+        return (false);
+
+    $configuration = realpath($cnf);
+    if ($configuration === false)
+        $configuration = $cnf;
+    $data = [
+        "configuration" => $configuration,
+        "configuration_mtime" => subject_generation_configuration_mtime($cnf),
+        "personalized" => !empty($metadata["Personalized"]),
+        "dabsic_hash" => (string)($metadata["DabsicHash"] ?? ""),
+    ];
+    $json = json_encode(
+        $data,
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
+    if ($json === false)
+        return (false);
+
+    $tmp = $file.".tmp.".getmypid();
+    if (@file_put_contents($tmp, $json."\n") === false)
+        return (false);
+    @chmod($tmp, 0644);
+    if (!@rename($tmp, $file))
+    {
+        @unlink($tmp);
+        return (false);
+    }
+    return (true);
+}
+
+function subject_generation_shared_output($act)
+{
+    global $Configuration;
+    global $Language;
+
+    return ($Configuration->ActivitiesDir($act->codename, $Language)."subject.pdf");
+}
+
+function subject_generation_personalized_output($act, array $user)
+{
+    global $Configuration;
+    global $Language;
+
+    return ($Configuration->UsersDir($user["codename"])."subjects/".
+        $act->codename."/".$Language."/subject.pdf");
+}
+
+function subject_generation_personalized_user_is_valid($act, array $user)
+{
+    if ((int)($user["id"] ?? 0) <= 0 || ($user["codename"] ?? "") == "")
+        return (false);
+
+    // A personalized subject belongs to a learner instance, not to the staff
+    // account merely previewing the activity page.
+    return (!empty($act->registered) && (int)($act->leader ?? 0) > 0);
+}
+
+function subject_generation_context($cnf, $act, $work_directory)
+{
+    global $Language;
+
     $runtime_profile = __DIR__."/../res/technocore/configuration.dab";
     if (!is_readable($runtime_profile))
     {
-        $act->subject_generation_error = "TechnoCore runtime profile not found: ".$runtime_profile;
-        return (NULL);
-    }
-
-    $personal_activity_dir =
-        $Configuration->UsersDir($User["codename"])."perso/{$act->codename}/";
-    $directory_result = new_directory($personal_activity_dir);
-    if ($directory_result->is_error())
-    {
-        $act->subject_generation_error = (string)$directory_result;
+        $act->subject_generation_error =
+            "TechnoCore runtime profile not found: ".$runtime_profile;
         return (NULL);
     }
 
@@ -407,7 +532,7 @@ function generate_subject($cnf, $act)
     if (count($laboratory))
         $data["laboratory"] = $laboratory;
 
-    $instance = $personal_activity_dir."instance.dab";
+    $instance = $work_directory."instance.dab";
     $generated = generate_dabsic($data, $instance);
     if ($generated->is_error())
     {
@@ -415,14 +540,10 @@ function generate_subject($cnf, $act)
         return (NULL);
     }
 
-    // Technical school conventions must be parsed before the subject itself:
-    // reusable Dabsic resources can resolve FunctionPrefix, PutChar, ... while
-    // they are being loaded.  The normal Infosphere instance stays last so
-    // contextual activity/matter/front-page data can still override defaults.
     $school_profile = "";
     if ((int)($school["id"] ?? 0) > 0)
     {
-        $school_profile = $personal_activity_dir."school-technocore.dab";
+        $school_profile = $work_directory."school-technocore.dab";
         $profile_error = NULL;
         if (!school_technocore_write_profile($school, $school_profile, $profile_error))
         {
@@ -432,30 +553,245 @@ function generate_subject($cnf, $act)
         }
     }
 
-    $outfile = $personal_activity_dir."subject.pdf";
-    $command = "docbuilder";
+    $command = ["docbuilder"];
     foreach (subject_context_include_paths($cnf, $act, $school) as $path)
-        $command .= " -I ".escapeshellarg($path);
-
-    $command .= " -i ".escapeshellarg($runtime_profile);
-    if ($school_profile != "")
-        $command .= " -i ".escapeshellarg($school_profile);
-
-    $command .= " -i ".escapeshellarg($cnf);
-    $command .= " -i ".escapeshellarg($instance);
-    $command .= " -o ".escapeshellarg($outfile);
-
-    $ret = run_command($command);
-    if (($ret["exit_code"] ?? 1) !== 0 || !is_file($outfile))
     {
-        $stderr = trim((string)($ret["stderr"] ?? ""));
-        $stdout = trim((string)($ret["stdout"] ?? ""));
-        $details = $stderr != "" ? $stderr : $stdout;
-        if ($details == "")
-            $details = "DocBuilder exited with code ".(string)($ret["exit_code"] ?? "unknown");
-        $act->subject_generation_error = $details;
-        add_log(REPORT, "Subject generation failed for {$act->codename}: ".$details);
+        $command[] = "-I";
+        $command[] = $path;
+    }
+    $command[] = "-i";
+    $command[] = $runtime_profile;
+    if ($school_profile != "")
+    {
+        $command[] = "-i";
+        $command[] = $school_profile;
+    }
+    $command[] = "-i";
+    $command[] = $cnf;
+    $command[] = "-i";
+    $command[] = $instance;
+
+    return ([
+        "command" => $command,
+        "school" => $school,
+        "instance" => $instance,
+    ]);
+}
+
+function subject_generation_command_error($ret, $prefix = "DocBuilder")
+{
+    $stderr = trim((string)($ret["stderr"] ?? ""));
+    $stdout = trim((string)($ret["stdout"] ?? ""));
+    $details = $stderr != "" ? $stderr : $stdout;
+    if ($details == "")
+        $details = $prefix." exited with code ".
+            (string)($ret["exit_code"] ?? "unknown");
+    return ($details);
+}
+
+function subject_generation_resolve_metadata($cnf, $act, array $context)
+{
+    $command = $context["command"];
+    $command[] = "--metadata-only";
+    $ret = run_command($command, 300);
+    if (($ret["exit_code"] ?? 1) !== 0)
+    {
+        $act->subject_generation_error = subject_generation_command_error($ret);
         return (NULL);
     }
+    $metadata = json_decode(trim((string)($ret["stdout"] ?? "")), true);
+    if (!is_array($metadata) || !array_key_exists("Personalized", $metadata))
+    {
+        $act->subject_generation_error =
+            "DocBuilder returned invalid subject metadata: ".
+            trim((string)($ret["stdout"] ?? ""));
+        return (NULL);
+    }
+    $metadata["Personalized"] = !empty($metadata["Personalized"]);
+    subject_generation_write_metadata($cnf, $act, $metadata);
+    return ($metadata);
+}
+
+function subject_generation_lock($outfile)
+{
+    $lockfile = rtrim(sys_get_temp_dir(), "/")."/infosphere_subject_".
+        sha1($outfile).".lock";
+    $lock = @fopen($lockfile, "c");
+    if ($lock === false)
+        return (NULL);
+    if (!flock($lock, LOCK_EX))
+    {
+        fclose($lock);
+        return (NULL);
+    }
+    return ($lock);
+}
+
+function subject_generation_render($cnf, $act, array $context, $outfile)
+{
+    $directory_result = new_directory($outfile);
+    if ($directory_result->is_error())
+    {
+        $act->subject_generation_error = (string)$directory_result;
+        return (NULL);
+    }
+
+    $lock = subject_generation_lock($outfile);
+    if ($lock === NULL)
+    {
+        $act->subject_generation_error = "Cannot lock subject generation for ".$outfile;
+        return (NULL);
+    }
+
+    if (subject_generation_is_fresh($cnf, $outfile))
+    {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        return ($outfile);
+    }
+
+    try
+    {
+        $suffix = bin2hex(random_bytes(6));
+    }
+    catch (Throwable $exception)
+    {
+        $suffix = uniqid("", true);
+    }
+    $temporary_output = $outfile.".tmp.".getmypid().".".$suffix;
+    $command = $context["command"];
+    $command[] = "-o";
+    $command[] = $temporary_output;
+
+    $ret = run_command($command, 300);
+    if (($ret["exit_code"] ?? 1) !== 0 || !is_file($temporary_output))
+    {
+        @unlink($temporary_output);
+        $details = subject_generation_command_error($ret);
+        $act->subject_generation_error = $details;
+        add_log(REPORT, "Subject generation failed for {$act->codename}: ".$details);
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        return (NULL);
+    }
+
+    @chmod($temporary_output, 0644);
+    if (!@rename($temporary_output, $outfile))
+    {
+        @unlink($temporary_output);
+        $act->subject_generation_error = "Cannot publish generated subject: ".$outfile;
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        return (NULL);
+    }
+
+    flock($lock, LOCK_UN);
+    fclose($lock);
     return ($outfile);
+}
+
+function generate_subject($cnf, $act, $subject_user = NULL)
+{
+    global $User;
+
+    $act->subject_generation_error = NULL;
+    if (!is_file($cnf))
+    {
+        $act->subject_generation_error = "Configuration file not found: ".$cnf;
+        return (NULL);
+    }
+
+    if ($subject_user === NULL)
+        $subject_user = $User;
+    if (!is_array($subject_user))
+    {
+        $act->subject_generation_error = "No user context available for subject generation.";
+        return (NULL);
+    }
+
+    $metadata = subject_generation_read_metadata($cnf, $act);
+    $work_directory = NULL;
+    $context = NULL;
+
+    if ($metadata === NULL)
+    {
+        $work_directory = subject_generation_work_directory($act);
+        if ($work_directory === NULL)
+        {
+            $act->subject_generation_error = "Cannot create temporary subject workspace.";
+            return (NULL);
+        }
+        $context = subject_generation_context($cnf, $act, $work_directory);
+        if ($context === NULL)
+        {
+            subject_generation_remove_tree($work_directory);
+            return (NULL);
+        }
+        $metadata = subject_generation_resolve_metadata($cnf, $act, $context);
+        if ($metadata === NULL)
+        {
+            subject_generation_remove_tree($work_directory);
+            return (NULL);
+        }
+    }
+
+    if (!empty($metadata["personalized"]))
+        $personalized = true;
+    else
+        $personalized = !empty($metadata["Personalized"]);
+
+    if ($personalized)
+    {
+        if (!subject_generation_personalized_user_is_valid($act, $subject_user))
+        {
+            if ($work_directory !== NULL)
+                subject_generation_remove_tree($work_directory);
+            $act->subject_generation_error =
+                "This subject is personalized and requires a registered learner context.";
+            return (NULL);
+        }
+        $outfile = subject_generation_personalized_output($act, $subject_user);
+    }
+    else
+        $outfile = subject_generation_shared_output($act);
+
+    if (subject_generation_is_fresh($cnf, $outfile))
+    {
+        if ($work_directory !== NULL)
+            subject_generation_remove_tree($work_directory);
+        return ($outfile);
+    }
+
+    if ($context === NULL)
+    {
+        $work_directory = subject_generation_work_directory($act);
+        if ($work_directory === NULL)
+        {
+            $act->subject_generation_error = "Cannot create temporary subject workspace.";
+            return (NULL);
+        }
+        $context = subject_generation_context($cnf, $act, $work_directory);
+        if ($context === NULL)
+        {
+            subject_generation_remove_tree($work_directory);
+            return (NULL);
+        }
+    }
+
+    $outfile = subject_generation_render($cnf, $act, $context, $outfile);
+    subject_generation_remove_tree($work_directory);
+    return ($outfile);
+}
+
+function ensure_subject_for_access($act, $subject_user = NULL)
+{
+    if ($act->current_configuration === NULL || !is_file($act->current_configuration))
+        return ($act->current_subject);
+
+    $subject = generate_subject($act->current_configuration, $act, $subject_user);
+    if ($subject !== NULL)
+        $act->current_subject = $subject;
+    else
+        $act->current_subject = NULL;
+    return ($act->current_subject);
 }

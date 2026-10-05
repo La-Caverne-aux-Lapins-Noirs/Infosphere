@@ -141,7 +141,7 @@ require_once ("login/index.php");
 ** Fichiers utilisateurs
 ** ---------------------
 ** Cette branche passe avant le bypass admin générique : même un admin doit
-** entrer explicitement dans public/, admin/ ou perso/. La racine utilisateur
+** entrer explicitement dans public/, admin/, perso/ ou subjects/. La racine utilisateur
 ** n'est plus une zone privée implicite.
 */
 if ($type == "user" || $type == "users")
@@ -351,7 +351,10 @@ if ($type == "activity")
         && ($target[4] == "admin" || $target[4] == "private"))
         forbidden();
 
-    if (in_array($activity_basename, ["configuration.dab", "preaccess.dab", "satisfaction.dab", "rubric.dab"], true))
+    if (in_array($activity_basename, [
+        "configuration.dab", "preaccess.dab", "satisfaction.dab", "rubric.dab",
+        "subject.meta.json"
+    ], true))
         not_found();
 
     // A pre-access quiz protects the resource itself, not merely the HTML

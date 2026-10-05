@@ -992,15 +992,10 @@ class FullActivity extends Response
 	if ($this->max_team_size == 1)
 	    $this->teamable = false;
 
-	// Le sujet dynamique dépend du contexte résolu (école, cycle, équipe,
-	// laboratoire et session). Le générer seulement une fois ces données chargées.
-	if ($this->current_configuration !== NULL && file_exists($this->current_configuration))
-	{
-	    if (($out = generate_subject($this->current_configuration, $this)) != NULL)
-		$this->current_subject = $out;
-	    else
-		$this->current_subject = NULL;
-	}
+	// Ne jamais générer un sujet comme effet de bord du chargement d'une activité.
+	// Les traitements périodiques (Albedo, calendrier, évaluations, etc.) utilisent
+	// FullActivity eux aussi. La génération dynamique est déclenchée uniquement
+	// lorsqu'un utilisateur demande effectivement le panneau Sujet.
 	
 	// Si on ne veut pas les sous activités...
 	if ($recursive == false)

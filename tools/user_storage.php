@@ -6,9 +6,10 @@
 **
 ** La racine dres/users/<codename>/ est uniquement un conteneur.
 **
-**   public/ : fichiers publiquement lisibles
-**   admin/  : fichiers administratifs
-**   perso/  : fichiers privés du titulaire du compte
+**   public/   : fichiers publiquement lisibles
+**   admin/    : fichiers administratifs
+**   perso/    : fichiers privés du titulaire du compte
+**   subjects/ : sujets personnalisés de l'élève, lisibles par lui et ses professeurs
 **
 ** $User peut être remplacé par "log as". Pour toute décision concernant
 ** perso/, l'identité de session réelle est donc $OriginalUser.
@@ -200,6 +201,97 @@ function user_storage_can_access_personal_space($id_user)
             && user_storage_actor_is_admin());
 }
 
+function user_storage_subject_activity($codename)
+{
+    global $Database;
+
+    $codename = $Database->real_escape_string((string)$codename);
+    return (db_select_one("
+        id, reference_activity
+        FROM activity
+        WHERE codename = '$codename'
+          AND deleted IS NULL
+    "));
+}
+
+function user_storage_student_has_activity($id_user, array $activity)
+{
+    $id_user = (int)$id_user;
+    $id_activity = (int)($activity["id"] ?? 0);
+    $team_activity = (int)($activity["reference_activity"] ?? 0);
+    if ($team_activity <= 0)
+        $team_activity = $id_activity;
+    if ($id_user <= 0 || $id_activity <= 0 || $team_activity <= 0)
+        return (false);
+
+    return (db_select_one("
+        user_team.id
+        FROM user_team
+        LEFT JOIN team ON team.id = user_team.id_team
+        WHERE user_team.id_user = $id_user
+          AND user_team.status > 0
+          AND team.id_activity = $team_activity
+        LIMIT 1
+    ") != NULL);
+}
+
+function user_storage_actor_can_read_student_subject_activity($id_user, array $activity)
+{
+    if (!user_storage_student_has_activity($id_user, $activity))
+        return (false);
+
+    $id_activity = (int)$activity["id"];
+    return (is_teacher_or_director_for_activity($id_activity)
+            || is_assistant_for_activity($id_activity));
+}
+
+function user_storage_actor_can_read_any_student_subject($id_user)
+{
+    $id_user = (int)$id_user;
+    if ($id_user <= 0)
+        return (false);
+
+    foreach (db_select_all("
+        DISTINCT activity.id, activity.reference_activity
+        FROM user_team
+        LEFT JOIN team ON team.id = user_team.id_team
+        LEFT JOIN activity
+          ON activity.id = team.id_activity
+          OR activity.reference_activity = team.id_activity
+        WHERE user_team.id_user = $id_user
+          AND user_team.status > 0
+          AND activity.id IS NOT NULL
+          AND activity.deleted IS NULL
+    ") as $activity)
+        if (user_storage_actor_can_read_student_subject_activity($id_user, $activity))
+            return (true);
+    return (false);
+}
+
+function user_storage_can_read_subject_path($id_user, $path)
+{
+    $path = user_storage_normalize_path($path);
+    if ($path === NULL)
+        return (false);
+    if (user_storage_actor_is_owner((int)$id_user))
+        return (true);
+
+    $parts = explode("/", $path);
+    if (($parts[0] ?? "") !== "subjects")
+        return (false);
+
+    if (!isset($parts[1]) || $parts[1] == "")
+        return (user_storage_actor_can_read_any_student_subject((int)$id_user));
+
+    $activity = user_storage_subject_activity($parts[1]);
+    if (!is_array($activity))
+        return (false);
+    return (user_storage_actor_can_read_student_subject_activity(
+        (int)$id_user,
+        $activity
+    ));
+}
+
 function user_storage_normalize_path($path)
 {
     if (!is_string($path) && !is_numeric($path))
@@ -239,7 +331,7 @@ function user_storage_is_root_space($path)
     $path = user_storage_normalize_path($path);
 
     return ($path !== NULL && in_array($path, [
-        "admin", "public", "perso"
+        "admin", "public", "perso", "subjects"
     ], true));
 }
 
@@ -265,6 +357,9 @@ function user_storage_can_read_path($id_user, $path)
     if ($space === "perso")
         return (user_storage_can_access_personal_space((int)$id_user));
 
+    if ($space === "subjects")
+        return (user_storage_can_read_subject_path((int)$id_user, $path));
+
     // Tout ancien fichier directement placé à la racine est refusé. La
     // migration le déplacera vers perso/.
     return (false);
@@ -281,6 +376,10 @@ function user_storage_can_write_path($id_user, $path)
 
     if ($space === "admin")
         return (user_storage_can_manage_admin_space((int)$id_user));
+
+    // subjects/ est produit exclusivement par le générateur de sujets.
+    if ($space === "subjects")
+        return (false);
 
     if ($space === "public")
         return (user_storage_actor_is_owner((int)$id_user)

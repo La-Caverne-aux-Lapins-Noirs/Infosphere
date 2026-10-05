@@ -57,6 +57,15 @@ else
 	    }
 	}
     }
+
+    // Dynamic subjects are generated only for an actual authorized request.
+    // FullActivity::build() deliberately has no document-generation side effect.
+    if ($display_subject && $activity->current_configuration !== NULL
+        && is_file($activity->current_configuration))
+        ensure_subject_for_access($activity, $User);
+
+    if ($activity->current_subject == "")
+        $display_subject = false;
     ?>
 
     <h4><?=$Dictionnary["ActivitySubject"]; ?></h4>

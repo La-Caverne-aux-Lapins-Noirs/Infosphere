@@ -108,11 +108,12 @@ class CConfiguration
 	if ($usr == NULL)
 	    return ($this->_UsersDir);
 	$dir = $this->_UsersDir.$usr."/";
-	// La racine utilisateur n'est qu'un conteneur. Garantir les trois
+	// La racine utilisateur n'est qu'un conteneur. Garantir les espaces
 	// espaces explicites même pour les comptes créés avant cette organisation.
 	foreach ([
 	    "public",
 	    "perso",
+	    "subjects",
 	    "admin",
 	    "admin/subscription",
 	    "admin/subscription/diplomas",
