@@ -74,4 +74,7 @@ else
     add_log(TRACE, "Support video job processing done: ".
 		   $VideoJobs["processed"]." processed, ".
 		   $VideoJobs["errors"]." error(s).", 1, true);
+// Detached mail worker: Albedo returns without waiting for any delay.
+require_once (__DIR__."/tools/bulk_mail_queue.php");
+bulk_mail_start_worker();
 add_log(TRACE, "Albedo stops.", 1, true);

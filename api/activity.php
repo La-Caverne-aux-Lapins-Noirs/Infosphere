@@ -34,6 +34,10 @@ $Tab = [
 	    "is_teacher_for_activity",
 	    "SetSubject"
 	],
+	"generate_subject" => [
+	    "logged_in",
+	    "GenerateSubject"
+	],
 	"preaccess" => [
 	    "is_teacher_for_activity",
 	    "SetActivityPreaccessQuiz"

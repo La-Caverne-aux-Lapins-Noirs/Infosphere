@@ -23,6 +23,7 @@ Title = "Certificat de scolarité"
   Mail = ""
   DocumentLogo = ""
   Stamp = ""
+  ShowStamp = 1
   MainInfo = ""
   SchoolInfo = ""
   FormationInfo = ""
@@ -109,3 +110,25 @@ LetterDate]
 {Content
   @insert txt ($) "certificat_scolarite.txt"
 }
+
+[FormGroup
+  [Presentation
+    Label = "Présentation du certificat"
+    [Fields
+      [School
+        [ShowStamp
+          Label = "Apposer le tampon de l’école (0 = non, 1 = oui)"
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Etablissement
+    Label = "Établissement"
+    {Read "Presentation"}
+    {Edit "Presentation"}
+    {Validate "Presentation"}
+  ]
+]

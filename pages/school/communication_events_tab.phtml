@@ -21,96 +21,331 @@ $communication_event_rooms = array_values(array_filter(fetch_rooms(), function($
 ?>
 
 <div class="school_communication_events">
-    <h3>Évènements de communication</h3>
-    <p>Ces évènements réservent des créneaux visibles par les écoles concernées. Les participants extérieurs s’inscrivent uniquement avec le lien public.</p>
+    <header class="communication_events_header">
+        <div>
+            <h3>Évènements de communication</h3>
+            <p>Créneaux destinés aux participants extérieurs, accessibles uniquement avec le lien public.</p>
+        </div>
+        <details class="final_box communication_event_new">
+            <summary><strong>Nouvel évènement</strong></summary>
+            <form method="post" action="/api/communication_event" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
+                <input type="hidden" name="school" value="<?=(int)$school["id"]; ?>" />
+                <label>Nom <input type="text" name="name" required /></label>
+                <label>Description <textarea name="description"></textarea></label>
+                <label>Illustration par URL <input type="url" name="illustration_url" placeholder="/res/... ou https://..." /></label>
+                <label class="communication_event_upload_field">
+                    Télécharger une illustration
+                    <input type="file" name="illustration_file" accept="image/png,image/jpeg,image/webp" />
+                    <small>PNG, JPEG ou WebP — 8 Mio maximum. Le fichier téléchargé remplace l’URL ci-dessus.</small>
+                </label>
+                <label><input type="checkbox" name="parental_authorization_required" value="1" /> Demander une attestation d’autorisation parentale lors de l’inscription</label>
+                <button type="submit">Créer l’évènement</button>
+            </form>
+        </details>
+    </header>
 
-    <details class="final_box" open>
-        <summary><strong>Nouvel évènement</strong></summary>
-        <form method="post" action="/api/communication_event" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
-            <input type="hidden" name="school" value="<?=(int)$school["id"]; ?>" />
-            <label>Nom <input type="text" name="name" required /></label>
-            <label>Description <textarea name="description"></textarea></label>
-            <label><input type="checkbox" name="parental_authorization_required" value="1" /> Demander une attestation d’autorisation parentale lors de l’inscription</label>
-            <button type="submit">Créer l’évènement</button>
-        </form>
-    </details>
+    <?php if (!count($communication_events)) { ?>
+        <div class="final_box communication_event_empty">Aucun évènement de communication.</div>
+    <?php } ?>
 
     <?php foreach ($communication_events as $event) {
         $sessions = communication_event_sessions((int)$event["id"], false);
         $summary = communication_event_registration_summary((int)$event["id"]);
+        $session_counts = communication_event_registration_counts_by_session((int)$event["id"]);
+        $registrations = communication_event_registration_rows((int)$event["id"]);
+        $class_choices = communication_event_class_choices();
+        $sessions_by_id = [];
+        foreach ($sessions as $event_session)
+            $sessions_by_id[(int)$event_session["id"]] = $event_session;
         $public_url = communication_event_public_url($event);
     ?>
         <section class="final_box communication_event_card">
-            <form method="put" action="/api/communication_event/<?=(int)$event["id"]; ?>" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
-                <h4><?=htmlspecialchars($event["name"]); ?></h4>
-                <label>Nom <input type="text" name="name" value="<?=htmlspecialchars($event["name"], ENT_QUOTES); ?>" required /></label>
-                <label>Description <textarea name="description"><?=htmlspecialchars($event["description"] ?? ""); ?></textarea></label>
-                <label><input type="checkbox" name="parental_authorization_required" value="1" <?=!empty($event["parental_authorization_required"]) ? "checked" : ""; ?> /> Demander une attestation d’autorisation parentale lors de l’inscription</label>
-                <button type="submit">Enregistrer</button>
-            </form>
-
-            <p><strong>Inscriptions :</strong> <?=$summary["active"]; ?> active<?=$summary["active"] > 1 ? "s" : ""; ?><?php if ($summary["cancelled"]) { ?> — <?=$summary["cancelled"]; ?> annulée<?=$summary["cancelled"] > 1 ? "s" : ""; ?><?php } ?></p>
-            <?php if ($public_url != "") { ?>
-                <label>Lien d’inscription
-                    <input class="communication_event_public_url" type="text" readonly value="<?=htmlspecialchars($public_url, ENT_QUOTES); ?>" onclick="this.select();" />
-                </label>
-            <?php } ?>
-
-            <h5>Créneaux</h5>
-            <?php if (!count($sessions)) { ?><p>Aucun créneau.</p><?php } ?>
-            <?php foreach ($sessions as $session) { ?>
-                <div class="communication_event_session">
-                    <strong><?=htmlspecialchars($session["name"] ?: $event["name"]); ?></strong>
-                    — <?=datex("d/m/Y H:i", date_to_timestamp($session["begin_date"])); ?>–<?=datex("H:i", date_to_timestamp($session["end_date"])); ?>
-                    <?php if (count($session["rooms"] ?? [])) { ?>
-                        — <?=htmlspecialchars(implode(", ", array_map(function($r){ return ($r["name"] ?: $r["codename"]); }, $session["rooms"]))); ?>
+            <div class="communication_event_card_header">
+                <div class="communication_event_identity">
+                    <?php if (trim((string)($event["illustration_url"] ?? "")) != "") { ?>
+                        <img class="communication_event_illustration_preview" src="<?=htmlspecialchars($event["illustration_url"], ENT_QUOTES); ?>" alt="" loading="lazy" />
                     <?php } ?>
-                    <small>Écoles : <?=htmlspecialchars(implode(", ", array_map(function($s){ return ($s["name"] ?: $s["codename"]); }, $session["schools"] ?? []))); ?></small>
-                    <form method="delete" action="/api/communication_event/<?=(int)$event["id"]; ?>/session/<?=(int)$session["id"]; ?>" onsubmit="return confirm('Supprimer ce créneau ?') && silent_submitf(this, {after_success:function(){window.location.reload();}});">
-                        <button type="submit">Supprimer</button>
-                    </form>
+                    <h4><?=htmlspecialchars($event["name"]); ?></h4>
+                    <?php if (trim((string)($event["description"] ?? "")) != "") { ?>
+                        <p><?=nl2br(htmlspecialchars(trim((string)$event["description"]))); ?></p>
+                    <?php } ?>
+                </div>
+                <div class="communication_event_metrics" aria-label="Inscriptions">
+                    <span class="communication_event_metric communication_event_metric_active">
+                        <strong><?=$summary["active"]; ?></strong>
+                        inscrit<?=$summary["active"] === 1 ? "" : "s"; ?>
+                    </span>
+                    <?php if ($summary["cancelled"] > 0) { ?>
+                        <span class="communication_event_metric communication_event_metric_cancelled">
+                            <strong><?=$summary["cancelled"]; ?></strong>
+                            annulée<?=$summary["cancelled"] === 1 ? "" : "s"; ?>
+                        </span>
+                    <?php } ?>
+                    <span class="communication_event_metric communication_event_metric_neutral">
+                        <strong><?=count($sessions); ?></strong>
+                        créneau<?=count($sessions) === 1 ? "" : "x"; ?>
+                    </span>
+                </div>
+            </div>
+
+            <?php if ($public_url != "") { ?>
+                <div class="communication_event_link_box">
+                    <strong>Lien public d’inscription</strong>
+                    <input class="communication_event_public_url" type="text" readonly value="<?=htmlspecialchars($public_url, ENT_QUOTES); ?>" onclick="this.select();" />
                 </div>
             <?php } ?>
 
-            <details>
-                <summary>Ajouter un créneau</summary>
-                <form method="post" action="/api/communication_event/<?=(int)$event["id"]; ?>/session" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
-                    <label>Nom <input type="text" name="name" placeholder="<?=htmlspecialchars($event["name"], ENT_QUOTES); ?>" /></label>
-                    <label>Date <input type="date" name="day" required /></label>
-                    <label>Début <input type="time" name="begin" required /></label>
-                    <label>Fin <input type="time" name="end" required /></label>
-                    <label>Salle
-                        <select name="room" required>
-                            <option value="">— choisir une salle —</option>
-                            <?php foreach ($communication_event_rooms as $room) { ?>
-                                <option value="<?=(int)$room["id"]; ?>"><?=htmlspecialchars($room["name"] ?: $room["codename"]); ?></option>
+            <div class="communication_event_participants_block communication_event_panel">
+                <div class="communication_event_section_title">
+                    <h5>Participants</h5>
+                    <span><?=$summary["active"]; ?> actif<?=$summary["active"] === 1 ? "" : "s"; ?><?php if ($summary["cancelled"] > 0) { ?> · <?=$summary["cancelled"]; ?> annulé<?=$summary["cancelled"] === 1 ? "" : "s"; ?><?php } ?></span>
+                </div>
+                <?php if (!count($registrations)) { ?>
+                    <p class="communication_event_empty_line">Aucune inscription pour le moment.</p>
+                <?php } else { ?>
+                    <div class="communication_event_participants_table_wrap">
+                        <table class="communication_event_participants_table">
+                            <thead>
+                                <tr>
+                                    <th>Participant</th>
+                                    <th>Contact</th>
+                                    <th>Scolarité</th>
+                                    <th>Créneau</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($registrations as $registration) {
+                                $answers = $registration["answers_data"] ?? [];
+                                $first_name = trim((string)($registration["first_name"] ?? ""));
+                                $family_name = trim((string)($registration["family_name"] ?? ""));
+                                $participant_name = trim($first_name." ".$family_name);
+                                if ($participant_name == "")
+                                    $participant_name = trim((string)($registration["recipient_name"] ?? "Participant"));
+                                $mail = trim((string)($registration["mail"] ?? ""));
+                                $phone = trim((string)($registration["phone"] ?? ""));
+                                $high_school = trim((string)($answers["Event.HighSchool"] ?? ""));
+                                $city = trim((string)($answers["Event.City"] ?? ""));
+                                $specialties = trim((string)($answers["Event.Specialties"] ?? ""));
+                                $interests = trim((string)($answers["Event.Interests"] ?? ""));
+                                $class_id = (int)($answers["Event.CurrentClass"] ?? 0);
+                                $class_label = trim((string)($class_choices[$class_id] ?? ""));
+                                $id_session = (int)($answers["Event.Session"] ?? 0);
+                                $participant_session = $sessions_by_id[$id_session] ?? NULL;
+                                $cancelled = !empty($registration["cancelled"]);
+                            ?>
+                                <tr class="<?=$cancelled ? "is-cancelled" : "is-active"; ?>">
+                                    <td class="communication_event_participant_identity">
+                                        <strong><?=htmlspecialchars($participant_name); ?></strong>
+                                        <?php if ((int)($registration["existing_user_id"] ?? 0) > 0) { ?>
+                                            <a class="communication_event_profile_link" target="_blank" href="?p=ProfileMenu&amp;a=<?=(int)$registration["existing_user_id"]; ?>">profil</a>
+                                        <?php } ?>
+                                        <?php if (!empty($registration["orphaned_user"])) { ?>
+                                            <span class="communication_event_warning" title="Le formulaire d’inscription existe toujours mais le compte associé n’existe plus.">compte supprimé</span>
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($mail != "") { ?><a href="mailto:<?=htmlspecialchars($mail, ENT_QUOTES); ?>"><?=htmlspecialchars($mail); ?></a><?php } else { ?>—<?php } ?>
+                                        <?php if ($phone != "") { ?><br /><a href="tel:<?=htmlspecialchars(preg_replace('/[^0-9+]/', '', $phone), ENT_QUOTES); ?>"><?=htmlspecialchars($phone); ?></a><?php } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($high_school != "") { ?><strong><?=htmlspecialchars($high_school); ?></strong><?php } ?>
+                                        <?php if ($city != "") { ?><div><?=htmlspecialchars($city); ?></div><?php } ?>
+                                        <?php if ($class_label != "") { ?><div class="communication_event_participant_subtle"><?=htmlspecialchars($class_label); ?></div><?php } ?>
+                                        <?php if ($specialties != "") { ?><div class="communication_event_participant_subtle">Spécialités : <?=htmlspecialchars($specialties); ?></div><?php } ?>
+                                        <?php if ($interests != "") { ?><details class="communication_event_interests"><summary>Intérêts</summary><?=nl2br(htmlspecialchars($interests)); ?></details><?php } ?>
+                                    </td>
+                                    <td>
+                                        <?php if (is_array($participant_session)) { ?>
+                                            <strong><?=htmlspecialchars($participant_session["name"] ?: $event["name"]); ?></strong>
+                                            <div class="communication_event_participant_subtle"><?=datex("d/m/Y H:i", date_to_timestamp($participant_session["begin_date"])); ?>–<?=datex("H:i", date_to_timestamp($participant_session["end_date"])); ?></div>
+                                        <?php } else { ?>
+                                            <span class="communication_event_warning">créneau absent</span>
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <span class="communication_event_status <?=$cancelled ? "is-cancelled" : "is-active"; ?>"><?=$cancelled ? "Annulée" : "Confirmée"; ?></span>
+                                        <?php if (!empty($registration["completed_at"])) { ?><div class="communication_event_participant_subtle">le <?=datex("d/m/Y H:i", date_to_timestamp($registration["completed_at"])); ?></div><?php } ?>
+                                    </td>
+                                </tr>
                             <?php } ?>
-                        </select>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php } ?>
+            </div>
+
+            <div class="communication_event_sessions_block communication_event_panel">
+                <div class="communication_event_section_title">
+                    <h5>Créneaux</h5>
+                    <span><?=count($sessions); ?> créneau<?=count($sessions) === 1 ? "" : "x"; ?></span>
+                </div>
+                <?php if (!count($sessions)) { ?><p class="communication_event_empty_line">Aucun créneau.</p><?php } ?>
+                <?php if (count($sessions)) { ?><div class="communication_event_sessions_grid"><?php } ?>
+                <?php foreach ($sessions as $session) {
+                    $registration_count = $session_counts[(int)$session["id"]] ?? ["active" => 0, "cancelled" => 0];
+                    $room_names = array_map(function($r) { return ($r["name"] ?: $r["codename"]); }, $session["rooms"] ?? []);
+                    $school_names = array_map(function($s) { return ($s["name"] ?: $s["codename"]); }, $session["schools"] ?? []);
+                ?>
+                    <div class="communication_event_session">
+                        <div class="communication_event_session_main">
+                            <div>
+                                <strong><?=htmlspecialchars($session["name"] ?: $event["name"]); ?></strong>
+                                <div class="communication_event_session_date">
+                                    <?=datex("d/m/Y H:i", date_to_timestamp($session["begin_date"])); ?>–<?=datex("H:i", date_to_timestamp($session["end_date"])); ?>
+                                </div>
+                            </div>
+                            <span class="communication_event_session_count">
+                                <strong><?=(int)$registration_count["active"]; ?></strong>
+                                inscrit<?=(int)$registration_count["active"] === 1 ? "" : "s"; ?>
+                            </span>
+                        </div>
+                        <?php if (count($room_names)) { ?>
+                            <div class="communication_event_session_meta"><strong>Salle :</strong> <?=htmlspecialchars(implode(", ", $room_names)); ?></div>
+                        <?php } ?>
+                        <?php if (count($school_names)) { ?>
+                            <div class="communication_event_session_meta"><strong>Écoles :</strong> <?=htmlspecialchars(implode(", ", $school_names)); ?></div>
+                        <?php } ?>
+                        <?php if ((int)$registration_count["cancelled"] > 0) { ?>
+                            <div class="communication_event_session_meta"><?=(int)$registration_count["cancelled"]; ?> inscription<?=(int)$registration_count["cancelled"] === 1 ? "" : "s"; ?> annulée<?=(int)$registration_count["cancelled"] === 1 ? "" : "s"; ?></div>
+                        <?php } ?>
+                        <form method="delete" action="/api/communication_event/<?=(int)$event["id"]; ?>/session/<?=(int)$session["id"]; ?>" onsubmit="return confirm('Supprimer ce créneau ?') && silent_submitf(this, {after_success:function(){window.location.reload();}});">
+                            <button type="submit">Supprimer le créneau</button>
+                        </form>
+                    </div>
+                <?php } ?>
+                <?php if (count($sessions)) { ?></div><?php } ?>
+
+                <details class="communication_event_add_session">
+                    <summary>Ajouter un créneau</summary>
+                    <form method="post" action="/api/communication_event/<?=(int)$event["id"]; ?>/session" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
+                        <label>Nom <input type="text" name="name" placeholder="<?=htmlspecialchars($event["name"], ENT_QUOTES); ?>" /></label>
+                        <label>Date <input type="date" name="day" required /></label>
+                        <label>Début <input type="time" name="begin" required /></label>
+                        <label>Fin <input type="time" name="end" required /></label>
+                        <label>Salle
+                            <select name="room" required>
+                                <option value="">— choisir une salle —</option>
+                                <?php foreach ($communication_event_rooms as $room) { ?>
+                                    <option value="<?=(int)$room["id"]; ?>"><?=htmlspecialchars($room["name"] ?: $room["codename"]); ?></option>
+                                <?php } ?>
+                            </select>
+                        </label>
+                        <label>Écoles concernées
+                            <select name="schools[]" multiple size="<?=min(6, max(2, count($communication_event_schools))); ?>">
+                                <?php foreach ($communication_event_schools as $candidate) { ?>
+                                    <option value="<?=(int)$candidate["id"]; ?>" <?=(int)$candidate["id"] === (int)$school["id"] ? "selected" : ""; ?>><?=htmlspecialchars($candidate["name"] ?: $candidate["codename"]); ?></option>
+                                <?php } ?>
+                            </select>
+                        </label>
+                        <button type="submit">Ajouter le créneau</button>
+                    </form>
+                </details>
+            </div>
+
+            <details class="communication_event_settings">
+                <summary>Modifier l’évènement</summary>
+                <form method="put" action="/api/communication_event/<?=(int)$event["id"]; ?>" onsubmit="return silent_submitf(this, {after_success:function(){window.location.reload();}});">
+                    <label>Nom <input type="text" name="name" value="<?=htmlspecialchars($event["name"], ENT_QUOTES); ?>" required /></label>
+                    <label>Description <textarea name="description"><?=htmlspecialchars($event["description"] ?? ""); ?></textarea></label>
+                    <label>Illustration par URL <input type="url" name="illustration_url" value="<?=htmlspecialchars($event["illustration_url"] ?? "", ENT_QUOTES); ?>" placeholder="/res/... ou https://..." /></label>
+                    <label class="communication_event_upload_field">
+                        Remplacer par un fichier
+                        <input type="file" name="illustration_file" accept="image/png,image/jpeg,image/webp" />
+                        <small>PNG, JPEG ou WebP — 8 Mio maximum. Le fichier téléchargé est conservé par Infosphère.</small>
                     </label>
-                    <label>Écoles concernées
-                        <select name="schools[]" multiple size="<?=min(6, max(2, count($communication_event_schools))); ?>">
-                            <?php foreach ($communication_event_schools as $candidate) { ?>
-                                <option value="<?=(int)$candidate["id"]; ?>" <?=(int)$candidate["id"] === (int)$school["id"] ? "selected" : ""; ?>><?=htmlspecialchars($candidate["name"] ?: $candidate["codename"]); ?></option>
-                            <?php } ?>
-                        </select>
-                    </label>
-                    <button type="submit">Ajouter le créneau</button>
+                    <?php if (trim((string)($event["illustration_url"] ?? "")) != "") { ?>
+                        <label class="communication_event_remove_illustration">
+                            <input type="checkbox" name="remove_illustration" value="1" />
+                            Supprimer l’illustration actuelle
+                        </label>
+                    <?php } ?>
+                    <label><input type="checkbox" name="parental_authorization_required" value="1" <?=!empty($event["parental_authorization_required"]) ? "checked" : ""; ?> /> Demander une attestation d’autorisation parentale lors de l’inscription</label>
+                    <button type="submit">Enregistrer</button>
+                </form>
+                <form class="communication_event_delete" method="delete" action="/api/communication_event/<?=(int)$event["id"]; ?>" onsubmit="return confirm('Supprimer cet évènement et ses créneaux ?') && silent_submitf(this, {after_success:function(){window.location.reload();}});">
+                    <button type="submit">Supprimer l’évènement</button>
                 </form>
             </details>
-
-            <form method="delete" action="/api/communication_event/<?=(int)$event["id"]; ?>" onsubmit="return confirm('Supprimer cet évènement et ses créneaux ?') && silent_submitf(this, {after_success:function(){window.location.reload();}});">
-                <button type="submit">Supprimer l’évènement</button>
-            </form>
         </section>
     <?php } ?>
 </div>
 
 <style>
-.school_communication_events .final_box { margin-bottom: 1em; }
-.school_communication_events label { display:block; margin:.45em 0; }
-.school_communication_events input[type=text], .school_communication_events textarea, .school_communication_events select { max-width:100%; }
-.communication_event_public_url { width:min(760px, 95%); }
-.communication_event_session { padding:.55em 0; border-bottom:1px solid #ddd; }
-.communication_event_session small { display:block; margin:.2em 0; }
-.communication_event_session form { display:inline-block; }
+.school_communication_events { display:grid; gap:1em; }
+.communication_events_header { display:flex; gap:1em; align-items:flex-start; justify-content:space-between; }
+.communication_events_header h3 { margin-bottom:.25em; }
+.communication_events_header p { margin-top:.25em; opacity:.8; }
+.school_communication_events .final_box { margin:0; }
+.school_communication_events label { display:block; margin:.55em 0; }
+.school_communication_events input[type=text],
+.school_communication_events input[type=url],
+.school_communication_events input[type=file],
+.school_communication_events textarea,
+.school_communication_events select { max-width:100%; }
+.communication_event_new { min-width:16em; }
+.communication_event_new form,
+.communication_event_settings form,
+.communication_event_add_session form { margin-top:.8em; }
+.communication_event_card { padding:1em; background:rgba(0,0,0,.18); border:1px solid rgba(110,255,125,.16); }
+.communication_event_card_header { display:flex; justify-content:space-between; gap:1.5em; align-items:flex-start; }
+.communication_event_identity { min-width:0; }
+.communication_event_identity h4 { margin:0 0 .35em; font-size:1.25em; }
+.communication_event_identity p { margin:.25em 0 0; white-space:normal; }
+.communication_event_illustration_preview { display:block; width:min(260px,100%); max-height:140px; object-fit:cover; margin:0 0 .7em; border-radius:.55em; border:1px solid rgba(110,255,125,.22); }
+.communication_event_upload_field small { display:block; margin-top:.25em; opacity:.72; font-size:.88em; }
+.communication_event_remove_illustration { margin-top:.8em !important; }
+.communication_event_metrics { display:flex; gap:.5em; flex-wrap:wrap; justify-content:flex-end; }
+.communication_event_metric,
+.communication_event_session_count { display:inline-flex; gap:.35em; align-items:baseline; padding:.35em .65em; border-radius:.45em; background:rgba(255,255,255,.08); white-space:nowrap; }
+.communication_event_metric strong,
+.communication_event_session_count strong { font-size:1.25em; }
+.communication_event_metric_active,
+.communication_event_session_count { border:1px solid rgba(90,190,100,.45); }
+.communication_event_metric_cancelled { opacity:.72; border:1px solid rgba(210,150,90,.35); }
+.communication_event_metric_neutral { opacity:.8; border:1px solid rgba(255,255,255,.18); }
+.communication_event_link_box { margin:1em 0; padding:.75em; border-radius:.45em; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.10); }
+.communication_event_link_box strong { display:block; margin-bottom:.4em; }
+.communication_event_public_url { width:min(900px, 100%); }
+.communication_event_panel { margin-top:1em; padding:.85em; border-radius:.55em; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.09); }
+.communication_event_sessions_block { margin-top:1em; }
+.communication_event_section_title { display:flex; justify-content:space-between; align-items:baseline; gap:1em; border-bottom:1px solid rgba(255,255,255,.16); }
+.communication_event_section_title h5 { margin:.2em 0 .55em; font-size:1.05em; }
+.communication_event_section_title span { opacity:.7; }
+.communication_event_sessions_grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:.7em; margin-top:.7em; }
+.communication_event_session { padding:.8em; border:1px solid rgba(255,255,255,.11); border-radius:.45em; background:rgba(255,255,255,.025); }
+.communication_event_session_main { display:flex; justify-content:space-between; align-items:flex-start; gap:1em; }
+.communication_event_session_date { margin-top:.2em; opacity:.8; }
+.communication_event_session_meta { margin-top:.25em; font-size:.92em; opacity:.82; }
+.communication_event_session form { margin-top:.55em; }
+.communication_event_add_session,
+.communication_event_settings { margin-top:.9em; }
+.communication_event_settings { padding-top:.6em; border-top:1px solid rgba(255,255,255,.16); }
+.communication_event_delete { margin-top:1em !important; padding-top:.8em; border-top:1px solid rgba(255,255,255,.12); }
+.communication_event_delete button { opacity:.8; }
+
+.communication_event_participants_table_wrap { overflow-x:auto; margin-top:.6em; }
+.communication_event_participants_table { width:100%; border-collapse:collapse; min-width:860px; }
+.communication_event_participants_table th { text-align:left; font-weight:normal; opacity:.72; padding:.45em .55em; border-bottom:1px solid rgba(255,255,255,.16); }
+.communication_event_participants_table td { vertical-align:top; padding:.6em .55em; border-bottom:1px solid rgba(255,255,255,.08); }
+.communication_event_participants_table tr.is-cancelled { opacity:.55; }
+.communication_event_participant_identity { white-space:nowrap; }
+.communication_event_profile_link { margin-left:.4em; font-size:.85em; opacity:.75; }
+.communication_event_participant_subtle { margin-top:.18em; opacity:.72; font-size:.88em; }
+.communication_event_warning { display:inline-block; margin-left:.35em; padding:.08em .35em; border-radius:.35em; background:rgba(220,120,70,.18); border:1px solid rgba(220,120,70,.35); font-size:.78em; }
+.communication_event_status { display:inline-block; padding:.15em .45em; border-radius:.35em; white-space:nowrap; }
+.communication_event_status.is-active { background:rgba(70,180,90,.18); border:1px solid rgba(70,180,90,.38); }
+.communication_event_status.is-cancelled { background:rgba(180,120,70,.16); border:1px solid rgba(180,120,70,.30); }
+.communication_event_interests { margin-top:.25em; font-size:.88em; }
+.communication_event_interests summary { cursor:pointer; opacity:.8; }
+
+.communication_event_empty,
+.communication_event_empty_line { opacity:.75; }
+@media (max-width:760px) {
+    .communication_events_header,
+    .communication_event_card_header,
+    .communication_event_session_main { flex-direction:column; }
+    .communication_event_metrics { justify-content:flex-start; }
+    .communication_event_new { width:100%; }
+}
 </style>

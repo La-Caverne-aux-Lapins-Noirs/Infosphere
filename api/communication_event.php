@@ -22,7 +22,9 @@ function AddCommunicationEvent($id, $data, $method, $output, $module)
             $data["name"] ?? "",
             $data["description"] ?? "",
             (int)($User["id"] ?? 0),
-            !empty($data["parental_authorization_required"])
+            !empty($data["parental_authorization_required"]),
+            $data["illustration_url"] ?? "",
+            $data["illustration_file"] ?? NULL
         ),
         "Évènement créé."
     ));

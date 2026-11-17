@@ -619,6 +619,24 @@ function SendBillingEntry($id, $data, $method, $output, $module)
     ]));
 }
 
+function RemindBillingEntry($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    if ($id <= 0)
+        bad_request();
+    $message = trim((string)($data["message"] ?? ""));
+    if (strlen($message) > 8000)
+        return (new ErrorResponse("BillingInvoiceMailMessageTooLong"));
+    $result = billing_remind_issued_invoice($id, $message);
+    if (!is_array($result) || isset($result["error"]))
+        return (new ErrorResponse($result["error"] ?? "CannotSendMail"));
+    return (new ValueResponse([
+        "msg" => $Dictionnary["BillingInvoiceReminderSent"] ?? "Relance envoyée",
+        "invoice" => $result["relative_path"],
+    ]));
+}
+
 function ViewBillingInvoice($id, $data, $method, $output, $module)
 {
     if ($id <= 0)
@@ -1335,6 +1353,7 @@ $Tab = [
     "PUT" => [
 	"entry" => ["is_billing_manager_for_billing_entry", "UpdateBillingEntry"],
         "send" => ["is_billing_manager_for_billing_entry", "SendBillingEntry"],
+        "remind" => ["is_billing_manager_for_billing_entry", "RemindBillingEntry"],
         "mark_sent" => ["is_billing_manager_for_billing_entry", "MarkBillingEntrySent"],
         "payment" => ["is_billing_manager_for_billing_payment", "UpdateBillingPayment"],
         "print" => ["is_billing_manager_for_billing_entry", "QueueBillingInvoicePrint"],

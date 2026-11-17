@@ -2940,7 +2940,10 @@ function billing_invoice_mail_body($entry, $reference, $relative_path = "", $cus
             : ($Dictionnary["BillingInvoiceMailIntro"] ?? "Veuillez trouver en pièce jointe la facture %s concernant :"),
         $reference
     )."\n\n";
-    $body .= $Dictionnary["Student"]." : ".$name."\n";
+    if ($student_name != "")
+        $body .= $Dictionnary["Student"]." : ".$student_name."\n";
+    if ($organization_name != "")
+        $body .= ($Dictionnary["BillingCustomerOrganization"] ?? "Client / organisation")." : ".$organization_name."\n";
     $body .= $Dictionnary["BillingLabel"]." : ".$entry["label"]."\n";
     $body .= $Dictionnary["BillingInvoiceType"]." : ".billing_invoice_type_label($entry["invoice_type"] ?? "school")."\n";
     $body .= $Dictionnary["Amount"]." : ".billing_euros($amount)."\n";
@@ -3836,6 +3839,50 @@ function billing_send_invoice_placeholder($id_entry, $reference, $custom_message
     if ($updated != NULL)
         $file["relative_path"] = billing_invoice_relative_path($updated);
     return ($file);
+}
+
+function billing_remind_issued_invoice($id_entry, $custom_message = "")
+{
+    global $Dictionnary;
+
+    $entry = billing_entry_with_user((int)$id_entry);
+    if ($entry == NULL || !billing_entry_is_managed($entry))
+        return (["error" => "NotFound"]);
+    if (billing_is_credit_note($entry) || empty($entry["sent_date"]) ||
+        !empty($entry["paid_date"]) || !empty($entry["deleted"]))
+        return (["error" => "BillingReminderUnavailable"]);
+    $recipients = billing_invoice_recipients($entry["id_user"], $entry["id_organization"] ?? 0);
+    if (!count($recipients))
+        return (["error" => "CannotSendMail"]);
+    // A reminder never changes the invoice or its accounting state. Reuse the
+    // original PDF (including imported external invoices) without regenerating it.
+    $path = billing_invoice_existing_file_path($entry);
+    if ($path == "")
+        return (["error" => "CannotBuildInvoice"]);
+    $content = @file_get_contents($path);
+    if ($content === false)
+        return (["error" => "CannotBuildInvoice"]);
+    $reference = billing_invoice_document_reference($entry);
+    $body = billing_invoice_mail_body($entry, $reference, "", $custom_message);
+    $billing_copy = "";
+    if (function_exists("school_mailbox_resolve") && (int)($entry["id_school"] ?? 0) > 0)
+        $billing_copy = school_mailbox_resolve((int)$entry["id_school"], "billing", false);
+    foreach ($recipients as $recipient)
+        if ($billing_copy != "" && strcasecmp(trim((string)$recipient), $billing_copy) == 0)
+            $billing_copy = "";
+    $mail = send_mail(
+        $recipients,
+        ($Dictionnary["BillingInvoiceReminderSubject"] ?? "Relance — ").billing_invoice_mail_subject($entry, $reference),
+        $body,
+        NULL,
+        [basename($path) => $content],
+        false,
+        NULL,
+        $billing_copy == "" ? NULL : $billing_copy
+    );
+    if ($mail->is_error())
+        return (["error" => "CannotSendMail"]);
+    return (["relative_path" => billing_invoice_relative_path($entry)]);
 }
 
 function billing_archive_paid_invoice_entries(array $entries)

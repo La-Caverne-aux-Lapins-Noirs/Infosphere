@@ -46,11 +46,24 @@ else
             $student = $student_result["student"];
     }
 }
+$registration_event_display = NULL;
+if ($is_event_public && is_array($invitation["event"] ?? NULL))
+    $registration_event_display = $invitation["event"];
+else if ($is_event_response && is_array($event_response_event))
+    $registration_event_display = $event_response_event;
+$registration_event_illustration = is_array($registration_event_display)
+    ? trim((string)($registration_event_display["illustration_url"] ?? ""))
+    : "";
 ?>
 <style><?php require (__DIR__."/style.css"); ?><?php require (__DIR__."/../../style/internship_calendar.css"); ?></style>
-<div class="registration-form-page">
-    <header class="registration-form-header">
-        <h1><?php
+<div class="registration-form-page<?=is_array($registration_event_display) ? " registration-event-page" : ""; ?>">
+    <header class="registration-form-header<?=is_array($registration_event_display) ? " registration-event-header" : ""; ?>">
+        <?php if ($registration_event_illustration != "") { ?>
+            <div class="registration-event-hero">
+                <img src="<?=htmlspecialchars($registration_event_illustration, ENT_QUOTES); ?>" alt="Illustration de l’évènement" />
+            </div>
+        <?php } ?>
+        <h1 style="width: 100%; height: 50px;"><?php
             if ($is_event_public)
                 echo htmlspecialchars($invitation["event"]["name"] ?? "Inscription à un évènement");
             else if ($is_event_response && is_array($event_response_event))

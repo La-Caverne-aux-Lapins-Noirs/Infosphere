@@ -359,3 +359,252 @@
     gap: 8px;
     margin-top: 8px;
 }
+
+.registration-event-fields select {
+    background: #17191d;
+    color: #f3f3f3;
+    color-scheme: dark;
+}
+
+.registration-event-fields select option,
+.registration-event-fields select optgroup {
+    background: #ffffff !important;
+    color: #111111 !important;
+    color-scheme: light;
+}
+
+/* The cancellation action is deliberately distinct from neutral browser buttons. */
+#registration-event-cancel-form button[data-event-cancel] {
+    padding: 9px 13px;
+    border: 1px solid #8f4a4a;
+    border-radius: 4px;
+    background: #612929;
+    color: #fff;
+    font-weight: bold;
+}
+
+#registration-event-cancel-form button[data-event-cancel]:hover {
+    background: #773333;
+}
+
+#registration-event-cancel-form button[data-event-cancel]:disabled {
+    opacity: .55;
+}
+
+
+/* Communication events are public landing pages, not administrative forms. */
+.registration-event-page {
+    max-width: 1180px;
+    padding-top: 18px;
+}
+
+.registration-event-page .registration-event-header {
+    width: min(980px, 100%);
+    margin: 0 auto 14px;
+}
+
+.registration-event-page .registration-event-header h1 {
+    margin: 14px 0 8px;
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1.05;
+    text-align: center;
+}
+
+.registration-event-page .registration-form-intro {
+    width: min(900px, 100%);
+    margin: 0 auto 18px;
+    padding: 0 18px;
+    background: transparent;
+    text-align: center;
+    font-size: 1.06rem;
+    line-height: 1.5;
+}
+
+.registration-event-hero {
+    width: min(980px, 100%);
+    max-height: 360px;
+    overflow: hidden;
+    border: 1px solid rgba(95, 190, 100, 0.5);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.42);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
+}
+
+.registration-event-hero img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 360px;
+    object-fit: cover;
+}
+
+.registration-event-page .registration-event-fields {
+    width: min(940px, 100%);
+    margin: 0 auto 18px;
+    padding: 22px 24px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.56);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.20);
+}
+
+.registration-event-page .registration-event-fields legend {
+    padding: 0 12px;
+    font-size: 1.08rem;
+}
+
+.registration-event-page .registration-form-field {
+    margin: 13px 0;
+}
+
+.registration-event-page .registration-form-field input,
+.registration-event-page .registration-form-field select,
+.registration-event-page .registration-form-field textarea {
+    min-height: 44px;
+    font-size: 1rem;
+}
+
+.registration-event-page .registration-form-field textarea {
+    min-height: 105px;
+}
+
+.registration-event-page .registration-form-actions {
+    width: min(940px, 100%);
+    margin: 0 auto;
+}
+
+@media (max-width: 760px) {
+    body.registration-page-shell #head {
+        height: 54px;
+        overflow: hidden;
+    }
+
+    body.registration-page-shell #head > a:not(#logo),
+    body.registration-page-shell #clock,
+    body.registration-page-shell #foot .menu,
+    body.registration-page-shell #foot .loginout {
+        display: none !important;
+    }
+
+    body.registration-page-shell #logo,
+    body.registration-page-shell #logo img {
+        max-height: 50px;
+    }
+
+    body.registration-page-shell #body {
+        top: 54px;
+        left: 0;
+        bottom: 44px;
+    }
+
+    body.registration-page-shell #foot {
+        height: 44px;
+    }
+
+    body.registration-page-shell #foot > form {
+        width: auto;
+    }
+
+    body.registration-page-shell #foot select {
+        width: auto;
+        height: 34px;
+        margin: 5px;
+        font-size: 16px;
+        line-height: 20px;
+    }
+
+    .registration-form-page {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 14px 12px 28px;
+    }
+
+    .registration-event-page .registration-event-header {
+        margin-bottom: 10px;
+    }
+
+    .registration-event-page .registration-event-header h1 {
+        margin: 11px 0 7px;
+        font-size: 1.8rem;
+    }
+
+    .registration-event-page .registration-form-intro {
+        margin-bottom: 14px;
+        padding: 0 4px;
+        font-size: 1rem;
+    }
+
+    .registration-event-hero {
+        max-height: 220px;
+        border-radius: 9px;
+    }
+
+    .registration-event-hero img {
+        max-height: 220px;
+    }
+
+    .registration-event-page .registration-event-fields {
+        margin: 0;
+        padding: 15px 13px 10px;
+        border-radius: 8px;
+    }
+
+    .registration-event-page .registration-form-field {
+        grid-template-columns: 1fr;
+        gap: 7px;
+        margin: 0 0 17px;
+        align-items: stretch;
+    }
+
+    .registration-event-page .registration-form-field > span {
+        display: block;
+        line-height: 1.2;
+    }
+
+    .registration-event-page .registration-form-field input,
+    .registration-event-page .registration-form-field select,
+    .registration-event-page .registration-form-field textarea {
+        min-height: 46px;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .registration-event-page .registration-form-field textarea {
+        min-height: 96px;
+    }
+
+    .registration-event-page .registration-form-actions {
+        position: static;
+        display: block;
+        padding: 14px 0 0;
+        background: transparent;
+    }
+
+    .registration-event-page .registration-form-actions button {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        margin: 0 0 9px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .registration-form-page {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .registration-event-page .registration-event-header h1 {
+        font-size: 1.55rem;
+    }
+
+    .registration-event-page .registration-form-intro {
+        font-size: .96rem;
+    }
+
+    .registration-event-hero,
+    .registration-event-hero img {
+        max-height: 180px;
+    }
+}

@@ -35,6 +35,39 @@
 }
 
 
+/*
+ * The dashboard is a two-row table. Tall content (in particular unread
+ * Intercom messages) must not increase a row's minimum height: each panel
+ * scrolls inside the space allocated to its cell.
+ */
+#home_table
+{
+    table-layout: fixed;
+    max-height: 100%;
+}
+
+#home_table > tbody > tr
+{
+    height: 50%;
+}
+
+#home_table > tbody > tr > td
+{
+    position: relative;
+    overflow: hidden;
+}
+
+#home_table > tbody > tr > td > div
+{
+    position: absolute;
+    inset: 5px;
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+
 #home_intercom_box
 {
     display: flex;

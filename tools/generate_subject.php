@@ -650,6 +650,12 @@ function subject_generation_render($cnf, $act, array $context, $outfile)
         return ($outfile);
     }
 
+    // DocBuilder appends .pdf when the requested output path does not already
+    // end with it.  Keep the temporary filename itself as a PDF so the path we
+    // later test/rename is exactly the path DocBuilder writes.
+    foreach (glob($outfile.".tmp.*") ?: [] as $stale_output)
+        @unlink($stale_output);
+
     try
     {
         $suffix = bin2hex(random_bytes(6));
@@ -658,7 +664,7 @@ function subject_generation_render($cnf, $act, array $context, $outfile)
     {
         $suffix = uniqid("", true);
     }
-    $temporary_output = $outfile.".tmp.".getmypid().".".$suffix;
+    $temporary_output = $outfile.".tmp.".getmypid().".".$suffix.".pdf";
     $command = $context["command"];
     $command[] = "-o";
     $command[] = $temporary_output;
@@ -668,6 +674,8 @@ function subject_generation_render($cnf, $act, array $context, $outfile)
     {
         @unlink($temporary_output);
         $details = subject_generation_command_error($ret);
+        if (($ret["exit_code"] ?? 1) === 0 && !is_file($temporary_output))
+            $details .= " (generated PDF not found at ".$temporary_output.")";
         $act->subject_generation_error = $details;
         add_log(REPORT, "Subject generation failed for {$act->codename}: ".$details);
         flock($lock, LOCK_UN);

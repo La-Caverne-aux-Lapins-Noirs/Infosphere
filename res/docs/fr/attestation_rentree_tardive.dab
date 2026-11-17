@@ -1,0 +1,189 @@
+@include ".base_letter/base.dab"
+Title = "Attestation de rentrée tardive"
+
+[Letter
+  BodyGap = "4cm"
+  BodyLeft = "1cm"
+  BodyRight = "1cm"
+  DateX = "13cm"
+  DateY = "8.2cm"
+]
+
+[School
+  Name = ""
+  Address = ""
+  Phone = ""
+  Mail = ""
+  DocumentLogo = ""
+  Stamp = ""
+  MainInfo = ""
+  SchoolInfo = ""
+  FormationInfo = ""
+  AlternationInfo = ""
+]
+
+[Student
+  Identity = ""
+  BirthDate = ""
+  BirthPlace = ""
+  Nationality = ""
+  Gender = "neutral"
+]
+
+[Admission
+  TargetClass = ""
+  TargetYearLabel = ""
+  EntryDate = ""
+  SchoolYear = ""
+  IssuePlace = ""
+  IssueDate = ""
+  Reference = ""
+  AutomaticSignature = 0
+  ShowStamp = 0
+]
+
+[LateEntry
+  LastArrivalDate = ""
+  CatchUpTerms = "L'établissement mettra à disposition les sujets et ressources pédagogiques nécessaires au rattrapage des activités manquées."
+]
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Candidat"
+    Auto = "Owner"
+    Required = 1
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+  [Director
+    Type = "director"
+    Prefix = "Director"
+    Label = "Direction signataire"
+    Required = 1
+    Signatory = "Director"
+    InferFrom = "School"
+  ]
+]
+
+[Signatures
+  [Director
+    Required = 1
+  ]
+]
+
+[FormGroup
+  [Beneficiaire
+    Label = "Bénéficiaire"
+    [Fields
+      [Student
+        [Identity
+          Label = "Nom et prénom"
+        ]
+        [BirthDate
+          Label = "Date de naissance"
+        ]
+        [BirthPlace
+          Label = "Lieu de naissance"
+        ]
+        [Nationality
+          Label = "Nationalité"
+        ]
+      ]
+    ]
+  ]
+  [Admission
+    Label = "Formation et émission"
+    [Fields
+      [Admission
+        [TargetClass
+          Label = "Formation / classe d'admission"
+        ]
+        [TargetYearLabel
+          Label = "Niveau d'admission"
+        ]
+        [EntryDate
+          Label = "Date de rentrée officielle"
+          Required = 1
+        ]
+        [SchoolYear
+          Label = "Année scolaire"
+        ]
+        [IssuePlace
+          Label = "Lieu d'émission"
+        ]
+        [IssueDate
+          Label = "Date d'émission"
+        ]
+        [Reference
+          Label = "Référence facultative"
+        ]
+        [AutomaticSignature
+          Label = "Ajouter automatiquement la signature"
+        ]
+        [ShowStamp
+          Label = "Apposer le tampon de l’école (0 = non, 1 = oui)"
+        ]
+      ]
+    ]
+  ]
+  [RentreeTardive
+    Label = "Autorisation de rentrée tardive"
+    [Fields
+      [LateEntry
+        [LastArrivalDate
+          Label = "Date limite d'arrivée autorisée"
+          Required = 1
+        ]
+        [CatchUpTerms
+          Label = "Modalités de rattrapage pédagogique"
+        ]
+      ]
+    ]
+  ]
+]
+
+[FormRole
+  [Beneficiaire
+    Label = "Bénéficiaire"
+    {Read "Beneficiaire"}
+    {Edit "Beneficiaire"}
+    {Validate "Beneficiaire"}
+  ]
+  [Etablissement
+    Label = "Établissement"
+    {Read "Admission", "RentreeTardive"}
+    {Edit "Admission", "RentreeTardive"}
+    {Validate "Admission", "RentreeTardive"}
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Attestation de rentrée tardive
+  Left]
+]
+
+From = [Text($,From)
+  [#Variable;School.Name]\par
+  [#Variable;School.Address]\par
+  [#Variable;School.Phone]\par
+  [#Variable;School.Mail]
+From]
+
+Subject = [Text($,LetterSubject)
+LetterSubject]
+
+Date = [Text($,LetterDate)
+  [#IfC;Admission.IssuePlace;!=;;Fait à [#Variable;Admission.IssuePlace], ;]le [#Variable;Admission.IssueDate]
+LetterDate]
+
+{Content
+  @insert txt ($) "attestation_rentree_tardive.txt"
+}

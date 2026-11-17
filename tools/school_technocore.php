@@ -6,7 +6,9 @@
  * Scolaire may keep local profiles for authoring/tests, but production
  * configuration is stored directly on the school row as JSON so the same
  * reusable subject can be rendered and evaluated with the conventions of the
- * school that uses it.
+ * school that uses it. A generated mirror is kept in
+ * dres/school/<codename>/school-technocore.dab for inspection and manual
+ * mergeconf tests; the database remains the authoritative source.
  */
 
 function school_technocore_column_available()
@@ -181,6 +183,15 @@ function school_technocore_save($id_school, array $data, $id_actor = 0)
         WHERE id = $id_school"))
         return (new ErrorResponse("CannotEdit", "school TechnoCore configuration"));
 
+    $school = fetch_school($id_school);
+    $profile_error = NULL;
+    if (!is_array($school) || !isset($school["id"]) ||
+        !school_technocore_refresh_profile($school, $profile_error, true))
+        return (new ErrorResponse(
+            "CannotEdit",
+            $profile_error ?? "Cannot refresh school TechnoCore profile"
+        ));
+
     // The regular school API log already records the acting user. Keep the
     // actor out of the configuration payload: it is configuration, not audit data.
     unset($id_actor);
@@ -263,6 +274,64 @@ function school_technocore_write_profile(array $school, $path, &$error = NULL)
         $error = "Cannot write school TechnoCore profile: ".$path;
         return (false);
     }
+    return (true);
+}
+
+function school_technocore_profile_path(array $school)
+{
+    global $Configuration;
+
+    $codename = trim((string)($school["codename"] ?? ""));
+    if ($codename == "" || !preg_match('/^[A-Za-z0-9_-]+$/D', $codename))
+        return (NULL);
+    return ($Configuration->SchoolsDir($codename)."school-technocore.dab");
+}
+
+/**
+ * Refresh the persistent, generated mirror of the DB-backed TechnoCore profile.
+ *
+ * An unconfigured school legitimately has no profile: in that case a stale
+ * mirror is removed and refresh_school() may continue. When $required is true
+ * (after an explicit TechnoCore edit), absence of a usable profile is an error.
+ */
+function school_technocore_refresh_profile(array $school, &$error = NULL, $required = false)
+{
+    $error = NULL;
+    $path = school_technocore_profile_path($school);
+    if ($path === NULL)
+    {
+        $error = "Invalid school codename for TechnoCore profile";
+        return (false);
+    }
+
+    $content = school_technocore_profile_dabsic($school, $error);
+    if ($content === NULL)
+    {
+        $not_configured =
+            $error === "school.technocore_configuration_json column is missing" ||
+            strpos((string)$error, "TechnoCore configuration is not configured for school ") === 0;
+        if (!$required && $not_configured)
+        {
+            if (is_file($path))
+                @unlink($path);
+            $error = NULL;
+            return (true);
+        }
+        return (false);
+    }
+
+    $directory = dirname($path);
+    if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory))
+    {
+        $error = "Cannot create school TechnoCore profile directory: ".$directory;
+        return (false);
+    }
+    if (file_put_contents($path, $content, LOCK_EX) === false)
+    {
+        $error = "Cannot write school TechnoCore profile: ".$path;
+        return (false);
+    }
+    @chmod($path, 0644);
     return (true);
 }
 

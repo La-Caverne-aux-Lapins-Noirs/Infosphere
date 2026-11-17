@@ -182,18 +182,30 @@ function build_document_latex_form_metadata(array $parts)
     return (NULL);
 }
 
-function build_document_latex_form_overrides($merged_file, array $metadata)
+/**
+ * Read resolved form values directly from their original inputs.
+ *
+ * The intermediate .dab produced by mergeconf --resolve can contain expanded
+ * multiline Text values which are not safe to feed to mergeconf a second time.
+ * Asking mergeconf for JSON directly from the inputs avoids that round trip.
+ */
+function build_document_latex_form_overrides(array $parts, array $metadata, array $include_paths = [])
 {
-    $content = @file_get_contents($merged_file);
-    if ($content === false)
-        return (new ErrorResponse("CannotReadFile", $merged_file));
+    $tmp = tempnam(sys_get_temp_dir(), "infosphere_doc_form_");
+    if ($tmp === false)
+        return (new ErrorResponse("CannotWriteFile", "temporary form JSON"));
+    @unlink($tmp);
+    $json_file = $tmp.".json";
 
-    $process = dabsic_form_process("mergeconf -if .dabsic -of .json", $content);
-    if (($process["status"] ?? 1) !== 0)
-        return (new ErrorResponse("CannotExecute", dabsic_form_clean_diagnostic($process["stderr"] ?? "")));
-    $tree = json_decode((string)($process["stdout"] ?? ""), true);
+    $ret = run_command(build_document_mergeconf_command($parts, $json_file, $include_paths, ".json"));
+    $content = is_file($json_file) ? @file_get_contents($json_file) : false;
+    @unlink($json_file);
+    if ($ret["exit_code"] !== 0 || $content === false)
+        return (new ErrorResponse("CannotExecute", trim($ret["stderr"]."\n".$ret["stdout"])));
+
+    $tree = json_decode($content, true);
     if (!is_array($tree))
-        return (new ErrorResponse("CannotReadFile", "resolved Dabsic form values"));
+        return (new ErrorResponse("CannotReadFile", "resolved Dabsic form JSON: ".json_last_error_msg()));
 
     $values = [];
     dabsic_form_flatten_values($tree, "", $values);
@@ -217,14 +229,16 @@ function build_document_latex_safe_merged_file($merged_file, array $parts, array
     if ($metadata === NULL)
         return (new ValueResponse(["file" => $merged_file, "temporary" => false]));
 
-    $overrides = build_document_latex_form_overrides($merged_file, $metadata);
+    $overrides = build_document_latex_form_overrides($parts, $metadata, $include_paths);
     if (is_object($overrides) && $overrides->is_error())
         return ($overrides);
     if (!count($overrides))
         return (new ValueResponse(["file" => $merged_file, "temporary" => false]));
 
     $safe_file = $merged_file.".texsafe.dab";
-    $safe_parts = [["type" => "file", "file" => $merged_file]];
+    // Recreate the rendering file from the valid inputs, not from the merged
+    // output whose round-trip parsing may fail on multiline Text values.
+    $safe_parts = $parts;
     foreach ($overrides as $field => $value)
         $safe_parts[] = ["type" => "field", "key" => $field, "value" => $value];
     $ret = run_command(build_document_mergeconf_command($safe_parts, $safe_file, $include_paths));
@@ -236,19 +250,27 @@ function build_document_latex_safe_merged_file($merged_file, array $parts, array
     return (new ValueResponse(["file" => $safe_file, "temporary" => true]));
 }
 
-function build_document_mergeconf_command(array $parts, $output_file, array $include_paths = [])
+function build_document_mergeconf_command(array $parts, $output_file, array $include_paths = [], $output_format = NULL)
 {
     $cmd = "mergeconf";
     foreach (build_document_existing_dirs($include_paths) as $path)
-	$cmd .= " -I ".escapeshellarg($path);
+        $cmd .= " -I ".escapeshellarg($path);
     foreach ($parts as $part)
     {
-	if ($part["type"] == "file")
-	    $cmd .= " -i ".escapeshellarg($part["file"]);
-	else if ($part["type"] == "field")
-	    $cmd .= " -m ".escapeshellarg($part["key"]."=".$part["value"]);
+        if ($part["type"] == "file")
+            $cmd .= " -i ".escapeshellarg($part["file"]);
+        else if ($part["type"] == "field")
+            $cmd .= " -m ".escapeshellarg($part["key"]."=".$part["value"]);
     }
-    $cmd .= " -o ".escapeshellarg($output_file)." --resolve";
+    if ($output_format !== NULL)
+    {
+        // mergeconf forbids mixing -of (stdout format) and -o (file output).
+        // Redirect stdout to the temporary JSON file instead.
+        $cmd .= " -of ".escapeshellarg($output_format).
+            " --resolve > ".escapeshellarg($output_file);
+    }
+    else
+        $cmd .= " -o ".escapeshellarg($output_file)." --resolve";
     return ($cmd);
 }
 
@@ -320,7 +342,7 @@ function build_document_from_parts($output_name, array $document_parts, array $i
     // original merged Dabsic remains untouched and stored form data never gains
     // presentation-level backslashes such as \& or \_.
     $render_input = $merged;
-    $safe = build_document_latex_safe_merged_file($merged, $parts, $include_paths);
+    $safe = build_document_latex_safe_merged_file($merged, $merge_parts, $include_paths);
     if ($safe->is_error())
     {
         @unlink($merged);
@@ -843,6 +865,24 @@ function document_builder_contract_context(array $student, $kind)
 
     if (function_exists("user_identity_complete_signatory_context"))
         $ctx = user_identity_complete_signatory_context($ctx);
+
+    // DocBuilder owns the generated Signatories.<Role> scope. The historical
+    // contract context still uses it internally to complete Finance from the
+    // student / legal representatives; convert it to ordinary source scopes
+    // before serializing the context to Dabsic.
+    $signatories = $ctx["Signatories"] ?? [];
+    unset($ctx["Signatories"]);
+    foreach (["Student", "Director", "Finance"] as $role)
+    {
+        $person = $signatories[$role] ?? NULL;
+        if (!is_array($person) || !count($person))
+            continue;
+        $existing = $ctx[$role] ?? [];
+        if (!is_array($existing))
+            $existing = [];
+        $person = user_identity_merge_dabsic_tree($existing, $person);
+        $ctx[$role] = document_builder_signatory_context($person, $role);
+    }
     return ($ctx);
 }
 

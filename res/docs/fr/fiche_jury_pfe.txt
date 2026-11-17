@@ -1,0 +1,1194 @@
+# Fiche d'évaluation du jury — Projet de fin d'études
+
+[@Size;1]
+
+**Candidat :** [#Variable;Student.Identity]
+
+**Projet :** [#Variable;PFE.Title]
+
+**Équipe éventuelle :** [#Variable;PFE.Team]
+
+**Spécialité(s) :** [#Variable;PFE.Specialities]
+
+**Cycle / année :** [#Variable;PFE.Cycle]
+
+**Date :** [#Variable;Evaluation.Date]
+
+**Lieu :** [#Variable;Evaluation.Location]
+
+**Membres du jury :**
+
+[#Variable;Evaluation.Members]
+
+**Dépôt / version / commit évalué :** [#Variable;PFE.Version]
+
+**Dépôt / URL interne :** [#Variable;PFE.Repository]
+
+---
+
+## 1. Principe de l'évaluation
+
+Le Projet de fin d'études constitue une réalisation terminale du cursus EFRITS.
+
+Il doit permettre au candidat de démontrer sa capacité à conduire jusqu'à son terme un
+projet informatique ambitieux comportant une difficulté technique réelle, une part de
+conception, d'expérimentation et de recherche, une réalisation substantielle, ainsi qu'une
+démarche de validation.
+
+Le jury n'évalue pas seulement le produit présenté.
+
+- la compréhension du problème ;
+- la pertinence des recherches menées ;
+- la qualité des choix d'architecture ;
+- la maîtrise réelle de la réalisation ;
+- la capacité à tester et mesurer ;
+- la sécurité, la fiabilité et l'exploitabilité ;
+- la conduite du projet ;
+- la qualité de la documentation ;
+- la capacité à démontrer le résultat ;
+- la capacité du candidat à défendre techniquement son travail ;
+- sa capacité à identifier lucidement les limites de sa propre réalisation.
+
+La soutenance doit notamment permettre de confronter **ce qui est annoncé à ce qui existe
+réellement**.
+
+Les médailles `PFEJ-*` sont exclusivement réservées au jury final de Projet de fin d'études.
+Elles ne peuvent être attribuées par une matière, un projet intermédiaire, un laboratoire,
+une colle, une soutenance préparatoire, ni automatiquement à partir d'autres médailles
+EFRITS.
+
+Chaque médaille est **individuelle**, y compris lorsque le projet a été réalisé en équipe.
+
+Une médaille est soit :
+
+**\checkbox{} Attribuée    \checkbox{} Non attribuée    \checkbox{} Non applicable**
+
+Il n'existe pas de demi-médaille. `Non applicable` ne doit être utilisé que lorsque la
+nature même du projet rend la compétence sans objet.
+
+Les médailles marquées **◆** sont structurantes. Elles ne peuvent pas être déclarées « non
+applicables ».
+
+### Sources de preuve
+
+**S** — Sources et réalisation
+
+**D** — Dossier et documentation
+
+**X** — Démonstration / recette
+
+**O** — Soutenance et questions du jury
+
+Une affirmation du candidat ne constitue pas à elle seule une preuve.
+
+---
+
+## 2. Problème, ambition et cadrage
+
+### ◆ PFEJ-CAD-01 — Problème réel
+
+Le candidat est capable d'exposer précisément le problème auquel répond son projet, son
+contexte, ses utilisateurs ou bénéficiaires et les raisons pour lesquelles ce problème
+mérite une réponse technique.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-CAD-02 — Objectifs vérifiables
+
+Les objectifs sont suffisamment précis pour permettre au jury de déterminer objectivement ce
+qui est réalisé, partiellement réalisé ou non réalisé.
+
+**Preuves :** D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-CAD-03 — Périmètre maîtrisé
+
+Le candidat distingue clairement cœur du projet, fonctionnalités secondaires,
+expérimentations, travaux abandonnés et évolutions futures.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-CAD-04 — Ambition de fin d'études
+
+Le projet présente une ampleur ou une difficulté technique cohérente avec une réalisation de
+fin de cursus et ne se réduit pas à l'assemblage élémentaire de solutions existantes.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 3. Recherche, expérimentation et démarche d'ingénierie
+
+### ◆ PFEJ-RCH-01 — État de l'art
+
+Le candidat a recherché les travaux, technologies, architectures, protocoles, bibliothèques,
+produits ou publications pertinents avant d'arrêter ses choix.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-RCH-02 — Sources pertinentes
+
+Les références utilisées sont identifiables, suffisamment variées et choisies pour leur
+valeur technique plutôt que pour leur seule accessibilité.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-RCH-03 — Hypothèses explicites
+
+Les hypothèses techniques importantes sont identifiées et peuvent être confrontées à des
+observations ou expériences.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-RCH-04 — Expérimentation
+
+Lorsque plusieurs solutions étaient envisageables, le candidat a su prototyper, mesurer,
+expérimenter ou comparer avant de choisir.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-RCH-05 — Choix défendables
+
+Le candidat est capable d'expliquer pourquoi les principales solutions retenues ont été
+préférées à des alternatives crédibles.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 4. Architecture et conception
+
+### ◆ PFEJ-ARC-01 — Architecture intelligible
+
+Le système peut être expliqué en composants, responsabilités, flux et interfaces cohérents.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ARC-02 — Séparation des responsabilités
+
+Les composants présentent des frontières justifiées et évitent autant que possible les
+dépendances accidentelles.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ARC-03 — Interfaces et contrats
+
+Les interfaces internes ou externes, protocoles, formats, structures de données ou API
+présentent des contrats suffisamment précis.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ARC-04 — Modèle de données
+
+Le stockage et la circulation des données sont cohérents avec leurs usages, leur durée de
+vie et leurs contraintes.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ARC-05 — Évolutivité
+
+L'architecture permet raisonnablement l'évolution du projet sans imposer une réécriture
+complète à chaque extension prévisible.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ARC-06 — Modes de panne
+
+Le candidat sait expliquer ce qui se produit lorsque les différents composants échouent,
+ralentissent, disparaissent ou reçoivent des données incorrectes.
+
+**Preuves :** S / D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 5. Réalisation et maîtrise technique
+
+### ◆ PFEJ-REA-01 — Réalisation substantielle
+
+Une part importante du système présenté résulte effectivement du travail technique du
+candidat.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-REA-02 — Maîtrise du code
+
+Le candidat sait retrouver, lire, expliquer et modifier mentalement les parties
+significatives de sa propre réalisation sans se réfugier derrière les bibliothèques ou
+outils employés.
+
+**Preuves :** S / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-REA-03 — Structures adaptées
+
+Les algorithmes, structures de données, abstractions, paradigmes et mécanismes employés sont
+adaptés au problème rencontré.
+
+**Preuves :** S / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-REA-04 — Gestion des ressources
+
+Le programme maîtrise correctement les ressources dont il a la charge : mémoire, fichiers,
+processus, connexions, périphériques, threads, transactions ou autres ressources
+pertinentes.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-REA-05 — Gestion des erreurs
+
+Les erreurs significatives sont détectées, propagées ou traitées de manière cohérente.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-REA-06 — Intégration
+
+Le candidat maîtrise l'intégration entre les différentes briques de son système et sait
+expliquer les frontières entre ce qu'il a produit et les éléments externes utilisés.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-REA-07 — Dépendances maîtrisées
+
+Les bibliothèques, frameworks, services et autres dépendances sont identifiés et leur rôle
+est compris.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 6. Qualité, tests et validation
+
+### ◆ PFEJ-VAL-01 — Stratégie de validation
+
+Le candidat sait expliquer comment il détermine que son système fonctionne correctement.
+
+**Preuves :** S / D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-VAL-02 — Tests pertinents
+
+Des tests adaptés aux risques du projet ont été réalisés : unitaires, fonctionnels,
+intégration, système, non-régression ou autres selon le contexte.
+
+**Preuves :** S / D / X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-VAL-03 — Cas limites
+
+La validation ne se limite pas au scénario nominal.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-VAL-04 — Reproductibilité des anomalies
+
+Les défauts connus peuvent être décrits suffisamment précisément pour être reproduits,
+diagnostiqués et corrigés.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-VAL-05 — Instrumentation
+
+Le système fournit les informations utiles à son diagnostic : traces, journaux, métriques,
+outils de débogage ou dispositifs équivalents.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 7. Performance, efficacité et robustesse
+
+### PFEJ-PER-01 — Mesure avant affirmation
+
+Toute affirmation significative portant sur les performances est étayée par une mesure ou un
+protocole explicite.
+
+**Preuves :** D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PER-02 — Profilage
+
+Le candidat sait identifier les véritables facteurs limitants de son système plutôt que de
+raisonner uniquement par intuition.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PER-03 — Complexité maîtrisée
+
+Le candidat comprend les principaux coûts algorithmiques ou systèmes engendrés par sa
+solution.
+
+**Preuves :** S / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PER-04 — Robustesse sous contrainte
+
+Le comportement du système face à une charge, un volume, une latence ou une pénurie de
+ressources pertinente pour le projet a été envisagé.
+
+**Preuves :** D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PER-05 — Sobriété
+
+Les consommations de ressources significatives ont été prises en considération lorsque le
+contexte le justifie.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 8. Sécurité et responsabilité technique
+
+### ◆ PFEJ-SEC-01 — Surface d'attaque comprise
+
+Le candidat est capable d'identifier les principales frontières de confiance et les risques
+introduits par son architecture.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-SEC-02 — Entrées hostiles
+
+Les entrées externes sont traitées comme potentiellement incorrectes ou hostiles lorsque le
+contexte l'exige.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-SEC-03 — Secrets et authentification
+
+Mots de passe, clés, jetons, certificats, sessions et autres éléments secrets sont manipulés
+de manière appropriée.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-SEC-04 — Privilèges maîtrisés
+
+Les droits accordés aux différents éléments du système sont cohérents avec leurs besoins.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-SEC-05 — Données protégées
+
+Confidentialité, intégrité, conservation et éventuelle suppression des données ont été
+prises en compte lorsque nécessaire.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 9. Construction, déploiement et exploitation
+
+### ◆ PFEJ-OPS-01 — Construction reproductible
+
+Le jury dispose d'une procédure suffisamment précise pour reconstruire le projet à partir
+des sources et dépendances annoncées.
+
+**Preuves :** S / D / X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-OPS-02 — Exécution reproductible
+
+Le système peut être lancé ou déployé dans un environnement décrit sans dépendre d'une suite
+d'opérations connues uniquement de son auteur.
+
+**Preuves :** S / D / X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-OPS-03 — Configuration séparée
+
+Le paramétrage de l'application est correctement distingué du code et de ses données.
+
+**Preuves :** S / D
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-OPS-04 — Observabilité en exploitation
+
+Les informations nécessaires pour comprendre l'état courant du système sont accessibles.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-OPS-05 — Reprise après incident
+
+Lorsque cela est pertinent, le candidat a prévu les procédures permettant de restaurer ou
+redémarrer le service après une panne.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 10. Conduite du projet
+
+### ◆ PFEJ-PIL-01 — Pilotage réel
+
+Le candidat sait raconter l'évolution réelle du projet, ses étapes, ses retards, ses
+difficultés et ses changements de direction.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PIL-02 — Priorisation
+
+Le candidat a su distinguer ce qui devait absolument être réalisé de ce qui pouvait être
+reporté ou abandonné.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PIL-03 — Gestion des risques
+
+Les principales incertitudes techniques ont été identifiées suffisamment tôt et ont
+influencé l'organisation du travail.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PIL-04 — Historique exploitable
+
+L'historique du projet permet de comprendre son développement : versions, dépôts, décisions,
+jalons ou dispositifs équivalents.
+
+**Preuves :** S / D
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PIL-05 — Arbitrages
+
+Le candidat est capable d'expliquer les compromis qu'il a effectués entre temps,
+fonctionnalités, qualité, dette technique et risque.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-PIL-06 — Contribution personnelle
+
+Dans le cas d'un projet collectif ou comportant des contributions externes, la contribution
+personnelle du candidat est clairement identifiable.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 11. Documentation et transmission
+
+### ◆ PFEJ-DOC-01 — Dossier technique exploitable
+
+Le dossier permet à un informaticien compétent ne connaissant pas le projet d'en comprendre
+l'objectif, l'organisation et les choix essentiels.
+
+**Preuves :** D
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DOC-02 — Documentation d'installation
+
+Les prérequis, étapes de construction, installation, configuration et démarrage sont
+documentés.
+
+**Preuves :** D / X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DOC-03 — Documentation d'architecture
+
+Les principaux composants et flux du système sont représentés et expliqués.
+
+**Preuves :** D
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DOC-04 — Documentation d'usage
+
+Un utilisateur ou développeur concerné dispose des informations nécessaires pour employer le
+système ou ses interfaces.
+
+**Preuves :** D
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DOC-05 — Transmission
+
+Le projet pourrait raisonnablement être repris par un autre développeur sans dépendre de la
+présence permanente de son auteur.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 12. Démonstration et recette
+
+### ◆ PFEJ-DEM-01 — Le projet fonctionne
+
+Le jury a pu constater directement le fonctionnement d'une part significative du projet. Une
+vidéo ou une présentation enregistrée ne remplace une démonstration réelle que lorsqu'une
+contrainte matérielle sérieuse le justifie.
+
+**Preuves :** X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DEM-02 — Démonstration représentative
+
+La démonstration porte sur les fonctionnalités centrales du projet et pas seulement sur ses
+parties les plus simples ou les plus visuelles.
+
+**Preuves :** X
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-DEM-03 — Preuve plutôt que promesse
+
+Les fonctionnalités, performances et caractéristiques annoncées comme réalisées peuvent être
+rattachées à des éléments effectivement présents et vérifiables.
+
+**Preuves :** S / D / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DEM-04 — Résistance au hors-script
+
+Le candidat conserve la maîtrise de son système lorsque le jury demande une manipulation ou
+un cas raisonnable qui n'était pas prévu dans le scénario de démonstration.
+
+**Preuves :** X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-DEM-05 — Défaillance expliquée
+
+Lorsqu'un élément échoue pendant la recette, le candidat est capable d'émettre des
+hypothèses pertinentes, d'investiguer et d'expliquer le comportement observé.
+
+**Preuves :** X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 13. Soutenance et défense technique
+
+### PFEJ-ORA-01 — Présentation structurée
+
+La soutenance expose le problème, les principaux choix, la réalisation et les résultats sans
+se réduire à une chronologie du travail effectué.
+
+**Preuves :** O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ORA-02 — Précision technique
+
+Le candidat utilise correctement le vocabulaire et les concepts techniques nécessaires à
+l'explication de son travail.
+
+**Preuves :** O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-ORA-03 — Questions techniques
+
+Le candidat répond avec suffisamment de précision aux questions portant sur les mécanismes
+internes de sa réalisation.
+
+**Preuves :** O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ORA-04 — Raisonnement en direct
+
+Face à une question qu'il n'avait pas préparée, le candidat est capable de construire un
+raisonnement technique cohérent.
+
+**Preuves :** O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-ORA-05 — Capacité de synthèse
+
+Le candidat peut adapter le niveau de détail et donner aussi bien une vue générale du
+système qu'approfondir un point particulier.
+
+**Preuves :** O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### ◆ PFEJ-ORA-06 — Regard critique
+
+Le candidat identifie honnêtement les défauts, limites, dettes techniques et décisions qu'il
+modifierait s'il recommençait le projet.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 14. Responsabilité et professionnalité
+
+### PFEJ-PRO-01 — Licences et propriété intellectuelle
+
+Le candidat connaît l'origine et les conditions d'utilisation des éléments externes intégrés
+à son projet.
+
+**Preuves :** S / D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PRO-02 — Données et réglementation
+
+Les principales contraintes juridiques ou réglementaires directement liées au fonctionnement
+du projet ont été identifiées lorsque cela est pertinent.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée \checkbox{} Non applicable
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PRO-03 — Responsabilité
+
+Le candidat sait identifier les conséquences possibles d'un mauvais fonctionnement ou d'un
+mauvais usage de son système.
+
+**Preuves :** D / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+### PFEJ-PRO-04 — Autonomie d'ingénieur
+
+Le candidat manifeste la capacité à rechercher une information inconnue, diagnostiquer un
+problème et progresser sans dépendre d'une procédure préparée à l'avance.
+
+**Preuves :** S / X / O
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+**Observations :**
+
+................................................................................
+
+---
+
+## 15. Médailles de distinction
+
+Les médailles suivantes constatent une qualité remarquable. Elles ne compensent jamais
+l'absence d'une compétence structurante.
+
+### PFEJ-X-01 — Contribution originale
+
+Le projet apporte une solution, une méthode, une implémentation ou un résultat présentant
+une originalité technique réelle.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+### PFEJ-X-02 — Profondeur technique exceptionnelle
+
+Le candidat démontre une maîtrise sensiblement supérieure aux attentes normales de fin de
+cursus sur une partie substantielle du projet.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+### PFEJ-X-03 — Architecture remarquable
+
+La conception atteint un niveau particulier de cohérence, simplicité, extensibilité ou
+élégance au regard de la difficulté traitée.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+### PFEJ-X-04 — Validation remarquable
+
+Le dispositif de test, mesure ou expérimentation apporte un niveau de confiance
+inhabituellement élevé dans les résultats annoncés.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+### PFEJ-X-05 — Maîtrise scientifique
+
+Le candidat formule, expérimente et analyse avec une rigueur particulièrement élevée une
+question de recherche ou d'ingénierie.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+### PFEJ-X-06 — Projet transmissible
+
+Le projet atteint un niveau permettant sa reprise, son exploitation ou son développement par
+une équipe tierce dans des conditions particulièrement bonnes.
+
+**Décision :** \checkbox{} Attribuée \checkbox{} Non attribuée
+
+---
+
+## 16. Constatations bloquantes
+
+Ces éléments ne constituent pas des médailles.
+
+**\checkbox{}** La réalisation présentée ne correspond pas substantiellement au projet annoncé.
+
+**\checkbox{}** L'élément central du projet n'est pas fonctionnel.
+
+**\checkbox{}** Le candidat ne maîtrise pas suffisamment le fonctionnement du code qu'il
+présente comme
+    étant le sien.
+
+**\checkbox{}** La contribution personnelle ne peut pas être distinguée de celle des autres
+    participants.
+
+**\checkbox{}** Une dépendance ou un produit externe réalise en réalité l'essentiel de la difficulté
+    présentée comme travail personnel.
+
+**\checkbox{}** Des résultats, performances ou fonctionnalités revendiqués ne peuvent pas être
+    justifiés.
+
+**\checkbox{}** Les sources ou éléments nécessaires à l'évaluation ne sont pas disponibles.
+
+**\checkbox{}** Le projet n'est pas raisonnablement reproductible.
+
+**\checkbox{}** Une suspicion de plagiat, falsification, fraude ou dissimulation nécessite un examen
+    complémentaire.
+
+**\checkbox{} Autre :**
+
+................................................................................
+
+---
+
+## 17. Synthèse du jury
+
+### Résultat quantitatif indicatif
+
+Médailles ordinaires applicables : ............
+
+Médailles ordinaires attribuées : ............
+
+**Taux d'obtention : ............ %**
+
+Médailles structurantes attribuées : ............ / ............
+
+Médailles de distinction : ............ / 6
+
+Le taux d'obtention constitue un indicateur de synthèse et ne remplace pas la décision du
+jury.
+
+### Points forts
+
+................................................................................
+................................................................................
+................................................................................
+
+### Faiblesses et limites
+
+................................................................................
+................................................................................
+................................................................................
+
+### Élément technique le plus convaincant
+
+................................................................................
+................................................................................
+................................................................................
+
+### Élément technique le plus fragile
+
+................................................................................
+................................................................................
+................................................................................
+
+### Questions auxquelles le candidat n'a pas apporté de réponse satisfaisante
+
+................................................................................
+................................................................................
+................................................................................
+
+### Corrections ou travaux demandés
+
+................................................................................
+................................................................................
+................................................................................
+
+---
+
+## 18. Décision
+
+**\checkbox{} PROJET VALIDÉ**
+
+**\checkbox{} PROJET VALIDÉ AVEC RÉSERVES**
+
+Réserves à lever :
+
+................................................................................
+
+................................................................................
+
+**\checkbox{} PROJET AJOURNÉ**
+
+Motif principal :
+
+................................................................................
+
+................................................................................
+
+---
+
+## 19. Appréciation générale du jury
+
+................................................................................
+................................................................................
+................................................................................
+................................................................................
+................................................................................
+
+**Nom et signature du président du jury :**
+
+................................................................................
+
+**Signatures des membres du jury :**
+
+................................................................................
+
+................................................................................

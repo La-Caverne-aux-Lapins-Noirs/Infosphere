@@ -252,11 +252,9 @@ function GenerateProspectDocument($id, $data, $method, $output, $module)
 
         if (($form_options = admission_certificate_form_options($id, $is_foreign, $form_output))->is_error())
             return ($form_options);
-        $ret = build_admission_certificate($id, [
+        $ret = build_admission_certificate($id, array_merge($form_options->value, [
             "is_foreign" => $is_foreign,
-            "payment_state" => $form_options->value["payment_state"],
-            "paid_amount" => $form_options->value["paid_amount"],
-        ]);
+        ]));
         $message = "Attestation d’admission générée";
     }
     else

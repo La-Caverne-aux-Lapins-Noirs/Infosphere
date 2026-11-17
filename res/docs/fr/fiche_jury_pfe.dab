@@ -1,0 +1,105 @@
+' Fiche d'évaluation du jury de Projet de fin d'études — EFRITS
+' Médailles PFEJ réservées exclusivement à cette épreuve.
+'
+' Le corps du document est volontairement imprimable : les décisions de médaille
+' sont cochées par le jury. Les métadonnées d'identification sont préremplissables
+' par Infosphère via Contexts/FormGroup.
+
+Document = "Generic"
+Title = "Fiche d'évaluation du jury — Projet de fin d'études"
+
+[Contexts
+  [Student
+    Type = "student"
+    Prefix = "Student"
+    Label = "Candidat"
+    Auto = "Owner"
+  ]
+  [School
+    Type = "school"
+    Prefix = "School"
+    Label = "École"
+    Required = 1
+    InferFrom = "Student"
+  ]
+]
+
+[FormGroup
+  [Identity
+    Label = "Identification"
+    [Fields
+      [Student
+        [Identity
+          Label = "Nom et prénom du candidat"
+          Required = 1
+        ]
+      ]
+      [PFE
+        [Title
+          Label = "Intitulé du projet"
+          Required = 1
+        ]
+        [Team
+          Label = "Équipe éventuelle"
+        ]
+        [Specialities
+          Label = "Spécialité(s)"
+        ]
+        [Cycle
+          Label = "Cycle / année"
+        ]
+        [Version
+          Label = "Dépôt, version ou commit évalué"
+        ]
+        [Repository
+          Label = "Dépôt / URL interne"
+        ]
+      ]
+    ]
+  ]
+
+  [Jury
+    Label = "Jury"
+    [Fields
+      [Evaluation
+        [Date
+          Label = "Date du jury"
+          Required = 1
+          Default = "@Today"
+        ]
+        [Members
+          Label = "Membres du jury"
+          Required = 1
+          Type = "textarea"
+        ]
+        [Location
+          Label = "Lieu"
+        ]
+      ]
+    ]
+  ]
+]
+
+[Header
+  Left = [Text($,Left)
+    [@Size;5] Projet de fin d'études
+  Left]
+  Right = [Text($,Right)
+    [@IfC;School.DocumentLogo;!=;;
+      [@Image;[#Variable;School.DocumentLogo];width=3cm;height=2cm]
+    ]
+  Right]
+]
+
+Footer = [Text($,Footer)
+  [@Size;0]
+  $(School.MainInfo)
+  $(School.SchoolInfo)
+  $(School.FormationInfo)
+  $(School.AlternationInfo)
+  $(School.Phone) $(School.Mail)
+Footer]
+
+{Content
+  @insert txt ($) "fiche_jury_pfe.txt"
+}

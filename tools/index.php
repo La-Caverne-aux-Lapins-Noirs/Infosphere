@@ -31,6 +31,7 @@ require_once ("get_prefix.php");
 require_once ("activity_form_templates.php");
 require_once ("build_evaluator_configuration.php");
 require_once ("activity_automatic_evaluation.php");
+require_once ("evaluation_history.php");
 require_once ("array_dsearch.php");
 require_once ("get_module.php");
 require_once ("get_activity.php");

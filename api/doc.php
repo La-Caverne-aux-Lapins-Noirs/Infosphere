@@ -590,8 +590,15 @@ function document_generation_request_references(array $data)
 {
     $out = [];
     foreach ($data as $key => $value)
-        if (strncmp((string)$key, "docref_", 7) === 0 && trim((string)$value) != "")
-            $out[] = (string)$value;
+    {
+        if (strncmp((string)$key, "docref_", 7) !== 0
+            || trim((string)$value) == "")
+            continue ;
+        $hash = substr((string)$key, 7);
+        if ($hash == "" || empty($data["doc_".$hash]))
+            continue ;
+        $out[] = (string)$value;
+    }
     return (array_values(array_unique($out)));
 }
 

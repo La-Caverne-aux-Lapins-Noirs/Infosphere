@@ -207,6 +207,23 @@ function billing_open_pending_invoice_menu(button, event)
     return (false);
 }
 
+function billing_remind_issued_invoice(button, event)
+{
+    if (event)
+        event.stopPropagation();
+    let form = button.closest("form");
+    if (!form)
+        return (false);
+    let text = button.getAttribute("data-confirm") ||
+        "Renvoyer cette facture par courriel à son destinataire ?";
+    if (!window.confirm(text))
+        return (false);
+    form.setAttribute("method", "put");
+    form.setAttribute("action", form.getAttribute("data-remind-action"));
+    billing_close_pending_invoice_menu();
+    return (silent_submitf(form, {after_success: function(){billing_refresh_student_from_source(form);}}));
+}
+
 function billing_prepare_invoice_send(button)
 {
     let form = button.closest("form");

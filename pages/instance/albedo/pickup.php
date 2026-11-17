@@ -85,6 +85,7 @@ foreach ($activities as $act)
     // enregistre donc un marqueur de ramassage sans repository : il suffit à
     // rendre le statut « travail livré » fiable dans les profils/ActivityMenu,
     // sans faire apparaître un faux fichier téléchargeable.
+    evaluation_history_save((int)$act["main_id"], $team_id, true, $content, "pickup");
     activity_delivery_record_final($team_id, true, "Official automatic pickup");
 
     $corrected_students = array_keys(db_select_all("\n      user.mail\n      FROM user_team LEFT JOIN user ON user_team.id_user = user.id\n      WHERE id_team = $team_id\n        AND user.mail IS NOT NULL\n        AND user.mail != ''\n    ", "mail"));
@@ -95,7 +96,9 @@ foreach ($activities as $act)
             "This Evaluation has been run automatically and is official",
             NULL,
             [["report.tar.gz" => $content]],
-            false
+            false, NULL, NULL,
+            evaluation_history_email_html($act["actname"], true,
+                evaluation_history_extract_report($content))
         ), true));
     if (function_exists("official_correction_mark_missing_medals_as_failed"))
         official_correction_mark_missing_medals_as_failed($full_activity, $team_id);

@@ -2,6 +2,9 @@
 <html>
     <head>
 	<meta charset="utf8" />
+	<?php if ($Position == "RegistrationForm") { ?>
+	    <meta name="viewport" content="width=device-width, initial-scale=1" />
+	<?php } ?>
 	<?php foreach (glob("./style/structure/*.css") as $css) { ?>
 	    <link rel="stylesheet" type="text/css" href="<?=$css; ?>?<?=filemtime($css); ?>" />
 	<?php } ?>
@@ -71,7 +74,7 @@
     </head>
 
     <?php $logo = ""; ?>
-    <body onload="remove_loading_screen();">
+    <body class="<?=$Position == "RegistrationForm" ? "registration-page-shell" : ""; ?>" onload="remove_loading_screen();">
 	<?php $logo = school_site_logo_path($current_school_style, false, true); ?>
 	<div id="loading_logo"
 	     <?php if ($logo != "") { ?>

@@ -162,7 +162,7 @@ class Database
 		$msg .= formatstr("#> ".$this->db->lastErrorMsg());
 	    $back = debug_backtrace();
 	    for ($i = 0; isset($back[$i]); ++$i)
-		$msg .= "#> ".$back[$i]["file"].":".$back[$i]["line"]."\n";
+		$msg .= "#> ".($back[$i]["file"] ?? "[internal]").":".($back[$i]["line"] ?? "?")."\n";
 	    $msg .= "-----------------\n";
 	    if ((isset($User["authority"]) && $User["authority"] >= ADMINISTRATOR) || $this->debug)
 	    {
@@ -190,7 +190,7 @@ class Database
 	for ($i = 0; isset($call[$i]) && $i < 8; ++$i);
 	$xcall = "";
 	for ($j = 0; $j < $i; ++$j)
-	    $xcall .= "\t".$call[$j]["file"].":".$call[$j]["line"];
+	    $xcall .= "\t".($call[$j]["file"] ?? "[internal]").":".($call[$j]["line"] ?? "?");
 	$xcall = str_replace(getcwd(), "", $xcall);
 	$hash = hash("md5", $xcall, false);
 	if (isset($DBMerge[$hash]))

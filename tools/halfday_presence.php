@@ -34,21 +34,21 @@ function halfday_presence_add_interval($user, $type, $begin, $end)
     global $Database;
 
     if (!halfday_presence_table_available())
-        return ;
+        return (true);
     if (!in_array((int)$type, user_log_valid_activity_types()))
-        return ;
+        return (true);
     if (is_array($user))
         $user = $user["id"];
     else if (is_object($user))
         $user = $user->id;
     if (!is_number($user))
-        return ;
+        return (false);
     $user = (int)$user;
     $type = (int)$type;
     $begin = (int)$begin;
     $end = (int)$end;
     if ($end <= $begin)
-        return ;
+        return (true);
 
     for ($day = remove_hour($begin); $day <= remove_hour($end); $day += 24 * 60 * 60)
     {
@@ -58,9 +58,11 @@ function halfday_presence_add_interval($user, $type, $begin, $end)
             if ($overlap <= 0)
                 continue ;
             $date = db_form_date($day, true);
-            $Database->query("\n                INSERT INTO user_log_halfday\n                (id_user, log_date, period, type, duration)\n                VALUES ($user, '$date', $period, $type, $overlap)\n                ON DUPLICATE KEY UPDATE duration = duration + VALUES(duration)\n            ");
+            if ($Database->query("\n                INSERT INTO user_log_halfday\n                (id_user, log_date, period, type, duration)\n                VALUES ($user, '$date', $period, $type, $overlap)\n                ON DUPLICATE KEY UPDATE duration = duration + VALUES(duration)\n            ") == NULL)
+                return (false);
         }
     }
+    return (true);
 }
 
 function halfday_presence_user_ids($users)

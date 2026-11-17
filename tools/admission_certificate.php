@@ -279,11 +279,13 @@ function admission_certificate_tariff(array $school, $tariff_year, array $option
           AND billing_template.tariff_year = $tariff_year
           AND billing_template.invoice_type = 'school'
           AND billing_template.deleted IS NULL
+          AND billing_template.registration_fee > 0
+          AND billing_template.amount_once > 0
           $where_template
         ORDER BY billing_template.id DESC
     ");
     if ($template == NULL)
-        return (new ErrorResponse("MissingFile", "billing tariff for school year ".$tariff_year));
+        return (new ErrorResponse("MissingFile", "annual billing tariff for school year ".$tariff_year));
     return (new ValueResponse($template));
 }
 
@@ -395,6 +397,72 @@ function admission_certificate_start($id_prospect, $is_foreign, $queue_for_print
     ]));
 }
 
+function admission_certificate_form_training_options(array $values)
+{
+    global $NoLocalisation;
+
+    // Keep the persisted form as the source of these optional statements.
+    // A blank field preserves the historical certificate and entry date.
+    $fields = [
+        "CourseTitle" => "course_title",
+        "TrainingRegime" => "training_regime",
+        "StudyPace" => "study_pace",
+        "TrainingDuration" => "training_duration",
+        "TeachingMode" => "teaching_mode",
+        "AdditionalInformation" => "additional_information",
+        "EntryDate" => "entry_date",
+        "EndDate" => "end_date",
+    ];
+    $options = [];
+    foreach ($fields as $field => $option)
+    {
+        $key = "Admission.".$field;
+        $value = $values[$key] ?? "";
+        if (!is_scalar($value) || strpos((string)$value, "\0") !== false)
+            return (new ErrorResponse("InvalidParameter", $key));
+        $value = trim((string)$value);
+        if ($value === "")
+            continue ;
+        if ($option === "entry_date" || $option === "end_date")
+        {
+            $date = false;
+            if (!preg_match('~^(?:[0-9]{2}/[0-9]{2}/[0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})$~D', $value))
+                return (new ErrorResponse("InvalidParameter", $key.": date attendue au format JJ/MM/AAAA"));
+            foreach (["d/m/Y", "Y-m-d"] as $format)
+            {
+                $candidate = DateTimeImmutable::createFromFormat("!".$format, $value, $NoLocalisation);
+                if ($candidate !== false && $candidate->format($format) === $value)
+                {
+                    $date = $candidate;
+                    break ;
+                }
+            }
+            if ($date === false)
+                return (new ErrorResponse("InvalidParameter", $key.": date attendue au format JJ/MM/AAAA"));
+            $value = $date->format("Y-m-d");
+        }
+        $options[$option] = $value;
+    }
+    return (new ValueResponse($options));
+}
+
+function admission_certificate_form_signature_options(array $values)
+{
+    $options = [];
+    foreach (["AutomaticSignature" => "automatic_signature", "ShowStamp" => "show_stamp"] as $field => $option)
+    {
+        $key = "Admission.".$field;
+        $value = $values[$key] ?? "0";
+        if (!is_scalar($value))
+            return (new ErrorResponse("InvalidParameter", $key));
+        $enabled = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($enabled === NULL)
+            return (new ErrorResponse("InvalidParameter", $key));
+        $options[$option] = $enabled ? 1 : 0;
+    }
+    return (new ValueResponse($options));
+}
+
 function admission_certificate_form_options($id_prospect, $is_foreign, $output_key)
 {
     $expected = admission_certificate_form_output_key($id_prospect, $is_foreign);
@@ -421,10 +489,15 @@ function admission_certificate_form_options($id_prospect, $is_foreign, $output_k
     if ($state == "partial" && $paid == "")
         return (new ErrorResponse("MissingParameter", "Admission.PaidAmount"));
 
-    return (new ValueResponse([
+    if (($training = admission_certificate_form_training_options($values))->is_error())
+        return ($training);
+    if (($signature = admission_certificate_form_signature_options($values))->is_error())
+        return ($signature);
+
+    return (new ValueResponse(array_merge($training->value, $signature->value, [
         "payment_state" => $state,
         "paid_amount" => $paid,
-    ]));
+    ])));
 }
 
 function admission_certificate_preview_required_amounts(array $prospect, array $options = [])
@@ -527,6 +600,13 @@ function admission_certificate_context(array $prospect, array $options = [])
     $entry_stamp = admission_certificate_entry_date($prospect, $options);
     if ($entry_stamp === NULL)
         return (new ErrorResponse("InvalidParameter", "target_entry"));
+    $end_stamp = NULL;
+    if (isset($options["end_date"]) && trim((string)$options["end_date"]) !== "")
+    {
+        $end_stamp = admission_certificate_parse_date($options["end_date"]);
+        if ($end_stamp === NULL || datex("Y-m-d", $end_stamp) < datex("Y-m-d", $entry_stamp))
+            return (new ErrorResponse("InvalidParameter", "Admission.EndDate : la fin de formation doit être au moins égale à la date de début"));
+    }
     $entry_specs = admission_certificate_entry_specs();
     $target_entry = (int)$prospect["target_entry"];
     $entry_label = ($entry_specs[$target_entry]["label"] ?? "rentrée")." ".datex("Y", $entry_stamp);
@@ -543,8 +623,14 @@ function admission_certificate_context(array $prospect, array $options = [])
     if ($issue_stamp === NULL)
         $issue_stamp = now();
 
+    $school_context = document_builder_school_context($school);
+    if (!empty($options["automatic_signature"]) && empty($director["signature"]))
+        return (new ErrorResponse("MissingFile", "Signature de la direction absente : enregistrez-la avant de générer une attestation signée."));
+    if (!empty($options["show_stamp"]) && empty($school_context["stamp"]))
+        return (new ErrorResponse("MissingFile", "Tampon de l'école absent : enregistrez-le avant de générer une attestation tamponnée."));
+
     $context = [
-        "school" => document_builder_school_context($school),
+        "school" => $school_context,
         "student" => $student,
         "signature_sources" => [
             "director" => document_builder_signatory_context($director, "Director"),
@@ -554,7 +640,14 @@ function admission_certificate_context(array $prospect, array $options = [])
             "target_class_code" => $class["label"],
             "target_year" => $class["year"],
             "target_year_label" => admission_certificate_year_label($class["year"]),
+            "course_title" => $options["course_title"] ?? "",
+            "training_regime" => $options["training_regime"] ?? "",
+            "study_pace" => $options["study_pace"] ?? "",
+            "training_duration" => $options["training_duration"] ?? "",
+            "teaching_mode" => $options["teaching_mode"] ?? "",
+            "additional_information" => $options["additional_information"] ?? "",
             "entry_date" => datex("d/m/Y", $entry_stamp),
+            "end_date" => $end_stamp === NULL ? "" : datex("d/m/Y", $end_stamp),
             "entry_label" => $entry_label,
             "school_year" => admission_certificate_school_year($entry_stamp),
             "prospect_registration_date" => $registration_stamp === NULL ? "" : datex("d/m/Y", $registration_stamp),
@@ -577,6 +670,7 @@ function admission_certificate_context(array $prospect, array $options = [])
             "issue_date" => datex("d/m/Y", $issue_stamp),
             "reference" => $options["reference"] ?? admission_certificate_reference($prospect, $school, $entry_stamp),
             "automatic_signature" => !empty($options["automatic_signature"]) ? 1 : 0,
+            "show_stamp" => !empty($options["show_stamp"]) ? 1 : 0,
         ],
     ];
     return (new ValueResponse(dabsic_pascalcase_array($context)));

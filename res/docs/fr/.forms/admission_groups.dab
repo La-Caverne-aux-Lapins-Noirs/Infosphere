@@ -31,9 +31,6 @@
       [TargetYearLabel
         Label = "Année / niveau d'admission"
       ]
-      [EntryDate
-        Label = "Date d'entrée en formation"
-      ]
       [EntryLabel
         Label = "Rentrée envisagée"
       ]
@@ -55,8 +52,40 @@
       [Reference
         Label = "Référence du document"
       ]
-      [AutomaticSignature
-        Label = "Ajouter automatiquement la signature de la direction"
+    ]
+  ]
+]
+
+[FormationAttestation
+  Label = "Précisions sur la formation (facultatif)"
+  [Fields
+    [Admission
+      [CourseTitle
+        Label = "Intitulé officiel complet (ex. première année du Bachelor en informatique)"
+      ]
+      [TrainingRegime
+        Label = "Régime de formation (ex. formation initiale, hors alternance)"
+      ]
+      [StudyPace
+        Label = "Rythme des études (ex. temps plein)"
+      ]
+      [EntryDate
+        Label = "Date de début (JJ/MM/AAAA ; vide = rentrée prévue au dossier)"
+        Type = "text"
+      ]
+      [EndDate
+        Label = "Date de fin de la période attestée (JJ/MM/AAAA)"
+        Type = "text"
+      ]
+      [TrainingDuration
+        Label = "Durée de la période attestée (préciser année ou cursus complet)"
+      ]
+      [TeachingMode
+        Label = "Modalités d'enseignement (ex. en présentiel dans les locaux de l'établissement)"
+      ]
+      [AdditionalInformation
+        Label = "Texte complémentaire à faire figurer sur l'attestation"
+        Type = "textarea"
       ]
     ]
   ]
@@ -89,6 +118,24 @@
       ]
       [PaidAmount
         Label = "Montant déjà réglé (uniquement si paiement partiel)"
+      ]
+    ]
+  ]
+]
+
+[SignatureAttestation
+  Label = "Signature et tampon à la génération"
+  [Fields
+    [Admission
+      [AutomaticSignature
+        Label = "Apposer la signature de la direction"
+        Type = "boolean_checkbox"
+        Default = 0
+      ]
+      [ShowStamp
+        Label = "Apposer le tampon de l'école"
+        Type = "boolean_checkbox"
+        Default = 0
       ]
     ]
   ]

@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/school_activity.php");
+require_once (__DIR__."/school_technocore.php");
 
 function school_logo_candidate_names($kind)
 {
@@ -420,9 +421,22 @@ function refresh_school($school)
     // lequel elle sera insérée par un document. La page Documents peut ainsi
     // l'insérer naturellement dans School, Company ou tout autre scope sans
     // dupliquer ici des wrappers historiques.
-    return (generate_dabsic(
+    $ret = generate_dabsic(
 	$school_dabsic,
 	$Configuration->SchoolsDir($school["codename"])."identity.dab"
-    ));
+    );
+    if ($ret->is_error())
+        return ($ret);
+
+    // Keep a human-readable/generated mirror of the DB-backed TechnoCore
+    // conventions next to identity.dab. This is intentionally regenerated,
+    // not edited by hand: school.technocore_configuration_json stays canonical.
+    $profile_error = NULL;
+    if (!school_technocore_refresh_profile($school, $profile_error, false))
+        return (new ErrorResponse(
+            "CannotEdit",
+            $profile_error ?? "Cannot refresh school TechnoCore profile"
+        ));
+    return ($ret);
 }
 

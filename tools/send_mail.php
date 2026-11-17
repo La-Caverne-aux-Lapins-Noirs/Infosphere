@@ -20,7 +20,7 @@ function send_mail_plain_text($text)
     return (html_entity_decode((string)$text, ENT_QUOTES | ENT_HTML5, "UTF-8"));
 }
 
-function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true, $sender = NULL, $blind_copy = NULL)
+function send_mail($target, $title, $content, $domain = NULL, $attachements = NULL, $hidden_copy = true, $sender = NULL, $blind_copy = NULL, $html = NULL)
 {
     global $Configuration;
 
@@ -99,16 +99,27 @@ function send_mail($target, $title, $content, $domain = NULL, $attachements = NU
     if ($content === "")
 	$content = "This mail has been send by the Efrits administration";
     $mail_content['text'] = send_mail_plain_text($content);
+    if ($html !== NULL)
+        $mail_content['html'] = $html;
 
     if ($attachements != NULL && count($attachements) > 0)
     {
         $mail_attachements = [];
         foreach ($attachements as $filename => $filecontent)
         {
+	    if (is_int($filename) && is_array($filecontent))
+            {
+                foreach ($filecontent as $nested_filename => $nested_content)
+                    $mail_attachements[] = [
+                        'fileContent' => $nested_content,
+                        'filename' => $nested_filename
+                    ];
+                continue ;
+            }
             $mail_attachements[] = [
-		'fileContent' => $filecontent,
-		'filename' => $filename
-	    ];
+                'fileContent' => $filecontent,
+                'filename' => $filename
+            ];
         }
         $mail_content['attachment'] = $mail_attachements;
     }

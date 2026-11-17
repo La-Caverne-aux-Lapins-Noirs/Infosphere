@@ -328,9 +328,9 @@ function PickupActivity($id, $data, $method, $output, $module)
     if ($correction === true)
     {
 	// Faire en sorte de retourner deux variables et les base64 différement pour les mettre dans le json
-	[$actConf, $allowFunc] = build_evaluator_configuration($activity, $user_id);
+	[$actConf, $allowFunc, $correction_error] = build_evaluator_configuration($activity, $user_id);
 	if ($actConf === NULL || $allowFunc === NULL)
-	    return (new ErrorResponse("NoCorrectionAvailable"));
+	    return (new ErrorResponse("NoCorrectionAvailable", $correction_error));
 	$ret = hand_request([
 	    "command" => "retrieve",
 	    "user" => $team_leader,
@@ -355,13 +355,28 @@ function PickupActivity($id, $data, $method, $output, $module)
 
     // On élimine les erreurs
     if (!isset($ret["result"]) || $ret["result"] != "ok" || !isset($ret["content"]))
-	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "NothingTurnedIn"));
+    {
+        $known_errors = [
+            "NoCurrentRepository",
+            "NoPickupContent",
+            "NoOfficialDelivery",
+        ];
+        $code = isset($ret["code"]) ? trim((string)$ret["code"]) : "";
+        if (in_array($code, $known_errors, true))
+            return (new ErrorResponse($code));
+
+        $reason = isset($ret["message"]) ? trim((string)$ret["message"]) : "";
+        if ($reason == "")
+            $reason = "NothingTurnedIn";
+        return (new ErrorResponse("InvalidDistransResponse", $reason));
+    }
 
     if (($content = base64_decode($ret["content"])) == NULL)
 	return (new ErrorResponse(isset($ret["message"]) ? $ret["message"] : "BadTarball"));
     
     if ($correction === true)
     {
+        evaluation_history_save((int)$id, (int)$team, (bool)$official, $content, "manual");
 
 	// On envoie les mails
 	$students_mail = array_keys(db_select_all("
@@ -377,7 +392,9 @@ function PickupActivity($id, $data, $method, $output, $module)
 	// En commentaire le temps de régler le fichier corrompu en téléchargement
 	//
 	send_mail($students_mail, $Dictionnary["EvaluationReport"]." ".basename($activity_name),
-		  $mail_content, NULL, [["report.tar.gz" => $content]], false);
+		  $mail_content, NULL, [["report.tar.gz" => $content]], false, NULL, NULL,
+                  evaluation_history_email_html(basename($activity_name), (bool)$official,
+                      evaluation_history_extract_report($content)));
 	if ($official)
 	    official_correction_mark_missing_medals_as_failed($activity, $team);
     }
@@ -1188,6 +1205,80 @@ function render_activity_subject_browser($page, $id, $activity, $language, $wrap
 <?php } ?>
 <?php
     return (ob_get_clean());
+}
+
+function activity_subject_runtime_access($activity, array $user)
+{
+    if (!is_object($activity))
+        return (false);
+    if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
+        return (true);
+    if (!$activity->registered || (int)$activity->leader <= 0)
+        return (false);
+
+    // Keep the same rule as pages/instance/subject.php: one accepted member is
+    // enough to expose the subject even when the activity can later grow a team.
+    if ($activity->teamable && $activity->user_team
+        && count($activity->user_team["user"] ?? []) < 1
+        && !empty($activity->user_team["canjoin"]))
+        return (false);
+    if ($activity->subject_appeir_date !== NULL
+        && $activity->subject_appeir_date >= now())
+        return (false);
+    if ($activity->subject_disappeir_date !== NULL
+        && $activity->subject_disappeir_date <= now())
+        return (false);
+    if (!activity_preaccess_can_read_subject($activity, (int)$user["id"]))
+        return (false);
+
+    foreach ($activity->medal as $medal)
+    {
+        if ($medal["role"] >= 0 || $medal["result"] > 0)
+            continue ;
+        $id_user = (int)$user["id"];
+        $id_medal = (int)$medal["id"];
+        $check = db_select_one("
+            result FROM user_medal
+            WHERE id_user = $id_user
+              AND id_medal = $id_medal
+              AND result = 1
+        ");
+        if ($check == NULL)
+            return (false);
+    }
+    return (true);
+}
+
+function GenerateSubject($id, $data, $method, $output, $module)
+{
+    global $User;
+
+    if ($id == -1)
+        bad_request();
+
+    ($activity = new FullActivity)->build($id);
+    if (!activity_subject_runtime_access($activity, $User))
+        return (new ErrorResponse("PermissionDenied"));
+
+    // Static subjects need no generation; return the already selected file.
+    if ($activity->current_configuration === NULL
+        || !is_file($activity->current_configuration))
+    {
+        if ($activity->current_subject == "")
+            return (new ErrorResponse("SubjectNotAvailable"));
+        return (new ValueResponse(["content" => $activity->current_subject]));
+    }
+
+    $subject = ensure_subject_for_access($activity, $User);
+    if ($subject === NULL || $subject === "")
+    {
+        $details = "";
+        if ($activity->is_director || $activity->is_teacher || $activity->is_assistant)
+            $details = (string)($activity->subject_generation_error ?? "");
+        return (new ErrorResponse("CannotGenerateSubject", $details));
+    }
+
+    return (new ValueResponse(["content" => $subject]));
 }
 
 function GetSubjectDir($id, $data, $method, $output, $module, $msg = "")

@@ -17,12 +17,122 @@ function send_ajax_target(target, role)
     return (target);
 }
 
-function send_ajax(method, url, data, tofill = null, toadd = null, toclear = null, toremove = null, gcall = null, bcall = null, verbose = false)
+function send_ajax_download_filename(disposition)
+{
+    if (!disposition)
+        return ("download.bin");
+
+    let utf8 = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8 && utf8[1])
+    {
+        try { return (decodeURIComponent(utf8[1])); }
+        catch (e) {}
+    }
+    let quoted = disposition.match(/filename="([^"]+)"/i);
+    if (quoted && quoted[1])
+        return (quoted[1]);
+    let plain = disposition.match(/filename=([^;]+)/i);
+    if (plain && plain[1])
+        return (plain[1].trim());
+    return ("download.bin");
+}
+
+function send_ajax_download_blob(blob, disposition)
+{
+    let url = URL.createObjectURL(blob);
+    let anchor = document.createElement("a");
+
+    anchor.href = url;
+    anchor.download = send_ajax_download_filename(disposition);
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+}
+
+function send_ajax(method, url, data, tofill = null, toadd = null, toclear = null, toremove = null, gcall = null, bcall = null, verbose = false, download = false)
 {
     var xhr = new XMLHttpRequest();
 
     xhr.addEventListener("load", function(event) {
 	let json;
+
+	if (download)
+	{
+	    let disposition = xhr.getResponseHeader("Content-Disposition") || "";
+	    let content_type = xhr.getResponseHeader("Content-Type") || "";
+	    let is_attachment = /attachment/i.test(disposition);
+	    let is_json = /application\/json/i.test(content_type);
+
+	    if (xhr.status >= 200 && xhr.status < 300 && is_attachment && !is_json)
+	    {
+		if (!xhr.response || xhr.response.size == 0)
+		{
+		    set_error_div("Le fichier retourné est vide.", false);
+		    if (gcall)
+			gcall(false, null, null, null);
+		    return ;
+		}
+		send_ajax_download_blob(xhr.response, disposition);
+		if (gcall)
+		    gcall(true, "ok", "", xhr.response);
+		return ;
+	    }
+
+	    if (!xhr.response || typeof xhr.response.text != "function")
+	    {
+		set_error_div(xhr.statusText || "Réponse serveur invalide.", false);
+		if (bcall)
+		    bcall();
+		return ;
+	    }
+
+	    xhr.response.text().then(function(response_text) {
+		let response;
+
+		try
+		{
+		    response = JSON.parse(response_text);
+		}
+		catch (e)
+		{
+		    set_error_div(response_text || xhr.statusText || "Réponse serveur invalide.", false);
+		    if (bcall)
+			bcall();
+		    return ;
+		}
+
+		let result = response["result"] || "";
+		let msg = response["msg"] || "";
+		let content = response["content"] || "";
+
+		if (result == "ok")
+		{
+		    if (gcall)
+			gcall(true, result, msg, content);
+		}
+		else if (result == "DEBUG")
+		{
+		    let dbox = document.getElementById("debugbox");
+		    if (dbox)
+		    {
+			dbox.style.display = "block";
+			dbox.textContent = msg + "\n" + content;
+		    }
+		}
+		else if (gcall)
+		    gcall(false, null, null, null);
+
+		if (msg != "")
+		    set_error_div(msg, result == "ok");
+	    }).catch(function() {
+		set_error_div(xhr.statusText || "Réponse serveur invalide.", false);
+		if (bcall)
+		    bcall();
+	    });
+	    return ;
+	}
 
 	if (verbose)
             console.log(xhr.responseText);
@@ -156,12 +266,14 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
     xhr.addEventListener("error", function(event) {
 	if (verbose)
 	    console.log(xhr.statusText); // Debug
-	set_error_div(xhr.responseText, false);
+	set_error_div(download ? (xhr.statusText || "Erreur de téléchargement.") : xhr.responseText, false);
 	if (bcall)
 	    bcall();
     });
 
     xhr.open(method, url, true);
+    if (download)
+	xhr.responseType = "blob";
     // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     if (!(typeof FormData != "undefined" && data instanceof FormData))
 	xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');

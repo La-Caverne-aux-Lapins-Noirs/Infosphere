@@ -1,6 +1,12 @@
 <?php
 
 
+if (isset($_GET["bulk_mail"]) && $_GET["bulk_mail"] == "1")
+{
+    require_once (__DIR__."/bulk_mail.php");
+    return ;
+}
+
 if ($Position == "CampaignMenu")
 {
     require_once ("campaign.php");
@@ -205,6 +211,8 @@ $fields = [
     value="Campagnes de prospection"
     style="width: 300px; background-color: #FFD700; color: black; font-weight: bold;"
 />
+
+<input type="button" onclick="document.location='?p=ProspectingMenu&amp;bulk_mail=1'" value="Envoyer un courriel aux prospects" style="width:300px;" />
 
 <?php
 require_once (__DIR__."/campaign_pager.php");

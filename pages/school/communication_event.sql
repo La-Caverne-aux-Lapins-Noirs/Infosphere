@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `communication_event` (
   KEY `id_school` (`id_school`),
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL DEFAULT '',
+  `illustration_url` text DEFAULT NULL,
   `parental_authorization_required` tinyint(1) NOT NULL DEFAULT 0,
   `token_hash` char(64) NOT NULL,
   UNIQUE KEY `token_hash` (`token_hash`),
@@ -35,6 +36,21 @@ SET @has_event_parental_authorization := (
 SET @sql := IF(
   @has_event_parental_authorization = 0,
   'ALTER TABLE `communication_event` ADD COLUMN `parental_authorization_required` tinyint(1) NOT NULL DEFAULT 0 AFTER `description`',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @has_event_illustration_url := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'communication_event'
+    AND column_name = 'illustration_url'
+);
+SET @sql := IF(
+  @has_event_illustration_url = 0,
+  'ALTER TABLE `communication_event` ADD COLUMN `illustration_url` text DEFAULT NULL AFTER `description`',
   'SELECT 1'
 );
 PREPARE stmt FROM @sql;

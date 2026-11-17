@@ -11,6 +11,8 @@ $browser_next = isset($model["browser_next_timestamp"]) ? $model["browser_next_t
 <div
     id="<?=$auto_eval_id; ?>"
     class="automatic_evaluation_status"
+    data-activity-id="<?=(int)$activity->id; ?>"
+    data-alert-active="<?=$model["active"] && $model["due_count"] === 0 ? "1" : "0"; ?>"
     data-next-timestamp="<?=$browser_next !== NULL ? (int)$browser_next : 0; ?>"
     data-refresh-url="/api/instance/<?=$activity->id; ?>/automatic_evaluation"
 >
@@ -43,4 +45,15 @@ $browser_next = isset($model["browser_next_timestamp"]) ? $model["browser_next_t
             </span>
         <?php } ?>
     </div>
+    <?php if ($model["active"] && $next !== NULL) { ?>
+        <div class="automatic_evaluation_alert_controls">
+            <button type="button" class="automatic_evaluation_alert_toggle"
+                    aria-pressed="false" onclick="automatic_evaluation_alert_toggle(this)">
+                🔕 Activer l’alerte sonore
+            </button>
+            <span class="automatic_evaluation_alert_warning" role="status" hidden>
+                Évaluation dans moins de 5 minutes !
+            </span>
+        </div>
+    <?php } ?>
 </div>

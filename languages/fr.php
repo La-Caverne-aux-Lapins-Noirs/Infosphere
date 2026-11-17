@@ -2,6 +2,7 @@
 // @codeCoverageIgnoreStart
 $AdjectiveOrder = "After";
 $Dictionnary = [
+    "Evaluation" => "Évaluation",
     "Scrum" => "Scrum",
     "ScrumSprintLength" => "Longueur du sprint",
     "ScrumWeek" => "semaine",
@@ -2793,3 +2794,17 @@ $Dictionnary["InvalidConsoleToken"] = "Jeton de console invalide ou expiré.";
 $Dictionnary["CannotCreateConsoleToken"] = "Impossible de créer le jeton de console.";
 $Dictionnary["CannotRevokeConsoleToken"] = "Impossible de révoquer le jeton de console.";
 $Dictionnary["ConsoleTokenNotFound"] = "Jeton de console introuvable.";
+
+$Dictionnary["NoCurrentRepository"] = "Le dépôt courant n'existe pas";
+$Dictionnary["NoPickupContent"] = "Aucun contenu ramassé";
+$Dictionnary["NoOfficialDelivery"] = "Aucun rendu officiel n'a été effectué";
+$Dictionnary["DownloadDelivery"] = "Télécharger le rendu officiel";
+$Dictionnary["LaunchOfficialCorrection"] = "Lancement de la correction officielle";
+
+$Dictionnary["NoCorrectionAvailable"] = "Aucune configuration de correction n'est disponible";
+
+$Dictionnary["BillingInvoiceRemind"] = "Relancer la facture";
+$Dictionnary["BillingInvoiceReminderSubject"] = "Relance — ";
+$Dictionnary["BillingInvoiceReminderSent"] = "Relance envoyée";
+$Dictionnary["BillingReminderUnavailable"] = "Cette facture ne peut pas être relancée.";
+$Dictionnary["BillingInvoiceRemindConfirm"] = "Renvoyer cette facture par courriel à son destinataire ?";

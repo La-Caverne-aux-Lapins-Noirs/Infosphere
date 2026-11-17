@@ -4,12 +4,12 @@ Title = "Attestation d'admission"
 [Letter
   ' L'attestation reste un document administratif, mais utilise désormais
   ' exactement le même moteur de mise en page que les courriers.
-  BodyGap = "4cm"
+  BodyGap = "2.4cm"
   BodyLeft = "1cm"
   BodyRight = "1cm"
 
   DateX = "13cm"
-  DateY = "8.2cm"
+  DateY = "6.6cm"
 ]
 
 [School
@@ -19,6 +19,7 @@ Title = "Attestation d'admission"
   Phone = ""
   Mail = ""
   DocumentLogo = ""
+  Stamp = ""
   MainInfo = ""
   SchoolInfo = ""
   FormationInfo = ""
@@ -36,7 +37,14 @@ Title = "Attestation d'admission"
 [Admission
   TargetClass = ""
   TargetYearLabel = ""
+  CourseTitle = ""
+  TrainingRegime = ""
+  StudyPace = ""
+  TrainingDuration = ""
+  TeachingMode = ""
+  AdditionalInformation = ""
   EntryDate = ""
+  EndDate = ""
   EntryLabel = ""
   SchoolYear = ""
   ProspectRegistrationDate = ""
@@ -48,6 +56,7 @@ Title = "Attestation d'admission"
   IssueDate = ""
   Reference = ""
   AutomaticSignature = 0
+  ShowStamp = 0
 ]
 
 [Contexts

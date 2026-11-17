@@ -81,7 +81,7 @@ function dabsic_form_dynamic_output($key, $trusted_user_document_id = NULL)
         return ([
             "absolute_file" => $absolute_file,
             "authorized_root" => $user_root,
-            "label" => "Frais d'admission - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
+            "label" => "Attestation d'admission - ".trim(($prospect["first_name"] ?? "")." ".($prospect["family_name"] ?? "")),
             "create_parent" => true,
             "private_user_output" => true,
             "owner_user_id" => $id_prospect,

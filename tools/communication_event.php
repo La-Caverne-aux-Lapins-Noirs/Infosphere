@@ -15,10 +15,124 @@ function communication_event_schema_ready()
           AND column_name IN ('id_communication_event', 'event_cancelled_at')");
     $event_columns = db_select_one("COUNT(*) AS total FROM information_schema.columns
         WHERE table_schema = DATABASE() AND table_name = 'communication_event'
-          AND column_name = 'parental_authorization_required'");
+          AND column_name IN ('parental_authorization_required', 'illustration_url')");
     return ($ready = ($tables && (int)$tables["total"] === 3
         && $columns && (int)$columns["total"] === 2
-        && $event_columns && (int)$event_columns["total"] === 1));
+        && $event_columns && (int)$event_columns["total"] === 2));
+}
+
+function communication_event_illustration_url($value)
+{
+    $value = trim((string)$value);
+    if ($value == "")
+        return ("");
+    if (strlen($value) > 2048)
+        return (NULL);
+
+    // Local public resource, for example /res/school/efrits/signal-perdu.jpg.
+    if ($value[0] === '/' && !str_starts_with($value, '//'))
+        return ($value);
+
+    if (filter_var($value, FILTER_VALIDATE_URL) === false)
+        return (NULL);
+    $scheme = strtolower((string)parse_url($value, PHP_URL_SCHEME));
+    if (!in_array($scheme, ["http", "https"], true))
+        return (NULL);
+    return ($value);
+}
+
+function communication_event_illustration_upload_raw($payload)
+{
+    if ($payload === NULL || $payload === "" || $payload === [])
+        return (["ok" => true, "empty" => true, "raw" => NULL]);
+
+    if (is_array($payload))
+    {
+        if (isset($payload[0]) && is_array($payload[0]))
+            $payload = $payload[0];
+        if (!isset($payload["content"]) || trim((string)$payload["content"]) == "")
+            return (["ok" => true, "empty" => true, "raw" => NULL]);
+        $payload = $payload["content"];
+    }
+
+    $payload = (string)$payload;
+    // 8 MiB decoded, plus base64 overhead.
+    if (strlen($payload) > 12 * 1024 * 1024)
+        return (["ok" => false, "error" => "FileTooBig"]);
+
+    $raw = base64_decode($payload, true);
+    if ($raw === false)
+        return (["ok" => false, "error" => "BadFileFormat"]);
+    if (strlen($raw) > 8 * 1024 * 1024)
+        return (["ok" => false, "error" => "FileTooBig"]);
+
+    $info = @getimagesizefromstring($raw);
+    $allowed = ["image/png", "image/jpeg", "image/webp"];
+    if (!is_array($info) || !in_array((string)($info["mime"] ?? ""), $allowed, true))
+        return (["ok" => false, "error" => "BadFileFormat"]);
+    $width = (int)($info[0] ?? 0);
+    $height = (int)($info[1] ?? 0);
+    if ($width <= 0 || $height <= 0 || $width > 8192 || $height > 8192
+        || $width * $height > 40000000)
+        return (["ok" => false, "error" => "InvalidPictureSize"]);
+
+    return (["ok" => true, "empty" => false, "raw" => $raw]);
+}
+
+function communication_event_illustration_file(array $event)
+{
+    global $Configuration;
+
+    $id_event = (int)($event["id"] ?? 0);
+    $codename = trim((string)($event["school_codename"] ?? ""));
+    if ($id_event <= 0 || $codename == "")
+        return (NULL);
+    $relative = $Configuration->SchoolsDir($codename)
+        ."communication_event/".$id_event."/illustration.png";
+    return ([
+        "relative" => $relative,
+        "absolute" => dirname(__DIR__)."/".$relative,
+    ]);
+}
+
+function communication_event_store_illustration(array $event, $payload)
+{
+    $decoded = communication_event_illustration_upload_raw($payload);
+    if (!$decoded["ok"])
+        return ($decoded);
+    if (!empty($decoded["empty"]))
+        return (["ok" => true, "changed" => false, "url" => NULL]);
+
+    $file = communication_event_illustration_file($event);
+    if ($file === NULL)
+        return (["ok" => false, "error" => "CannotWriteFile"]);
+    if (($ret = new_directory($file["absolute"]))->is_error())
+        return (["ok" => false, "error" => "CannotWriteFile"]);
+
+    $image = @imagecreatefromstring($decoded["raw"]);
+    if ($image === false)
+        return (["ok" => false, "error" => "BadFileFormat"]);
+    imagesavealpha($image, true);
+    $written = @imagepng($image, $file["absolute"], 8);
+    imagedestroy($image);
+    if (!$written)
+        return (["ok" => false, "error" => "CannotWriteFile"]);
+
+    $version = @filemtime($file["absolute"]);
+    if (!$version)
+        $version = time();
+    return ([
+        "ok" => true,
+        "changed" => true,
+        "url" => "/".$file["relative"]."?v=".(int)$version,
+    ]);
+}
+
+function communication_event_remove_uploaded_illustration(array $event)
+{
+    $file = communication_event_illustration_file($event);
+    if ($file !== NULL && is_file($file["absolute"]))
+        @unlink($file["absolute"]);
 }
 
 function communication_event_kind()
@@ -305,13 +419,14 @@ function communication_event_form_schema(array $event)
             "id" => (int)$event["id"],
             "name" => (string)$event["name"],
             "description" => (string)($event["description"] ?? ""),
+            "illustration_url" => (string)($event["illustration_url"] ?? ""),
             "parental_authorization_required" => !empty($event["parental_authorization_required"]),
             "sessions" => $sessions,
         ],
     ]);
 }
 
-function communication_event_create($id_school, $name, $description, $id_creator, $parental_authorization_required = false)
+function communication_event_create($id_school, $name, $description, $id_creator, $parental_authorization_required = false, $illustration_url = "", $illustration_file = NULL)
 {
     global $Database;
 
@@ -321,6 +436,9 @@ function communication_event_create($id_school, $name, $description, $id_creator
     $id_creator = (int)$id_creator;
     $name = trim((string)$name);
     $description = trim((string)$description);
+    $illustration_url = communication_event_illustration_url($illustration_url);
+    if ($illustration_url === NULL)
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "illustration_url"]);
     if ($id_school <= 0 || $id_creator <= 0 || $name == "")
         return (["ok" => false, "error" => "MissingParameter"]);
     if (!communication_event_can_manage_school($id_school, $id_creator))
@@ -333,19 +451,38 @@ function communication_event_create($id_school, $name, $description, $id_creator
         return (["ok" => false, "error" => "CannotCreate"]);
     $name_sql = $Database->real_escape_string(substr($name, 0, 255));
     $description_sql = $Database->real_escape_string($description);
+    $illustration_sql = $Database->real_escape_string($illustration_url);
     $secret_sql = $Database->real_escape_string($secret);
     $parental = $parental_authorization_required ? 1 : 0;
     if ($Database->query("
         INSERT INTO communication_event
-            (id_school, name, description, parental_authorization_required,
+            (id_school, name, description, illustration_url, parental_authorization_required,
              token_hash, token_secret, id_creator, created_at)
         VALUES
-            ($id_school, '$name_sql', '$description_sql', $parental,
+            ($id_school, '$name_sql', '$description_sql', NULLIF('$illustration_sql', ''), $parental,
              '$hash', '$secret_sql', $id_creator, NOW())
     ") === false)
         return (["ok" => false, "error" => "CannotCreate"]);
     $id = (int)$Database->insert_id;
-    return (["ok" => true, "event" => communication_event_fetch($id), "token" => $token]);
+    $event = communication_event_fetch($id);
+    $upload = communication_event_store_illustration($event, $illustration_file);
+    if (!$upload["ok"])
+    {
+        $Database->query("DELETE FROM communication_event WHERE id = $id");
+        return ($upload);
+    }
+    if (!empty($upload["changed"]))
+    {
+        $uploaded_sql = $Database->real_escape_string($upload["url"]);
+        if ($Database->query("UPDATE communication_event SET illustration_url = '$uploaded_sql' WHERE id = $id") === false)
+        {
+            communication_event_remove_uploaded_illustration($event);
+            $Database->query("DELETE FROM communication_event WHERE id = $id");
+            return (["ok" => false, "error" => "CannotCreate"]);
+        }
+        $event = communication_event_fetch($id);
+    }
+    return (["ok" => true, "event" => $event, "token" => $token]);
 }
 
 function communication_event_edit($id_event, array $data)
@@ -359,13 +496,28 @@ function communication_event_edit($id_event, array $data)
         return (["ok" => false, "error" => "PermissionDenied"]);
     $name = trim((string)($data["name"] ?? $event["name"]));
     $description = trim((string)($data["description"] ?? $event["description"]));
+    $illustration_url = communication_event_illustration_url($data["illustration_url"] ?? ($event["illustration_url"] ?? ""));
+    if ($illustration_url === NULL)
+        return (["ok" => false, "error" => "InvalidParameter", "details" => "illustration_url"]);
+    if (!empty($data["remove_illustration"]))
+    {
+        communication_event_remove_uploaded_illustration($event);
+        $illustration_url = "";
+    }
+    $upload = communication_event_store_illustration($event, $data["illustration_file"] ?? NULL);
+    if (!$upload["ok"])
+        return ($upload);
+    if (!empty($upload["changed"]))
+        $illustration_url = $upload["url"];
     $parental = !empty($data["parental_authorization_required"]) ? 1 : 0;
     if ($name == "")
         return (["ok" => false, "error" => "MissingParameter", "details" => "name"]);
     $name_sql = $Database->real_escape_string(substr($name, 0, 255));
     $description_sql = $Database->real_escape_string($description);
+    $illustration_sql = $Database->real_escape_string($illustration_url);
     if ($Database->query("UPDATE communication_event
         SET name = '$name_sql', description = '$description_sql',
+            illustration_url = NULLIF('$illustration_sql', ''),
             parental_authorization_required = $parental
         WHERE id = ".(int)$event["id"]) === false)
         return (["ok" => false, "error" => "CannotEdit"]);
@@ -428,6 +580,78 @@ function communication_event_registration_summary($id_event)
         "active" => (int)($row["active"] ?? 0),
         "cancelled" => (int)($row["cancelled"] ?? 0),
     ]);
+}
+
+function communication_event_registration_counts_by_session($id_event)
+{
+    $id_event = (int)$id_event;
+    if (!communication_event_schema_ready() || $id_event <= 0)
+        return ([]);
+
+    $counts = [];
+    $rows = db_select_all("
+        answers, event_cancelled_at
+        FROM user_form
+        WHERE id_communication_event = $id_event
+          AND completed_at IS NOT NULL
+          AND revoked_at IS NULL
+    ");
+    foreach ($rows as $row)
+    {
+        $answers = registration_form_decode_json($row["answers"] ?? "{}", []);
+        $id_session = (int)($answers["Event.Session"] ?? 0);
+        if ($id_session <= 0)
+            continue ;
+        if (!isset($counts[$id_session]))
+            $counts[$id_session] = ["total" => 0, "active" => 0, "cancelled" => 0];
+        ++$counts[$id_session]["total"];
+        if (empty($row["event_cancelled_at"]))
+            ++$counts[$id_session]["active"];
+        else
+            ++$counts[$id_session]["cancelled"];
+    }
+    return ($counts);
+}
+
+
+function communication_event_registration_rows($id_event)
+{
+    $id_event = (int)$id_event;
+    if (!communication_event_schema_ready() || $id_event <= 0)
+        return ([]);
+
+    $rows = db_select_all("
+        user_form.id, user_form.id_user, user_form.recipient_mail, user_form.recipient_name,
+        user_form.answers, user_form.completed_at, user_form.event_cancelled_at,
+        user.id AS existing_user_id, user.first_name AS user_first_name,
+        user.family_name AS user_family_name, user.mail AS user_mail, user.phone AS user_phone
+        FROM user_form
+        LEFT JOIN user ON user.id = user_form.id_user AND user.authority != -1
+        WHERE user_form.id_communication_event = $id_event
+          AND user_form.completed_at IS NOT NULL
+          AND user_form.revoked_at IS NULL
+        ORDER BY user_form.event_cancelled_at IS NOT NULL,
+                 user_form.completed_at DESC, user_form.id DESC
+    ");
+
+    foreach ($rows as &$row)
+    {
+        $answers = registration_form_decode_json($row["answers"] ?? "{}", []);
+        $row["answers_data"] = $answers;
+        $row["first_name"] = trim((string)($answers["Event.FirstName"]
+            ?? $row["user_first_name"] ?? ""));
+        $row["family_name"] = trim((string)($answers["Event.FamilyName"]
+            ?? $row["user_family_name"] ?? ""));
+        $row["mail"] = trim((string)($answers["Event.Mail"]
+            ?? $row["recipient_mail"] ?? $row["user_mail"] ?? ""));
+        $row["phone"] = trim((string)($answers["Event.Phone"]
+            ?? $row["user_phone"] ?? ""));
+        $row["cancelled"] = !empty($row["event_cancelled_at"]);
+        $row["orphaned_user"] = (int)($row["id_user"] ?? 0) > 0
+            && (int)($row["existing_user_id"] ?? 0) <= 0;
+    }
+    unset($row);
+    return ($rows);
 }
 
 
@@ -694,6 +918,73 @@ function communication_event_validate_answers(array $event, array $submitted)
     ]]);
 }
 
+function communication_event_send_confirmation_mail(array $event, array $values, $personal_url, $id_user)
+{
+    $session = NULL;
+    foreach (communication_event_sessions((int)$event["id"], false) as $candidate)
+        if ((int)$candidate["id"] === (int)$values["id_session"])
+        {
+            $session = $candidate;
+            break ;
+        }
+
+    $school = fetch_school((int)($event["id_school"] ?? 0));
+    if (!is_array($school))
+        $school = [];
+    $school_name = trim((string)($school["fr_name"] ?? $school["name"] ?? $school["codename"] ?? ""));
+    $address = trim((string)($school["address"] ?? ""));
+    $rooms = [];
+    if (is_array($session))
+        foreach (($session["rooms"] ?? []) as $room)
+        {
+            $label = trim((string)($room["name"] ?? $room["codename"] ?? ""));
+            if ($label != "")
+                $rooms[] = $label;
+        }
+
+    $subject = "Confirmation d’inscription — ".trim((string)$event["name"]);
+    $content = "Bonjour ".trim((string)$values["first_name"]).",\n\n".
+        "Votre inscription à l’activité « ".trim((string)$event["name"])." » est confirmée.\n\n";
+    $description = trim((string)($event["description"] ?? ""));
+    if ($description != "")
+        $content .= "Nature de l’activité :\n".$description."\n\n";
+    if (is_array($session))
+        $content .= "Date et heure : ".datex("d/m/Y H:i", date_to_timestamp($session["begin_date"]))
+            ." – ".datex("H:i", date_to_timestamp($session["end_date"]))."\n";
+    $location = [];
+    if ($school_name != "")
+        $location[] = $school_name;
+    if (count($rooms))
+        $location[] = implode(", ", $rooms);
+    if ($address != "")
+        $location[] = preg_replace('/\s+/u', ' ', str_replace(["\r", "\n"], ' ', $address));
+    if (count($location))
+        $content .= "Lieu : ".implode(" — ", $location)."\n";
+    $content .= "\nPour consulter votre inscription ou l’annuler si nécessaire :\n".
+        $personal_url."\n\n".
+        "À bientôt".($school_name != "" ? " à ".$school_name : "").".\n";
+
+    try
+    {
+        $sent = send_mail(trim((string)$values["mail"]), $subject, $content);
+        if (is_object($sent) && method_exists($sent, "is_error") && $sent->is_error())
+        {
+            add_log(EDITING_OPERATION,
+                "Communication event confirmation mail failed for event #".(int)$event["id"],
+                (int)$id_user);
+            return (false);
+        }
+    }
+    catch (Throwable $e)
+    {
+        add_log(EDITING_OPERATION,
+            "Communication event confirmation mail failed for event #".(int)$event["id"],
+            (int)$id_user);
+        return (false);
+    }
+    return (true);
+}
+
 function communication_event_finalize(array $event, array $submitted)
 {
     global $Database;
@@ -833,11 +1124,13 @@ function communication_event_finalize(array $event, array $submitted)
         $rollback();
         return (["ok" => false, "error" => "CannotEdit"]);
     }
+    $personal_url = public_invitation_url("RegistrationForm", $personal_token);
     add_log(CREATIVE_OPERATION, "Prospect #$id_user registered to communication event #".(int)$event["id"], $id_user);
+    communication_event_send_confirmation_mail($event, $v, $personal_url, $id_user);
     return ([
         "ok" => true,
         "completed" => true,
-        "redirect" => public_invitation_url("RegistrationForm", $personal_token),
+        "redirect" => $personal_url,
         "id_user" => $id_user,
         "id_team" => $id_team,
     ]);

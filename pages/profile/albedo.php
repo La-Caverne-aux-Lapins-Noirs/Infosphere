@@ -65,10 +65,15 @@ function albedo_room_merge_measured_state($previous, $current)
     if (empty($current["distrans_duration"]))
         return ($previous);
 
+    // A source exports cumulative counters, not one accumulator per terminal.
+    // Repeated representations must never be added together. Different epochs
+    // cannot be combined: retain the latest observation as a new baseline.
+    if (($previous["reset_token"] ?? "") !== ($current["reset_token"] ?? ""))
+        return (($current["counter_timestamp"] ?? 0) >= ($previous["counter_timestamp"] ?? 0)
+            ? $current : $previous);
     $merged = $previous;
     foreach (["xtime", "sshtime", "ssh_idle_time", "locktime"] as $field)
-        $merged[$field] = max(0, (int)($previous[$field] ?? 0))
-            + max(0, (int)($current[$field] ?? 0));
+        $merged[$field] = max(0, (int)($previous[$field] ?? 0), (int)($current[$field] ?? 0));
 
     $merged["current"] = !empty($previous["current"]) || !empty($current["current"]);
     $merged["distant"] = !empty($previous["distant"]) || !empty($current["distant"]);
@@ -80,6 +85,10 @@ function albedo_room_merge_measured_state($previous, $current)
     $merged["activity_timestamp"] = max(
         (int)($previous["activity_timestamp"] ?? 0),
         (int)($current["activity_timestamp"] ?? 0)
+    );
+    $merged["counter_timestamp"] = max(
+        (int)($previous["counter_timestamp"] ?? 0),
+        (int)($current["counter_timestamp"] ?? 0)
     );
 
     $previous_token = trim((string)($previous["reset_token"] ?? ""));
@@ -147,10 +156,27 @@ function albedo_room_log_timestamp($entry, $fallback = NULL)
 
 function albedo_room_log_reset_token($entry)
 {
-    foreach (["reset_timestamp", "reset_at", "reset"] as $field)
+    foreach (["counter_epoch", "reset_timestamp", "reset_at", "reset"] as $field)
         if (isset($entry[$field]) && trim((string)$entry[$field]) != "")
             return (trim((string)$entry[$field]));
     return ("");
+}
+
+function albedo_room_log_counter_timestamp($entry, $fallback = NULL)
+{
+    // last_activity is the last input, possibly many hours ago while locked.
+    // Only server observation timestamps can delimit cumulative samples.
+    foreach (["counter_timestamp", "updated_timestamp", "updated_at"] as $field)
+    {
+        if (!isset($entry[$field]))
+            continue ;
+        $timestamp = user_log_distrans_utc_timestamp($entry[$field]);
+        if ($timestamp > 0)
+            return ($timestamp);
+    }
+    if (is_array($fallback))
+        return (albedo_room_log_counter_timestamp($fallback));
+    return (0);
 }
 
 function albedo_room_log_source_key($entry, $fallback = NULL)
@@ -167,15 +193,16 @@ function albedo_room_log_counter_source_key($entry, $fallback = NULL)
     if ($machine_key == "")
         return ("");
 
-    // Version the cursor namespace when the aggregation semantics change.  The
-    // first v2 sample is deliberately only a baseline (see student_log.php), so
-    // old single-state cursors cannot turn a newly discovered SSH/X companion
-    // state into a large historical spike.
-    return ($machine_key."|activity-v2");
+    // v3 stores server observation times in UTC and starts with fresh baselines.
+    // Existing v1/v2 rows and historical attendance are left untouched.
+    return ($machine_key."|activity-v3");
 }
 
 function albedo_room_log_is_current($entry, $current_users = [], $fallback = NULL)
 {
+    $observed = albedo_room_log_counter_timestamp($entry, $fallback);
+    if ($observed > 0 && time() - $observed > 5 * 60)
+        return (false);
     if (isset($entry["current"]))
         return (!empty($entry["current"]));
     if (isset($entry["active"]))
@@ -329,6 +356,7 @@ function albedo_room_logs_from_distrans_payload($logs)
                 "source_key" => albedo_room_log_counter_source_key($user, $machine),
                 "reset_token" => albedo_room_log_reset_token($user),
                 "activity_timestamp" => albedo_room_log_timestamp($user, $machine),
+                "counter_timestamp" => albedo_room_log_counter_timestamp($user, $machine),
                 "xtime" => isset($user["xtime"]) ? (int)$user["xtime"] : 0,
                 "sshtime" => isset($user["sshtime"]) ? (int)$user["sshtime"] : 0,
                 "ssh_idle_time" => isset($user["ssh_idle_time"]) ? (int)$user["ssh_idle_time"] : (isset($user["sshidletime"]) ? (int)$user["sshidletime"] : 0),
@@ -415,6 +443,8 @@ if (isset($logs) && is_array($logs) && isset($logs["content"]))
 {
     $current_users = albedo_room_current_users_by_machine($logs);
     $ologs = [];
+    $distrans_user_batches = [];
+    $distrans_has_measured_samples = false;
     foreach ($logs["content"] as $log)
     {
 	if (!strlen(@$log["name"]) || !strlen(@$log["mac"]) || !strlen(@$log["ip"]) || !isset($log["type"]))
@@ -476,9 +506,10 @@ if (isset($logs) && is_array($logs) && isset($logs["content"]))
 		        || array_key_exists("ssh_idle_time", $log)
 		        || array_key_exists("sshidletime", $log)
 		        || array_key_exists("locktime", $log)),
-		"source_key" => isset($log["source_key"]) ? (string)$log["source_key"] : albedo_room_log_source_key($log),
+		"source_key" => albedo_room_log_counter_source_key($log),
 		"reset_token" => isset($log["reset_token"]) ? (string)$log["reset_token"] : albedo_room_log_reset_token($log),
 		"activity_timestamp" => isset($log["activity_timestamp"]) ? (int)$log["activity_timestamp"] : albedo_room_log_timestamp($log),
+		"counter_timestamp" => albedo_room_log_counter_timestamp($log) ?: time(),
 		"xtime" => isset($log["xtime"]) ? (int)$log["xtime"] : 0,
 		"sshtime" => isset($log["sshtime"]) ? (int)$log["sshtime"] : 0,
 		"ssh_idle_time" => isset($log["ssh_idle_time"]) ? (int)$log["ssh_idle_time"] : (isset($log["sshidletime"]) ? (int)$log["sshidletime"] : 0),
@@ -533,50 +564,35 @@ if (isset($logs) && is_array($logs) && isset($logs["content"]))
 		$user_locked = !$user_distant && !empty($user_state["lock"]);
 		$user_ssh_idle = $user_distant && !empty($user_state["ssh_idle"]);
 		$user_ip = isset($user_state["ip"]) ? $user_state["ip"] : $log["ip"];
-		$activity_timestamp = isset($user_state["activity_timestamp"]) ? (int)$user_state["activity_timestamp"] : 0;
-		$collection_date = user_log_wall_timestamp($activity_timestamp > 0 ? $activity_timestamp : time());
-
 		if (!empty($user_state["distrans_duration"]))
 		{
-		    // Distrans is authoritative.  Import the cumulative snapshot through
-		    // a persistent cursor so retries and failed resets cannot double-count.
-		    $import_failure = NULL;
-		    if (!import_distrans_activity_counters(
-			["id" => $cod],
-			$user_state["source_key"] ?? albedo_room_log_source_key($log),
-			$user_state["reset_token"] ?? "",
-			$user_state,
-			$collection_date,
-			$user_ip,
-			$import_failure,
-			!empty($user_state["local_current"]) && !empty($user_state["remote_current"])
-		    ))
-		    {
-			$distrans_import_failed = true;
-			add_log(REPORT, "Distrans activity persistence failed for '".$user."' on '".
-			    ($user_state["source_key"] ?? albedo_room_log_source_key($log))."': ".
-			    ($import_failure ?: "unknown persistence error"), 1);
-		    }
+		    // Import all machines of a login together, so parallel local/SSH
+		    // sessions share a single timeline and database transaction.
+		    $distrans_user_batches[$cod][] = $user_state;
+		    $distrans_has_measured_samples = true;
 		}
-		else if ($distrans_structured_payload && albedo_room_log_duration($user_state) > 0)
+		else if ($distrans_structured_payload)
 		{
-		    // Machine.user may legitimately expose a currently connected account
-		    // before Distrans has created its duration-counter row.  Such a synthetic
-		    // zero-duration entry has nothing to persist and must not prevent the
-		    // counters that do exist from being acknowledged/reset.
-		    $distrans_import_failed = true;
-		    add_log(REPORT, "Distrans measured activity has no counter metadata for '".$user."'", 1);
+		    // Synthetic Machine.users entries can update the desk display, but
+		    // provide no measured duration. Do not invent time from cron ticks.
+		    if (albedo_room_log_duration($user_state) > 0)
+		    {
+		        $distrans_import_failed = true;
+		        add_log(REPORT, "Distrans measured activity has no counter metadata for '".$user."'", 1);
+		    }
 		}
 		else
 		{
 		    // Compatibility fallback for genuinely old Hand payloads.
+		    $activity_timestamp = (int)($user_state["activity_timestamp"] ?? 0);
+		    $legacy_activity_date = user_log_wall_timestamp($activity_timestamp > 0 ? $activity_timestamp : time());
 		    $user_log_type = $user_ssh_idle
 			? USER_LOG_SSH_IDLE
 			: ($user_distant ? USER_LOG_DISTANT : ($user_locked ? USER_LOG_LOCK : USER_LOG_WORK));
 		    compute_student_log(
 			["id" => $cod],
 			$user_log_type,
-			$collection_date,
+			$legacy_activity_date,
 			$user_ip,
 			$user_distant
 		    );
@@ -586,7 +602,26 @@ if (isset($logs) && is_array($logs) && isset($logs["content"]))
 	}
 	++$logcnt;
     }
-    if ($logcnt)
+    foreach ($distrans_user_batches as $id_user => $samples)
+    {
+	$import_failure = NULL;
+	if (!import_distrans_activity_batch(["id" => $id_user], $samples, $import_failure))
+	{
+	    $distrans_import_failed = true;
+	    add_log(REPORT, "Distrans activity persistence failed for user ".$id_user.": ".
+	        ($import_failure ?: "unknown persistence error"), 1);
+	}
+    }
+    if ($logcnt && ($distrans_structured_payload || $distrans_has_measured_samples))
+    {
+	// Cumulative snapshots and persistent cursors need no remote reset.
+	// Resetting after GET would erase reports received between GET and
+	// RESET, and would also make a lost reset reply ambiguous.
+	add_log($distrans_import_failed ? REPORT : TRACE,
+	    $distrans_import_failed ? "Distrans import incomplete; cumulative counters retained for retry"
+	        : "Distrans cumulative activity imported; no remote reset required", 1);
+    }
+    else if ($logcnt)
     {
 	if ($distrans_import_failed)
 	    add_log(REPORT, "Distrans activity counters were not reset because at least one duration failed to persist", 1);

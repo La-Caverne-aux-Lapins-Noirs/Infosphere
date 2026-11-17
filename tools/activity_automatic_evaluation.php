@@ -380,6 +380,7 @@ function activity_automatic_evaluation_run($act)
         return (false);
     }
 
+    evaluation_history_save($activity_id, $team_id, false, $content, "automatic");
     activity_automatic_evaluation_record($team_id, true, "Automatic non-official evaluation");
     $students_mail = activity_automatic_evaluation_students_mail($team_id);
     if (count($students_mail))
@@ -390,7 +391,9 @@ function activity_automatic_evaluation_run($act)
             "This evaluation has been run automatically and is not official.",
             NULL,
             [["report.tar.gz" => $content]],
-            false
+            false, NULL, NULL,
+            evaluation_history_email_html($act["actname"], false,
+                evaluation_history_extract_report($content))
         );
     }
     return (true);

@@ -220,7 +220,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
 <div class="dabsic-form-page">
     <div class="dabsic-form-header">
         <div>
-            <h2><?=$dabsic_form_admission_prospect_id > 0 ? "Attestation d’admission — frais" : $Dictionnary["DabsicFormTitle"]; ?></h2>
+            <h2><?=$dabsic_form_admission_prospect_id > 0 ? "Attestation d’admission — formation et frais" : $Dictionnary["DabsicFormTitle"]; ?></h2>
             <?php if ($dabsic_form_discovery["ok"]) { ?>
                 <div class="dabsic-form-path-line" title="<?=htmlspecialchars($dabsic_form_discovery["reference"]["relative"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>">
                     <span><?=$Dictionnary["DabsicFormReference"]; ?></span>
@@ -465,7 +465,7 @@ if ($dabsic_form_error === "" && $dabsic_form_discovery["ok"])
                         — la validation apposera la signature de la personne ayant conduit l'entretien et le tampon de l'école, puis enverra le PDF.
                     <?php } ?>
                     <?php if ($dabsic_form_admission_prospect_id > 0) { ?>
-                        — le montant exigible est calculé automatiquement ; renseignez uniquement l’état du règlement et, si nécessaire, le montant partiel versé.
+                        — le montant exigible est calculé automatiquement. Complétez les précisions de formation utiles, puis l’état du règlement et, si nécessaire, le montant partiel versé. Les précisions laissées vides ne sont pas ajoutées au PDF ; la date de début reprend alors la rentrée prévue au dossier.
                     <?php } ?>
                 </span>
                 <div class="dabsic-form-action-buttons">

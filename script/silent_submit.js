@@ -116,7 +116,8 @@ function silent_submitf(form, cnf)
 	cnf["clear_form"],
 	cnf["after_success"],
 	cnf["after_success_parameter"],
-	cnf["after_complete"]
+	cnf["after_complete"],
+	cnf["download"]
     ));
 }
 
@@ -125,11 +126,11 @@ function refresh()
     location.reload();
 }
 
-function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data)
+function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data, download = false)
 {
     if (file_load_counter != 0)
     {
-	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data);
+	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data, download);
 	return (false);
     }
     // Ca y est, le paquet est pret !
@@ -149,7 +150,7 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
 	function (success, result, msg, content)
 	{
 	    setTimeout(reset_form, 1000, form);
-	    form.style.backgroundColor = "green";
+	    form.style.backgroundColor = success ? "green" : "red";
 
 	    if (after_success && success)
 		after_success(result, msg, content, after_success_parameter);
@@ -180,11 +181,13 @@ function wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_for
 	    if (after_complete)
 		after_complete(false, null, null, null, after_success_parameter);
 
-	}
+	},
+	false,
+	download
     ); 
 }
 
-function silent_submit(form, tofill = null, toadd = null, toclear = null, toremove = null, body = null, wrapper = "", ismap = false, clear_form = false, after_success = null, after_success_parameter = null, after_complete = null)
+function silent_submit(form, tofill = null, toadd = null, toclear = null, toremove = null, body = null, wrapper = "", ismap = false, clear_form = false, after_success = null, after_success_parameter = null, after_complete = null, download = false)
 {
     // On récupère le formulaire
     while (form != null && form.tagName.toLowerCase() != "form")
@@ -210,11 +213,11 @@ function silent_submit(form, tofill = null, toadd = null, toclear = null, toremo
 	data = body;
 
     if (data instanceof FormData)
-	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data);
+	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data, download);
     else if (file_load_counter == 0)
-	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data);
+	wait_complete_loading(form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data, download);
     else
-	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data);
+	setTimeout(wait_complete_loading, 300, form, tofill, toadd, toclear, toremove, clear_form, after_success, after_success_parameter, after_complete, method, data, download);
     
     return (false); // Pour éviter le submit
 }

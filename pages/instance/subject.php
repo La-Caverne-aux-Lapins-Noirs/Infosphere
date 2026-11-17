@@ -17,8 +17,6 @@ else
     $display_subject = true;
     $preaccess_status = ["configured" => false, "passed" => true, "quizzes" => [], "next" => NULL];
     $subject_staff_access = $activity->is_director || $activity->is_teacher || $activity->is_assistant;
-    if ($activity->current_subject == "")
-	$display_subject = false;
     $missing_medals = [];
     if (!$subject_staff_access)
     {
@@ -58,54 +56,136 @@ else
 	}
     }
 
-    // Dynamic subjects are generated only for an actual authorized request.
-    // FullActivity::build() deliberately has no document-generation side effect.
-    if ($display_subject && $activity->current_configuration !== NULL
-        && is_file($activity->current_configuration))
-        ensure_subject_for_access($activity, $User);
-
-    if ($activity->current_subject == "")
+    // A configured subject is loaded/generated in a second HTTP request.  The
+    // activity page itself must never wait for DocBuilder.
+    $dynamic_subject = $display_subject
+        && $activity->current_configuration !== NULL
+        && is_file($activity->current_configuration);
+    if (!$dynamic_subject && $activity->current_subject == "")
         $display_subject = false;
+    $subject_url = (string)($activity->current_subject ?? "");
+    $pdf = $subject_url !== ""
+        && (strlen($subject_url) > 256
+            || strtolower(pathinfo($subject_url, PATHINFO_EXTENSION)) == "pdf");
+    $subject_dom_suffix = (int)$activity->id;
     ?>
 
     <h4><?=$Dictionnary["ActivitySubject"]; ?></h4>
-    <?php $pdf = strlen($activity->current_subject) > 256 || pathinfo($activity->current_subject, PATHINFO_EXTENSION) == "pdf"; ?>
 
     <?php if ($display_subject) { ?>
-	<div style="float: right; height: 25px;">
-	    <?php if ($pdf) { ?>
-		<a href="<?=$activity->current_subject; ?>">
-		    <?=$Dictionnary["Download"]; ?>
-		</a>
-	    <?php } ?>
-	</div>
-	<iframe
-	    src="<?=$activity->current_subject; ?><?=$pdf ? '#toolbar=0&navpanes=0&scrollbar=0' : ''; ?>"
-		 style="width: 99%; height: 90%;"
-	>
-	</iframe>
+        <div style="float: right; height: 25px;">
+            <a
+                id="subject_download_<?=$subject_dom_suffix; ?>"
+                href="<?=htmlspecialchars($subject_url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?>"
+                style="<?=$dynamic_subject || !$pdf ? "display: none;" : ""; ?>"
+            >
+                <?=$Dictionnary["Download"]; ?>
+            </a>
+        </div>
+
+        <?php if ($dynamic_subject) { ?>
+            <div
+                id="subject_loading_<?=$subject_dom_suffix; ?>"
+                style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large; white-space: pre-wrap;"
+            >
+                <i><?=$Language == "fr" ? "Chargement du sujet…" : "Loading subject…"; ?></i>
+            </div>
+        <?php } ?>
+
+        <iframe
+            id="subject_frame_<?=$subject_dom_suffix; ?>"
+            src="<?=$dynamic_subject ? "" : htmlspecialchars(
+                $subject_url.($pdf ? '#toolbar=0&navpanes=0&scrollbar=0' : ''),
+                ENT_QUOTES | ENT_SUBSTITUTE,
+                "UTF-8"
+            ); ?>"
+            style="width: 99%; height: 90%;<?=$dynamic_subject ? " display: none;" : ""; ?>"
+        >
+        </iframe>
+
+        <?php if ($dynamic_subject) { ?>
+            <script>
+            (function() {
+                var status = document.getElementById("subject_loading_<?=$subject_dom_suffix; ?>");
+                var frame = document.getElementById("subject_frame_<?=$subject_dom_suffix; ?>");
+                var download = document.getElementById("subject_download_<?=$subject_dom_suffix; ?>");
+
+                if (!status || !frame || status.getAttribute("data-loading") == "1")
+                    return ;
+                status.setAttribute("data-loading", "1");
+
+                function subjectFailure(message)
+                {
+                    message = message || <?=json_encode($Dictionnary["SubjectNotAvailable"]); ?>;
+                    status.textContent = message.replace(/<br\s*\/?>/gi, "\n");
+                    status.style.display = "block";
+                    frame.style.display = "none";
+                    download.style.display = "none";
+                }
+
+                var xhr = new XMLHttpRequest();
+                xhr.addEventListener("load", function() {
+                    var packet;
+
+                    try
+                    {
+                        packet = JSON.parse(xhr.responseText);
+                    }
+                    catch (exception)
+                    {
+                        subjectFailure(xhr.responseText);
+                        return ;
+                    }
+                    if (!packet || packet.result != "ok" || !packet.content)
+                    {
+                        subjectFailure(packet ? packet.msg : "");
+                        return ;
+                    }
+
+                    var url = packet.content;
+                    var isPdf = /\.pdf(?:$|[?#])/i.test(url);
+                    var separator = url.indexOf("?") == -1 ? "?" : "&";
+                    var displayUrl = url + separator + "v=" + Date.now();
+
+                    if (isPdf)
+                    {
+                        download.href = url;
+                        download.style.display = "inline";
+                        displayUrl += "#toolbar=0&navpanes=0&scrollbar=0";
+                    }
+                    else
+                        download.style.display = "none";
+
+                    frame.src = displayUrl;
+                    frame.style.display = "block";
+                    status.style.display = "none";
+                });
+                xhr.addEventListener("error", function() {
+                    subjectFailure(<?=$Language == "fr"
+                        ? json_encode("Erreur lors du chargement du sujet.")
+                        : json_encode("Error while loading the subject."); ?>);
+                });
+                xhr.open(
+                    "POST",
+                    "/api/activity/<?=((int)$activity->id); ?>/generate_subject",
+                    true
+                );
+                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xhr.send("{}");
+            })();
+            </script>
+        <?php } ?>
     <?php } else { ?>
-	<div style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large;" id="subject_error_box">
-	    <?php if ($activity->current_subject == "") { ?>
-		<i><?=$Dictionnary["SubjectNotAvailable"]; ?></i>
-                <?php if ($subject_staff_access && !empty($activity->subject_generation_error)) { ?>
-                    <pre
-                        style="font-size: 13px; text-align: left; white-space: pre-wrap; margin: 20px; padding: 12px; overflow: auto;"
-                    ><?=htmlspecialchars(
-                        $activity->subject_generation_error,
-                        ENT_QUOTES | ENT_SUBSTITUTE,
-                        "UTF-8"
-                    ); ?></pre>
-                <?php } ?>
-	    <?php } else if (!$activity->registered && !$subject_staff_access) { ?>
-		<i><?=$Dictionnary["YouMustBeRegisteredToSee"]; ?></i>
-	    <?php } else if ($activity->teamable && $activity->user_team["canjoin"]) { ?>
-		<i><?=$Dictionnary["YouMustCompleteYourTeamToGetTheSubject"]; ?></i>
-	    <?php } else if (!$not_too_soon) { ?>
-		<i><?=$Dictionnary["SubjectNotAvailableYet"]; ?></i>
-	    <?php } else if (!$not_too_late) { ?>
-		<i><?=$Dictionnary["SubjectNotAvailableAnymore"]; ?></i>
-	    <?php } else if ($preaccess_status["configured"] && !$preaccess_status["passed"]) { ?>
+        <div style="position: absolute; top: 40%; text-align: center; width: 100%; font-size: xx-large;" id="subject_error_box">
+            <?php if (!$activity->registered && !$subject_staff_access) { ?>
+                <i><?=$Dictionnary["YouMustBeRegisteredToSee"]; ?></i>
+            <?php } else if ($activity->teamable && $activity->user_team && $activity->user_team["canjoin"]) { ?>
+                <i><?=$Dictionnary["YouMustCompleteYourTeamToGetTheSubject"]; ?></i>
+            <?php } else if (!$not_too_soon) { ?>
+                <i><?=$Dictionnary["SubjectNotAvailableYet"]; ?></i>
+            <?php } else if (!$not_too_late) { ?>
+                <i><?=$Dictionnary["SubjectNotAvailableAnymore"]; ?></i>
+            <?php } else if ($preaccess_status["configured"] && !$preaccess_status["passed"]) { ?>
                 <div class="activity-preaccess-lock">
                     <i><?=$Dictionnary["QuizPreaccessSubjectLocked"] ?? "Un questionnaire préalable doit être réussi avant l'accès au sujet."; ?></i>
                     <div class="activity-preaccess-list">
@@ -128,17 +208,19 @@ else
                         </form>
                     <?php } ?>
                 </div>
-	    <?php } else if (count($missing_medals)) { ?>
-		<i><?=$Dictionnary["YouNeedThesesMedalsToSeeSubject"]; ?>:</i>
-		<br /><br />
-		<?php $no_text = true; ?>
-		<?php foreach ($missing_medals as $medal) { ?>
-		    <a href="index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>">
-			<?php require ("single_medal.php"); ?>
-		    </a>
-		<?php } ?>
-	    <?php } ?>
-	</div>
+            <?php } else if (count($missing_medals)) { ?>
+                <i><?=$Dictionnary["YouNeedThesesMedalsToSeeSubject"]; ?>:</i>
+                <br /><br />
+                <?php $no_text = true; ?>
+                <?php foreach ($missing_medals as $medal) { ?>
+                    <a href="index.php?p=MedalsMenu&amp;a=<?=$medal["id"]; ?>">
+                        <?php require ("single_medal.php"); ?>
+                    </a>
+                <?php } ?>
+            <?php } else { ?>
+                <i><?=$Dictionnary["SubjectNotAvailable"]; ?></i>
+            <?php } ?>
+        </div>
     <?php } ?>
 </div>
 

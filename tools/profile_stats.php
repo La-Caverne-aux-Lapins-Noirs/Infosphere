@@ -42,44 +42,15 @@ $data = [];
 if (isset($_GET["d"]))
     $data = json_decode(base64_decode($_GET["d"]), true);
 
-// On fait la somme des champs qui s'ajoutent
-if (isset($data["avg_intra_logs"]) && isset($data["avg_work_logs"]))
+// Intra requests can cover the same seconds as workstation/SSH activity.
+// Match the home/export totals: only measured active categories add up.
+foreach (["", "avg_"] as $prefix)
 {
-    foreach ($data["avg_intra_logs"] as $k => $v)
-	$data["avg_logs"][$k] = $v;
-    foreach ($data["avg_work_logs"] as $k => $v)
+    $data[$prefix."logs"] = [];
+    foreach (["work_logs", "distant_logs"] as $label)
     {
-	if (!isset($data["avg_logs"][$k]))
-	    $data["avg_logs"][$k] = $v;
-	else
-	    $data["avg_logs"][$k] += $v;
-    }
-    foreach ($data["avg_distant_logs"] as $k => $v)
-    {
-	if (!isset($data["avg_logs"][$k]))
-	    $data["avg_logs"][$k] = $v;
-	else
-	    $data["avg_logs"][$k] += $v;
-    }
-}
-
-if (isset($data["intra_logs"]) && isset($data["work_logs"]))
-{
-    foreach ($data["intra_logs"] as $k => $v)
-	$data["logs"][$k] = $v;
-    foreach ($data["work_logs"] as $k => $v)
-    {
-	if (!isset($data["logs"][$k]))
-	    $data["logs"][$k] = $v;
-	else
-	    $data["logs"][$k] += $v;
-    }
-    foreach ($data["distant_logs"] as $k => $v)
-    {
-	if (!isset($data["logs"][$k]))
-	    $data["logs"][$k] = $v;
-	else
-	    $data["logs"][$k] += $v;
+        foreach ($data[$prefix.$label] ?? [] as $day => $hours)
+            $data[$prefix."logs"][$day] = ($data[$prefix."logs"][$day] ?? 0) + $hours;
     }
 }
 
@@ -139,18 +110,15 @@ foreach ($data as $k => $idx)
 }
 
 // Les histogrammes d'activité sont dessinés en barres empilées.
-// L'ancienne échelle ne prenait en compte que chaque série isolée, ou un
-// sous-total incomplet, ce qui permettait aux barres cumulées (notamment avec
-// lock_logs et ssh_idle_logs) de dépasser le cadre du graphe.
+// Intra is drawn beside the measured timeline, so it has its own scale
+// contribution above and must not increase the height of this stack.
 profile_stats_stack_days_for_scale($data, [
     "work_logs",
     "distant_logs",
     "ssh_idle_logs",
-    "intra_logs",
     "lock_logs",
 ]);
 profile_stats_stack_days_for_scale($data, [
-    "avg_intra_logs",
     "avg_work_logs",
     "avg_distant_logs",
     "avg_ssh_idle_logs",
@@ -307,11 +275,16 @@ if (isset($data["halfday_am"]) || isset($data["halfday_pm"]))
 // On affiche les valeurs. On commence par la fin.
 for ($index = $endday - $startday - 1; $index >= 0; --$index)
 {
-    $coords = draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $transparent, $darkblue);
-    $coords = draw_area($data, "avg_work_logs", $startday, $index, $laddersize, $transparent, $darkgreen, [$coords[8], $coords[9]]);
-    $coords = draw_area($data, "avg_distant_logs", $startday, $index, $laddersize, $transparent, $darkpink, [$coords[8], $coords[9]]);
-    $coords = draw_area($data, "avg_ssh_idle_logs", $startday, $index, $laddersize, $transparent, $darkorange, [$coords[8], $coords[9]]);
-    draw_area($data, "avg_lock_logs", $startday, $index, $laddersize, $transparent, $grey, [$coords[8], $coords[9]]);
+    draw_area($data, "avg_intra_logs", $startday, $index, $laddersize, $transparent, $darkblue);
+    $average_offset = [0, 0];
+    foreach (["avg_work_logs" => $darkgreen, "avg_distant_logs" => $darkpink,
+        "avg_ssh_idle_logs" => $darkorange, "avg_lock_logs" => $grey] as $label => $color)
+    {
+        $coords = draw_area($data, $label, $startday, $index, $laddersize,
+            $transparent, $color, $average_offset);
+        $average_offset[0] += $coords[8];
+        $average_offset[1] += $coords[9];
+    }
     
     $x = 0;
     $y = $h - 50;
@@ -320,7 +293,6 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
 	"work_logs" => [$green, $greena, true],
 	"distant_logs" => [$pink, $pinka, true],
 	"ssh_idle_logs" => [$orange, $orangea, false],
-	"intra_logs" => [$blue, $bluea, true],
 	"lock_logs" => [$grey, $greya, false]
     ] as $label => $color)
     {
@@ -342,9 +314,21 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
 		$hours += $data[$label][$index + $startday];
 	}
     }
+    // A narrow blue bar keeps Intra observations visible without adding
+    // their overlapping seconds to the workstation/SSH timeline.
+    if ($index > 0 && isset($data["intra_logs"][$index + $startday]))
+    {
+        $intra_x1 = $w / $len / 2 + ($index + 0.84 - 1) * $w / $len;
+        $intra_x2 = $w / $len / 2 + ($index + 0.94 - 1) * $w / $len;
+        $intra_y = $zero_y - $data["intra_logs"][$index + $startday] * $hh;
+        infosphere_imagefilledpolygon($img,
+            [$intra_x1, $zero_y, $intra_x1, $intra_y, $intra_x2, $intra_y, $intra_x2, $zero_y], $bluea);
+        infosphere_imagerectangle($img, $intra_x1, $intra_y, $intra_x2, $zero_y, $blue);
+    }
     if ($index > 0)
     {
-	$hours = sprintf("%d:%d", (int)$hours, ($hours - (int)$hours) * 60);
+        $seconds = (int)round($hours * 3600);
+	$hours = sprintf("%d:%02d", intdiv($seconds, 3600), intdiv($seconds % 3600, 60));
 	$siz = imagettfbbox(10, 0, $fnt, $hours);
 	infosphere_imagettftext(
 	    $img, 10, 0,
@@ -353,13 +337,6 @@ for ($index = $endday - $startday - 1; $index >= 0; --$index)
 	    $lines, $fnt, $hours
 	);
     }
-
-    /*
-    $coords = draw_area($data, "intra_logs", $startday, $index, $bladder, $bluea, $blue);
-    $coords = draw_area($data, "work_logs", $startday, $index, $bladder, $greena, $green, [$coords[8], $coords[9]]);
-    $coords = draw_area($data, "distant_logs", $startday, $index, $bladder, $pinka, $pink, [$coords[8], $coords[9]]);
-    $coords = draw_area($data, "lock_logs", $startday, $index, $bladder, $lightgreya, $lightgrey, [$coords[8], $coords[9]]);
-     */
 
     if (isset($data["presence_hist"]) || isset($data["absence_hist"]) || isset($data["presence"]) || isset($data["late"]) || isset($data["mispresence"]))
     {

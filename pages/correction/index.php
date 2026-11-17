@@ -13,7 +13,7 @@ require_once (__DIR__."/style.php");
         <p>Catalogue des bibliothèques de correction, évaluateurs de fonction et scénarios.</p>
     </div>
     <div class="correction-actions">
-            <form method="post" action="/api/correction" onsubmit="return silent_submit(this, 'correction-catalog');">
+            <form method="post" action="/api/correction" onsubmit="return correctionSubmitWithState(this);">
                 <input type="hidden" name="action" value="inventory" />
                 <button type="submit">Comparer avec Distrans</button>
             </form>
@@ -35,7 +35,7 @@ require_once (__DIR__."/style.php");
                 <input type="file" name="file[]" multiple required />
                 <button type="submit">Mettre en ligne</button>
             </form>
-            <form class="correction-category" method="post" action="/api/correction" onsubmit="return silent_submit(this, 'correction-catalog');">
+            <form class="correction-category" method="post" action="/api/correction" onsubmit="return correctionSubmitWithState(this);">
                 <input type="hidden" name="action" value="category" />
                 <input type="text" name="name" placeholder="Nouvelle catégorie" required />
                 <select name="id_parent">
@@ -53,7 +53,136 @@ require_once (__DIR__."/style.php");
 </div>
 
 <script>
-function correctionRestoreActiveTab() {
+var correctionTreeFoldersStorageKey = "correction-tree-folders-v1";
+var correctionTreeScrollStorageKey = "correction-tree-scroll-v1";
+var correctionTreeScrollSavePending = false;
+var correctionTreeRestoringState = false;
+
+function correctionStorageRead(key, fallback) {
+    try {
+        var value = localStorage.getItem(key);
+        return value === null ? fallback : JSON.parse(value);
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function correctionStorageWrite(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        // The page must remain usable when localStorage is unavailable/full.
+    }
+}
+
+function correctionTreeCaptureViewState() {
+    var root = document.getElementById("correction-catalog");
+    var state = {
+        folders: {},
+        scroll: {tree: 0, tabs: 0, page: 0}
+    };
+    var tree;
+    var tabs;
+
+    if (!root)
+        return state;
+    root.querySelectorAll(".correction-tree-folder-node[data-correction-category-id]").forEach(function (node) {
+        var details = node.querySelector(":scope > details");
+        var id = node.getAttribute("data-correction-category-id");
+
+        if (details && id)
+            state.folders[id] = !!details.open;
+    });
+    tree = root.querySelector(".correction-tree-root");
+    tabs = root.querySelector(".tabcontent");
+    state.scroll.tree = tree ? tree.scrollTop : 0;
+    state.scroll.tabs = tabs ? tabs.scrollTop : 0;
+    state.scroll.page = window.scrollY || document.documentElement.scrollTop || 0;
+    return state;
+}
+
+function correctionTreeStoreViewState(state) {
+    if (!state)
+        return;
+    correctionStorageWrite(correctionTreeFoldersStorageKey, state.folders || {});
+    correctionStorageWrite(correctionTreeScrollStorageKey, state.scroll || {});
+}
+
+function correctionTreeRememberViewState() {
+    var state = correctionTreeCaptureViewState();
+
+    correctionTreeStoreViewState(state);
+    return state;
+}
+
+function correctionTreeSaveFolderState() {
+    var state = correctionTreeCaptureViewState();
+
+    correctionStorageWrite(correctionTreeFoldersStorageKey, state.folders);
+}
+
+function correctionTreeSaveScrollState() {
+    var state = correctionTreeCaptureViewState();
+
+    correctionStorageWrite(correctionTreeScrollStorageKey, state.scroll);
+}
+
+function correctionTreeScheduleScrollSave() {
+    if (correctionTreeScrollSavePending)
+        return;
+    correctionTreeScrollSavePending = true;
+    window.requestAnimationFrame(function () {
+        correctionTreeScrollSavePending = false;
+        correctionTreeSaveScrollState();
+    });
+}
+
+function correctionTreeRestoreViewState(state) {
+    var root = document.getElementById("correction-catalog");
+    var folders;
+    var scroll;
+
+    if (!root)
+        return;
+    if (state) {
+        folders = state.folders || {};
+        scroll = state.scroll || {};
+    } else {
+        folders = correctionStorageRead(correctionTreeFoldersStorageKey, null);
+        scroll = correctionStorageRead(correctionTreeScrollStorageKey, null);
+    }
+
+    correctionTreeRestoringState = true;
+    if (folders) {
+        root.querySelectorAll(".correction-tree-folder-node[data-correction-category-id]").forEach(function (node) {
+            var details = node.querySelector(":scope > details");
+            var id = node.getAttribute("data-correction-category-id");
+
+            if (details && Object.prototype.hasOwnProperty.call(folders, id))
+                details.open = !!folders[id];
+        });
+    }
+
+    window.requestAnimationFrame(function () {
+        var tree = root.querySelector(".correction-tree-root");
+        var tabs = root.querySelector(".tabcontent");
+
+        if (scroll) {
+            if (tree)
+                tree.scrollTop = Number(scroll.tree) || 0;
+            if (tabs)
+                tabs.scrollTop = Number(scroll.tabs) || 0;
+            window.scrollTo(window.scrollX || 0, Number(scroll.page) || 0);
+        }
+        // details/toggle events are queued; keep persistence muted until the
+        // restored DOM has had a chance to settle.
+        window.setTimeout(function () {
+            correctionTreeRestoringState = false;
+        }, 0);
+    });
+}
+
+function correctionRestoreActiveTab(viewState) {
     window.setTimeout(function () {
         var root = document.getElementById("correction-catalog");
         var active = localStorage.getItem("correction-catalog-tabs");
@@ -61,20 +190,20 @@ function correctionRestoreActiveTab() {
         var panels;
         var buttons;
 
-        if (!root || !active)
-            return;
-        button = root.querySelector('[data-tabpanel-button][data-tabpanel-tab="' + active + '"]');
-        if (!button)
-            return;
-
-        panels = root.querySelectorAll("[data-tabpanel-content]");
-        panels.forEach(function (panel) {
-            panel.style.display = panel.getAttribute("data-tabpanel-tab") === active ? "block" : "none";
-        });
-        buttons = root.querySelectorAll("[data-tabpanel-button]");
-        buttons.forEach(function (tabButton) {
-            tabButton.classList.toggle("selected", tabButton === button);
-        });
+        if (root && active) {
+            button = root.querySelector('[data-tabpanel-button][data-tabpanel-tab="' + active + '"]');
+            if (button) {
+                panels = root.querySelectorAll("[data-tabpanel-content]");
+                panels.forEach(function (panel) {
+                    panel.style.display = panel.getAttribute("data-tabpanel-tab") === active ? "block" : "none";
+                });
+                buttons = root.querySelectorAll("[data-tabpanel-button]");
+                buttons.forEach(function (tabButton) {
+                    tabButton.classList.toggle("selected", tabButton === button);
+                });
+            }
+        }
+        correctionTreeRestoreViewState(viewState);
     }, 0);
 }
 
@@ -107,14 +236,18 @@ function correctionLibrariesSetExpanded(expanded) {
 
 function correctionMoveAsset(button) {
     var form = button.closest ? button.closest("form") : null;
+    var viewState;
 
     if (!form) {
         console.error("Formulaire de déplacement introuvable.");
         return false;
     }
+    viewState = correctionTreeRememberViewState();
     return silent_submitf(form, {
         tofill: "correction-catalog",
-        after_success: correctionRestoreActiveTab
+        after_success: function () {
+            correctionRestoreActiveTab(viewState);
+        }
     });
 }
 function correctionClearStaleDebug() {
@@ -128,6 +261,7 @@ function correctionClearStaleDebug() {
 
 function correctionTreeRequest(method, path, fields) {
     var form = document.createElement("form");
+    var viewState = correctionTreeRememberViewState();
 
     form.method = method;
     form.action = path;
@@ -144,10 +278,21 @@ function correctionTreeRequest(method, path, fields) {
         after_success: function () {
             form.remove();
             correctionClearStaleDebug();
-            correctionRestoreActiveTab();
+            correctionRestoreActiveTab(viewState);
         }
     });
     return false;
+}
+
+function correctionSubmitWithState(form) {
+    var viewState = correctionTreeRememberViewState();
+
+    return silent_submitf(form, {
+        tofill: "correction-catalog",
+        after_success: function () {
+            correctionRestoreActiveTab(viewState);
+        }
+    });
 }
 
 function correctionTreePromptDirectory(parentId) {
@@ -320,6 +465,8 @@ function correctionUploadPool(categoryId, items, concurrency, state) {
 }
 
 function correctionRefreshCatalog() {
+    var viewState = correctionTreeRememberViewState();
+
     return fetch("/api/correction", {credentials: "same-origin"})
         .then(function (response) { return response.json(); })
         .then(function (packet) {
@@ -330,7 +477,7 @@ function correctionRefreshCatalog() {
             if (root && typeof packet.content === "string")
                 root.innerHTML = packet.content;
             correctionClearStaleDebug();
-            correctionRestoreActiveTab();
+            correctionRestoreActiveTab(viewState);
         });
 }
 
@@ -522,7 +669,43 @@ function correctionTreeExpandAll(opened) {
     document.querySelectorAll("#correction-catalog .correction-tree details").forEach(function (details) {
         details.open = opened;
     });
+    correctionTreeSaveFolderState();
 }
+
+(function correctionInstallTreePersistence() {
+    document.addEventListener("click", function (event) {
+        var summary = event.target.closest && event.target.closest(
+            "#correction-catalog .correction-tree-folder-node > details > summary"
+        );
+
+        if (!summary)
+            return;
+        // The default action toggles <details> after the click handler.
+        window.setTimeout(function () {
+            if (!correctionTreeRestoringState)
+                correctionTreeSaveFolderState();
+        }, 0);
+    }, true);
+
+    document.addEventListener("toggle", function (event) {
+        if (!correctionTreeRestoringState && event.target && event.target.matches &&
+            event.target.matches("#correction-catalog .correction-tree-folder-node > details"))
+            correctionTreeSaveFolderState();
+    }, true);
+
+    document.addEventListener("scroll", function (event) {
+        var target = event.target;
+
+        if (target === document || target === document.documentElement || target === document.body ||
+            (target && target.matches &&
+             target.matches("#correction-catalog .correction-tree-root, #correction-catalog .tabcontent")))
+            correctionTreeScheduleScrollSave();
+    }, true);
+    window.addEventListener("scroll", correctionTreeScheduleScrollSave, {passive: true});
+    window.addEventListener("pagehide", correctionTreeRememberViewState);
+
+    correctionRestoreActiveTab();
+})();
 
 (function correctionInstallTreeDnD() {
     var dragged = null;
@@ -624,11 +807,11 @@ function correctionTreeExpandAll(opened) {
 function correctionConfirmSync(form) {
     if (!confirm("Synchroniser l’intégralité du catalogue Infosphere vers Distrans ? Les fichiers distants absents d’Infosphere seront retirés de la génération active."))
         return false;
-    return silent_submit(form, 'correction-catalog');
+    return correctionSubmitWithState(form);
 }
 function correctionConfirmRollback(form) {
     if (!confirm("Restaurer la génération de corrections précédemment active sur Distrans ?"))
         return false;
-    return silent_submit(form, 'correction-catalog');
+    return correctionSubmitWithState(form);
 }
 </script>

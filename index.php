@@ -74,6 +74,54 @@ load_constants();
 // Tout ce qui concerne la connexion, le log as, le mode admin
 require_once ("login/index.php");
 
+// Endpoint de detail charge uniquement lorsqu'une evaluation est deployee.
+if (isset($_GET["evaluation_detail"]))
+{
+    header("Content-Type: text/html; charset=UTF-8");
+    header("Cache-Control: private, no-store");
+    $aid = filter_input(INPUT_GET, "a", FILTER_VALIDATE_INT);
+    $tid = filter_input(INPUT_GET, "t", FILTER_VALIDATE_INT);
+    $eid = (string)$_GET["evaluation_detail"];
+    if (!$aid || !$tid || !isset($User["id"]))
+    {
+        http_response_code(403);
+        exit;
+    }
+    $allowed = db_select_one("user_team.id FROM user_team
+        INNER JOIN team ON team.id = user_team.id_team
+        WHERE user_team.id_user = ".(int)$User["id"]."
+        AND team.id = ".$tid." AND team.id_activity = ".$aid);
+    if (!$allowed && !(is_admin() || is_teacher_for_activity($aid)))
+    {
+        http_response_code(403);
+        exit;
+    }
+    $owner = db_select_one("team.id FROM team WHERE team.id = ".$tid.
+        " AND team.id_activity = ".$aid);
+    if (!$owner)
+    {
+        http_response_code(404);
+        exit;
+    }
+    $report = evaluation_history_report($aid, $tid, $eid);
+    if ($report === null)
+    {
+        http_response_code(404);
+        echo "Rapport indisponible.";
+    }
+    else
+    {
+        $metadata_file = evaluation_history_root($aid, $tid).'/history/'.$eid.'.json';
+        $metadata = is_file($metadata_file)
+            ? json_decode(file_get_contents($metadata_file), true) : null;
+        if (!is_array($metadata) || ($metadata['id'] ?? '') !== $eid) $metadata = [];
+        echo evaluation_history_comparison_html($metadata['comparison'] ?? null);
+        echo evaluation_history_render($report);
+    }
+    exit;
+}
+
+
 // On trace la visite pour fournir des infos en cas de problème
 trace();
 

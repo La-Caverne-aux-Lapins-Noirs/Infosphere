@@ -2,6 +2,7 @@
 // @codeCoverageIgnoreStart
 $AdjectiveOrder = "Before";
 $Dictionnary = [
+    "Evaluation" => "Evaluation",
     "Scrum" => "Scrum",
     "ScrumSprintLength" => "Sprint length",
     "ScrumWeek" => "week",
@@ -646,6 +647,7 @@ $Dictionnary["UnknownCategory"] = "Unknown correction category";
 $Dictionnary["InvalidCategory"] = "Invalid correction category";
 $Dictionnary["CategoryAlreadyExists"] = "This correction category already exists";
 $Dictionnary["DistransUnavailable"] = "Distrans is unavailable";
+$Dictionnary["NoCorrectionAvailable"] = "No correction configuration is available";
 $Dictionnary["InvalidDistransResponse"] = "Invalid response from Distrans";
 $Dictionnary["CannotReadCorrectionFile"] = "Unable to read the correction file";
 $Dictionnary["UnknownLocalCorrectionFile"] = "Unknown local correction file";
@@ -1401,3 +1403,15 @@ $Dictionnary["InvalidConsoleToken"] = "Invalid or expired console token.";
 $Dictionnary["CannotCreateConsoleToken"] = "Unable to create console token.";
 $Dictionnary["CannotRevokeConsoleToken"] = "Unable to revoke console token.";
 $Dictionnary["ConsoleTokenNotFound"] = "Console token not found.";
+
+$Dictionnary["NoCurrentRepository"] = "The current repository does not exist";
+$Dictionnary["NoPickupContent"] = "No content has been picked up";
+$Dictionnary["NoOfficialDelivery"] = "No official rendering has been performed";
+$Dictionnary["DownloadDelivery"] = "Download the official rendering";
+$Dictionnary["LaunchOfficialCorrection"] = "Launch official correction";
+
+$Dictionnary["BillingInvoiceRemind"] = "Resend invoice";
+$Dictionnary["BillingInvoiceReminderSubject"] = "Reminder — ";
+$Dictionnary["BillingInvoiceReminderSent"] = "Reminder sent";
+$Dictionnary["BillingReminderUnavailable"] = "This invoice cannot be resent.";
+$Dictionnary["BillingInvoiceRemindConfirm"] = "Resend this invoice by email to its recipient?";

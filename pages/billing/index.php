@@ -593,7 +593,7 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
         $credit_capacity = 0;
         if (!$credit_note && (int)$entry["amount"] > 0)
             $credit_capacity = max(0, (int)$entry["amount"] - billing_credit_note_total_for_entry((int)$entry["id"], false));
-        if ($credit_capacity > 0)
+        if ($credit_capacity > 0 || (!$credit_note && empty($entry["paid_date"])))
         {
             $credit_input = number_format($credit_capacity / 100, 2, '.', '');
             $can_view = !billing_is_external_invoice($entry) || billing_invoice_existing_file_path($entry) != "";
@@ -602,6 +602,7 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
                 method="post"
                 action="/api/billing/-1/credit_note"
                 data-credit-action="/api/billing/-1/credit_note"
+                data-remind-action="/api/billing/<?=$entry["id"]; ?>/remind"
                 data-delete-action="/api/billing/<?=$entry["id"]; ?>/entry"
                 data-delete-confirm="<?=$delete_confirm; ?>"
                 class="billing_event_form billing_issued_invoice_form"
@@ -616,11 +617,14 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
                     onclick="return billing_open_pending_invoice_menu(this, event);"
                 ><?=$month; ?></button>
                 <span class="billing_pending_invoice_menu billing_issued_invoice_menu hidden">
-                    <strong><?=$Dictionnary["BillingPrepareCreditNote"]; ?></strong>
+                    <strong><?= $credit_capacity > 0 ? $Dictionnary["BillingPrepareCreditNote"] : ($Dictionnary["BillingInvoice"] ?? "Facture"); ?></strong>
                     <small>
                         <?=$Dictionnary["BillingRelatedInvoice"]; ?> : <?=billing_e(billing_invoice_document_reference($entry)); ?><br />
-                        <?=$Dictionnary["BillingCreditNoteAmount"]; ?> max. : <?=billing_euros($credit_capacity); ?>
+                        <?php if ($credit_capacity > 0) { ?>
+                            <?=$Dictionnary["BillingCreditNoteAmount"]; ?> max. : <?=billing_euros($credit_capacity); ?>
+                        <?php } ?>
                     </small>
+                    <?php if ($credit_capacity > 0) { ?>
                     <label>
                         <span><?=$Dictionnary["BillingCreditNoteAmount"]; ?></span>
                         <input type="text" name="amount" value="<?=$credit_input; ?>" required />
@@ -633,15 +637,23 @@ function billing_render_invoice_event($entry, $student_id, $covered_amount = 0)
                         <span><?=$Dictionnary["BillingCreditNoteReason"]; ?></span>
                         <input type="text" name="label" />
                     </label>
+                    <?php } ?>
                     <div class="billing_pending_invoice_actions">
                         <?php if ($can_view) { ?>
                             <a href="/api/billing/<?=$entry["id"]; ?>/invoice" target="_blank" onclick="event.stopPropagation();">
                                 <?=$Dictionnary["ViewInvoice"]; ?>
                             </a>
                         <?php } ?>
+                        <?php if (!$credit_note && empty($entry["paid_date"])) { ?>
+                            <button type="button" data-confirm="<?=billing_e($Dictionnary["BillingInvoiceRemindConfirm"]); ?>" onclick="return billing_remind_issued_invoice(this, event);">
+                                <?=$Dictionnary["BillingInvoiceRemind"]; ?>
+                            </button>
+                        <?php } ?>
+                        <?php if ($credit_capacity > 0) { ?>
                         <button type="button" onclick="return billing_prepare_credit_note_from_invoice(this, event);">
                             <?=$Dictionnary["BillingPrepareCreditNote"]; ?>
                         </button>
+                        <?php } ?>
                         <button type="button" onclick="return billing_pending_invoice_delete(this, event);">
                             <?=$Dictionnary["Delete"]; ?>
                         </button>

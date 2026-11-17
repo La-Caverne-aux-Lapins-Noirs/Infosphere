@@ -110,8 +110,7 @@ if ($activity->unique_session
 	|| $activity->progressive_slot_opening
 	|| $activity->team_based_slot_opening))
     $right_panel[$Dictionnary["AppointmentSlots"]] = __DIR__."/slots.php";
-if ($activity->evaluation != NULL)
-    $right_panel[$Dictionnary["Evaluation"]] = __DIR__."/evaluation.php";
+$right_panel[($Dictionnary["Evaluation"] ?? "Évaluation")] = __DIR__."/evaluation.php";
 
 $right_panel[$Dictionnary["OpinionOnActivity"]] = __DIR__."/opinion.php";
 if ($activity->is_assistant && count(activity_quiz_entrypoint_quizzes($activity, "rubric")) > 0)
@@ -171,6 +170,29 @@ if ($activity->is_assistant)
      margin-bottom: 4px;
  }
  .automatic_evaluation_status_detail,
+ .automatic_evaluation_alert_controls
+ {
+     margin-top: 6px;
+     display: flex;
+     flex-wrap: wrap;
+     align-items: center;
+     gap: 8px;
+ }
+ .automatic_evaluation_alert_toggle
+ {
+     cursor: pointer;
+     font-size: small;
+ }
+ .automatic_evaluation_alert_warning
+ {
+     color: #f0bd58;
+     font-weight: bold;
+     font-size: small;
+ }
+ .automatic_evaluation_alert_warning[hidden]
+ {
+     display: none;
+ }
  .automatic_evaluation_countdown
  {
      font-size: small;
@@ -300,10 +322,115 @@ if ($activity->is_assistant)
      return "au prochain passage";
  }
 
+ // The browser requires a user gesture before Web Audio can produce sound.
+ function automatic_evaluation_alert_key(node)
+ {
+     return "infosphere:auto-evaluation-alert:" + node.getAttribute("data-activity-id");
+ }
+
+ function automatic_evaluation_alert_enabled(node)
+ {
+     try { return localStorage.getItem(automatic_evaluation_alert_key(node)) === "1"; }
+     catch (e) { return false; }
+ }
+
+ function automatic_evaluation_alert_update_button(node)
+ {
+     let button = node.querySelector(".automatic_evaluation_alert_toggle");
+     if (!button) return;
+     let enabled = automatic_evaluation_alert_enabled(node);
+     button.textContent = enabled
+         ? (window.automatic_evaluation_audio && window.automatic_evaluation_audio.state === "running"
+             ? "🔔 Alerte sonore activée" : "🔔 Cliquer pour autoriser le son")
+         : "🔕 Activer l’alerte sonore";
+     button.setAttribute("aria-pressed", enabled ? "true" : "false");
+ }
+
+ // AudioContext is resumed by the click handler, rather than from a timer.
+ window.automatic_evaluation_audio = window.automatic_evaluation_audio || null;
+ function automatic_evaluation_alert_toggle(button)
+ {
+     let node = button.closest(".automatic_evaluation_status");
+     if (!node) return;
+     let enabled = !automatic_evaluation_alert_enabled(node)
+         || !window.automatic_evaluation_audio
+         || window.automatic_evaluation_audio.state !== "running";
+     try { localStorage.setItem(automatic_evaluation_alert_key(node), enabled ? "1" : "0"); }
+     catch (e) { enabled = false; }
+     if (enabled)
+     {
+         try
+         {
+             let Context = window.AudioContext || window.webkitAudioContext;
+             if (Context && !window.automatic_evaluation_audio)
+                 window.automatic_evaluation_audio = new Context();
+             if (window.automatic_evaluation_audio)
+                 window.automatic_evaluation_audio.resume().catch(function() {});
+         }
+         catch (e) {}
+     }
+     automatic_evaluation_alert_update_button(node);
+     automatic_evaluation_refresh_countdowns();
+ }
+
+ function automatic_evaluation_alert_play()
+ {
+     let ctx = window.automatic_evaluation_audio;
+     if (!ctx || ctx.state !== "running") return false;
+     try
+     {
+         [0, 0.24].forEach(function(delay) {
+             let oscillator = ctx.createOscillator();
+             let volume = ctx.createGain();
+             let start = ctx.currentTime + delay;
+             oscillator.type = "sine";
+             oscillator.frequency.value = 880;
+             volume.gain.setValueAtTime(0.0001, start);
+             volume.gain.exponentialRampToValueAtTime(0.16, start + 0.015);
+             volume.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
+             oscillator.connect(volume);
+             volume.connect(ctx.destination);
+             oscillator.start(start);
+             oscillator.stop(start + 0.19);
+         });
+         return true;
+     }
+     catch (e) { return false; }
+ }
+
+ function automatic_evaluation_alert_check(node, now)
+ {
+     automatic_evaluation_alert_update_button(node);
+     let warning = node.querySelector(".automatic_evaluation_alert_warning");
+     if (!warning) return;
+     let next = parseInt(node.getAttribute("data-next-timestamp") || "0", 10);
+     let active = node.getAttribute("data-alert-active") === "1";
+     let due = next - now;
+     warning.hidden = !active || due <= 0 || due > 300;
+     if (warning.hidden || !automatic_evaluation_alert_enabled(node)) return;
+     let key = automatic_evaluation_alert_key(node) + ":last";
+     let token = String(next);
+     try
+     {
+         if (localStorage.getItem(key) === token) return;
+         // Avoid repeating alerts on refresh, even if playback is browser-blocked.
+         localStorage.setItem(key, token);
+     }
+     catch (e) { return; }
+     if (!automatic_evaluation_alert_play())
+         warning.textContent = "Évaluation dans moins de 5 minutes — audio bloqué par le navigateur.";
+     else
+         warning.textContent = "Évaluation dans moins de 5 minutes !";
+ }
+
  function automatic_evaluation_refresh_countdowns()
  {
      let now = Math.floor(Date.now() / 1000);
 
+     Array.prototype.forEach.call(
+         document.getElementsByClassName("automatic_evaluation_status"),
+         function(node) { automatic_evaluation_alert_check(node, now); }
+     );
      Array.prototype.forEach.call(
          document.getElementsByClassName("automatic_evaluation_countdown"),
          function(node) {

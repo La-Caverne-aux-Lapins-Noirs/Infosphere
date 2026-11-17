@@ -14,17 +14,23 @@
   Label = "Établissement"
   {Read
     "Admission",
+    "FormationAttestation",
     "FraisAdmission",
+    "SignatureAttestation",
     "Direction"
   }
   {Edit
     "Admission",
+    "FormationAttestation",
     "FraisAdmission",
+    "SignatureAttestation",
     "Direction"
   }
   {Validate
     "Admission",
+    "FormationAttestation",
     "FraisAdmission",
+    "SignatureAttestation",
     "Direction"
   }
 ]
@@ -32,12 +38,18 @@
 [AdmissionGeneration
   Label = "Génération de l'attestation d'admission"
   {Read
-    "FraisAdmission"
+    "FormationAttestation",
+    "FraisAdmission",
+    "SignatureAttestation"
   }
   {Edit
-    "FraisAdmission"
+    "FormationAttestation",
+    "FraisAdmission",
+    "SignatureAttestation"
   }
   {Validate
-    "FraisAdmission"
+    "FormationAttestation",
+    "FraisAdmission",
+    "SignatureAttestation"
   }
 ]
