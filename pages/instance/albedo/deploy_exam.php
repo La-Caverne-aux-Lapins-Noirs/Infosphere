@@ -1,5 +1,7 @@
 <?php
 // On prépare les environnements d'exam pour les élèves concernés
+if (empty($HandOk))
+    return;
 
 $begin = db_form_date(now());
 $end = db_form_date(now() + 60 * 3);
@@ -11,6 +13,7 @@ $activities = db_select_all("
   FROM activity
   LEFT JOIN activity as template ON activity.id_template = template.id
   WHERE activity.is_template = 0
+    AND activity.deleted IS NULL
     AND activity.subject_appeir_date >= '$begin'
     AND activity.subject_appeir_date <= '$end'
     AND (activity.repository_name != '' OR template.repository_name != '')
@@ -33,7 +36,12 @@ foreach ($activities as $act)
     LEFT JOIN user_team ON team.id = user_team.id_team
     LEFT JOIN user ON user_team.id_user = user.id
     WHERE activity.id = $id_activity
+      AND user_team.status > 0
+      AND user.deleted IS NULL
+      AND user.profile_status = 'member'
     ");
+    if (!$users)
+        continue;
 
     //add_log(TRACE, "User list : ".print_r($users, true), 1); // -> Résultat correct aux attentes
     
@@ -63,7 +71,7 @@ foreach ($activities as $act)
     }
     
     if (strlen($repo = $activity->repository_name) == 0)
-	return (new ErrorResponse("NoRepositoryConfigured"));
+	continue;
 
     $ret = hand_request([
 	"command" => "deployexam",
@@ -72,7 +80,7 @@ foreach ($activities as $act)
 	"subject_name" => base64_encode($subject_name),
 	"subject" => base64_encode($activity_subject),
 	"room" => $room
-    ]);
+    ], true, 30);
 
     if (!isset($ret["result"]))
 	add_log(TRACE, "Failed to load exam session", true);

@@ -26,7 +26,8 @@ function run_ssh_packet_with_inline_key(
     string $account,
     string $host,
     int $port,
-    string $private_key
+    string $private_key,
+    int $timeout = 0
 ): array {
     $runtime_dirs = [
         "/run/distrans",
@@ -94,6 +95,8 @@ function run_ssh_packet_with_inline_key(
         "-o", "LogLevel=ERROR",
         $account . "@" . $host,
     ];
+    if ($timeout > 0)
+        $cmd = array_merge(["timeout", (string)$timeout], $cmd);
 
     $descriptors = [
         0 => ["pipe", "r"], // child stdin  : child reads, parent writes
@@ -134,7 +137,7 @@ function run_ssh_packet_with_inline_key(
     ];
 }
 
-function hand_request(array $data, bool $code = true)
+function hand_request(array $data, bool $code = true, int $timeout = 0)
 {
     global $Configuration;
 
@@ -171,7 +174,7 @@ function hand_request(array $data, bool $code = true)
         return (false);
     }
 
-    $out = run_ssh_packet_with_inline_key($packet, $acc, $url, $port, $key);
+    $out = run_ssh_packet_with_inline_key($packet, $acc, $url, $port, $key, $timeout);
 
     if ($albx != "")
         distrans_clear_challenge($albx, $rnd);

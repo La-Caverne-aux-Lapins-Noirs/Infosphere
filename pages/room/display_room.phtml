@@ -1,4 +1,13 @@
 <?php
+$exam_state = $room["exam_mode"] ?? (!empty($room["is_exam"]) ? "exam" : NULL);
+$exam_label = match ($exam_state) {
+    "exam" => $Dictionnary["ExamInProgress"],
+    "upcoming" => $Dictionnary["ExamUpcoming"],
+    "normal" => $Dictionnary["RoomExamNormal"],
+    "unknown" => $Dictionnary["RoomExamUnknown"],
+    default => "",
+};
+$exam_name = htmlspecialchars((string)($room["exam"]["name"] ?? ""), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
 $room_presences = [];
 foreach ($room["desk"] as $presence_desk)
 {
@@ -95,9 +104,10 @@ $room_user_status_label = function ($usr) use ($Dictionnary)
 	<br />
 	<h5>
 	    <?=$room["name"]; ?><?=is_admin() ? " (".$room["codename"].")" : ""; ?>
-	    <?php if (!empty($room["is_exam"])) { ?>
-		<span class="room_exam_badge" title="<?=htmlentities((string)$room["exam"]["name"]); ?>">
-		    <?=$Dictionnary["ExamInProgress"]; ?>
+	    <?php if ($exam_label !== "") { ?>
+		<span class="<?=($exam_state === "exam" || $exam_state === "upcoming") ? "room_exam_badge" : "room_exam_status"; ?>" title="<?=$exam_name; ?>">
+		    <?=$exam_label; ?>
+		    <?php if ($exam_state === "upcoming" && !empty($room["exam_start_at"])) echo " ".date("H:i", (int)$room["exam_start_at"]); ?>
 		</span>
 	    <?php } ?>
 	</h5>
@@ -125,10 +135,10 @@ $room_user_status_label = function ($usr) use ($Dictionnary)
 		: <?=$room["capacity"]; ?><br />
 	    <?php } ?>
 	</form>
-	<?php if (!empty($room["is_exam"])) { ?>
+	<?php if ($exam_state === "exam" && $exam_name !== "") { ?>
 	    <p class="room_exam_notice">
 		<?=$Dictionnary["RoomInExam"]; ?>:
-		<?=htmlentities((string)$room["exam"]["name"]); ?>
+		<?=$exam_name; ?>
 	    </p>
 	<?php } ?>
 	<?php if ($isdir) { ?>

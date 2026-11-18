@@ -325,33 +325,35 @@ function PickupActivity($id, $data, $method, $output, $module)
     if (strlen($activity_name = $activity->repository_name) == 0)
 	return (new ErrorResponse("NoRepositoryConfigured"));
 
+    $is_exam = presence_declaration_is_exam_activity($activity);
+    $request = [
+	"command" => "retrieve",
+	"user" => $team_leader,
+	"repo" => $activity_name,
+	"alive" => $alive,
+	"official" => $official,
+	"is_exam" => $is_exam
+    ];
+    if ($is_exam && (!$alive || $official))
+    {
+	$marker = exam_workflow_final_marker((int)$team);
+	$request["archive_name"] = exam_workflow_archive_name($marker);
+	if ($official && ($marker["status"] ?? "") !== activity_delivery_final_status_delivered())
+	    return (new ErrorResponse("NoOfficialDelivery"));
+    }
     if ($correction === true)
     {
 	// Faire en sorte de retourner deux variables et les base64 différement pour les mettre dans le json
 	[$actConf, $allowFunc, $correction_error] = build_evaluator_configuration($activity, $user_id);
 	if ($actConf === NULL || $allowFunc === NULL)
 	    return (new ErrorResponse("NoCorrectionAvailable", $correction_error));
-	$ret = hand_request([
-	    "command" => "retrieve",
-	    "user" => $team_leader,
-	    "repo" => $activity_name,
-	    "alive" => $alive,
-	    "official" => $official,
-	    "correction" => $correction,
+	$request += [
+	    "correction" => true,
 	    "configuration" => base64_encode($actConf),
-	    "allowFunc" => base64_encode($allowFunc),
-	    "is_exam" => ((isset($activity->type) ? (int)$activity->type : 0) >= 5
-		       && (isset($activity->type) ? (int)$activity->type : 0) <= 9)
-	]);
+	    "allowFunc" => base64_encode($allowFunc)
+	];
     }
-    else
-	$ret = hand_request([
-	    "command" => "retrieve",
-	    "user" => $team_leader,
-	    "repo" => $activity_name,
-	    "alive" => $alive,
-	    "official" => $official
-	]);
+    $ret = hand_request($request, true, $is_exam ? 185 : 0);
 
     // On élimine les erreurs
     if (!isset($ret["result"]) || $ret["result"] != "ok" || !isset($ret["content"]))

@@ -4,7 +4,7 @@ function DisplayRoom($id, $data, $method, $output, $module)
 {
     global $Dictionnary;
 
-    $rooms = fetch_rooms();
+    $rooms = fetch_rooms(-1, false, exam_room_statuses());
     if ($output == "json")
 	return (new ValueResponse(["content" => json_encode($rooms, JSON_UNESCAPED_SLASHES)]));
 

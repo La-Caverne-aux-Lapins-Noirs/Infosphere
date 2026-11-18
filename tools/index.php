@@ -153,6 +153,8 @@ require_once ("activity_quiz.php");
 require_once ("fulliframe.php");
 require_once ("vertical_text.php");
 require_once ("fetch_rooms.php");
+require_once ("exam_schedule.php");
+require_once ("exam_workflow.php");
 require_once ("fetch_cycle.php");
 require_once ("fetch_medal.php");
 require_once ("fetch_activity_cycle.php"); // A retirer

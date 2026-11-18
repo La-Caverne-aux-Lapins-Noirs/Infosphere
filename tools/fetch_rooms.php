@@ -1,10 +1,13 @@
 <?php
 
-function fetch_room_current_exam($id_room)
+function fetch_room_current_exam($id_room, $id_session = NULL)
 {
     global $Language;
 
     $id_room = (int)$id_room;
+    $when = $id_session === NULL
+        ? "session.begin_date <= NOW() AND session.end_date > NOW()"
+        : "session.id = ".(int)$id_session;
     $exam = db_select_one("
         activity.id,
         activity.codename,
@@ -19,14 +22,13 @@ function fetch_room_current_exam($id_room)
           AND activity.deleted IS NULL
           AND activity.type >= 5
           AND activity.type <= 9
-          AND session.begin_date <= NOW()
-          AND session.end_date >= NOW()
+          AND $when
         ORDER BY session.begin_date ASC
     ");
     return ($exam ? $exam : NULL);
 }
 
-function fetch_rooms($id = -1, $by_name = false)
+function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
 {
     global $Configuration;
     global $Language;
@@ -39,9 +41,9 @@ function fetch_rooms($id = -1, $by_name = false)
 	) as $lab)
 	{
 	    if ($by_name)
-		$out[$lab["codename"]] = fetch_rooms($lab["id"], $by_name);
+		$out[$lab["codename"]] = fetch_rooms($lab["id"], $by_name, $exam_states);
 	    else
-		$out[] = fetch_rooms($lab["id"], $by_name);
+		$out[] = fetch_rooms($lab["id"], $by_name, $exam_states);
 	}
 	return ($out);
     }
@@ -76,8 +78,19 @@ function fetch_rooms($id = -1, $by_name = false)
     else
 	$lab["map"] = NULL;
 
-    $lab["exam"] = fetch_room_current_exam($lab["id"]);
-    $lab["is_exam"] = $lab["exam"] !== NULL;
+    if ($exam_states === false)
+    {
+        $lab["exam"] = fetch_room_current_exam($lab["id"]);
+        $lab["is_exam"] = $lab["exam"] !== NULL;
+    }
+    else
+    {
+        $state = $exam_states[$lab["codename"]] ?? [];
+        $lab["exam_mode"] = $state["mode"] ?? ($exam_states === NULL ? "unknown" : "normal");
+        $lab["exam_start_at"] = $state["start_at"] ?? NULL;
+        $lab["exam"] = isset($state["session_id"]) ? fetch_room_current_exam($lab["id"], $state["session_id"]) : NULL;
+        $lab["is_exam"] = $lab["exam_mode"] === "exam";
+    }
 
     $lab["desk"] = db_select_all("
         *

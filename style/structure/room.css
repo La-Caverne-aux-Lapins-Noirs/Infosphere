@@ -297,6 +297,13 @@
     margin: 0px 8px 4px 8px;
 }
 
+.room_exam_status
+{
+    margin-left: 4px;
+    font-size: x-small;
+    font-weight: normal;
+}
+
 .room_presence_avatar.room_user_locked img
 {
     filter: grayscale(100%);

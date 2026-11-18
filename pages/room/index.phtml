@@ -55,7 +55,7 @@ $TypeLabels = [
 
 <div class="fullscreen scrollable" id="roomlist">
     <?php
-    $rooms = $trooms = fetch_rooms(-1, true);
+    $rooms = $trooms = fetch_rooms(-1, true, exam_room_statuses());
     if (($my_room = where_am_i()) != NULL)
     {
 	$rooms = [];

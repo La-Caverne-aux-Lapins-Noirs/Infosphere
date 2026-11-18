@@ -2,7 +2,8 @@
 
 function presence_declaration_is_exam_activity($activity)
 {
-    return ((int)$activity->type >= 5 && (int)$activity->type <= 9);
+    $type = (int)($activity->type ?? 0);
+    return ($type >= 5 && $type <= 9);
 }
 
 function presence_declaration_is_available_for_activity($activity)

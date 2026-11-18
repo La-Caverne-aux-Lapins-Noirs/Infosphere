@@ -170,7 +170,7 @@ function activity_automatic_evaluation_status_model($activity)
         "teacher_view" => $activity->is_assistant,
     ];
 
-    if ($cfg == NULL)
+    if ($cfg == NULL || (presence_declaration_is_exam_activity($activity) && (int)($activity->reference_activity ?? 0) <= 0))
         return ($model);
     $model["frequency"] = (int)$cfg["frequency"];
     if ($model["frequency"] <= 0)
@@ -220,7 +220,7 @@ function activity_automatic_evaluation_status_model($activity)
 }
 
 
-function activity_automatic_evaluation_record($team_id, $ok, $message = "")
+function activity_automatic_evaluation_record($team_id, $ok, $message = "", ?string $date = null)
 {
     global $Database;
 
@@ -229,6 +229,7 @@ function activity_automatic_evaluation_record($team_id, $ok, $message = "")
     $message = $Database->real_escape_string($message);
     $observation = $ok ? "'$message'" : "NULL";
     $errors = $ok ? "NULL" : "'$message'";
+    $pickedup_date = $date === null ? "NOW()" : "'" . $Database->real_escape_string($date) . "'";
     $previous = db_select_one("
         id
         FROM pickedup_work
@@ -242,7 +243,7 @@ function activity_automatic_evaluation_record($team_id, $ok, $message = "")
         $id = (int)$previous["id"];
         $Database->query("
             UPDATE pickedup_work
-            SET pickedup_date = NOW(),
+            SET pickedup_date = $pickedup_date,
                 observation = $observation,
                 errors = $errors
             WHERE id = $id
@@ -252,7 +253,7 @@ function activity_automatic_evaluation_record($team_id, $ok, $message = "")
     $Database->query("
         INSERT INTO pickedup_work
         (id_team, pickedup_date, status, observation, errors)
-        VALUES ($team_id, NOW(), '$status', $observation, $errors)
+        VALUES ($team_id, $pickedup_date, '$status', $observation, $errors)
     ");
 }
 
@@ -310,6 +311,7 @@ function activity_automatic_evaluation_candidate_rows()
         LEFT JOIN user ON user_team.id_user = user.id
         WHERE activity.is_template = 0
           AND activity.deleted IS NULL
+          AND (activity.type IS NULL OR activity.type NOT BETWEEN 5 AND 9 OR activity.reference_activity > 0)
           AND team.id IS NOT NULL
           AND team.closed IS NULL
           AND ($frequency) > 0
