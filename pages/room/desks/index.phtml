@@ -9,6 +9,7 @@ $rooms = db_select_all("
     ORDER BY name
 ", "id");
 $desks = db_select_all("* FROM room_desk ORDER BY codename, id", "id");
+$users_by_desk = fetch_room_desk_users(array_keys($desks));
 $editable_rooms = array_filter($rooms, static fn($room) => room_desk_can_work_on_room($room["id"]));
 $can_unassign = room_desk_can_work_on_room(-1);
 $can_edit_desk = static function ($desk) use ($editable_rooms, $can_unassign) {
@@ -92,7 +93,7 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
             <table>
                 <thead>
                     <tr>
-                        <?php foreach (["DeskName", "Room", "Type", "IpAddress", "MacAddress", "Status"] as $label) { ?>
+                        <?php foreach (["DeskName", "Room", "Type", "IpAddress", "MacAddress", "Status", "RoomDeskUsedBy"] as $label) { ?>
                             <th scope="col"><?=$escape($Dictionnary[$label]); ?></th>
                         <?php } ?>
                         <th scope="col"><?=$escape($huile_label); ?></th>
@@ -104,7 +105,9 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                         $room_id = (int)$desk["id_room"];
                         $room_name = $room_id <= 0 ? $Dictionnary["RoomDeskUnassigned"]
                             : ($rooms[$room_id]["name"] ?? $Dictionnary["RoomDeskRoomUnavailable"]);
-                        $status = room_desk_is_recent($desk) ? (int)($desk["status"] ?? 3) : 3;
+                        $recent = room_desk_is_recent($desk);
+                        $status = $recent ? (int)($desk["status"] ?? 3) : 3;
+                        $desk_users = $recent ? ($users_by_desk[$desk["id"]] ?? []) : [];
                     ?>
                         <tr>
                             <th scope="row"><?=$escape($desk["codename"]); ?></th>
@@ -113,6 +116,29 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                             <td><?=$escape($desk["ip"] ?: $empty_value); ?></td>
                             <td><?=$escape($desk["mac"] ?: $empty_value); ?></td>
                             <td><?=$escape($Status[$status] ?? $Status[3]); ?></td>
+                            <td>
+                                <?php if ($desk_users === []) { ?>
+                                    <?=$empty_value; ?>
+                                <?php } else { ?>
+                                    <ul class="room_desks_users">
+                                        <?php foreach ($desk_users as $desk_user) {
+                                            $codename = $escape($desk_user["codename"] ?? $empty_value);
+                                            $session_label = $desk_user["distant"]
+                                                ? ($desk_user["locked"] ? $Dictionnary["SSHIdle"] : "SSH")
+                                                : $Dictionnary["RoomDeskLocalSession"];
+                                        ?>
+                                            <li>
+                                                <?php if ($desk_user["id"] !== null && $desk_user["codename"] !== null) { ?>
+                                                    <a href="index.php?p=ProfileMenu&amp;a=<?=(int)$desk_user["id"]; ?>"><?=$codename; ?></a>
+                                                <?php } else { ?>
+                                                    <?=$codename; ?>
+                                                <?php } ?>
+                                                <small>(<?=$escape($session_label); ?>)</small>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                <?php } ?>
+                            </td>
                             <td><?=$escape(($desk["huile_version"] ?? "") ?: $empty_value); ?></td>
                             <td>
                                 <?php if ($can_edit_desk($desk)) { ?>

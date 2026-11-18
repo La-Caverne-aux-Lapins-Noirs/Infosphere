@@ -37,6 +37,13 @@
     overflow-wrap: anywhere;
 }
 
+.room_desks_users
+{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 .room_desks_editor
 {
     padding: 12px;

@@ -33,6 +33,36 @@ function room_desk_is_recent(array $desk): bool
     return !empty($desk["last_update"]) && now() - date_to_timestamp($desk["last_update"]) <= 60 * 5;
 }
 
+function fetch_room_desk_users(array $desk_ids): array
+{
+    if ($desk_ids === [])
+        return [];
+
+    $ids = implode(", ", array_map("intval", $desk_ids));
+    $system_codename = room_desk_user_codename_column_exists() ? "room_desk_user.codename" : "NULL";
+    $users_by_desk = [];
+    foreach (db_select_all("
+        room_desk_user.id_room_desk,
+        room_desk_user.id_user AS id,
+        COALESCE(user.codename, $system_codename) AS codename,
+        $system_codename AS system_codename,
+        room_desk_user.distant,
+        room_desk_user.locked,
+        room_desk_user.last_update
+        FROM room_desk_user
+        LEFT JOIN user ON room_desk_user.id_user = user.id
+        WHERE room_desk_user.id_room_desk IN ($ids)
+          AND TIMESTAMPDIFF(SECOND, room_desk_user.last_update, NOW()) < 60 * 5
+        ORDER BY room_desk_user.id_room_desk, room_desk_user.distant, room_desk_user.id
+    ") as $user)
+    {
+        $desk_id = $user["id_room_desk"];
+        unset($user["id_room_desk"]);
+        $users_by_desk[$desk_id][] = $user;
+    }
+    return $users_by_desk;
+}
+
 function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
 {
     global $Configuration;
@@ -102,6 +132,7 @@ function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
         FROM room_desk
         WHERE room_desk.id_room = {$lab["id"]}
 	", $by_name ? "codename" : "");
+    $desk_users = fetch_room_desk_users(array_column($lab["desk"], "id"));
     $lab["occupied"] = 0;
     $lab["computer_available"] = 0;
     foreach ($lab["desk"] as &$d)
@@ -109,21 +140,7 @@ function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
 	$desk_is_alive = room_desk_is_recent($d);
 	if (!$desk_is_alive)
 	    $d["status"] = 3; // Unavailable
-	$select_system_codename = in_array("codename", db_select_rows("room_desk_user"))
-	    ? "room_desk_user.codename"
-	    : "NULL";
-	$d["users"] = db_select_all("
-	  room_desk_user.id_user as id,
-	  COALESCE(user.codename, $select_system_codename) as codename,
-	  $select_system_codename as system_codename,
-	  room_desk_user.distant,
-	  room_desk_user.locked,
-	  room_desk_user.last_update
-	  FROM room_desk_user
-          LEFT JOIN user ON room_desk_user.id_user = user.id
-          WHERE room_desk_user.id_room_desk = {$d["id"]}
-	  AND TIMESTAMPDIFF(SECOND, room_desk_user.last_update, NOW()) < 60 * 5
-	  ");
+	$d["users"] = $desk_users[$d["id"]] ?? [];
 	$d["physical_user_count"] = 0;
 	$d["ssh_user_count"] = 0;
 	$d["locked_user_count"] = 0;
