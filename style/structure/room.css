@@ -44,6 +44,11 @@
     list-style: none;
 }
 
+.room_desks_upgrade form
+{
+    margin-top: 6px;
+}
+
 .room_desks_editor
 {
     padding: 12px;

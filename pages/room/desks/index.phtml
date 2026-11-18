@@ -1,6 +1,7 @@
 <?php
 
 require (dirname(__DIR__)."/desk_labels.php");
+require_once dirname(__DIR__, 3)."/tools/room_desk_upgrade.php";
 
 $rooms = db_select_all("
     id, COALESCE(NULLIF({$Language}_name, ''), codename) AS name
@@ -10,6 +11,8 @@ $rooms = db_select_all("
 ", "id");
 $desks = db_select_all("* FROM room_desk ORDER BY codename, id", "id");
 $users_by_desk = fetch_room_desk_users(array_keys($desks));
+$upgrade_states = room_desk_upgrade_states($desks);
+$upgrade_token = room_desk_upgrade_token();
 $editable_rooms = array_filter($rooms, static fn($room) => room_desk_can_work_on_room($room["id"]));
 $can_unassign = room_desk_can_work_on_room(-1);
 $can_edit_desk = static function ($desk) use ($editable_rooms, $can_unassign) {
@@ -26,7 +29,7 @@ $empty_value = "—";
 $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
 ?>
 
-<section class="room_desks">
+<section class="room_desks" data-upgrade-unavailable="<?=$escape($Dictionnary["RoomDeskUpgradeUnavailable"]); ?>">
     <a href="index.php?p=RoomsMenu"><?=$escape($Dictionnary["Rooms"]); ?></a>
     <h2><?=$escape($Dictionnary["RoomDesks"]); ?></h2>
 
@@ -97,6 +100,7 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                             <th scope="col"><?=$escape($Dictionnary[$label]); ?></th>
                         <?php } ?>
                         <th scope="col"><?=$escape($huile_label); ?></th>
+                        <th scope="col"><?=$escape($Dictionnary["RoomDeskUpgrade"]); ?></th>
                         <th scope="col"><?=$escape($Dictionnary["Actions"]); ?></th>
                     </tr>
                 </thead>
@@ -108,6 +112,7 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                         $recent = room_desk_is_recent($desk);
                         $status = $recent ? (int)($desk["status"] ?? 3) : 3;
                         $desk_users = $recent ? ($users_by_desk[$desk["id"]] ?? []) : [];
+                        $upgrade = $upgrade_states[$desk["id"]];
                     ?>
                         <tr>
                             <th scope="row"><?=$escape($desk["codename"]); ?></th>
@@ -139,7 +144,20 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                                     </ul>
                                 <?php } ?>
                             </td>
-                            <td><?=$escape(($desk["huile_version"] ?? "") ?: $empty_value); ?></td>
+                            <td data-desk-huile="<?=(int)$desk["id"]; ?>"><?=$escape(($desk["huile_version"] ?? "") ?: $empty_value); ?></td>
+                            <td class="room_desks_upgrade" data-desk-upgrade="<?=(int)$desk["id"]; ?>">
+                                <span role="status"><?=$escape($upgrade["label"]); ?></span>
+                                <?php if (room_desk_can_work_on_room($desk["id_room"])) { ?>
+                                    <form method="post" action="/api/desk/<?=(int)$desk["id"]; ?>/upgrade"
+                                          onsubmit="return room_desks_upgrade_submit(this);">
+                                        <input type="hidden" name="upgrade_token" value="<?=$escape($upgrade_token); ?>">
+                                        <button type="submit"<?=$upgrade["can_request"] ? "" : " disabled"; ?>
+                                                aria-label="<?=$escape($Dictionnary["RoomDeskUpgradeAction"]." ".$desk["codename"]); ?>">
+                                            <?=$escape($Dictionnary["RoomDeskUpgradeAction"]); ?>
+                                        </button>
+                                    </form>
+                                <?php } ?>
+                            </td>
                             <td>
                                 <?php if ($can_edit_desk($desk)) { ?>
                                     <a href="index.php?p=RoomDesksMenu&amp;desk=<?=(int)$desk["id"]; ?>#room-desk-editor"

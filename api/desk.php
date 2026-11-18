@@ -1,5 +1,34 @@
 <?php
 
+require_once __DIR__ . '/../tools/room_desk_upgrade.php';
+
+function UpgradeDesk($id, $data, $method, $output, $module)
+{
+    global $Dictionnary;
+
+    $token = room_desk_upgrade_token();
+    if (!am_i_director() || (int)$id <= 0 || !is_string($data['upgrade_token'] ?? null)
+        || $token === '' || !hash_equals($token, $data['upgrade_token']))
+        bad_request();
+    $desk = db_select_one("id, id_room, mac FROM room_desk WHERE id = " . (int)$id);
+    if ($desk === null || !room_desk_can_work_on_room($desk['id_room']))
+        bad_request();
+    if (filter_var($desk['mac'], FILTER_VALIDATE_MAC) === false)
+        return new ErrorResponse('RoomDeskUpgradeUnsupported');
+    $response = hand_request(['command' => 'request_machine_upgrade', 'mac' => $desk['mac']], true, 10);
+    if (($response['result'] ?? '') !== 'ok' || !is_array($response['upgrade'] ?? null))
+        return new ErrorResponse('RoomDeskUpgradeRequestFailed');
+    return new ValueResponse(['msg' => $Dictionnary['RoomDeskUpgradeRequested']]);
+}
+
+function GetDeskUpgradeStates($id, $data, $method, $output, $module)
+{
+    if (!am_i_director())
+        bad_request();
+    $desks = db_select_all("id, id_room, mac, huile_version FROM room_desk", "id");
+    return new ValueResponse(['content' => room_desk_upgrade_states($desks)]);
+}
+
 function room_desk_sql_string($value)
 {
     global $Database;
@@ -122,9 +151,19 @@ function AddDesk($id, $data, $method, $output, $module)
 
 $Tab = [
     "POST" => [
+        "upgrade" => [
+            "am_i_director",
+            "UpgradeDesk"
+        ],
         "" => [
             "am_i_director",
             "AddDesk"
+        ]
+    ],
+    "GET" => [
+        "upgrade_states" => [
+            "am_i_director",
+            "GetDeskUpgradeStates"
         ]
     ],
     "PUT" => [
