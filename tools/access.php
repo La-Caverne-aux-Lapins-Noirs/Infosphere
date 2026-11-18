@@ -784,6 +784,13 @@ function is_director_for_room($id)
     return (false);
 }
 
+function room_desk_can_work_on_room($id_room)
+{
+    if ((int)$id_room <= 0)
+        return (is_admin());
+    return (is_director_for_room((int)$id_room));
+}
+
 function is_director($id_user = -1)
 {
     global $User;

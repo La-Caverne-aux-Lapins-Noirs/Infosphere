@@ -149,6 +149,7 @@ $Unlisted = [
     "BillingTemplateMenu" => "./pages/billing/",
     "BillingInvoiceMenu" => "./pages/billing/",
     "FunctionMenu" => "./pages/function/",
+    "RoomDesksMenu" => "./pages/room/desks/",
     "JuryMenu" => "./pages/jury/",
     "DabsicEditorMenu" => "./pages/dabsic_editor/",
     "DabsicFormMenu" => "./pages/dabsic_form/",

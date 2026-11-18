@@ -8,6 +8,70 @@
     overflow-x: auto;
 }
 
+.room_desks
+{
+    padding: 12px;
+}
+
+.room_desks_list
+{
+    overflow-x: auto;
+}
+
+.room_desks_list table
+{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.room_desks_list th,
+.room_desks_list td
+{
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.45);
+}
+
+.room_desks_list td
+{
+    overflow-wrap: anywhere;
+}
+
+.room_desks_editor
+{
+    padding: 12px;
+    margin: 0 0 16px;
+    border: 1px solid rgba(128, 128, 128, 0.55);
+    border-radius: 6px;
+}
+
+.room_desks_fields
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 12px;
+}
+
+.room_desks_fields label
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.room_desks_notes
+{
+    grid-column: 1 / -1;
+}
+
+.room_desks_actions
+{
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .roomdiv .map
 {
     position: absolute;

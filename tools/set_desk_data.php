@@ -68,23 +68,35 @@ function set_desk_data($ddata)
     $user_state = isset($ddata["user_state"]) && is_array($ddata["user_state"]) ? $ddata["user_state"] : [];
     $type = $ddata["type"];
 
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false)
+        return (new ErrorResponse("InvalidParameter", "ip $ip"));
+    if (filter_var($mac, FILTER_VALIDATE_MAC) === false)
+        return (new ErrorResponse("InvalidParameter", "mac $mac"));
+
     $name = explode(".", $name)[0];
     if (($desk = resolve_codename("room_desk", $name))->is_error())
     {
 	if ($desk->label != "BadCodeName")
 	    return ($desk);
-	// resolve_codename en renvoyant "nom de code inconnu" certifie
-	// que la forme de name est correcte
-	$Database->query("\n\t    INSERT INTO room_desk (codename) VALUES ('$name')\n\t");
-	$desk = $Database->insert_id;
+        // A desk can have been renamed in Infosphère while retaining its hostname.
+        $mac_key = strtolower(str_replace([":", "-", "."], "", $mac));
+        $matches = db_select_all("
+            id FROM room_desk
+            WHERE LOWER(REPLACE(REPLACE(REPLACE(mac, ':', ''), '-', ''), '.', '')) = '$mac_key'
+            LIMIT 2
+        ");
+        if (count($matches) == 1)
+            $desk = (int)$matches[0]["id"];
+        else
+        {
+            $name = $Database->real_escape_string($name);
+            if (!$Database->query("INSERT INTO room_desk (codename, id_room, type) VALUES ('$name', -1, 0)"))
+                return (new ErrorResponse("CannotUpdate"));
+            $desk = $Database->insert_id;
+        }
     }
     else
 	$desk = $desk->value;
-
-    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false)
-	return (new ErrorResponse("InvalidParameter", "mac $mac"));
-    if (filter_var($mac, FILTER_VALIDATE_MAC) === false)
-	return (new ErrorResponse("InvalidParameter", "ip $ip"));
 
     // Status: 0: libre, 1: utilisé physiquement, 2: verrouillé physiquement,
     // 3: en panne/injoignable, 4: occupé uniquement en SSH.

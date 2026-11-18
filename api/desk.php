@@ -46,7 +46,7 @@ function room_desk_update_fields($id, $fields)
     }
     if (!count($sql))
         bad_request();
-    $Database->query("\n        UPDATE room_desk\n        SET ".implode(", ", $sql)."\n        WHERE id = ".(int)$id."\n    ");
+    return ($Database->query("\n        UPDATE room_desk\n        SET ".implode(", ", $sql)."\n        WHERE id = ".(int)$id."\n    "));
 }
 
 function room_desk_fetch_room_id($id)
@@ -62,16 +62,9 @@ function room_desk_fetch_room_id($id)
     return ((int)$desk["id_room"]);
 }
 
-function room_desk_can_work_on_room($id_room)
-{
-    if ((int)$id_room == -1)
-        return (is_admin());
-    return (is_director_for_room((int)$id_room));
-}
-
 function room_desk_require_editor_rights($current_room, $target_room)
 {
-    if ((int)$current_room != -1 && !room_desk_can_work_on_room($current_room))
+    if ((int)$current_room > 0 && !room_desk_can_work_on_room($current_room))
         bad_request();
     if (!room_desk_can_work_on_room($target_room))
         bad_request();
@@ -87,7 +80,8 @@ function SetDesk($id, $data, $method, $output, $module)
     $current_room = room_desk_fetch_room_id($id);
     $target_room = isset($fields["id_room"]) ? $fields["id_room"] : $current_room;
     room_desk_require_editor_rights($current_room, $target_room);
-    room_desk_update_fields($id, $fields);
+    if (!room_desk_update_fields($id, $fields))
+        return (new ErrorResponse("CannotUpdate"));
     return (new ValueResponse([
         "msg" => $Dictionnary["Edited"],
         "id" => (int)$id,

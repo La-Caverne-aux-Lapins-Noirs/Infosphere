@@ -1,11 +1,5 @@
 <?php
-$Status = [
-    $Dictionnary["Free"],
-    $Dictionnary["Used"],
-    $Dictionnary["Locked"],
-    $Dictionnary["Unavailable"],
-    $Dictionnary["SSHOnly"],
-];
+require (__DIR__."/desk_labels.php");
 $Color = [
     "rgba(0, 255, 0, 0.3)",
     "rgba(255, 0, 0, 0.3)",
@@ -26,16 +20,13 @@ $Types = [
     "/res/mac.png",
     "/res/rpi.png",
 ];
-$TypeLabels = [
-    "Linux",
-    "Windows",
-    "Mac",
-    "Raspberry Pi",
-];
 ?>
 
 <div>
     <h2 class="alignable_blocks"><?=$Dictionnary["Rooms"]; ?></h2>
+    <?php if (am_i_director()) { ?>
+        <a class="alignable_blocks" href="index.php?p=RoomDesksMenu"><?=$Dictionnary["RoomDesks"]; ?></a>
+    <?php } ?>
     <form
 	class="alignable_blocks searchbar"
 	method="get"

@@ -28,6 +28,11 @@ function fetch_room_current_exam($id_room, $id_session = NULL)
     return ($exam ? $exam : NULL);
 }
 
+function room_desk_is_recent(array $desk): bool
+{
+    return !empty($desk["last_update"]) && now() - date_to_timestamp($desk["last_update"]) <= 60 * 5;
+}
+
 function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
 {
     global $Configuration;
@@ -101,7 +106,7 @@ function fetch_rooms($id = -1, $by_name = false, $exam_states = false)
     $lab["computer_available"] = 0;
     foreach ($lab["desk"] as &$d)
     {
-	$desk_is_alive = !($d["last_update"] == NULL || now() - date_to_timestamp($d["last_update"]) > 60 * 5);
+	$desk_is_alive = room_desk_is_recent($d);
 	if (!$desk_is_alive)
 	    $d["status"] = 3; // Unavailable
 	$select_system_codename = in_array("codename", db_select_rows("room_desk_user"))

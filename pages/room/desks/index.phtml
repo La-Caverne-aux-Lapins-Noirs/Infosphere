@@ -1,0 +1,133 @@
+<?php
+
+require (dirname(__DIR__)."/desk_labels.php");
+
+$rooms = db_select_all("
+    id, COALESCE(NULLIF({$Language}_name, ''), codename) AS name
+    FROM room
+    WHERE deleted IS NULL
+    ORDER BY name
+", "id");
+$desks = db_select_all("* FROM room_desk ORDER BY codename, id", "id");
+$editable_rooms = array_filter($rooms, static fn($room) => room_desk_can_work_on_room($room["id"]));
+$can_unassign = room_desk_can_work_on_room(-1);
+$can_edit_desk = static function ($desk) use ($editable_rooms, $can_unassign) {
+    $room_id = (int)$desk["id_room"];
+    return $can_unassign || isset($editable_rooms[$room_id]) || ($room_id <= 0 && $editable_rooms !== []);
+};
+$desk_id = filter_var($_GET["desk"] ?? null, FILTER_VALIDATE_INT);
+$editing = $desk_id > 0 ? ($desks[$desk_id] ?? null) : null;
+if ($editing !== null && !$can_edit_desk($editing))
+    $editing = null;
+
+$escape = static fn($value) => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+$empty_value = "—";
+$huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
+?>
+
+<section class="room_desks">
+    <a href="index.php?p=RoomsMenu"><?=$escape($Dictionnary["Rooms"]); ?></a>
+    <h2><?=$escape($Dictionnary["RoomDesks"]); ?></h2>
+
+    <?php if ($editing !== null) {
+        $selected_room = (int)$editing["id_room"];
+        $has_selected_room = isset($editable_rooms[$selected_room]) || ($can_unassign && $selected_room <= 0);
+    ?>
+        <form id="room-desk-editor" class="room_desks_editor"
+              method="put" action="/api/desk/<?=(int)$editing["id"]; ?>"
+              onsubmit="return silent_submitf(this, {after_success: refresh});">
+            <h3><?=$escape($Dictionnary["Edit"]); ?> · <?=$escape($editing["codename"]); ?></h3>
+            <div class="room_desks_fields">
+                <label><?=$escape($Dictionnary["DeskName"]); ?>
+                    <input type="text" name="codename" maxlength="255" required value="<?=$escape($editing["codename"]); ?>">
+                </label>
+                <label><?=$escape($Dictionnary["Room"]); ?>
+                    <select name="id_room" required>
+                        <option value="" disabled<?=$has_selected_room ? "" : " selected"; ?>><?=$escape($Dictionnary["RoomDeskChooseRoom"]); ?></option>
+                        <?php if ($can_unassign) { ?>
+                            <option value="-1"<?=$selected_room <= 0 ? " selected" : ""; ?>><?=$escape($Dictionnary["RoomDeskUnassigned"]); ?></option>
+                        <?php } ?>
+                        <?php foreach ($editable_rooms as $room) { ?>
+                            <option value="<?=(int)$room["id"]; ?>"<?=$selected_room == $room["id"] ? " selected" : ""; ?>>
+                                <?=$escape($room["name"]); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </label>
+                <label><?=$escape($Dictionnary["Type"]); ?>
+                    <select name="type">
+                        <?php foreach ($TypeLabels as $type => $label) { ?>
+                            <option value="<?=$type; ?>"<?=$type == $editing["type"] ? " selected" : ""; ?>><?=$escape($label); ?></option>
+                        <?php } ?>
+                    </select>
+                </label>
+                <label><?=$escape($Dictionnary["IpAddress"]); ?>
+                    <input type="text" name="ip" maxlength="255" value="<?=$escape($editing["ip"]); ?>">
+                </label>
+                <label><?=$escape($Dictionnary["MacAddress"]); ?>
+                    <input type="text" name="mac" maxlength="255" value="<?=$escape($editing["mac"]); ?>">
+                </label>
+                <label><?=$escape($Dictionnary["Position"]); ?> X
+                    <input type="number" name="x" min="0" max="1250" value="<?=(int)$editing["x"]; ?>">
+                </label>
+                <label><?=$escape($Dictionnary["Position"]); ?> Y
+                    <input type="number" name="y" min="0" max="500" value="<?=(int)$editing["y"]; ?>">
+                </label>
+                <label class="room_desks_notes"><?=$escape($Dictionnary["RoomDeskNotes"]); ?>
+                    <textarea name="misc" rows="3"><?=$escape($editing["misc"]); ?></textarea>
+                </label>
+            </div>
+            <p><?=$escape($Dictionnary["RoomDeskTelemetry"]); ?></p>
+            <div class="room_desks_actions">
+                <button type="submit"><?=$escape($Dictionnary["Save"]); ?></button>
+                <a href="index.php?p=RoomDesksMenu"><?=$escape($Dictionnary["Cancel"]); ?></a>
+            </div>
+        </form>
+    <?php } ?>
+
+    <?php if ($desks === []) { ?>
+        <p><?=$escape($Dictionnary["NoRoomDesk"]); ?></p>
+    <?php } else { ?>
+        <div class="room_desks_list">
+            <table>
+                <thead>
+                    <tr>
+                        <?php foreach (["DeskName", "Room", "Type", "IpAddress", "MacAddress", "Status"] as $label) { ?>
+                            <th scope="col"><?=$escape($Dictionnary[$label]); ?></th>
+                        <?php } ?>
+                        <th scope="col"><?=$escape($huile_label); ?></th>
+                        <th scope="col"><?=$escape($Dictionnary["Actions"]); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($desks as $desk) {
+                        $room_id = (int)$desk["id_room"];
+                        $room_name = $room_id <= 0 ? $Dictionnary["RoomDeskUnassigned"]
+                            : ($rooms[$room_id]["name"] ?? $Dictionnary["RoomDeskRoomUnavailable"]);
+                        $status = room_desk_is_recent($desk) ? (int)($desk["status"] ?? 3) : 3;
+                    ?>
+                        <tr>
+                            <th scope="row"><?=$escape($desk["codename"]); ?></th>
+                            <td><?=$escape($room_name); ?></td>
+                            <td><?=$escape($TypeLabels[(int)$desk["type"]] ?? $empty_value); ?></td>
+                            <td><?=$escape($desk["ip"] ?: $empty_value); ?></td>
+                            <td><?=$escape($desk["mac"] ?: $empty_value); ?></td>
+                            <td><?=$escape($Status[$status] ?? $Status[3]); ?></td>
+                            <td><?=$escape(($desk["huile_version"] ?? "") ?: $empty_value); ?></td>
+                            <td>
+                                <?php if ($can_edit_desk($desk)) { ?>
+                                    <a href="index.php?p=RoomDesksMenu&amp;desk=<?=(int)$desk["id"]; ?>#room-desk-editor"
+                                       aria-label="<?=$escape($Dictionnary["Edit"]." ".$desk["codename"]); ?>">
+                                        <?=$escape($Dictionnary["Edit"]); ?>
+                                    </a>
+                                <?php } else { ?>
+                                    <?=$escape($Dictionnary["RoomDeskReadOnly"]); ?>
+                                <?php } ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    <?php } ?>
+</section>
