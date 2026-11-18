@@ -808,6 +808,7 @@ $Dictionnary = [
     "Used" => "Poste utilisé",
     "Locked" => "Poste verrouillé",
     "SSHOnly" => "SSH actif",
+    "HuileInstalledVersion" => "Huile installé",
     "SSHIdle" => "SSH inactif",
     "Local" => "Locale",
     "Unavailable" => "Poste indisponible",

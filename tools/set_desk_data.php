@@ -116,7 +116,25 @@ function set_desk_data($ddata)
     if ($type < 0 || $type > 3)
 	return (new ErrorResponse("InvalidParameter", "type $type", "[0-3]"));
 
-    $Database->query("\n\tUPDATE room_desk\n\tSET ip = '$ip', mac = '$mac', status = $status, type = $type, last_update = NOW()\n\tWHERE id = $desk\n    ");
+    $package_update = "";
+    if (array_key_exists("huile_version", $ddata))
+    {
+        static $has_huile_version = NULL;
+        $has_huile_version ??= in_array("huile_version", db_select_rows("room_desk"), true);
+        if ($has_huile_version)
+        {
+            $version = $ddata["huile_version"];
+            $version_sql = is_string($version) && $version !== "" && strlen($version) <= 255
+                ? "'".$Database->real_escape_string($version)."'" : "NULL";
+            $package_update = ", huile_version = $version_sql";
+        }
+    }
+
+    $Database->query("
+        UPDATE room_desk
+        SET ip = '$ip', mac = '$mac', status = $status, type = $type, last_update = NOW()$package_update
+        WHERE id = $desk
+    ");
 
     // Suppression des utilisateurs indiqués
     // Puis remise des utilisateurs indiqués comme connecté

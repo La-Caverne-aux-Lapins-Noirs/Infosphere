@@ -20,6 +20,7 @@ CREATE TABLE `room_desk` (
   `mac` varchar(255) DEFAULT NULL,
   `ip` varchar(255) DEFAULT NULL,
   `type` varchar(255) NOT NULL,
+  `huile_version` varchar(255) DEFAULT NULL,
   `status` int(11) DEFAULT NULL,
   `last_update` datetime DEFAULT current_timestamp(),
   `x` int(11) DEFAULT NULL,

@@ -212,6 +212,10 @@ presence_same(albedo_room_log_counter_timestamp($entry), $t, "collection used la
 $entry = ["distrans_duration" => true, "xtime" => 1000, "reset_token" => "x", "counter_timestamp" => $t];
 presence_same(albedo_room_merge_measured_state($entry, $entry)["xtime"], 1000, "duplicate snapshot summed");
 presence_same(albedo_room_log_counter_source_key(["mac" => "AA"]), "aa|activity-v3", "cursor migration");
+$idle_desk = ["name" => "pc-idle", "mac" => "aa:bb:cc:dd:ee:ff", "ip" => "192.0.2.3",
+    "type" => "linux", "users" => [], "huile_version" => "2:1.0.0+1761642810~deb13u1-1"];
+$idle_logs = albedo_room_logs_from_distrans_payload(["machines" => [$idle_desk], "users" => []]);
+presence_same($idle_logs[0]["huile_version"], $idle_desk["huile_version"], "Huile version on a desk with no login");
 
 // Optional companion checkout: replay real Persoc-compatible packets all the
 // way through Distrans, Albedo conversion and SQL persistence.
@@ -221,6 +225,7 @@ if (isset($argv[1]))
     $tmp = sys_get_temp_dir()."/presence-chain-".bin2hex(random_bytes(6));
     $conf = ["Machines" => ["Directory" => $tmp."/machines"], "Users" => ["Directory" => $tmp."/users"]];
     $packet = ["mac" => "aa:bb:cc:dd:ee:ff", "name" => "pc-test", "ip" => "192.0.2.2", "type" => "linux",
+        "huile_version" => "2:1.0.0+1761642810~deb13u1-1",
         "users" => [["username" => "student", "mode" => "x", "lock" => false, "last_activity" => $t]]];
     try
     {
@@ -252,6 +257,7 @@ if (isset($argv[1]))
             eval($body);
         }
         presence_same(presence_total(109), 10, "Albedo cron body did not persist measured seconds");
+        presence_same(end($PresenceDesks)["huile_version"], $packet["huile_version"], "Albedo passes the Huile version to the desk");
         presence_same($PresenceHandCalls, ["get_activity_log", "get_activity_log", "get_activity_log"],
             "Albedo must not reset cumulative counters");
 

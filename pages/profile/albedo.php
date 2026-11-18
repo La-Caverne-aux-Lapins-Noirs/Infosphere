@@ -291,6 +291,7 @@ function albedo_room_logs_from_distrans_payload($logs)
     {
         if (!isset($machine["name"]) || !isset($machine["mac"]) || !isset($machine["ip"]))
             continue ;
+        $package = array_intersect_key($machine, ["huile_version" => true]);
         $mac = strtolower(trim((string)$machine["mac"]));
         $machine_users = isset($users_by_machine[$mac]) ? $users_by_machine[$mac] : [];
         $known_machine_users = [];
@@ -328,7 +329,7 @@ function albedo_room_logs_from_distrans_payload($logs)
                 "date" => isset($machine["updated_at"]) ? $machine["updated_at"] : now(),
                 "lock" => isset($machine["lock"]) && $machine["lock"],
                 "distant" => true,
-            ];
+            ] + $package;
             continue ;
         }
         foreach ($machine_users as $user)
@@ -361,7 +362,7 @@ function albedo_room_logs_from_distrans_payload($logs)
                 "sshtime" => isset($user["sshtime"]) ? (int)$user["sshtime"] : 0,
                 "ssh_idle_time" => isset($user["ssh_idle_time"]) ? (int)$user["ssh_idle_time"] : (isset($user["sshidletime"]) ? (int)$user["sshidletime"] : 0),
                 "locktime" => isset($user["locktime"]) ? (int)$user["locktime"] : 0,
-            ];
+            ] + $package;
         }
     }
     return ($content);

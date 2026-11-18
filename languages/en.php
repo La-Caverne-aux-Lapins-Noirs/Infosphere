@@ -25,6 +25,7 @@ $Dictionnary = [
     "NoUnknownRoomUsers" => "No unknown system user connected.",
     "UnknownRoomUsersNotice" => "Users reported by workstations but not found in Infosphere.",
     "SSHOnly" => "SSH connections only",
+    "HuileInstalledVersion" => "Installed Huile",
     "SSHIdle" => "Idle SSH connection",
     "Exam" => "Exam",
     "ExamInProgress" => "Exam in progress",

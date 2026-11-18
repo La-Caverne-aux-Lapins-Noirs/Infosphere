@@ -46,6 +46,8 @@ $room_user_status_label = function ($usr) use ($Dictionnary)
 		[$Dictionnary["MacAddress"], $desk["mac"]],
 		[$Dictionnary["Status"], $Status[$desk_status]]
 	    ];
+	    if (!empty($desk["huile_version"]))
+		$Description[] = [$Dictionnary["HuileInstalledVersion"], $desk["huile_version"]];
 	    ob_start(); ?>
 	    <table class="mapinfo">
 		<?php foreach ($Description as $desc) { ?>
