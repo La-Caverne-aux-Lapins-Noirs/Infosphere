@@ -1,5 +1,7 @@
 <?php
 
+require_once (__DIR__."/support_video_tracks.php");
+
 function support_video_upload_extension($extension)
 {
     $extension = strtolower($extension);
@@ -93,64 +95,9 @@ function support_video_fallback($source, $target, $extension, $consume_source = 
     return (new ValueResponse($fallback));
 }
 
-function support_video_create_hls($source, $target, $temporary_prefix)
+function support_video_create_hls($source, $target, $temporary_prefix, $original = NULL)
 {
-    $hls_dir = support_video_hls_directory($target);
-    $temporary_hls_dir = $temporary_prefix.".hls";
-    $log = $temporary_prefix.".hls.log";
-
-    support_video_remove_tree($temporary_hls_dir);
-    if (!is_dir($temporary_hls_dir) && @mkdir($temporary_hls_dir, 0750, true) == false)
-        return (new ErrorResponse("CannotWriteFile", $temporary_hls_dir));
-
-    $argv = [
-        support_video_ffmpeg_binary(),
-        "-hide_banner",
-        "-nostdin",
-        "-y",
-        "-i", $source,
-        "-map", "0:v:0",
-        "-map", "0:a?",
-        "-c", "copy",
-        "-f", "hls",
-        "-hls_time", "2",
-        "-hls_list_size", "0",
-        "-hls_playlist_type", "vod",
-        "-hls_segment_type", "fmp4",
-        "-hls_flags", "independent_segments",
-        "-hls_fmp4_init_filename", "init.mp4",
-        "-hls_segment_filename", $temporary_hls_dir."/segment_%05d.m4s",
-        $temporary_hls_dir."/index.m3u8"
-    ];
-
-    $output = [];
-    $status = 1;
-    exec(support_video_shell_command($argv)." 2> ".escapeshellarg($log), $output, $status);
-
-    if ($status != 0 || !file_exists($temporary_hls_dir."/index.m3u8"))
-    {
-        $details = @file_get_contents($log);
-        if ($details !== false && $details != "")
-            error_log("Infosphere support video HLS packaging failed for $target:\n".$details);
-        support_video_remove_tree($temporary_hls_dir);
-        @unlink($log);
-        return (new ValueResponse(false));
-    }
-
-    support_video_remove_tree($hls_dir);
-    if (@rename($temporary_hls_dir, $hls_dir) == false)
-    {
-        support_video_remove_tree($temporary_hls_dir);
-        @unlink($log);
-        return (new ErrorResponse("CannotWriteFile", $hls_dir));
-    }
-
-    foreach (scandir($hls_dir) as $entry)
-        if ($entry != "." && $entry != "..")
-            @chmod($hls_dir."/".$entry, 0640);
-    @chmod($hls_dir, 0750);
-    @unlink($log);
-    return (new ValueResponse(true));
+    return (support_video_package_tracks($source, $target, $temporary_prefix, $original ?? $source));
 }
 
 
@@ -206,7 +153,8 @@ function support_video_create_hls_from_existing($target, $force = false)
 
     @unlink($temporary);
     @unlink($log);
-    if (!support_video_encode_mp4($target, $temporary, $log))
+    $original = support_video_original_source($target);
+    if (!support_video_encode_mp4($original, $temporary, $log))
     {
         $details = @file_get_contents($log);
         if ($details !== false && $details != "")
@@ -216,7 +164,7 @@ function support_video_create_hls_from_existing($target, $force = false)
         return (new ValueResponse(["status" => "error", "path" => $target, "message" => "ffmpeg transcode failed"]));
     }
 
-    $hls = support_video_create_hls($temporary, $target, $prefix);
+    $hls = support_video_create_hls($temporary, $target, $prefix, $original);
     @unlink($temporary);
     @unlink($log);
     if ($hls->is_error())
@@ -262,7 +210,7 @@ function support_video_store_file($target, $source, $original_name, $consume_sou
         return (support_video_fallback($source, $target, $extension, $consume_source));
     }
 
-    $hls = support_video_create_hls($temporary, $target, $prefix);
+    $hls = support_video_create_hls($temporary, $target, $prefix, $source);
     if ($hls->is_error())
     {
         @unlink($temporary);

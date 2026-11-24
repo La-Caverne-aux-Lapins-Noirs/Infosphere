@@ -78,7 +78,8 @@ function support_video_enqueue($source, $target, $original_name, $consume_source
         return (new ErrorResponse("CannotWriteFile", $queue_source));
     @chmod($queue_source, 0640);
 
-    support_video_remove_tree(support_video_hls_directory($target));
+    // Keep the published rendition (and its original) until the replacement
+    // has been completely prepared and can be published atomically.
 
     if ($extension == "mp4" || $extension == "m4v")
     {
@@ -186,7 +187,7 @@ function support_video_process_job($pending_file, $verbose = true)
         return (["status" => "failed", "path" => $job["target"], "message" => "ffmpeg transcode failed"]);
     }
 
-    $hls = support_video_create_hls($temporary, $job["target"], $prefix);
+    $hls = support_video_create_hls($temporary, $job["target"], $prefix, $job["source"]);
     if ($hls->is_error() || $hls->value !== true)
     {
         @unlink($temporary);

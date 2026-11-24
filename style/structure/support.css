@@ -323,6 +323,84 @@
     position: relative;
 }
 
+.support_video_controls
+{
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    z-index: 55;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.82);
+    color: white;
+    border-radius: 4px;
+    font-size: small;
+}
+
+.support_video_controls label
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.support_video_controls [hidden]
+{
+    display: none;
+}
+
+.support_video_controls select
+{
+    width: auto;
+    max-width: min(260px, 45vw);
+    margin: 0;
+    background: #222;
+    color: white;
+}
+
+.support_video_local_subtitles
+{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.support_video_local_subtitles input
+{
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    position: absolute;
+}
+
+.support_video_track_warning
+{
+    flex-basis: 100%;
+    color: #ffd37a;
+}
+
+.support_video_track_warning:empty
+{
+    display: none;
+}
+
+.support_video_local_subtitles:focus-within
+{
+    outline: 2px solid white;
+    outline-offset: 3px;
+}
+
+.support_screen:fullscreen
+{
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: none !important;
+    background: black;
+}
+
 .support_next_asset_prompt
 {
     position: absolute;

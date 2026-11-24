@@ -58,6 +58,16 @@ function send_ajax(method, url, data, tofill = null, toadd = null, toclear = nul
     xhr.addEventListener("load", function(event) {
 	let json;
 
+	if (xhr.status == 413)
+	{
+	    set_error_div("Le fichier ou l'ensemble de l'envoi dépasse la taille maximale autorisée par le serveur.", false);
+	    if (gcall)
+		gcall(false, null, null, null);
+	    if (bcall)
+		bcall();
+	    return ;
+	}
+
 	if (download)
 	{
 	    let disposition = xhr.getResponseHeader("Content-Disposition") || "";

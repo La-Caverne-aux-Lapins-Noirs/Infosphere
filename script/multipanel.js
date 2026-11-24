@@ -183,6 +183,7 @@ function support_record_asset_progress(asset_id, progress)
 
 function support_video_reset_player(video)
 {
+    support_video_tracks_cleanup(video);
     support_hide_next_asset_prompt(video.parentElement);
     if (video._infosphere_hls != null)
     {
@@ -283,6 +284,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null, link = nul
     }
     support_video_reset_player(video);
     support_hide_next_asset_prompt(screen_id);
+    support_video_tracks_initialize(video, hls_asset);
     video._infosphere_progress_asset_id = asset_id;
     if (asset_id)
     {
@@ -313,6 +315,7 @@ function support_video_play(video, asset, hls_asset, asset_id = null, link = nul
 	    maxMaxBufferLength: 60,
 	    backBufferLength: 30
 	});
+	support_video_tracks_bind_hls(video);
 	video._infosphere_hls.loadSource(hls_asset);
 	video._infosphere_hls.attachMedia(video);
 	video._infosphere_hls.on(Hls.Events.MANIFEST_PARSED, function() {

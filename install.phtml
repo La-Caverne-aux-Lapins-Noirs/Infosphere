@@ -105,6 +105,12 @@
 		    and download <b>script/ext/hls.min.js</b>. If the web server user cannot
 		    write Apache configuration, the file is generated in
 		    <b>res/install/apache/infosphere-hls.conf</b> for manual installation.
+		    <br />
+		    - Video preparation requires <b>ffmpeg</b> and <b>ffprobe</b>.
+		    Uploads default to <b>4 GiB per file</b>, with a larger PHP POST limit
+		    and an Apache override scoped to this installation. When system
+		    configuration is not writable, apply the generated settings with
+		    <b>sudo php tools/configure_upload_limits.php</b>.
 		</p>
 	    </div>
 	    <p id="bottom">

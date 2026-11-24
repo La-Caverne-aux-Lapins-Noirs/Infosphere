@@ -4,8 +4,9 @@
 @define("INSTALLATION", 1);
 
 // A FAIRE POUR AMELIORER LE SERVICE:
-// Etendre la taille max du POST et d'upload
 // Agrandir la taille maximale accessible d'une requete (pour les gros cookies)
+
+require_once (__DIR__."/tools/install_uploads.php");
 
 require_once ("language.php");
 require_once ("tools/response.php");
@@ -157,6 +158,7 @@ function install_apache_hls_configuration(&$warnings)
 	"  AddType application/vnd.apple.mpegurl .m3u8\n".
 	"  AddType video/iso.segment .m4s\n".
 	"  AddType video/mp4 .mp4\n".
+	"  AddType text/vtt .vtt\n".
 	"</IfModule>\n";
     @mkdir("res/install/apache", 0775, true);
     @file_put_contents("res/install/apache/infosphere-hls.conf", $content);
@@ -454,6 +456,7 @@ if (isset($_POST["host"]) && !file_exists("version.php"))
     }
     install_php_timezone_configuration($InstallWarnings);
     install_hls_support($InstallWarnings);
+    install_upload_configuration($InstallWarnings);
 }
     
 if (isset($_POST["setup_timezone"]) && file_exists("version.php"))
@@ -475,6 +478,17 @@ if (isset($_POST["setup_hls"]) && file_exists("version.php"))
 	    install_hls_support($InstallWarnings);
 	else
 	    $ErrorMsg = "BadInstall";
+    }
+}
+
+if (isset($_POST["setup_uploads"]) && file_exists("version.php"))
+{
+    if (($json = json_decode(file_get_contents("./database.json"), true)) != NULL)
+    {
+        if ($json["password"] == $_POST["password"])
+            install_upload_configuration($InstallWarnings);
+        else
+            $ErrorMsg = "BadInstall";
     }
 }
 
@@ -530,6 +544,7 @@ if (file_exists("version.php"))
 			<input type="password" name="password" placeholder="Database password" />
 			<input type="submit" name="setup_timezone" value="Install / refresh PHP timezone" />
 			<input type="submit" name="setup_hls" value="Install / refresh HLS support" />
+			<input type="submit" name="setup_uploads" value="Configurer les envois (4 Gio)" />
 			<input type="submit" name="destroy" value="Destroy infosphere" />
 		    </form>
 		</div>
