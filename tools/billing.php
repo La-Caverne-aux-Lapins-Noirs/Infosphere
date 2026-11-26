@@ -1572,6 +1572,19 @@ function billing_fetch_students($include_hidden = false)
         WHERE user_school.authority = $student_authority
           AND user.deleted IS NULL
           AND school.deleted IS NULL
+          AND (
+              user.profile_status != 'prospect'
+              OR TRIM(COALESCE(user.password, '')) != ''
+              OR COALESCE((
+                  SELECT action.consequence
+                  FROM prospection
+                  INNER JOIN action ON action.id = prospection.id_action
+                  WHERE prospection.id_user = user.id
+                    AND action.consequence IN ('lost', 'transformed')
+                  ORDER BY prospection.id DESC
+                  LIMIT 1
+              ), '') != 'lost'
+          )
           $hidden_filter
         ".billing_school_filter("user_school")."
         ORDER BY school.codename, user.family_name, user.first_name, user.codename
