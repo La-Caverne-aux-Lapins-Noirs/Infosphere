@@ -4,7 +4,8 @@
 	style="background-size: contain; background-repeat: no-repeat; background-position: center center;"
     ></div>
     <iframe class="screen_media" src=""></iframe>
-    <video class="screen_media" controls preload="metadata">
+    <video class="screen_media" controls preload="metadata"
+           data-support-can-upload="<?=function_exists("can_edit_supports") && can_edit_supports() ? "1" : "0"; ?>">
 	<source src="">
 	<!--source src="" type="video/webm" /-->
     </video>
