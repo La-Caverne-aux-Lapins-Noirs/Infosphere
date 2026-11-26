@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__."/../../tools/machine_health_view.php";
+$health_history = machine_health_fetch(["infosphere", "distrans"], NULL, true);
 $total = disk_total_space('./');
 $free = disk_free_space('./');
 $used = max(0, $total - $free);
@@ -35,6 +37,21 @@ $log_type_labels = configuration_log_type_labels();
             Aucune alerte administrative remontée actuellement.
         </div>
     <?php } ?>
+
+    <section aria-label="Santé des serveurs">
+        <h3>Serveurs · historique sur 48 heures</h3>
+        <p class="configuration-field-description">
+            Collecte automatique par Albedo, environ toutes les deux minutes.
+            Un serveur Distrans indisponible déclenche une alerte.
+        </p>
+        <?php if (!machine_health_ready()) { ?>
+            <p class="configuration-alert">L'historique matériel ne peut pas être enregistré :
+                vérifier les droits de création de la table machine_health_sample.</p>
+        <?php } ?>
+        <?php machine_health_ranges(); ?>
+        <?php machine_health_render("Serveur Infosphère", $health_history["infosphere"] ?? [], "local"); ?>
+        <?php machine_health_render("Serveur Distrans", $health_history["distrans"] ?? [], "server"); ?>
+    </section>
 
     <div class="configuration-stats-grid">
         <section class="configuration-subcard configuration-storage-card configuration-wide-subcard <?=$storage_class; ?>">

@@ -50,7 +50,15 @@ add_log(TRACE, "Albedo starts.", 1, true);
 
 // Ici, on est admin, si les paramètres étaient bons
 // C'est ici que commence le travail d'Albedo.
-$HandOk = ping_hand();
+$HandOk = ping_hand($MachineHealthProbe);
+try
+{
+    machine_health_collect($MachineHealthProbe);
+}
+catch (Throwable $e)
+{
+    add_log(REPORT, "Machine monitoring: ".$e->getMessage(), 1, true);
+}
 
 // Chaque fichier albedo doit commencer par vérifier les credentials
 $files = glob("*/albedo.php");

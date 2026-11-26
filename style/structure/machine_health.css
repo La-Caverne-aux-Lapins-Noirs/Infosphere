@@ -1,0 +1,40 @@
+.mh-card { margin: 14px 0; padding: 16px; border: 1px solid #52655a; border-radius: 9px;
+    background: #111b16; color: #f1f4f2; text-align: left; }
+.mh-card header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    justify-content: space-between; }
+.mh-card h3 { margin: 0; color: inherit; }
+.mh-badge { display: inline-block; border: 1px solid #82958a; border-radius: 5px;
+    padding: 4px 7px; font-size: 0.9em; white-space: normal; }
+.mh-badge.mh-ok { color: #b1f3ba; border-color: #73b57d; }
+.mh-badge.mh-warning { color: #ffe3a3; border-color: #c79f43; }
+.mh-badge.mh-critical { color: #ffc3bb; border-color: #e18173; }
+.mh-card.mh-critical { border-color: #e18173; }
+.mh-card.mh-warning { border-color: #c79f43; }
+.mh-badge.mh-off, .mh-badge.mh-unknown { color: #c4ceca; }
+.mh-muted { font-size: 0.85em; color: #bac8bf; }
+.mh-reasons { color: #ffe3a3; padding-left: 20px; }
+.mh-values { display: flex; flex-wrap: wrap; gap: 12px 26px; margin: 12px 0; }
+.mh-values div { min-width: 120px; }
+.mh-values dt { font-size: 0.8em; color: #bac8bf; }
+.mh-values dd { margin: 3px 0; }
+.mh-sensors { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 0.85em; }
+.mh-sensors span { display: inline-block; }
+.mh-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 12px; }
+.mh-chart { margin: 16px 0 4px; padding: 10px; background: #08110c; border-radius: 6px; min-width: 0; }
+.mh-chart figcaption { font-size: 0.9em; font-weight: bold; }
+.mh-chart svg { display: block; width: 100%; height: auto; }
+.mh-chart text { fill: #bfcac4; font-size: 12px; }
+.mh-gridline { stroke: #34463c; stroke-width: 1; }
+.mh-hit { fill: transparent; pointer-events: all; }
+.mh-hit:hover { fill: #fff; }
+.mh-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 0.75em; }
+.mh-legend i { display: inline-block; width: 10px; height: 3px; margin: 0 5px 3px 0; }
+.mh-ranges { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.mh-ranges a { padding: 4px 8px; border: 1px solid #587263; border-radius: 5px; color: #e0efe5; }
+.mh-ranges a[aria-current] { background: #355443; font-weight: bold; }
+.mh-toggle { color: inherit; background: transparent; border: 1px solid #658573;
+    border-radius: 4px; padding: 4px 7px; cursor: pointer; font: inherit; }
+.mh-toggle[aria-expanded="true"] { background: #355443; }
+.room_desks_list .mh-detail > td { padding: 0 12px; }
+.mh-detail[hidden] { display: none; }
+@media (max-width: 600px) { .mh-charts { grid-template-columns: 1fr; } .mh-card { padding: 10px; } }

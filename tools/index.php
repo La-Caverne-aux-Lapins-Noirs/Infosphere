@@ -274,6 +274,7 @@ require_once ("communication_event.php");
 require_once ("registration_form.php");
 require_once ("persoc_deadlist.php");
 require_once ("ping_hand.php");
+require_once ("machine_health.php");
 require_once ("render_dynamic_table.php");
 require_once ("fetch_prospecting_actions.php");
 require_once ("score_color_table.php");

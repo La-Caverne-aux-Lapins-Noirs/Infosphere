@@ -1,6 +1,7 @@
 <?php
 
 require_once (__DIR__."/distrans_status.php");
+require_once (__DIR__."/machine_health.php");
 
 function retrieve_alerts()
 {
@@ -13,6 +14,8 @@ function retrieve_alerts()
 
     if (virtual_now_original_user_is_admin())
     {
+        foreach (machine_health_server_alerts() as $server => $message)
+            $alert["health_".$server] = htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
         $timezone = infosphere_timezone_status();
         if (!$timezone["startup_matches_system"])
         {

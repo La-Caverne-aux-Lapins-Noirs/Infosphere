@@ -93,6 +93,12 @@ class TestDeskDatabase
     function query($sql)
     {
         $this->queries[] = $sql;
+        if (str_contains($sql, "SELECT node_key, observed_at, payload"))
+            return new class($GLOBALS['desk_health_fixture'] ?? []) {
+                private $rows;
+                function __construct($rows) { $this->rows = $rows; }
+                function fetch_assoc() { return array_shift($this->rows); }
+            };
         return !$this->fail_update;
     }
 }
@@ -135,7 +141,9 @@ desk_check(str_contains($html, "Poste &lt;2&gt;") && str_contains($html, "Lectur
     "the inventory still lists the other school's desk");
 desk_check(str_contains($html, "2:1.0.0+20261118") && str_contains($html, "Sans salle"), "version and unassigned desks");
 desk_check(str_contains($html, '<th scope="col">Utilisé par</th>'), "users column");
-desk_check(preg_match('~<th scope="row">Poste &lt;1&gt;</th>(.*?)</tr>~s', $html, $row) === 1, "occupied desk row");
+desk_check(preg_match('~<th scope="row">\s*<button[^>]*aria-controls="desk-health-1".*?</th>(.*?)</tr>~s', $html, $row) === 1, "occupied desk row");
+desk_check(str_contains($html, 'id="desk-health-1" class="mh-detail" hidden'),
+    "a workstation without monitoring history stays collapsed");
 desk_check(str_contains($row[1], 'href="index.php?p=ProfileMenu&amp;a=60">lea&lt;dev&gt;</a>')
     && str_contains($row[1], "(Sur place)"), "local user profile and label");
 desk_check(str_contains($row[1], "aurelien") && str_contains($row[1], "(SSH)")
@@ -156,7 +164,8 @@ foreach ([[2, 10], [1, 20], [1, -1]] as [$desk, $destination])
     }
     catch (TestDeskRequestDenied $e) {}
 }
-desk_check($Database->queries === [], "denied saves must never reach UPDATE");
+desk_check(!array_filter($Database->queries, static fn($query) => str_contains($query, "UPDATE room_desk")),
+    "denied saves must never reach UPDATE");
 desk_check(!SetDesk(4, ["id_room" => 10], "PUT", "json", "")->is_error(), "attach a previously unassigned desk");
 
 $User = ["id" => 1, "authority" => ADMINISTRATOR, "admin_mode" => true];
@@ -206,4 +215,31 @@ desk_check(!room_desk_upgrade_states($desks_fixture)[1]['can_request'], "pending
 $upgrade_response = false;
 desk_check(room_desk_upgrade_states($desks_fixture)[1]['status'] === 'unavailable', "Distrans failure is visible");
 
+$Database->fail_update = false;
+$desk_health_fixture = [
+    ['node_key' => 'desk:aa:bb:cc:dd:ee:01', 'observed_at' => time(),
+     'payload' => json_encode(['kind' => 'workstation', 'online' => true,
+         'metrics' => tc_metrics_normalize(['cpu_percent' => 99])])],
+    ['node_key' => 'desk:aa:bb:cc:dd:ee:02', 'observed_at' => time(),
+     'payload' => json_encode(['kind' => 'workstation', 'online' => false])],
+];
+$html = desk_inventory_page(1);
+desk_check(preg_match('~id="desk-health-1" class="mh-detail"\s+data-health-url=~', $html),
+    "a degraded machine unfolds automatically");
+desk_check(str_contains($html, 'id="desk-health-2" class="mh-detail" hidden'),
+    "being powered off does not unfold a workstation as an alert");
+desk_check(machine_health_desk_key(['mac' => 'aabb.ccdd.ee01']) === 'desk:aa:bb:cc:dd:ee:01',
+    "health history survives legacy MAC formatting");
+$card = GetDeskHealth(1, [], 'GET', 'json', '')->value['content'];
+desk_check(str_contains($card, 'Utilisation des ressources'), 'lazy history endpoint renders graphs');
+foreach ([null, ['id' => 77, 'authority' => 0]] as $actor)
+{
+    $User = $actor;
+    try
+    {
+        GetDeskHealth(1, [], 'GET', 'json', '');
+        throw new RuntimeException('unauthorized history request succeeded');
+    }
+    catch (TestDeskRequestDenied $e) {}
+}
 echo "Room desk inventory: OK\n";

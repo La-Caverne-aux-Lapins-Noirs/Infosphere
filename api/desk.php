@@ -1,6 +1,20 @@
 <?php
 
 require_once __DIR__ . '/../tools/room_desk_upgrade.php';
+require_once __DIR__ . '/../tools/machine_health_view.php';
+
+function GetDeskHealth($id, $data, $method, $output, $module)
+{
+    if (!am_i_director() || (int)$id <= 0)
+        bad_request();
+    $desk = db_select_one("codename, mac FROM room_desk WHERE id = ".(int)$id);
+    if ($desk === NULL) bad_request();
+    $key = machine_health_desk_key($desk);
+    $history = $key !== NULL ? machine_health_fetch([$key], NULL, true) : [];
+    ob_start();
+    machine_health_render($desk["codename"], $history[$key ?? ''] ?? [], "workstation");
+    return (new ValueResponse(["content" => ob_get_clean()]));
+}
 
 function UpgradeDesk($id, $data, $method, $output, $module)
 {
@@ -161,6 +175,10 @@ $Tab = [
         ]
     ],
     "GET" => [
+        "health" => [
+            "am_i_director",
+            "GetDeskHealth"
+        ],
         "upgrade_states" => [
             "am_i_director",
             "GetDeskUpgradeStates"

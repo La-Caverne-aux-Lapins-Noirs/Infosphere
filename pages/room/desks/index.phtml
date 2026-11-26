@@ -2,6 +2,7 @@
 
 require (dirname(__DIR__)."/desk_labels.php");
 require_once dirname(__DIR__, 3)."/tools/room_desk_upgrade.php";
+require_once dirname(__DIR__, 3)."/tools/machine_health_view.php";
 
 $rooms = db_select_all("
     id, COALESCE(NULLIF({$Language}_name, ''), codename) AS name
@@ -10,6 +11,8 @@ $rooms = db_select_all("
     ORDER BY name
 ", "id");
 $desks = db_select_all("* FROM room_desk ORDER BY codename, id", "id");
+$health_history = machine_health_fetch(
+    array_values(array_filter(array_map("machine_health_desk_key", $desks))), 0, false, true);
 $users_by_desk = fetch_room_desk_users(array_keys($desks));
 $upgrade_states = room_desk_upgrade_states($desks);
 $upgrade_token = room_desk_upgrade_token();
@@ -32,6 +35,10 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
 <section class="room_desks" data-upgrade-unavailable="<?=$escape($Dictionnary["RoomDeskUpgradeUnavailable"]); ?>">
     <a href="index.php?p=RoomsMenu"><?=$escape($Dictionnary["Rooms"]); ?></a>
     <h2><?=$escape($Dictionnary["RoomDesks"]); ?></h2>
+    <p>Dérouler un poste pour consulter ses mesures et ses graphes.
+        Les postes dont l'état est dégradé ou à surveiller sont ouverts automatiquement.
+        Un poste éteint ne déclenche pas d'alerte.</p>
+    <?php machine_health_ranges(); ?>
 
     <?php if ($editing !== null) {
         $selected_room = (int)$editing["id_room"];
@@ -101,6 +108,7 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                         <?php } ?>
                         <th scope="col"><?=$escape($huile_label); ?></th>
                         <th scope="col"><?=$escape($Dictionnary["RoomDeskUpgrade"]); ?></th>
+                        <th scope="col">Santé</th>
                         <th scope="col"><?=$escape($Dictionnary["Actions"]); ?></th>
                     </tr>
                 </thead>
@@ -113,9 +121,19 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                         $status = $recent ? (int)($desk["status"] ?? 3) : 3;
                         $desk_users = $recent ? ($users_by_desk[$desk["id"]] ?? []) : [];
                         $upgrade = $upgrade_states[$desk["id"]];
+                        $health_rows = $health_history[machine_health_desk_key($desk) ?? ''] ?? [];
+                        $health_state = machine_health_evaluate($health_rows ? end($health_rows) : NULL);
+                        $health_open = $health_state["bad"];
+                        $health_id = 'desk-health-'.(int)$desk["id"];
                     ?>
                         <tr>
-                            <th scope="row"><?=$escape($desk["codename"]); ?></th>
+                            <th scope="row">
+                                <button type="button" class="mh-toggle"
+                                    aria-controls="<?=$health_id; ?>" aria-expanded="<?=$health_open ? 'true' : 'false'; ?>"
+                                    onclick="return room_desks_health_toggle(this);">
+                                    <?=$escape($desk["codename"]); ?> ▾
+                                </button>
+                            </th>
                             <td><?=$escape($room_name); ?></td>
                             <td><?=$escape($TypeLabels[(int)$desk["type"]] ?? $empty_value); ?></td>
                             <td><?=$escape($desk["ip"] ?: $empty_value); ?></td>
@@ -158,6 +176,7 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                                     </form>
                                 <?php } ?>
                             </td>
+                            <td><?=machine_health_badge($health_state); ?></td>
                             <td>
                                 <?php if ($can_edit_desk($desk)) { ?>
                                     <a href="index.php?p=RoomDesksMenu&amp;desk=<?=(int)$desk["id"]; ?>#room-desk-editor"
@@ -169,9 +188,23 @@ $huile_label = $Dictionnary["HuileInstalledVersion"] ?? "Huile";
                                 <?php } ?>
                             </td>
                         </tr>
+                        <tr id="<?=$health_id; ?>" class="mh-detail"<?=$health_open ? '' : ' hidden'; ?>
+                            data-health-url="/api/desk/<?=(int)$desk["id"]; ?>/health?health_hours=<?=machine_health_hours(); ?>">
+                            <td colspan="11">
+                                <?php if ($health_open) {
+                                    $key = machine_health_desk_key($desk);
+                                    $history = machine_health_fetch([$key], NULL, true);
+                                    machine_health_render($desk["codename"], $history[$key] ?? [], "workstation");
+                                    unset($history);
+                                } else { ?>
+                                    <div data-health-placeholder>Ouvrir la ligne pour charger les graphes.</div>
+                                <?php } ?>
+                            </td>
+                        </tr>
                     <?php } ?>
                 </tbody>
             </table>
         </div>
     <?php } ?>
 </section>
+<script><?php require dirname(__DIR__, 3)."/script/room_desks_health.js"; ?></script>

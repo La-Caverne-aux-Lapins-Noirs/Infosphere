@@ -96,7 +96,7 @@ function run_ssh_packet_with_inline_key(
         $account . "@" . $host,
     ];
     if ($timeout > 0)
-        $cmd = array_merge(["timeout", (string)$timeout], $cmd);
+        $cmd = array_merge(["timeout", "--kill-after=2", (string)$timeout], $cmd);
 
     $descriptors = [
         0 => ["pipe", "r"], // child stdin  : child reads, parent writes
